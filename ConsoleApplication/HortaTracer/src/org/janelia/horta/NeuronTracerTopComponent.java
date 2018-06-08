@@ -262,6 +262,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     private boolean doCubifyVoxels = false; // Always begin in "no distortion" state
     
+    private boolean pausePlayback = false;
+    
     private final NeuronEditDispatcher neuronEditDispatcher;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     
@@ -554,6 +556,43 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new URI(currentSource).toURL();
     }
     
+    public void playSampleLocations(List<SampleLocation> locationList) {
+        try {
+            for (SampleLocation sampleLocation : locationList) {
+                if (this.pausePlayback)
+                    return;
+                Quaternion q = new Quaternion();
+                float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
+                if (quaternionRotation != null) {
+                    q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
+                }
+                ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+                        currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
+                );
+
+                // figure out number of steps
+                Vantage vantage = sceneWindow.getVantage();
+                float[] startLocation = vantage.getFocus();
+                double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm() - startLocation[0], 2)
+                         + Math.pow(sampleLocation.getFocusYUm() - startLocation[1], 2)
+                         + Math.pow(sampleLocation.getFocusZUm() - startLocation[2], 2));
+                // # of steps is 1 per uM
+                int steps = (int) Math.round(distance);
+                if (steps < 1) {
+                    steps = 1;
+                }
+                animateToLocationWithRotation(acceptor, q, sampleLocation, steps);
+                
+                activityLogger.logHortaLaunch(sampleLocation);
+                currentSource = sampleLocation.getSampleUrl().toString();
+                defaultColorChannel = sampleLocation.getDefaultColorChannel();
+                volumeCache.setColorChannel(defaultColorChannel);
+            }
+        } catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+        }
+    }
+    
     public void setSampleLocation(SampleLocation sampleLocation) {
         try {
             leverageCompressedFiles = sampleLocation.isCompressed();
@@ -566,7 +605,17 @@ public final class NeuronTracerTopComponent extends TopComponent
             );
             
             if (sampleLocation.getInterpolate()) {
-               animateToLocationWithRotation(acceptor, q, sampleLocation, 1);                                
+                // figure out number of steps
+                Vantage vantage = sceneWindow.getVantage();
+                float[] startLocation = vantage.getFocus();
+                double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm()-startLocation[0],2) + 
+                        Math.pow(sampleLocation.getFocusYUm()-startLocation[1],2) + 
+                        Math.pow(sampleLocation.getFocusZUm()-startLocation[2],2));
+                // # of steps is 1 per uM
+                int steps = (int)Math.round(distance);
+                if (steps<1)
+                    steps = 1;
+               animateToLocationWithRotation(acceptor, q, sampleLocation, steps);                                
             } else {
                 acceptor.acceptLocation(sampleLocation);
                 Vantage vantage = sceneWindow.getVantage();
@@ -2321,5 +2370,19 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     public void setPreferKtx(boolean doPreferKtx) {
         ktxBlockMenuBuilder.setPreferKtx(doPreferKtx);
+    }
+
+    /**
+     * @return the pausePlayback
+     */
+    public boolean isPausePlayback() {
+        return pausePlayback;
+    }
+
+    /**
+     * @param pausePlayback the pausePlayback to set
+     */
+    public void setPausePlayback(boolean pausePlayback) {
+        this.pausePlayback = pausePlayback;
     }
 }

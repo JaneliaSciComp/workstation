@@ -30,6 +30,7 @@
 package org.janelia.console.viewerapi;
 
 import java.net.URL;
+import java.util.List;
 
 /**
  * Implement this to become a provider of focusable location.
@@ -46,6 +47,9 @@ public interface Tiled3dSampleLocationProviderAcceptor {
     
     /** Only acceptor or both type should be called here. */
     void setSampleLocation(SampleLocation location);
+    /** workaround to play a whole set of sample locations */    
+    void playSampleLocations(List<SampleLocation> locationList);
+    
     /** Provider, or both-type: @return where-at, in case reload required. */
     SampleLocation getSampleLocation();
     /** @return Unique across all impls. Answers: is this one me? */

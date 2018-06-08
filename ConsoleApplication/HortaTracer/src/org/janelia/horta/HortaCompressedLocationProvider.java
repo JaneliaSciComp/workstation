@@ -29,6 +29,7 @@
  */
 package org.janelia.horta;
 
+import java.util.List;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.openide.util.lookup.ServiceProvider;
@@ -92,5 +93,10 @@ public class HortaCompressedLocationProvider extends HortaLocationProviderBase i
         else {
             throw new IllegalStateException("Failed to open Neuron Tracer.");
         }
+    }
+
+    @Override
+    public void playSampleLocations(List<SampleLocation> locationList) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

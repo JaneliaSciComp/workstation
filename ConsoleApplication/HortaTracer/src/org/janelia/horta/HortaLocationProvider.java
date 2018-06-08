@@ -32,6 +32,7 @@ package org.janelia.horta;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.List;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
@@ -117,5 +118,10 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProviderAccep
         else {
             throw new IllegalStateException("Failed to open Neuron Tracer.");
         }
+    }
+
+    @Override
+    public void playSampleLocations(List<SampleLocation> locationList) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
