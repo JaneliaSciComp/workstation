@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.task_workflow;
 
+import Jama.Matrix;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -25,6 +26,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.beans.PropertyVetoException;
+import java.util.Arrays;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
@@ -242,10 +244,10 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
         taskButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         add(taskButtonsPanel, BorderLayout.NORTH);
-
-        JButton nextButton = new JButton("Next unreviewed");
-        nextButton.addActionListener(event -> onNextButton());
-        taskButtonsPanel.add(nextButton);
+        
+        JButton playButton = new JButton("Play Branch");
+        playButton.addActionListener(event -> playBranch());
+        taskButtonsPanel.add(playButton);
 
 
         // workflow management buttons: load, done (?)
@@ -263,83 +265,6 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         JButton saveButton = new JButton("Save reviewed list...");
         saveButton.addActionListener(event -> onSaveButton());
         workflowButtonsPanel.add(saveButton);
-        
-        treeView.addMouseWheelListener(new MouseWheelListener() {
-            @Override
-            public void mouseWheelMoved(MouseWheelEvent e) {
-                if (e.getPreciseWheelRotation()==1.0) {
-                    nextTask();
-                } else {
-                    prevTask();
-                }
-            }
-
-        });
-         addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-                log.info("BBBBBBBBBBBBBB");
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-               
-                log.info("CCCCCCCCCCC");
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                log.info("DDDDDDDDDDDD");
-            }
-
-        });
-/*
-        setLayout(new GridBagLayout());
-        setBorder(new EmptyBorder(5, 5, 5, 5));
-
-        GridBagConstraints cTop = new GridBagConstraints();
-        cTop.gridx = 0;
-        cTop.gridy = 0;
-        cTop.weightx = 1.0;
-        cTop.weighty = 0.0;
-        cTop.anchor = GridBagConstraints.PAGE_START;
-        cTop.fill = GridBagConstraints.HORIZONTAL;
-        cTop.insets = new Insets(10, 0, 0, 0);
-        add(new JLabel("Point review workflow", JLabel.CENTER));
-
-
-        // point table
-        pointTable = new JTable(pointModel);        
-        pointTable.setRowHeight(20);
-        pointTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        TableColumn col = pointTable.getColumnModel().getColumn(4);
-        col.setCellEditor(new ReviewEditor());
-
-        JScrollPane scrollPane = new JScrollPane(pointTable);
-        pointTable.setFillsViewportHeight(true);
-
-        // table should take available space
-        GridBagConstraints cTable = new GridBagConstraints();
-        cTable.gridx = 0;
-        cTable.gridy = GridBagConstraints.RELATIVE;
-        cTable.weightx = 1.0;
-        cTable.weighty = 1.0;
-        cTable.anchor = GridBagConstraints.PAGE_START;
-        cTable.fill = GridBagConstraints.BOTH;
-        add(scrollPane, cTable);
-
-        // not sure I need this: it'll push content up so it
-        //  doesn't stretch; so far, it's fine without it, but
-        //  I haven't checked the appearance if the user undocks
-        //  the window and lets it get big
-        GridBagConstraints cBottom = new GridBagConstraints();
-        cBottom.gridx = 0;
-        cBottom.gridy = GridBagConstraints.RELATIVE;
-        cBottom.anchor = GridBagConstraints.PAGE_START;
-        cBottom.fill = GridBagConstraints.BOTH;
-        cBottom.weighty = 1.0;
-        add(Box.createVerticalGlue(), cBottom);
-        */
 
     }
 
@@ -349,6 +274,10 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     private void startWorkflow(String neuronName) {
         rootNode = new ReviewListNode(neuronName, groupList);
         reviewManager.setRootContext(rootNode);
+    }
+    
+    private void playBranch() {
+        reviewGroup(currGroupIndex);
     }
 
     private void onLoadButton() {
@@ -392,44 +321,38 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             }
         }
     }
-
-    /**
-     * the next button brings you to the next unreviewed point
-     */
-    private void onNextButton() {
-        /*if (hasPoints()) {
-            // note: "next" is relative to view state, not model!
-            /*int viewRow = pointTable.getSelectedRow();
-            int startRow;
-            if (viewRow >= 0) {
-                // selection exists
-                startRow = viewRow + 1;
-                if (startRow >= pointModel.getRowCount()) {
-                    startRow = 0;
-                }
-            } else {
-                // no selection
-                startRow = 0;
+    
+     private void reviewGroup(int groupIndex) {
+         ReviewGroup group = groupList.get(groupIndex);
+         Node[] groupNode = new Node[1];
+         groupNode[0] = rootNode.getChildren().getNodeAt(groupIndex);
+         if (groupNode[0]!=null) {
+             try {
+                this.reviewManager.setSelectedNodes(groupNode);
+             } catch (PropertyVetoException pe) {
+                pe.printStackTrace();
+             }
+            
+            List<SampleLocation> playList = new ArrayList<SampleLocation>();
+            SynchronizationHelper helper = new SynchronizationHelper();
+            Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+               
+            for (ReviewPoint point: group.getPointList()) {
+                SampleLocation sampleLocation = originator.getSampleLocation();
+                sampleLocation.setFocusUm(point.getLocation().getX(), point.getLocation().getY(), point.getLocation().getZ());
+                sampleLocation.setMicrometersPerWindowHeight(point.getZoomLevel());
+                sampleLocation.setRotationAsQuaternion(point.getRotation());  
+                playList.add(sampleLocation);
             }
-            // working from start row, find the next unreviewed row:
-            int testRow = startRow;
-            while (pointModel.isReviewed(pointTable.convertRowIndexToModel(testRow))) {
-                testRow++;
-                if (testRow >= pointModel.getRowCount()) {
-                    testRow = 0;
+            Tiled3dSampleLocationProviderAcceptor hortaViewer;
+            Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+            for (Tiled3dSampleLocationProviderAcceptor acceptor : locationAcceptors) {
+                if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
+                    acceptor.playSampleLocations(playList);
                 }
-                if (testRow == startRow) {
-                    JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
-                            "All points have been reviewed.",
-                            "Nothing left",
-                            JOptionPane.INFORMATION_MESSAGE);
-                    return;
-                }
-            }
-            selectGoto(testRow);
-        }*/
+            }                        
+        }
     }
-
 
     /**
      * move the camera to the indicated point in LVV and Horta
@@ -502,19 +425,32 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 point.setLocation(vecPoint);
                 point.setZoomLevel(70);
                 // calculate quicky normal
+                Quaternion q;
                 
-                if (i > 1 && i < branch.size() - 2) {
-                    Vec3 diff1 = branch.get(i-1).minus(vecPoint);
-                    Vec3 diff2 = branch.get(i+1).minus(vecPoint);
-                    Vec3 normal = diff1.cross(diff2);
-                    double qw = 1.0f + diff1.dot(diff2);
-                    log.info ("normal {}", normal.toString());
-                    Quaternion q = new Quaternion(normal.getX(), normal.getY(), normal.getZ(), qw, false);
-                    point.setRotation(new float[]{(float)0, (float)1, (float)0, (float)0});
+                List<Vec3> segments = new ArrayList<Vec3>();
+                if (branch.size()<3) {
+                    q = null;
                 } else {
-
+                    if (i == 0) {
+                        segments.add(branch.get(0));
+                        segments.add(branch.get(1));
+                        segments.add(branch.get(2));
+                    } else if (i == branch.size()-1) {
+                        segments.add(branch.get(branch.size()-3));
+                        segments.add(branch.get(branch.size()-2));
+                        segments.add(branch.get(branch.size()-1));
+                    } else {
+                        segments.add(branch.get(i-1));
+                        segments.add(branch.get(i));
+                        segments.add(branch.get(i+1));
+                    }
+                    q = this.calculateRotation(segments);
                 }
-               
+
+                
+                if (q!=null) {
+                    point.setRotation(new float[]{(float)q.x(), (float)q.y(), (float)q.z(), (float)q.w()});
+                }
                 point.setInterpolate(true);
                 pointList.add(point);
             }
@@ -525,6 +461,18 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         }
         startWorkflow(name);
 
+    }
+    
+    private Quaternion calculateRotation (List<Vec3> vertexPoints) {
+        Vec3 first = vertexPoints.get(1).minus(vertexPoints.get(0));
+        Vec3 second = vertexPoints.get(1).minus(vertexPoints.get(2));
+        Vec3 normal = first.cross(second);
+        double angle = Math.atan2(normal.getX(), normal.getZ());
+        float qx = (float) (normal.getX() * Math.sin(angle / 2));
+        float qy = (float) (normal.getY() * Math.sin(angle / 2));
+        float qz = (float) (normal.getZ() * Math.sin(angle / 2));
+        float qw = (float) Math.cos(angle / 2);
+        return new Quaternion(qx, qy, qz, qw, false);       
     }
 
     /**
