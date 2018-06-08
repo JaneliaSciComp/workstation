@@ -1597,6 +1597,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     public boolean getNeuronVisibility(TmNeuronMetadata neuron) {
+        if (neuron == null) {
+            // doesn't really matter if the neuron doesn't exist
+            return true;
+        }
         Set<String> neuronTags = getUserNeuronTags(neuron);
         if (neuronTags!=null) {
             if (neuronTags.contains(NEURON_TAG_VISIBILITY)) {
