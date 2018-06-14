@@ -10,9 +10,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -46,24 +47,12 @@ public final class NewMaskActionListener implements ActionListener {
         ActivityLogHelper.logUserAction("NewMaskActionListener.actionPerformed");
 
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-
-        fileChooser.setFileFilter(new FileFilter() {
-            @Override
-            public String getDescription() {
-                return "PNG mask files (*.png)";
-            }
-
-            @Override
-            public boolean accept(File f) {
-                return f.isDirectory() || f.getName().endsWith(".png");
-            }
-        });
+        fileChooser.setFileFilter(new FileNameExtensionFilter("PNG Mask Files", "png"));
         
         int returnVal = fileChooser.showOpenDialog(FrameworkImplProvider.getMainFrame());
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            File localFile = fileChooser.getSelectedFile();  
-
+            File localFile = fileChooser.getSelectedFile();
+            
             SimpleWorker worker = new SimpleWorker()     {
 
                 private String uploadPath;
