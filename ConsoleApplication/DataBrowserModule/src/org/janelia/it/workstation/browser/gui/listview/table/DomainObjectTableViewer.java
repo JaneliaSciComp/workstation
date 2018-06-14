@@ -214,29 +214,37 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             JTable table = getTable();
             ListSelectionModel lsm = table.getSelectionModel();
             if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) {
-                String value = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
-                final String label = StringUtils.isEmpty(value) ? "Empty value" : value;
+                
+                int selectedRow = table.getSelectedRow();
+                int selectedCol = table.getSelectedColumn();
+                
+                if (selectedRow>=0 && selectedCol>=0) {
+                    String value = table.getValueAt(selectedRow, selectedCol).toString();
+                    final String label = StringUtils.isEmpty(value) ? "Empty value" : value;
 
-                JMenuItem titleMenuItem = new JMenuItem(label);
-                titleMenuItem.setEnabled(false);
-                popupMenu.add(titleMenuItem);
+                    JMenuItem titleMenuItem = new JMenuItem(label);
+                    titleMenuItem.setEnabled(false);
+                    popupMenu.add(titleMenuItem);
 
-                JMenuItem copyMenuItem = new JMenuItem("  Copy Value To Clipboard");
-                copyMenuItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        Transferable t = new StringSelection(label);
-                        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-                    }
-                });
-                popupMenu.add(copyMenuItem);
+                    JMenuItem copyMenuItem = new JMenuItem("  Copy Value To Clipboard");
+                    copyMenuItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            Transferable t = new StringSelection(label);
+                            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+                        }
+                    });
+                    popupMenu.add(copyMenuItem);
+                    
+                    popupMenu.addSeparator();
+                }
             }
 
-            popupMenu.addSeparator();
             popupMenu.addMenuItems();
 
             return popupMenu;
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) {
             ConsoleApp.handleException(ex);
             return null;
         }
@@ -268,8 +276,10 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     @Override
     protected void objectDoubleClicked(DomainObject object) {
         try {
-            getContextualPopupMenu().runDefaultAction();
-        } catch (Exception ex) {
+            DomainObjectContextMenu popupMenu = getContextualPopupMenu();
+            if (popupMenu!=null) popupMenu.runDefaultAction();
+        } 
+        catch (Exception ex) {
             ConsoleApp.handleException(ex);
         }
     }
@@ -284,7 +294,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             }
             updateTableModel();
             updateUI();
-            log.info("Updated table model1");
         }
     }
 
