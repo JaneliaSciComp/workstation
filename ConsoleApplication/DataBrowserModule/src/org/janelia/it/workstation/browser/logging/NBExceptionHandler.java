@@ -16,6 +16,7 @@ import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
 import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.SystemInfo;
@@ -161,6 +162,11 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
      * can still report them manually. 
      */
     private boolean isIgnoredForAutoSend(Throwable throwable, String stacktrace) {
+        
+        // Ignore auth issues
+        if (stacktrace.contains(AuthenticationException.class.getName()+": Invalid username or password")) {
+            return true;
+        }
         
         // Ignore all disk space issues, these do not represent bugs.
         if (stacktrace.contains("No space left on device")) {
