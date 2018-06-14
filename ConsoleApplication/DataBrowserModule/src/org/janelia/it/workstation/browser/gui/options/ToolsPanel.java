@@ -9,9 +9,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.prefs.BackingStoreException;
 
 import javax.swing.BoxLayout;

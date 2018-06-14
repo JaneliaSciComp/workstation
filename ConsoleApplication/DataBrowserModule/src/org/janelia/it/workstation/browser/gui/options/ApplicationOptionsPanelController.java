@@ -11,6 +11,7 @@ import org.openide.util.Lookup;
 
 @OptionsPanelController.SubRegistration(
         location = "Core",
+        id = ApplicationOptionsPanelController.ID,
         displayName = "#AdvancedOption_DisplayName_Application",
         keywords = "#AdvancedOption_Keywords_Application",
         keywordsCategory = "Core/Application"
@@ -18,6 +19,9 @@ import org.openide.util.Lookup;
 @org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_Application=Application", "AdvancedOption_Keywords_Application=application memory cache"})
 public final class ApplicationOptionsPanelController extends OptionsPanelController {
 
+    public static final String ID = "org.janelia.it.workstation.browser.gui.options.Application";
+    public static final String PATH = "Core/"+ID;
+    
     private ApplicationPanel panel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private boolean changed;

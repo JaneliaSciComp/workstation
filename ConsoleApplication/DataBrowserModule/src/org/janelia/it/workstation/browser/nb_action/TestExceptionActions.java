@@ -100,6 +100,25 @@ public final class TestExceptionActions extends AbstractAction implements Presen
                 }
             });
             subMenu.add(unexpectedItem2);
+
+            JMenuItem oomTestItem = new JMenuItem("Out of Memory Exception");
+            oomTestItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    throw new OutOfMemoryError("Test");
+                }
+            });
+            subMenu.add(oomTestItem);
+            
+            JMenuItem noSpaceItem = new JMenuItem("No Space Left Exception");
+            noSpaceItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    throw new RuntimeException("No space left on device");
+                }
+            });
+            subMenu.add(noSpaceItem);
+            
         }
         return subMenu;
     }

@@ -5,7 +5,6 @@ import java.beans.PropertyChangeSupport;
 import java.util.prefs.Preferences;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.util.BrandingConfig;
 import org.openide.util.NbPreferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
