@@ -24,6 +24,7 @@ public class FilteredAnnotationModel extends AbstractTableModel {
     }
 
     // boilerplate stuff
+    @Override
     public String getColumnName(int column) {
         return columnNames[column];
     }
@@ -54,7 +55,17 @@ public class FilteredAnnotationModel extends AbstractTableModel {
 
     }
 
+    // find annotation based on ID; returns its row or -1 if not found
+    public int findAnnotation(InterestingAnnotation ann) {
+        for (int row = 0; row < annotations.size(); row++)
+            if (ann.getAnnotationID().equals(annotations.get(row).getAnnotationID())) {
+                return row;
+        }
+        return -1;
+    }
+
     // this needs to be done to get Date column to sort right
+    @Override
     public Class<?> getColumnClass(int column) {
         switch (column) {
             case 0:

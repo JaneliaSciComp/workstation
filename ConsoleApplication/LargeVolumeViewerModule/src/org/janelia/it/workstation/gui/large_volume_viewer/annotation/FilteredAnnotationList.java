@@ -133,6 +133,7 @@ public class FilteredAnnotationList extends JPanel {
                     int modelRow = filteredTable.convertRowIndexToModel(viewRow);
                     if (me.getClickCount() == 1) {
                         InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
+                        table.setRowSelectionInterval(viewRow, viewRow);
                         annoSelectListener.annotationSelected(ann.getAnnotationID());
                     } else if (me.getClickCount() == 2) {
                         // which column?
@@ -215,6 +216,12 @@ public class FilteredAnnotationList extends JPanel {
         // totally brute force; we don't know what updated, so
         //  start from scratch each time
 
+        int savedSelectionRow = filteredTable.getSelectedRow();
+        InterestingAnnotation savedAnn = null;
+        if (savedSelectionRow >= 0) {
+            savedAnn = model.getAnnotationAtRow(filteredTable.convertRowIndexToModel(savedSelectionRow));
+        }
+
         TmWorkspace currentWorkspace = annotationModel.getCurrentWorkspace();
         if (currentWorkspace == null) {
             return;
@@ -237,6 +244,15 @@ public class FilteredAnnotationList extends JPanel {
         }
 
         model.fireTableDataChanged();
+
+        // restore selection
+        if (savedSelectionRow >= 0 && savedAnn != null) {
+            int newRow = model.findAnnotation(savedAnn);
+            if (newRow >= 0) {
+                int viewRow = filteredTable.convertRowIndexToView(newRow);
+                filteredTable.setRowSelectionInterval(viewRow, viewRow);
+            }
+        }
 
         // stopwatch.stop();
         // System.out.println("updated filtered annotation list; elapsed time = " + stopwatch.toString());
@@ -351,8 +367,8 @@ public class FilteredAnnotationList extends JPanel {
         };
 
 
-        // we respond to clicks, but we're not really selecting rows
-        filteredTable.setRowSelectionAllowed(false);
+        filteredTable.setRowSelectionAllowed(true);
+
 
         // custom renderer for date column:
         filteredTable.getColumnModel().getColumn(0).setCellRenderer(new ShortDateRenderer());
