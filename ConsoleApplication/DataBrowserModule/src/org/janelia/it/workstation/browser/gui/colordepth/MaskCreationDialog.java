@@ -185,20 +185,19 @@ public class MaskCreationDialog extends ModalDialog {
             protected void doStuff() throws Exception {
 
                 String uploadPath;
-                if (!mask.equals(originalImage)) {
+                if (mask.equals(originalImage) && !StringUtils.isBlank(originalImagePath)) {
+                    uploadPath = originalImagePath;
+                    log.info("Using existing mask: {}", uploadPath);
+                }
+                else {
                     // Write the mask to disk temporarily
                     // TODO: in the future, the uploader should support byte stream input
                     File tempFile = File.createTempFile("mask", ".png");
                     tempFile.deleteOnExit();
                     ImageIO.write(mask, "png", tempFile);
-                    log.info("Wrote mask to temporary file: "+tempFile);
+                    log.info("Wrote mask to temporary file: {}", tempFile);
                     uploadPath = MaskUtils.uploadMask(tempFile);
-                }
-                else {
-                    if (StringUtils.isBlank(originalImagePath)) {
-                        throw new IllegalStateException("No mask and no image path");
-                    }
-                    uploadPath = originalImagePath;
+                    log.info("Uploaded mask to: ", uploadPath);
                 }
 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
