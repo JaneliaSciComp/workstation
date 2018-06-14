@@ -29,6 +29,7 @@ public class ClientDomainUtils {
      */
     public static boolean isOwner(DomainObject domainObject) {
         if (!AccessManager.loggedIn()) return false;
+        if (domainObject==null) return false;
         return DomainUtils.isOwner(domainObject, AccessManager.getSubjectKey());
     } 
     
@@ -39,6 +40,7 @@ public class ClientDomainUtils {
      */
     public static boolean hasReadAccess(DomainObject domainObject) {
         if (!AccessManager.loggedIn()) return false;
+        if (domainObject==null) return false;
         return DomainUtils.hasReadAccess(domainObject, AccessManager.getReaderSet());
     }
     
@@ -49,6 +51,7 @@ public class ClientDomainUtils {
      */
     public static boolean hasWriteAccess(DomainObject domainObject) {
         if (!AccessManager.loggedIn()) return false;
+        if (domainObject==null) return false;
         return DomainUtils.hasWriteAccess(domainObject, AccessManager.getWriterSet());
     }
     
