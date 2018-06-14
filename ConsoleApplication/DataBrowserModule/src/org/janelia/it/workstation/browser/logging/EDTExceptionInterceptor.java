@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.logging;
 
 import java.awt.AWTEvent;
 import java.awt.EventQueue;
+import java.awt.IllegalComponentStateException;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -31,6 +32,11 @@ public class EDTExceptionInterceptor extends EventQueue {
     }
     
     private boolean isKnownHarmlessIssue(Throwable e) {
+        
+        // NetBeans bug: https://netbeans.org/bugzilla/show_bug.cgi?id=270487
+        if ((e instanceof IllegalComponentStateException) && "component must be showing on the screen to determine its location".equals(e.getMessage())) {
+            return true;
+        }
         
         // JDK bug: http://bugs.java.com/view_bug.do?bug_id=8003398
         if ((e instanceof IllegalArgumentException) && e.getMessage()!=null && "adding a container to a container on a different GraphicsDevice".equalsIgnoreCase(e.getMessage().trim())) {
