@@ -1,5 +1,7 @@
 // 7.12
 
 Workstation Browser
+* Improved performance of Download dialog when many samples are selected for download
 * Added help message when no items are displayed
+* Better handling and error messages when running out of memory 
 * Fixed many minor bugs 

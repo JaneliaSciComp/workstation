@@ -46,6 +46,7 @@ import org.janelia.it.workstation.browser.model.search.SolrSearchResults;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
@@ -53,6 +54,7 @@ import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.interfaces.HasFileGroups;
 import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.NeuronSeparation;
 import org.janelia.model.domain.sample.PipelineResult;
@@ -127,13 +129,28 @@ public final class DownloadWizardAction implements ActionListener {
             @Override
             protected void doStuff() throws Exception {
                                 
+                log.info("Precaching LSMs");
+                List<Reference> lsmRefs = new ArrayList<>();
+                for(DomainObject domainObject : inputObjects) {
+                    if (isCancelled()) return;
+                    if (domainObject instanceof Sample) {
+                        Sample sample = (Sample)domainObject;
+                        lsmRefs.addAll(sample.getLsmReferences());
+                    }
+                }
+                if (!lsmRefs.isEmpty()) {
+                    DomainMgr.getDomainMgr().getModel().getDomainObjectsAs(LSMImage.class, lsmRefs);
+                }
+
+                setProgress(1);
+                
                 log.info("Finding items for download");
                 for(DomainObject domainObject : inputObjects) {
                     if (isCancelled()) return;
                     downloadItems.addAll(addObjectsToExport(new ArrayList<String>(), domainObject));
                 }
                 
-                setProgress(1);
+                setProgress(2);
                 
                 log.info("Got {} download items", downloadItems.size());
                 log.info("Collecting descriptors");
@@ -146,12 +163,12 @@ public final class DownloadWizardAction implements ActionListener {
                 Multiset<ArtifactDescriptor> artifactCounts = DescriptorUtils.getArtifactCounts(domainObjects);
                 Set<ArtifactDescriptor> elementSet = artifactCounts.elementSet();
 
-                setProgress(2);
+                setProgress(3);
                 
                 log.info("Got {} artifact descriptors", elementSet.size());
                 log.info("Finding files");
                 
-                int startIndex = 2;
+                int startIndex = 3;
                 int progressTotal = startIndex + (downloadItems.size() * elementSet.size());
                 
                 artifactFileCounts = new HashMap<>();
@@ -298,7 +315,6 @@ public final class DownloadWizardAction implements ActionListener {
                         countedTypeNames.addAll(typeNames);
                     }
                 }
-                
             }
         }
         
