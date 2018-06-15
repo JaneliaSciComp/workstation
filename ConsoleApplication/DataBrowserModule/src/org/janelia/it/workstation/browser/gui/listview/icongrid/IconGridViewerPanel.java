@@ -125,14 +125,13 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             }
 
             @Override
-            protected void configButtonPressed() {
-                IconGridViewerPanel.this.configButtonPressed();
+            protected void customizeTitlesPressed() {
+                IconGridViewerPanel.this.customizeTitlesPressed();
             }
 
             @Override
             protected void currImageSizeChanged(int imageSize) {
                 imagesPanel.setMaxImageWidth(imageSize);
-                //imagesPanel.recalculateGrid();
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -316,7 +315,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     
     protected abstract JPopupMenu getAnnotationPopupMenu(Annotation annotation);
 
-    protected abstract void configButtonPressed();
+    protected abstract void customizeTitlesPressed();
 
     protected abstract void setMustHaveImage(boolean mustHaveImage);
 
@@ -575,7 +574,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         scrollSelectedObjectsToCenter();
     }
 
-    private void setObjects(List<T> objectList) {
+    protected void setObjects(List<T> objectList) {
         this.objectList = objectList;
         this.objectMap = new HashMap<>();
         for(T object : objectList) {

@@ -509,6 +509,9 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                         }
                             
                         resultsView.refreshEditMode();
+                        
+                        updateStatusBar();
+                        
                         ConcurrentUtils.invokeAndHandleExceptions(success);
                         return null;
                     }

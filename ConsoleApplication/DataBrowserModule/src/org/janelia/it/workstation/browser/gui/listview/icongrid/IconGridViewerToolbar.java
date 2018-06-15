@@ -86,7 +86,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         titlesMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("IconGridViewerToolbar.configButtonPressed");
-                configButtonPressed();
+                customizeTitlesPressed();
             }
         });
         configButton.addMenuItem(titlesMenuItem);
@@ -162,7 +162,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
     protected abstract void showTagsButtonPressed();
 
-    protected abstract void configButtonPressed();
+    protected abstract void customizeTitlesPressed();
     
     protected abstract boolean isMustHaveImage();
     

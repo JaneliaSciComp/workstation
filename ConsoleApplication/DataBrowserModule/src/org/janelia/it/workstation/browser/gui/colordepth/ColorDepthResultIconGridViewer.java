@@ -344,7 +344,7 @@ public class ColorDepthResultIconGridViewer
     protected void deleteKeyPressed() {}
 
     @Override
-    protected void configButtonPressed() {}
+    protected void customizeTitlesPressed() {}
 
     @Override
     protected void setMustHaveImage(boolean mustHaveImage) {}

@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
+import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -12,7 +15,6 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.AnnotationContextMenu;
 import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
@@ -36,6 +38,8 @@ import org.janelia.it.workstation.browser.model.DomainObjectImageModel;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
+import org.janelia.it.workstation.browser.util.ConcurrentUtils;
+import org.janelia.it.workstation.browser.util.HelpTextUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
@@ -61,6 +65,7 @@ public class DomainObjectIconGridViewer
     // UI Components
     private ResultSelectionButton resultButton;
     private ImageTypeSelectionButton typeButton;
+    private final JPanel helpPanel;
     
     // Configuration
     private IconGridViewerConfiguration config;
@@ -136,6 +141,16 @@ public class DomainObjectIconGridViewer
                 
         getToolbar().addCustomComponent(resultButton);
         getToolbar().addCustomComponent(typeButton);
+
+
+        helpPanel = new JPanel();
+        helpPanel.setLayout(new GridBagLayout());
+        JPanel panel = new JPanel();
+        panel.add(new JLabel("<html>All items are hidden by your chosen settings.<br><br>"
+                + "Check your selected result and display settings, such as the '"
+                + HelpTextUtils.getBoldedLabel("Show only items with selected imagery")+"' setting.<br>"
+                + "</html>"));
+        helpPanel.add(panel, new GridBagConstraints());
     }
     
     @Override
@@ -236,6 +251,13 @@ public class DomainObjectIconGridViewer
         add(new JLabel(Icons.getLoadingIcon()));
         updateUI();
     }
+
+    public synchronized void showHelp() {
+        removeAll();
+        add(getToolbar(), BorderLayout.NORTH);
+        add(helpPanel, BorderLayout.CENTER);
+        updateUI();
+    }
     
     @Override
     public void show(AnnotatedObjectList<DomainObject,Reference> objects, final Callable<Void> success) {
@@ -298,17 +320,33 @@ public class DomainObjectIconGridViewer
                 else {
                     domainObjects = domainObjectList.getObjects();
                 }
-                
             }
 
             @Override
             protected void hadSuccess() {
-                showObjects(domainObjects, success);
+                if (!domainObjectList.getObjects().isEmpty() && domainObjects.isEmpty()) {
+                    // There are results. but they're all hidden. In this case, show some guidance for the user.
+                    showHelp();
+                    // Update the state so that methods like getNumItemsHidden() return the correct amount
+                    setObjects(domainObjects);
+                    // Don't forget to invoke the success callback
+                    SwingUtilities.invokeLater(() -> {
+                        if (listener!=null) listener.visibleObjectsChanged();
+                        ConcurrentUtils.invokeAndHandleExceptions(success);
+                    });
+                }
+                else {
+                    showObjects(domainObjects, () -> {
+                        if (listener!=null) listener.visibleObjectsChanged();
+                        ConcurrentUtils.invokeAndHandleExceptions(success);
+                        return null;
+                    });
+                }
             }
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 
@@ -418,12 +456,12 @@ public class DomainObjectIconGridViewer
             }
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 
     @Override
-    protected void configButtonPressed() {
+    protected void customizeTitlesPressed() {
         try {
             if (domainObjectList.getObjects().isEmpty()) return;
 
@@ -443,7 +481,7 @@ public class DomainObjectIconGridViewer
             }
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 
@@ -451,11 +489,7 @@ public class DomainObjectIconGridViewer
     protected void setMustHaveImage(boolean mustHaveImage) {
         try {
             FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
-            refreshView(() -> {
-                if (listener!=null) listener.visibleObjectsChanged();
-                return null;
-            });
-            
+            refreshView(null);
         }
         catch (Exception e) {
             FrameworkImplProvider.handleException(e);
@@ -497,15 +531,16 @@ public class DomainObjectIconGridViewer
             hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), toggle, true);
         } 
         catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
     }
     
     private List<DomainObject> getSelectedObjects() {
         try {
             return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-        }  catch (Exception e) {
-            ConsoleApp.handleException(e);
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleException(e);
             return null;
         }
     }

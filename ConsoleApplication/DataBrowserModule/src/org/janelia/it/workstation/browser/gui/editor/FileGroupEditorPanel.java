@@ -305,7 +305,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
         }
 
         @Override
-        protected void configButtonPressed() {
+        protected void customizeTitlesPressed() {
 
         }
 

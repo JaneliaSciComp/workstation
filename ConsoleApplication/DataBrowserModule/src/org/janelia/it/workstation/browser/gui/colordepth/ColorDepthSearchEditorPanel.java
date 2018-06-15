@@ -210,7 +210,6 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         
         helpPanel = new JPanel();
         helpPanel.setLayout(new GridBagLayout());
-        
         JPanel panel = new JPanel();
         panel.add(new JLabel("<html>You need to add some masks to this search.<br>"
                 + "To do so, right-click any Color Depth Projection and click "+HelpTextUtils.getBoldedLabel("Create Mask for Color Depth Search")+",<br>"

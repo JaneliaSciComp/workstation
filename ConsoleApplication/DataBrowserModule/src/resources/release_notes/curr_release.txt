@@ -1,4 +1,5 @@
 // 7.12
 
 Workstation Browser
+* Added help message when no items are displayed
 * Fixed many minor bugs 
