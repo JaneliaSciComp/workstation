@@ -21,6 +21,7 @@ import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.model.domain.interfaces.HasFilepath;
 import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.interfaces.IsAligned;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.NeuronSeparation;
@@ -45,6 +46,7 @@ public class DownloadFileItem {
     public static final String ATTR_LABEL_RESULT_NAME = "Result Name";
     public static final String ATTR_LABEL_OBJECTIVE = "Objective";
     public static final String ATTR_LABEL_ANATOMICAL_AREA = "Anatomical Area";
+    public static final String ATTR_LABEL_ALIGNMENT_SPACE = "Alignment Space";
     public static final String ATTR_LABEL_FILE_NAME = "File Name";
     public static final String ATTR_LABEL_SAMPLE_NAME = "Sample Name";
     public static final String ATTR_LABEL_EXTENSION = "Extension";
@@ -195,10 +197,18 @@ public class DownloadFileItem {
             log.debug("  {}: {}", ATTR_LABEL_ANATOMICAL_AREA, aaResult.getAnatomicalArea());
         }
 
+        if (fileProvider instanceof IsAligned) {
+            IsAligned aaResult = (IsAligned)fileProvider;
+            keyValues.put(ATTR_LABEL_ALIGNMENT_SPACE, aaResult.getAlignmentSpace());
+            log.debug("  {}: {}", ATTR_LABEL_ALIGNMENT_SPACE, aaResult.getAlignmentSpace());
+        }
+        
         if (fileProvider instanceof PipelineResult) {
             PipelineResult result = (PipelineResult)fileProvider;
             keyValues.put(ATTR_LABEL_GUID, result.getId());
             log.debug("  {}: {}", ATTR_LABEL_GUID, result.getId());
+            keyValues.put(ATTR_LABEL_RESULT_NAME, result.getName());
+            log.debug("  {}: {}", ATTR_LABEL_RESULT_NAME, result.getName());
             String objective = result.getParentRun().getParent().getObjective();
             keyValues.put(ATTR_LABEL_OBJECTIVE, objective);
             log.debug("  {}: {}", ATTR_LABEL_OBJECTIVE, objective);
@@ -211,8 +221,6 @@ public class DownloadFileItem {
         if (domainObject instanceof Sample) {
             keyValues.put(ATTR_LABEL_SAMPLE_NAME, domainObject.getName());
             log.debug("  {}: {}", ATTR_LABEL_SAMPLE_NAME, domainObject.getName());
-            keyValues.put(ATTR_LABEL_RESULT_NAME, resultName);
-            log.debug("  {}: {}", ATTR_LABEL_RESULT_NAME, resultName);
         }
         else if (domainObject instanceof LSMImage) {
             List<DomainObject> mapped = DomainModelViewUtils.map(domainObject, MappingType.Sample);
