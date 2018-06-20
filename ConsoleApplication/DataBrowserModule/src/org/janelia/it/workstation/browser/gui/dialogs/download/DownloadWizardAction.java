@@ -46,7 +46,6 @@ import org.janelia.it.workstation.browser.model.search.SolrSearchResults;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;

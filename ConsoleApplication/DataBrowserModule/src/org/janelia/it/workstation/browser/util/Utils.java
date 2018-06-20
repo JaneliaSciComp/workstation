@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -669,7 +670,7 @@ public class Utils {
                     if ((totalBytesWritten - totalBytesWrittenAtLastStatusUpdate) > TEN_MEGABYTES) {
    
                         totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
-    
+
                         if (totalBytesWritten < estimatedLength) {
                             worker.setProgress(totalBytesWritten, estimatedLength);
                         }
@@ -702,15 +703,19 @@ public class Utils {
             String amountUnits;
             if (totalBytesWritten > ONE_GIGABYTE) {
                 amountWritten = divideAndScale(totalBytesWritten, ONE_GIGABYTE, 1);
-                amountUnits = " gigabytes in ";
-            } else if (totalBytesWritten > ONE_MEGABYTE) {
-                amountWritten = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1);
-                amountUnits = " megabytes in ";
-            } else {
-                amountWritten = divideAndScale(totalBytesWritten, ONE_KILOBYTE, 1);
-                amountUnits = " kilobytes in ";
+                amountUnits = "Gb";
             }
-            log.info("copy: wrote " + amountWritten + amountUnits + elapsedSeconds + " seconds");
+            else if (totalBytesWritten > ONE_MEGABYTE) {
+                amountWritten = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1);
+                amountUnits = "Mb";
+            } 
+            else {
+                amountWritten = divideAndScale(totalBytesWritten, ONE_KILOBYTE, 1);
+                amountUnits = "Kb";
+            }
+            
+            BigDecimal mbps = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1).divide(elapsedSeconds, 2, RoundingMode.HALF_UP);
+            log.info("Wrote {} {} in {} seconds ({} Mbps)", amountWritten, amountUnits, elapsedSeconds, mbps);
         }
 
         return totalBytesWritten;

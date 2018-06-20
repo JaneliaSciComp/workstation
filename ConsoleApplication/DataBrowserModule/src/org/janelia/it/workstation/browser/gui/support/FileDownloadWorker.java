@@ -269,7 +269,10 @@ public class FileDownloadWorker {
     }
 
     private void copyFile(String remoteFile, File localFile, BackgroundWorker worker, boolean hasProgress) throws Exception {
-        if (hasProgress && worker!=null) worker.setStatus("Waiting to download...");
+        if (hasProgress && worker!=null) {
+            worker.setProgress(0, 100);
+            worker.setStatus("Waiting to download...");
+        }
         copyFileLock.lock();
         try {
             if (hasProgress && worker!=null) worker.setStatus("Downloading " + new File(remoteFile).getName());
