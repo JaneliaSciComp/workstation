@@ -439,6 +439,7 @@ public final class DownloadWizardAction implements ActionListener {
             @Override
             protected void doStuff() throws Exception {
                 
+                // Check all files to see if they have already been downloaded
                 while (!toCheck.isEmpty()) {
                     downloadItem = toCheck.remove();
                     setProgress(totalToCheck - toCheck.size(), totalToCheck);
@@ -464,10 +465,6 @@ public final class DownloadWizardAction implements ActionListener {
                         if (applyToAllChoice==1) {
                             // Just download the rest
                             toDownload.addAll(toCheck);
-                            toCheck.clear();
-                        }
-                        else if (applyToAllChoice==2) {
-                            // Just ignore the rest
                             toCheck.clear();
                         }
                     }
