@@ -575,7 +575,7 @@ public class Utils {
             worker.throwExceptionIfCancelled();
         }
         
-        log.info("copyURLToFile: entry, standardPath={}, destination={}", standardPath, destination);
+        log.trace("copyURLToFile: standardPath={}, destination={}", standardPath, destination);
 
         final File destinationDir = destination.getParentFile();
         if ((destinationDir != null) && (! destinationDir.exists())) {
@@ -703,19 +703,19 @@ public class Utils {
             String amountUnits;
             if (totalBytesWritten > ONE_GIGABYTE) {
                 amountWritten = divideAndScale(totalBytesWritten, ONE_GIGABYTE, 1);
-                amountUnits = "Gb";
+                amountUnits = "GB";
             }
             else if (totalBytesWritten > ONE_MEGABYTE) {
                 amountWritten = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1);
-                amountUnits = "Mb";
+                amountUnits = "MB";
             } 
             else {
                 amountWritten = divideAndScale(totalBytesWritten, ONE_KILOBYTE, 1);
-                amountUnits = "Kb";
+                amountUnits = "KB";
             }
             
-            BigDecimal mbps = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1).divide(elapsedSeconds, 2, RoundingMode.HALF_UP);
-            log.info("Wrote {} {} in {} seconds ({} Mbps)", amountWritten, amountUnits, elapsedSeconds, mbps);
+            BigDecimal mbs = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1).divide(elapsedSeconds, 2, RoundingMode.HALF_UP);
+            log.info("Wrote {} {} in {} seconds ({} MB/s)", amountWritten, amountUnits, elapsedSeconds, mbs);
         }
 
         return totalBytesWritten;

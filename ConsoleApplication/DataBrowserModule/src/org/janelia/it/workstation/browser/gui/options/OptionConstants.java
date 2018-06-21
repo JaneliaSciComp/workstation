@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.browser.gui.options;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -21,10 +23,17 @@ public class OptionConstants {
     public static final String USE_RUN_AS_USER_PREFERENCES = "useRunAsUserPreferences";
     public static final String FILE_CACHE_DISABLED_PROPERTY = "console.localCache.disabled";
     public static final String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
-    /**
-     * @deprecated use FILE_DOWNLOADS_DIR
-     */
-    public static final String DOWNLOADS_DIR = "DownloadsDir";
+    public static final String NUM_CONCURRENT_DOWNLOADS_PROPERTY = "console.concurrent.downloads";
     public static final String FILE_DOWNLOADS_DIR = "FileDownloadsDir";
+    
+    public static final Integer NUM_CONCURRENT_DOWNLOADS_DEFAULT = 1;
 
+    public static Integer getNumConcurrentDownloads() {
+        Integer value = (Integer) FrameworkImplProvider.getModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY);
+        if (value==null) {
+            value = NUM_CONCURRENT_DOWNLOADS_DEFAULT;
+        }
+        return value;
+    }
+    
 }

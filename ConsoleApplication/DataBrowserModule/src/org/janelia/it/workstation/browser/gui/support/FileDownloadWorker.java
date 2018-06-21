@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,16 +47,17 @@ public class FileDownloadWorker {
     
     private final Path downloadsDir = SystemInfo.getDownloadsDir();
     private final Collection<DownloadFileItem> downloadItems;
-    private final Lock copyFileLock;
+//    private final Lock copyFileLock;
+    private final Semaphore copySemaphore;
     private Multiset<String> parentDirs = HashMultiset.create();
     
-    public FileDownloadWorker(Collection<DownloadFileItem> downloadItems, Lock copyFileLock) {
+    public FileDownloadWorker(Collection<DownloadFileItem> downloadItems, Semaphore copySemaphore) {
         this.downloadItems = downloadItems;
-        this.copyFileLock = copyFileLock;
+        this.copySemaphore = copySemaphore;
     }
     
-    public FileDownloadWorker(DownloadFileItem downloadItem, Lock copyFileLock) {
-        this(Arrays.asList(downloadItem), copyFileLock);
+    public FileDownloadWorker(DownloadFileItem downloadItem, Semaphore copySemaphore) {
+        this(Arrays.asList(downloadItem), copySemaphore);
     }
 
     public void startDownload() {
@@ -273,13 +274,13 @@ public class FileDownloadWorker {
             worker.setProgress(0, 100);
             worker.setStatus("Waiting to download...");
         }
-        copyFileLock.lock();
+        copySemaphore.acquire();
         try {
             if (hasProgress && worker!=null) worker.setStatus("Downloading " + new File(remoteFile).getName());
             Utils.copyURLToFile(remoteFile, localFile, worker, hasProgress);
         } 
         finally {
-            copyFileLock.unlock();
+            copySemaphore.release();
         }
     }
         

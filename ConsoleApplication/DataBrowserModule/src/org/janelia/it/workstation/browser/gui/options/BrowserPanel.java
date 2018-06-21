@@ -1,10 +1,6 @@
 package org.janelia.it.workstation.browser.gui.options;
 
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.UNLOAD_IMAGES_PROPERTY;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.*;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -13,9 +9,11 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JCheckBox;
 import javax.swing.JSlider;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImagesPanel;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
@@ -34,6 +32,24 @@ final class BrowserPanel extends javax.swing.JPanel {
     private JCheckBox allowDuplicateAnnotations;
     private JCheckBox showAnnotationTables;
     private JSlider annotationTableHeight;
+    private JTextField concurrentDownloadsField;
+
+    DocumentListener listener = new DocumentListener() {
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            controller.changed();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            controller.changed();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            controller.changed();
+        }
+    };
     
     BrowserPanel(BrowserOptionsPanelController controller) {
         this.controller = controller;
@@ -75,9 +91,7 @@ final class BrowserPanel extends javax.swing.JPanel {
         if (FrameworkImplProvider.getModelProperty(UNLOAD_IMAGES_PROPERTY) == null) {
             FrameworkImplProvider.setModelProperty(UNLOAD_IMAGES_PROPERTY, Boolean.FALSE);
         }
-        else {
-            unloadImagesCheckbox.setSelected((Boolean) FrameworkImplProvider.getModelProperty(UNLOAD_IMAGES_PROPERTY));
-        }
+        unloadImagesCheckbox.setSelected((Boolean) FrameworkImplProvider.getModelProperty(UNLOAD_IMAGES_PROPERTY));
 
         mainPanel.addItem(unloadImagesCheckbox);
 
@@ -94,9 +108,7 @@ final class BrowserPanel extends javax.swing.JPanel {
         if (FrameworkImplProvider.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY) == null) {
             FrameworkImplProvider.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, Boolean.FALSE);
         }
-        else {
-            disableImageDrag.setSelected((Boolean) FrameworkImplProvider.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY));
-        }
+        disableImageDrag.setSelected((Boolean) FrameworkImplProvider.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY));
 
         mainPanel.addItem(disableImageDrag);
 
@@ -112,27 +124,21 @@ final class BrowserPanel extends javax.swing.JPanel {
         if (FrameworkImplProvider.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY) == null) {
             FrameworkImplProvider.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, Boolean.FALSE);
         }
-        else {
-            allowDuplicateAnnotations.setSelected((Boolean) FrameworkImplProvider.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY));
-        }
-
+        allowDuplicateAnnotations.setSelected((Boolean) FrameworkImplProvider.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY));
+     
         mainPanel.addItem(allowDuplicateAnnotations);
         
         // Use Annotation Tables
         
         showAnnotationTables = new JCheckBox();
         showAnnotationTables.setText("Show annotations in a table instead of a tag cloud");
-        showAnnotationTables.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                controller.changed();
-            }
+        showAnnotationTables.addActionListener((e) -> {
+            controller.changed();
         });
         if (FrameworkImplProvider.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY) == null) {
             FrameworkImplProvider.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, Boolean.FALSE);
         }
-        else {
-            showAnnotationTables.setSelected((Boolean) FrameworkImplProvider.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
-        }
+        showAnnotationTables.setSelected((Boolean) FrameworkImplProvider.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
 
         mainPanel.addItem(showAnnotationTables);
 
@@ -141,53 +147,84 @@ final class BrowserPanel extends javax.swing.JPanel {
         annotationTableHeight = new JSlider(ImagesPanel.MIN_TABLE_HEIGHT, ImagesPanel.MAX_TABLE_HEIGHT, ImagesPanel.DEFAULT_TABLE_HEIGHT);
         annotationTableHeight.putClientProperty("Slider.paintThumbArrowShape", Boolean.TRUE);
         annotationTableHeight.setMaximumSize(new Dimension(300, Integer.MAX_VALUE));
-        annotationTableHeight.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                controller.changed();
-            }
+        annotationTableHeight.addChangeListener((e) -> {
+            controller.changed();
         });
 
         if (FrameworkImplProvider.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY) == null) {
             FrameworkImplProvider.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
         }
-        else {
-            annotationTableHeight.setValue((Integer) FrameworkImplProvider.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));
-        }
+        annotationTableHeight.setValue((Integer) FrameworkImplProvider.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));
 
         mainPanel.addItem("Annotation table height", annotationTableHeight);
+        
+        // Concurrent downloads
+        
+        this.concurrentDownloadsField = new JTextField(10);
+        concurrentDownloadsField.getDocument().addDocumentListener(listener);
+
+        if (FrameworkImplProvider.getModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY) == null) {
+            FrameworkImplProvider.setModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY, NUM_CONCURRENT_DOWNLOADS_DEFAULT);
+        }
+        concurrentDownloadsField.setText(FrameworkImplProvider.getModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY).toString());
+
+        mainPanel.addItem("Concurrent downloads", concurrentDownloadsField);
     }
 
     void store() {
 
         if (unloadImagesCheckbox.isSelected() != (Boolean) FrameworkImplProvider.getModelProperty(UNLOAD_IMAGES_PROPERTY)) {
-            log.info("Saving unload images setting: "+unloadImagesCheckbox.isSelected());
+            log.info("Saving unload images setting: {}", unloadImagesCheckbox.isSelected());
             FrameworkImplProvider.setModelProperty(UNLOAD_IMAGES_PROPERTY, unloadImagesCheckbox.isSelected());
         }
 
         if (disableImageDrag.isSelected() != (Boolean) FrameworkImplProvider.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY)) {
-            log.info("Saving disable image drag: "+disableImageDrag.isSelected());
+            log.info("Saving disable image drag: {}", disableImageDrag.isSelected());
             FrameworkImplProvider.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, disableImageDrag.isSelected());
         }
 
         if (allowDuplicateAnnotations.isSelected() != (Boolean) FrameworkImplProvider.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY)) {
-            log.info("Saving allow annotation duplicates: "+allowDuplicateAnnotations.isSelected());
+            log.info("Saving allow annotation duplicates: {}", allowDuplicateAnnotations.isSelected());
             FrameworkImplProvider.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, allowDuplicateAnnotations.isSelected());
         }
         
         if (showAnnotationTables.isSelected() != (Boolean) FrameworkImplProvider.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY)) {
-            log.info("Saving show annotation tables: "+showAnnotationTables.isSelected());
+            log.info("Saving show annotation tables: {}", showAnnotationTables.isSelected());
             FrameworkImplProvider.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, showAnnotationTables.isSelected());
         }
 
         if (annotationTableHeight.getValue() != (Integer) FrameworkImplProvider.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY)) {
-            log.info("Saving annotation table height: "+annotationTableHeight.getValue());
+            log.info("Saving annotation table height: {}", annotationTableHeight.getValue());
             FrameworkImplProvider.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, annotationTableHeight.getValue());
+        }
+        
+        Integer numConcurrentDownloads = NUM_CONCURRENT_DOWNLOADS_DEFAULT;
+        
+        try {
+            String concurrentDownloadsStr = concurrentDownloadsField.getText();
+            if (!StringUtils.isBlank(concurrentDownloadsStr)) {
+                numConcurrentDownloads = new Integer(concurrentDownloadsStr);
+            }
+        }
+        catch (NumberFormatException e) {
+            log.warn("Cannot parse num concurrent downloads input as integer", e);
+        }
+
+        if (numConcurrentDownloads != (Integer) FrameworkImplProvider.getModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY)) {
+            log.info("Saving num concurrent downloads: {}", numConcurrentDownloads);
+            FrameworkImplProvider.setModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY, numConcurrentDownloads);
         }
     }
 
     boolean valid() {
-        // TODO check whether form is consistent and complete
+        try {
+            if (!StringUtils.isBlank(concurrentDownloadsField.getText())) {
+                Integer.parseInt(concurrentDownloadsField.getText());
+            }
+        }
+        catch (NumberFormatException e) {
+            return false;
+        }
         return true;
     }
 

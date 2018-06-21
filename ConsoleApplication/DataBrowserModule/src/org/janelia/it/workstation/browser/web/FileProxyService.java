@@ -89,7 +89,7 @@ public class FileProxyService extends AbstractHandler {
             wfile = new WorkstationFile(standardPath);
             
             // Read from WebDav
-            wfile.get("HEAD".equals(method));
+            wfile.get("HEAD".equals(method), true);
             if (wfile.getStatusCode()!=null) {
                 response.setStatus(wfile.getStatusCode());
             }

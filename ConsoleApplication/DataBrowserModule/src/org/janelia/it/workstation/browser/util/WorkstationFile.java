@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.net.URL;
 
 import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
@@ -38,11 +37,11 @@ public class WorkstationFile {
     }
     
     public void get() throws Exception {
-        get(false, true);
+        get(false);
     }
 
     public void get(boolean headOnly) throws Exception {
-        get(headOnly, true);
+        get(headOnly, false);
     }
     
     public void get(boolean headOnly, boolean cache) throws Exception {

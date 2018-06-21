@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 
 import javax.swing.JCheckBox;
@@ -36,6 +35,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.gui.support.FileDownloadWorker;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
@@ -93,12 +93,13 @@ public final class DownloadWizardAction implements ActionListener {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadWizardAction.class);
 
+    private static final int MAX_CONCURRENT_DOWNLOADS = OptionConstants.getNumConcurrentDownloads();
+    
     private ArtifactDescriptor defaultResultDescriptor;
     private List<? extends DomainObject> inputObjects;
     private List<DownloadObject> downloadItems = new ArrayList<>();
     private Map<ArtifactDescriptor,Multiset<FileType>> artifactFileCounts;
-
-    private static final Lock COPY_FILE_LOCK = new ReentrantLock();
+    private static final Semaphore COPY_SEMAPHORE = new Semaphore(MAX_CONCURRENT_DOWNLOADS);
     private static final int MAX_BROWSE_FILES = 10;
     private Integer applyToAllChoice;
     private int numBrowseFileAttempts = 0;
@@ -483,7 +484,7 @@ public final class DownloadWizardAction implements ActionListener {
                 }
                 else {
                     if (!toDownload.isEmpty()) {
-                        FileDownloadWorker worker = new FileDownloadWorker(toDownload, COPY_FILE_LOCK);
+                        FileDownloadWorker worker = new FileDownloadWorker(toDownload, COPY_SEMAPHORE);
                         worker.startDownload();
                     }
                     else {

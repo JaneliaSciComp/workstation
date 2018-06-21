@@ -72,7 +72,7 @@ public class LocalFileLoader {
             }
 
         } else {
-            LOG.info("no unregistered files found in local cache");
+            LOG.debug("no unregistered files found in local cache");
         }
 
         return locallyCachedFiles;

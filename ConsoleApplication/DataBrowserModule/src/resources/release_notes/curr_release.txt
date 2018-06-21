@@ -2,9 +2,10 @@
 
 Workstation Browser
 * Improved performance of Download dialog when many samples are selected for download
-* Added {Alignment Space} and {Result Name} for downloads
-* Improved performance of file downloads
-* Added help message when no items are displayed
+* Greatly improved performance of large file downloads
+* Added option for concurrent file downloads
+* Added {Alignment Space} and {Result Name} for file naming
 * Better handling and error messages when running out of memory
+* Added help message when no items are displayed
 * Fixed issue with Filter reload after using Save As
 * Fixed many minor bugs 
