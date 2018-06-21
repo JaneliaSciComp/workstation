@@ -91,7 +91,15 @@ public class FileDownloadWorker {
             }
         }
 
-        log.info("Will convert and download {} files, and directly download {} files.", toConvertOnServer.size(), toTransfer.size());
+        if (toConvertOnServer.isEmpty()) {
+            log.info("Will directly download {} files.", toTransfer.size());
+        }
+        else if (toTransfer.isEmpty()) {
+            log.info("Will convert and download {} files.", toConvertOnServer.size());
+        }
+        else {
+            log.info("Will convert and download {} files, and directly download {} files.", toConvertOnServer.size(), toTransfer.size());
+        }
         
         for(DownloadFileItem downloadItem : toConvertOnServer) {
 
@@ -244,8 +252,18 @@ public class FileDownloadWorker {
                     return getDownloadSuccessCallback();
                 }
             };
-    
+
+            transferWorker.setName(createName(toTransfer));
             transferWorker.executeWithEvents();
+        }
+    }
+    
+    private String createName(List<DownloadFileItem> toTransfer) {
+        if (toTransfer.size()==1) {
+            return toTransfer.get(0).getTargetFile().getFileName().toString();
+        }
+        else {
+            return "Download "+ toTransfer.size() +" items";
         }
     }
 
