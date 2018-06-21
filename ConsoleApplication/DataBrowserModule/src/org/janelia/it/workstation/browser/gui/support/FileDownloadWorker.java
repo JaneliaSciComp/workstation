@@ -47,7 +47,6 @@ public class FileDownloadWorker {
     
     private final Path downloadsDir = SystemInfo.getDownloadsDir();
     private final Collection<DownloadFileItem> downloadItems;
-//    private final Lock copyFileLock;
     private final Semaphore copySemaphore;
     private Multiset<String> parentDirs = HashMultiset.create();
     

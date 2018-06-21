@@ -62,7 +62,7 @@ public class DownloadFileItem {
     
     // Derived state
     private String errorMessage;
-    private String resultName;
+   
     private String sourceFile;
     private String targetRelativePath;
     private Path targetLocalPath;
@@ -86,7 +86,6 @@ public class DownloadFileItem {
         this.fileProvider = fileProvider;
         this.splitChannels = splitChannels;
         this.errorMessage = null;
-        this.resultName = null;
         this.targetLocalPath = null;
         this.is3d = fileType.is3dImage();
         

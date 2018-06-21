@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.browser.gui.options;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -27,13 +25,5 @@ public class OptionConstants {
     public static final String FILE_DOWNLOADS_DIR = "FileDownloadsDir";
     
     public static final Integer NUM_CONCURRENT_DOWNLOADS_DEFAULT = 1;
-
-    public static Integer getNumConcurrentDownloads() {
-        Integer value = (Integer) FrameworkImplProvider.getModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY);
-        if (value==null) {
-            value = NUM_CONCURRENT_DOWNLOADS_DEFAULT;
-        }
-        return value;
-    }
     
 }

@@ -1,13 +1,21 @@
 package org.janelia.it.workstation.browser.gui.options;
 
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.*;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.NUM_CONCURRENT_DOWNLOADS_DEFAULT;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.UNLOAD_IMAGES_PROPERTY;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
@@ -162,13 +170,13 @@ final class BrowserPanel extends javax.swing.JPanel {
         
         this.concurrentDownloadsField = new JTextField(10);
         concurrentDownloadsField.getDocument().addDocumentListener(listener);
-
-        if (FrameworkImplProvider.getModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY) == null) {
-            FrameworkImplProvider.setModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY, NUM_CONCURRENT_DOWNLOADS_DEFAULT);
-        }
-        concurrentDownloadsField.setText(FrameworkImplProvider.getModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY).toString());
-
-        mainPanel.addItem("Concurrent downloads", concurrentDownloadsField);
+        concurrentDownloadsField.setText(BrowserOptions.getInstance().getNumConcurrentDownloads()+"");
+        JPanel concurrentDownloadPanel = new JPanel();
+        concurrentDownloadPanel.setLayout(new BoxLayout(concurrentDownloadPanel, BoxLayout.X_AXIS));
+        concurrentDownloadPanel.add(concurrentDownloadsField);
+        concurrentDownloadPanel.add(new JLabel(" (requires restart)"));
+        
+        mainPanel.addItem("Concurrent downloads", concurrentDownloadPanel);
     }
 
     void store() {
@@ -199,7 +207,6 @@ final class BrowserPanel extends javax.swing.JPanel {
         }
         
         Integer numConcurrentDownloads = NUM_CONCURRENT_DOWNLOADS_DEFAULT;
-        
         try {
             String concurrentDownloadsStr = concurrentDownloadsField.getText();
             if (!StringUtils.isBlank(concurrentDownloadsStr)) {
@@ -210,10 +217,7 @@ final class BrowserPanel extends javax.swing.JPanel {
             log.warn("Cannot parse num concurrent downloads input as integer", e);
         }
 
-        if (numConcurrentDownloads != (Integer) FrameworkImplProvider.getModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY)) {
-            log.info("Saving num concurrent downloads: {}", numConcurrentDownloads);
-            FrameworkImplProvider.setModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY, numConcurrentDownloads);
-        }
+        BrowserOptions.getInstance().setNumConcurrentDownloads(numConcurrentDownloads);
     }
 
     boolean valid() {
