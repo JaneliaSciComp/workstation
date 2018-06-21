@@ -483,8 +483,11 @@ public final class DownloadWizardAction implements ActionListener {
                 else {
                     if (!toDownload.isEmpty()) {
                      
+                        log.info("Will download {} items with a max of {} workers", toDownload.size(), MAX_CONCURRENT_DOWNLOADS);
+                        
                         // Start a worker for each concurrent download
-                        for(List<DownloadFileItem> sublist : Lists.partition(toDownload, MAX_CONCURRENT_DOWNLOADS)) {
+                        int sublistSize = (int)Math.ceil((double)toDownload.size() / (double)MAX_CONCURRENT_DOWNLOADS);
+                        for(List<DownloadFileItem> sublist : Lists.partition(toDownload, sublistSize)) {
                             FileDownloadWorker worker = new FileDownloadWorker(sublist, COPY_SEMAPHORE);
                             worker.startDownload();
                         }
