@@ -5,3 +5,7 @@ Workstation Browser
 * Added help message when no items are displayed
 * Better handling and error messages when running out of memory 
 * Fixed many minor bugs 
+
+Large Volume Viewer
+* Added visible selection to annotation list
+
