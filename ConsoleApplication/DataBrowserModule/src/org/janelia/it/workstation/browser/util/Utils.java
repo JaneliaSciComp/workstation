@@ -612,8 +612,9 @@ public class Utils {
             }
 
             FileOutputStream output = new FileOutputStream(destination);
+            
             try {
-                final long totalBytesWritten = copy(input, output, length==null?100:length, worker, estimatedCompressionFactor, hasProgress);
+                final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
                 if (length != null && totalBytesWritten < length) {
                     throw new IOException("bytes written (" + totalBytesWritten + ") for " + wfile.getEffectiveURL() +
                                           " is less than source length (" + length + ")");
@@ -632,7 +633,7 @@ public class Utils {
     /**
      * Adapted from Apache's commons-io, so that we could add progress percentage and status.
      */
-    private static long copy(InputStream input, OutputStream output, long length,
+    private static long copy(InputStream input, FileOutputStream output, Long length,
                              SimpleWorker worker, int estimatedCompressionFactor, 
                              boolean hasProgress) throws IOException {
 
@@ -651,39 +652,61 @@ public class Utils {
         }
 
         final long startTime = System.currentTimeMillis();
-        final long estimatedLength = estimatedCompressionFactor * length;
-
-        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-        int bytesRead;
+        final long estimatedLength = length == null ? 1 : estimatedCompressionFactor * length;
         long totalBytesWritten = 0;
-        long totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
         long totalMegabytesWritten;
-        while (-1 != (bytesRead = input.read(buffer))) {
+        
+        if (length != null) {
+            // 30 MB/s on Windows (Windows to NAS)
+            ReadableByteChannel inc = Channels.newChannel(input);
+            totalBytesWritten = output.getChannel().transferFrom(inc, 0, length);
+        }
+        else {
+            log.warn("No length given, using inefficient file copy method");
 
-            output.write(buffer, 0, bytesRead);
-            totalBytesWritten += bytesRead;
-
-            if (worker != null) {
-                worker.throwExceptionIfCancelled();
-
-                if (hasProgress) {
-                    if ((totalBytesWritten - totalBytesWrittenAtLastStatusUpdate) > TEN_MEGABYTES) {
-   
-                        totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
-
-                        if (totalBytesWritten < estimatedLength) {
-                            worker.setProgress(totalBytesWritten, estimatedLength);
-                        }
+            // 30-35 MB/s (Windows to NAS)
+//          ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
+//            int numRead = 0;
+//            long totalBytesWritten = 0; 
+//            while (numRead >= 0) {
+//                buffer.rewind();
+//                numRead = inc.read(buffer);
+//                buffer.rewind();
+//                totalBytesWritten += output.getChannel().write(buffer);
+//            }
+            
+            // 10-15 MB/s (Windows to NAS)
+            
+            byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+            int bytesRead;
+            long totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
+            while (-1 != (bytesRead = input.read(buffer))) {
     
-                        if (backgroundWorker != null) {
-                            totalMegabytesWritten = totalBytesWritten / ONE_MEGABYTE;
-                            backgroundWorker.setStatus(backgroundStatus + totalMegabytesWritten + " Mb written)");
+                output.write(buffer, 0, bytesRead);
+                totalBytesWritten += bytesRead;
+    
+                if (worker != null) {
+                    worker.throwExceptionIfCancelled();
+    
+                    if (hasProgress) {
+                        if ((totalBytesWritten - totalBytesWrittenAtLastStatusUpdate) > TEN_MEGABYTES) {
+       
+                            totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
+    
+                            if (totalBytesWritten < estimatedLength) {
+                                worker.setProgress(totalBytesWritten, estimatedLength);
+                            }
+        
+                            if (backgroundWorker != null) {
+                                totalMegabytesWritten = totalBytesWritten / ONE_MEGABYTE;
+                                backgroundWorker.setStatus(backgroundStatus + totalMegabytesWritten + " Mb written)");
+                            }
                         }
                     }
                 }
             }
         }
-
+        
         if (worker != null) {
 
             if (hasProgress) {
