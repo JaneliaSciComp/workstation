@@ -8,4 +8,4 @@ Workstation Browser
 
 Large Volume Viewer
 * Added visible selection to annotation list
-
+* Added preferences in LVV and Horta to make it optional to use shift key to annotate
