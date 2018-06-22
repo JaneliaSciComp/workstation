@@ -9,3 +9,7 @@ Workstation Browser
 * Added help message when no items are displayed
 * Fixed issue with Filter reload after using Save As
 * Fixed many minor bugs 
+
+Large Volume Viewer
+* Added visible selection to annotation list
+* Added preferences in LVV and Horta to make it optional to use shift key to annotate

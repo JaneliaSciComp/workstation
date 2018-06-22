@@ -32,6 +32,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationM
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
@@ -131,22 +132,27 @@ implements MouseMode, KeyListener
 	}
 	
 	private void onMouseActuallyClicked(MouseEvent event) {
-		// Only want left/near clicks with SHIFT down
-		// BUTTON1 is near-click for both left and right handed mice (right?)
-		if ((event.getButton() == MouseEvent.BUTTON1) && event.isShiftDown()) {
-			// Place new anchor
-			Vec3 xyz = worldFromPixel(event.getPoint());
-			// System.out.println("Trace click "+xyz);
-            
-            // TODO - nudge location to voxel center
-            TraceMode.startTimer();
-			appendAnchor(xyz);
-		}
-		else if (event.getButton() == MouseEvent.BUTTON1) {
-			if (hoverAnchor != null) {
-				controller.setNextParent(hoverAnchor);
-			}
-		}
+        // we don't use other button or middle button for tracing
+        if (event.getButton() == MouseEvent.BUTTON1) {
+            // regardless of how you shift-click or click, or your settings,
+            //  clicking an anchor always sets next parent (old behavior: could put
+            //  a point on top of another, which we don't want)
+            if (hoverAnchor != null) {
+                controller.setNextParent(hoverAnchor);
+            } else {
+                // original behavior: shift-click to annotate; new behavior (2018):
+                //  shift not required to annotate; check preference for which:
+                if (ApplicationPanel.getAnnotationClickMode().equals(ApplicationPanel.CLICK_MODE_SHIFT_LEFT_CLICK)
+                        && !event.isShiftDown()) {
+                    // require shift but don't have shift = no annotation for you
+                    return;
+                }
+                // finally we're cleared to annotate
+                Vec3 xyz = worldFromPixel(event.getPoint());
+                TraceMode.startTimer();
+                appendAnchor(xyz);
+            }
+        }
 	}
 	
 	@Override

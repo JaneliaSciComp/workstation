@@ -51,6 +51,7 @@ import java.util.Observer;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.prefs.Preferences;
 
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
@@ -91,12 +92,14 @@ import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
+import org.janelia.horta.options.TileLoadingPanel;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
+import org.openide.util.NbPreferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -296,45 +299,45 @@ public class TracingInteractor extends MouseAdapter
     // Mouse clicking for recentering, selection, and tracing
     @Override
     public void mouseClicked(MouseEvent event) {
-        // System.out.println("Mouse clicked in tracer");
-        long clickTime = System.nanoTime();
-        
         // Cache the current state, in case subsequent asynchronous changes occur to hoveredDensity etc.
         InteractorContext context = createContext();
-        
-        // single click on primary (left) button
+
+        // single click on primary (usually left) button
         if ( (event.getClickCount() == 1) && (event.getButton() == MouseEvent.BUTTON1) )
         {
-            // Shift-clicking might add a new vertex to the neuron model
-            if (event.isShiftDown()) { // Hold down shift to build neurons
-                if (context.canAppendVertex()) {
-                    context.appendVertex();
-                    long appendedTime = System.nanoTime();
-                    double elapsed = (appendedTime - clickTime) / 1.0e6;
-                    // System.out.println("Append took " + elapsed + "milliseconds"); // 1200 ms -- way too long
+            // bare click on a point = select, always
+            if (volumeProjection.isNeuronModelAt(event.getPoint()) && !event.isShiftDown() 
+                && context.canSelectParent()) {
+                    context.selectParent();
+            } else {
+                Preferences pref = NbPreferences.forModule(TileLoadingPanel.class);
+                String clickMode = pref.get(TileLoadingPanel.PREFERENCE_ANNOTATIONS_CLICK_MODE,
+                    TileLoadingPanel.PREFERENCE_ANNOTATIONS_CLICK_MODE_DEFAULT);
+
+                // first, the new mode:
+                if (clickMode.equals(TileLoadingPanel.CLICK_MODE_LEFT_CLICK)) {
+                    if (context.canAppendVertex()) {
+                        context.appendVertex();
+                        return;
+                    }                      
+                } 
+                
+                // everything else requires a shift
+                if (event.isShiftDown()) {
+                    // another chance to add a point
+                    if (context.canAppendVertex()) {
+                        context.appendVertex();
+                    } else if (context.canMergeNeurite()) { // Maybe merge two neurons
+                        context.mergeNeurites();
+                        }
+                    else if (context.canCreateNeuron()) {
+                        context.createNeuron();
+                    }
+                    else {
+                        // TODO: What happens if you shift click on a readOnly workspace?
+                    }
                 }
-                else if (context.canMergeNeurite()) { // Maybe merge two neurons
-                    context.mergeNeurites();
-                }
-                else if (context.canCreateNeuron()) {
-                    context.createNeuron();
-                }
-                else {
-                    // TODO: What happens if you shift click on a readOnly workspace?
-                }
-            }
-            else { // Non-shift click to select vertices
-                // Click on highlighted vertex to make it the next parent
-                if (volumeProjection.isNeuronModelAt(event.getPoint())) {
-                    if (context.canSelectParent())
-                        context.selectParent();
-                }
-                // Click away from existing neurons to clear parent point
-                else {
-                    // User requested not to unselect parent March 2016
-                    // clearParentVertexAndNotify();
-                }
-            }
+            }        
         }
     }
     
