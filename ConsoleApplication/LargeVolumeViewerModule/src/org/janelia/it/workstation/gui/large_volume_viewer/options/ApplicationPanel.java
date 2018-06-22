@@ -31,9 +31,9 @@ public class ApplicationPanel extends javax.swing.JPanel {
     public static final String PREFERENCE_Z_THICKNESS = "ZThickness";
     public static final String PREFERENCE_Z_THICKNESS_DEFAULT = "80";
     public static final String PREFERENCE_ANNOTATIONS_CLICK_MODE = "AnnotationClickMode";
-    public static final String PREFERENCE_ANNOTATIONS_CLICK_MODE_DEFAULT = "shift-left-click";
     public static final String CLICK_MODE_SHIFT_LEFT_CLICK = "shift-left-click";
     public static final String CLICK_MODE_LEFT_CLICK = "left-click";
+    public static final String PREFERENCE_ANNOTATIONS_CLICK_MODE_DEFAULT = CLICK_MODE_SHIFT_LEFT_CLICK;
 
     private final ApplicationOptionsPanelController controller;
     private JCheckBox loadLastCheckbox; 
@@ -88,11 +88,12 @@ public class ApplicationPanel extends javax.swing.JPanel {
         attrPanel.add(anchorsInViewportCheckbox,"gap para");
 
 
-        String [] modeStrings = {"left-click", "shift-left-click"};
+        String [] modeStrings = {CLICK_MODE_LEFT_CLICK, CLICK_MODE_SHIFT_LEFT_CLICK};
         this.clickModeCombo = new JComboBox<>(modeStrings);
         clickModeCombo.addActionListener(e -> controller.changed());
         // default to the original behavior, shift-left-click
-        clickModeCombo.setSelectedIndex(1);
+        clickModeCombo.setSelectedItem(CLICK_MODE_SHIFT_LEFT_CLICK);
+        // clickModeCombo.setSelectedIndex(1);
         JLabel clickModeLabel = new JLabel("Click mode for adding annotations: ");
         clickModeLabel.setLabelFor(clickModeCombo);
         attrPanel.add(clickModeLabel, "gap para");
