@@ -110,6 +110,17 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     private File swcDirectory;
 
 
+    public boolean isTempOwnershipAdmin() {
+        return isTempOwnershipAdmin;
+    }
+
+    public void setTempOwnershipAdmin(boolean tempOwnershipAdmin) {
+        isTempOwnershipAdmin = tempOwnershipAdmin;
+    }
+
+    // people can temporarily become admins for changing neuron owner purposes
+    private boolean isTempOwnershipAdmin = false;
+
     // ----- constants
     // AUTOMATIC_TRACING_TIMEOUT for automatic tracing in seconds
     private static final double AUTOMATIC_TRACING_TIMEOUT = 10.0;
@@ -1378,6 +1389,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public boolean isOwnershipAdmin() {
         // workstation admins always qualify
         if (AccessManager.getAccessManager().isAdmin()) {
+            return true;
+        }
+
+        // user has temporary admin (think of it as sudo)
+        if (isTempOwnershipAdmin()) {
             return true;
         }
 

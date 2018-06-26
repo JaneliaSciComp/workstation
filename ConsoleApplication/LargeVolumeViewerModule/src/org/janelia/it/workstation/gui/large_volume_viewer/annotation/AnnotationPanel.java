@@ -9,23 +9,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JSeparator;
+import javax.swing.*;
 
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronColorAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronOwnerAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
@@ -92,6 +80,7 @@ public class AnnotationPanel extends JPanel
     private WorkspaceSaveAsAction saveAsAction;
     private JCheckBoxMenuItem automaticTracingMenuItem;
     private JCheckBoxMenuItem automaticRefinementMenuItem;
+    private JCheckBoxMenuItem tempOwnerAdminItem;
     private NeuronExportAllAction exportAllSWCAction;
     private ImportSWCAction importSWCAction;
     private ImportSWCAction importSWCActionMulti;
@@ -265,7 +254,32 @@ public class AnnotationPanel extends JPanel
 
         saveAsAction = new WorkspaceSaveAsAction();
         workspaceToolMenu.add(new JMenuItem(saveAsAction));
-        
+
+        tempOwnerAdminItem = new JCheckBoxMenuItem("Temp ownership admin");
+        tempOwnerAdminItem.setSelected(false);
+        tempOwnerAdminItem.addItemListener(e -> {
+                    if (e.getStateChange() == ItemEvent.SELECTED) {
+                        // about to get temporary ownership admin: dialog warning!
+                        int ans = JOptionPane.showConfirmDialog(
+                                ComponentUtil.getLVVMainWindow(),
+                                "You are about to give yourself permission to change any neuron's owner. Be careful!\n\nContinue?",
+                                "Become owner admin?",
+                                JOptionPane.OK_CANCEL_OPTION,
+                                JOptionPane.WARNING_MESSAGE
+                        );
+                        if (ans == JOptionPane.CANCEL_OPTION) {
+                            tempOwnerAdminItem.setSelected(false);
+                        } else {
+                            annotationMgr.setTempOwnershipAdmin(true);
+                        }
+                    } else {
+                        // giving up admin
+                        annotationMgr.setTempOwnershipAdmin(false);
+                    }
+                }
+        );
+        workspaceToolMenu.add(tempOwnerAdminItem);
+
         // workspace tool menu button
         final JButton workspaceToolButton = new JButton();
         String gearIconFilename = "cog.png";
