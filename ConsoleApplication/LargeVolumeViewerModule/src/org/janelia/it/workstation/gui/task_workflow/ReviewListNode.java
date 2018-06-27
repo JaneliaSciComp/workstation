@@ -54,6 +54,7 @@ public class ReviewListNode extends AbstractNode
      private static class ReviewListChildNodeFactory extends ChildFactory<ReviewGroup>
     {
         private List<ReviewGroup> groupList;
+        int index=0;
         
         public ReviewListChildNodeFactory(List<ReviewGroup> group) {
             this.groupList = group;
@@ -67,8 +68,8 @@ public class ReviewListNode extends AbstractNode
         }
 
         @Override
-        protected Node createNodeForKey(ReviewGroup key) {
-            return new ReviewGroupNode(key);
+        protected Node createNodeForKey(ReviewGroup key) {            
+            return new ReviewGroupNode(key, index++);
         }
     }
     

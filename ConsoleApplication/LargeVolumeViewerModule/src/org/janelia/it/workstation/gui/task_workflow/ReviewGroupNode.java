@@ -42,15 +42,15 @@ public class ReviewGroupNode extends AbstractNode
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private ReviewGroup group;
     
-    public ReviewGroupNode(ReviewGroup reviewGroup) {
+    public ReviewGroupNode(ReviewGroup reviewGroup, int index) {
         super(Children.create(new ReviewGroupNodeFactory(reviewGroup), true), Lookups.singleton(reviewGroup));
         group = reviewGroup;
-        updateDisplayName();
+        updateDisplayName(index);
        
     }
     
-    private void updateDisplayName() {
-        setDisplayName("Branch"); //  (" + workspace.getNeuronSets().size() + " neurons)");
+    private void updateDisplayName(int index) {
+        setDisplayName("Branch" + index); //  (" + workspace.getNeuronSets().size() + " neurons)");
     }
     
      private static class ReviewGroupNodeFactory extends ChildFactory<ReviewPoint>
