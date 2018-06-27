@@ -1,3 +1,19 @@
+// 7.11	
+	
+Workstation Browser	
+* Fixed error when setting key binds for annotations	
+* Added {Index} template attribute for downloading duplicate files	
+	
+Large Volume Viewer	
+* Removed silent error for missing mesh file on Workspace load	
+* Added thread pool size option to jacs messaging	
+* Added thread logging	
+	
+// 7.10.1	
+	
+Horta	
+* Fixed hide/show issue	
+
 // 7.10
 
 Workstation Browser
