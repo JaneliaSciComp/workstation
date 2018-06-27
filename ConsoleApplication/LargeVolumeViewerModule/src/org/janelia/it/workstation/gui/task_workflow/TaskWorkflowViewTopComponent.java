@@ -431,7 +431,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 
                 List<Vec3> segments = new ArrayList<Vec3>();
                 if (branch.size()<3) {
-                    q = null;
+                    q = new Quaternion();
                 } else {
                     if (i == 0) {
                         segments.add(branch.get(0));
