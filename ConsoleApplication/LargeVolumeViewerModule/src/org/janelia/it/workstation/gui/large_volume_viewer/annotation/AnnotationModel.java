@@ -298,7 +298,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         currentSample = null;
         currentTagMap = null;
         setCurrentNeuron(null);
-        SwingUtilities.invokeLater(() -> fireWorkspaceUnloaded(currentWorkspace));
+        fireWorkspaceUnloaded(currentWorkspace);
     }
     
     public synchronized void loadSample(final TmSample sample) throws Exception {
@@ -341,7 +341,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         final TmWorkspace workspace = getCurrentWorkspace();
         // Update TC, in case the load bypassed it
         LargeVolumeViewerTopComponent.getInstance().setCurrent(workspace==null ? getCurrentSample() : workspace);    
-        SwingUtilities.invokeLater(() -> fireWorkspaceLoaded(workspace));
+        fireWorkspaceLoaded(workspace);
                 // load user preferences
         try {
             loadUserPreferences();
@@ -351,7 +351,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         } catch (Exception error) {
             ConsoleApp.handleException(error);
         }
-        SwingUtilities.invokeLater(() -> fireNeuronSelected(null));
+        fireNeuronSelected(null);
         if (workspace!=null) {
             activityLog.logLoadWorkspace(workspace.getId());
         }
@@ -407,7 +407,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             return;
         }
         setCurrentNeuron(neuron); // synchronized on this AnnotationModel here
-        SwingUtilities.invokeLater(() -> fireNeuronSelected(neuron));
+        fireNeuronSelected(neuron);
         if (getCurrentWorkspace()!=null && neuron!=null) {
             activityLog.logSelectNeuron(getCurrentWorkspace().getId(), neuron.getId());
         }
@@ -1597,10 +1597,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     public boolean getNeuronVisibility(TmNeuronMetadata neuron) {
-        if (neuron == null) {
-            // doesn't really matter if the neuron doesn't exist
-            return true;
-        }
         Set<String> neuronTags = getUserNeuronTags(neuron);
         if (neuronTags!=null) {
             if (neuronTags.contains(NEURON_TAG_VISIBILITY)) {
@@ -1621,7 +1617,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             } else {
                 addUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
             }
-            SwingUtilities.invokeLater(() -> fireNeuronStylesChanged(styleUpdater));
+            fireNeuronStylesChanged(styleUpdater);
         }
     }
 
@@ -1640,7 +1636,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             }
         }
         if (styleUpdater.size() > 0) {
-            SwingUtilities.invokeLater(() -> fireNeuronStylesChanged(styleUpdater));
+            fireNeuronStylesChanged(styleUpdater);
         }
     }
 
@@ -1652,7 +1648,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         neuron.setColor(style.getColor());
         setNeuronVisibility(neuron, style.isVisible());
         neuronManager.saveNeuronMetadata(neuron);
-        SwingUtilities.invokeLater(() -> fireNeuronStyleChanged(neuron, style));
+        fireNeuronStyleChanged(neuron, style);
         activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
     }
 
@@ -1669,7 +1665,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             updateMap.put(neuron, getNeuronStyle(neuron));
         }
         
-        SwingUtilities.invokeLater(() -> fireNeuronStylesChanged(updateMap));
+        fireNeuronStylesChanged(updateMap);
     }
 
     /**
@@ -2157,7 +2153,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             currentTagMap.addTag(tag, neuron);
             neuron.getTags().add(tag);
         }
-        SwingUtilities.invokeLater(() -> fireNeuronTagsChanged(neuronList));
+        fireNeuronTagsChanged(neuronList);
     }
     
     public void addUserNeuronTag(String tag, TmNeuronMetadata neuron) {
@@ -2192,14 +2188,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             currentTagMap.removeTag(tag, neuron);
             neuron.getTags().remove(tag);
         }
-        SwingUtilities.invokeLater(() -> fireNeuronTagsChanged(neuronList));
+        fireNeuronTagsChanged(neuronList);
     }
 
     public void clearNeuronTags(TmNeuronMetadata neuron) throws Exception {
         tmDomainMgr.bulkEditNeuronTags(Arrays.asList(neuron), new ArrayList<>(neuron.getTags()), false);
         currentTagMap.clearTags(neuron);
         neuron.getTags().clear();
-        SwingUtilities.invokeLater(() -> fireNeuronTagsChanged(Arrays.asList(neuron)));
+        fireNeuronTagsChanged(Arrays.asList(neuron));
     }
 
     public List<File> breakOutByRoots(File infile) throws IOException {
@@ -2222,10 +2218,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
 
     // ----- notifications to listeners -----
-    // ***** NOTE *****
-    // all calls to all "fire" methods must be done in the UI thread!
-    //  use SwingUtilities.invokeLater()!
-
     public void fireAnnotationNotMoved(TmGeoAnnotation annotation) {
         for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {
             l.annotationNotMoved(annotation);

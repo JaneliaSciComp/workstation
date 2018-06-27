@@ -1,15 +1,4 @@
-// 7.12
+// 7.10.1
 
-Workstation Browser
-* Improved performance of Download dialog when many samples are selected for download
-* Greatly improved performance of large file downloads
-* Added option for concurrent file downloads
-* Added {Alignment Space} and {Result Name} for file naming
-* Better handling and error messages when running out of memory
-* Added help message when no items are displayed
-* Fixed issue with Filter reload after using Save As
-* Fixed many minor bugs 
-
-Large Volume Viewer
-* Added visible selection to annotation list
-* Added preferences in LVV and Horta to make it optional to use shift key to annotate
+Horta
+* Fixed hide/show issue
