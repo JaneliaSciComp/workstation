@@ -185,6 +185,11 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             return true;
         }
         
+        // Ignore problems with local disks 
+        if (throwable instanceof java.nio.file.AccessDeniedException) {
+            return true;
+        }
+        
         return false;
     }
     
