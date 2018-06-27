@@ -165,6 +165,7 @@ import org.janelia.horta.actions.ResetHortaRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
+import org.janelia.horta.camera.CatmullRomSplineKernel;
 import org.janelia.horta.camera.Interpolator;
 import org.janelia.horta.camera.InterpolatorKernel;
 import org.janelia.horta.camera.LinearInterpolatorKernel;
@@ -581,6 +582,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 if (steps < 1) {
                     steps = 1;
                 }
+                
                 animateToLocationWithRotation(acceptor, q, sampleLocation, steps);
                 
                 activityLogger.logHortaLaunch(sampleLocation);
@@ -890,9 +892,9 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     private void animateToLocationWithRotation(ViewerLocationAcceptor acceptor, Quaternion endRotation, SampleLocation endLocation, int steps) throws Exception {
         Vantage vantage = sceneWindow.getVantage();
-        InterpolatorKernel linearKernel = new LinearInterpolatorKernel();
-        Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(linearKernel);
-        Interpolator<Quaternion> rotationInterpolator = new PrimitiveInterpolator(linearKernel);
+        CatmullRomSplineKernel splineKernel = new CatmullRomSplineKernel();
+        Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(splineKernel);
+        Interpolator<Quaternion> rotationInterpolator = new PrimitiveInterpolator(splineKernel);
         double stepSize = 1.0/(float)steps;
         
         double zoom = endLocation.getMicrometersPerWindowHeight();

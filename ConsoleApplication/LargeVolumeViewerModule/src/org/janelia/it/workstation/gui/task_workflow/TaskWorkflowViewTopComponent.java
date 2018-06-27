@@ -27,6 +27,8 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.beans.PropertyVetoException;
 import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Stack;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
@@ -91,10 +93,12 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     private Lookup.Result<ReviewGroup> groupSelection = null;
     int currGroupIndex;
     int currPointIndex;
+    private LinkedList<Vec3> normalGroup;
     private String[] reviewOptions;
     List<ReviewPoint> pointList;
     List<ReviewGroup> groupList;
-
+    boolean firstTime = true;
+    
     private JPanel viewPanel;
 
     public TaskWorkflowViewTopComponent() {
@@ -167,7 +171,18 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 }
             }
         } else {
-            // might be a reviewgroup instead
+            Collection<? extends ReviewGroup> allEventsGroup = groupSelection.allInstances();
+            if (!allEventsGroup.isEmpty()) {
+                ReviewGroup selectedGroup = allEventsGroup.iterator().next();
+                for (int i = 0; i < groupList.size(); i++) {
+                    ReviewGroup reviewGroup = groupList.get(i);
+                    if (reviewGroup==selectedGroup) {
+                        currGroupIndex = i;
+                        currPointIndex = 0;
+                        this.gotoPoint(reviewGroup.getPointList().get(0));
+                    }
+                }
+            }
         }
     }
 
@@ -326,13 +341,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
          ReviewGroup group = groupList.get(groupIndex);
          Node[] groupNode = new Node[1];
          groupNode[0] = rootNode.getChildren().getNodeAt(groupIndex);
-         if (groupNode[0]!=null) {
-             try {
-                this.reviewManager.setSelectedNodes(groupNode);
-             } catch (PropertyVetoException pe) {
-                pe.printStackTrace();
-             }
-            
+         if (groupNode[0]!=null) {           
             List<SampleLocation> playList = new ArrayList<SampleLocation>();
             SynchronizationHelper helper = new SynchronizationHelper();
             Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
@@ -348,7 +357,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
             for (Tiled3dSampleLocationProviderAcceptor acceptor : locationAcceptors) {
                 if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
-                    acceptor.playSampleLocations(playList);
+                    acceptor.playSampleLocations(playList);    
                 }
             }                        
         }
@@ -381,15 +390,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             sampleLocation.setFocusUm(point.getLocation().getX(), point.getLocation().getY(), point.getLocation().getZ());
             sampleLocation.setMicrometersPerWindowHeight(point.getZoomLevel());
             sampleLocation.setRotationAsQuaternion(point.getRotation());   
-            if (currPointIndex==0)
-                sampleLocation.setInterpolate(false);
-            else
-                sampleLocation.setInterpolate(point.getInterpolate());
-
-
-            // the order you do these determines which will be at front when you're done;
-            //  do LVV first so it matches the behavior from FilteredAnnList
-
+            sampleLocation.setInterpolate(false);
             // LVV
             originator.setSampleLocation(sampleLocation);
 
@@ -417,13 +418,14 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         reviewOptions = new String[]{"Problem", "Bad Signal", "Incorrect Neuron"};
         groupList = new ArrayList<>();
 
+        normalGroup = new LinkedList();
         for (List<Vec3> branch: branchList) {
             pointList = new ArrayList<>();
             for (int i=0; i<branch.size(); i++) {
                 Vec3 vecPoint = branch.get(i);                
                 ReviewPoint point = new ReviewPoint();
                 point.setLocation(vecPoint);
-                point.setZoomLevel(70);
+                point.setZoomLevel(50);
                 // calculate quicky normal
                 Quaternion q;
                 
@@ -465,13 +467,38 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     
     private Quaternion calculateRotation (List<Vec3> vertexPoints) {
         Vec3 first = vertexPoints.get(1).minus(vertexPoints.get(0));
-        Vec3 second = vertexPoints.get(1).minus(vertexPoints.get(2));
+        Vec3 second = vertexPoints.get(2).minus(vertexPoints.get(1));
         Vec3 normal = first.cross(second);
-        double angle = Math.atan2(normal.getX(), normal.getZ());
-        float qx = (float) (normal.getX() * Math.sin(angle / 2));
-        float qy = (float) (normal.getY() * Math.sin(angle / 2));
-        float qz = (float) (normal.getZ() * Math.sin(angle / 2));
+        double length = Math.sqrt(normal.getX()*normal.getX()+normal.getY()*normal.getY()+normal.getZ()*normal.getZ());
+        normal.setX(normal.getX()/length);
+        normal.setY(normal.getY()/length);
+        normal.setZ(normal.getZ()/length);
+        
+        // add normal to queue, if queue is greater than 5, pop off one, then average normal
+        if (normalGroup.size()>5) 
+            normalGroup.pop();
+        normalGroup.add(normal);
+       
+        // figure out average normal so we don't get such crazy rotations
+        Vec3 normalAvg = new Vec3();
+        double x = 0, y = 0, z = 0;
+        for (Vec3 unitNorm : normalGroup) {
+            x += unitNorm.getX();
+            y += unitNorm.getY();
+            z += unitNorm.getZ();
+        }
+        normalAvg.setX(x/normalGroup.size());
+        normalAvg.setY(y/normalGroup.size());
+        normalAvg.setZ(z/normalGroup.size());
+        
+        double angle = Math.atan2(normalAvg.getX(),normalAvg.getZ());
+        
+        //Quaternion foo = new Quaternion();
+        float qx = (float) (normalAvg.getX() * Math.sin(angle / 2));
+        float qy = (float) (normalAvg.getY() * Math.sin(angle / 2));
+        float qz = (float) (normalAvg.getZ() * Math.sin(angle / 2));
         float qw = (float) Math.cos(angle / 2);
+        //return null;
         return new Quaternion(qx, qy, qz, qw, false);       
     }
 

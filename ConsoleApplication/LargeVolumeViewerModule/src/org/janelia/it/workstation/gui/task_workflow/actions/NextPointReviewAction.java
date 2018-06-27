@@ -39,6 +39,7 @@ public class NextPointReviewAction extends AbstractAction {
     
     @Override
     public void actionPerformed(ActionEvent e) {
+        System.out.println ("ASDFASDFASDF");
         TaskWorkflowViewTopComponent.getInstance().nextTask();
     }
     
