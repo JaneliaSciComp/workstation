@@ -70,7 +70,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private NeuronSelectedListener neuronSelectedListener;
 
     // for preserving selection across operations
-    private int savedSelection;
+    private TmNeuronMetadata savedSelectedNeuron;
 
     private int width;
     private static final int height = 2 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
@@ -432,12 +432,24 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     public void saveSelection() {
-        this.savedSelection = neuronTable.getSelectedRow();
+        int viewRow = neuronTable.getSelectedRow();
+        if (viewRow >= 0) {
+            int modelRow = neuronTable.convertRowIndexToModel(viewRow);
+            savedSelectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
+        } else {
+            savedSelectedNeuron = null;
+        }
     }
     
     public void restoreSelection() {
-        if (savedSelection>0  && savedSelection<neuronTable.getRowCount()) {
-            neuronTable.setRowSelectionInterval(savedSelection, savedSelection);
+        if (savedSelectedNeuron != null) {
+            int modelRow = neuronTableModel.getRowForNeuron(savedSelectedNeuron);
+            if (modelRow >= 0) {
+                int viewRow = neuronTable.convertRowIndexToView(modelRow);
+                if (viewRow >= 0) {
+                    neuronTable.setRowSelectionInterval(viewRow, viewRow);
+                }
+            }
         }
     }
 
