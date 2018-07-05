@@ -6,7 +6,6 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalListeners;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.cache.Weigher;
-import org.apache.commons.httpclient.HttpClient;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.slf4j.Logger;
@@ -16,7 +15,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -45,7 +43,7 @@ public class LocalFileCache {
     private final ExecutorService asyncLoadService;
     private final Weigher<String, CachedFile> weigher;
     private final RemovalListener<String, CachedFile> asyncRemovalListener;
-    private final WebDavClientMgr webDavClientMgr;
+    private final StorageClientMgr storageClientMgr;
     private final RemoteFileCacheLoader defaultLoader;
     private LoadingCache<String, CachedFile> remoteNameToFileCache;
 
@@ -68,7 +66,7 @@ public class LocalFileCache {
      *
      * @param httpClient for loading remote files
      *
-     * @param webDavClientMgr for finding remote files
+     * @param storageClientMgr for finding remote files
      *
      * @throws IllegalStateException
      *   if any errors occur while constructing a cache tied to the file system.
@@ -77,7 +75,7 @@ public class LocalFileCache {
                           long kilobyteCapacity,
                           CacheLoadEventListener cacheLoadEventListener,
                           HttpClientProxy httpClient,
-                          WebDavClientMgr webDavClientMgr)
+                          StorageClientMgr storageClientMgr)
             throws IllegalStateException {
 
         File cacheRootDirectory = createAndValidateDirectoryAsNeeded(cacheParentDirectory, CACHE_DIRECTORY_NAME);
@@ -129,8 +127,8 @@ public class LocalFileCache {
                         },
                         Executors.newFixedThreadPool(4)); // separate thread pool for removing files that expire from the cache
 
-        this.webDavClientMgr = webDavClientMgr;
-        this.defaultLoader = new RemoteFileCacheLoader(httpClient, webDavClientMgr, this);
+        this.storageClientMgr = storageClientMgr;
+        this.defaultLoader = new RemoteFileCacheLoader(httpClient, storageClientMgr, this);
 
         final File[] tempFiles = tempDirectory.listFiles();
         if ((tempFiles != null) && (tempFiles.length > 0)) {
@@ -275,7 +273,7 @@ public class LocalFileCache {
      * @return the local or remote URL for the resource depending upon
      *         whether it has already been cached.
      */
-    public URL getEffectiveUrl(String remoteFileRefName, boolean cacheAsync) {
+    public URLProxy getEffectiveUrl(String remoteFileRefName, boolean cacheAsync) {
         // get call will NOT load file if it is missing
         CachedFile cachedFile = remoteNameToFileCache.getIfPresent(remoteFileRefName);
         File localFile = getVerifiedLocalFile(cachedFile);
@@ -299,10 +297,10 @@ public class LocalFileCache {
                     });
                 }
             }
-            return webDavClientMgr.getDownloadFileURL(remoteFileRefName);
+            return storageClientMgr.getDownloadFileURL(remoteFileRefName);
         } else  {
             try {
-                return localFile.toURI().toURL();
+                return new URLProxy(localFile.toURI().toURL());
             }  catch (MalformedURLException e) {
                 LOG.error("failed to derive URL for " + localFile.getAbsolutePath(), e);
                 throw new IllegalStateException("Invalid cached file URL " + localFile, e);

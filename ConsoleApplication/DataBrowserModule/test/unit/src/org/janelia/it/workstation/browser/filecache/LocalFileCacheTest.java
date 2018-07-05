@@ -39,11 +39,12 @@ import static org.junit.Assert.*;
  * @author Eric Trautman
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({WebDavClientMgr.class, RemoteFileCacheLoader.class})
+@PrepareForTest({StorageClientMgr.class, RemoteFileCacheLoader.class})
 public class LocalFileCacheTest {
     private static final Logger LOG = LoggerFactory.getLogger(LocalFileCacheTest.class);
 
-    private WebDavClient webDavClient;
+    private MasterStorageClient masterStorageClient;
+    private AgentStorageClient agentStorageClient;
     private HttpClient httpClient;
     private GetMethod testGetMethod;
     private List<File> testRemoteFiles;
@@ -91,7 +92,8 @@ public class LocalFileCacheTest {
             testRemoteFiles.add(TestFileUtils.createFile(remoteTestDirectory, singleFileKilobytes));
         }
 
-        webDavClient = Mockito.mock(WebDavClient.class);
+        masterStorageClient = Mockito.mock(MasterStorageClient.class);
+        agentStorageClient = Mockito.mock(AgentStorageClient.class);
         httpClient = Mockito.mock(HttpClient.class);
         HttpClientProxy httpClientProxy = new HttpClientProxy(httpClient);
 
@@ -99,9 +101,14 @@ public class LocalFileCacheTest {
         // adding last file should force removal of first file
         final int cacheKilobytes =
                 (singleFileKilobytes + 1) * maxNumberOfCachedFiles;
-        PowerMockito.whenNew(WebDavClient.class).withArguments(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpClientProxy.class), ArgumentMatchers.any(ObjectMapper.class)).thenReturn(webDavClient);
+        PowerMockito.whenNew(MasterStorageClient.class)
+                .withArguments(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpClientProxy.class), ArgumentMatchers.any(ObjectMapper.class))
+                .thenReturn(masterStorageClient);
+        PowerMockito.whenNew(AgentStorageClient.class)
+                .withArguments(ArgumentMatchers.anyString(), ArgumentMatchers.any(HttpClientProxy.class), ArgumentMatchers.any(ObjectMapper.class))
+                .thenReturn(agentStorageClient);
 
-        Mockito.when(webDavClient.findStorage(ArgumentMatchers.anyString()))
+        Mockito.when(masterStorageClient.findStorage(ArgumentMatchers.anyString()))
                 .then(invocation -> {
                     String storagePathName = invocation.getArgument(0);
                     Path storagePath = Paths.get(storagePathName);
@@ -113,16 +120,16 @@ public class LocalFileCacheTest {
                     }
                     MultiStatusResponse multiStatusResponse = new MultiStatusResponse("http://test", "desc");
                     multiStatusResponse.add(new DefaultDavProperty<>(DavPropertyName.GETETAG, storagePrefix.toString()));
-                    return new WebDavFile(invocation.getArgument(0), multiStatusResponse);
+                    return new WebDavStorage(invocation.getArgument(0), multiStatusResponse);
                 });
-        Mockito.when(webDavClient.findFile(ArgumentMatchers.anyString()))
+        Mockito.when(agentStorageClient.findFile(ArgumentMatchers.anyString()))
                 .then(invocation -> {
                     String fileName = invocation.getArgument(0);
                     MultiStatusResponse multiStatusResponse = new MultiStatusResponse("http://test", "desc");
                     multiStatusResponse.add(new DefaultDavProperty<>(DavPropertyName.GETCONTENTLENGTH, String.valueOf(new File(fileName).length())), 200);
-                    return new WebDavFile(fileName, multiStatusResponse);
+                    return new WebDavFile(fileName, multiStatusResponse, (err)->{});
                 });
-        Mockito.when(webDavClient.getDownloadFileURL(ArgumentMatchers.anyString()))
+        Mockito.when(agentStorageClient.getDownloadFileURL(ArgumentMatchers.anyString()))
                 .then(invocation -> {
                     return new URL("http://test/path" + invocation.getArgument(0));
                 });
@@ -130,7 +137,7 @@ public class LocalFileCacheTest {
         PowerMockito.whenNew(GetMethod.class).withAnyArguments().thenReturn(testGetMethod);
         Mockito.when(httpClient.executeMethod(ArgumentMatchers.any(HttpMethod.class))).thenReturn(200);
 
-        cache = new LocalFileCache(cacheRootParentDirectory, cacheKilobytes, null, httpClientProxy, new WebDavClientMgr("http://basewebdav", httpClientProxy));
+        cache = new LocalFileCache(cacheRootParentDirectory, cacheKilobytes, null, httpClientProxy, new StorageClientMgr("http://basewebdav", httpClientProxy));
 
         filesToDeleteDuringTearDown = new ArrayList<>();
         filesToDeleteDuringTearDown.addAll(testRemoteFiles);
@@ -275,7 +282,7 @@ public class LocalFileCacheTest {
 
         Mockito.reset(testGetMethod);
         Mockito.when(testGetMethod.getResponseBodyAsStream()).thenReturn(new FileInputStream(remoteFile));
-        URL effectiveUrl = cache.getEffectiveUrl(remoteFile.getAbsolutePath(), true);
+        URLProxy effectiveUrl = cache.getEffectiveUrl(remoteFile.getAbsolutePath(), true);
         final long numberOfFiles = cache.getNumberOfFiles();
 
         assertNotNull(effectiveUrl);
