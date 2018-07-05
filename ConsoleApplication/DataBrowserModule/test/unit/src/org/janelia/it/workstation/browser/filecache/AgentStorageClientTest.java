@@ -27,46 +27,26 @@ import static org.junit.Assert.*;
  * @author Eric Trautman
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({WebDavClient.class})
+@PrepareForTest({AgentStorageClient.class, AbstractStorageClient.class})
 @Category(TestCategories.FastTests.class)
-public class WebDavClientTest {
+public class AgentStorageClientTest {
     private static final String BASE_WEBDAV_URL = "http://test/webdav";
 
-    private HttpClient httpClient;
-    private WebDavClient testWebDavClient;
+    private HttpClientProxy httpClient;
+    private AgentStorageClient testWebDavClient;
     private ObjectMapper objectMapper;
 
     @Before
     public void setUp() {
-        httpClient = Mockito.mock(HttpClient.class);
+        httpClient = Mockito.mock(HttpClientProxy.class);
         objectMapper = new ObjectMapper();
-        testWebDavClient = new WebDavClient(BASE_WEBDAV_URL, new HttpClientProxy(httpClient), objectMapper);
+        testWebDavClient = new AgentStorageClient(BASE_WEBDAV_URL, httpClient, objectMapper, (t) -> {});
     }
 
     @Test
     public void downloadURL() throws Exception {
         String testPath = "/p1/p2/c1/c2";
         assertEquals(new URL(BASE_WEBDAV_URL + "/storage_path/" + testPath), testWebDavClient.getDownloadFileURL(testPath));
-    }
-
-    @Test
-    public void findStorage() throws Exception {
-        String storagePrefix = "/p1/p2";
-        PropFindMethod testMethod = Mockito.mock(PropFindMethod.class);
-
-        PowerMockito.whenNew(PropFindMethod.class).withArguments(BASE_WEBDAV_URL + "/data_storage_path/" + storagePrefix, WebDavFile.PROPERTY_NAMES, 0).thenReturn(testMethod);
-        Mockito.when(httpClient.executeMethod(testMethod)).thenReturn(207);
-
-        String returnedUrl = "http://test";
-        MultiStatusResponse multiStatusResponse = new MultiStatusResponse(returnedUrl, "desc");
-        MultiStatus multiStatus = new MultiStatus();
-        multiStatus.addResponse(multiStatusResponse);
-
-        Mockito.when(testMethod.getResponseBodyAsMultiStatus()).thenReturn(multiStatus);
-
-        WebDavFile webDavFile = testWebDavClient.findStorage(storagePrefix);
-        assertEquals(storagePrefix, webDavFile.getWebdavFileKey());
-        assertEquals(new URL(returnedUrl), webDavFile.getRemoteFileUrl());
     }
 
     @Test

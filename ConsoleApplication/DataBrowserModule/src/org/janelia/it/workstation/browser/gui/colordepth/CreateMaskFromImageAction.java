@@ -14,6 +14,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.FileMgr;
+import org.janelia.it.workstation.browser.filecache.URLProxy;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -66,7 +67,7 @@ public class CreateMaskFromImageAction extends AbstractAction {
             
             @Override
             protected void doStuff() throws Exception {
-                URL imageFileURL = FileMgr.getFileMgr().getURL(imagePath, true);
+                URLProxy imageFileURL = FileMgr.getFileMgr().getURL(imagePath, true);
                 this.image = Utils.readImage(imageFileURL);
                 alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();
             }

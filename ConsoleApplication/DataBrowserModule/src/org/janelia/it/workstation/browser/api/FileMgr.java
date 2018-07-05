@@ -2,8 +2,6 @@ package org.janelia.it.workstation.browser.api;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URL;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
@@ -11,11 +9,11 @@ import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.janelia.it.workstation.browser.filecache.LocalFileCache;
-import org.janelia.it.workstation.browser.filecache.WebDavClientMgr;
+import org.janelia.it.workstation.browser.filecache.URLProxy;
+import org.janelia.it.workstation.browser.filecache.StorageClientMgr;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.model.security.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +47,7 @@ public class FileMgr {
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
 
     private final HttpClientProxy httpClient;
-    private final WebDavClientMgr webDavClientMgr;
+    private final StorageClientMgr storageClientMgr;
     private LocalFileCache localFileCache;
 
     private FileMgr() {
@@ -63,7 +61,7 @@ public class FileMgr {
         managerParams.setDefaultMaxConnectionsPerHost(WEBDAV_MAX_CONNS_PER_HOST);
         managerParams.setMaxTotalConnections(WEBDAV_MAX_TOTAL_CONNECTIONS);
         httpClient = new HttpClientProxy(new HttpClient(mgr));
-        webDavClientMgr = new WebDavClientMgr(WEBDAV_BASE_URL, httpClient);
+        storageClientMgr = new StorageClientMgr(WEBDAV_BASE_URL, httpClient);
 
         setFileCacheGigabyteCapacity((Integer)
                 LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
@@ -76,7 +74,7 @@ public class FileMgr {
     }
 
     public WebDavUploader getFileUploader() {
-        return new WebDavUploader(webDavClientMgr);
+        return new WebDavUploader(storageClientMgr);
     }
 
     /**
@@ -104,7 +102,7 @@ public class FileMgr {
                 final String localCacheRoot = ConsoleProperties.getString("console.localCache.rootDirectory", CONSOLE_PREFS_DIR);
                 final long kilobyteCapacity = getFileCacheGigabyteCapacity() * 1024 * 1024;
 
-                localFileCache = new LocalFileCache(new File(localCacheRoot), kilobyteCapacity, null, httpClient, webDavClientMgr);
+                localFileCache = new LocalFileCache(new File(localCacheRoot), kilobyteCapacity, null, httpClient, storageClientMgr);
             }
             catch (IllegalStateException e) {
                 localFileCache = null;
@@ -189,11 +187,9 @@ public class FileMgr {
         if (isFileCacheAvailable()) {
             try {
                 file = localFileCache.getFile(standardPath, forceRefresh);
-            } 
-            catch (FileNotFoundException e) {
+            } catch (FileNotFoundException e) {
                 log.warn("File does not exist: " + standardPath, e);
-            } 
-            catch (Exception e) {
+            } catch (Exception e) {
                 if ("No space left on device".equals(e.getMessage())) {
                     FrameworkImplProvider.handleException("No space left on disk", e);
                 } else {
@@ -218,10 +214,10 @@ public class FileMgr {
      *
      * @return an accessible URL for the specified path
      */
-    public URL getURL(String standardPathName, boolean cacheAsync) {
+    public URLProxy getURL(String standardPathName, boolean cacheAsync) {
         return isFileCacheAvailable()
                 ? localFileCache.getEffectiveUrl(standardPathName, cacheAsync)
-                : webDavClientMgr.getDownloadFileURL(standardPathName);
+                : storageClientMgr.getDownloadFileURL(standardPathName);
     }
 
 }

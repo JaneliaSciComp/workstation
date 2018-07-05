@@ -24,7 +24,7 @@ import static org.junit.Assert.*;
 public class WebDavUploaderTest {
     private static final Logger LOG = LoggerFactory.getLogger(WebDavUploaderTest.class);
 
-    private WebDavClientMgr webDavClientMgr;
+    private StorageClientMgr storageClientMgr;
     private WebDavUploader uploader;
     private File testRootParentDirectory;
     private File testNestedDirectory;
@@ -32,8 +32,8 @@ public class WebDavUploaderTest {
 
     @Before
     public void setUp() throws Exception {
-        webDavClientMgr = Mockito.mock(WebDavClientMgr.class);
-        uploader = new WebDavUploader(webDavClientMgr);
+        storageClientMgr = Mockito.mock(StorageClientMgr.class);
+        uploader = new WebDavUploader(storageClientMgr);
 
         final String ts = TestFileUtils.buildTimestampName();
         testRootParentDirectory = new File("test-upload-" + ts);
@@ -76,11 +76,11 @@ public class WebDavUploaderTest {
         String testStorageUrl = "http://teststorage/" + testStorageName;
         File testFile = testFiles.get(0);
         
-        Mockito.when(webDavClientMgr.createStorage(testStorageName, testUploadContext, testStorageTags))
+        Mockito.when(storageClientMgr.createStorage(testStorageName, testUploadContext, testStorageTags))
                 .thenReturn(testStorageUrl);
-        Mockito.when(webDavClientMgr.urlEncodeComp(ArgumentMatchers.anyString()))
+        Mockito.when(storageClientMgr.urlEncodeComp(ArgumentMatchers.anyString()))
                 .thenCallRealMethod();
-        Mockito.when(webDavClientMgr.uploadFile(testFile, testStorageUrl, testFile.getName()))
+        Mockito.when(storageClientMgr.uploadFile(testFile, testStorageUrl, testFile.getName()))
                 .then(invocation -> {
                     RemoteLocation remoteFile = new RemoteLocation(testFile.getName(), testFile.getAbsolutePath(), testStorageUrl + "/file/" + testFile.getName());
                     remoteFile.setStorageURL(invocation.getArgument(1));
@@ -97,13 +97,13 @@ public class WebDavUploaderTest {
         String testStorageTags = "t1, t2";
         String testUploadContext = "WorkstationFileUpload";
         String testStorageUrl = "http://teststorage/" + testStorageName;
-        Mockito.when(webDavClientMgr.createStorage(testStorageName, testUploadContext, testStorageTags))
+        Mockito.when(storageClientMgr.createStorage(testStorageName, testUploadContext, testStorageTags))
                 .thenReturn(testStorageUrl);
-        Mockito.when(webDavClientMgr.urlEncodeComp(ArgumentMatchers.anyString()))
+        Mockito.when(storageClientMgr.urlEncodeComp(ArgumentMatchers.anyString()))
                 .thenCallRealMethod();
-        Mockito.when(webDavClientMgr.urlEncodeComps(ArgumentMatchers.anyString()))
+        Mockito.when(storageClientMgr.urlEncodeComps(ArgumentMatchers.anyString()))
                 .thenCallRealMethod();
-        Mockito.when(webDavClientMgr.uploadFile(ArgumentMatchers.any(File.class), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
+        Mockito.when(storageClientMgr.uploadFile(ArgumentMatchers.any(File.class), ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
                 .then(invocation -> {
                     RemoteLocation remoteFile = new RemoteLocation(
                             ((File) invocation.getArgument(0)).getAbsolutePath(),
@@ -125,10 +125,10 @@ public class WebDavUploaderTest {
             assertEquals(testStorageUrl, rf.getStorageURL());
         }
 
-        Mockito.verify(webDavClientMgr).createDirectory(testStorageUrl, testNestedDirectory.getName());
+        Mockito.verify(storageClientMgr).createDirectory(testStorageUrl, testNestedDirectory.getName());
         for (File f : testFiles) {
-            String encodedUrl = webDavClientMgr.urlEncodeComps(testRootParentDirectory.toPath().relativize(f.toPath()).toString());
-            Mockito.verify(webDavClientMgr).uploadFile(f, testStorageUrl, encodedUrl);
+            String encodedUrl = storageClientMgr.urlEncodeComps(testRootParentDirectory.toPath().relativize(f.toPath()).toString());
+            Mockito.verify(storageClientMgr).uploadFile(f, testStorageUrl, encodedUrl);
         }   
     }
 

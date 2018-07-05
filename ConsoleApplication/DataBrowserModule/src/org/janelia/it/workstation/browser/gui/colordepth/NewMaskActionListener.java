@@ -20,6 +20,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.FileMgr;
+import org.janelia.it.workstation.browser.filecache.URLProxy;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -65,7 +66,7 @@ public final class NewMaskActionListener implements ActionListener {
                     File file = FileMgr.getFileMgr().getFile(uploadPath, false);
                     if (file==null) {
                         // Cache is probably disabled, just fetch remotely
-                        URL imageFileURL = FileMgr.getFileMgr().getURL(uploadPath, false);
+                        URLProxy imageFileURL = FileMgr.getFileMgr().getURL(uploadPath, false);
                         this.image = Utils.readImage(imageFileURL);
                     }
                     else {

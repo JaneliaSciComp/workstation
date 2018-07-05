@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
+import org.janelia.it.workstation.browser.filecache.URLProxy;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.ImageCache;
 import org.janelia.it.workstation.browser.util.Utils;
@@ -80,7 +81,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
         if (useCacheBehind) {
             // Async cache-behind
             log.trace("Async cache-behind loading: {}",imageFilename);
-            URL imageFileURL = FileMgr.getFileMgr().getURL(imageFilename, true);
+            URLProxy imageFileURL = FileMgr.getFileMgr().getURL(imageFilename, true);
             maxSizeImage = Utils.readImage(imageFileURL);
             if (maxSizeImage != null && imageCache != null) {
                 imageCache.put(imageFilename, maxSizeImage);
@@ -90,7 +91,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
             // Sync cache-ahead
             log.trace("Cache-ahead loading: {}",imageFilename);
             File imageFile = FileMgr.getFileMgr().getFile(imageFilename, false);
-            maxSizeImage = Utils.readImage(imageFile.toURI().toURL());
+            maxSizeImage = Utils.readImage(new URLProxy(imageFile.toURI().toURL()));
         }
 
         if (maxSizeImage != null) {

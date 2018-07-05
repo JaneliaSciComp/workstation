@@ -97,12 +97,12 @@ public class FileProxyService extends AbstractHandler {
                 response.setStatus(500);
             }
             
-            log.info("Proxying {} ({}) for: {}",method,response.getStatus(),wfile.getEffectiveURL());
+            log.info("Proxying {} ({}) for: {}",method,response.getStatus(), wfile.getEffectiveURL());
             
-            if (wfile.getContentType()!=null) {
+            if (wfile.getContentType() != null) {
                 response.setContentType(wfile.getContentType());
             }
-            if (wfile.getLength()!=null) {
+            if (wfile.getLength() != null) {
                 response.addHeader("Content-length", wfile.getLength().toString());
             }
 

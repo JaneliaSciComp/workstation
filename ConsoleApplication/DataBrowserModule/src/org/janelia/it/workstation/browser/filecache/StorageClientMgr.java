@@ -2,16 +2,12 @@ package org.janelia.it.workstation.browser.filecache;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
@@ -20,25 +16,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 
 /**
- * {@link WebDavClient} manager.
+ * {@link AbstractStorageClient} manager.
  */
-public class WebDavClientMgr {
+public class StorageClientMgr {
 
-    private static final int STORAGE_PATH_PREFIX_COMPS_COUNT = 2;
-
-    private static final Cache<String, WebDavClient> WEBDAV_AGENTS_CACHE = CacheBuilder.newBuilder()
+    private static final Cache<String, AgentStorageClient> STORAGE_WORKERS_CACHE = CacheBuilder.newBuilder()
             .maximumSize(10)
             .build();
+    private static Consumer<Throwable> NOOP_ERROR_CONN_HANDLER = (t) -> {};
 
     private final HttpClientProxy httpClient;
-    private final WebDavClient masterWebDavInstance;
+    private final MasterStorageClient masterStorageClient;
     private final ObjectMapper objectMapper;
 
     /**
@@ -50,28 +42,19 @@ public class WebDavClientMgr {
      * @throws IllegalArgumentException
      *   if the baseUrl cannot be parsed.
      */
-    public WebDavClientMgr(String baseUrl, HttpClientProxy httpClient) {
+    public StorageClientMgr(String baseUrl, HttpClientProxy httpClient) {
         this.httpClient = httpClient;
         this.objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        this.masterWebDavInstance = new WebDavClient(validateUrl(baseUrl), httpClient, objectMapper);
+        this.masterStorageClient = new MasterStorageClient(baseUrl, httpClient, objectMapper);
     }
 
-    private String validateUrl(String urlString) {
-        try {
-            final URL url = new URL(urlString);
-            return urlString;
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("failed to parse URL: " + urlString, e);
-        }
+    public URLProxy getDownloadFileURL(String standardPathName) {
+        AgentStorageClient storageClient = getStorageClientForStandardPath(standardPathName);
+        return storageClient.getDownloadFileURL(standardPathName);
     }
 
-    public URL getDownloadFileURL(String standardPathName) {
-        WebDavClient webDavClient = getWebDavClientForStandardPath(standardPathName);
-        return webDavClient.getDownloadFileURL(standardPathName);
-    }
-
-    private WebDavClient getWebDavClientForStandardPath(String standardPathName) {
+    private AgentStorageClient getStorageClientForStandardPath(String standardPathName) {
         Path standardPath = Paths.get(standardPathName);
         int nPathComponents = standardPath.getNameCount();
         List<String> storagePathPrefixCandidates = new LinkedList<>();
@@ -84,21 +67,18 @@ public class WebDavClientMgr {
                     }
                 })
                 .forEach(p -> storagePathPrefixCandidates.add(0, p));
-        WebDavClient webDavClient;
+        AgentStorageClient storageClient;
         for (String pathPrefix : storagePathPrefixCandidates) {
-            webDavClient = WEBDAV_AGENTS_CACHE.getIfPresent(pathPrefix);
-            if (webDavClient != null) {
-                return webDavClient;
+            storageClient = STORAGE_WORKERS_CACHE.getIfPresent(pathPrefix);
+            if (storageClient != null) {
+                return storageClient;
             }
         }
-        WebDavFile webDavFile = findWebDavFileStorage(standardPathName);
-        webDavClient = new WebDavClient(webDavFile.getRemoteFileUrl().toString(), httpClient, objectMapper);
-        WEBDAV_AGENTS_CACHE.put(webDavFile.getEtag(), webDavClient);
-        return webDavClient;
-    }
-
-    private WebDavFile findWebDavFileStorage(String storagePath) throws WebDavException {
-        return masterWebDavInstance.findStorage(storagePath);
+        WebDavStorage storage = masterStorageClient.findStorage(standardPathName);
+        String storageKey = storage.getEtag();
+        storageClient = new AgentStorageClient(storage.getRemoteFileUrl(), httpClient, objectMapper, t -> STORAGE_WORKERS_CACHE.invalidate(storageKey));
+        STORAGE_WORKERS_CACHE.put(storageKey, storageClient);
+        return storageClient;
     }
 
     /**
@@ -113,18 +93,18 @@ public class WebDavClientMgr {
      */
     WebDavFile findFile(String remoteFileName)
             throws WebDavException {
-        WebDavClient webDavClient = getWebDavClientForStandardPath(remoteFileName);
-        return webDavClient.findFile(remoteFileName);
+        AgentStorageClient storageClient = getStorageClientForStandardPath(remoteFileName);
+        return storageClient.findFile(remoteFileName);
     }
 
     String createStorage(String storageName, String storageContext, String storageTags) {
-        return masterWebDavInstance.createStorage(storageName, storageContext, storageTags);
+        return masterStorageClient.createStorage(storageName, storageContext, storageTags);
     }
 
     RemoteLocation uploadFile(File file, String storageURL, String storageLocation) {
         try {
-            String uploadFileUrl = storageURL + "/file/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation);
-            RemoteLocation remoteFile = masterWebDavInstance.saveFile(new URL(uploadFileUrl), file);
+            AgentStorageClient agentStorageClient = new AgentStorageClient(storageURL, httpClient, objectMapper, NOOP_ERROR_CONN_HANDLER);
+            RemoteLocation remoteFile = agentStorageClient.saveFile(agentStorageClient.getUploadFileURL(storageLocation), file);
             remoteFile.setStorageURL(storageURL);
             return remoteFile;
         } catch (Exception e) {
@@ -134,8 +114,8 @@ public class WebDavClientMgr {
 
     RemoteLocation createDirectory(String storageURL, String storageLocation) {
         try {
-            String createDirUrl = storageURL + "/directory/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation);
-            RemoteLocation remoteDirectory = masterWebDavInstance.createDirectory(new URL(createDirUrl));
+            AgentStorageClient agentStorageClient = new AgentStorageClient(storageURL, httpClient, objectMapper, NOOP_ERROR_CONN_HANDLER);
+            RemoteLocation remoteDirectory = agentStorageClient.createDirectory(agentStorageClient.getNewDirURL(storageLocation));
             remoteDirectory.setStorageURL(storageURL);
             return remoteDirectory;
         } catch (Exception e) {

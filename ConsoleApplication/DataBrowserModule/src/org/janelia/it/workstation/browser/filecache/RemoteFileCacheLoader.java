@@ -10,7 +10,6 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.cache.CacheLoader;
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.slf4j.Logger;
@@ -32,19 +31,19 @@ public class RemoteFileCacheLoader extends CacheLoader<String, CachedFile> {
     private static final int BUFFER_SIZE = 2 * 1024 * 1024; // 2Mb
 
     private final HttpClientProxy httpClient;
-    private final WebDavClientMgr webDavClientMgr;
+    private final StorageClientMgr storageClientMgr;
     private final LocalFileCache loadedCache;
 
-    public RemoteFileCacheLoader(HttpClientProxy httpClient, WebDavClientMgr webDavClientMgr, LocalFileCache loadedCache) {
+    public RemoteFileCacheLoader(HttpClientProxy httpClient, StorageClientMgr storageClientMgr, LocalFileCache loadedCache) {
         this.httpClient = httpClient;
-        this.webDavClientMgr = webDavClientMgr;
+        this.storageClientMgr = storageClientMgr;
         this.loadedCache = loadedCache;
     }
 
     @Override
     public CachedFile load(String remoteFileName) throws Exception {
         CachedFile cachedFile;
-        WebDavFile webDavFile = webDavClientMgr.findFile(remoteFileName);
+        WebDavFile webDavFile = storageClientMgr.findFile(remoteFileName);
 
         // check for catastrophic case of file larger than entire cache
         final long size = webDavFile.getKilobytes();
@@ -119,7 +118,7 @@ public class RemoteFileCacheLoader extends CacheLoader<String, CachedFile> {
                                       File activeFile)
             throws IllegalArgumentException, IllegalStateException, WebDavException {
         CachedFile cachedFile = new CachedFile(webDavFile, activeFile);
-        final URL remoteFileUrl = webDavFile.getRemoteFileUrl();
+        final URLProxy remoteFileUrl = webDavFile.getRemoteFileURLProxy();
         if (webDavFile.isDirectory()) {
             throw new IllegalArgumentException(
                     "Requested load of directory " + remoteFileUrl +
@@ -164,7 +163,7 @@ public class RemoteFileCacheLoader extends CacheLoader<String, CachedFile> {
      * @throws WebDavException
      *   if the file cannot be retrieved.
      */
-    private File retrieveFile(URL remoteFileUrl, File outputFile) throws WebDavException {
+    private File retrieveFile(URLProxy remoteFileUrl, File outputFile) throws WebDavException {
         InputStream input = null;
         FileOutputStream output = null;
         GetMethod getMethod = null;
@@ -190,6 +189,7 @@ public class RemoteFileCacheLoader extends CacheLoader<String, CachedFile> {
                 output.write(buffer, 0, n);
             }
         } catch (Throwable t) {
+            remoteFileUrl.handleError(t);
             throw new WebDavException(
                     "failed to copy " + remoteFileUrl + " to " + outputFile.getAbsolutePath(), t);
         } finally {
