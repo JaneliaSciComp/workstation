@@ -9,6 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -41,6 +42,7 @@ class AgentStorageClient extends AbstractStorageClient {
     private static final Logger LOG = LoggerFactory.getLogger(AgentStorageClient.class);
 
     private final Consumer<Throwable> connectionErrorHandler;
+    private Supplier<String> alternativeBaseUrlSupplier;
 
     /**
      * Constructs a client with default authentication credentials.
@@ -50,9 +52,10 @@ class AgentStorageClient extends AbstractStorageClient {
      * @throws IllegalArgumentException
      *   if the baseUrl cannot be parsed.
      */
-    AgentStorageClient(String baseUrl, HttpClientProxy httpClient, ObjectMapper objectMapper, Consumer<Throwable> connectionErrorHandler) {
+    AgentStorageClient(String baseUrl, Supplier<String> alternativeBaseUrlSupplier, HttpClientProxy httpClient, ObjectMapper objectMapper, Consumer<Throwable> connectionErrorHandler) {
         super(baseUrl, httpClient, objectMapper);
         this.connectionErrorHandler = connectionErrorHandler;
+        this.alternativeBaseUrlSupplier = alternativeBaseUrlSupplier;
     }
 
     /**
@@ -67,9 +70,28 @@ class AgentStorageClient extends AbstractStorageClient {
      */
     WebDavFile findFile(String remoteFileName)
             throws WebDavException {
-        String href = getStorageLookupURL(remoteFileName, "data_storage_path");
-
-        MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0, 0);
+        MultiStatusResponse[] multiStatusResponses;
+        try {
+            multiStatusResponses = StorageClientResponseHelper.getResponses(
+                    httpClient,
+                    StorageClientResponseHelper.getStorageLookupURL(baseUrl, "data_storage_path", remoteFileName),
+                    DavConstants.DEPTH_0,
+                    0
+            );
+        } catch (Exception e) {
+            if (alternativeBaseUrlSupplier != null) {
+                String alternativeBaseURL = alternativeBaseUrlSupplier.get();
+                LOG.info("{} failed with {} so trying alternative base URL - {}", baseUrl, e, alternativeBaseURL);
+                multiStatusResponses = StorageClientResponseHelper.getResponses(
+                        httpClient,
+                        StorageClientResponseHelper.getStorageLookupURL(alternativeBaseURL, "data_storage_path", remoteFileName),
+                        DavConstants.DEPTH_0,
+                        0
+                );
+            } else {
+                multiStatusResponses = null;
+            }
+        }
         if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
             throw new WebDavException("empty response returned for " + remoteFileName);
         }
