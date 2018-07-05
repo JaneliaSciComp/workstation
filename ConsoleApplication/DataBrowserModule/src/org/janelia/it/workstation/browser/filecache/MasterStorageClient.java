@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.browser.filecache;
 
+import java.util.function.Supplier;
+
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,9 +48,12 @@ class MasterStorageClient extends AbstractStorageClient {
      */
     WebDavStorage findStorage(String storagePath)
             throws WebDavException {
-        String href = getStorageLookupURL(storagePath, "data_storage_path");
-
-        MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0, 0);
+        MultiStatusResponse[] multiStatusResponses = StorageClientResponseHelper.getResponses(
+                httpClient,
+                StorageClientResponseHelper.getStorageLookupURL(baseUrl, "data_storage_path", storagePath),
+                DavConstants.DEPTH_0,
+                0
+        );
         if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
             throw new WebDavException("empty response returned for " + storagePath);
         }

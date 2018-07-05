@@ -139,7 +139,11 @@ public class WebDavUploader {
         filePathHierarchy.forEach(fp -> storageClientMgr.createDirectory(storageURL, localRootPath.relativize(fp).toString()));
         List<RemoteLocation> remoteFileList = fileList.stream()
                 .filter(f -> f.isFile())
-                .map(f -> storageClientMgr.uploadFile(f, storageURL, storageClientMgr.urlEncodeComps(localRootPath.relativize(f.toPath()).toString())))
+                .map(f -> {
+                    RemoteLocation remoteFile = storageClientMgr.uploadFile(f, storageURL, storageClientMgr.urlEncodeComps(localRootPath.relativize(f.toPath()).toString()));
+                    LOG.info("uploaded {} to {} - {}", f, storageURL, remoteFile);
+                    return remoteFile;
+                })
                 .collect(Collectors.toList());
 
         LOG.info("uploaded {} files to {}", fileList.size(), storageURL);
