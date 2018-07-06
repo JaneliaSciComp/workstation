@@ -742,7 +742,8 @@ public class Utils {
                 amountUnits = "KB";
             }
             
-            BigDecimal mbs = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1).divide(elapsedSeconds, 2, RoundingMode.HALF_UP);
+            BigDecimal mbWritten = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1);
+            BigDecimal mbs = elapsedSeconds.intValue()==0 ? mbWritten : mbWritten.divide(elapsedSeconds, 2, RoundingMode.HALF_UP);
             log.info("Wrote {} {} in {} seconds ({} MB/s)", amountWritten, amountUnits, elapsedSeconds, mbs);
         }
 
