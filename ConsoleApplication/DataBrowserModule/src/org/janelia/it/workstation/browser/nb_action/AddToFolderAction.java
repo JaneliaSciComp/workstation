@@ -139,11 +139,11 @@ public class AddToFolderAction extends NodePresenterAction {
                         idPath = NodeUtils.createIdPath(workspace, folder);
                         workspace = model.addChild(workspace, folder);
                         log.info("Added new folder to {}", workspace);
-                        addUniqueItemsToFolder(folder, idPath, success);
                     }
 
                     @Override
                     protected void hadSuccess() {
+                        addUniqueItemsToFolder(folder, idPath, success);
                     }
 
                     @Override
@@ -277,6 +277,7 @@ public class AddToFolderAction extends NodePresenterAction {
                 ConsoleApp.handleException(error);
             }
         };
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));
         worker.execute();
     }
 
