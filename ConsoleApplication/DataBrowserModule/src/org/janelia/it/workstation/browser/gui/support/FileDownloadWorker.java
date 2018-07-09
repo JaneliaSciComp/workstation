@@ -20,12 +20,11 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.workstation.browser.api.StateMgr;
-import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.it.workstation.browser.events.workers.WorkerChangedEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadFileItem;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
+import org.janelia.it.workstation.browser.workers.NamedBackgroundWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -315,20 +314,5 @@ public class FileDownloadWorker {
                 return null;
             }
         };
-    }
-    
-    private static abstract class NamedBackgroundWorker extends BackgroundWorker {
-        
-        private String name;
-
-        public void setName(String name) {
-            this.name = name;
-            Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
-        }
-        
-        @Override
-        public String getName() {
-            return name;
-        }
     }
 }

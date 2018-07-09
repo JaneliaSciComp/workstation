@@ -1,14 +1,21 @@
 package org.janelia.it.workstation.browser.actions;
 
 import java.awt.event.ActionEvent;
+import java.io.File;
 
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
+import javax.swing.ProgressMonitor;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.gui.editor.SampleResultContextMenu;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
+import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,8 +58,54 @@ public class OpenInToolAction extends AbstractAction {
     public void actionPerformed(ActionEvent event) {
 
         ActivityLogHelper.logUserAction("OpenInToolAction.doAction", tool);
+        
+        if (path.endsWith(Utils.EXTENSION_LSM_BZ2)) {
+
+            SimpleWorker worker = new SimpleWorker() {
+
+                String uncompressedFilepath;
+                
+                @Override
+                protected void doStuff() throws Exception {
+                    
+                    // TODO: this should be one step, download and decompress
+                    
+                    setStatus("Downloading LSM...");
+                    File file = FileMgr.getFileMgr().getFile(path, false);
+                    uncompressedFilepath = file.getAbsolutePath().replaceFirst(Utils.EXTENSION_LSM_BZ2, Utils.EXTENSION_LSM);
+
+                    File uncompressedFile = new File(uncompressedFilepath);
+                    if (!uncompressedFile.exists()) {
+                        setStatus("Decompressing LSM...");
+                        Utils.copyFileToFile(file, new File(uncompressedFilepath), this, true);
+                    }
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    openFile(uncompressedFilepath);
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    FrameworkImplProvider.handleException(error);
+                }
+            };
+
+            // TODO: it should be possible to indicate progress for file downloads to cache
+            worker.setProgressMonitor(new IndeterminateProgressMonitor(
+                    ConsoleApp.getMainFrame(), "Downloading and decompressing LSM...", ""));
+            worker.execute();
+        }
+        else {
+            openFile(path);
+        }
+    }
+    
+    private void openFile(String filepath) {
+        
         try {
-            ToolMgr.openFile(tool, path, mode);
+            ToolMgr.openFile(tool, filepath, mode);
         } 
         catch (Exception e) {
             log.error("Error launching tool", e);

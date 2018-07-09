@@ -614,6 +614,7 @@ public class Utils {
                     (! destination.getName().endsWith(EXTENSION_BZ2))) {
                 input = new BZip2CompressorInputStream(input, true);
                 estimatedCompressionFactor = 3;
+                length = null;
             }
 
             FileOutputStream output = new FileOutputStream(destination);
@@ -632,6 +633,59 @@ public class Utils {
         } 
         finally {
             wfile.close();
+        }
+    }
+
+    public static void copyFileToFile(File source, File destination, SimpleWorker worker, boolean hasProgress) throws Exception {
+
+
+        if (worker != null) {
+            worker.throwExceptionIfCancelled();
+        }
+        
+        log.trace("copyFileToFile: source={}, destination={}", source, destination);
+
+        final File destinationDir = destination.getParentFile();
+        if ((destinationDir != null) && (! destinationDir.exists())) {
+            Files.createDirectories(destinationDir.toPath());
+        }
+
+        // make sure we can write to destination
+        if (destination.exists() && !destination.canWrite()) {
+            throw new IOException("Unable to open " + destination.getAbsolutePath() + " for writing.");
+        }
+        
+        InputStream input = null;
+        FileOutputStream output = null;
+
+        try {
+            input = new FileInputStream(source);
+            Long length = source.length();
+            log.info("copyURLToFile: length={}, source={}", length, source);
+    
+            int estimatedCompressionFactor = 1;
+            if (source.getName().endsWith(EXTENSION_BZ2) &&
+                    (! destination.getName().endsWith(EXTENSION_BZ2))) {
+                input = new BZip2CompressorInputStream(input, true);
+                estimatedCompressionFactor = 3;
+                length = null;
+            }
+    
+            output = new FileOutputStream(destination);
+            
+            final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
+            if (totalBytesWritten < length) {
+                throw new IOException("bytes written (" + totalBytesWritten + ") for " + destination +
+                                      " is less than source length (" + length + ")");
+            }
+        } 
+        finally {
+            if (input!=null) {
+                IOUtils.closeQuietly(input); // close input here to ensure bzip stream is properly closed
+            }
+            if (output!=null) {
+                IOUtils.closeQuietly(output);
+            }
         }
     }
 
@@ -662,6 +716,7 @@ public class Utils {
         long totalMegabytesWritten;
         
         if (length != null) {
+            // TODO: add progress indication
             // 30 MB/s on Windows (Windows to NAS)
             ReadableByteChannel inc = Channels.newChannel(input);
             totalBytesWritten = output.getChannel().transferFrom(inc, 0, length);
