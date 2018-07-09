@@ -23,6 +23,8 @@ public class OptionConstants {
     public static final String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
     public static final String NUM_CONCURRENT_DOWNLOADS_PROPERTY = "console.concurrent.downloads";
     public static final String FILE_DOWNLOADS_DIR = "FileDownloadsDir";
+    public static final String ICON_GRID_VIEWER_SHOW_TITLES = "IconGridViewer.showTitles";
+    public static final String ICON_GRID_VIEWER_SHOW_TAGS = "IconGridViewer.showTags";
     
     public static final Integer NUM_CONCURRENT_DOWNLOADS_DEFAULT = 1;
     

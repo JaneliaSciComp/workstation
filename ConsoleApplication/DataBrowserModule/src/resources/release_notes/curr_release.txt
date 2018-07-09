@@ -2,5 +2,6 @@
  	 
 Workstation Browser
 * Added progress indication when adding large numbers of items to a folder
+* Viewer preferences such as showing titles/tags as now persisted
 * Better handling of errors when applying publishing names
 * Fixed spurious error when downloading small files

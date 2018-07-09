@@ -13,8 +13,10 @@ import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.ViewerToolbar;
+import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
@@ -38,31 +40,40 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
     public IconGridViewerToolbar() {
         super();
 
+        Boolean showTitles = (Boolean) FrameworkImplProvider.getModelProperty(
+                OptionConstants.ICON_GRID_VIEWER_SHOW_TITLES, true);
+        Boolean showAnnotations = (Boolean) FrameworkImplProvider.getModelProperty(
+                OptionConstants.ICON_GRID_VIEWER_SHOW_TAGS, true);
+        
         showTitlesButton = new JToggleButton();
         showTitlesButton.setIcon(Icons.getIcon("text_smallcaps.png"));
         showTitlesButton.setFocusable(false);
-        showTitlesButton.setSelected(true);
+        showTitlesButton.setSelected(showTitles);
         showTitlesButton.setToolTipText("Show the image title above each image.");
         showTitlesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("IconGridViewerToolbar.showTitlesButtonPressed");
                 showTitlesButtonPressed();
+                FrameworkImplProvider.setModelProperty(
+                        OptionConstants.ICON_GRID_VIEWER_SHOW_TITLES, showTitlesButton.isSelected());
             }
         });
         showTitlesButton.addMouseListener(new MouseForwarder(toolbar, "ShowTitlesButton->JToolBar"));
         toolbar.add(showTitlesButton);
-
+        
         showTagsButton = new JToggleButton();
         showTagsButton.setIcon(Icons.getIcon("page_white_stack.png"));
         showTagsButton.setFocusable(false);
-        showTagsButton.setSelected(true);
+        showTagsButton.setSelected(showAnnotations);
         showTagsButton.setToolTipText("Show annotations below each image");
         showTagsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("IconGridViewerToolbar.showTagsButtonPressed");
                 showTagsButtonPressed();
+                FrameworkImplProvider.setModelProperty(
+                        OptionConstants.ICON_GRID_VIEWER_SHOW_TAGS, showTagsButton.isSelected());
             }
         });
         showTagsButton.addMouseListener(new MouseForwarder(toolbar, "ShowTagsButton->JToolBar"));
