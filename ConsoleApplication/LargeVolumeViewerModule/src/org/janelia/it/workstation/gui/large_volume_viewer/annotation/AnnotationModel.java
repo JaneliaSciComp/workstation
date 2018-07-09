@@ -914,6 +914,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             final Long sourceNeuronID, final Long sourceAnnotationID, 
             final Long targetNeuronID, final Long targetAnnotationID) throws Exception {
 
+        // start transaction to prevent screen refresh until ownership change, etc. happens
+        beginTransaction();
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
 
@@ -979,7 +981,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                beginTransaction();
                 try {
                     if (notesChangedSource) {
                         fireNotesUpdated(sourceAnnotation);
@@ -998,13 +999,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 finally {
                     endTransaction();                
                 }
-                
+                stopwatch.stop();
                 activityLog.logEndOfOperation(getWsId(), targetAnnotation);
             }
         });
 
         // log.info("ending mergeNeurite(); elapsed = " + stopwatch);
-        stopwatch.stop();
+        
     }
     
     /**
