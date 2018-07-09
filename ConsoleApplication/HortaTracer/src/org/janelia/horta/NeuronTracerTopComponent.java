@@ -621,7 +621,11 @@ public final class NeuronTracerTopComponent extends TopComponent
             } else {
                 acceptor.acceptLocation(sampleLocation);
                 Vantage vantage = sceneWindow.getVantage();
-                vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
+                if (sampleLocation.getRotationAsQuaternion()!=null) {
+                    vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
+                } else {
+                    vantage.setRotationInGround(vantage.getDefaultRotation());
+                }
             }
             activityLogger.logHortaLaunch(sampleLocation);
             currentSource = sampleLocation.getSampleUrl().toString();
