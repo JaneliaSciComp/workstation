@@ -20,15 +20,15 @@ import org.slf4j.LoggerFactory;
 public class WebDavUploader {
     private static final Logger LOG = LoggerFactory.getLogger(WebDavUploader.class);
 
-    private final WebDavClientMgr webDavClientMgr;
+    private final StorageClientMgr storageClientMgr;
 
     /**
      * Constructs an uploader.
      *
-     * @param webDavClientMgr WebDAV client manager for the current session
+     * @param storageClientMgr WebDAV client manager for the current session
      */
-    public WebDavUploader(WebDavClientMgr webDavClientMgr) {
-        this.webDavClientMgr = webDavClientMgr;
+    public WebDavUploader(StorageClientMgr storageClientMgr) {
+        this.storageClientMgr = storageClientMgr;
     }
 
     /**
@@ -45,8 +45,8 @@ public class WebDavUploader {
      *   if the file cannot be uploaded.
      */
     public RemoteLocation uploadFile(String storageName, String storageContext, String storageTags, File file) throws WebDavException {
-        String storageURL = webDavClientMgr.createStorage(storageName, storageContext, storageTags);
-        RemoteLocation remoteFile = webDavClientMgr.uploadFile(file, storageURL, webDavClientMgr.urlEncodeComp(file.getName()));
+        String storageURL = storageClientMgr.createStorage(storageName, storageContext, storageTags);
+        RemoteLocation remoteFile = storageClientMgr.uploadFile(file, storageURL, storageClientMgr.urlEncodeComp(file.getName()));
         LOG.info("uploaded {} to {} - {}", file, storageURL, remoteFile);
         return remoteFile;
     }
@@ -78,7 +78,7 @@ public class WebDavUploader {
     public List<RemoteLocation> uploadFiles(String storageName, String storageContext, String storageTags, List<File> fileList, File localRootDirectory)
             throws IllegalArgumentException, WebDavException {
 
-        String storageURL = webDavClientMgr.createStorage(storageName, storageContext, storageTags);
+        String storageURL = storageClientMgr.createStorage(storageName, storageContext, storageTags);
 
         // need to go through the entire fileList and create the directory hierarchy
         // and then upload the file content
@@ -125,7 +125,7 @@ public class WebDavUploader {
                     return IntStream.range(0, nPathComponents - 1)
                             .mapToObj(i -> fp.getName(i))
                             .map(p -> p.toString())
-                            .map(p -> webDavClientMgr.urlEncodeComp(p))
+                            .map(p -> storageClientMgr.urlEncodeComp(p))
                             .map(pc -> Paths.get(pc))
                             .reduce(new PathComps(),
                                     (pathList, pc)-> pathList.append(pc),
@@ -136,10 +136,14 @@ public class WebDavUploader {
                 .sorted()
                 .collect(Collectors.toSet());
 
-        filePathHierarchy.forEach(fp -> webDavClientMgr.createDirectory(storageURL, localRootPath.relativize(fp).toString()));
+        filePathHierarchy.forEach(fp -> storageClientMgr.createDirectory(storageURL, localRootPath.relativize(fp).toString()));
         List<RemoteLocation> remoteFileList = fileList.stream()
                 .filter(f -> f.isFile())
-                .map(f -> webDavClientMgr.uploadFile(f, storageURL, webDavClientMgr.urlEncodeComps(localRootPath.relativize(f.toPath()).toString())))
+                .map(f -> {
+                    RemoteLocation remoteFile = storageClientMgr.uploadFile(f, storageURL, storageClientMgr.urlEncodeComps(localRootPath.relativize(f.toPath()).toString()));
+                    LOG.info("uploaded {} to {} - {}", f, storageURL, remoteFile);
+                    return remoteFile;
+                })
                 .collect(Collectors.toList());
 
         LOG.info("uploaded {} files to {}", fileList.size(), storageURL);

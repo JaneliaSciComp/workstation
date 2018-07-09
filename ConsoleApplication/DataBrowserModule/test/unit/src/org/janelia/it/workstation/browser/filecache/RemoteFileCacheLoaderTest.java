@@ -41,7 +41,7 @@ public class RemoteFileCacheLoaderTest {
     private static final Logger LOG = LoggerFactory.getLogger(RemoteFileCacheLoaderTest.class);
 
     private HttpClient httpClient;
-    private WebDavClientMgr webDavClientMgr;
+    private StorageClientMgr storageClientMgr;
     private LocalFileCache testCache;
     private RemoteFileCacheLoader remoteFileCacheLoader;
     private File testCacheRootDirectory;
@@ -57,9 +57,9 @@ public class RemoteFileCacheLoaderTest {
         testRemoteFile = TestFileUtils.createFile(testRemoteDirectory, 1);
         httpClient = Mockito.mock(HttpClient.class);
         HttpClientProxy httpClientProxy = new HttpClientProxy(httpClient);
-        webDavClientMgr = Mockito.mock(WebDavClientMgr.class);
-        testCache = new LocalFileCache(testCacheRootDirectory, 100, null, httpClientProxy, webDavClientMgr);
-        remoteFileCacheLoader = new RemoteFileCacheLoader(httpClientProxy, webDavClientMgr, testCache);
+        storageClientMgr = Mockito.mock(StorageClientMgr.class);
+        testCache = new LocalFileCache(testCacheRootDirectory, 100, null, httpClientProxy, storageClientMgr);
+        remoteFileCacheLoader = new RemoteFileCacheLoader(httpClientProxy, storageClientMgr, testCache);
     }
 
     @After
@@ -73,12 +73,12 @@ public class RemoteFileCacheLoaderTest {
     public void testLoadAndDelete() throws Exception {
         String testRemoteFileName = testRemoteFile.getAbsolutePath();
         MultiStatusResponse multiStatusResponse = new MultiStatusResponse("http://test", "desc");
-        WebDavFile testWebDavFile = Mockito.spy(new WebDavFile(testRemoteFileName, multiStatusResponse));
+        WebDavFile testWebDavFile = Mockito.spy(new WebDavFile(testRemoteFileName, multiStatusResponse, (t) -> {}));
         GetMethod testMethod = Mockito.mock(GetMethod.class);
 
         PowerMockito.whenNew(GetMethod.class).withAnyArguments().thenReturn(testMethod);
         Mockito.when(testMethod.getResponseBodyAsStream()).thenReturn(new FileInputStream(testRemoteFile));
-        Mockito.when(webDavClientMgr.findFile(testRemoteFileName)).thenReturn(testWebDavFile);
+        Mockito.when(storageClientMgr.findFile(testRemoteFileName)).thenReturn(testWebDavFile);
         Mockito.when(httpClient.executeMethod(ArgumentMatchers.any(HttpMethod.class))).thenReturn(200);
 
         CachedFile cachedFile = remoteFileCacheLoader.load(testRemoteFile.getAbsolutePath());

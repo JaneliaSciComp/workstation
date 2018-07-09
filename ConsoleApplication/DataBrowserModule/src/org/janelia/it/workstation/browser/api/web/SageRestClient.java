@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -46,6 +47,10 @@ public class SageRestClient extends RESTClientBase {
                 .request("application/json")
                 .get();
         try {
+            if (response.getStatus()==404) {
+                // SageResponder unfortunately abuses 404 to represent several okay-ish states, so we can't throw an exception in this case
+                return names;
+            }
             checkBadResponse(target, response);
             JsonNode data = response.readEntity(new GenericType<JsonNode>() {});
             if (data!=null) {

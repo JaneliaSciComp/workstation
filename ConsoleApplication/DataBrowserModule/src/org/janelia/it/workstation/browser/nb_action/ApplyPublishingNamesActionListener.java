@@ -121,16 +121,23 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
         final SageRestClient sageClient = DomainMgr.getDomainMgr().getSageClient();
         
         for(String lineName : sampleByLine.keySet()) {
-            Collection<String> possibleNames = sageClient.getPublishingNames(lineName);
             
-            if (possibleNames.isEmpty()) {
-                log.info("No pulishing names available for '{}'", lineName);
+            try {
+                Collection<String> possibleNames = sageClient.getPublishingNames(lineName);
+                
+                if (possibleNames.isEmpty()) {
+                    log.info("No pulishing names available for '{}'", lineName);
+                }
+                else if (possibleNames.size() == 1) {
+                    annotatePublishedName((List<Sample>)sampleByLine.get(lineName), possibleNames.iterator().next());
+                }
+                else {
+                    manualAnnotationNecessary.add(lineName);
+                }
             }
-            else if (possibleNames.size() == 1) {
-                annotatePublishedName((List<Sample>)sampleByLine.get(lineName), possibleNames.iterator().next());
-            }
-            else {
-                manualAnnotationNecessary.add(lineName);
+            catch (Exception e) {
+                // Handle exceptions here so that one error with the SAGE responder doesn't prevent other images from being annotated
+                ConsoleApp.handleException(e);
             }
         }
     }

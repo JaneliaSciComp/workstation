@@ -51,6 +51,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
 import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
+import org.janelia.it.workstation.browser.filecache.URLProxy;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -169,8 +170,7 @@ public class Utils {
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 String format = path.substring(path.lastIndexOf(".") + 1);
                 IFormatReader reader;
                 switch (format) {
@@ -214,23 +214,28 @@ public class Utils {
     /**
      * Read an image from a URL using the ImageIO API. Currently supports TIFFs, PNGs and JPEGs.
      */
-    public static BufferedImage readImage(URL url) throws Exception {
+    public static BufferedImage readImage(URLProxy urlProxy) throws Exception {
         BufferedImage image;
         StopWatch stopWatch = TIMER ? new LoggingStopWatch() : null;
         // Some extra finagling is required because LOCI libraries do not like the file protocol for some reason
-        if (url.getProtocol().equals("file")) {
-            String localFilepath = url.toString().replace("file:", "");
+        if (urlProxy.getProtocol().equals("file")) {
+            String localFilepath = urlProxy.toString().replace("file:", "");
             log.trace("Loading cached file: {}", localFilepath);
             image = Utils.readImage(localFilepath);
             if (TIMER) {
                 stopWatch.stop("readCachedImage");
             }
-        }
-        else {
-            log.trace("Loading url: {}", url);
-            image = Utils.readImage(url.toString());
-            if (TIMER) {
-                stopWatch.stop("readRemoteImage");
+        } else {
+            log.trace("Loading url: {}", urlProxy);
+            try {
+                image = Utils.readImage(urlProxy.toString());
+            } catch (Exception e) {
+                urlProxy.handleError(e);
+                throw e;
+            } finally {
+                if (TIMER) {
+                    stopWatch.stop("readRemoteImage");
+                }
             }
         }
         return image;
@@ -737,7 +742,8 @@ public class Utils {
                 amountUnits = "KB";
             }
             
-            BigDecimal mbs = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1).divide(elapsedSeconds, 2, RoundingMode.HALF_UP);
+            BigDecimal mbWritten = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1);
+            BigDecimal mbs = elapsedSeconds.intValue()==0 ? mbWritten : mbWritten.divide(elapsedSeconds, 2, RoundingMode.HALF_UP);
             log.info("Wrote {} {} in {} seconds ({} MB/s)", amountWritten, amountUnits, elapsedSeconds, mbs);
         }
 
