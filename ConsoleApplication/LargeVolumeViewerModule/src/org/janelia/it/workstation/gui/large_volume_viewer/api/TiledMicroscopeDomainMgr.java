@@ -173,10 +173,10 @@ public class TiledMicroscopeDomainMgr {
         return workspace;
     }
 
-    public TmWorkspace copyWorkspace(TmWorkspace workspace, String name) throws Exception {
-        log.debug("copyWorkspace(workspace={}, name={})", workspace, name);
+    public TmWorkspace copyWorkspace(TmWorkspace workspace, String name, String assignOwner) throws Exception {
+        log.debug("copyWorkspace(workspace={}, name={}, neuronOwner={})", workspace, name, assignOwner);
         
-        TmWorkspace workspaceCopy = client.copy(workspace, name);
+        TmWorkspace workspaceCopy = client.copy(workspace, name, assignOwner);
         
         // Server should have put the new workspace in the Workspaces root folder. Refresh the Workspaces folder to show it in the explorer.
         TreeNode folder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);

@@ -1625,6 +1625,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
         final String workspaceName = dialog.showForSample(getAnnotationModel().getCurrentSample());
+        final String assignOwner = dialog.getAssignOwner();
         
         if (workspaceName==null) {
             log.info("Aborting workspace creation: no valid name was provided by the user");
@@ -1639,7 +1640,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             
             @Override
             protected void doStuff() throws Exception {
-                workspaceCopy = annotationModel.copyWorkspace(workspace, workspaceName);
+                workspaceCopy = annotationModel.copyWorkspace(workspace, workspaceName, assignOwner);
             }
 
             @Override

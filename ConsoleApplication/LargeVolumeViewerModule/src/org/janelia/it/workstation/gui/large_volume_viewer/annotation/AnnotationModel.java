@@ -655,8 +655,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * @param name = name of new workspace
      * @throws Exception
      */
-    public synchronized TmWorkspace copyWorkspace(TmWorkspace workspace, String name) throws Exception {
-        TmWorkspace workspaceCopy = tmDomainMgr.copyWorkspace(workspace, name);
+    public synchronized TmWorkspace copyWorkspace(TmWorkspace workspace, String name, String assignOwner) throws Exception {
+        TmWorkspace workspaceCopy = tmDomainMgr.copyWorkspace(workspace, name, assignOwner);
         activityLog.logCreateWorkspace(workspace.getId());
         return workspaceCopy;
     }
