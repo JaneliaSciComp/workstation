@@ -269,6 +269,8 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     @Override
     public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
+        if (skipSkeletonChange)
+            return;
         for (SkeletonActor actor: actors) {
             actor.getModel().updateNeuronStyles(neuronStyleMap);
         }

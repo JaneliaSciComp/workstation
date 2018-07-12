@@ -982,6 +982,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             @Override
             public void run() {
                 try {
+                    // temporary fix to set index properly
+                    final List<TmNeuronMetadata> neuronList = new ArrayList<>();
+                    neuronList.add(targetNeuron);
+                    fireNeuronsOwnerChanged(neuronList);
+                    
                     if (notesChangedSource) {
                         fireNotesUpdated(sourceAnnotation);
                     }
@@ -999,6 +1004,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 finally {
                     endTransaction();                
                 }
+                log.info("TOTAL MERGE: {}",stopwatch.elapsedMillis());
                 stopwatch.stop();
                 activityLog.logEndOfOperation(getWsId(), targetAnnotation);
             }
