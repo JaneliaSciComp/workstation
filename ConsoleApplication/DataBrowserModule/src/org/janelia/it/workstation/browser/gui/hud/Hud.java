@@ -372,7 +372,11 @@ public class Hud extends ModalDialog {
     }
     
     public String getFast3dFile() {
-        return DomainUtils.getFilepath(fileProvider, FileType.FastStack);
+        String fastFile = DomainUtils.getFilepath(fileProvider, FileType.AllMovie);
+        if (fastFile==null) {
+            fastFile = DomainUtils.getFilepath(fileProvider, FileType.FastStack);
+        }
+        return fastFile;
     }
     
     /**
