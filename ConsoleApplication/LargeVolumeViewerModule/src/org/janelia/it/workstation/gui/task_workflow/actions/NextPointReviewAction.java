@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "N")
+    @ActionReference(path = "Shortcuts", name = "A-N")
 })
 public class NextPointReviewAction extends AbstractAction {
 
@@ -39,8 +39,8 @@ public class NextPointReviewAction extends AbstractAction {
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        System.out.println ("ASDFASDFASDF");
-        TaskWorkflowViewTopComponent.getInstance().nextTask();
+        // commenting out for now since it's still in development
+        // TaskWorkflowViewTopComponent.getInstance().nextTask();
     }
     
     @Override
