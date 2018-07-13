@@ -1151,6 +1151,17 @@ public class SampleEditorPanel
             values.put("Objective", alignment.getObjective());
             values.put("Optical Resolution", alignment.getOpticalResolution());
             values.put("Message", alignment.getMessage());
+            values.put("Container Id", alignment.getContainerRef().getTargetId());
+            
+            Long bridgeParentAlignmentId = alignment.getBridgeParentAlignmentId();
+            if (bridgeParentAlignmentId!=null) {
+                List<SampleAlignmentResult> bridges = alignment.getParentRun().getResultsById(SampleAlignmentResult.class, bridgeParentAlignmentId);
+                if (!bridges.isEmpty()) {
+                    SampleAlignmentResult sampleAlignmentResult = bridges.get(0);
+                    values.put("Bridged From", sampleAlignmentResult.getAlignmentSpace());
+                }
+            }
+            
             for (AlignmentScoreType scoretype : alignment.getScores().keySet()) {
                 String score = alignment.getScores().get(scoretype);
                 values.put(scoretype.getLabel(), score);
