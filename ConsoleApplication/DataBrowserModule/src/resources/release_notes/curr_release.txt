@@ -2,3 +2,4 @@
  	 
 Workstation Browser
 * Support more than 100 facet values for search
+* Added "User's Animal Id" attribute from TMOG
