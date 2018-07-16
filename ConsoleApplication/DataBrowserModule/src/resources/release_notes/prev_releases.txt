@@ -1,3 +1,20 @@
+// 7.13
+     
+Workstation Browser
+* You can now use "Open in Fiji/Vaa3d" on bzip2-compressed LSMs
+* Added progress indication when adding large numbers of items to a folder
+* Viewer preferences such as showing titles/tags as now persisted
+* Better handling of errors when applying publishing names
+* Fixed spurious error when downloading small files
+
+Large Volume Viewer
+* Fixed brain flip for navigation to Horta location
+* Added Assign Neuron Owner to Save As Workspace
+* Fixed NPE for TaskView hotkeys 
+
+Horta Viewer
+* Improved neuron merge performance
+
 // 7.12 
      
 Workstation Browser
