@@ -5,6 +5,8 @@
 *.iws
 *.ipr
 *.log
+*.iml
+.gradle
 build
 build_eclipse
 target
