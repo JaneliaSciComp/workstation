@@ -250,8 +250,6 @@ public class AnnotationPanel extends JPanel
         };
         workspaceToolMenu.add(new JMenuItem(saveColorModelAction));
 
-        workspaceToolMenu.add(new WorkspaceInformationAction(annotationModel));
-
         saveAsAction = new WorkspaceSaveAsAction();
         workspaceToolMenu.add(new JMenuItem(saveAsAction));
 
@@ -345,7 +343,9 @@ public class AnnotationPanel extends JPanel
         neuronToolMenu.add(bulkNeuronOwnerAction);
 
         neuronToolMenu.add(new JSeparator());
-                        
+
+        neuronToolMenu.add(new WorkspaceInformationAction(annotationModel, workspaceNeuronList));
+
         sortSubmenu = new JMenu("Sort");
         JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical by name") {
             @Override

@@ -6,3 +6,4 @@ Workstation Browser
 
 Large Volume Viewer
 * Sorting neurons alphabetically or by owner will subsort by creation date
+* Workspace info dialog only shows filtered neuron list; moved to neuron gear menu

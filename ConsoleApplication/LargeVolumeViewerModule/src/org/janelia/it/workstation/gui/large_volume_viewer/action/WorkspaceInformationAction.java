@@ -20,23 +20,27 @@ import Jama.Matrix;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuronListProvider;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.util.MatrixUtilities;
 
 /**
  * this action opens a dialog in which information on the neurons
- * in the current workspace is displayed
+ * in the current workspace is displayed; currently we limit to the
+ * neurons visible in the neuron list
  */
 public class WorkspaceInformationAction extends AbstractAction {
 
     private AnnotationModel annotationModel;
+    private NeuronListProvider listProvider;
 
-    public WorkspaceInformationAction(AnnotationModel annotationModel) {
+    public WorkspaceInformationAction(AnnotationModel annotationModel, NeuronListProvider listProvider) {
         this.annotationModel = annotationModel;
+        this.listProvider = listProvider;
 
-        putValue(NAME, "Show workspace information...");
-        putValue(SHORT_DESCRIPTION, "Show workspace info");
+        putValue(NAME, "Show neuron table...");
+        putValue(SHORT_DESCRIPTION, "Show neuron table");
     }
 
 
@@ -69,7 +73,7 @@ public class WorkspaceInformationAction extends AbstractAction {
 
             table.setFillsViewportHeight(true);
             table.setAutoCreateRowSorter(true);
-            tableModel.addNeurons(new ArrayList<>(annotationModel.getNeuronList()));
+            tableModel.addNeurons(new ArrayList<>(listProvider.getNeuronList()));
 
             JPanel panel = new JPanel();
             panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
@@ -81,7 +85,7 @@ public class WorkspaceInformationAction extends AbstractAction {
             JOptionPane.showConfirmDialog(null,
                 // scrollPane,
                 panel,
-                "Workspace information",
+                "Data for filtered neurons",
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.INFORMATION_MESSAGE,
                 null);
