@@ -49,7 +49,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
     private boolean showTitle;
     
     public ImageTypeSelectionButton() {
-        this(false, true);
+        this(true, true);
     }
     
     public ImageTypeSelectionButton(boolean showTitle, boolean only2d) {

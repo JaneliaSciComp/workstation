@@ -44,7 +44,7 @@ public class ResultSelectionButton extends DropDownButton {
     private ButtonGroup group;
 
     public ResultSelectionButton() {
-        this(false);
+        this(true);
     }
     
     public ResultSelectionButton(boolean showTitle) {
