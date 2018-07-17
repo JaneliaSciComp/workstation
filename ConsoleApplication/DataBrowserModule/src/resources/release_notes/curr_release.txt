@@ -3,3 +3,6 @@
 Workstation Browser
 * Support more than 100 facet values for search
 * Added "User's Animal Id" attribute from TMOG
+
+Large Volume Viewer
+* Sorting neurons alphabetically or by owner will subsort by creation date

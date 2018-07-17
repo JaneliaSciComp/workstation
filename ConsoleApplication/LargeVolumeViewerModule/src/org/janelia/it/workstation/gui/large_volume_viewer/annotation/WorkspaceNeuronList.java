@@ -640,11 +640,18 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private void setSortOrder(NeuronSortOrder neuronSortOrder) {
         if (neuronTableModel.getRowCount() > 0) {
             switch(neuronSortOrder) {
+                // always sort by creation date as a secondary key
                 case ALPHABETICAL:
-                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_NAME, SortOrder.ASCENDING)));
+                    sorter.setSortKeys(Arrays.asList(
+                        new RowSorter.SortKey(NeuronTableModel.COLUMN_NAME, SortOrder.ASCENDING),
+                        new RowSorter.SortKey(NeuronTableModel.COLUMN_CREATION_DATE, SortOrder.ASCENDING)
+                    ));
                     break;
                 case OWNER:
-                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_OWNER_NAME, SortOrder.ASCENDING)));
+                    sorter.setSortKeys(Arrays.asList(
+                        new RowSorter.SortKey(NeuronTableModel.COLUMN_OWNER_NAME, SortOrder.ASCENDING),
+                        new RowSorter.SortKey(NeuronTableModel.COLUMN_CREATION_DATE, SortOrder.ASCENDING)
+                    ));
                     break;
                 case CREATIONDATE:
                     sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_CREATION_DATE, SortOrder.ASCENDING)));
