@@ -106,6 +106,10 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
         }
         return objects;
     }
+    
+    public ResultArtifactDescriptor withoutObjective() {
+        return new ResultArtifactDescriptor(null, area, resultClass, resultName, aligned);
+    }
 
     @Override
     public String toString() {
@@ -121,12 +125,17 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
         }
         
         StringBuilder sb = new StringBuilder();
-        sb.append(objective);
-        if (!StringUtils.isBlank(realArea)) {
+        if (objective!=null) {
+            sb.append(objective);
             sb.append(" ");
-            sb.append(realArea);
         }
-        sb.append(" - ");
+        if (!StringUtils.isBlank(realArea)) {
+            sb.append(realArea);
+            sb.append(" ");
+        }
+        if (sb.length()>0) {
+            sb.append(" - ");
+        }
         sb.append(realResultName);
         
         return sb.toString();
