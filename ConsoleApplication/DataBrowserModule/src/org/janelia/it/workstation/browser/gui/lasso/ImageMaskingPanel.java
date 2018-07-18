@@ -102,6 +102,10 @@ public class ImageMaskingPanel extends JPanel {
 
     public void setImage(BufferedImage image) {
 
+        if (image==null) {
+            throw new IllegalArgumentException("Null image");
+        }
+        
         this.image = image;
         
         // ImageJ wants images in this format

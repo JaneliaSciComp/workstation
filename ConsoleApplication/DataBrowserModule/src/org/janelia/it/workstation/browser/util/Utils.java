@@ -46,6 +46,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
@@ -131,10 +132,10 @@ public class Utils {
     public static BufferedImage readImage(String path) throws Exception {
         try {
             String selectedRenderer = (String) LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D);
-
             RendererType2D renderer = selectedRenderer == null ? RendererType2D.LOCI : RendererType2D.valueOf(selectedRenderer);
+            String format = FilenameUtils.getExtension(path);
             BufferedImage image = null;
-
+            
             if (renderer == RendererType2D.IMAGE_IO) {
                 InputStream stream = null;
                 GetMethod get = null;
@@ -156,6 +157,9 @@ public class Utils {
 
                     // Supports GIF, PNG, JPEG, BMP, and WBMP 
                     image = ImageIO.read(stream);
+                    if (image==null) {
+                        throw new FormatException("File format is not supported: " + format);
+                    }
                 }
                 finally {
                     if (get != null) {
@@ -170,8 +174,8 @@ public class Utils {
                         }
                     }
                 }
-            } else {
-                String format = path.substring(path.lastIndexOf(".") + 1);
+            } 
+            else {
                 IFormatReader reader;
                 switch (format) {
                     case "tif":
@@ -205,7 +209,8 @@ public class Utils {
         catch (Exception e) {
             if (e instanceof IOException) {
                 throw e;
-            } else {
+            } 
+            else {
                 throw new IOException("Error reading image: " + path, e);
             }
         }
