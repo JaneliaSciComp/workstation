@@ -1,8 +1,12 @@
 // 7.14
- 	 
+ 
 Workstation Browser
 * Support more than 100 facet values for search
 * Added "User's Animal Id" attribute from TMOG
+* Improved progress indication for bulk file downloads
+* Clean up partially downloaded files in case of an error
+* Fixed a bug with color depth mask upload
+* Prevent users from selected unsupported file formats when uploading files
 
 Large Volume Viewer
 * Sorting neurons alphabetically or by owner will subsort by creation date
