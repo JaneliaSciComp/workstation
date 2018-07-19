@@ -50,6 +50,7 @@ import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthSearchDialog;
 import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromImageAction;
 import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
 import org.janelia.it.workstation.browser.gui.dialogs.CompressionDialog;
+import org.janelia.it.workstation.browser.gui.dialogs.DataSetDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.SpecialAnnotationChooserDialog;
@@ -82,6 +83,7 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.Image;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.PipelineResult;
@@ -200,6 +202,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getPartialSecondaryDataDeletiontItem());
         //add(getSetPublishingNameItem());
         add(getApplyPublishingNamesItem());
+        add(getDataSetDialogItem());
         add(getMergeItem());
         add(getCreateColorDepthMaskItem());
         add(getAddToColorDepthSearchItem());
@@ -440,6 +443,57 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 menuItem.setEnabled(false);
                 break;
             }
+        }
+        
+        return menuItem;
+    }
+
+    protected JMenuItem getDataSetDialogItem() {
+
+        if (multiple) return null;
+        
+        if (!(domainObject instanceof Sample)) {
+            return null;
+        }
+        
+        Sample sample = (Sample)domainObject;
+        
+        JMenuItem menuItem = new JMenuItem("  View Data Set Settings");
+        menuItem.addActionListener((e) -> {
+
+            SimpleWorker simpleWorker = new SimpleWorker() {
+                private DataSet dataSet;
+
+                @Override
+                protected void doStuff() throws Exception {
+                    dataSet = DomainMgr.getDomainMgr().getModel().getDataSet(sample.getDataSet());
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    if (dataSet==null) {
+                        JOptionPane.showMessageDialog(mainFrame,
+                                "Could not retrieve this sample's data set.", "Invalid Data Set",
+                                JOptionPane.WARNING_MESSAGE);
+                    }
+                    else {
+                        DataSetDialog dataSetDialog = new DataSetDialog(null);
+                        dataSetDialog.showForDataSet(dataSet);
+                    }
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    ConsoleApp.handleException(error);
+                }
+            };
+
+            simpleWorker.execute();
+            
+        });
+        
+        if (!ClientDomainUtils.hasWriteAccess(sample)) {
+            menuItem.setEnabled(false);
         }
         
         return menuItem;

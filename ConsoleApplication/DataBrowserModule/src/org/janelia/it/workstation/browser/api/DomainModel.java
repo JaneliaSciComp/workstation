@@ -583,6 +583,16 @@ public class DomainModel {
         return canonicalDataSets;
     }
 
+    public DataSet getDataSet(String identifier) throws Exception {
+        // TODO: improve performance by fetching only the required data set
+        for (DataSet dataSet : getDataSets()) {
+            if (dataSet.getIdentifier().equals(identifier)) {
+                return dataSet;
+            }
+        }
+        return null;
+    }
+    
     public List<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         List<DataSet> dataSets = new ArrayList<>(sampleFacade.getColorDepthDataSets(alignmentSpace));

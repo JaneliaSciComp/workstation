@@ -38,7 +38,6 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.SampleUtils;
-import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.sample.DataSet;
 
 import net.miginfocom.swing.MigLayout;
@@ -55,8 +54,6 @@ public class DataSetDialog extends ModalDialog {
 
     private static final String SLIDE_CODE_PATTERN = "{Slide Code}";
     private static final String DEFAULT_SAMPLE_NAME_PATTERN = "{Line}-" + SLIDE_CODE_PATTERN;
-
-    private final DataSetListDialog parentDialog;
 
     private JPanel attrPanel;
     private JTextField nameInput;
@@ -76,7 +73,6 @@ public class DataSetDialog extends ModalDialog {
     public DataSetDialog(DataSetListDialog parentDialog) {
 
         super(parentDialog);
-        this.parentDialog = parentDialog;
 
         setTitle("Data Set Definition");
 

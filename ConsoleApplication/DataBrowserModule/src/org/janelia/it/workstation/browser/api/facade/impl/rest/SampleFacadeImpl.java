@@ -72,7 +72,13 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
     public DataSet update(DataSet dataSet) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(dataSet);
-        query.setSubjectKey(AccessManager.getSubjectKey());
+        // TODO: this is a hack to allow admins to edit data sets. We need to implement a more comprehensive solution to this.
+        if (AccessManager.getAccessManager().isAdmin()) {
+            query.setSubjectKey(dataSet.getOwnerKey());
+        }
+        else {
+            query.setSubjectKey(AccessManager.getSubjectKey());
+        }
         Response response = service.path("data/dataset")
                 .request("application/json")
                 .post(Entity.json(query));

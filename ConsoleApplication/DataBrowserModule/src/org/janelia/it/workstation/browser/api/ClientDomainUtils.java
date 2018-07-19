@@ -35,23 +35,27 @@ public class ClientDomainUtils {
     
     /**
      * Returns true if the current user has read access to the given domain object.
+     * Always returns true if the current user is an admin.
      * @param domainObject can they read this?
      * @return T=Yes; F=No
      */
     public static boolean hasReadAccess(DomainObject domainObject) {
         if (!AccessManager.loggedIn()) return false;
         if (domainObject==null) return false;
+        if (AccessManager.getAccessManager().isAdmin()) return true;
         return DomainUtils.hasReadAccess(domainObject, AccessManager.getReaderSet());
     }
     
     /**
      * Returns true if the current user has write access to the given domain object.
+     * Always returns true if the current user is an admin.
      * @param domainObject can they write this?
      * @return T=Yes; F=No
      */
     public static boolean hasWriteAccess(DomainObject domainObject) {
         if (!AccessManager.loggedIn()) return false;
         if (domainObject==null) return false;
+        if (AccessManager.getAccessManager().isAdmin()) return true;
         return DomainUtils.hasWriteAccess(domainObject, AccessManager.getWriterSet());
     }
     
