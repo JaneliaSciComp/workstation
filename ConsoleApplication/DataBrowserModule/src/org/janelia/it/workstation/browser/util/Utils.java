@@ -723,11 +723,14 @@ public class Utils {
         if (length != null) {
             // TODO: add progress indication
             // 30 MB/s on Windows (Windows to NAS)
-            ReadableByteChannel inc = Channels.newChannel(input);
-            totalBytesWritten = output.getChannel().transferFrom(inc, 0, length);
+            CallbackByteChannel rbc = new CallbackByteChannel(Channels.newChannel(input), (long bytesWritten) -> {
+                worker.setProgress(bytesWritten, estimatedLength);
+            });
+            output.getChannel().transferFrom(rbc, 0, length);
+            totalBytesWritten = rbc.getTotalBytesRead();
         }
         else {
-            log.warn("No length given, using inefficient file copy method");
+            log.warn("No length given, falling back on inefficient copy method");
 
             // 30-35 MB/s (Windows to NAS)
 //          ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
