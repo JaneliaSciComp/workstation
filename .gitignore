@@ -5,6 +5,9 @@
 *.iws
 *.ipr
 *.log
+*.iml
+.gradle
+groovy/.settings
 build
 build_eclipse
 target
