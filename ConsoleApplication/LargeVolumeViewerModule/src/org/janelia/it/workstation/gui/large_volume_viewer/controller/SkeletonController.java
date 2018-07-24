@@ -28,6 +28,7 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -193,7 +194,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         for (Anchor anchor: anchors) {
             anchor.setSkeletonAnchorListener(skeletonAnchorListener);
         }
-        skeletonChanged();
+        skeletonChanged(anchors);
     }
 
     @Override
@@ -220,13 +221,16 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     @Override
     public void clearAnchors(Collection<TmGeoAnnotation> annotations) {
+        List<Anchor> anchorList = new ArrayList<Anchor>();
         for(TmGeoAnnotation annotation : annotations) {
             Anchor anchor = skeleton.getAnchorByID(annotation.getId());
             if (anchor!=null) {
+                anchorList.add(anchor);
                 skeleton.delete(anchor);
             }
         }
-        skeletonChanged();
+        if (anchorList.size()>0)
+            skeletonChanged(anchorList);
     }
     
     @Override
@@ -290,6 +294,17 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     public void skeletonChanged() {
         skeletonChanged(false);
+    }
+    
+    public void skeletonChanged(List<Anchor> anchorList) {
+        if (!skipSkeletonChange) {
+            for (SkeletonActor actor : actors) {
+                 actor.getModel().updateAnchors(anchorList);
+            }
+            refreshMeshDrawUpdateTimer();
+            fireComponentUpdate();
+            log.debug("anchor time=" + TraceMode.getTimerMs());
+        }
     }
     
     public void skeletonChanged(boolean forceUpdate) {
