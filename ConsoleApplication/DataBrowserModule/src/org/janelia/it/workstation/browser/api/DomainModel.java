@@ -635,6 +635,10 @@ public class DomainModel {
         }
     }
 
+    public void removeStorage(List<String> storagePaths) {
+        domainFacade.removeObjectStorage(storagePaths);
+    }
+
     /**
      * Returns all of the ontologies that a user has access to view. 
      * @return collection of ontologies

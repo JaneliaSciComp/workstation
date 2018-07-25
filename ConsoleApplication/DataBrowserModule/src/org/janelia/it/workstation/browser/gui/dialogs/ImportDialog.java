@@ -11,20 +11,11 @@ import java.io.FilenameFilter;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -72,11 +63,21 @@ public class ImportDialog extends ModalDialog {
             "Name of the folder in which data should be loaded with the data.";
     private static final String TOOLTIP_INPUT_DIR =
             "Directory of the tree that should be loaded into the database.";
-    private static final String IMPORT_STORAGE_DEFAULT_TAGS = ConsoleProperties.getString("console.importStorage.tags");
+
+    private static final String NRS_STORAGE = "NRS";
+    private static final String JADE_STORAGE = "JADE";
+
+    private static final Map<String, String> STORAGE_TAGS = ImmutableMap.of(
+            NRS_STORAGE, ConsoleProperties.getString("console.upload.StorageTags.nrs"),
+            JADE_STORAGE, ConsoleProperties.getString("console.upload.StorageTags.jade")
+    );
 
     private JTextField folderField;
     private TreeNode rootFolder;
     private JTextField pathTextField;
+    private JTextField importFilesChanSpecField;
+    private JTextField importMipsOptionsField;
+    private JComboBox<String> storageChoice;
     private FilenameFilter selectedChildrenFilter;
 
     public ImportDialog(String title) {
@@ -137,6 +138,15 @@ public class ImportDialog extends ModalDialog {
             }
         });
 
+        JLabel importFilesChanSpecLabel = new JLabel("Import Files ChannelSpec:");
+        importFilesChanSpecField = new JTextField(40);
+
+        JLabel importMipsOptionsLabel = new JLabel("Import Files MIPS Options:");
+        importMipsOptionsField = new JTextField(40);
+
+        JLabel storageLabel = new JLabel("Storage:");
+        storageChoice = new JComboBox<>(new String[] {NRS_STORAGE, JADE_STORAGE});
+
         GridBagConstraints c = new GridBagConstraints();
         c.ipadx = 5;
         c.gridx = 0;
@@ -155,6 +165,28 @@ public class ImportDialog extends ModalDialog {
 
         c.gridx = 2;
         attrPanel.add(chooseFileButton, c);
+
+        c.gridx = 0;
+        c.gridy = 2;
+        attrPanel.add(importFilesChanSpecLabel, c);
+
+        c.gridx = 1;
+        attrPanel.add(importFilesChanSpecField, c);
+
+        c.gridx = 0;
+        c.gridy = 3;
+        attrPanel.add(importMipsOptionsLabel, c);
+
+        c.gridx = 1;
+        attrPanel.add(importMipsOptionsField, c);
+
+        c.gridx = 0;
+        c.gridy = 4;
+        attrPanel.add(storageLabel, c);
+
+        c.gridx = 1;
+        c.ipadx = 398;
+        attrPanel.add(storageChoice, c);
 
         mainPanel.add(attrPanel);
         add(mainPanel, BorderLayout.CENTER);
@@ -310,7 +342,12 @@ public class ImportDialog extends ModalDialog {
         if (continueWithImport) {
             // close import dialog and run import in background thread
             this.setVisible(false);
-            runImport(selectedFile, selectedChildren, folderName, rootFolder.getId());
+            runImport(selectedFile, selectedChildren,
+                    folderName,
+                    rootFolder.getId(), STORAGE_TAGS.get((String) storageChoice.getSelectedItem()),
+                    importFilesChanSpecField.getText(),
+                    importMipsOptionsField.getText()
+            );
         }
     }
 
@@ -337,7 +374,10 @@ public class ImportDialog extends ModalDialog {
     private void runImport(final File selectedFile,
                            final List<File> selectedChildren,
                            final String importFolderName,
-                           final Long importFolderId) {
+                           final Long importFolderId,
+                           final String storageTags,
+                           final String channelSpec,
+                           final String mipsOptions) {
         try {
             BackgroundWorker executeWorker = new AsyncServiceMonitoringWorker() {
     
@@ -354,7 +394,9 @@ public class ImportDialog extends ModalDialog {
                     Long taskId = startImportFilesTask(selectedFile,
                             selectedChildren,
                             importFolderName,
-                            importFolderId);
+                            importFolderId, storageTags,
+                            channelSpec,
+                            mipsOptions);
                     
                     setServiceId(taskId);
                     
@@ -440,7 +482,10 @@ public class ImportDialog extends ModalDialog {
     private Long startImportFilesTask(File selectedFile,
                                       List<File> selectedChildren,
                                       String importTopLevelFolderName,
-                                      Long importTopLevelFolderId) throws Exception {
+                                      Long importTopLevelFolderId,
+                                      String storageTags,
+                                      String channelSpec,
+                                      String mipsOptions) throws Exception {
 
         AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
 
@@ -458,11 +503,20 @@ public class ImportDialog extends ModalDialog {
         String storageName = "UserFileImport_"+guid;
         
         if (selectedChildren == null) {
-            RemoteLocation uploadedFile = uploader.uploadFile(storageName, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, selectedFile);
+            RemoteLocation uploadedFile = uploader.uploadFile(
+                    storageName,
+                    uploadContext,
+                    storageTags,
+                    selectedFile);
             uploadPath = uploadedFile.getStorageURL();
         } 
         else {
-            List<RemoteLocation> uploadedFiles = uploader.uploadFiles(storageName, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, selectedChildren, selectedFile);
+            List<RemoteLocation> uploadedFiles = uploader.uploadFiles(
+                    storageName,
+                    uploadContext,
+                    storageTags,
+                    selectedChildren,
+                    selectedFile);
             // all files should be uploaded to the same storage
             uploadPath = uploadedFiles.stream().findFirst().map(rl -> rl.getStorageURL()).orElseThrow(() -> new IllegalStateException("Invalid upload state " + uploadedFiles));
         }
@@ -471,6 +525,12 @@ public class ImportDialog extends ModalDialog {
                 .add("-folderName", importTopLevelFolderName);
         if (importTopLevelFolderId != null) {
             serviceArgsBuilder.add("-parentFolderId", importTopLevelFolderId.toString());
+        }
+        if (channelSpec != null && channelSpec.trim().length() > 0) {
+            serviceArgsBuilder.add("-mipsChanSpec", channelSpec);
+        }
+        if (mipsOptions != null && mipsOptions.trim().length() > 0) {
+            serviceArgsBuilder.add("-mipsOptions", mipsOptions);
         }
         serviceArgsBuilder.add("-storageLocation", uploadPath);
         return asyncServiceClient.invokeService("dataTreeLoad",
