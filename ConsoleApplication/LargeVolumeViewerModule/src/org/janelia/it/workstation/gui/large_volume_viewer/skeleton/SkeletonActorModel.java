@@ -475,7 +475,7 @@ public class SkeletonActorModel {
         //  updating a subset of anchors, the next parent could be
         //  on an entirely different neuron, and if so, we don't
         //  want to touch it
-        if (neuronVertexIndex.keySet().contains(getNextParent().getGuid()) && !anchors.contains(getNextParent())) {
+        if (getNextParent() != null && neuronVertexIndex.keySet().contains(getNextParent().getGuid()) && !anchors.contains(getNextParent())) {
             setNextParent(null);
         }
         
