@@ -84,6 +84,8 @@ public class Hud extends ModalDialog {
     private DomainObject domainObject;
     private HasFiles fileProvider;
     private String title;
+
+    private FileType imageType;
     
     public enum COLOR_CHANNEL {
         RED,
@@ -243,6 +245,8 @@ public class Hud extends ModalDialog {
         typeButton.setResultDescriptor(currResult);
         typeButton.setImageTypeName(currImageType);
         typeButton.populate(domainObject);
+        
+        imageType = FileType.valueOf(currImageType);
 
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
@@ -372,10 +376,34 @@ public class Hud extends ModalDialog {
     }
     
     public String getFast3dFile() {
-        String fastFile = DomainUtils.getFilepath(fileProvider, FileType.AllMovie);
-        if (fastFile==null) {
-            fastFile = DomainUtils.getFilepath(fileProvider, FileType.FastStack);
+        
+        FileType type = null;
+        if (imageType==FileType.AllMip) {
+            type = FileType.AllMovie;
         }
+        else if (imageType==FileType.SignalMip) {
+            type = FileType.SignalMovie;
+        }
+        else if (imageType==FileType.ReferenceMip) {
+            type = FileType.ReferenceMovie;
+        }
+        else if (imageType==FileType.Signal1Mip || imageType==FileType.Signal2Mip || imageType==FileType.Signal3Mip) {
+            type = FileType.SignalMovie;
+        }
+        else if (imageType==FileType.RefSignal1Mip || imageType==FileType.RefSignal2Mip || imageType==FileType.RefSignal3Mip) {
+            type = FileType.AllMovie;
+        }
+        
+        // Try the preferred movie
+        String fastFile = type==null ? null : DomainUtils.getFilepath(fileProvider, type);
+        if (fastFile==null) {
+            // Try some other options
+            fastFile = DomainUtils.getFilepath(fileProvider, FileType.AllMovie);
+            if (fastFile==null) {
+                fastFile = DomainUtils.getFilepath(fileProvider, FileType.FastStack);
+            }
+        }
+        
         return fastFile;
     }
     
