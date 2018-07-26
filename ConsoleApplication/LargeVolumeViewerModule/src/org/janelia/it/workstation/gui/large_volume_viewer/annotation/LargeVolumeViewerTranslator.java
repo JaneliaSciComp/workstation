@@ -438,7 +438,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         neuronDeleted(neuron);
         neuronCreated(neuron);
 
-        if (nextParent != null && neuron.getGeoAnnotationMap().containsKey(nextParent.getGuid())) {
+        if (nextParent != null && neuron.getId().equals(nextParent.getNeuronID()) && neuron.getGeoAnnotationMap().containsKey(nextParent.getGuid())) {
             fireNextParentEvent(nextParent.getGuid());
         }
 
