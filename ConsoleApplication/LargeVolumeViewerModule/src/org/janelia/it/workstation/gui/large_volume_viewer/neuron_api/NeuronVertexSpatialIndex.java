@@ -179,8 +179,9 @@ public class NeuronVertexSpatialIndex {
     public boolean addToIndex(NeuronVertex vertex) {
         try {
             double[] key = keyForVertex(vertex);
-            //log.info("Adding to new index: ({},{},{})",key[0],key[1],key[2]);
+            log.info("Adding key to index: ({},{},{})",key[0],key[1],key[2]);
             index.insert(key, vertex);
+            log.info("index size = " + index.size());
             // Store original key, in case the old position changes
             cachedKeys.put(vertex, cacheableKey(key));
         }
@@ -193,7 +194,9 @@ public class NeuronVertexSpatialIndex {
     public boolean removeFromIndex(NeuronVertex vertex) {
         try {
             double[] k = keyForVertex(vertex);
+            log.info("Removing key from index: ({},{},{})",k[0],k[1],k[2]);
             index.delete(k);
+            log.info("index size = " + index.size());
             cachedKeys.remove(vertex);
         }
         catch (KeySizeException | KeyMissingException ex) {

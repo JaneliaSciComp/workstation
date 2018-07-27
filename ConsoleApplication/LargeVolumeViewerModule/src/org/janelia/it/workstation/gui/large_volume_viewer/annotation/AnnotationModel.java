@@ -2191,7 +2191,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public Set<String> getUserNeuronTags(TmNeuronMetadata neuron) {
-        return currentTagMap.getUserTags().get(neuron.getId());
+        if (currentTagMap != null) {
+            return currentTagMap.getUserTags().get(neuron.getId());
+        } else {
+            return new HashSet<>();
+        }
     }
 
     public void removeNeuronTag(String tag, TmNeuronMetadata neuron) throws Exception {
