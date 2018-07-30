@@ -20,13 +20,11 @@ public class CommonDialogItems {
      private static Set<String> mouselightUsers = new HashSet<>(Arrays.asList(
             "ackermand",
             "arshadic",
-            "azarr",
             "base",
             "blaker",
             "chandrashekarj",
             "dossantosb",
             "ferreirat",
-            "hasanm",
             "mouselight",
             "olbrisd",
             "ramirezd2",
