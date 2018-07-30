@@ -469,7 +469,13 @@ public class SkeletonActorModel {
         //  we know where the paths are!)
         updateLines(anchors);
 
-        if (!anchors.contains(getNextParent())) {
+        // clear the next parent if needed; check that the next parent's
+        //  neuron is in the set we're working with, and if so, check
+        //  that it didn't disappear; note that since we're only
+        //  updating a subset of anchors, the next parent could be
+        //  on an entirely different neuron, and if so, we don't
+        //  want to touch it
+        if (getNextParent() != null && neuronVertexIndex.keySet().contains(getNextParent().getGuid()) && !anchors.contains(getNextParent())) {
             setNextParent(null);
         }
         
