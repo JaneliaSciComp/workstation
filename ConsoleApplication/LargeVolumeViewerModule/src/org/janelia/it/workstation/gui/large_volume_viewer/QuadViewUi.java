@@ -944,6 +944,22 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }
         });
         buttonsPanel.add(useHttpCheckbox);
+        
+        final JCheckBox receiveSharedUpdatesCheckbox = new JCheckBox("Shared updates");
+        receiveSharedUpdatesCheckbox.setSelected(true);
+        receiveSharedUpdatesCheckbox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange()==ItemEvent.DESELECTED) {
+                    receiveSharedUpdatesCheckbox.setSelected(false);
+                    annotationModel.setReceiveUpdates(false);
+                } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                    receiveSharedUpdatesCheckbox.setSelected(true);
+                    annotationModel.setReceiveUpdates(true);
+                }
+            }
+        });
+        buttonsPanel.add(receiveSharedUpdatesCheckbox);
 
         buttonsPanel.add(new TileStackCacheStatusPanel());
 

@@ -32,6 +32,20 @@ import org.slf4j.LoggerFactory;
 
 
 public class RefreshHandler implements DeliverCallback, CancelCallback {
+
+    /**
+     * @return the receiveUpdates
+     */
+    public boolean isReceiveUpdates() {
+        return receiveUpdates;
+    }
+
+    /**
+     * @param receiveUpdates the receiveUpdates to set
+     */
+    public void setReceiveUpdates(boolean receiveUpdates) {
+        this.receiveUpdates = receiveUpdates;
+    }
     
     private static final Logger log = LoggerFactory.getLogger(RefreshHandler.class);
     private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
@@ -43,6 +57,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
     private Channel msgChannel;
     private Receiver msgReceiver;
     static RefreshHandler handler;
+    private boolean receiveUpdates = true;
     
     private RefreshHandler() {
         
@@ -55,8 +70,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         }
         return handler;
     }
-    
-    
+
     private void init() {
         try {
             ConnectionManager connManager = ConnectionManager.getInstance();
@@ -94,14 +108,20 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                 log.error("Issue trying to process metadata from update");
             }
             // thead logging
-            log.info ("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
-            log.info ("Heap Size: {}", Runtime.getRuntime().totalMemory());
+            log.debug ("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
+            log.debug ("Heap Size: {}", Runtime.getRuntime().totalMemory());
             
-            log.info("message properties: TYPE={},USER={},WORKSPACE={},METADATA={}", msgHeaders.get(HeaderConstants.TYPE), msgHeaders.get(HeaderConstants.USER),
+            log.debug("message properties: TYPE={},USER={},WORKSPACE={},METADATA={}", msgHeaders.get(HeaderConstants.TYPE), msgHeaders.get(HeaderConstants.USER),
                     msgHeaders.get(HeaderConstants.WORKSPACE), msgHeaders.get(HeaderConstants.METADATA));
 
             MessageType action = MessageType.valueOf(convertLongString((LongString) msgHeaders.get(HeaderConstants.TYPE)));
             String user = convertLongString((LongString) msgHeaders.get(HeaderConstants.USER));
+            
+            // flag to suppress shared updates
+            if (!receiveUpdates && !user.equals(AccessManager.getSubjectKey())) {
+                return;
+            }
+            
             Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
             if (action == MessageType.ERROR_PROCESSING) {
                 if (user != null && user.equals(AccessManager.getSubjectKey())) {
