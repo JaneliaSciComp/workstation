@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 
 import javax.swing.JCheckBox;
@@ -36,6 +35,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.gui.options.BrowserOptions;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.gui.support.FileDownloadWorker;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
@@ -46,7 +46,6 @@ import org.janelia.it.workstation.browser.model.search.SolrSearchResults;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
@@ -71,6 +70,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 
 /**
@@ -94,12 +94,13 @@ public final class DownloadWizardAction implements ActionListener {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadWizardAction.class);
 
+    private static final int MAX_CONCURRENT_DOWNLOADS = BrowserOptions.getInstance().getNumConcurrentDownloads();
+    
     private ArtifactDescriptor defaultResultDescriptor;
     private List<? extends DomainObject> inputObjects;
     private List<DownloadObject> downloadItems = new ArrayList<>();
     private Map<ArtifactDescriptor,Multiset<FileType>> artifactFileCounts;
-
-    private static final Lock COPY_FILE_LOCK = new ReentrantLock();
+    private static final Semaphore COPY_SEMAPHORE = new Semaphore(MAX_CONCURRENT_DOWNLOADS);
     private static final int MAX_BROWSE_FILES = 10;
     private Integer applyToAllChoice;
     private int numBrowseFileAttempts = 0;
@@ -411,7 +412,7 @@ public final class DownloadWizardAction implements ActionListener {
 
     private int totalToCheck = 0;
     private Queue<DownloadFileItem> toCheck = new LinkedList<>();
-    private Queue<DownloadFileItem> toDownload = new LinkedList<>();
+    private List<DownloadFileItem> toDownload = new LinkedList<>();
     
     private void download(List<DownloadFileItem> downloadItems) {
         ActivityLogHelper.logUserAction("DownloadWizardAction.beginDownload");
@@ -438,6 +439,7 @@ public final class DownloadWizardAction implements ActionListener {
             @Override
             protected void doStuff() throws Exception {
                 
+                // Check all files to see if they have already been downloaded
                 while (!toCheck.isEmpty()) {
                     downloadItem = toCheck.remove();
                     setProgress(totalToCheck - toCheck.size(), totalToCheck);
@@ -465,10 +467,6 @@ public final class DownloadWizardAction implements ActionListener {
                             toDownload.addAll(toCheck);
                             toCheck.clear();
                         }
-                        else if (applyToAllChoice==2) {
-                            // Just ignore the rest
-                            toCheck.clear();
-                        }
                     }
                 }
             }
@@ -484,8 +482,16 @@ public final class DownloadWizardAction implements ActionListener {
                 }
                 else {
                     if (!toDownload.isEmpty()) {
-                        FileDownloadWorker worker = new FileDownloadWorker(toDownload, COPY_FILE_LOCK);
-                        worker.startDownload();
+                     
+                        log.info("Will download {} items with a max of {} workers", toDownload.size(), MAX_CONCURRENT_DOWNLOADS);
+                        
+                        // Start a worker for each concurrent download
+                        int sublistSize = (int)Math.ceil((double)toDownload.size() / (double)MAX_CONCURRENT_DOWNLOADS);
+                        for(List<DownloadFileItem> sublist : Lists.partition(toDownload, sublistSize)) {
+                            FileDownloadWorker worker = new FileDownloadWorker(sublist, COPY_SEMAPHORE);
+                            worker.startDownload();
+                        }
+                        
                     }
                     else {
                         JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "There are no downloads to start.", "Nothing to do", JOptionPane.PLAIN_MESSAGE);

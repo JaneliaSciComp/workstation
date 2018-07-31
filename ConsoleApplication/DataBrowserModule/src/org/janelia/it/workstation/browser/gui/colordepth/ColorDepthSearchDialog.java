@@ -32,7 +32,7 @@ import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.gui.support.WrapLayout;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -83,7 +83,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
 
         this.alignmentSpaceLabel = new JLabel();
         
-        this.maskNameField = new JTextField(50);
+        this.maskNameField = new JTextField(60);
         
         attrPanel = new GroupedKeyValuePanel();
         attrPanel.addItem("Alignment space", alignmentSpaceLabel);
@@ -119,14 +119,13 @@ public class ColorDepthSearchDialog extends ModalDialog {
         this.searchNameField = new JTextField(35);
 
         this.addPanel = new JPanel();
-        addPanel.setLayout(new MigLayout("wrap 2, ins 10, fillx", "[]20[]"));
-        addPanel.add(existingSearchRadioButton);
-        addPanel.add(newSearchRadioButton);
+        addPanel.setLayout(new MigLayout("wrap 2, ins 10, fillx", "[grow 0]20[grow 1]"));
+        addPanel.add(existingSearchRadioButton, "");
+        addPanel.add(newSearchRadioButton, "");
         addPanel.add(searchComboPanel, "gapleft 10");
         addPanel.add(searchNameField, "gapleft 10");
         
         searchOptionsPanel = new SearchOptionsPanel();
-        searchOptionsPanel.setMinimumSize(new Dimension(10, 100));
         
         mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));

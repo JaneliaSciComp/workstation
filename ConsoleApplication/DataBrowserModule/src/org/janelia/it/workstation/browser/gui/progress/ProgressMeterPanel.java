@@ -275,7 +275,7 @@ public class ProgressMeterPanel extends JPanel {
             add(nameLabel, "width 10:100:1000");
 
             this.progressBar = new JProgressBar(1, 100);
-            progressBar.setIndeterminate(true);
+            progressBar.setIndeterminate(false);
             progressBar.setUI(new BasicProgressBarUI());
             add(progressBar, "width 10:80:300, gapx 5 5, spany 2");
             

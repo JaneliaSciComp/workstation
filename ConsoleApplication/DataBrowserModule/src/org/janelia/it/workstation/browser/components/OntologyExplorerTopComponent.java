@@ -412,29 +412,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         this.loadInitialState = false;
         
         showLoadingIndicator();
-                
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-                // Attempt to load ontologies into the cache, which the OntologyRootNode will query from the EDT
-                loadOntologies();
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // Load the data
-                refresh(false, false, null);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                showNothing();
-                ConsoleApp.handleException(error);
-            }
-        };
-        
-        worker.execute();
+        refresh(false, false, null);
     }
     
     @Subscribe

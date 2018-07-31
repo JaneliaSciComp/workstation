@@ -70,7 +70,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private NeuronSelectedListener neuronSelectedListener;
 
     // for preserving selection across operations
-    private int savedSelection;
+    private TmNeuronMetadata savedSelectedNeuron;
 
     private int width;
     private static final int height = 2 * AnnotationPanel.SUBPANEL_STD_HEIGHT;
@@ -432,12 +432,24 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     public void saveSelection() {
-        this.savedSelection = neuronTable.getSelectedRow();
+        int viewRow = neuronTable.getSelectedRow();
+        if (viewRow >= 0) {
+            int modelRow = neuronTable.convertRowIndexToModel(viewRow);
+            savedSelectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
+        } else {
+            savedSelectedNeuron = null;
+        }
     }
     
     public void restoreSelection() {
-        if (savedSelection>0  && savedSelection<neuronTable.getRowCount()) {
-            neuronTable.setRowSelectionInterval(savedSelection, savedSelection);
+        if (savedSelectedNeuron != null) {
+            int modelRow = neuronTableModel.getRowForNeuron(savedSelectedNeuron);
+            if (modelRow >= 0) {
+                int viewRow = neuronTable.convertRowIndexToView(modelRow);
+                if (viewRow >= 0) {
+                    neuronTable.setRowSelectionInterval(viewRow, viewRow);
+                }
+            }
         }
     }
 
@@ -628,11 +640,18 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private void setSortOrder(NeuronSortOrder neuronSortOrder) {
         if (neuronTableModel.getRowCount() > 0) {
             switch(neuronSortOrder) {
+                // always sort by creation date as a secondary key
                 case ALPHABETICAL:
-                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_NAME, SortOrder.ASCENDING)));
+                    sorter.setSortKeys(Arrays.asList(
+                        new RowSorter.SortKey(NeuronTableModel.COLUMN_NAME, SortOrder.ASCENDING),
+                        new RowSorter.SortKey(NeuronTableModel.COLUMN_CREATION_DATE, SortOrder.ASCENDING)
+                    ));
                     break;
                 case OWNER:
-                    sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_OWNER_NAME, SortOrder.ASCENDING)));
+                    sorter.setSortKeys(Arrays.asList(
+                        new RowSorter.SortKey(NeuronTableModel.COLUMN_OWNER_NAME, SortOrder.ASCENDING),
+                        new RowSorter.SortKey(NeuronTableModel.COLUMN_CREATION_DATE, SortOrder.ASCENDING)
+                    ));
                     break;
                 case CREATIONDATE:
                     sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_CREATION_DATE, SortOrder.ASCENDING)));

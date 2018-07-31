@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import Jama.Matrix;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
+import org.perf4j.StopWatch;
 
 
 /**
@@ -405,22 +406,26 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             annList.add(path);
         }
         
+        skeletonController.setSkipSkeletonChange(true);
         fireAnchorsAdded(addedAnchorList);
         logger.info("  added {} anchors", addedAnchorList.size());
-
-        fireNeuronStylesChangedEvent(updateNeuronStyleMap);
-        logger.info("  updated {} neuron styles", updateNeuronStyleMap.size());
         
         addAnchoredPaths(neuron.getId(), annList);
         logger.info("  added {} anchored paths", annList.size());
+        
+        skeletonController.setSkipSkeletonChange(false);        
+        fireNeuronStylesChangedEvent(updateNeuronStyleMap);        
+        logger.info("  updated {} neuron styles", updateNeuronStyleMap.size());  
     }
 
     @Override
-    public void neuronDeleted(TmNeuronMetadata neuron) {
+    public void neuronDeleted(TmNeuronMetadata neuron) {        
+        skeletonController.setSkipSkeletonChange(true);
         logger.info("neuronDeleted: {}", neuron);
         fireNeuronStyleRemovedEvent(neuron);
-        fireClearAnchors(neuron.getGeoAnnotationMap().values());
         removeAnchoredPathsByNeuronID(neuron.getId());
+        skeletonController.setSkipSkeletonChange(false);
+        fireClearAnchors(neuron.getGeoAnnotationMap().values());
     }
 
     @Override
@@ -433,7 +438,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         neuronDeleted(neuron);
         neuronCreated(neuron);
 
-        if (nextParent != null && neuron.getGeoAnnotationMap().containsKey(nextParent.getGuid())) {
+        if (nextParent != null && neuron.getId().equals(nextParent.getNeuronID()) && neuron.getGeoAnnotationMap().containsKey(nextParent.getGuid())) {
             fireNextParentEvent(nextParent.getGuid());
         }
 

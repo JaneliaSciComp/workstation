@@ -1,12 +1,60 @@
 package org.janelia.it.workstation.gui.task_workflow;
 
-import javax.swing.JPanel;
+import Jama.Matrix;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.TableCellEditor;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.awt.Event;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.beans.PropertyVetoException;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Stack;
+import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.console.viewerapi.SynchronizationHelper;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.geom.Quaternion;
+import org.janelia.it.jacs.shared.geom.UnitVec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.explorer.ExplorerManager;
+import org.openide.explorer.ExplorerUtils;
+import org.openide.explorer.view.OutlineView;
+import org.openide.nodes.Node;
+import org.openide.util.Lookup;
+import org.openide.util.LookupEvent;
+import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.Utilities;
+import org.openide.windows.WindowManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
@@ -34,19 +82,35 @@ import org.openide.util.NbBundle.Messages;
     "CTL_TaskWorkflowViewTopComponentTopComponent=" + TaskWorkflowViewTopComponent.LABEL_TEXT,
     "HINT_TaskWorkflowViewTopComponentTopComponent=Task Workflow View"
 })
-public final class TaskWorkflowViewTopComponent extends TopComponent {
+public final class TaskWorkflowViewTopComponent extends TopComponent implements ExplorerManager.Provider, LookupListener {
 
     public static final String PREFERRED_ID = "TaskWorkflowViewTopComponent";
     public static final String LABEL_TEXT = "Task Workflow";
-    private final TopComponentPopulator populator = new TopComponentPopulator();
-
+    private final ExplorerManager reviewManager = new ExplorerManager();
+    ReviewListNode rootNode;
+    private final OutlineView treeView = new OutlineView("Review Items");
+    private Lookup.Result<ReviewPoint> pointSelection = null;    
+    private Lookup.Result<ReviewGroup> groupSelection = null;
+    int currGroupIndex;
+    int currPointIndex;
+    private LinkedList<Vec3> normalGroup;
+    private String[] reviewOptions;
+    List<ReviewPoint> pointList;
+    List<ReviewGroup> groupList;
+    boolean firstTime = true;
+    
     private JPanel viewPanel;
 
     public TaskWorkflowViewTopComponent() {
         initComponents();
+        setupUI();
         setName(Bundle.CTL_TaskWorkflowViewTopComponentTopComponent());
         setToolTipText(Bundle.HINT_TaskWorkflowViewTopComponentTopComponent());
 
+    }
+    
+    public static final TaskWorkflowViewTopComponent getInstance() {
+        return (TaskWorkflowViewTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
     }
 
     /**
@@ -76,14 +140,476 @@ public final class TaskWorkflowViewTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        populator.depopulate(viewPanel);
-        populator.populate(viewPanel);
+        pointSelection = Utilities.actionsGlobalContext().lookupResult(ReviewPoint.class);
+        pointSelection.addLookupListener (this);
+        groupSelection = Utilities.actionsGlobalContext().lookupResult(ReviewGroup.class);
+        groupSelection.addLookupListener (this);
     }
 
     @Override
     public void componentClosed() {
-        populator.depopulate(viewPanel);
+        pointSelection.removeLookupListener(this);
+        groupSelection.removeLookupListener(this);
     }
+    
+    @Override
+    public void resultChanged (LookupEvent lookupEvent) {
+        Collection<? extends ReviewPoint> allEvents = pointSelection.allInstances();
+        if (!allEvents.isEmpty()) {
+            ReviewPoint selectedPoint = allEvents.iterator().next();
+            // find the point in all the groups
+            for (int i = 0; i < groupList.size(); i++) {
+                ReviewGroup reviewGroup = groupList.get(i);
+                List<ReviewPoint> reviewList = reviewGroup.getPointList();
+                for (int j = 0; j < reviewList.size(); j++) {
+                    ReviewPoint reviewPoint = reviewList.get(j);
+                    if (reviewPoint == selectedPoint) {
+                        currGroupIndex = i;
+                        currPointIndex = j;
+                        this.gotoPoint(selectedPoint);
+                    }
+                }
+            }
+        } else {
+            Collection<? extends ReviewGroup> allEventsGroup = groupSelection.allInstances();
+            if (!allEventsGroup.isEmpty()) {
+                ReviewGroup selectedGroup = allEventsGroup.iterator().next();
+                for (int i = 0; i < groupList.size(); i++) {
+                    ReviewGroup reviewGroup = groupList.get(i);
+                    if (reviewGroup==selectedGroup) {
+                        currGroupIndex = i;
+                        currPointIndex = 0;
+                        this.gotoPoint(reviewGroup.getPointList().get(0));
+                    }
+                }
+            }
+        }
+    }
+
+
+    @Override
+    public ExplorerManager getExplorerManager()
+    {
+        return reviewManager;
+    }
+
+    private static final Logger log = LoggerFactory.getLogger(TaskWorkflowViewTopComponent.class);
+
+    
+
+
+    public void nextTask() {
+        if (currGroupIndex!=-1) {
+            ReviewGroup currGroup = groupList.get(currGroupIndex);
+            if (currPointIndex<currGroup.getPointList().size()-1) {
+                currPointIndex++;
+                gotoPoint(currGroup.getPointList().get(currPointIndex));
+            } else {
+                if (currGroupIndex<groupList.size()-1) {
+                    currGroupIndex++;
+                    currGroup = groupList.get(currGroupIndex);
+                    currPointIndex = 0;
+                    gotoPoint(currGroup.getPointList().get(currPointIndex));
+                }
+            }
+        }        
+    }
+
+    public void prevTask() {
+       if (currGroupIndex!=-1) {
+            if (currPointIndex>0) {
+                ReviewGroup currGroup = groupList.get(currGroupIndex);
+                currPointIndex--;
+                gotoPoint(currGroup.getPointList().get(currPointIndex));
+            } else {
+                if (currGroupIndex>0) {
+                    currGroupIndex--;
+                    ReviewGroup currGroup = groupList.get(currGroupIndex);
+                    currPointIndex = currGroup.getPointList().size()-1;
+                    gotoPoint(currGroup.getPointList().get(currPointIndex));
+                }
+            }
+        }  
+    }
+
+    private void setupUI() {
+        treeView.addPropertyColumn("x", "x (µm)");
+        treeView.addPropertyColumn("y", "y (µm)");
+        treeView.addPropertyColumn("z", "z (µm)");
+        treeView.addPropertyColumn("rotation", "Rotation");
+        treeView.addPropertyColumn("reviewed", "Review");
+        associateLookup(ExplorerUtils.createLookup(reviewManager, getActionMap()));
+
+        setLayout(new BorderLayout());
+        add(
+               treeView,
+               BorderLayout.CENTER);
+
+        // I want most of the components to stack vertically;
+        //  components should fill or align left as appropriate
+        GridBagConstraints cVert = new GridBagConstraints();
+        cVert.gridx = 0;
+        cVert.gridy = GridBagConstraints.RELATIVE;
+        cVert.anchor = GridBagConstraints.PAGE_START;
+        cVert.fill = GridBagConstraints.HORIZONTAL;
+        cVert.weighty = 0.0;
+
+        // task transition buttons (next, previous, etc)
+        JPanel taskButtonsPanel = new JPanel();
+        taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
+        taskButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        add(taskButtonsPanel, BorderLayout.NORTH);
+        
+        JButton playButton = new JButton("Play Branch");
+        playButton.addActionListener(event -> playBranch());
+        taskButtonsPanel.add(playButton);
+
+
+        // workflow management buttons: load, done (?)
+        JPanel workflowButtonsPanel = new JPanel();
+        workflowButtonsPanel.setLayout(new BoxLayout(workflowButtonsPanel, BoxLayout.LINE_AXIS));
+        workflowButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        add(workflowButtonsPanel, BorderLayout.SOUTH);
+
+        workflowButtonsPanel.add(Box.createHorizontalGlue());
+
+        JButton loadButton = new JButton("Load point list...");
+        loadButton.addActionListener(event -> onLoadButton());
+        workflowButtonsPanel.add(loadButton);
+
+        JButton saveButton = new JButton("Save reviewed list...");
+        saveButton.addActionListener(event -> onSaveButton());
+        workflowButtonsPanel.add(saveButton);
+
+    }
+
+    /**
+     * given a list of points, start the workflow from scratch
+     */
+    private void startWorkflow(String neuronName) {
+        rootNode = new ReviewListNode(neuronName, groupList);
+        reviewManager.setRootContext(rootNode);
+    }
+    
+    private void playBranch() {
+        reviewGroup(currGroupIndex);
+    }
+
+    private void onLoadButton() {
+        readPointFile();
+        startWorkflow("From File");
+
+        log.info("Loaded point file " + "my point file");
+    }
+
+    private void onSaveButton() {
+        // dialog to get file
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Choose export file");
+        chooser.setMultiSelectionEnabled(false);
+        int result = chooser.showSaveDialog(FrameworkImplProvider.getMainFrame());
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File exportFile = chooser.getSelectedFile();
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                // get the review notes and output with point list
+                List<Map<String,String>> pointReviews = new ArrayList<>();
+                for (int i = 0; i < pointList.size(); i++) {
+                   /* String review = (String) pointTable.getModel().getValueAt(i, 3);
+                    if (review != null) {
+                        Map pointReview = new HashMap<String,String>();
+                        pointReview.put("x", pointList.get(i).getLocation().getX());
+                        pointReview.put("y", pointList.get(i).getLocation().getY());
+                        pointReview.put("z", pointList.get(i).getLocation().getZ());
+                        pointReview.put("reviewNote", review);
+                        pointReviews.add(pointReview);
+                    }*/
+                }
+                mapper.writeValue(exportFile,pointReviews);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                        "Could not write out reviewed points " + exportFile,
+                        "Error writing point reviews file",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+     private void reviewGroup(int groupIndex) {
+         ReviewGroup group = groupList.get(groupIndex);
+         Node[] groupNode = new Node[1];
+         groupNode[0] = rootNode.getChildren().getNodeAt(groupIndex);
+         if (groupNode[0]!=null) {           
+            List<SampleLocation> playList = new ArrayList<SampleLocation>();
+            SynchronizationHelper helper = new SynchronizationHelper();
+            Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+               
+            for (ReviewPoint point: group.getPointList()) {
+                SampleLocation sampleLocation = originator.getSampleLocation();
+                sampleLocation.setFocusUm(point.getLocation().getX(), point.getLocation().getY(), point.getLocation().getZ());
+                sampleLocation.setMicrometersPerWindowHeight(point.getZoomLevel());
+                sampleLocation.setRotationAsQuaternion(point.getRotation());  
+                playList.add(sampleLocation);
+            }
+            Tiled3dSampleLocationProviderAcceptor hortaViewer;
+            Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+            for (Tiled3dSampleLocationProviderAcceptor acceptor : locationAcceptors) {
+                if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
+                    acceptor.playSampleLocations(playList);    
+                }
+            }                        
+        }
+    }
+
+    /**
+     * move the camera to the indicated point in LVV and Horta
+     */
+    private void gotoPoint(ReviewPoint point) {
+        Node[] nodeList = new Node[1];
+        nodeList[0] = rootNode.getChildren().getNodeAt(currGroupIndex)
+                .getChildren().getNodeAt(currPointIndex);
+        try {
+            this.reviewManager.setSelectedNodes(nodeList);
+        } catch (PropertyVetoException pe) {
+            pe.printStackTrace();
+        }
+
+        // this is possibly a bit hacky...I followed the example in FilteredAnnList;
+        //  we use the LVV sample provider to get the sample location, then poke
+        //  our values in; that's sent to the appropriate Horta acceptor; then
+        //  since we know that LVV is an acceptor, too, we can just put the altered
+        //  sample location back into the originator to trigger that move
+
+        // not sure what the try/catch is preventing, but it was in the code I copied
+        try {
+            SynchronizationHelper helper = new SynchronizationHelper();
+            Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+            SampleLocation sampleLocation = originator.getSampleLocation();
+            sampleLocation.setFocusUm(point.getLocation().getX(), point.getLocation().getY(), point.getLocation().getZ());
+            sampleLocation.setMicrometersPerWindowHeight(point.getZoomLevel());
+            sampleLocation.setRotationAsQuaternion(point.getRotation());   
+            sampleLocation.setInterpolate(false);
+            // LVV
+            originator.setSampleLocation(sampleLocation);
+
+
+            // Horta
+            Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+            for (Tiled3dSampleLocationProviderAcceptor acceptor : locationAcceptors) {
+                if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
+                    acceptor.setSampleLocation(sampleLocation);
+                }
+            }
+        } catch (Exception e) {
+            ConsoleApp.handleException(e);
+        }
+    }
+    
+    public double vectorLen (Vec3 vector) {
+        return Math.sqrt(vector.getX()*vector.getX() + vector.getY()*vector.getY() + vector.getZ()*vector.getZ());
+    }
+
+    /**
+     * generates a point review list from a list of TmGeoAnnotations generated somewhere else
+     */
+    public void loadPointList (String name, List<List<Vec3>> branchList, boolean neuron) {
+        reviewOptions = new String[]{"Problem", "Bad Signal", "Incorrect Neuron"};
+        groupList = new ArrayList<>();
+
+        normalGroup = new LinkedList();
+        for (List<Vec3> branch: branchList) {
+            pointList = new ArrayList<>();
+            for (int i=0; i<branch.size(); i++) {
+                Vec3 vecPoint = branch.get(i);                
+                ReviewPoint point = new ReviewPoint();
+                point.setLocation(vecPoint);
+                point.setZoomLevel(50);
+                // calculate quicky normal
+                Quaternion q;
+                
+                List<Vec3> segments = new ArrayList<Vec3>();
+                if (branch.size()<3) {
+                    q = new Quaternion();
+                } else {
+                    if (i == 0) {
+                        segments.add(branch.get(0));
+                        segments.add(branch.get(1));
+                        segments.add(branch.get(2));
+                    } else if (i == branch.size()-1) {
+                        segments.add(branch.get(branch.size()-3));
+                        segments.add(branch.get(branch.size()-2));
+                        segments.add(branch.get(branch.size()-1));
+                    } else {
+                        segments.add(branch.get(i-1));
+                        segments.add(branch.get(i));
+                        segments.add(branch.get(i+1));
+                    }
+                    q = this.calculateRotation(segments);
+                }
+
+                
+                if (q!=null) {
+                    point.setRotation(new float[]{(float)q.x(), (float)q.y(), (float)q.z(), (float)q.w()});
+                }
+                point.setInterpolate(true);
+                pointList.add(point);
+            }
+
+            ReviewGroup group = new ReviewGroup();
+            group.setPointList(pointList);
+            groupList.add(group);
+        }
+        startWorkflow(name);
+
+    }
+    
+    private Quaternion calculateRotation (List<Vec3> vertexPoints) {
+        Vec3 first = vertexPoints.get(1).minus(vertexPoints.get(0));
+        Vec3 second = vertexPoints.get(2).minus(vertexPoints.get(1));
+        Vec3 normal = first.cross(second);
+        double length = Math.sqrt(normal.getX()*normal.getX()+normal.getY()*normal.getY()+normal.getZ()*normal.getZ());
+        normal.setX(normal.getX()/length);
+        normal.setY(normal.getY()/length);
+        normal.setZ(normal.getZ()/length);
+        
+        // add normal to queue, if queue is greater than 5, pop off one, then average normal
+        if (normalGroup.size()>5) 
+            normalGroup.pop();
+        normalGroup.add(normal);
+       
+        // figure out average normal so we don't get such crazy rotations
+        Vec3 normalAvg = new Vec3();
+        double x = 0, y = 0, z = 0;
+        for (Vec3 unitNorm : normalGroup) {
+            x += unitNorm.getX();
+            y += unitNorm.getY();
+            z += unitNorm.getZ();
+        }
+        normalAvg.setX(x/normalGroup.size());
+        normalAvg.setY(y/normalGroup.size());
+        normalAvg.setZ(z/normalGroup.size());
+        
+        double angle = Math.atan2(normalAvg.getX(),normalAvg.getZ());
+        
+        //Quaternion foo = new Quaternion();
+        float qx = (float) (normalAvg.getX() * Math.sin(angle / 2));
+        float qy = (float) (normalAvg.getY() * Math.sin(angle / 2));
+        float qz = (float) (normalAvg.getZ() * Math.sin(angle / 2));
+        float qw = (float) Math.cos(angle / 2);
+        //return null;
+        return new Quaternion(qx, qy, qz, qw, false);       
+    }
+
+    /**
+     * pop a file chooser; load and parse a json list of points
+     *
+     * file format:
+     *      -- one point per line = whitespace-delimited x, y, z
+     * (preferred) -- one point per line = [x, y, z] (allowed, matches "copy
+     * coord to clipboard" format) -- blank lines allowed -- comment lines start
+     * with #
+     */
+    private void readPointFile() {
+        groupList = new ArrayList<>();
+
+        // dialog to get file
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Choose point file");
+        chooser.setMultiSelectionEnabled(false);
+        int result = chooser.showOpenDialog(FrameworkImplProvider.getMainFrame());
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File pointFile = chooser.getSelectedFile();
+
+            Map<String,Object> reviewData = null;
+            Map<String,Object> pointData = null;
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                reviewData = mapper.readValue(new FileInputStream(pointFile), new TypeReference<Map<String,Object>>(){});
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                        "Could not read file " + pointFile,
+                        "Error reading point file",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+
+            if (reviewData!=null) {
+                List pointGroups = (List)reviewData.get("reviewGroups");
+                if (pointGroups != null && pointGroups.size() > 0) {
+                    for (int i=0; i<pointGroups.size(); i++) {
+                        List<ReviewPoint> pointList = new ArrayList<>();
+                        LinkedHashMap pointWrapper = (LinkedHashMap)pointGroups.get(i);
+                        List<Map<String, Object>> rawPoints = (List<Map<String, Object>>) pointWrapper.get("points");
+                        int nerrors = 0;
+
+                        boolean interpolate = false;
+                        if ((String)pointWrapper.get("interpolate")!=null)
+                            interpolate = true;
+                        for (Map<String, Object> pointMap : rawPoints) {
+                            try {
+                                ReviewPoint point = new ReviewPoint();
+                                Vec3 pointLocation = new Vec3(Double.parseDouble((String)pointMap.get("x")),
+                                        Double.parseDouble((String)pointMap.get("y")), Double.parseDouble((String)pointMap.get("z")));
+                                point.setLocation(pointLocation);
+
+                                // get quaternion rotation
+                                List rotation = (List)pointMap.get("quaternionRotation");
+                                if (rotation!=null && rotation.size()>0) {
+                                    float[] quaternion = new float[4];
+                                    quaternion[0] = Float.parseFloat((String)rotation.get(0));
+                                    quaternion[1] = Float.parseFloat((String)rotation.get(1));
+                                    quaternion[2] = Float.parseFloat((String)rotation.get(2));
+                                    quaternion[3] = Float.parseFloat((String)rotation.get(3));
+                                    point.setRotation(quaternion);
+                                }
+
+                                // get zoom level
+                                String zoomLevel = (String)pointMap.get("zoomLevel");
+                                if (zoomLevel!=null)
+                                    point.setZoomLevel(Float.parseFloat(zoomLevel));
+
+                                point.setInterpolate(interpolate);
+
+                                pointList.add(point);
+                            } catch (NumberFormatException e) {
+                                nerrors++;
+                                continue;
+                            }
+                        }
+                        ReviewGroup group = new ReviewGroup();
+                        group.setPointList(pointList);
+                        groupList.add(group);
+
+                        if (nerrors > 0) {
+                            JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                                    "Not all lines in point file could be parsed; " + nerrors + " errors.",
+                                    "Errors parsing point file",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+
+                    // load review options
+                    List<String> reviewActions = (List<String>) reviewData.get("reviewOptions");
+                    if (reviewActions != null) {
+                        reviewOptions = reviewActions.toArray(new String[reviewActions.size()]);
+                    }
+                }
+
+            }
+
+
+        }
+    }
+
+    /**
+     * are there any points loaded?
+     */
+    private boolean hasPoints() {
+        return groupList.size()>0 && pointList.size()>0;
+    }
+
 
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
@@ -94,4 +620,5 @@ public final class TaskWorkflowViewTopComponent extends TopComponent {
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
     }
+
 }

@@ -30,6 +30,7 @@
 
 package org.janelia.horta.movie;
 
+import org.janelia.horta.camera.Interpolator;
 import org.janelia.console.viewerapi.ObservableInterface;
 
 /**

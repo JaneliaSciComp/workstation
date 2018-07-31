@@ -38,6 +38,7 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
@@ -224,7 +225,8 @@ public class FilterEditorPanel
                         SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {
-                                // Select the filter and force it to reloadMask
+                                // Select the filter and force it to reload
+                                DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(filter.getId());
                             }
                         });
                     }

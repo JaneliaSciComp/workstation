@@ -22,7 +22,7 @@ public interface DomainFacade {
      * @param id GUID of domain object
      * @return the domain object
      */
-    public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) throws Exception;
+    <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) throws Exception;
 
     /**
      * Returns the domain object with the given class and name.
@@ -30,28 +30,28 @@ public interface DomainFacade {
      * @param name name of the domain object
      * @return
      */
-    public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) throws Exception;
+    <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) throws Exception;
     
     /**
      * Returns the domain object specified by the given reference.
      * @param reference to a domain object
      * @return the domain object
      */
-    public <T extends DomainObject> T getDomainObject(Reference reference) throws Exception;
+    <T extends DomainObject> T getDomainObject(Reference reference) throws Exception;
 
     /**
      * Returns the domain objects specified by the given list of references. 
      * @param references list of references
      * @return list of domain objects
      */
-    public List<DomainObject> getDomainObjects(List<Reference> references) throws Exception;
+    List<DomainObject> getDomainObjects(List<Reference> references) throws Exception;
 
     /**
      * Returns the domain objects specified by the given reverse reference. 
      * @param reference reverse reference
      * @return list of domain objects
      */
-    public List<DomainObject> getDomainObjects(ReverseReference reference) throws Exception;
+    List<DomainObject> getDomainObjects(ReverseReference reference) throws Exception;
 
     /**
      * Returns the domain objects of a particular type, given by the list of GUIDs. 
@@ -59,14 +59,14 @@ public interface DomainFacade {
      * @param ids collection of GUIDs
      * @return list of domain objects
      */
-    public <T extends DomainObject> List<T> getDomainObjects(String className, Collection<Long> ids) throws Exception;
+    <T extends DomainObject> List<T> getDomainObjects(String className, Collection<Long> ids) throws Exception;
 
     /**
      * Returns the domain objects of a particular type, for ANY ownership.
      * @param className class name
      * @return list of domain objects
      */
-    public List<DomainObject> getAllDomainObjectsByClass(String className) throws Exception;
+    List<DomainObject> getAllDomainObjectsByClass(String className) throws Exception;
     
     /**
      * Update a property on the given domain object.
@@ -75,7 +75,7 @@ public interface DomainFacade {
      * @param propValue new property value
      * @return the updated domain object
      */
-    public DomainObject updateProperty(DomainObject domainObject, String propName, Object propValue) throws Exception;
+    DomainObject updateProperty(DomainObject domainObject, String propName, Object propValue) throws Exception;
 
     /**
      * Update the permissions on the given domain object to grant or revoke rights to some subject. 
@@ -84,14 +84,19 @@ public interface DomainFacade {
      * @param rights list of access rights, e.g. "rw"
      * @throws Exception something went wrong
      */
-    public DomainObject setPermissions(DomainObject domainObject, String granteeKey, String rights) throws Exception;
+    DomainObject setPermissions(DomainObject domainObject, String granteeKey, String rights) throws Exception;
 
     /**
      * 
      * @param deleteObjectRefs
      * @throws Exception
      */
-    public void remove(List<Reference> deleteObjectRefs) throws Exception;
+    void remove(List<Reference> deleteObjectRefs) throws Exception;
+
+    /**
+     * Remove object storage.
+     */
+    void removeObjectStorage(List<String> storagePaths);
 
     /**
      *
@@ -99,19 +104,19 @@ public interface DomainFacade {
      * @param  domainObject domain object to update
      * @throws Exception
      */
-    public DomainObject save(DomainObject domainObject) throws Exception;
+    DomainObject save(DomainObject domainObject) throws Exception;
     
     /**
      * Returns the database summary for the current user.
      * @return
      * @throws Exception
      */
-    public DatabaseSummary getDatabaseSummary() throws Exception;
+    DatabaseSummary getDatabaseSummary() throws Exception;
     
     /**
      * Returns the disk usage summary for the current user.
      * @return
      * @throws Exception
      */
-    public DiskUsageSummary getDiskUsageSummary() throws Exception;
+    DiskUsageSummary getDiskUsageSummary() throws Exception;
 }

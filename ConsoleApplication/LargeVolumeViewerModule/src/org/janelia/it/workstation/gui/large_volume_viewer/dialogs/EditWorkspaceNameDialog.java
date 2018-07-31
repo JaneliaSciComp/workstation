@@ -4,14 +4,19 @@ import java.awt.BorderLayout;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -27,6 +32,10 @@ import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 import net.miginfocom.swing.MigLayout;
+import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
+import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
 
 /**
  * A dialog for editing the name for a Workspace, based on a pre-determined naming pattern.
@@ -44,6 +53,8 @@ public class EditWorkspaceNameDialog extends ModalDialog {
     private JTextField suffixField;
     private JCheckBox overrideCheckbox;
     private JTextField nameField;
+    private JComboBox subjectComboBox;
+    private JCheckBox assignNeuronOwnerCheckbox;
     private boolean save = false;
     private String name;
     
@@ -134,6 +145,25 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         nameField.setEnabled(false);
         attrPanel.add(nameField,"span 4, grow");
         
+        assignNeuronOwnerCheckbox = new JCheckBox("Assign Neurons");
+        assignNeuronOwnerCheckbox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                subjectComboBox.setEnabled(assignNeuronOwnerCheckbox.isSelected());
+            }
+        });  
+        attrPanel.add(assignNeuronOwnerCheckbox, "span 4");
+        
+        subjectComboBox = new JComboBox();
+        subjectComboBox.setEnabled(false);
+
+        SubjectComboBoxRenderer renderer = new SubjectComboBoxRenderer();
+        subjectComboBox.setRenderer(renderer);
+        subjectComboBox.setMaximumRowCount(20);
+        attrPanel.add(subjectComboBox, "span 4");
+        
+        CommonDialogItems.updateList((DefaultComboBoxModel)subjectComboBox.getModel(), true);
+        
         ActivityLogHelper.logUserAction("EditWorkspaceNameDialog.showForSample");
         
         pack();
@@ -147,6 +177,13 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         setVisible(true);
         
         return save?name:null;
+    }
+    
+    public String getAssignOwner() {
+        if (assignNeuronOwnerCheckbox.isSelected()) {
+            return ((Subject)subjectComboBox.getModel().getSelectedItem()).getKey();
+        }
+        return null;
     }
     
     public static String guessSampleDate(String sampleName) {

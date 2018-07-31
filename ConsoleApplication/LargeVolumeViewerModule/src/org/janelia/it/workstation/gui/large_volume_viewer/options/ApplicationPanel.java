@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 
 import javax.swing.Icon;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -29,12 +30,17 @@ public class ApplicationPanel extends javax.swing.JPanel {
     public static final String PREFERENCE_ANCHORS_IN_VIEWPORT_DEFAULT = "true";
     public static final String PREFERENCE_Z_THICKNESS = "ZThickness";
     public static final String PREFERENCE_Z_THICKNESS_DEFAULT = "80";
-    
+    public static final String PREFERENCE_ANNOTATIONS_CLICK_MODE = "AnnotationClickMode";
+    public static final String CLICK_MODE_SHIFT_LEFT_CLICK = "shift-left-click";
+    public static final String CLICK_MODE_LEFT_CLICK = "left-click";
+    public static final String PREFERENCE_ANNOTATIONS_CLICK_MODE_DEFAULT = CLICK_MODE_SHIFT_LEFT_CLICK;
+
     private final ApplicationOptionsPanelController controller;
     private JCheckBox loadLastCheckbox; 
     private JCheckBox verifyNeuronsCheckbox; 
     private JCheckBox anchorsInViewportCheckbox; 
     private JTextField zThicknessField;
+    private JComboBox<String> clickModeCombo;
     private JLabel errorLabel;
     
     ApplicationPanel(final ApplicationOptionsPanelController controller) {
@@ -81,7 +87,19 @@ public class ApplicationPanel extends javax.swing.JPanel {
         attrPanel.add(titleLabel2,"gap para");
         attrPanel.add(anchorsInViewportCheckbox,"gap para");
 
-        
+
+        String [] modeStrings = {CLICK_MODE_LEFT_CLICK, CLICK_MODE_SHIFT_LEFT_CLICK};
+        this.clickModeCombo = new JComboBox<>(modeStrings);
+        clickModeCombo.addActionListener(e -> controller.changed());
+        // default to the original behavior, shift-left-click
+        clickModeCombo.setSelectedItem(CLICK_MODE_SHIFT_LEFT_CLICK);
+        // clickModeCombo.setSelectedIndex(1);
+        JLabel clickModeLabel = new JLabel("Click mode for adding annotations: ");
+        clickModeLabel.setLabelFor(clickModeCombo);
+        attrPanel.add(clickModeLabel, "gap para");
+        attrPanel.add(clickModeCombo, "gap para");
+
+
         this.zThicknessField = new JTextField();
         zThicknessField.getDocument().addDocumentListener(new DocumentListener() {
             public void changedUpdate(DocumentEvent e) {
@@ -124,6 +142,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
         loadLastCheckbox.setSelected(isLoadLastObject());
         verifyNeuronsCheckbox.setSelected(isVerifyNeurons());
         anchorsInViewportCheckbox.setSelected(isAnchorsInViewport());
+        clickModeCombo.setSelectedItem(getAnnotationClickMode());
         zThicknessField.setText(getZThickness()+"");
     }
 
@@ -143,6 +162,11 @@ public class ApplicationPanel extends javax.swing.JPanel {
                 ApplicationPanel.class, 
                 PREFERENCE_ANCHORS_IN_VIEWPORT, 
                 anchorsInViewportCheckbox.isSelected()+"");  
+
+        FrameworkImplProvider.setLocalPreferenceValue(
+                ApplicationPanel.class,
+                PREFERENCE_ANNOTATIONS_CLICK_MODE,
+                (String) clickModeCombo.getSelectedItem());
 
         FrameworkImplProvider.setLocalPreferenceValue(
                 ApplicationPanel.class, 
@@ -197,6 +221,13 @@ public class ApplicationPanel extends javax.swing.JPanel {
                 ApplicationPanel.PREFERENCE_ANCHORS_IN_VIEWPORT, 
                 ApplicationPanel.PREFERENCE_ANCHORS_IN_VIEWPORT_DEFAULT);
         return Boolean.parseBoolean(anchorsInViewportStr);
+    }
+
+    public static String getAnnotationClickMode() {
+        return FrameworkImplProvider.getLocalPreferenceValue(
+                ApplicationPanel.class,
+                ApplicationPanel.PREFERENCE_ANNOTATIONS_CLICK_MODE,
+                ApplicationPanel.PREFERENCE_ANNOTATIONS_CLICK_MODE_DEFAULT);
     }
 
     public static int getZThickness() {

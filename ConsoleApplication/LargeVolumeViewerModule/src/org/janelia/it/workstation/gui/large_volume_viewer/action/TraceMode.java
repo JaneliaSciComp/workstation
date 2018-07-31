@@ -32,11 +32,13 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationM
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.it.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -131,22 +133,27 @@ implements MouseMode, KeyListener
 	}
 	
 	private void onMouseActuallyClicked(MouseEvent event) {
-		// Only want left/near clicks with SHIFT down
-		// BUTTON1 is near-click for both left and right handed mice (right?)
-		if ((event.getButton() == MouseEvent.BUTTON1) && event.isShiftDown()) {
-			// Place new anchor
-			Vec3 xyz = worldFromPixel(event.getPoint());
-			// System.out.println("Trace click "+xyz);
-            
-            // TODO - nudge location to voxel center
-            TraceMode.startTimer();
-			appendAnchor(xyz);
-		}
-		else if (event.getButton() == MouseEvent.BUTTON1) {
-			if (hoverAnchor != null) {
-				controller.setNextParent(hoverAnchor);
-			}
-		}
+        // we don't use other button or middle button for tracing
+        if (event.getButton() == MouseEvent.BUTTON1) {
+            // regardless of how you shift-click or click, or your settings,
+            //  clicking an anchor always sets next parent (old behavior: could put
+            //  a point on top of another, which we don't want)
+            if (hoverAnchor != null) {
+                controller.setNextParent(hoverAnchor);
+            } else {
+                // original behavior: shift-click to annotate; new behavior (2018):
+                //  shift not required to annotate; check preference for which:
+                if (ApplicationPanel.getAnnotationClickMode().equals(ApplicationPanel.CLICK_MODE_SHIFT_LEFT_CLICK)
+                        && !event.isShiftDown()) {
+                    // require shift but don't have shift = no annotation for you
+                    return;
+                }
+                // finally we're cleared to annotate
+                Vec3 xyz = worldFromPixel(event.getPoint());
+                TraceMode.startTimer();
+                appendAnchor(xyz);
+            }
+        }
 	}
 	
 	@Override
@@ -525,6 +532,15 @@ implements MouseMode, KeyListener
                     };
                     setNeuronGroupsAction.setEnabled(controller.editsAllowed());
                     result.add(new JMenuItem(setNeuronGroupsAction));
+                    
+                    AbstractAction generateReviewPointList = new AbstractAction("Generate point review list...") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().generateReviewPointList(hover);
+                        }
+                    };
+                    generateReviewPointList.setEnabled(controller.editsAllowed());
+                    result.add(new JMenuItem(generateReviewPointList));
 
                     AbstractAction setNeuronRadiusAction = new AbstractAction("Set neuron radius...") {
                         @Override
@@ -603,7 +619,7 @@ implements MouseMode, KeyListener
 	}
 
 	@Override
-	public void keyPressed(KeyEvent event) {
+	public void keyPressed(KeyEvent event) {          
 		checkShiftPlusCursor(event);
 		int keyCode = event.getKeyCode();
 		Anchor historyAnchor = null;
@@ -669,6 +685,12 @@ implements MouseMode, KeyListener
 				skeleton.addEditNoteRequest(nextParent);
 			}
 			break;
+                case KeyEvent.VK_P:
+			TaskWorkflowViewTopComponent.getInstance().nextTask();
+			break;
+                case KeyEvent.VK_O:
+			TaskWorkflowViewTopComponent.getInstance().prevTask();
+			break;               
 		}
                 
                 // if not normal key event, check our group toggle events

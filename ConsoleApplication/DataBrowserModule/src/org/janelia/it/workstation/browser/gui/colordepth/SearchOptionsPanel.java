@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -141,7 +142,7 @@ public class SearchOptionsPanel extends ConfigPanel {
             public Set<DataSet> getSelectedValues() {
                 if (dataSets==null) return ImmutableSet.of();
                 Map<String, DataSet> dataSetLookup = dataSets.stream().collect(Collectors.toMap(DataSet::getIdentifier, Function.identity()));
-                return search.getDataSets().stream().map(dataSet -> dataSetLookup.get(dataSet)).collect(Collectors.toSet());
+                return search.getDataSets().stream().map(dataSet -> dataSetLookup.get(dataSet)).filter(Objects::nonNull).collect(Collectors.toSet());
             }
 
             @Override

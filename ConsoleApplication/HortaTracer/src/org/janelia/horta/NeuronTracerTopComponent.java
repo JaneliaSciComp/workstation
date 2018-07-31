@@ -165,6 +165,12 @@ import org.janelia.horta.actions.ResetHortaRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
+import org.janelia.horta.camera.CatmullRomSplineKernel;
+import org.janelia.horta.camera.Interpolator;
+import org.janelia.horta.camera.InterpolatorKernel;
+import org.janelia.horta.camera.LinearInterpolatorKernel;
+import org.janelia.horta.camera.PrimitiveInterpolator;
+import org.janelia.horta.camera.Vector3Interpolator;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
@@ -256,6 +262,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     private boolean leverageCompressedFiles = false;
     
     private boolean doCubifyVoxels = false; // Always begin in "no distortion" state
+    
+    private boolean pausePlayback = false;
     
     private final NeuronEditDispatcher neuronEditDispatcher;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -549,18 +557,81 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new URI(currentSource).toURL();
     }
     
+    public void playSampleLocations(List<SampleLocation> locationList) {
+        try {
+            for (SampleLocation sampleLocation : locationList) {
+                if (this.pausePlayback)
+                    return;
+                Quaternion q = new Quaternion();
+                float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
+                if (quaternionRotation != null) {
+                    q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
+                }
+                ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+                        currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
+                );
+
+                // figure out number of steps
+                Vantage vantage = sceneWindow.getVantage();
+                float[] startLocation = vantage.getFocus();
+                double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm() - startLocation[0], 2)
+                         + Math.pow(sampleLocation.getFocusYUm() - startLocation[1], 2)
+                         + Math.pow(sampleLocation.getFocusZUm() - startLocation[2], 2));
+                // # of steps is 1 per uM
+                int steps = (int) Math.round(distance);
+                if (steps < 1) {
+                    steps = 1;
+                }
+                
+                animateToLocationWithRotation(acceptor, q, sampleLocation, steps);
+                
+                activityLogger.logHortaLaunch(sampleLocation);
+                currentSource = sampleLocation.getSampleUrl().toString();
+                defaultColorChannel = sampleLocation.getDefaultColorChannel();
+                volumeCache.setColorChannel(defaultColorChannel);
+            }
+        } catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+        }
+    }
+    
     public void setSampleLocation(SampleLocation sampleLocation) {
         try {
             leverageCompressedFiles = sampleLocation.isCompressed();
+            Quaternion q = new Quaternion();
+            float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
+            if (quaternionRotation!=null) 
+                q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
             ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                    currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
+                currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
             );
-            acceptor.acceptLocation(sampleLocation);
+            
+            if (sampleLocation.getInterpolate()) {
+                // figure out number of steps
+                Vantage vantage = sceneWindow.getVantage();
+                float[] startLocation = vantage.getFocus();
+                double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm()-startLocation[0],2) + 
+                        Math.pow(sampleLocation.getFocusYUm()-startLocation[1],2) + 
+                        Math.pow(sampleLocation.getFocusZUm()-startLocation[2],2));
+                // # of steps is 1 per uM
+                int steps = (int)Math.round(distance);
+                if (steps<1)
+                    steps = 1;
+               animateToLocationWithRotation(acceptor, q, sampleLocation, steps);                                
+            } else {
+                acceptor.acceptLocation(sampleLocation);
+                Vantage vantage = sceneWindow.getVantage();
+                if (sampleLocation.getRotationAsQuaternion()!=null) {
+                    vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
+                } else {
+                    vantage.setRotationInGround(vantage.getDefaultRotation());
+                }
+            }
+            activityLogger.logHortaLaunch(sampleLocation);
             currentSource = sampleLocation.getSampleUrl().toString();
             defaultColorChannel = sampleLocation.getDefaultColorChannel();
             volumeCache.setColorChannel(defaultColorChannel);
-            activityLogger.logHortaLaunch(sampleLocation);
-
+            
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
             throw new RuntimeException(
@@ -820,6 +891,42 @@ public final class NeuronTracerTopComponent extends TopComponent
         if (didMove) {
             vantage.notifyObservers();
             redrawNow();
+        }
+    }
+    
+    private void animateToLocationWithRotation(ViewerLocationAcceptor acceptor, Quaternion endRotation, SampleLocation endLocation, int steps) throws Exception {
+        Vantage vantage = sceneWindow.getVantage();
+        CatmullRomSplineKernel splineKernel = new CatmullRomSplineKernel();
+        Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(splineKernel);
+        Interpolator<Quaternion> rotationInterpolator = new PrimitiveInterpolator(splineKernel);
+        double stepSize = 1.0/(float)steps;
+        
+        double zoom = endLocation.getMicrometersPerWindowHeight();
+        if (zoom > 0) {
+            vantage.setSceneUnitsPerViewportHeight((float)zoom);
+            vantage.setDefaultSceneUnitsPerViewportHeight((float)zoom);
+        }
+
+        
+        Vector3 startFocus = new Vector3(sceneWindow.getVantage().getFocusPosition().getX(),sceneWindow.getVantage().getFocusPosition().getY(),
+            sceneWindow.getVantage().getFocusPosition().getZ());
+        sceneWindow.getVantage().getFocusPosition().copy(startFocus);        
+        Quaternion startRotation = sceneWindow.getVantage().getRotationInGround().convertRotationToQuaternion();
+        
+        Vector3 endFocus = new Vector3((float)endLocation.getFocusXUm(), (float)endLocation.getFocusYUm(), 
+                (float)endLocation.getFocusZUm());
+        double currWay = 0;
+        for (int i=0; i<steps; i++) { 
+            SampleLocation sampleLocation = new BasicSampleLocation();
+            currWay += stepSize;
+            Vector3 iFocus = vec3Interpolator.interpolate_equidistant(currWay, 
+                    startFocus, startFocus, endFocus, endFocus);
+            Quaternion iRotate = rotationInterpolator.interpolate_equidistant(currWay, 
+                    startRotation, startRotation, endRotation, endRotation);
+            vantage.setFocus(iFocus.getX(), iFocus.getY(), iFocus.getZ());
+            vantage.setRotationInGround(new Rotation().setFromQuaternion(iRotate));
+            vantage.notifyObservers();
+            sceneWindow.redrawImmediately();
         }
     }
 
@@ -2276,5 +2383,19 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     public void setPreferKtx(boolean doPreferKtx) {
         ktxBlockMenuBuilder.setPreferKtx(doPreferKtx);
+    }
+
+    /**
+     * @return the pausePlayback
+     */
+    public boolean isPausePlayback() {
+        return pausePlayback;
+    }
+
+    /**
+     * @param pausePlayback the pausePlayback to set
+     */
+    public void setPausePlayback(boolean pausePlayback) {
+        this.pausePlayback = pausePlayback;
     }
 }

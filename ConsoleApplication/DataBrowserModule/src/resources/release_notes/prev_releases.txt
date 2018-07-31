@@ -1,18 +1,70 @@
-// 7.11
+// 7.14.1
+ 
+Large Volume Viewer
+* Patch to fix anchor updates for large workspaces 
 
+// 7.14
+  
 Workstation Browser
-* Fixed error when setting key binds for annotations
-* Added {Index} template attribute for downloading duplicate files
+* Support more than 100 facet values for search
+* Added "User's Animal Id" attribute for LSMs and Samples
+* Improved progress indication for bulk file downloads
+* Clean up partially downloaded files in case of a download error
+* Fixed a bug with color depth mask upload
+* Prevent users from selected unsupported file formats when uploading files
 
 Large Volume Viewer
-* Removed silent error for missing mesh file on Workspace load
-* Added thread pool size option to jacs messaging
-* Added thread logging
+* Sorting neurons alphabetically or by owner will subsort by creation date
+* Workspace info dialog only shows filtered neuron list; moved to neuron gear menu
 
-// 7.10.1
+// 7.13
+     
+Workstation Browser
+* You can now use "Open in Fiji/Vaa3d" on bzip2-compressed LSMs
+* Added progress indication when adding large numbers of items to a folder
+* Viewer preferences such as showing titles/tags as now persisted
+* Better handling of errors when applying publishing names
+* Fixed spurious error when downloading small files
 
-Horta
-* Fixed hide/show issue
+Large Volume Viewer
+* Fixed brain flip for navigation to Horta location
+* Added Assign Neuron Owner to Save As Workspace
+* Fixed NPE for TaskView hotkeys 
+
+Horta Viewer
+* Improved neuron merge performance
+
+// 7.12 
+     
+Workstation Browser
+* Improved performance of Download dialog when many samples are selected for download   
+* Greatly improved performance of large file downloads  
+* Added option for concurrent file downloads    
+* Added {Alignment Space} and {Result Name} for file naming 
+* Better handling and error messages when running out of memory 
+* Added help message when no items are displayed    
+* Fixed issue with Filter reload after using Save As    
+* Fixed many minor bugs     
+    
+Large Volume Viewer 
+* Added visible selection to annotation list    
+* Added preferences in LVV and Horta to make it optional to use shift key to annotate
+
+// 7.11	
+	
+Workstation Browser	
+* Fixed error when setting key binds for annotations	
+* Added {Index} template attribute for downloading duplicate files	
+	
+Large Volume Viewer	
+* Removed silent error for missing mesh file on Workspace load	
+* Added thread pool size option to jacs messaging	
+* Added thread logging	
+	
+// 7.10.1	
+	
+Horta	
+* Fixed hide/show issue	
 
 // 7.10
 

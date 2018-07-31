@@ -55,6 +55,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.Anch
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.it.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
@@ -109,6 +110,17 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     private File swcDirectory;
 
+
+    public boolean isTempOwnershipAdmin() {
+        return isTempOwnershipAdmin;
+    }
+
+    public void setTempOwnershipAdmin(boolean tempOwnershipAdmin) {
+        isTempOwnershipAdmin = tempOwnershipAdmin;
+    }
+
+    // people can temporarily become admins for changing neuron owner purposes
+    private boolean isTempOwnershipAdmin = false;
 
     // ----- constants
     // AUTOMATIC_TRACING_TIMEOUT for automatic tracing in seconds
@@ -230,6 +242,54 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void editNeuronGroups() {
         NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
         ngDialog.showDialog();
+    }
+
+    void addBranchAnnotation(List<Vec3> branch, TmGeoAnnotation annotation) {
+        Vec3 tempLocation = getTileFormat().micronVec3ForVoxelVec3Centered(
+                new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
+        branch.add(tempLocation);
+    }
+    
+    /**
+     * recursive function to generate all the branch points for a neuron
+     **/
+    void exploreNeuronBranches (List<List<Vec3>> branchList, List<Vec3> currentBranch, TmNeuronMetadata neuron, TmGeoAnnotation neuronVertex) {
+        List<TmGeoAnnotation> branchChildren = neuron.getChildrenOf(neuronVertex);
+
+        if (branchChildren.size()>1) {
+            // pick ordered to find and trace out the main branch
+            List<TmGeoAnnotation> ordered = neuron.getChildrenOfOrdered(neuronVertex);
+            addBranchAnnotation(currentBranch, ordered.get(0));
+            exploreNeuronBranches(branchList, currentBranch, neuron, ordered.get(0));
+
+            // now start new branches for each of the other children
+            for (int i=1; i<ordered.size(); i++) {
+                List<Vec3> newBranch = new ArrayList<>();
+                addBranchAnnotation(newBranch, ordered.get(i));
+                exploreNeuronBranches(branchList, newBranch, neuron, ordered.get(i));
+            }
+        } else if (branchChildren.size()==1) {
+            // continue branch
+            addBranchAnnotation(currentBranch, branchChildren.get(0));
+            exploreNeuronBranches(branchList, currentBranch, neuron, branchChildren.get(0));
+        } else {
+            // tip node; add branch to branchlist
+            branchList.add(currentBranch);
+        }
+        
+    }
+    
+    public void generateReviewPointList(Anchor anchor) {
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(anchor.getNeuronID());
+        TmGeoAnnotation rootNode = neuron.getFirstRoot();
+        if (rootNode!=null) {
+            List<List<Vec3>> branchList = new ArrayList<>();
+            List<Vec3> currentBranch = new ArrayList<Vec3>();
+            addBranchAnnotation(currentBranch, rootNode);
+            exploreNeuronBranches(branchList, currentBranch, neuron, rootNode);
+            System.out.println("sdfsdf" + rootNode.getChildIds());
+            TaskWorkflowViewTopComponent.getInstance().loadPointList(neuron.getName(), branchList, true);
+        }
     }
     
     public void showNeuronHistory() {
@@ -1381,6 +1441,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return true;
         }
 
+        // user has temporary admin (think of it as sudo)
+        if (isTempOwnershipAdmin()) {
+            return true;
+        }
+
         // check if user has admin role in mouselight group:
         Subject subject = AccessManager.getAccessManager().getAuthenticatedSubject();
         if (subject==null) {
@@ -1560,6 +1625,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
         final String workspaceName = dialog.showForSample(getAnnotationModel().getCurrentSample());
+        final String assignOwner = dialog.getAssignOwner();
         
         if (workspaceName==null) {
             log.info("Aborting workspace creation: no valid name was provided by the user");
@@ -1574,7 +1640,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             
             @Override
             protected void doStuff() throws Exception {
-                workspaceCopy = annotationModel.copyWorkspace(workspace, workspaceName);
+                workspaceCopy = annotationModel.copyWorkspace(workspace, workspaceName, assignOwner);
             }
 
             @Override

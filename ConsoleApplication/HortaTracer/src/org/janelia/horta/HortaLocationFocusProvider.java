@@ -32,6 +32,7 @@ package org.janelia.horta;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.List;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
@@ -109,6 +110,29 @@ public class HortaLocationFocusProvider implements Tiled3dSampleLocationProvider
             try {
                 sampleLocation.setDefaultColorChannel(0);
                 nttc.setSampleLocation(sampleLocation);
+            } catch (Exception ex) {
+                logger.error(ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
+        else {
+            throw new IllegalStateException("Failed to open Neuron Tracer.");
+        }
+    }
+
+    @Override
+    public void playSampleLocations(List<SampleLocation> locationList) {
+       NeuronTracerTopComponent nttc = getNeuronTracer();
+        if (nttc == null) {
+            throw new IllegalStateException("Failed to find Neuron Tracer.");
+        }
+        if (! nttc.isOpened()) {
+           return;
+        }
+        if (nttc.isOpened()) {
+            nttc.requestActive();
+            try {                
+                nttc.playSampleLocations(locationList);
             } catch (Exception ex) {
                 logger.error(ex.getMessage());
                 ex.printStackTrace();

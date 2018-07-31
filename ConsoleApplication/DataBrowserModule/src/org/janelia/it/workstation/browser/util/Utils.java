@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -45,11 +46,13 @@ import javax.swing.SwingUtilities;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
 import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
+import org.janelia.it.workstation.browser.filecache.URLProxy;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -129,10 +132,10 @@ public class Utils {
     public static BufferedImage readImage(String path) throws Exception {
         try {
             String selectedRenderer = (String) LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D);
-
             RendererType2D renderer = selectedRenderer == null ? RendererType2D.LOCI : RendererType2D.valueOf(selectedRenderer);
+            String format = FilenameUtils.getExtension(path);
             BufferedImage image = null;
-
+            
             if (renderer == RendererType2D.IMAGE_IO) {
                 InputStream stream = null;
                 GetMethod get = null;
@@ -154,6 +157,9 @@ public class Utils {
 
                     // Supports GIF, PNG, JPEG, BMP, and WBMP 
                     image = ImageIO.read(stream);
+                    if (image==null) {
+                        throw new FormatException("File format is not supported: " + format);
+                    }
                 }
                 finally {
                     if (get != null) {
@@ -168,9 +174,8 @@ public class Utils {
                         }
                     }
                 }
-            }
+            } 
             else {
-                String format = path.substring(path.lastIndexOf(".") + 1);
                 IFormatReader reader;
                 switch (format) {
                     case "tif":
@@ -204,7 +209,8 @@ public class Utils {
         catch (Exception e) {
             if (e instanceof IOException) {
                 throw e;
-            } else {
+            } 
+            else {
                 throw new IOException("Error reading image: " + path, e);
             }
         }
@@ -213,23 +219,28 @@ public class Utils {
     /**
      * Read an image from a URL using the ImageIO API. Currently supports TIFFs, PNGs and JPEGs.
      */
-    public static BufferedImage readImage(URL url) throws Exception {
+    public static BufferedImage readImage(URLProxy urlProxy) throws Exception {
         BufferedImage image;
         StopWatch stopWatch = TIMER ? new LoggingStopWatch() : null;
         // Some extra finagling is required because LOCI libraries do not like the file protocol for some reason
-        if (url.getProtocol().equals("file")) {
-            String localFilepath = url.toString().replace("file:", "");
+        if (urlProxy.getProtocol().equals("file")) {
+            String localFilepath = urlProxy.toString().replace("file:", "");
             log.trace("Loading cached file: {}", localFilepath);
             image = Utils.readImage(localFilepath);
             if (TIMER) {
                 stopWatch.stop("readCachedImage");
             }
-        }
-        else {
-            log.trace("Loading url: {}", url);
-            image = Utils.readImage(url.toString());
-            if (TIMER) {
-                stopWatch.stop("readRemoteImage");
+        } else {
+            log.trace("Loading url: {}", urlProxy);
+            try {
+                image = Utils.readImage(urlProxy.toString());
+            } catch (Exception e) {
+                urlProxy.handleError(e);
+                throw e;
+            } finally {
+                if (TIMER) {
+                    stopWatch.stop("readRemoteImage");
+                }
             }
         }
         return image;
@@ -574,7 +585,7 @@ public class Utils {
             worker.throwExceptionIfCancelled();
         }
         
-        log.info("copyURLToFile: entry, standardPath={}, destination={}", standardPath, destination);
+        log.trace("copyURLToFile: standardPath={}, destination={}", standardPath, destination);
 
         final File destinationDir = destination.getParentFile();
         if ((destinationDir != null) && (! destinationDir.exists())) {
@@ -608,11 +619,13 @@ public class Utils {
                     (! destination.getName().endsWith(EXTENSION_BZ2))) {
                 input = new BZip2CompressorInputStream(input, true);
                 estimatedCompressionFactor = 3;
+                length = null;
             }
 
             FileOutputStream output = new FileOutputStream(destination);
+            
             try {
-                final long totalBytesWritten = copy(input, output, length==null?100:length, worker, estimatedCompressionFactor, hasProgress);
+                final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
                 if (length != null && totalBytesWritten < length) {
                     throw new IOException("bytes written (" + totalBytesWritten + ") for " + wfile.getEffectiveURL() +
                                           " is less than source length (" + length + ")");
@@ -628,10 +641,63 @@ public class Utils {
         }
     }
 
+    public static void copyFileToFile(File source, File destination, SimpleWorker worker, boolean hasProgress) throws Exception {
+
+
+        if (worker != null) {
+            worker.throwExceptionIfCancelled();
+        }
+        
+        log.trace("copyFileToFile: source={}, destination={}", source, destination);
+
+        final File destinationDir = destination.getParentFile();
+        if ((destinationDir != null) && (! destinationDir.exists())) {
+            Files.createDirectories(destinationDir.toPath());
+        }
+
+        // make sure we can write to destination
+        if (destination.exists() && !destination.canWrite()) {
+            throw new IOException("Unable to open " + destination.getAbsolutePath() + " for writing.");
+        }
+        
+        InputStream input = null;
+        FileOutputStream output = null;
+
+        try {
+            input = new FileInputStream(source);
+            Long length = source.length();
+            log.info("copyURLToFile: length={}, source={}", length, source);
+    
+            int estimatedCompressionFactor = 1;
+            if (source.getName().endsWith(EXTENSION_BZ2) &&
+                    (! destination.getName().endsWith(EXTENSION_BZ2))) {
+                input = new BZip2CompressorInputStream(input, true);
+                estimatedCompressionFactor = 3;
+                length = null;
+            }
+    
+            output = new FileOutputStream(destination);
+            
+            final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
+            if (totalBytesWritten < length) {
+                throw new IOException("bytes written (" + totalBytesWritten + ") for " + destination +
+                                      " is less than source length (" + length + ")");
+            }
+        } 
+        finally {
+            if (input!=null) {
+                IOUtils.closeQuietly(input); // close input here to ensure bzip stream is properly closed
+            }
+            if (output!=null) {
+                IOUtils.closeQuietly(output);
+            }
+        }
+    }
+
     /**
      * Adapted from Apache's commons-io, so that we could add progress percentage and status.
      */
-    private static long copy(InputStream input, OutputStream output, long length,
+    private static long copy(InputStream input, FileOutputStream output, Long length,
                              SimpleWorker worker, int estimatedCompressionFactor, 
                              boolean hasProgress) throws IOException {
 
@@ -650,39 +716,65 @@ public class Utils {
         }
 
         final long startTime = System.currentTimeMillis();
-        final long estimatedLength = estimatedCompressionFactor * length;
-
-        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-        int bytesRead;
+        final long estimatedLength = length == null ? 1 : estimatedCompressionFactor * length;
         long totalBytesWritten = 0;
-        long totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
         long totalMegabytesWritten;
-        while (-1 != (bytesRead = input.read(buffer))) {
+        
+        if (length != null) {
+            // TODO: add progress indication
+            // 30 MB/s on Windows (Windows to NAS)
+            CallbackByteChannel rbc = new CallbackByteChannel(Channels.newChannel(input), (long bytesWritten) -> {
+                worker.setProgress(bytesWritten, estimatedLength);
+            });
+            output.getChannel().transferFrom(rbc, 0, length);
+            totalBytesWritten = rbc.getTotalBytesRead();
+        }
+        else {
+            log.warn("No length given, falling back on inefficient copy method");
 
-            output.write(buffer, 0, bytesRead);
-            totalBytesWritten += bytesRead;
-
-            if (worker != null) {
-                worker.throwExceptionIfCancelled();
-
-                if (hasProgress) {
-                    if ((totalBytesWritten - totalBytesWrittenAtLastStatusUpdate) > TEN_MEGABYTES) {
-   
-                        totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
+            // 30-35 MB/s (Windows to NAS)
+//          ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
+//            int numRead = 0;
+//            long totalBytesWritten = 0; 
+//            while (numRead >= 0) {
+//                buffer.rewind();
+//                numRead = inc.read(buffer);
+//                buffer.rewind();
+//                totalBytesWritten += output.getChannel().write(buffer);
+//            }
+            
+            // 10-15 MB/s (Windows to NAS)
+            
+            byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+            int bytesRead;
+            long totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
+            while (-1 != (bytesRead = input.read(buffer))) {
     
-                        if (totalBytesWritten < estimatedLength) {
-                            worker.setProgress(totalBytesWritten, estimatedLength);
-                        }
+                output.write(buffer, 0, bytesRead);
+                totalBytesWritten += bytesRead;
     
-                        if (backgroundWorker != null) {
-                            totalMegabytesWritten = totalBytesWritten / ONE_MEGABYTE;
-                            backgroundWorker.setStatus(backgroundStatus + totalMegabytesWritten + " Mb written)");
+                if (worker != null) {
+                    worker.throwExceptionIfCancelled();
+    
+                    if (hasProgress) {
+                        if ((totalBytesWritten - totalBytesWrittenAtLastStatusUpdate) > TEN_MEGABYTES) {
+       
+                            totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
+    
+                            if (totalBytesWritten < estimatedLength) {
+                                worker.setProgress(totalBytesWritten, estimatedLength);
+                            }
+        
+                            if (backgroundWorker != null) {
+                                totalMegabytesWritten = totalBytesWritten / ONE_MEGABYTE;
+                                backgroundWorker.setStatus(backgroundStatus + totalMegabytesWritten + " Mb written)");
+                            }
                         }
                     }
                 }
             }
         }
-
+        
         if (worker != null) {
 
             if (hasProgress) {
@@ -702,15 +794,20 @@ public class Utils {
             String amountUnits;
             if (totalBytesWritten > ONE_GIGABYTE) {
                 amountWritten = divideAndScale(totalBytesWritten, ONE_GIGABYTE, 1);
-                amountUnits = " gigabytes in ";
-            } else if (totalBytesWritten > ONE_MEGABYTE) {
-                amountWritten = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1);
-                amountUnits = " megabytes in ";
-            } else {
-                amountWritten = divideAndScale(totalBytesWritten, ONE_KILOBYTE, 1);
-                amountUnits = " kilobytes in ";
+                amountUnits = "GB";
             }
-            log.info("copy: wrote " + amountWritten + amountUnits + elapsedSeconds + " seconds");
+            else if (totalBytesWritten > ONE_MEGABYTE) {
+                amountWritten = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1);
+                amountUnits = "MB";
+            } 
+            else {
+                amountWritten = divideAndScale(totalBytesWritten, ONE_KILOBYTE, 1);
+                amountUnits = "KB";
+            }
+            
+            BigDecimal mbWritten = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1);
+            BigDecimal mbs = elapsedSeconds.intValue()==0 ? mbWritten : mbWritten.divide(elapsedSeconds, 2, RoundingMode.HALF_UP);
+            log.info("Wrote {} {} in {} seconds ({} MB/s)", amountWritten, amountUnits, elapsedSeconds, mbs);
         }
 
         return totalBytesWritten;

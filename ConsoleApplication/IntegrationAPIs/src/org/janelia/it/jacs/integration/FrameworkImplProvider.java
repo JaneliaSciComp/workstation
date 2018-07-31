@@ -117,6 +117,13 @@ public class FrameworkImplProvider {
             return model.getModelProperty(propName);
         }
     }
+
+    public static <T> T getModelProperty(String propName, T defaultValue) {
+        @SuppressWarnings("unchecked")
+        T value = (T)getModelProperty(propName);
+        if (value==null) return defaultValue;
+        return value;
+    }
     
     public static void setModelProperty(String propName, Object value) {
         SettingsModel model = getSettingsModel();

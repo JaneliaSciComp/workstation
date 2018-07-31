@@ -8,9 +8,13 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -28,21 +32,17 @@ import org.janelia.it.workstation.browser.util.PathUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 /**
  * {@link HttpClient} wrapper for submitting WebDAV requests.
  *
  * @author Eric Trautman
  */
-public class WebDavClient {
+class AgentStorageClient extends AbstractStorageClient {
 
-    private static final Logger LOG = LoggerFactory.getLogger(WebDavClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AgentStorageClient.class);
 
-    private final String baseUrl;
-    private final HttpClientProxy httpClient;
-    private final ObjectMapper objectMapper;
+    private final Consumer<Throwable> connectionErrorHandler;
+    private Supplier<String> alternativeBaseUrlSupplier;
 
     /**
      * Constructs a client with default authentication credentials.
@@ -52,40 +52,10 @@ public class WebDavClient {
      * @throws IllegalArgumentException
      *   if the baseUrl cannot be parsed.
      */
-    public WebDavClient(String baseUrl, HttpClientProxy httpClient, ObjectMapper objectMapper) {
-        this.baseUrl = validateUrl(baseUrl);
-        this.httpClient = httpClient;
-        this.objectMapper = objectMapper;
-    }
-
-    private String validateUrl(String urlString) {
-        try {
-            final URL url = new URL(urlString);
-            return urlString;
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("failed to parse URL: " + urlString, e);
-        }
-    }
-
-    /**
-     * Finds information about the storage using the storage path prefix
-     *
-     * @param  storagePath storage key
-     *
-     * @return WebDAV information for the storage.
-     *
-     * @throws WebDavException
-     *   if the storage information cannot be retrieved.
-     */
-    public WebDavFile findStorage(String storagePath)
-            throws WebDavException {
-        String href = getWebdavFindUrl(storagePath, "data_storage_path");
-
-        MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0, 0);
-        if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
-            throw new WebDavException("empty response returned for " + storagePath);
-        }
-        return new WebDavFile(storagePath, multiStatusResponses[0]);
+    AgentStorageClient(String baseUrl, Supplier<String> alternativeBaseUrlSupplier, HttpClientProxy httpClient, ObjectMapper objectMapper, Consumer<Throwable> connectionErrorHandler) {
+        super(baseUrl, httpClient, objectMapper);
+        this.connectionErrorHandler = connectionErrorHandler;
+        this.alternativeBaseUrlSupplier = alternativeBaseUrlSupplier;
     }
 
     /**
@@ -98,15 +68,34 @@ public class WebDavClient {
      * @throws WebDavException
      *   if the file information cannot be retrieved.
      */
-    public WebDavFile findFile(String remoteFileName)
+    WebDavFile findFile(String remoteFileName)
             throws WebDavException {
-        String href = getWebdavFindUrl(remoteFileName, "data_storage_path");
-
-        MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0, 0);
+        MultiStatusResponse[] multiStatusResponses;
+        try {
+            multiStatusResponses = StorageClientResponseHelper.getResponses(
+                    httpClient,
+                    StorageClientResponseHelper.getStorageLookupURL(baseUrl, "data_storage_path", remoteFileName),
+                    DavConstants.DEPTH_0,
+                    0
+            );
+        } catch (Exception e) {
+            if (alternativeBaseUrlSupplier != null) {
+                String alternativeBaseURL = alternativeBaseUrlSupplier.get();
+                LOG.info("{} failed with {} so trying alternative base URL - {}", baseUrl, e, alternativeBaseURL);
+                multiStatusResponses = StorageClientResponseHelper.getResponses(
+                        httpClient,
+                        StorageClientResponseHelper.getStorageLookupURL(alternativeBaseURL, "data_storage_path", remoteFileName),
+                        DavConstants.DEPTH_0,
+                        0
+                );
+            } else {
+                multiStatusResponses = null;
+            }
+        }
         if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
             throw new WebDavException("empty response returned for " + remoteFileName);
         }
-        return new WebDavFile(remoteFileName, multiStatusResponses[0]);
+        return new WebDavFile(remoteFileName, multiStatusResponses[0], connectionErrorHandler);
     }
 
     /**
@@ -232,104 +221,28 @@ public class WebDavClient {
         return new RemoteLocation(virtualFilePath, realFilePath, location);
     }
 
-    private MultiStatusResponse[] getResponses(String href, int depth, int callCount)
-            throws WebDavException {
-        MultiStatusResponse[] multiStatusResponses;
-        PropFindMethod method = null;
+    URL getNewDirURL(String storageLocation) {
         try {
-            method = new PropFindMethod(href, WebDavFile.PROPERTY_NAMES, depth);
-            method.addRequestHeader("Accept", "application/xml");
-            method.addRequestHeader("Content-Type", "application/xml");
-            final int responseCode = httpClient.executeMethod(method);
-            LOG.trace("getResponses: {} returned for PROPFIND {}", responseCode, href);
-
-            if (responseCode == HttpStatus.SC_MULTI_STATUS) {
-                final MultiStatus multiStatus = method.getResponseBodyAsMultiStatus();
-                multiStatusResponses = multiStatus.getResponses();
-            } else if (responseCode == HttpStatus.SC_MOVED_PERMANENTLY) {
-                final Header locationHeader = method.getResponseHeader("Location");
-                if (locationHeader != null) {
-                    final String movedHref = locationHeader.getValue();
-                    if (callCount == 0) {
-                        return getResponses(movedHref, depth, 1);
-                    }
-                }
-                throw new WebDavException(responseCode + " response code returned for " + href, responseCode);
-            } else if (responseCode == HttpStatus.SC_NOT_FOUND) {
-                throw new FileNotFoundException("Resource " + href + "not found (" + responseCode + ")");
-            } else {
-                throw new WebDavException(responseCode + " response code returned for " + href, responseCode);
-            }
-        } catch (WebDavException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new WebDavException("failed to retrieve WebDAV information from " + href, e);
-        } finally {
-            if (method != null) {
-                method.releaseConnection();
-            }
-        }
-
-        return multiStatusResponses;
-    }
-
-    String createStorage(String storageName, String storageContext, String storageTags) {
-        return createStorageForResource(getCreateStorageURL(storageName, "DATA_DIRECTORY"), storageContext, storageTags);
-    }
-
-    private String getCreateStorageURL(String storageName, String storageType) {
-        return baseUrl + "/storage/" + storageName + "/format/" + storageType;
-    }
-
-    private String createStorageForResource(String resourceURI, String storageContext, String storageTags) {
-        MkColMethod method = null;
-        Integer responseCode = null;
-        try {
-            method = new MkColMethod(resourceURI);
-            if (storageTags != null) {
-                method.addRequestHeader("storageTags", storageTags);
-            }
-            if (storageContext != null) {
-                method.addRequestHeader("pathPrefix", storageContext);
-            }
-            responseCode = httpClient.executeMethod(method);
-            LOG.trace("createDirectory: {} returned for MKCOL {}", resourceURI, responseCode);
-
-            if (responseCode != HttpServletResponse.SC_CREATED) {
-                String response = method.getResponseBodyAsString();
-                throw new WebDavException(responseCode + " returned for MKCOL " + resourceURI + ": " + response, responseCode);
-            }
-            final Header locationHeader = method.getResponseHeader("Location");
-            if (locationHeader == null) {
-                throw new WebDavException("No location header returned for " + resourceURI, responseCode);
-            }
-            String location = locationHeader.getValue();
-            if (StringUtils.isBlank(location)) {
-                throw new WebDavException("No location value set in the header returned for " + resourceURI, responseCode);
-            }
-            return location;
-        } catch (WebDavException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new WebDavException("failed to MKCOL " + resourceURI, e, responseCode);
-        } finally {
-            if (method != null) {
-                method.releaseConnection();
-            }
-        }
-
-    }
-
-    URL getDownloadFileURL(String standardPathName) {
-        try {
-            return new URL(baseUrl + "/storage_path/" + standardPathName);
+            return new URL(baseUrl + "/directory/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation));
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }
     }
 
-    private String getWebdavFindUrl(String remoteFileName, String context) {
-        return baseUrl + "/" + context + "/" + remoteFileName;
+    URL getUploadFileURL(String storageLocation) {
+        try {
+            return new URL(baseUrl + "/file/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation));
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    URLProxy getDownloadFileURL(String standardPathName) {
+        try {
+            return new URLProxy(new URL(baseUrl + "/storage_path/" + standardPathName), connectionErrorHandler);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
 }

@@ -1,7 +1,10 @@
 package org.janelia.horta.options;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -23,9 +26,15 @@ public class TileLoadingPanel extends javax.swing.JPanel {
     public static final String PREFERENCE_RAM_TILE_COUNT = "RamTileCount";
     public static final String PREFERENCE_RAM_TILE_COUNT_DEFAULT = "3";
 
+    public static final String PREFERENCE_ANNOTATIONS_CLICK_MODE = "AnnotationClickMode";
+    public static final String CLICK_MODE_SHIFT_LEFT_CLICK = "shift-left-click";
+    public static final String CLICK_MODE_LEFT_CLICK = "left-click";
+    public static final String PREFERENCE_ANNOTATIONS_CLICK_MODE_DEFAULT = CLICK_MODE_SHIFT_LEFT_CLICK;
+
     private final TileLoadingOptionsPanelController controller;
     private final JTextField concurrentLoadsField;
     private final JTextField ramTileCountField;
+    private JComboBox<String> clickModeCombo;
 
     DocumentListener listener = new DocumentListener() {
         @Override
@@ -64,6 +73,21 @@ public class TileLoadingPanel extends javax.swing.JPanel {
         attrPanel.add(titleLabel,"gap para");
         attrPanel.add(ramTileCountField,"gap para, width 100:400:600, growx");
 
+        String [] modeStrings = {CLICK_MODE_LEFT_CLICK, CLICK_MODE_SHIFT_LEFT_CLICK};
+        this.clickModeCombo = new JComboBox<>(modeStrings);
+        clickModeCombo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                controller.changed();
+            }
+        });
+        // default to the original behavior, shift-left-click
+        clickModeCombo.setSelectedItem(CLICK_MODE_SHIFT_LEFT_CLICK);
+        JLabel clickModeLabel = new JLabel("Click mode for adding annotations: ");
+        clickModeLabel.setLabelFor(clickModeCombo);
+        attrPanel.add(clickModeLabel, "gap para");
+        attrPanel.add(clickModeCombo, "gap para");
+
         add(attrPanel, BorderLayout.CENTER);
     }
 
@@ -82,17 +106,20 @@ public class TileLoadingPanel extends javax.swing.JPanel {
     void load() {
         concurrentLoadsField.setText(NbPreferences.forModule(TileLoadingPanel.class).get(PREFERENCE_CONCURRENT_LOADS, PREFERENCE_CONCURRENT_LOADS_DEFAULT));
         ramTileCountField.setText(NbPreferences.forModule(TileLoadingPanel.class).get(PREFERENCE_RAM_TILE_COUNT, PREFERENCE_RAM_TILE_COUNT_DEFAULT));
+        clickModeCombo.setSelectedItem(NbPreferences.forModule(TileLoadingPanel.class).get(PREFERENCE_ANNOTATIONS_CLICK_MODE, PREFERENCE_ANNOTATIONS_CLICK_MODE_DEFAULT));
     }
 
     void store() {
         NbPreferences.forModule(TileLoadingPanel.class).put(PREFERENCE_CONCURRENT_LOADS, concurrentLoadsField.getText());
         NbPreferences.forModule(TileLoadingPanel.class).put(PREFERENCE_RAM_TILE_COUNT, ramTileCountField.getText());
+        NbPreferences.forModule(TileLoadingPanel.class).put(PREFERENCE_ANNOTATIONS_CLICK_MODE, (String) clickModeCombo.getSelectedItem());
     }
 
     boolean valid() {
         try {
             Integer.parseInt(concurrentLoadsField.getText());
             Integer.parseInt(ramTileCountField.getText());
+            // click mode drop-down is always valid
         }
         catch (NumberFormatException e) {
             return false;

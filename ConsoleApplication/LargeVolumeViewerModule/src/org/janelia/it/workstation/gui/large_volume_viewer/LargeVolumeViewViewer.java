@@ -214,6 +214,10 @@ public class LargeVolumeViewViewer extends JPanel {
                         //  not all failures end up in onFailure()!
                         if (volumeLoaded.get()) {
                             logger.info("Loading completed");
+                            if (annotationModel == null) {
+                                // trying to diagnose how this could happen...
+                                logger.info("found null annotationModel");
+                            }
                             annotationModel.loadComplete();
                         } else {
                             // same as onFailure() (code copied):
@@ -312,6 +316,8 @@ public class LargeVolumeViewViewer extends JPanel {
         
         if (annotationModel!=null) {
             Events.getInstance().unregisterOnEventBus(annotationModel);
+            // trying to diagnose a later null:
+            logger.info("setting annotationModel to null");
             annotationModel = null;
         }
     }
@@ -323,6 +329,8 @@ public class LargeVolumeViewViewer extends JPanel {
             showLoadingIndicator();
 
             if ( viewUI == null ) {
+                // trying to diagnost how this can be null later
+                logger.info("instantiating AnnotationModel");
                 annotationModel = new AnnotationModel();
                 Events.getInstance().registerOnEventBus(annotationModel);
                 viewUI = new QuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);

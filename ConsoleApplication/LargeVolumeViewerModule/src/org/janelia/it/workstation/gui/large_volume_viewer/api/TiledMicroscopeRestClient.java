@@ -209,12 +209,16 @@ public class TiledMicroscopeRestClient {
         return response.readEntity(TmWorkspace.class);
     }
 
-    public TmWorkspace copy(TmWorkspace tmWorkspace, String name) throws Exception {
+    public TmWorkspace copy(TmWorkspace tmWorkspace, String name, String assignOwner) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(tmWorkspace);
         query.setPropertyName("name");
         query.setPropertyValue(name);
+        // overload objectType in domain query for assign owner subject key
+        if (assignOwner!=null) {
+            query.setObjectType(assignOwner);
+        }
         Response response = getMouselightEndpoint("/workspace/copy")
                 .request("application/json")
                 .post(Entity.json(query));

@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
+import java.util.List;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
@@ -65,6 +66,11 @@ public class LargeVolumeViewerLocationProvider implements Tiled3dSampleLocationP
     public SampleLocation getSampleLocation()
     {
         return viewer.getSampleLocation();
+    }
+
+    @Override
+    public void playSampleLocations(List<SampleLocation> locationList) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

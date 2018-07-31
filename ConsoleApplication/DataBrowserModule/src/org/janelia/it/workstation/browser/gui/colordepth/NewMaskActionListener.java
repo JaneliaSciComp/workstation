@@ -4,15 +4,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
@@ -20,6 +17,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.FileMgr;
+import org.janelia.it.workstation.browser.filecache.URLProxy;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -65,7 +63,7 @@ public final class NewMaskActionListener implements ActionListener {
                     File file = FileMgr.getFileMgr().getFile(uploadPath, false);
                     if (file==null) {
                         // Cache is probably disabled, just fetch remotely
-                        URL imageFileURL = FileMgr.getFileMgr().getURL(uploadPath, false);
+                        URLProxy imageFileURL = FileMgr.getFileMgr().getURL(uploadPath, false);
                         this.image = Utils.readImage(imageFileURL);
                     }
                     else {
