@@ -17,7 +17,6 @@ import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.nb_action.AddOntologyTermAction;
-import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.browser.nb_action.OntologyExportAction;
 import org.janelia.it.workstation.browser.nb_action.OntologyImportAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
@@ -90,10 +89,7 @@ public class OntologyNode extends OntologyTermNode implements DomainObjectNode<O
         actions.add(OntologyImportAction.get());
         actions.add(OntologyExportAction.get());
         actions.add(null);
-        actions.add(new AssignShortcutAction());
         actions.add(AddOntologyTermAction.get());
-        actions.add(null);
-        actions.add(ApplyAnnotationAction.get());
         return actions.toArray(new Action[actions.size()]);
     }
     
