@@ -66,7 +66,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public class ImportImageFilesDialog extends ModalDialog {
 
-    private static final Logger log = LoggerFactory.getLogger(ImportDialog.class);
+    private static final Logger log = LoggerFactory.getLogger(ImportImageFilesDialog.class);
     
     private static final int MAX_IMPORT_GB = 100;
     
