@@ -10,6 +10,8 @@ import com.rabbitmq.client.impl.LongStringHelper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import javax.swing.SwingUtilities;
 import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
@@ -32,7 +34,19 @@ import org.slf4j.LoggerFactory;
 
 
 public class RefreshHandler implements DeliverCallback, CancelCallback {
-
+    private static final Logger log = LoggerFactory.getLogger(RefreshHandler.class);
+    private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
+    private static final String MESSAGESERVER_USERACCOUNT = ConsoleProperties.getInstance().getProperty("domain.msgserver.useraccount").trim();
+    private static final String MESSAGESERVER_PASSWORD = ConsoleProperties.getInstance().getProperty("domain.msgserver.password").trim();
+    private static final String MESSAGESERVER_REFRESHEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.refresh").trim();
+    
+    private AnnotationModel annotationModel;
+    private Channel msgChannel;
+    private Receiver msgReceiver;
+    static RefreshHandler handler;
+    private boolean receiveUpdates = true;
+    private Map<Long, Map<String,Object>> updatesMap = new HashMap<>();
+    
     /**
      * @return the receiveUpdates
      */
@@ -46,18 +60,6 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
     public void setReceiveUpdates(boolean receiveUpdates) {
         this.receiveUpdates = receiveUpdates;
     }
-    
-    private static final Logger log = LoggerFactory.getLogger(RefreshHandler.class);
-    private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
-    private static final String MESSAGESERVER_USERACCOUNT = ConsoleProperties.getInstance().getProperty("domain.msgserver.useraccount").trim();
-    private static final String MESSAGESERVER_PASSWORD = ConsoleProperties.getInstance().getProperty("domain.msgserver.password").trim();
-    private static final String MESSAGESERVER_REFRESHEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.refresh").trim();
-    
-    private AnnotationModel annotationModel;
-    private Channel msgChannel;
-    private Receiver msgReceiver;
-    static RefreshHandler handler;
-    private boolean receiveUpdates = true;
     
     private RefreshHandler() {
         
@@ -94,6 +96,69 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
     private String convertLongString (LongString data) {
         return LongStringHelper.asLongString(data.getBytes()).toString();
     }
+    
+    public void refreshNeuronUpdates() {
+        // play back all the latest neurons and empty the map
+        Iterator<Long> neuronIterator = updatesMap.keySet().iterator();
+        log.info ("Number of updates to refresh: {}",updatesMap.size());
+        while (neuronIterator.hasNext()) {
+             try {
+                 Long neuronId = neuronIterator.next();
+                 Map<String, Object> neuronData = updatesMap.get(neuronId);
+                 TmNeuronMetadata neuron = (TmNeuronMetadata)neuronData.get("neuron");
+                 MessageType action = (MessageType) neuronData.get("action");
+                 String user = (String) neuronData.get("user");
+                 // if not a neuron CRUD action, ignore
+                 switch (action) {
+                     case NEURON_CREATE:
+                         log.info("processing remote create: {}",neuron.getName());
+                         annotationModel.getNeuronManager().addNeuron(neuron);
+                         annotationModel.fireBackgroundNeuronCreated(neuron);
+                         break;
+                     case NEURON_SAVE_NEURONDATA:
+                     case NEURON_SAVE_METADATA:
+                          log.info("processing remote save: {},",neuron.getName());
+                          annotationModel.getNeuronManager().addNeuron(neuron);
+                          annotationModel.fireBackgroundNeuronChanged(neuron);
+                         break;
+                     case NEURON_DELETE:
+                         log.info("processing remote delete: {},",neuron.getName());
+                         annotationModel.fireBackgroundNeuronDeleted(neuron);
+                         break;
+                 }                 
+                 
+             } catch (Exception e) {
+                 // skip this update
+                 e.printStackTrace();
+             }
+        }
+        updatesMap.clear();
+    }
+    
+    private void addNeuronUpdate (Delivery message,  Map<String, Object> msgHeaders, MessageType action, String user) {
+         try {             
+             ObjectMapper mapper = new ObjectMapper();
+             String metadata = convertLongString((LongString) msgHeaders.get(HeaderConstants.METADATA));
+             TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
+
+             TmProtobufExchanger exchanger = new TmProtobufExchanger();
+             byte[] msgBody = message.getBody();
+             exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+             
+             // assume this has to do with neuron CRUD; otherwise ignore
+             Map neuronData = new HashMap<String,Object>();
+             neuronData.put("neuron", neuron);
+             neuronData.put("action", action);
+             neuronData.put("user", user);
+             log.info ("Adding neuron remote update: {}",neuron.getName());
+             if (neuron!=null && neuron.getId()!=null) {
+                 this.updatesMap.put(neuron.getId(), neuronData);
+             }
+         } catch (Exception e) {
+             // any type of exception, log the exception and dump the neuron
+             log.info("Problem storing update {}",e.getMessage());
+         }
+    }
 
     /**
      * Successful refresh update received
@@ -117,12 +182,17 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             MessageType action = MessageType.valueOf(convertLongString((LongString) msgHeaders.get(HeaderConstants.TYPE)));
             String user = convertLongString((LongString) msgHeaders.get(HeaderConstants.USER));
             
+            Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
+            
             // flag to suppress shared updates
             if (!receiveUpdates && !user.equals(AccessManager.getSubjectKey())) {
+                if (workspace != null && annotationModel!=null && annotationModel.getCurrentWorkspace() != null
+                    && workspace.longValue()==annotationModel.getCurrentWorkspace().getId().longValue()) {
+                    addNeuronUpdate (message, msgHeaders, action, user);
+                }
                 return;
             }
             
-            Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
             if (action == MessageType.ERROR_PROCESSING) {
                 if (user != null && user.equals(AccessManager.getSubjectKey())) {
                     log.info("Error message received from server");
