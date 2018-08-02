@@ -358,24 +358,18 @@ public class SkeletonActorModel {
     }
 
     public void updateNeuronStyles(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
-        List<Anchor> anchorList = new ArrayList<Anchor>();
         for (TmNeuronMetadata neuron: neuronStyleMap.keySet()) {
             neuronStyles.put(neuron.getId(), neuronStyleMap.get(neuron));
-            Collection<TmGeoAnnotation> annList = neuron.getGeoAnnotationMap().values();
-            for (TmGeoAnnotation ann: annList) {
-                Anchor anchor = skeleton.getAnchorByID(ann.getId());
-                if (anchor!=null)
-                    anchorList.add(anchor);
-            }
         }
-        mostRecentAnchorVersion--;
-        if (anchorList.size()>0)
-            updateAnchors(anchorList);
-        else 
-            updateAnchors();
-        
+        forceUpdateAnchors();
     }
 
+    public void updateRemoteNeuronStyles(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
+        for (TmNeuronMetadata neuron: neuronStyleMap.keySet()) {
+            neuronStyles.put(neuron.getId(), neuronStyleMap.get(neuron));
+        }
+    }
+    
     public void removeNeuronStyle(TmNeuronMetadata neuron) {
         neuronStyles.remove(neuron.getId());
     }
@@ -386,101 +380,6 @@ public class SkeletonActorModel {
         updateAnchors();
     }
     
-    public synchronized void updateAnchors (Collection<Anchor> anchors) {
-        neuronVertexCount.clear();
-        neuronVertices.clear();
-        neuronColors.clear();
-        
-        for (Anchor anchor : anchors) {
-            neuronVertexCount.add(anchor.getNeuronID());
-        }
-        for (Long neuronID : neuronVertexCount.elementSet()) {
-            int vertexCount=neuronVertexCount.count(neuronID);
-            ByteBuffer tempBytes = ByteBuffer.allocateDirect(vertexCount * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT);
-            tempBytes.order(ByteOrder.nativeOrder());
-            neuronVertices.put(neuronID, tempBytes.asFloatBuffer());
-            neuronVertices.get(neuronID).rewind();
-
-            tempBytes = ByteBuffer.allocateDirect(vertexCount * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT);
-            tempBytes.order(ByteOrder.nativeOrder());
-            neuronColors.put(neuronID, tempBytes.asFloatBuffer());
-            neuronColors.get(neuronID).rewind();
-        }
-
-        neuronAnchorIndices.clear();
-        neuronIndexAnchors.clear();
-        Map<Long, Integer> neuronVertexIndex = new HashMap<>();
-        Integer currentVertexIndex;
-        NeuronStyle style;
-        for (Anchor anchor : anchors) {
-            Long neuronID = anchor.getNeuronID();
-
-            Vec3 xyz = anchor.getLocation();
-            FloatBuffer vertexBuffer=neuronVertices.get(neuronID);
-            vertexBuffer.put((float) xyz.getX());
-            vertexBuffer.put((float) xyz.getY());
-            vertexBuffer.put((float) xyz.getZ());
-
-            style=neuronStyles.get(neuronID);
-            if (style==null) {
-                style = NeuronStyle.getStyleForNeuron(neuronID);
-            }
-            float[] styleColorArr=style.getColorAsFloatArray();
-            FloatBuffer colorBuffer=neuronColors.get(neuronID);
-            colorBuffer.put(styleColorArr);
-
-            currentVertexIndex=neuronVertexIndex.get(neuronID);
-            if (currentVertexIndex==null) {
-                currentVertexIndex=0;
-                neuronVertexIndex.put(neuronID, currentVertexIndex);
-            }
-            neuronAnchorIndices.put(anchor, currentVertexIndex);
-
-            Map<Integer, Anchor> indexAnchorMap=neuronIndexAnchors.get(neuronID);
-            if (indexAnchorMap==null) {
-                indexAnchorMap=new HashMap<>();
-                neuronIndexAnchors.put(neuronID, indexAnchorMap);
-            }
-            indexAnchorMap.put(currentVertexIndex, anchor);
-
-            neuronVertexIndex.put(neuronID, currentVertexIndex + 1);
-        }
-
-        neuronPointIndices.clear();
-        for (Long neuronID : neuronVertexIndex.keySet()) {
-            // recall that the last value neuronVertexIndex takes is the
-            //  number of points:
-            ByteBuffer tempBytes = ByteBuffer.allocateDirect(neuronVertexIndex.get(neuronID) * INT_BYTE_COUNT);
-            tempBytes.order(ByteOrder.nativeOrder());
-            neuronPointIndices.put(neuronID, tempBytes.asIntBuffer());
-            neuronPointIndices.get(neuronID).rewind();
-        }
-        for (Anchor anchor : anchors) {
-            int i1 = neuronAnchorIndices.get(anchor);
-            neuronPointIndices.get(anchor.getNeuronID()).put(i1);
-        }
-
-        pointIndicesNeedCopy=true;
-
-        // automatically traced paths
-        updateTracedPaths(anchors);
-
-        // lines between points, if no path (must be done after path updates so
-        //  we know where the paths are!)
-        updateLines(anchors);
-
-        // clear the next parent if needed; check that the next parent's
-        //  neuron is in the set we're working with, and if so, check
-        //  that it didn't disappear; note that since we're only
-        //  updating a subset of anchors, the next parent could be
-        //  on an entirely different neuron, and if so, we don't
-        //  want to touch it
-        if (getNextParent() != null && neuronVertexIndex.keySet().contains(getNextParent().getGuid()) && !anchors.contains(getNextParent())) {
-            setNextParent(null);
-        }
-        
-        updater.update();
-    }
     /**
      * update the arrays we'll send to OpenGL; this includes the anchors/points
      * (thus the name of the method), the lines between them, and the
@@ -858,6 +757,7 @@ public class SkeletonActorModel {
                     wp2v.getY(),
                     wp2v.getZ()+thickness/2
                     };
+            
             // Find all relevant anchors which are inside the viewport
             Map<Long,TmGeoAnnotation> annotations = new LinkedHashMap<>();
             List<NeuronVertex> vertexList = neuronSet.getAnchorsInMicronArea(wp1, wp2);
