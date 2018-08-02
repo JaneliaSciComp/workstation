@@ -26,12 +26,10 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileFilter;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -70,9 +68,14 @@ public class ImportImageFilesDialog extends ModalDialog {
     
     private static final int MAX_IMPORT_GB = 100;
     
-    private static final String IMPORT_TARGET_FOLDER = "FileImport.TargetFolder";
-    private static final String IMPORT_SOURCE_FOLDER = "FileImport.SourceFolder";
-
+    private static final String PREF_IMPORT_SOURCE_DIR = "FileImport.SourceFolder";
+    private static final String PREF_IMPORT_TARGET_FOLDER = "FileImport.TargetFolder";
+    private static final String PREF_IMPORT_MOVIES = "FileImport.Movies";
+    private static final String PREF_IMPORT_MIPS = "FileImport.MIPs";
+    private static final String PREF_IMPORT_HIST = "FileImport.Hist";
+    private static final String PREF_IMPORT_GAMMA = "FileImport.Gamma";
+    private static final String PREF_IMPORT_LEGENDS = "FileImport.Legends";
+    
     private static final String TOOLTIP_TOP_LEVEL_FOLDER =
             "Name of the folder in which data should be loaded with the data.";
     private static final String TOOLTIP_INPUT_DIR =
@@ -110,20 +113,12 @@ public class ImportImageFilesDialog extends ModalDialog {
         this.pathTextField = new JTextField(40);
         pathTextField.setToolTipText(TOOLTIP_INPUT_DIR);
         
-        final String importSourceFolderName = (String)
-                FrameworkImplProvider.getModelProperty(IMPORT_SOURCE_FOLDER);
-        if (!StringUtils.isEmpty(importSourceFolderName)) {
-            final File importSourceFolder = new File(importSourceFolderName.trim());
-            if (importSourceFolder.exists()) {
-                pathTextField.setText(importSourceFolder.getAbsolutePath());
-            }
-        }
-
         String chooseFileText = null;
         ImageIcon chooseFileIcon = null;
         try {
             chooseFileIcon = Utils.getClasspathImage("magnifier.png");
-        } catch (FileNotFoundException e) {
+        } 
+        catch (FileNotFoundException e) {
             log.warn("failed to load button icon", e);
             chooseFileText = "...";
         }
@@ -161,7 +156,7 @@ public class ImportImageFilesDialog extends ModalDialog {
         pathPanel.setLayout(new BoxLayout(pathPanel, BoxLayout.LINE_AXIS));
         pathPanel.add(pathTextField);
         pathPanel.add(chooseFileButton);
-        attrPanel.addItem("Directory containing images to upload", pathPanel);
+        attrPanel.addItem("Directory or image to upload", pathPanel);
         
         this.folderField = new JTextField(40);
         folderField.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
@@ -248,6 +243,32 @@ public class ImportImageFilesDialog extends ModalDialog {
     }
     
     public void showDialog() {
+
+        // Load preferences
+
+        final String importSourceDirectory = (String)
+                FrameworkImplProvider.getModelProperty(PREF_IMPORT_SOURCE_DIR);
+        if (!StringUtils.isEmpty(importSourceDirectory)) {
+            final File importSourceFolder = new File(importSourceDirectory);
+            if (importSourceFolder.exists()) {
+                pathTextField.setText(importSourceFolder.getAbsolutePath());
+            }
+        }
+        
+        final Boolean generateMovies = FrameworkImplProvider.getModelProperty(PREF_IMPORT_MOVIES, true);
+        generateMoviesCheckbox.setSelected(generateMovies);
+
+        final Boolean generateMips = FrameworkImplProvider.getModelProperty(PREF_IMPORT_MIPS, true);
+        generateMipsCheckbox.setSelected(generateMips);
+
+        final Boolean hist = FrameworkImplProvider.getModelProperty(PREF_IMPORT_HIST, true);
+        histCheckbox.setSelected(hist);
+
+        final Boolean gamma = FrameworkImplProvider.getModelProperty(PREF_IMPORT_GAMMA, true);
+        gammaCheckbox.setSelected(gamma);
+
+        final Boolean legends = FrameworkImplProvider.getModelProperty(PREF_IMPORT_LEGENDS, false);
+        legendsCheckbox.setSelected(legends);
         
         try {
             rootFolder = DomainMgr.getDomainMgr().getModel().getDefaultWorkspace();
@@ -272,7 +293,7 @@ public class ImportImageFilesDialog extends ModalDialog {
         }
 
         // save the user preferences for later
-        FrameworkImplProvider.setModelProperty(IMPORT_TARGET_FOLDER, folderName);
+        FrameworkImplProvider.setModelProperty(PREF_IMPORT_TARGET_FOLDER, folderName);
 
         int fileCount = 1;
         double transferMegabytes = 0;
@@ -282,8 +303,13 @@ public class ImportImageFilesDialog extends ModalDialog {
         if (selectedFile.exists()) {
 
             // save the user preferences for later
-            FrameworkImplProvider.setModelProperty(IMPORT_SOURCE_FOLDER, selectedFile.getAbsolutePath());
-
+            FrameworkImplProvider.setModelProperty(PREF_IMPORT_SOURCE_DIR, selectedFile.getAbsolutePath());
+            FrameworkImplProvider.setModelProperty(PREF_IMPORT_MOVIES, generateMoviesCheckbox.isSelected());
+            FrameworkImplProvider.setModelProperty(PREF_IMPORT_MIPS, generateMipsCheckbox.isSelected());
+            FrameworkImplProvider.setModelProperty(PREF_IMPORT_HIST, histCheckbox.isSelected());
+            FrameworkImplProvider.setModelProperty(PREF_IMPORT_GAMMA, gammaCheckbox.isSelected());
+            FrameworkImplProvider.setModelProperty(PREF_IMPORT_LEGENDS, legendsCheckbox.isSelected());
+            
             if (selectedFile.isDirectory()) {
 
                 selectedChildren = new ArrayList<File>();
@@ -302,11 +328,13 @@ public class ImportImageFilesDialog extends ModalDialog {
                     }
                 }
 
-            } else {
+            } 
+            else {
                 transferMegabytes = selectedFile.length() / 1000000.0;
             }
 
-        } else {
+        } 
+        else {
             JOptionPane.showMessageDialog(ImportImageFilesDialog.this, "Please specify a valid file or directory to import.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -318,15 +346,18 @@ public class ImportImageFilesDialog extends ModalDialog {
 
         final double transferGigabytes = transferMegabytes / 1000.0;
         if (transferGigabytes > 0.999999999) {
-            msg = form.format(new Object[] {fileCount, transferGigabytes, "giga"});
-        } else if (transferMegabytes > 0.999999) {
-            msg = form.format(new Object[] {fileCount, (int) transferMegabytes, "mega"});
-        } else if (transferMegabytes > 0.000999) {
+            msg = form.format(new Object[] { fileCount, transferGigabytes, "giga" });
+        }
+        else if (transferMegabytes > 0.999999) {
+            msg = form.format(new Object[] { fileCount, (int) transferMegabytes, "mega" });
+        }
+        else if (transferMegabytes > 0.000999) {
             final int transferKilobytes = (int) (transferMegabytes * 1000);
-            msg = form.format(new Object[] {fileCount, transferKilobytes, "kilo"});
-        } else {
+            msg = form.format(new Object[] { fileCount, transferKilobytes, "kilo" });
+        }
+        else {
             final int transferBytes = (int) (transferMegabytes * 1000000);
-            msg = form.format(new Object[] {fileCount, transferBytes, ""});
+            msg = form.format(new Object[] { fileCount, transferBytes, "" });
         }
 
         final int maxGigabytes = MAX_IMPORT_GB;
@@ -406,78 +437,74 @@ public class ImportImageFilesDialog extends ModalDialog {
                            final String storageTags,
                            final String channelSpec,
                            final String mipsOptions) {
-        try {
-            BackgroundWorker executeWorker = new AsyncServiceMonitoringWorker() {
     
-                @Override
-                public String getName() {
-                    return "Import "+selectedFile.getName();
-                }
-    
-                @Override
-                protected void doStuff() throws Exception {
+        BackgroundWorker executeWorker = new AsyncServiceMonitoringWorker() {
 
-                    setStatus("Submitting task");
-                    
-                    Long taskId = startImportFilesTask(selectedFile,
-                            selectedChildren,
-                            importFolderName,
-                            importFolderId, storageTags,
-                            channelSpec,
-                            mipsOptions);
-                    
-                    setServiceId(taskId);
-                    
-                    setStatus("Grid execution");
-                    
-                    // Wait until task is finished
-                    super.doStuff(); 
+            @Override
+            public String getName() {
+                return "Import "+selectedFile.getName();
+            }
 
-                    if (isCancelled()) throw new CancellationException();
-                    setStatus("Done importing");
-                }
+            @Override
+            protected void doStuff() throws Exception {
 
-                @Override
-                public Callable<Void> getSuccessCallback() {
-                    return () -> {
-                        final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
-                        explorer.refresh(true, true, () -> {
+                setStatus("Submitting task");
+                
+                Long taskId = startImportFilesTask(selectedFile,
+                        selectedChildren,
+                        importFolderName,
+                        importFolderId, storageTags,
+                        channelSpec,
+                        mipsOptions);
+                
+                setServiceId(taskId);
+                
+                setStatus("Grid execution");
+                
+                // Wait until task is finished
+                super.doStuff(); 
 
-                                if (rootFolder!=null) {
+                if (isCancelled()) throw new CancellationException();
+                setStatus("Done importing");
+            }
 
-                                    DomainModel model = DomainMgr.getDomainMgr().getModel();
-                                    rootFolder = (TreeNode) model.getDomainObject(Reference.createFor(rootFolder));
-                                    List<DomainObject> children = model.getDomainObjects(rootFolder.getChildren());
-                                    DomainObject importFolder = null;
-                                    for (DomainObject child : children) {
-                                        if (child.getName().equals(importFolderName)) {
-                                            importFolder = child;
-                                            break;
-                                        }
+            @Override
+            public Callable<Void> getSuccessCallback() {
+                return () -> {
+                    final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
+                    explorer.refresh(true, true, () -> {
+
+                            if (rootFolder!=null) {
+
+                                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                                rootFolder = (TreeNode) model.getDomainObject(Reference.createFor(rootFolder));
+                                List<DomainObject> children = model.getDomainObjects(rootFolder.getChildren());
+                                DomainObject importFolder = null;
+                                for (DomainObject child : children) {
+                                    if (child.getName().equals(importFolderName)) {
+                                        importFolder = child;
+                                        break;
                                     }
-                                    final Long[] idPath = NodeUtils.createIdPath(rootFolder, importFolder);
-                                    SwingUtilities.invokeLater(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            explorer.selectAndNavigateNodeByPath(idPath);
-                                            setVisible(false);
-                                        }
-                                    });
                                 }
-
-                                return null;
+                                final Long[] idPath = NodeUtils.createIdPath(rootFolder, importFolder);
+                                SwingUtilities.invokeLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        explorer.selectAndNavigateNodeByPath(idPath);
+                                        setVisible(false);
+                                    }
+                                });
                             }
-                        );
-                        return null;
-                    };
-                }
-            };
-    
-            executeWorker.executeWithEvents();
-        }
-        catch (Exception e) {
-            ConsoleApp.handleException(e);
-        }
+
+                            return null;
+                        }
+                    );
+                    return null;
+                };
+            }
+        };
+
+        executeWorker.executeWithEvents();
     }
 
     private Long startImportFilesTask(File selectedFile,
