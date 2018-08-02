@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -28,6 +29,8 @@ import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
+import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.model.util.ReflectionsFixer;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
@@ -161,9 +164,9 @@ public class DomainMgr {
     }
     
     /**
-     * Queries the backend and returns a list of subjects sorted by: 
-     * groups then users, alphabetical by full name. 
-     * @return sorted list of subjects
+     * Returns a list of subjects sorted by groups then users, alphabetical by full name. 
+     * This method runs a remote query and thus should be run in a background thread.
+     * @return sorted list of all subjects
      */
     public List<Subject> getSubjects() throws Exception {
         List<Subject> subjects = subjectFacade.getSubjects();
@@ -171,6 +174,21 @@ public class DomainMgr {
         return subjects;
     }
 
+    /**
+     * Returns a list of subjects in a specified group, sorted by full name.
+     * This method runs a remote query and thus should be run in a background thread. 
+     * @param groupKey
+     * @return list of users in the given group
+     * @throws Exception
+     */
+    public List<User> getUsersInGroup(String groupKey) throws Exception {
+        return DomainMgr.getDomainMgr().getSubjects().stream()
+                .filter(s -> SubjectUtils.subjectIsInGroup(s, groupKey))
+                .filter(s -> s instanceof User)
+                .map(s -> (User)s)
+                .collect(Collectors.toList());
+    }
+    
     private void loadPreferences() throws Exception {
         if (preferenceMap==null) {
             preferenceMap = new HashMap<>();
