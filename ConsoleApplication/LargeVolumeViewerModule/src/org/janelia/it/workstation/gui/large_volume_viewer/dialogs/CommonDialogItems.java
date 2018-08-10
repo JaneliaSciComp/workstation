@@ -17,13 +17,17 @@ import org.janelia.model.security.Subject;
 
 
 public class CommonDialogItems {
-     private static Set<String> mouselightUsers = new HashSet<>(Arrays.asList(
+    // these are the people we usually want to assign neuron ownership to; it's
+    //  a mix of tracers, devs, and project leaders, but it's a smaller list than
+    //  all the people in mouselight, so we hard-code it here
+     private static Set<String> mouselightOwners = new HashSet<>(Arrays.asList(
             "ackermand",
             "arshadic",
             "base",
             "blaker",
             "chandrashekarj",
             "dossantosb",
+            "elsayeda",
             "ferreirat",
             "mouselight",
             "olbrisd",
@@ -35,8 +39,13 @@ public class CommonDialogItems {
             "winnubstj",
             "zafara"
     ));
-     
-    public static void updateList(DefaultComboBoxModel comboBoxModel, boolean mouselightOnly) {
+
+    /**
+     * given a combo model box, populate it with a list of all Subjects (people and groups) from
+     * the db, or restrict to the custom mouselight subjects listed above; used in mouselight
+     * dialogs when presenting options for ownership and other permissions
+     */
+    public static void updateOwnerList(DefaultComboBoxModel comboBoxModel, boolean mouselightOnly) {
         comboBoxModel.removeAllElements();
 
         List<Subject> subjects = new ArrayList<>();
@@ -48,14 +57,11 @@ public class CommonDialogItems {
         }
 
         if (mouselightOnly) {
-            // currently no api for getting all users in a group; hardcode for now
             // note: in testing, there were occasionally resize problems when the
             //  checkbox changed--sometimes when the list got wider, the window didn't;
             //  currently, it's OK
-
-            // playing with Java lambdas to see if it helps clarity...not sure it does
             subjects = subjects.stream()
-                .filter(subject -> mouselightUsers.contains(subject.getName()))
+                .filter(subject -> mouselightOwners.contains(subject.getName()))
                 .collect(Collectors.toList());
         }
         for (Subject subject: subjects) {

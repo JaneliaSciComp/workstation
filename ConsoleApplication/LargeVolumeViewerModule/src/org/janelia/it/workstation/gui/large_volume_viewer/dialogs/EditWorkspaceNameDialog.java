@@ -4,11 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -32,10 +29,8 @@ import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 import net.miginfocom.swing.MigLayout;
-import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.model.security.Subject;
-import org.janelia.model.security.User;
 
 /**
  * A dialog for editing the name for a Workspace, based on a pre-determined naming pattern.
@@ -162,7 +157,7 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         subjectComboBox.setMaximumRowCount(20);
         attrPanel.add(subjectComboBox, "span 4");
         
-        CommonDialogItems.updateList((DefaultComboBoxModel)subjectComboBox.getModel(), true);
+        CommonDialogItems.updateOwnerList((DefaultComboBoxModel)subjectComboBox.getModel(), true);
         
         ActivityLogHelper.logUserAction("EditWorkspaceNameDialog.showForSample");
         

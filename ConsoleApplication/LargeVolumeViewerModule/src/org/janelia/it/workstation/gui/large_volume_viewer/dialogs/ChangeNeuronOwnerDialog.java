@@ -4,21 +4,11 @@ import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.swing.*;
 
-import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.security.Subject;
 
 /**
@@ -26,26 +16,6 @@ import org.janelia.model.security.Subject;
  * doesn't do the work--it just provides the dialog for the user to detail the request
  */
 public class ChangeNeuronOwnerDialog extends JDialog {
-
-    private static Set<String> mouselightUsers = new HashSet<>(Arrays.asList(
-            "ackermand",
-            "arshadic",
-            "base",
-            "blaker",
-            "chandrashekarj",
-            "dossantosb",
-            "ferreirat",
-            "mouselight",
-            "olbrisd",
-            "ramirezd2",
-            "rokickik",
-            "schauderd",
-            "taylora",
-            "weldonm",
-            "winnubstj",
-            "zafara"
-    ));
-
 
     JComboBox subjectCombobox;
     JCheckBox mouselightOnlyCheckbox;
@@ -63,7 +33,6 @@ public class ChangeNeuronOwnerDialog extends JDialog {
 
         // show list of users; should be able to select from list of all neurons or
         //  just users in the mouselight group
-        // not sure how to get the group-only list; have to show everyone for now
         constraints.gridx = 0;
         constraints.gridy = 0;
         add(new JLabel("Choose new owner for neuron:"), constraints);
@@ -77,7 +46,6 @@ public class ChangeNeuronOwnerDialog extends JDialog {
         subjectCombobox.setRenderer(renderer);
         subjectCombobox.setMaximumRowCount(20);
 
-        // eventually we are going to optionally filter out non-mouselight users
         mouselightOnlyCheckbox = new JCheckBox("Only show mouselight users");
         mouselightOnlyCheckbox.setSelected(true);
         mouselightOnlyCheckbox.addActionListener(e -> updateList());
@@ -116,30 +84,7 @@ public class ChangeNeuronOwnerDialog extends JDialog {
 
     private void updateList() {
         DefaultComboBoxModel model = (DefaultComboBoxModel) subjectCombobox.getModel();
-        model.removeAllElements();
-
-        List<Subject> subjects = new ArrayList<>();
-        try {
-            subjects = DomainMgr.getDomainMgr().getSubjects();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        if (mouselightOnlyCheckbox.isSelected()) {
-            // currently no api for getting all users in a group; hardcode for now
-            // note: in testing, there were occasionally resize problems when the
-            //  checkbox changed--sometimes when the list got wider, the window didn't;
-            //  currently, it's OK
-
-            // playing with Java lambdas to see if it helps clarity...not sure it does
-            subjects = subjects.stream()
-                .filter(subject -> mouselightUsers.contains(subject.getName()))
-                .collect(Collectors.toList());
-        }
-        for (Subject subject: subjects) {
-            model.addElement(subject);
-        }
+        CommonDialogItems.updateOwnerList(model, mouselightOnlyCheckbox.isSelected());
     }
 
     private void onCancel() {
