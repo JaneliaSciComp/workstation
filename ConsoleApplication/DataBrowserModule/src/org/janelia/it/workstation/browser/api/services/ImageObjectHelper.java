@@ -4,12 +4,15 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.io.Files;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.sample.Image;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
@@ -40,7 +43,7 @@ public class ImageObjectHelper implements DomainObjectHelper {
 
     @Override
     public Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
-        throw new UnsupportedOperationException("image objects are not editable");
+        return  null;
     }
     
     @Override   
@@ -66,8 +69,39 @@ public class ImageObjectHelper implements DomainObjectHelper {
         model.remove(Arrays.asList(imageObject));
         // remove the image files
         model.removeStorage(Stream.concat(
-                imageObject.getFiles().values().stream(),
-                Stream.of(imageObject.getFilepath()))
+                imageObject.getFiles().entrySet().stream().map(e -> ImmutablePair.of(e.getKey(), e.getValue())),
+                Stream.of(ImmutablePair.<FileType, String>of(null, imageObject.getFilepath())))
+                .filter(fp -> {
+                    if (fp.getLeft() == null) {
+                        // only try this branch if this is the main filepath which has no filetype associated with it.
+                        String fpExt = Files.getFileExtension(fp.getRight());
+                        if (fpExt.length() > 0) {
+                            switch (fpExt.toLowerCase()) {
+                                case "gif":
+                                case "png":
+                                case "tif":
+                                case "tiff":
+                                case "lsm":
+                                case "v3draw":
+                                case "v3dpbd":
+                                    return true;
+                                default:
+                                    return false;
+                            }
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        return true;
+                    }
+                })
+                .map(fp -> {
+                    if (fp.getLeft() == null) {
+                        return fp.getRight();
+                    } else {
+                        return DomainUtils.getFilepath(imageObject, fp.getLeft());
+                    }
+                })
                 .collect(Collectors.toList()));
     }
 
