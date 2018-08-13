@@ -562,6 +562,7 @@ public class ImportImageFilesDialog extends ModalDialog {
             serviceArgsBuilder.add("-mipsOptions", mipsOptions);
         }
         serviceArgsBuilder.add("-storageLocation", uploadPath);
+        serviceArgsBuilder.add("-cleanStorageOnFailure");
         return asyncServiceClient.invokeService("dataTreeLoad",
                 serviceArgsBuilder.build(),
                 null,
