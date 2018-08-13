@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import com.google.common.io.Files;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
@@ -17,15 +18,19 @@ import org.janelia.model.domain.sample.Image;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A helper for working with ImageNodes.
  * 
- * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ * @author goinac
  */
 @ServiceProvider(service = DomainObjectHelper.class, path = DomainObjectHelper.DOMAIN_OBJECT_LOOKUP_PATH)
 public class ImageObjectHelper implements DomainObjectHelper {
 
+    private final static Logger log = LoggerFactory.getLogger(ImageObjectHelper.class);
+    
     @Override
     public boolean isCompatible(DomainObject domainObject) {
         return isCompatible(domainObject.getClass());
@@ -63,10 +68,14 @@ public class ImageObjectHelper implements DomainObjectHelper {
     
     @Override
     public void remove(DomainObject domainObject) throws Exception {
+        
+        log.info("Removing {}", domainObject);
+        
         // remove the image
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         Image imageObject = (Image) domainObject;
         model.remove(Arrays.asList(imageObject));
+        
         // remove the image files
         model.removeStorage(Stream.concat(
                 imageObject.getFiles().entrySet().stream().map(e -> ImmutablePair.of(e.getKey(), e.getValue())),
