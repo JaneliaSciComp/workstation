@@ -75,6 +75,7 @@ public class ImportImageFilesDialog extends ModalDialog {
     private static final String PREF_IMPORT_HIST = "FileImport.Hist";
     private static final String PREF_IMPORT_GAMMA = "FileImport.Gamma";
     private static final String PREF_IMPORT_LEGENDS = "FileImport.Legends";
+    private static final String PREF_IMPORT_STORAGE_TIER = "FileImport.StorageTier";
     
     private static final String TOOLTIP_TOP_LEVEL_FOLDER =
             "Name of the folder in which data should be loaded with the data.";
@@ -271,6 +272,9 @@ public class ImportImageFilesDialog extends ModalDialog {
         final Boolean legends = FrameworkImplProvider.getModelProperty(PREF_IMPORT_LEGENDS, false);
         legendsCheckbox.setSelected(legends);
         
+        final String storageTier = FrameworkImplProvider.getModelProperty(PREF_IMPORT_STORAGE_TIER, NRS_STORAGE);
+        storageChoice.setSelectedItem(storageTier);
+        
         try {
             rootFolder = DomainMgr.getDomainMgr().getModel().getDefaultWorkspace();
         } 
@@ -301,6 +305,8 @@ public class ImportImageFilesDialog extends ModalDialog {
         final File selectedFile = new File(pathTextField.getText());
         List<File> selectedChildren = null;
 
+        String storageTier = (String) storageChoice.getSelectedItem();
+        
         if (selectedFile.exists()) {
 
             // save the user preferences for later
@@ -310,6 +316,7 @@ public class ImportImageFilesDialog extends ModalDialog {
             FrameworkImplProvider.setModelProperty(PREF_IMPORT_HIST, histCheckbox.isSelected());
             FrameworkImplProvider.setModelProperty(PREF_IMPORT_GAMMA, gammaCheckbox.isSelected());
             FrameworkImplProvider.setModelProperty(PREF_IMPORT_LEGENDS, legendsCheckbox.isSelected());
+            FrameworkImplProvider.setModelProperty(PREF_IMPORT_STORAGE_TIER, storageTier);
             
             if (selectedFile.isDirectory()) {
 
@@ -328,7 +335,6 @@ public class ImportImageFilesDialog extends ModalDialog {
                         transferMegabytes += (child.length() / 1000000.0);
                     }
                 }
-
             } 
             else {
                 transferMegabytes = selectedFile.length() / 1000000.0;
@@ -402,12 +408,15 @@ public class ImportImageFilesDialog extends ModalDialog {
                 }
             }
             
+            String storageTags = STORAGE_TAGS.get(storageTier);
+            
             // close import dialog and run import in background thread
             this.setVisible(false);
             runImport(selectedFile, 
                     selectedChildren,
                     folderName,
-                    rootFolder.getId(), STORAGE_TAGS.get((String) storageChoice.getSelectedItem()),
+                    rootFolder.getId(), 
+                    storageTags,
                     null,
                     options.toString()
             );
@@ -518,6 +527,14 @@ public class ImportImageFilesDialog extends ModalDialog {
 
         AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
 
+        log.info("Starting import of {} with options:", selectedFile);
+        log.info("selectedChildren: {}", selectedChildren);
+        log.info("importTopLevelFolderName: {}", importTopLevelFolderName);
+        log.info("importTopLevelFolderId: {}", importTopLevelFolderId);
+        log.info("storageTags: {}", storageTags);
+        log.info("channelSpec: {}", channelSpec);
+        log.info("mipsOptions: {}", mipsOptions);
+        
         final WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
         final String subjectName = AccessManager.getSubjectName();
         String uploadContext;

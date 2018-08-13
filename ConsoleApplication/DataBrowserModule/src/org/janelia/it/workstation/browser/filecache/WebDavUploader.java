@@ -47,7 +47,11 @@ public class WebDavUploader {
     public RemoteLocation uploadFile(String storageName, String storageContext, String storageTags, File file) throws WebDavException {
         String storageURL = storageClientMgr.createStorage(storageName, storageContext, storageTags);
         RemoteLocation remoteFile = storageClientMgr.uploadFile(file, storageURL, storageClientMgr.urlEncodeComp(file.getName()));
-        LOG.info("uploaded {} to {} - {}", file, storageURL, remoteFile);
+        LOG.info("Uploaded file {}", file);
+        LOG.info("  realFilePath: {}", remoteFile.getRealFilePath());
+        LOG.info("  storageUrl: {}", remoteFile.getStorageURL());
+        LOG.info("  virtualFilePath: {}", remoteFile.getVirtualFilePath());
+        LOG.info("  fileUrl: {}", remoteFile.getFileUrl());
         return remoteFile;
     }
 
