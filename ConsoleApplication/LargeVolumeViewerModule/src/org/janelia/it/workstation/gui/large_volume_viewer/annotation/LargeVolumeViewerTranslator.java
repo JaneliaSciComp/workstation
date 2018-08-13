@@ -433,7 +433,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         neuronDeleted(neuron);
         neuronCreated(neuron);
 
-        if (nextParent != null && neuron.getGeoAnnotationMap().containsKey(nextParent.getGuid())) {
+        if (nextParent != null && neuron.getId().equals(nextParent.getNeuronID()) && neuron.getGeoAnnotationMap().containsKey(nextParent.getGuid())) {
             fireNextParentEvent(nextParent.getGuid());
         }
 
@@ -661,22 +661,57 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     @Override
     public void neuronModelChanged(TmNeuronMetadata neuron) {
-        neuronChanged(neuron);
+        logger.info("remote NeuronDelete: {}", neuron);
+        
+        Anchor nextParent = largeVolumeViewer.getSkeletonActor().getModel().getNextParent();
+
+        neuronModelDeleted(neuron);
+        neuronModelCreated(neuron);
+
+        if (nextParent != null && neuron.getGeoAnnotationMap().containsKey(nextParent.getGuid())) {
+            fireNextParentEvent(nextParent.getGuid());
+        }
     }
 
     @Override
     public void neuronModelCreated(TmNeuronMetadata neuron) {
-        neuronCreated(neuron);
+        logger.info("remote NeuronCreated: {}", neuron);
+        
+        Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
+        List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
+        List<TmAnchoredPath> annList = new ArrayList<>();
+        
+        NeuronStyle style = annModel.getNeuronStyle(neuron);
+        updateNeuronStyleMap.put(neuron, style);
+        
+        for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+            addedAnchorList.addAll(neuron.getSubTreeList(root));
+        }
+
+        for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
+            annList.add(path);
+        }
+        
+        skeletonController.remoteAnchorsAdded(addedAnchorList);
+        skeletonController.remoteNeuronStylesChanged(updateNeuronStyleMap);
+        List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
+        for (TmAnchoredPath path: annList) {
+            voxelPathList.add(TAP2AVP(neuron.getId(), path));
+        }
+        skeletonController.remoteAddAnchoredVoxelPaths(voxelPathList);        
     }
 
     @Override
     public void neuronModelDeleted(TmNeuronMetadata neuron) {
-        neuronDeleted(neuron);
+        logger.info("remote NeuronDelete: {}", neuron);
+        skeletonController.neuronStyleRemoved(neuron);
+        skeletonController.remoteClearAnchors(neuron.getGeoAnnotationMap().values());
+        skeletonController.remoteRemoveAnchoredVoxelPaths(neuron.getId());
     }
 
     @Override
     public void neuronOwnerChanged(TmNeuronMetadata neuron) {
-       
+        
     }
 
 }

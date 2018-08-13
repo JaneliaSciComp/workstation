@@ -18,6 +18,7 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;
@@ -31,14 +32,15 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
     private static final Logger log = LoggerFactory.getLogger(DomainFacadeImpl.class);
     
     private static final String REMOTE_API_URL = ConsoleApp.getConsoleApp().getRemoteRestUrl();
+    private static final String REMOTE_STORAGE_URL = ConsoleProperties.getInstance().getProperty("jadestorage.rest.url");
 
     private WebTarget service;
-    
+
     public DomainFacadeImpl() {
         this(REMOTE_API_URL);
     }
 
-    public DomainFacadeImpl(String serverUrl) {
+    private DomainFacadeImpl(String serverUrl) {
         super(log);
         log.info("Using server URL: {}",serverUrl);
         this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
@@ -218,6 +220,20 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request to remove objectList: " + deleteObjectRefs)) {
             throw new WebApplicationException(response);
+        }
+    }
+
+    @Override
+    public void removeObjectStorage(List<String> storagePaths) {
+        WebTarget storageService = RestJsonClientManager.getInstance().getTarget(REMOTE_STORAGE_URL, true);
+        for (String storagePath : storagePaths) {
+            Response response = storageService.path("storage_content")
+                    .path("storage_path_redirect")
+                    .path(storagePath)
+                    .request("application/json")
+                    .delete();
+            // check and log but don't fail
+            checkBadResponse(response.getStatus(), "problem making request to remove " + storagePath);
         }
     }
 

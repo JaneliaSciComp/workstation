@@ -303,7 +303,7 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
                     add(mainPanel, BorderLayout.CENTER);
                     // Repack to fit everything
                     setPreferredSize(null);
-                    packAndShow();
+                    pack();
                 }
 
                 @Override

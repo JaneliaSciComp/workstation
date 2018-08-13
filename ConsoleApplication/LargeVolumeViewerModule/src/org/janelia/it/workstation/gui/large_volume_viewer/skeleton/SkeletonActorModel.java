@@ -364,6 +364,12 @@ public class SkeletonActorModel {
         forceUpdateAnchors();
     }
 
+    public void updateRemoteNeuronStyles(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
+        for (TmNeuronMetadata neuron: neuronStyleMap.keySet()) {
+            neuronStyles.put(neuron.getId(), neuronStyleMap.get(neuron));
+        }
+    }
+    
     public void removeNeuronStyle(TmNeuronMetadata neuron) {
         neuronStyles.remove(neuron.getId());
     }

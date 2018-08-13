@@ -165,6 +165,11 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         skeleton.incrementAnchorVersion();
         skeletonChanged();
     }
+    
+    public void remoteAddAnchoredVoxelPaths(List<AnchoredVoxelPath> paths) {
+        skeleton.addTracedSegments(paths);
+        skeleton.incrementAnchorVersion();
+    }
 
     @Override
     public void removeAnchoredVoxelPath(AnchoredVoxelPath path) {
@@ -179,6 +184,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         skeletonChanged();
     }
     
+    public void remoteRemoveAnchoredVoxelPaths(Long neuronID) {
+        skeleton.removeTracedSegments(neuronID);
+    }
+     
     //--------------------------------IMPLEMENTS TmGeoAnnotationAnchorListener
     @Override
     public void anchorAdded(TmGeoAnnotation tmAnchor) {
@@ -194,6 +203,13 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
             anchor.setSkeletonAnchorListener(skeletonAnchorListener);
         }
         skeletonChanged();
+    }
+    
+    public void remoteAnchorsAdded(List<TmGeoAnnotation> tmAnchors) {
+        List<Anchor> anchors = skeleton.addTmGeoAnchors(tmAnchors);
+        for (Anchor anchor: anchors) {
+            anchor.setSkeletonAnchorListener(skeletonAnchorListener);
+        }
     }
 
     @Override
@@ -227,6 +243,15 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
             }
         }
         skeletonChanged();
+    }
+    
+    public void remoteClearAnchors(Collection<TmGeoAnnotation> annotations) {
+        for(TmGeoAnnotation annotation : annotations) {
+            Anchor anchor = skeleton.getAnchorByID(annotation.getId());
+            if (anchor!=null) {
+                skeleton.delete(anchor);
+            }
+        }
     }
     
     @Override
@@ -276,6 +301,13 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         fireComponentUpdate();
     }
     
+    public void remoteNeuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
+        for (SkeletonActor actor: actors) {
+            actor.getModel().updateRemoteNeuronStyles(neuronStyleMap);
+        }
+        refreshMeshDrawUpdateTimer();
+        fireComponentUpdate();
+    }
     
     @Override
     public void neuronStyleRemoved(TmNeuronMetadata neuron) {

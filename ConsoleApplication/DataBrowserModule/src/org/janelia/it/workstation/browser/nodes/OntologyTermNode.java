@@ -32,6 +32,7 @@ import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.browser.nb_action.OntologyExportAction;
 import org.janelia.it.workstation.browser.nb_action.OntologyImportAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
+import org.janelia.it.workstation.browser.nb_action.RemoveAnnotationByTermAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.Accumulation;
@@ -252,6 +253,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         actions.add(AddOntologyTermAction.get());
         actions.add(null);
         actions.add(ApplyAnnotationAction.get());
+        actions.add(RemoveAnnotationByTermAction.get());
         return actions.toArray(new Action[actions.size()]);
     }
 

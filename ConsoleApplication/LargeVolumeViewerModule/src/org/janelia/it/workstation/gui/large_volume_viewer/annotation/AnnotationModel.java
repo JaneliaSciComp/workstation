@@ -357,6 +357,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
 
     }
+    
+    public void setReceiveUpdates(boolean receiveUpdates) {
+        RefreshHandler.getInstance().setReceiveUpdates(receiveUpdates);
+    }
+    
+    public void refreshNeuronUpdates() {
+        RefreshHandler.getInstance().refreshNeuronUpdates();
+    }
 
     public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
         final TmWorkspace workspace = getCurrentWorkspace();
@@ -966,7 +974,15 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         final boolean notesChangedSource = stripPredefNotes(targetNeuron, sourceAnnotationID);
         final boolean notesChangedTarget = stripPredefNotes(targetNeuron, targetAnnotationID);
         
-        // Save the target neuron.
+        // Save the target neurons; this has more side effects than one would like
+        //  first, order matters; do source first so moved annotations are removed there
+        //      before being added to the target; this prevents a double-delete in the
+        //      spatial index
+        //  second, you need to save the source neuron even if you plan to delete it,
+        //      again so the annotation moves will be properly accounted for
+        //  this is all needed to get around the fact that moving annotations
+        //      from one neuron to another isn't atomic like it should be
+        neuronManager.saveNeuronData(sourceNeuron);
         neuronManager.saveNeuronData(targetNeuron);
         
         // If source neuron is now empty, delete it, otherwise save it.
@@ -975,9 +991,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             neuronManager.deleteNeuron(currentWorkspace, sourceNeuron);
             log.info("Source neuron was deleted: "+sourceNeuron);
         }
-        else {
-            neuronManager.saveNeuronData(sourceNeuron);
-        }
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -985,7 +998,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     // temporary fix to set index properly
                     final List<TmNeuronMetadata> neuronList = new ArrayList<>();
                     neuronList.add(targetNeuron);
-                    fireNeuronsOwnerChanged(neuronList);
                     
                     if (notesChangedSource) {
                         fireNotesUpdated(sourceAnnotation);
@@ -2186,7 +2198,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public Set<String> getUserNeuronTags(TmNeuronMetadata neuron) {
-        return currentTagMap.getUserTags().get(neuron.getId());
+        if (currentTagMap != null) {
+            return currentTagMap.getUserTags().get(neuron.getId());
+        } else {
+            return new HashSet<>();
+        }
     }
 
     public void removeNeuronTag(String tag, TmNeuronMetadata neuron) throws Exception {

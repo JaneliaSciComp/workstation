@@ -1,9 +1,4 @@
-// 7.14
- 	 
-Workstation Browser
-* Support more than 100 facet values for search
-* Added "User's Animal Id" attribute from TMOG
-
+// 7.14.2
+ 
 Large Volume Viewer
-* Sorting neurons alphabetically or by owner will subsort by creation date
-* Workspace info dialog only shows filtered neuron list; moved to neuron gear menu
+* Fixed bug: next parent doesn't deselect due to incoming updates

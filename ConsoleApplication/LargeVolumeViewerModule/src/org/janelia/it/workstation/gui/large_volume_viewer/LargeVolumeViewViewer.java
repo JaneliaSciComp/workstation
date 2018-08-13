@@ -118,7 +118,8 @@ public class LargeVolumeViewViewer extends JPanel {
                 
             	logger.info("Found sample {}", sliceSample.getId());
 
-                // but now we have to do the load in another thread, so we don't lock the UI:
+                // but now we have to do the loads in other threads, so we don't lock the UI;
+                //  first start up the image volume load
                 final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading image data...");
                 progress.start();
                 progress.setDisplayName("Loading image data");
@@ -171,6 +172,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 
                 SimpleListenableFuture<Void> future1 = volumeLoader.executeWithFuture();
 
+                // independently of the image volume load, we load the annotation data:
                 final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading metadata...");
                 progress2.start();
                 progress2.setDisplayName("Loading metadata");
@@ -199,6 +201,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
                     @Override
                     protected void hadError(Throwable error) {
+                        logger.error("workspace loader failed", error);
                         progress2.finish();
                         ConsoleApp.handleException(error);
                     }
@@ -214,10 +217,14 @@ public class LargeVolumeViewViewer extends JPanel {
                         //  not all failures end up in onFailure()!
                         if (volumeLoaded.get()) {
                             logger.info("Loading completed");
+                            if (annotationModel == null) {
+                                // trying to diagnose how this could happen...
+                                logger.info("found null annotationModel");
+                            }
                             annotationModel.loadComplete();
                         } else {
                             // same as onFailure() (code copied):
-                            logger.error("LVVV load failed");
+                            logger.error("LVVV load failed; volume loader failed");
                             try {
                                 if (annotationModel != null) {
                                     annotationModel.clear();
@@ -231,7 +238,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     }
                     public void onFailure(Throwable t) {
                         // If either load failed
-                        logger.error("LVVV load failed", t);
+                        logger.error("LVVV load failed; combined future failed", t);
                         try {
                             if (annotationModel!=null) {
                                 annotationModel.clear();
@@ -312,6 +319,8 @@ public class LargeVolumeViewViewer extends JPanel {
         
         if (annotationModel!=null) {
             Events.getInstance().unregisterOnEventBus(annotationModel);
+            // trying to diagnose a later null:
+            logger.info("setting annotationModel to null");
             annotationModel = null;
         }
     }
@@ -323,6 +332,8 @@ public class LargeVolumeViewViewer extends JPanel {
             showLoadingIndicator();
 
             if ( viewUI == null ) {
+                // trying to diagnost how this can be null later
+                logger.info("instantiating AnnotationModel");
                 annotationModel = new AnnotationModel();
                 Events.getInstance().registerOnEventBus(annotationModel);
                 viewUI = new QuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);

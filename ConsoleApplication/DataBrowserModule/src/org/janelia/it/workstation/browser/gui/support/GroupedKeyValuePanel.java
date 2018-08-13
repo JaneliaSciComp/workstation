@@ -20,11 +20,20 @@ public class GroupedKeyValuePanel extends JPanel {
 
     private static final Font SEPARATOR_FONT = new Font("Sans Serif", Font.BOLD, 12);
 
+    private final String separatorLabelConstraints = "split 2, span, gaptop 10lp, ay top";
+    private final String separatorConstraints = "span 2, gaptop 12lp, grow";
+    private final String componentConstraints;
+    
     public GroupedKeyValuePanel() {
         this("wrap 2, ins 10, fillx", "[growprio 0]0[growprio 1, grow]", "");
     }
-    
+
     public GroupedKeyValuePanel(String constraints, String columnConstraints, String rowConstraints) {
+        this(constraints, columnConstraints, rowConstraints, "gap para, gaptop 10lp, ay top");
+    }
+    
+    public GroupedKeyValuePanel(String constraints, String columnConstraints, String rowConstraints, String componentConstraints) {
+        this.componentConstraints = componentConstraints;
         setLayout(new MigLayout(
                 constraints,
                 columnConstraints,
@@ -33,7 +42,7 @@ public class GroupedKeyValuePanel extends JPanel {
     }
 
     public void addSeparator() {
-        add(new JSeparator(SwingConstants.HORIZONTAL), "span 2, gaptop 22lp, grow");
+        add(new JSeparator(SwingConstants.HORIZONTAL), separatorConstraints);   
     }
     
     /**
@@ -43,8 +52,8 @@ public class GroupedKeyValuePanel extends JPanel {
     public JLabel addSeparator(String text) {
         JLabel label = new JLabel(text);
         label.setFont(SEPARATOR_FONT);
-        add(label, "split 2, span, gaptop 10lp, ay top");
-        add(new JSeparator(SwingConstants.HORIZONTAL), "wrap, gaptop 22lp, grow");
+        add(label, separatorLabelConstraints);
+        add(new JSeparator(SwingConstants.HORIZONTAL), separatorConstraints);
         return label;
     }
 
@@ -92,9 +101,9 @@ public class GroupedKeyValuePanel extends JPanel {
             }
             attrLabel = new JLabel(label);
             attrLabel.setLabelFor(component);
-            add(attrLabel, "gap para, gaptop 10lp, ay top");
+            add(attrLabel, componentConstraints);
         }
-        String compConstraints = "gap para, gaptop 10lp, ay top";
+        String compConstraints = componentConstraints;
         if (!StringUtils.isEmpty(constraints)) {
             compConstraints += ", "+constraints;
         }
