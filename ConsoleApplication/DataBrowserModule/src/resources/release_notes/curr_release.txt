@@ -1,4 +1,10 @@
-// 7.14.2
+// 7.15
  
-Large Volume Viewer
-* Fixed bug: next parent doesn't deselect due to incoming updates
+Workstation Browser
+* Improved File->Upload->Image Files with storage choices and MIP options
+* Delete associated files on disk when deleting upload images
+* Added "View Data Set Settings" right-click option for Samples
+* Added "Remove From Selected Objects" right-click option for ontology terms, 
+  so that you can bulk remove tags like "Publishing Name" from many items at once.
+* Improvements to Lightbox view
+
