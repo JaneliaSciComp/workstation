@@ -357,6 +357,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
 
     }
+    
+    public void setReceiveUpdates(boolean receiveUpdates) {
+        RefreshHandler.getInstance().setReceiveUpdates(receiveUpdates);
+    }
+    
+    public void refreshNeuronUpdates() {
+        RefreshHandler.getInstance().refreshNeuronUpdates();
+    }
 
     public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
         final TmWorkspace workspace = getCurrentWorkspace();
@@ -990,7 +998,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     // temporary fix to set index properly
                     final List<TmNeuronMetadata> neuronList = new ArrayList<>();
                     neuronList.add(targetNeuron);
-                    fireNeuronsOwnerChanged(neuronList);
                     
                     if (notesChangedSource) {
                         fireNotesUpdated(sourceAnnotation);

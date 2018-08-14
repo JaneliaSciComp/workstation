@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.nb_action;
 
-import org.janelia.it.workstation.browser.gui.dialogs.ImportDialog;
+import org.janelia.it.workstation.browser.gui.dialogs.ImportImageFilesDialog;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -45,7 +45,7 @@ public final class ImportFilesAction extends CallableSystemAction {
     
     @Override
     public void performAction() {
-        ImportDialog importDialog = new ImportDialog("Import Files");
+        ImportImageFilesDialog importDialog = new ImportImageFilesDialog();
         importDialog.showDialog();
     }
 }

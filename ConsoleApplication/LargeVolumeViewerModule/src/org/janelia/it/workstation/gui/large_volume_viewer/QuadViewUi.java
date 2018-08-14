@@ -99,6 +99,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.PanModeAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.PreviousZSliceAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.RawFileLocToClipboardAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.RecentFileList;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.RefreshSharedUpdatesAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ResetColorsAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ResetViewAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ResetZoomAction;
@@ -241,6 +242,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	private RecentFileList recentFileList = new RecentFileList(new JMenu("Open Recent"));
 	private final Action resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
 	private final Action resetColorsAction = new ResetColorsAction(imageColorModel);
+        private final Action refreshSharedUpdatesAction = new RefreshSharedUpdatesAction();
 	// mode actions (and groups)
 	private final ZoomMouseModeAction zoomMouseModeAction = new ZoomMouseModeAction();
 	private final PanModeAction panModeAction = new PanModeAction();
@@ -944,6 +946,30 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }
         });
         buttonsPanel.add(useHttpCheckbox);
+        
+        JButton loadUpdatesButton = new JButton("Refresh Updates");
+	loadUpdatesButton.setAction(refreshSharedUpdatesAction);
+        
+        final JCheckBox receiveSharedUpdatesCheckbox = new JCheckBox("Shared Updates");
+        receiveSharedUpdatesCheckbox.setSelected(true);
+        receiveSharedUpdatesCheckbox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange()==ItemEvent.DESELECTED) {
+                    receiveSharedUpdatesCheckbox.setSelected(false);
+                    annotationModel.setReceiveUpdates(false);
+                    loadUpdatesButton.setEnabled(true);
+                } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                    receiveSharedUpdatesCheckbox.setSelected(true);
+                    annotationModel.setReceiveUpdates(true);
+                    loadUpdatesButton.setEnabled(false);
+                }
+            }
+        });
+        buttonsPanel.add(receiveSharedUpdatesCheckbox);
+        
+
+	buttonsPanel.add(loadUpdatesButton);
 
         buttonsPanel.add(new TileStackCacheStatusPanel());
 

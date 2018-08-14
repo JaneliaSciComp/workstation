@@ -646,6 +646,9 @@ public class DomainModel {
     }
 
     public void removeStorage(List<String> storagePaths) {
+        for(String path : storagePaths) {
+            log.info("Removing object storage path: {}", path);
+        }
         domainFacade.removeObjectStorage(storagePaths);
     }
 
