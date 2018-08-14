@@ -1045,7 +1045,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 try {
                     fireNeuronChanged(sourceNeuron);
                     fireNeuronChanged(destNeuron);
-                    fireNeuronSelected(destNeuron);
+                    //fireNeuronSelected(destNeuron);
                 }
                 finally {
                     endTransaction();

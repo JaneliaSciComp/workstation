@@ -173,7 +173,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                 log.error("Issue trying to process metadata from update");
             }
             // thead logging
-            log.debug ("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
+            log.info ("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
             log.debug ("Heap Size: {}", Runtime.getRuntime().totalMemory());
             
             log.debug("message properties: TYPE={},USER={},WORKSPACE={},METADATA={}", msgHeaders.get(HeaderConstants.TYPE), msgHeaders.get(HeaderConstants.USER),
@@ -189,6 +189,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                 if (workspace != null && annotationModel!=null && annotationModel.getCurrentWorkspace() != null
                     && workspace.longValue()==annotationModel.getCurrentWorkspace().getId().longValue()) {
                     addNeuronUpdate (message, msgHeaders, action, user);
+                    log.info("Time to add shared update: {}", stopWatch.getElapsedTime());
                 }
                 return;
             }
