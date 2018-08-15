@@ -108,6 +108,8 @@ public class MergeNeuriteCommand
             die();
             return;
         }
+        
+        neuronSet.setSelectMode(false);
         if (! firstNeuron.equals(secondNeuron)) {
             // What if secondNeuron no longer exists?
             if (! neuronSet.contains(secondNeuron)) {
@@ -121,6 +123,7 @@ public class MergeNeuriteCommand
                 return;
             }
         }
+        
     }
     
 }

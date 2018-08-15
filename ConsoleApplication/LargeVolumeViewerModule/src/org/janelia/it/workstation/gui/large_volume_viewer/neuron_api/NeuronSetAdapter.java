@@ -602,6 +602,11 @@ implements NeuronSet// , LookupListener
             LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNote(annotation.getNeuronId(), annotation.getId(), PredefinedNote.TRACED_END.getNoteText());
         }
     }
+    
+    @Override
+    public void setSelectMode(boolean select) {
+        annotationModel.setSelectMode(select);
+    }
 
     private class NeuronSetBackgroundAnnotationListener implements BackgroundAnnotationListener {
         GlobalAnnotationListener global;
