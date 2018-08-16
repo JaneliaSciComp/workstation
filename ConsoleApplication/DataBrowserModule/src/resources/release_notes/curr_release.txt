@@ -11,3 +11,6 @@ Workstation Browser
 Large Volume Viewer
 * Added bulk export neurons option
 * Added option to defer incoming remote updates until asked for
+
+Horta
+* Fixed undo merge
