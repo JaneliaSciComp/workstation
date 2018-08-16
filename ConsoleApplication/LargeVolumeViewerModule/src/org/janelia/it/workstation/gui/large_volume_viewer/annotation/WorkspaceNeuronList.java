@@ -642,10 +642,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
             switch(neuronSortOrder) {
                 // always sort by creation date as a secondary key
                 case ALPHABETICAL:
-                    sorter.setSortKeys(Arrays.asList(
-                        new RowSorter.SortKey(NeuronTableModel.COLUMN_NAME, SortOrder.ASCENDING),
-                        new RowSorter.SortKey(NeuronTableModel.COLUMN_CREATION_DATE, SortOrder.ASCENDING)
-                    ));
+                      sorter.setSortKeys(Arrays.asList(new RowSorter.SortKey(NeuronTableModel.COLUMN_NAME, SortOrder.ASCENDING)));
+
                     break;
                 case OWNER:
                     sorter.setSortKeys(Arrays.asList(
@@ -1004,7 +1002,7 @@ class NeuronTableModel extends AbstractTableModel {
         switch (column) {
             case COLUMN_NAME:
                 // neuron
-                return TmNeuronMetadata.class;
+                return Integer.class;
             case COLUMN_OWNER_ICON:
                 // owner
                 // old: the string

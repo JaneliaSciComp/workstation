@@ -45,6 +45,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
     private Receiver msgReceiver;
     static RefreshHandler handler;
     private boolean receiveUpdates = true;
+    private boolean freezeUpdates = false;
     private Map<Long, Map<String,Object>> updatesMap = new HashMap<>();
     
     /**
@@ -98,6 +99,8 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
     }
     
     public void refreshNeuronUpdates() {
+        // freeze neuron updates 
+        freezeUpdates = true;
         // play back all the latest neurons and empty the map
         Iterator<Long> neuronIterator = updatesMap.keySet().iterator();
         log.info ("Number of updates to refresh: {}",updatesMap.size());
@@ -133,6 +136,8 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
              }
         }
         updatesMap.clear();
+        
+        freezeUpdates = true;
     }
     
     private void addNeuronUpdate (Delivery message,  Map<String, Object> msgHeaders, MessageType action, String user) {
@@ -185,7 +190,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
             
             // flag to suppress shared updates
-            if (!receiveUpdates && !user.equals(AccessManager.getSubjectKey())) {
+            if (!receiveUpdates && !freezeUpdates && !user.equals(AccessManager.getSubjectKey())) {
                 if (workspace != null && annotationModel!=null && annotationModel.getCurrentWorkspace() != null
                     && workspace.longValue()==annotationModel.getCurrentWorkspace().getId().longValue()) {
                     addNeuronUpdate (message, msgHeaders, action, user);
