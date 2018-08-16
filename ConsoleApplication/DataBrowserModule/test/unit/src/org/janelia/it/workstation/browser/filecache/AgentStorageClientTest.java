@@ -31,7 +31,6 @@ import static org.junit.Assert.*;
 @Category(TestCategories.FastTests.class)
 public class AgentStorageClientTest {
     private static final String BASE_WEBDAV_URL = "http://test/webdav";
-    private static final String ALTERNATIVE_BASE_WEBDAV_URL = "http://test/otherwebdav";
 
     private HttpClientProxy httpClient;
     private AgentStorageClient testWebDavClient;
@@ -41,7 +40,7 @@ public class AgentStorageClientTest {
     public void setUp() {
         httpClient = Mockito.mock(HttpClientProxy.class);
         objectMapper = new ObjectMapper();
-        testWebDavClient = new AgentStorageClient(BASE_WEBDAV_URL, () -> ALTERNATIVE_BASE_WEBDAV_URL, httpClient, objectMapper, (t) -> {});
+        testWebDavClient = new AgentStorageClient(BASE_WEBDAV_URL, httpClient, objectMapper, (t) -> {});
     }
 
     @Test

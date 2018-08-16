@@ -78,10 +78,6 @@ public class StorageClientMgr {
         String storageKey = storage.getEtag();
         storageClient = new AgentStorageClient(
                 storage.getRemoteFileUrl(),
-                () -> {
-                    WebDavStorage alternativeStorage = masterStorageClient.findStorage(standardPathName);
-                    return alternativeStorage.getRemoteFileUrl();
-                },
                 httpClient,
                 objectMapper,
                 t -> STORAGE_WORKERS_CACHE.invalidate(storageKey)
@@ -112,7 +108,7 @@ public class StorageClientMgr {
 
     RemoteLocation uploadFile(File file, String storageURL, String storageLocation) {
         try {
-            AgentStorageClient agentStorageClient = new AgentStorageClient(storageURL, null, httpClient, objectMapper, NOOP_ERROR_CONN_HANDLER);
+            AgentStorageClient agentStorageClient = new AgentStorageClient(storageURL, httpClient, objectMapper, NOOP_ERROR_CONN_HANDLER);
             RemoteLocation remoteFile = agentStorageClient.saveFile(agentStorageClient.getUploadFileURL(storageLocation), file);
             remoteFile.setStorageURL(storageURL);
             return remoteFile;
@@ -123,7 +119,7 @@ public class StorageClientMgr {
 
     RemoteLocation createDirectory(String storageURL, String storageLocation) {
         try {
-            AgentStorageClient agentStorageClient = new AgentStorageClient(storageURL, null, httpClient, objectMapper, NOOP_ERROR_CONN_HANDLER);
+            AgentStorageClient agentStorageClient = new AgentStorageClient(storageURL, httpClient, objectMapper, NOOP_ERROR_CONN_HANDLER);
             RemoteLocation remoteDirectory = agentStorageClient.createDirectory(agentStorageClient.getNewDirURL(storageLocation));
             remoteDirectory.setStorageURL(storageURL);
             return remoteDirectory;

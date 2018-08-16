@@ -582,7 +582,7 @@ public class ImportImageFilesDialog extends ModalDialog {
         serviceArgsBuilder.add("-cleanStorageOnFailure");
         return asyncServiceClient.invokeService("dataTreeLoad",
                 serviceArgsBuilder.build(),
-                null,
+                "LSF_JAVA",
                 ImmutableMap.of()
         );
     }
