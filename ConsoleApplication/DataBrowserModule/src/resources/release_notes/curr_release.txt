@@ -2,7 +2,7 @@
  
 Workstation Browser
 * Improved File->Upload->Image Files with storage choices and MIP options
-* Delete associated files on disk when deleting upload images
+* Delete associated files on disk when deleting uploaded images
 * Added "View Data Set Settings" right-click option for Samples
 * Added "Remove From Selected Objects" right-click option for ontology terms, 
   so that you can bulk remove tags like "Publishing Name" from many items at once.
