@@ -141,6 +141,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private final LoadTimer addTimer = new LoadTimer();
 
     private final ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
+    private boolean select = true;
 
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
 
@@ -995,6 +996,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             @Override
             public void run() {
                 try {
+                    
+                log.info("MERGE A: {}",stopwatch.elapsedMillis());
                     // temporary fix to set index properly
                     final List<TmNeuronMetadata> neuronList = new ArrayList<>();
                     neuronList.add(targetNeuron);
@@ -1004,7 +1007,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     }
                     if (notesChangedTarget) {
                         fireNotesUpdated(targetAnnotation);
-                    }
+                    }                   
                     if (sourceDeleted) {
                         fireNeuronDeleted(sourceNeuron);
                     }
@@ -1012,6 +1015,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                         fireNeuronChanged(sourceNeuron);
                     }
                     fireNeuronChanged(targetNeuron);
+                    
+                log.info("MERGE B: {}",stopwatch.elapsedMillis());
                 }
                 finally {
                     endTransaction();                
@@ -1049,6 +1054,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 }
                 finally {
                     endTransaction();
+                    setSelectMode(true);
                 }
                 activityLog.logEndOfOperation(getWsId(), annotation);
             }
@@ -2389,6 +2395,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     void fireNeuronSelected(TmNeuronMetadata neuron) {
+        if (!getSelectMode())
+            return;
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronSelected(neuron);
         }
@@ -2426,6 +2434,14 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     public TmModelManipulator getNeuronManager() {
         return neuronManager;
+    }
+    
+    public boolean getSelectMode() {
+        return select;
+    }
+
+    public void setSelectMode(boolean select) {
+        this.select = select;
     }
     
     

@@ -1,3 +1,8 @@
+// 7.14.2
+ 
+Large Volume Viewer
+* Fixed bug: next parent doesn't deselect due to incoming updates
+
 // 7.14.1
  
 Large Volume Viewer
