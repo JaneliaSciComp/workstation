@@ -16,6 +16,7 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronColorAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronOwnerAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkExportNeuronAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronCreateAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronDeleteAction;
@@ -92,6 +93,7 @@ public class AnnotationPanel extends JPanel
     private AbstractAction bulkChangeNeuronStyleAction;
     private AbstractAction bulkNeuronTagAction;
     private AbstractAction bulkNeuronOwnerAction;
+    private AbstractAction bulkExportNeuronAction;
     
 
     private JMenu sortSubmenu;
@@ -305,7 +307,7 @@ public class AnnotationPanel extends JPanel
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
 
-        JMenuItem titleMenuItem = new JMenuItem("Change neurons showing above:");
+        JMenuItem titleMenuItem = new JMenuItem("Operate on neurons showing above:");
         titleMenuItem.setEnabled(false);
         neuronToolMenu.add(titleMenuItem);
 
@@ -341,6 +343,9 @@ public class AnnotationPanel extends JPanel
 
         bulkNeuronOwnerAction = new BulkChangeNeuronOwnerAction(annotationMgr, annotationModel, workspaceNeuronList);
         neuronToolMenu.add(bulkNeuronOwnerAction);
+
+        bulkExportNeuronAction = new BulkExportNeuronAction(annotationMgr, annotationModel, workspaceNeuronList);
+        neuronToolMenu.add(bulkExportNeuronAction);
 
         neuronToolMenu.add(new JSeparator());
 

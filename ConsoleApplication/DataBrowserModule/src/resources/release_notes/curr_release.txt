@@ -8,3 +8,6 @@ Workstation Browser
   so that you can bulk remove tags like "Publishing Name" from many items at once.
 * Improvements to Lightbox view
 
+Large Volume Viewer
+* Added bulk export neurons option
+* Added option to defer incoming remote updates until asked for
