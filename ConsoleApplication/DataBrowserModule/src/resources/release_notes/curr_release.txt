@@ -1,16 +1,4 @@
-// 7.15
+// 7.16
  
 Workstation Browser
-* Improved File->Upload->Image Files with storage choices and MIP options
-* Delete associated files on disk when deleting uploaded images
-* Added "View Data Set Settings" right-click option for Samples
-* Added "Remove From Selected Objects" right-click option for ontology terms, 
-  so that you can bulk remove tags like "Publishing Name" from many items at once.
-* Improvements to Lightbox view
-
-Large Volume Viewer
-* Added bulk export neurons option
-* Added option to defer incoming remote updates until asked for
-
-Horta
-* Fixed undo merge
+* Fixed error when clicking on pipeline result without alignment
