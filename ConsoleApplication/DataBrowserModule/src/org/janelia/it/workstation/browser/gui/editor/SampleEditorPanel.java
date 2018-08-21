@@ -71,6 +71,7 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.compute.ContainerizedService;
 import org.janelia.model.domain.enums.AlignmentScoreType;
 import org.janelia.model.domain.enums.ErrorType;
 import org.janelia.model.domain.enums.FileType;
@@ -142,6 +143,7 @@ public class SampleEditorPanel
     private String currObjective = ALL_VALUE;
     private String currArea = ALL_VALUE;
     private String currAlignmentSpace;
+    private Map<Long, ContainerizedService> containers;
     
     public SampleEditorPanel() {
 
@@ -296,6 +298,7 @@ public class SampleEditorPanel
             @Override
             protected void doStuff() throws Exception {
                 loadPreferences();
+                loadContainers();
                 prepareLsmResults();
             }
 
@@ -341,6 +344,15 @@ public class SampleEditorPanel
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);
+        }
+    }
+    
+    private void loadContainers() throws Exception {
+        synchronized (this) {
+            this.containers = new HashMap<>();
+            for (ContainerizedService container : DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(ContainerizedService.class)) {
+                containers.put(container.getId(), container);
+            }
         }
     }
     
