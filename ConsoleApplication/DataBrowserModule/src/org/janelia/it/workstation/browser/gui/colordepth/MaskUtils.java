@@ -16,7 +16,7 @@ public class MaskUtils {
 
     private static final Logger log = LoggerFactory.getLogger(MaskUtils.class);
 
-    private static final String IMPORT_STORAGE_DEFAULT_TAGS = ConsoleProperties.getString("console.importStorage.tags");
+    private static final String IMPORT_STORAGE_DEFAULT_TAGS = ConsoleProperties.getString("console.upload.StorageTags.nrs");
 
     /**
      * Upload the given local file to the remote storage location, and return its real path.
