@@ -540,6 +540,14 @@ public class SampleEditorPanel
                     }
                     
                     mainPanel.addPanel(new PipelineResultPanel(result));
+                    
+                    NeuronSeparation separation = result.getLatestSeparationResult();
+                    if (separation!=null) {
+                        if (!StringUtils.isBlank(separation.getMessage())) {
+                            // Neuron separation error
+                            mainPanel.addPanel(new PipelineResultPanel(separation));
+                        }
+                    }
                 }
                 
                 if (run.hasError()) {
