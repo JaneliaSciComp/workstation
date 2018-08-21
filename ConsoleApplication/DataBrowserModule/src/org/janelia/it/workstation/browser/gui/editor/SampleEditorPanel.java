@@ -143,7 +143,7 @@ public class SampleEditorPanel
     private String currObjective = ALL_VALUE;
     private String currArea = ALL_VALUE;
     private String currAlignmentSpace;
-    private Map<Long, ContainerizedService> containers;
+    private Map<Long, ContainerizedService> containers = new HashMap<>();;
     
     public SampleEditorPanel() {
 
@@ -409,6 +409,7 @@ public class SampleEditorPanel
                     lsms = model.getLsmsForSample(sample);
                     lsmAnnotations = model.getAnnotations(DomainUtils.getReferences(lsms));
                     loadPreferences();
+                    loadContainers();
                     prepareLsmResults();
                 }
                 else {
@@ -1156,6 +1157,26 @@ public class SampleEditorPanel
         values.put("Name", result.getName());
         values.put("Purged", result.getPurged());
         
+        if (result.getContainerRef()!=null) {
+            Long containerId = result.getContainerRef().getTargetId();
+            values.put("Plugin GUID", containerId);
+            
+            ContainerizedService container = containers==null?null:containers.get(containerId);
+            if (container==null) {
+                log.warn("Could not find container with id {}", containerId);
+            }
+            else {
+                values.put("Plugin Name", container.getName());
+                values.put("Plugin Description", container.getDescription());
+                values.put("Plugin Version", container.getVersion());
+                values.put("Plugin Harness", container.getClass());
+            }
+        }
+        
+        if (result.getContainerApp()!=null) {
+            values.put("Plugin App", result.getContainerApp());
+        }
+        
         if (result instanceof HasAnatomicalArea) {
             HasAnatomicalArea hasAA = (HasAnatomicalArea) result;
             values.put("Anatomical Area", hasAA.getAnatomicalArea());
@@ -1171,9 +1192,6 @@ public class SampleEditorPanel
             values.put("Objective", alignment.getObjective());
             values.put("Optical Resolution", alignment.getOpticalResolution());
             values.put("Message", alignment.getMessage());
-            if (alignment.getContainerRef()!=null) {
-                values.put("Container Id", alignment.getContainerRef().getTargetId());
-            }
             
             Long bridgeParentAlignmentId = alignment.getBridgeParentAlignmentId();
             if (bridgeParentAlignmentId!=null) {
