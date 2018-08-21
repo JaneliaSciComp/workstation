@@ -1,3 +1,17 @@
+// 7.15
+ 
+Workstation Browser
+* Improved File->Upload->Image Files with storage choices and MIP options
+* Delete associated files on disk when deleting upload images
+* Added "View Data Set Settings" right-click option for Samples
+* Added "Remove From Selected Objects" right-click option for ontology terms, 
+  so that you can bulk remove tags like "Publishing Name" from many items at once.
+* Improvements to Lightbox view
+
+Large Volume Viewer
+* Added bulk export neurons option
+* Added option to defer incoming remote updates until asked for
+
 // 7.14.2
  
 Large Volume Viewer
