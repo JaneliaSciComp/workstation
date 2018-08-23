@@ -42,6 +42,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -130,6 +131,9 @@ public class TracingInteractor extends MouseAdapter
     private NeuronVertex cachedParentVertex = null;
     // second model is the actual associated in-memory full parent neuron domain model
     private NeuronModel cachedParentNeuronModel = null;
+    
+    // testing: drag to define region
+    private List<ConstVector3> dragPoints = new ArrayList<>();
     
     // White ghost vertex for potential new vertex under cursor 
     // TODO: Maybe color RED until a good path from parent is found
@@ -594,6 +598,18 @@ public class TracingInteractor extends MouseAdapter
     @Override
     public void mouseDragged(MouseEvent event) 
     {
+        // testing: if alt-drag, we're trying to merge; eat the event
+        
+        // it's not panning when alt-left-drag, but no prints, either (?)
+        // also seems to interfere with middle-drag with no alt somehow?
+        if (event.isAltDown() && SwingUtilities.isLeftMouseButton(event)) {
+            dragPoints.add(volumeProjection.worldXyzForScreenXy(event.getPoint()));
+            log.info("adding point to drag list: " + event.getPoint());
+            event.consume();
+            return;
+        }
+
+
         // log.info("Tracing Dragging");
         if (cachedDragVertex == null)
             return; // no vertex to drag
@@ -636,6 +652,8 @@ public class TracingInteractor extends MouseAdapter
     private ConstVector3 startingDragVertexLocation = null;
     @Override
     public void mousePressed(MouseEvent event) {
+        dragPoints.clear();
+        
         // log.info("Begin drag");
         if ( (cachedHighlightVertex != null) && (! defaultWorkspace.isReadOnly()) ) {
             cachedDragVertex = cachedHighlightVertex;
@@ -661,7 +679,84 @@ public class TracingInteractor extends MouseAdapter
             {
                 moveAnchor(cachedHighlightNeuron, cachedHighlightVertex, newLocation);
             }
+        } else if (!defaultWorkspace.isReadOnly()) {
+            // testing: do a different drag action
+            // no, I don't like testing read-only twice, but we're just messing around
+            
+            // attempt a merge: unlike the LVV test case, we're not going to do 
+            //  all the plumbing to annMgr, meaning we'll have to process the
+            //  points here; but do the same thing: find bounding box, find
+            //  vertices within, check for exactly two neurons, and merge
+            //  arbitrarily chosen vertices from them (which is going to be 
+            //  a mess because it's not a smart merge, which picks the closest!
+            
+            if (dragPoints.isEmpty()) {
+                log.info("no points dragged");
+                return;
+            }
+            
+            ConstVector3 p1 = dragPoints.get(0);
+            double xmin = p1.getX();
+            double xmax = xmin;
+            double ymin = p1.getY();
+            double ymax = ymin;
+            double zmin = p1.getZ();
+            double zmax = zmin;
+            for (ConstVector3 p: dragPoints) {
+                double x = p.getX();
+                double y = p.getY();
+                double z = p.getZ();
+                if (x < xmin) xmin = x;
+                if (x > xmax) xmax = x;
+                if (y < ymin) ymin = y;
+                if (y > ymax) ymax = y;
+                if (z < zmin) zmin = z;
+                if (z > zmax) zmax = z;
+            }
+            // we want a minimum volume size; for LVV, we only worry about z,
+            //  but in 3d, any dimension could be small; the size is
+            //  arbitrary for this test
+            if (xmax - xmin < 100.0) {
+                xmin -= 50.0;
+                xmax += 50.0;
+            }            
+            if (ymax - ymin < 100.0) {
+                ymin -= 50.0;
+                ymax += 50.0;
+            }            
+            if (zmax - zmin < 100.0) {
+                zmin -= 50.0;
+                zmax += 50.0;
+            }            
+            double [] pmin = {xmin, ymin, zmin};
+            double [] pmax = {xmax, ymax, zmax};
+            List<NeuronVertex> vertList = defaultWorkspace.getAnchorsInMicronArea(pmin, pmax);
+
+                       
+            Map<NeuronModel, NeuronVertex> vertices = new HashMap<>();
+            for (NeuronVertex v: vertList) {
+                NeuronModel neuron = defaultWorkspace.getNeuronForAnchor(v);
+                if (!vertices.containsKey(neuron)) {
+                    vertices.put(neuron, v);
+                }
+            }
+            if (vertices.size() != 2) {
+                log.info("need exactly two neurons for merge; found " + vertices.size());
+                return;
+            }
+            
+            // this is a really cut-down version of merge, no checks on anything (testing)            
+            List<NeuronVertex> vertList2 = new ArrayList<>(vertices.values());
+            MergeNeuriteCommand cmd = new MergeNeuriteCommand(defaultWorkspace, vertList2.get(0), vertList2.get(1));
+            if (cmd.execute()) {
+                log.info("User merged neurites in Horta");
+                if (undoRedoManager != null) {
+                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                }
+            }
         }
+
+        
         cachedDragVertex = null;
     }
     
