@@ -63,6 +63,8 @@ implements MouseMode, KeyListener
 	// Sometimes users move an anchor with the mouse
 	private Anchor dragAnchor = null;
 	private Point dragStart = null;
+    // sometimes we drag to draw:
+    private List<Vec3> dragPoints = new ArrayList<>();
 	private Cursor grabHandCursor = BasicMouseMode.createCursor("grab_closed.png", 7, 7);
 	private Cursor penCursor = BasicMouseMode.createCursor("nib.png", 7, 0);
 	private Cursor crossCursor = BasicMouseMode.createCursor("crosshair.png", 7, 7);
@@ -75,7 +77,9 @@ implements MouseMode, KeyListener
 	private static long time1;
 	public static void startTimer() { time1=new Date().getTime();}
 	public static String getTimerMs() { return new Long(new Date().getTime() - time1).toString(); }
-	
+
+    public enum RegionDragAction {MERGE, LINE_ANNOTATION};
+
 	public TraceMode(Skeleton skeleton) {
 		this.skeleton = skeleton;
 		setHoverCursor(penCursor);
@@ -164,7 +168,10 @@ implements MouseMode, KeyListener
                     
 			Vec3 loc = worldFromPixel(event.getPoint());
 			skeletonActor.getModel().lightweightPlaceAnchor(dragAnchor, loc);
-		}
+		} else {
+            // keep track of these for later
+            dragPoints.add(worldFromPixel(event.getPoint()));
+        }
 		// Middle button drag to pan
 		if ((event.getModifiers() & InputEvent.BUTTON2_MASK) != 0) {
 			// TODO reuse pan code
@@ -279,6 +286,7 @@ implements MouseMode, KeyListener
 		// Might start dragging an anchor
 		if (event.getButton() == MouseEvent.BUTTON1) 
 		{
+            dragPoints.clear();
 			// start dragging anchor position
 			if (hoverAnchor == null) {
 				dragAnchor = null;
@@ -320,7 +328,16 @@ implements MouseMode, KeyListener
 					dragAnchor.setLocation(newLoc);
 //					skeleton.getHistory().push(dragAnchor);
 				}
-			}
+			} else {
+                // do stuff with points we've dragged
+                skeleton.dragRegionPerformed(RegionDragAction.MERGE, dragPoints);
+
+
+                Vec3 xyz = worldFromPixel(event.getPoint());
+
+
+
+            }
 			dragAnchor = null;
 			dragStart = null;
 		}
@@ -648,8 +665,8 @@ implements MouseMode, KeyListener
 		case KeyEvent.VK_LEFT:
 			if (nextParent != null) {
 				if (event.isAltDown()) {
-				controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
-						AnnotationNavigationDirection.ROOTWARD_STEP);
+				    controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
+					    	AnnotationNavigationDirection.ROOTWARD_STEP);
 				} else {
 					controller.navigationRelative(nextParent.getNeuronID(), nextParent.getGuid(),
 							AnnotationNavigationDirection.ROOTWARD_JUMP);
@@ -693,54 +710,54 @@ implements MouseMode, KeyListener
 			break;               
 		}
                 
-                // if not normal key event, check our group toggle events
-                AnnotationModel annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
-                Map<String, Map<String,Object>> groupMappings = annModel.getTagGroupMappings();
-                Iterator<String> groups = groupMappings.keySet().iterator();
-                while (groups.hasNext()) {
-                    String groupName = groups.next();
-                    Map<String,Object> fooMap = groupMappings.get(groupName);
-                    String keyMap = (String)fooMap.get("keymap");
-                    if (keyMap!=null && keyMap.equals(KeymapUtil.getTextByKeyStroke(KeyStroke.getKeyStrokeForEvent(event)))) {
-                        // toggle property
-                        Boolean toggled = (Boolean)fooMap.get("toggled");
-                        if (toggled==null) 
-                            toggled = Boolean.FALSE;
-                        toggled = !toggled;
-                        fooMap.put("toggled", toggled);
-                        
-                        // get all neurons in group
-                        Set<TmNeuronMetadata> neurons = annModel.getNeuronsForTag(groupName);
-                        List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
-                        // set toggle state
-                        String property =(String)fooMap.get("toggleprop");
-                        if (property!=null) {
-                            try {
-                                Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
-                                if (property.equals(NeuronGroupsDialog.PROPERTY_RADIUS)) {
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, toggled);
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
-                                } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuronList, !toggled);
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
-                                } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, toggled);
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();                                    
-                                } else if (property.equals(NeuronGroupsDialog.PROPERTY_CROSSCHECK)) {
-                                    List<String> properties =  new ArrayList<String>();
-                                    properties.add("Radius");
-                                    properties.add("Background");
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggled);
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();                                    
-                                }
-                            } catch (Exception error) {
+        // if not normal key event, check our group toggle events
+        AnnotationModel annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
+        Map<String, Map<String,Object>> groupMappings = annModel.getTagGroupMappings();
+        Iterator<String> groups = groupMappings.keySet().iterator();
+        while (groups.hasNext()) {
+            String groupName = groups.next();
+            Map<String,Object> fooMap = groupMappings.get(groupName);
+            String keyMap = (String)fooMap.get("keymap");
+            if (keyMap!=null && keyMap.equals(KeymapUtil.getTextByKeyStroke(KeyStroke.getKeyStrokeForEvent(event)))) {
+                // toggle property
+                Boolean toggled = (Boolean)fooMap.get("toggled");
+                if (toggled==null)
+                    toggled = Boolean.FALSE;
+                toggled = !toggled;
+                fooMap.put("toggled", toggled);
 
-                                ConsoleApp.handleException(error);
-                            }
+                // get all neurons in group
+                Set<TmNeuronMetadata> neurons = annModel.getNeuronsForTag(groupName);
+                List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
+                // set toggle state
+                String property =(String)fooMap.get("toggleprop");
+                if (property!=null) {
+                    try {
+                        Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
+                        if (property.equals(NeuronGroupsDialog.PROPERTY_RADIUS)) {
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, toggled);
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
+                        } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuronList, !toggled);
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
+                        } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, toggled);
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
+                        } else if (property.equals(NeuronGroupsDialog.PROPERTY_CROSSCHECK)) {
+                            List<String> properties =  new ArrayList<String>();
+                            properties.add("Radius");
+                            properties.add("Background");
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggled);
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
                         }
-                        
+                    } catch (Exception error) {
+
+                        ConsoleApp.handleException(error);
                     }
                 }
+
+            }
+        }
 		if (historyAnchor != null)
 			camera.setFocus(historyAnchor.getLocation());
 	}

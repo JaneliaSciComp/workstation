@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.TraceMode;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -163,7 +164,11 @@ public class Skeleton {
 	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {
         controller.anchorAdded(new AnchorSeed(xyz, parent));
 	}
-    
+
+    public void dragRegionPerformed(TraceMode.RegionDragAction action, List<Vec3> pointList) {
+        controller.dragRegionPerformed(action, pointList);
+    }
+
     /**
      * Externally drive focus, given a target anchor.
      * 

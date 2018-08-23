@@ -395,6 +395,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void anchorAdded(AnchorSeed anchorSeed) {
         annoMgr.anchorAdded(anchorSeed);
     }
+
+    public void dragRegionPerformed(TraceMode.RegionDragAction action, List<Vec3> pointList) {
+        annoMgr.dragRegionPerformed(action, pointList);
+    }
     
     public void pathTraceRequested(Long neuronId, Long annotationId) {
         qvController.pathTraceRequested(neuronId, annotationId);

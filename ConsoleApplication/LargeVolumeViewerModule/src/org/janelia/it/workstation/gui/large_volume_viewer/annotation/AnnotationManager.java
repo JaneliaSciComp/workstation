@@ -27,6 +27,7 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
@@ -42,6 +43,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.TraceMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
@@ -50,6 +52,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadL
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.AdminHistoryDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
@@ -301,7 +304,76 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void anchorAdded(AnchorSeed seed) {
         addAnnotation(seed.getLocation(), seed.getParentGuid());
     }
-    
+
+    public void dragRegionPerformed(TraceMode.RegionDragAction action, List<Vec3> pointList) {
+        System.out.println("drag region: action = " + action + "; # points = " + pointList.size());
+
+        if (pointList.size() == 0) {
+            return;
+        }
+
+        // in the future I think we'll want the convex hull, but for now, just find
+        //  the bounding box:
+        Vec3 p1 = pointList.get(0);
+        double xmin = p1.getX();
+        double xmax = xmin;
+        double ymin = p1.getY();
+        double ymax = ymin;
+        double zmin = p1.getZ();
+        double zmax = zmin;
+        for (Vec3 p: pointList) {
+            double x = p.getX();
+            double y = p.getY();
+            double z = p.getZ();
+            if (x < xmin) xmin = x;
+            if (x > xmax) xmax = x;
+            if (y < ymin) ymin = y;
+            if (y > ymax) ymax = y;
+            if (z < zmin) zmin = z;
+            if (z > zmax) zmax = z;
+        }
+
+        // we want a minimum slab size in z; usually zmin = zmax at this point because
+        //  people will drag in a plane; thicken it
+
+        // choose arbitrary numbers for testing:
+        if (zmax - zmin < 100.0) {
+            zmin -= 50.0;
+            zmax += 50.0;
+        }
+
+        // find points in that bbox; convert to annotations:
+        double [] pmin = {xmin, ymin, zmin};
+        double [] pmax = {xmax, ymax, zmax};
+
+        List<TmGeoAnnotation> annList = getNeuronSet().getAnchorsInMicronArea(pmin, pmax)
+            .stream()
+            .map(v -> ((NeuronVertexAdapter) v).getTmGeoAnnotation())
+            .collect(Collectors.toList());
+
+        // for testing: do a smart merge on neurons if there are exactly two;
+        //  all we need is two annotations from different neurons
+        Map<TmNeuronMetadata, TmGeoAnnotation> annotations = new HashMap<>();
+        for (TmGeoAnnotation ann: annList) {
+            TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(ann.getNeuronId());
+            if (!annotations.containsKey(neuron)) {
+                annotations.put(neuron, ann);
+            }
+        }
+        if (annotations.size() != 2) {
+            System.out.println("need exactly two neurons for merge; found " + annotations.size());
+            return;
+        }
+
+        // arbitrary order of source, target:
+        List<TmGeoAnnotation> annList2 = new ArrayList<>(annotations.values());
+        smartMergeNeuriteRequested(annList2.get(0), annList2.get(1));
+
+
+
+
+    }
+
     public boolean checkOwnership(TmNeuronMetadata neuron)  {
         if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
             if (neuron.getOwnerKey().equals(SYSTEM_OWNER)) {
@@ -771,20 +843,28 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void smartMergeNeuriteRequested(Anchor sourceAnchor, Anchor targetAnchor) {
         if (targetAnchor == null) {
             presentError("No neurite selected!  Select an annotation on target neurite, then choose this operation again.",
-                "No selected neurite");
+                    "No selected neurite");
             return;
         }
-                
-        if (!checkOwnership(targetAnchor.getNeuronID()) || !checkOwnership(sourceAnchor.getNeuronID()))
-            return;
 
         TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(sourceAnchor.getNeuronID(),
             sourceAnchor.getGuid());
         TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(targetAnchor.getNeuronID(),
             targetAnchor.getGuid());
-        TmNeuronMetadata sourceNeuron = annotationModel.getNeuronFromNeuronID(sourceAnchor.getNeuronID());
-        TmNeuronMetadata targetNeuron = annotationModel.getNeuronFromNeuronID(targetAnchor.getNeuronID());
+        smartMergeNeuriteRequested(sourceAnnotation, targetAnnotation);
+    }
 
+    public void smartMergeNeuriteRequested(TmGeoAnnotation sourceAnnotation, TmGeoAnnotation targetAnnotation) {
+        if (targetAnnotation == null) {
+            presentError("No neurite selected!  Select an annotation on target neurite, then choose this operation again.",
+                "No selected neurite");
+            return;
+        }
+
+        TmNeuronMetadata sourceNeuron = annotationModel.getNeuronFromNeuronID(sourceAnnotation.getNeuronId());
+        TmNeuronMetadata targetNeuron = annotationModel.getNeuronFromNeuronID(targetAnnotation.getNeuronId());
+        if (!checkOwnership(targetNeuron) || !checkOwnership(sourceNeuron))
+            return;
 
         // check for cycles (this can be tested before we check exactly which annotations to merge
         if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
