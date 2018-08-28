@@ -172,7 +172,9 @@ public final class DownloadVisualPanel3 extends JPanel {
                     }
                 };
                 fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                fileChooser.setCurrentDirectory(downloadsDir.toFile());
+                if (downloadsDir!=null) {
+                    fileChooser.setCurrentDirectory(downloadsDir.toFile());
+                }
                 int returnVal = fileChooser.showOpenDialog(DownloadVisualPanel3.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String downloadDirPath = fileChooser.getSelectedFile().getAbsolutePath();
