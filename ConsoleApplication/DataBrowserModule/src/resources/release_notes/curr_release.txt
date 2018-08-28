@@ -2,4 +2,7 @@
  
 Workstation Browser
 * Fixed error when clicking on pipeline result without alignment
+<<<<<<< HEAD
 * Clicking on a pipeline result now shows details about the plugin used to generate it
+=======
+>>>>>>> master

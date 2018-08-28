@@ -11,19 +11,24 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 
 /**
  * {@link AbstractStorageClient} manager.
  */
 public class StorageClientMgr {
 
+    private static final Logger log = LoggerFactory.getLogger(StorageClientMgr.class);
+    
     private static final Cache<String, AgentStorageClient> STORAGE_WORKERS_CACHE = CacheBuilder.newBuilder()
             .maximumSize(10)
             .build();
@@ -55,7 +60,7 @@ public class StorageClientMgr {
     }
 
     private AgentStorageClient getStorageClientForStandardPath(String standardPathName) {
-        Path standardPath = Paths.get(standardPathName);
+        Path standardPath = Paths.get(standardPathName.replaceFirst("^jade:\\/\\/", ""));
         int nPathComponents = standardPath.getNameCount();
         List<String> storagePathPrefixCandidates = new LinkedList<>();
         IntStream.range(1, nPathComponents)
@@ -67,10 +72,12 @@ public class StorageClientMgr {
                     }
                 })
                 .forEach(p -> storagePathPrefixCandidates.add(0, p));
+        log.info("storagePathPrefixCandidates={}", storagePathPrefixCandidates);
         AgentStorageClient storageClient;
         for (String pathPrefix : storagePathPrefixCandidates) {
             storageClient = STORAGE_WORKERS_CACHE.getIfPresent(pathPrefix);
             if (storageClient != null) {
+                log.info("Found storage client for {} in cache", pathPrefix);
                 return storageClient;
             }
         }
@@ -83,6 +90,7 @@ public class StorageClientMgr {
                 t -> STORAGE_WORKERS_CACHE.invalidate(storageKey)
         );
         STORAGE_WORKERS_CACHE.put(storageKey, storageClient);
+        log.info("Created storage client for {}", storageKey);
         return storageClient;
     }
 

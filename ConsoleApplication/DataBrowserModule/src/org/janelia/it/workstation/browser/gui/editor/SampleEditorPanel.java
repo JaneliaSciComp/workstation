@@ -1192,6 +1192,10 @@ public class SampleEditorPanel
             values.put("Objective", alignment.getObjective());
             values.put("Optical Resolution", alignment.getOpticalResolution());
             values.put("Message", alignment.getMessage());
+
+            if (alignment.getContainerRef()!=null) {
+                values.put("Container Id", alignment.getContainerRef().getTargetId());
+            }
             
             Long bridgeParentAlignmentId = alignment.getBridgeParentAlignmentId();
             if (bridgeParentAlignmentId!=null) {

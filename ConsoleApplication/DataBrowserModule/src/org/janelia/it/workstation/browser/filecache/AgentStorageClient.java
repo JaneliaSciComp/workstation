@@ -204,8 +204,8 @@ class AgentStorageClient extends AbstractStorageClient {
         String storageVirtualPath = jsonResponse.get("storageRootPathURI").asText();
         String storageRealPath = jsonResponse.get("storageRootLocation").asText();
         String storageRelativePath = jsonResponse.get("nodeRelativePath").asText();        
-        String virtualFilePath = PathUtil.getStandardPath(Paths.get(storageVirtualPath, storageRelativePath));
-        String realFilePath = PathUtil.getStandardPath(Paths.get(storageRealPath, storageRelativePath));
+        String virtualFilePath = PathUtil.getStandardPath(storageVirtualPath+"/"+storageRelativePath);
+        String realFilePath = PathUtil.getStandardPath(storageRealPath+"/"+storageRelativePath);
         return new RemoteLocation(virtualFilePath, realFilePath, location);
     }
 

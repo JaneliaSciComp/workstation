@@ -11,7 +11,11 @@ public class PathUtil {
      * @return
      */
     public static final String getStandardPath(Path path) {
-        return path.toString().replaceAll("\\\\", "/").replaceFirst("^[A-Z]:", "");
+        return getStandardPath(path.toString());
+    }
+    
+    public static final String getStandardPath(String path) {
+        return path.replaceAll("\\\\", "/").replaceFirst("^[A-Z]:", "");
     }
  
     public static void main(String[] args) {
