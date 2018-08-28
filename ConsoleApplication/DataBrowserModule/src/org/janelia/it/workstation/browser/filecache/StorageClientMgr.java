@@ -82,7 +82,7 @@ public class StorageClientMgr {
             }
         }
         WebDavStorage storage = masterStorageClient.findStorage(standardPathName);
-        String storageKey = storage.getEtag();
+        String storageKey = storage.getEtag().replaceFirst("^jade:\\/\\/", "");
         storageClient = new AgentStorageClient(
                 storage.getRemoteFileUrl(),
                 httpClient,
