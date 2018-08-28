@@ -229,7 +229,8 @@ public class ColorDepthSearchDialog extends ModalDialog {
                 dataSets = model.getColorDepthDataSets(alignmentSpace);
                 
                 for(ColorDepthSearch search : model.getAllDomainObjectsByClass(ColorDepthSearch.class)) {
-                    if (ClientDomainUtils.hasWriteAccess(search)) {
+                    // TODO: this should use hasWriteAccess, once save is working server-side
+                    if (ClientDomainUtils.isOwner(search)) {
                         if (search.getAlignmentSpace().equals(alignmentSpace)) {
                             searches.add(search);
                         }
