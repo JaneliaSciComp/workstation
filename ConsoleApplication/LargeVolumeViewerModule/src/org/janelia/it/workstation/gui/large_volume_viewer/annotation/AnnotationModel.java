@@ -64,6 +64,7 @@ import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.model.access.domain.DomainUtils;
@@ -2342,25 +2343,33 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         
     public void fireBackgroundNeuronCreated(TmNeuronMetadata neuron) {
         for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
-            b.neuronModelCreated(neuron);
+            if (b instanceof NeuronSetAdapter || b instanceof PanelController) {
+                b.neuronModelCreated(neuron);
+            }
         }
     }
 
     public void fireBackgroundNeuronDeleted(TmNeuronMetadata neuron) {
-        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
-            b.neuronModelDeleted(neuron);
+        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {            
+            if (b instanceof NeuronSetAdapter || b instanceof PanelController) {
+                b.neuronModelDeleted(neuron);
+            }
         }
     }
 
     public void fireBackgroundNeuronChanged(TmNeuronMetadata neuron) {
-        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
-            b.neuronModelChanged(neuron);
+        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {            
+            if (b instanceof NeuronSetAdapter || b instanceof PanelController) {
+                b.neuronModelChanged(neuron);
+            }
         }
     }
     
     public void fireBackgroundNeuronOwnershipChanged(TmNeuronMetadata neuron) {
         for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
-            b.neuronOwnerChanged(neuron);
+            if (b instanceof NeuronSetAdapter || b instanceof PanelController) {
+                b.neuronOwnerChanged(neuron);
+            }
         }
     }
     

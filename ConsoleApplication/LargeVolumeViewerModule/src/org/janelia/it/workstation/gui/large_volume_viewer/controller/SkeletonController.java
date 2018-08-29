@@ -305,8 +305,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         for (SkeletonActor actor: actors) {
             actor.getModel().updateRemoteNeuronStyles(neuronStyleMap);
         }
-        refreshMeshDrawUpdateTimer();
-        fireComponentUpdate();
     }
     
     @Override

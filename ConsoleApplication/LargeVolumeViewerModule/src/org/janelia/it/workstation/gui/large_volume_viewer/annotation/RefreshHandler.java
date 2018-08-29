@@ -178,7 +178,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                 log.error("Issue trying to process metadata from update");
             }
             // thead logging
-            log.info ("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
+            log.debug ("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
             log.debug ("Heap Size: {}", Runtime.getRuntime().totalMemory());
             
             log.debug("message properties: TYPE={},USER={},WORKSPACE={},METADATA={}", msgHeaders.get(HeaderConstants.TYPE), msgHeaders.get(HeaderConstants.USER),
@@ -194,7 +194,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                 if (workspace != null && annotationModel!=null && annotationModel.getCurrentWorkspace() != null
                     && workspace.longValue()==annotationModel.getCurrentWorkspace().getId().longValue()) {
                     addNeuronUpdate (message, msgHeaders, action, user);
-                    log.info("SHARED UPDATE TIME: {}", stopWatch.getElapsedTime());
+                    log.debug("SHARED UPDATE TIME: {}", stopWatch.getElapsedTime());
                 }
                 return;
             }
@@ -209,7 +209,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             }
 
             if (!msgHeaders.containsKey(HeaderConstants.METADATA) || msgHeaders.get(HeaderConstants.METADATA)==null) {
-                log.info("Message includes no neuron information; rejecting processing");
+                log.error("Message includes no neuron information; rejecting processing");
                 return;
             }
                 
@@ -228,7 +228,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             log.info("Processed headers for workspace Id {}", workspace);
             // if not this workspace or user isn't looking at a workspace right now or workspace not relating to a workspace update, filter out message
             
-            log.info("PRE-WORKSPACE TIME: {}", stopWatch.getElapsedTime());
+            log.debug("PRE-WORKSPACE TIME: {}", stopWatch.getElapsedTime());
             if (workspace == null || annotationModel.getCurrentWorkspace() == null
                     || workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
                 return;
@@ -258,7 +258,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                 annotationModel.getNeuronManager().completeCreateNeuron(neuron);
                 stopWatch2.stop();
                 log.info("RefreshHandler: Remote own neuron creation update in {} ms", stopWatch2.getElapsedTime());
-                log.info("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
+                log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
             } else if (action == MessageType.REQUEST_NEURON_OWNERSHIP) {
                 // some other user is asking for ownership of this neuron... process accordingly
             } else {
@@ -281,7 +281,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                                     exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
                                     annotationModel.getNeuronManager().addNeuron(neuron);
                                     annotationModel.fireBackgroundNeuronCreated(neuron);
-                                    log.info("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
+                                    log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
                                     break;
                                 case NEURON_SAVE_NEURONDATA:
                                 case NEURON_SAVE_METADATA:
@@ -292,7 +292,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                                         exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
                                         annotationModel.getNeuronManager().addNeuron(neuron);
                                         annotationModel.fireBackgroundNeuronChanged(neuron);
-                                        log.info("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
+                                        log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
                                     }
                                     break;
                                 case NEURON_DELETE:
@@ -302,12 +302,12 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                                         msgBody = message.getBody();
                                         exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
                                         annotationModel.fireBackgroundNeuronDeleted(neuron);
-                                        log.info("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
+                                        log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
                                     }
                                     break;
                             }
                             stopWatch2.stop();
-                            log.info("RefreshHandler.invokeLater: handled update in {} ms", stopWatch2.getElapsedTime());
+                            log.debug("RefreshHandler.invokeLater: handled update in {} ms", stopWatch2.getElapsedTime());
                         } catch (Exception e) {
                             log.error("Exception thrown in main GUI thread during message processing", e);
                             logError(e.getMessage());
