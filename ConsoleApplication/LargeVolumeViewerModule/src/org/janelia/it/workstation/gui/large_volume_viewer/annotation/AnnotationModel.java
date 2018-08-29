@@ -2343,33 +2343,25 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         
     public void fireBackgroundNeuronCreated(TmNeuronMetadata neuron) {
         for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
-            if (b instanceof NeuronSetAdapter || b instanceof PanelController) {
-                b.neuronModelCreated(neuron);
-            }
+            b.neuronModelCreated(neuron);
         }
     }
 
     public void fireBackgroundNeuronDeleted(TmNeuronMetadata neuron) {
-        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {            
-            if (b instanceof NeuronSetAdapter || b instanceof PanelController) {
-                b.neuronModelDeleted(neuron);
-            }
+        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {     
+            b.neuronModelDeleted(neuron);
         }
     }
 
     public void fireBackgroundNeuronChanged(TmNeuronMetadata neuron) {
-        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {            
-            if (b instanceof NeuronSetAdapter || b instanceof PanelController) {
-                b.neuronModelChanged(neuron);
-            }
+        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {     
+            b.neuronModelChanged(neuron);
         }
     }
     
     public void fireBackgroundNeuronOwnershipChanged(TmNeuronMetadata neuron) {
         for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
-            if (b instanceof NeuronSetAdapter || b instanceof PanelController) {
-                b.neuronOwnerChanged(neuron);
-            }
+            b.neuronOwnerChanged(neuron);
         }
     }
     
