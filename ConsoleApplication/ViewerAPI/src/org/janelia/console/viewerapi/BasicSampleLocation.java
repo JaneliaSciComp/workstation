@@ -49,6 +49,8 @@ public class BasicSampleLocation implements SampleLocation
     private double micrometersPerWindowHeight = 100;
     private int defaultColorChannel = 0;
     private boolean compressed = false;
+    private Long neuronId = null;  // Optional
+    private Long neuronVertexId = null;  // Optional
     private Long workspaceId = null;  // Optional
     private Long sampleId = null;     // Optional
     private TmSample sample = null;     // Optional
@@ -202,5 +204,23 @@ public class BasicSampleLocation implements SampleLocation
     @Override
     public boolean getInterpolate() {
         return interpolate;
+    }
+
+    @Override
+    public Long getNeuronId() {
+        return neuronId;
+    }
+
+    @Override
+    public Long getNeuronVertexId() {
+        return neuronVertexId;
+    }
+        
+    public void setNeuronId(Long neuronId) {
+        this.neuronId = neuronId;
+    }
+
+    public void setNeuronVertexId(Long neuronVertex) {
+        this.neuronVertexId = neuronVertex;
     }
 }
