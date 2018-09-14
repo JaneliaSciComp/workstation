@@ -8,6 +8,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 
 /**
  * Encapsulates minimum amount of information for a remote
@@ -21,7 +22,8 @@ class AbstractWebDav {
     private String webdavFileKey;
     private boolean isDirectory;
     private Long contentLength;
-    private String etag;
+    private String storageRootDir;
+    private String storageBindName;
 
     /**
      * Parses the specified WebDAV PROPFIND response 'fragment' to
@@ -68,12 +70,18 @@ class AbstractWebDav {
                 }
             }
 
-            final DavProperty<?> etagProperty =
-                    propertySet.get(DavPropertyName.GETETAG);
-            if (etagProperty != null) {
-                this.etag = String.valueOf(etagProperty.getValue());
+            final DavProperty<?> storageRootDirProperty =
+                    propertySet.get(DavPropertyName.create("storageRootDir", Namespace.getNamespace("JADE:")));
+            if (storageRootDirProperty != null) {
+                this.storageRootDir = String.valueOf(storageRootDirProperty.getValue());
             }
-            
+
+            final DavProperty<?> storageBindNameProperty =
+                    propertySet.get(DavPropertyName.create("storageBindName", Namespace.getNamespace("JADE:")));
+            if (storageBindNameProperty != null) {
+                this.storageBindName = String.valueOf(storageBindNameProperty.getValue());
+            }
+
         }
     }
 
@@ -113,11 +121,12 @@ class AbstractWebDav {
         return kilobytes;
     }
 
-    /**
-     * @return the file's etag.
-     */
-    String getEtag() {
-        return etag;
+    String getStorageRootDir() {
+        return storageRootDir;
+    }
+
+    String getStorageBindName() {
+        return storageBindName;
     }
 
     @Override
@@ -125,7 +134,6 @@ class AbstractWebDav {
         return this.getClass().getSimpleName() + "{webdavFileKey='" + webdavFileKey + '\'' +
                 ", isDirectory=" + isDirectory +
                 ", contentLength=" + contentLength +
-                ", etag=" + etag +
                 '}';
     }
 
@@ -141,7 +149,6 @@ class AbstractWebDav {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(DavPropertyName.RESOURCETYPE);
         nameSet.add(DavPropertyName.GETCONTENTLENGTH);
-        nameSet.add(DavPropertyName.GETETAG);
         PROPERTY_NAMES = nameSet;
     }
 }

@@ -166,42 +166,59 @@ public class RemoteFileCacheLoader extends CacheLoader<String, CachedFile> {
     private File retrieveFile(URLProxy remoteFileUrl, File outputFile) throws WebDavException {
         InputStream input = null;
         FileOutputStream output = null;
+        final String prototcol = remoteFileUrl.getProtocol();
         GetMethod getMethod = null;
-        try {
-            final String prototcol = remoteFileUrl.getProtocol();
-            if (prototcol.startsWith("http")) {
+        if (prototcol.startsWith("http")) {
+            // this is the only case which if fails we need to handle the proxy error
+            try {
                 getMethod = new GetMethod(remoteFileUrl.toString());
                 final int responseCode = httpClient.executeMethod(getMethod);
                 LOG.trace("retrieveFile: {} returned for GET {}", responseCode, remoteFileUrl);
                 if (responseCode != HttpServletResponse.SC_OK) {
-                    throw new WebDavException(responseCode + " returned for GET " + remoteFileUrl,
-                            responseCode);
+                    throw new WebDavException(responseCode + " returned for GET " + remoteFileUrl, responseCode);
                 }
                 input = getMethod.getResponseBodyAsStream();
-            } else {
-                // use java URL library for non-http resources (e.g. file://)
-                input = remoteFileUrl.openStream();
+            } catch (WebDavException e) {
+                remoteFileUrl.handleError(e);
+                if (getMethod != null) {
+                    getMethod.releaseConnection();
+                }
+                throw e;
+            } catch (Exception e) {
+                remoteFileUrl.handleError(e);
+                if (getMethod != null) {
+                    getMethod.releaseConnection();
+                }
+                throw new WebDavException(
+                        "failed to open " + remoteFileUrl + " in order to write to " + outputFile.getAbsolutePath(), e);
             }
+        } else {
+            // use java URL library for non-http resources (e.g. file://)
+            try {
+                input = remoteFileUrl.openStream();
+            } catch (Exception e) {
+                throw new WebDavException(
+                        "failed to open " + remoteFileUrl + " in order to write to " + outputFile.getAbsolutePath(), e);
+            }
+        }
+        try {
             output = new FileOutputStream(outputFile);
             byte[] buffer = new byte[BUFFER_SIZE];
             int n;
             while (EOF != (n = input.read(buffer))) {
                 output.write(buffer, 0, n);
             }
-        } catch (Throwable t) {
-            remoteFileUrl.handleError(t);
+        } catch (Exception e) {
             throw new WebDavException(
-                    "failed to copy " + remoteFileUrl + " to " + outputFile.getAbsolutePath(), t);
+                    "failed to copy " + remoteFileUrl + " to " + outputFile.getAbsolutePath(), e);
         } finally {
             if (getMethod != null) {
                 getMethod.releaseConnection();
             }
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    LOG.warn("retrieveFile: failed to close " + remoteFileUrl, e);
-                }
+            try {
+                input.close();
+            } catch (IOException e) {
+                LOG.warn("retrieveFile: failed to close " + remoteFileUrl, e);
             }
             if (output != null) {
                 try {

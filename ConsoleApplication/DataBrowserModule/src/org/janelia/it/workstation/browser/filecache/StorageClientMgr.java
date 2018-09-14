@@ -30,7 +30,7 @@ public class StorageClientMgr {
     private static final Logger log = LoggerFactory.getLogger(StorageClientMgr.class);
     
     private static final Cache<String, AgentStorageClient> STORAGE_WORKERS_CACHE = CacheBuilder.newBuilder()
-            .maximumSize(10)
+            .maximumSize(100)
             .build();
     private static Consumer<Throwable> NOOP_ERROR_CONN_HANDLER = (t) -> {};
 
@@ -74,23 +74,42 @@ public class StorageClientMgr {
                 .forEach(p -> storagePathPrefixCandidates.add(0, p));
         log.info("storagePathPrefixCandidates={}", storagePathPrefixCandidates);
         AgentStorageClient storageClient;
-        for (String pathPrefix : storagePathPrefixCandidates) {
-            storageClient = STORAGE_WORKERS_CACHE.getIfPresent(pathPrefix);
-            if (storageClient != null) {
-                log.info("Found storage client for {} in cache", pathPrefix);
-                return storageClient;
+        synchronized(STORAGE_WORKERS_CACHE) {
+            for (String pathPrefix : storagePathPrefixCandidates) {
+                storageClient = STORAGE_WORKERS_CACHE.getIfPresent(pathPrefix);
+                if (storageClient != null) {
+                    log.info("Found storage client for {} in cache", pathPrefix);
+                    return storageClient;
+                }
+            }
+            WebDavStorage storage = masterStorageClient.findStorage(standardPathName);
+            String storageBindName = storage.getStorageBindName();
+            String storageRootDir = storage.getStorageRootDir();
+            String storageKey;
+            Consumer<Throwable> agentErrorHandler;
+            if  (storageBindName != null && standardPath.startsWith(storageBindName)) {
+                storageKey = storageBindName;
+                agentErrorHandler = t -> STORAGE_WORKERS_CACHE.invalidate(storageKey);
+            } else if (storageRootDir != null && standardPath.startsWith(storageRootDir)) {
+                storageKey = storageRootDir;
+                agentErrorHandler = t -> STORAGE_WORKERS_CACHE.invalidate(storageKey);
+            } else {
+                storageKey = null;
+                agentErrorHandler = t -> {};
+            }
+            storageClient = new AgentStorageClient(
+                    storage.getRemoteFileUrl(),
+                    httpClient,
+                    objectMapper,
+                    agentErrorHandler
+            );
+            if (storageKey != null) {
+                STORAGE_WORKERS_CACHE.put(storageKey, storageClient);
+                log.info("Created storage client for {}", storageKey);
+            } else {
+                log.info("No storage agent cached for {}", standardPathName);
             }
         }
-        WebDavStorage storage = masterStorageClient.findStorage(standardPathName);
-        String storageKey = storage.getEtag().replaceFirst("^jade:\\/\\/", "");
-        storageClient = new AgentStorageClient(
-                storage.getRemoteFileUrl(),
-                httpClient,
-                objectMapper,
-                t -> STORAGE_WORKERS_CACHE.invalidate(storageKey)
-        );
-        STORAGE_WORKERS_CACHE.put(storageKey, storageClient);
-        log.info("Created storage client for {}", storageKey);
         return storageClient;
     }
 
