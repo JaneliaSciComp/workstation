@@ -157,6 +157,8 @@ public class FilteredAnnotationList extends JPanel {
                                         Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                                         SampleLocation sampleLocation = originator.getSampleLocation();
                                         sampleLocation.setFocusUm(location.getX(), location.getY(), location.getZ());
+                                        sampleLocation.setNeuronId(ann.getNeuronId());
+                                        sampleLocation.setNeuronVertexId(ann.getId());
                                         Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                                         for (Tiled3dSampleLocationProviderAcceptor acceptor: locationAcceptors) {
                                             if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {

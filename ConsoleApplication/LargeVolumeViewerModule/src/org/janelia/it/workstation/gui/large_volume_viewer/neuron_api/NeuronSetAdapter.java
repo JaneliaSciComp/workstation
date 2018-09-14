@@ -423,7 +423,7 @@ implements NeuronSet// , LookupListener
             neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
             // Trigger a Horta repaint  for instant GUI feedback
             // NOTE - assumes this callback is only invoked from one-at-a-time manual addition
-            final boolean doRecenterHorta = false;
+            final boolean doRecenterHorta = true;
             if (getMetaWorkspace() != null) 
             {
                 if (doRecenterHorta) 
