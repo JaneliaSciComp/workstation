@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.filecache;
 
+import java.io.FileNotFoundException;
 import java.util.function.Supplier;
 
 import javax.servlet.http.HttpServletResponse;
@@ -46,17 +47,13 @@ class MasterStorageClient extends AbstractStorageClient {
      * @throws WebDavException
      *   if the storage information cannot be retrieved.
      */
-    WebDavStorage findStorage(String storagePath)
-            throws WebDavException {
+    WebDavStorage findStorage(String storagePath) throws WebDavException, FileNotFoundException {
         MultiStatusResponse[] multiStatusResponses = StorageClientResponseHelper.getResponses(
                 httpClient,
                 StorageClientResponseHelper.getStorageLookupURL(baseUrl, "data_storage_path", storagePath),
                 DavConstants.DEPTH_0,
                 0
         );
-        if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
-            throw new WebDavException("empty response returned for " + storagePath);
-        }
         return new WebDavStorage(storagePath, multiStatusResponses[0]);
     }
 

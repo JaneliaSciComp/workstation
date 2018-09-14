@@ -214,7 +214,7 @@ public class FileMgr {
      *
      * @return an accessible URL for the specified path
      */
-    public URLProxy getURL(String standardPathName, boolean cacheAsync) {
+    public URLProxy getURL(String standardPathName, boolean cacheAsync) throws FileNotFoundException {
         return isFileCacheAvailable()
                 ? localFileCache.getEffectiveUrl(standardPathName, cacheAsync)
                 : storageClientMgr.getDownloadFileURL(standardPathName);

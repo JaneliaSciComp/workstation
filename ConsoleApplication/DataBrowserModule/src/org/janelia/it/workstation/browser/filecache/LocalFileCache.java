@@ -273,7 +273,7 @@ public class LocalFileCache {
      * @return the local or remote URL for the resource depending upon
      *         whether it has already been cached.
      */
-    public URLProxy getEffectiveUrl(String remoteFileRefName, boolean cacheAsync) {
+    public URLProxy getEffectiveUrl(String remoteFileRefName, boolean cacheAsync) throws FileNotFoundException {
         // get call will NOT load file if it is missing
         CachedFile cachedFile = remoteNameToFileCache.getIfPresent(remoteFileRefName);
         File localFile = getVerifiedLocalFile(cachedFile);
