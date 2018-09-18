@@ -69,4 +69,10 @@ public interface SampleLocation
     Long getSampleId();
     /** Optional, may not be supported. */
     TmSample getSample();
+    /** Optional, may not be supported. */
+    Long getNeuronId();   
+    void setNeuronId(Long neuronId);
+    /** Optional, may not be supported. */
+    Long getNeuronVertexId();
+    void setNeuronVertexId(Long neuronVertexId);
 }

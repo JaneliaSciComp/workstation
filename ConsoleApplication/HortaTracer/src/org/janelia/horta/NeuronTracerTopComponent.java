@@ -606,6 +606,19 @@ public final class NeuronTracerTopComponent extends TopComponent
                 currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
             );
             
+            // if neuron and neuron vertex passed, select this parent vertex
+            if (sampleLocation.getNeuronVertexId()!=null) {
+                long neuronId = sampleLocation.getNeuronId();
+                long vertexId = sampleLocation.getNeuronVertexId();
+                if (activeNeuronSet!=null) {
+                    NeuronModel neuron = activeNeuronSet.getNeuronByGuid(neuronId);
+                    NeuronVertex vertex = neuron.getVertexByGuid(vertexId);
+                    if (neuron!=null && vertex !=null) {
+                        tracingInteractor.selectParentVertex(vertex, neuron);
+                    }
+                }
+            }
+            
             if (sampleLocation.getInterpolate()) {
                 // figure out number of steps
                 Vantage vantage = sceneWindow.getVantage();
