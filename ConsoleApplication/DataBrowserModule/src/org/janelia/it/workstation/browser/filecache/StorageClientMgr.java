@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.filecache;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.file.Path;
@@ -54,12 +55,12 @@ public class StorageClientMgr {
         this.masterStorageClient = new MasterStorageClient(baseUrl, httpClient, objectMapper);
     }
 
-    public URLProxy getDownloadFileURL(String standardPathName) {
+    public URLProxy getDownloadFileURL(String standardPathName) throws FileNotFoundException {
         AgentStorageClient storageClient = getStorageClientForStandardPath(standardPathName);
         return storageClient.getDownloadFileURL(standardPathName);
     }
 
-    private AgentStorageClient getStorageClientForStandardPath(String standardPathName) {
+    private AgentStorageClient getStorageClientForStandardPath(String standardPathName) throws FileNotFoundException {
         Path standardPath = Paths.get(standardPathName.replaceFirst("^jade:\\/\\/", ""));
         int nPathComponents = standardPath.getNameCount();
         List<String> storagePathPrefixCandidates = new LinkedList<>();
@@ -112,7 +113,7 @@ public class StorageClientMgr {
         }
         return storageClient;
     }
-
+    
     /**
      * Finds information about the specified file.
      *
@@ -123,8 +124,8 @@ public class StorageClientMgr {
      * @throws WebDavException
      *   if the file information cannot be retrieved.
      */
-    WebDavFile findFile(String remoteFileName)
-            throws WebDavException {
+    WebDavFile findFile(String remoteFileName) 
+            throws WebDavException, FileNotFoundException {
         AgentStorageClient storageClient = getStorageClientForStandardPath(remoteFileName);
         return storageClient.findFile(remoteFileName);
     }

@@ -1,12 +1,8 @@
 package org.janelia.it.workstation.browser.filecache;
 
 import java.io.FileNotFoundException;
-import java.net.MalformedURLException;
-import java.net.URL;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.http.HttpStatus;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
@@ -17,24 +13,25 @@ import org.slf4j.LoggerFactory;
 
 class StorageClientResponseHelper {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StorageClientResponseHelper.class);
+    private static final Logger log = LoggerFactory.getLogger(StorageClientResponseHelper.class);
 
     static MultiStatusResponse[] getResponses(HttpClientProxy httpClient, String href, int depth, int callCount)
-            throws WebDavException {
+            throws WebDavException, FileNotFoundException {
         MultiStatusResponse[] multiStatusResponses;
         PropFindMethod method = null;
         try {
-            LOG.debug("WebDAV property lookup - {}", href);
+            log.debug("WebDAV property lookup - {}", href);
             method = new PropFindMethod(href, WebDavFile.PROPERTY_NAMES, depth);
             method.addRequestHeader("Accept", "application/xml");
             method.addRequestHeader("Content-Type", "application/xml");
             final int responseCode = httpClient.executeMethod(method);
-            LOG.trace("getResponses: {} returned for PROPFIND {}", responseCode, href);
+            log.trace("getResponses: {} returned for PROPFIND {}", responseCode, href);
 
             if (responseCode == HttpStatus.SC_MULTI_STATUS) {
                 final MultiStatus multiStatus = method.getResponseBodyAsMultiStatus();
                 multiStatusResponses = multiStatus.getResponses();
-            } else if (responseCode == HttpStatus.SC_MOVED_PERMANENTLY) {
+            }
+            else if (responseCode == HttpStatus.SC_MOVED_PERMANENTLY) {
                 final Header locationHeader = method.getResponseHeader("Location");
                 if (locationHeader != null) {
                     final String movedHref = locationHeader.getValue();
@@ -43,19 +40,27 @@ class StorageClientResponseHelper {
                     }
                 }
                 throw new WebDavException(responseCode + " response code returned for " + href, responseCode);
-            } else if (responseCode == HttpStatus.SC_NOT_FOUND) {
+            }
+            else if (responseCode == HttpStatus.SC_NOT_FOUND) {
                 throw new FileNotFoundException("Resource " + href + "not found (" + responseCode + ")");
-            } else {
+            }
+            else {
                 throw new WebDavException(responseCode + " response code returned for " + href, responseCode);
             }
-        } catch (WebDavException e) {
+        }
+        catch (WebDavException | FileNotFoundException e) {
             throw e;
-        } catch (Exception e) {
-            throw new WebDavException("failed to retrieve WebDAV information from " + href, e);
-        } finally {
+        }
+        catch (Exception e) {
+            throw new WebDavException("Failed to retrieve WebDAV information from " + href, e);
+        }
+        finally {
             if (method != null) {
                 method.releaseConnection();
             }
+        }
+        if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
+            throw new WebDavException("empty response returned for " + href);
         }
         return multiStatusResponses;
     }
@@ -63,7 +68,8 @@ class StorageClientResponseHelper {
     static String getStorageLookupURL(String baseUrl, String context, String remoteFileName) {
         if (baseUrl == null) {
             return null;
-        } else {
+        }
+        else {
             return baseUrl + "/" + context + "/" + remoteFileName;
         }
     }

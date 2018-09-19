@@ -66,23 +66,13 @@ class AgentStorageClient extends AbstractStorageClient {
      * @throws WebDavException
      *   if the file information cannot be retrieved.
      */
-    WebDavFile findFile(String remoteFileName)
-            throws WebDavException {
-        MultiStatusResponse[] multiStatusResponses;
-        try {
-            multiStatusResponses = StorageClientResponseHelper.getResponses(
-                    httpClient,
-                    StorageClientResponseHelper.getStorageLookupURL(baseUrl, "data_storage_path", remoteFileName),
-                    DavConstants.DEPTH_0,
-                    0
-            );
-        } catch (Exception e) {
-            LOG.error("Failed to retrieve {} with {}", remoteFileName, baseUrl, e);
-            multiStatusResponses = null;
-        }
-        if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
-            throw new WebDavException("empty response returned for " + remoteFileName);
-        }
+    WebDavFile findFile(String remoteFileName) throws WebDavException, FileNotFoundException {
+        MultiStatusResponse[] multiStatusResponses = StorageClientResponseHelper.getResponses(
+                httpClient,
+                StorageClientResponseHelper.getStorageLookupURL(baseUrl, "data_storage_path", remoteFileName),
+                DavConstants.DEPTH_0,
+                0
+        );
         return new WebDavFile(remoteFileName, multiStatusResponses[0], connectionErrorHandler);
     }
 
