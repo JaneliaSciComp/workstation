@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.google.common.base.Splitter;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +31,32 @@ public class WebDavUploader {
      */
     public WebDavUploader(StorageClientMgr storageClientMgr) {
         this.storageClientMgr = storageClientMgr;
+    }
+
+    public String createUploadContext(String contextName, String subjectName, String storageTags) {
+        if (shouldIncludeUserFolder(storageTags) || StringUtils.isBlank(subjectName)) {
+            return contextName;
+        } else {
+            return subjectName + "/" + contextName;
+        }
+    }
+
+    /**
+     * A storage is considered to already be user aware if it has the tag "includesUserFolder"
+     * @param storageTags
+     * @return
+     */
+    private boolean shouldIncludeUserFolder(String storageTags) {
+        if (storageTags == null) {
+            return false;
+        } else {
+            for (String tag : Splitter.on(',').trimResults().omitEmptyStrings().split(storageTags)) {
+                if ("includesUserFolder".equalsIgnoreCase(tag)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     /**

@@ -23,10 +23,13 @@ public class MaskUtils {
      * @param localFile
      * @return
      */
-    public static String uploadMask(File localFile) {
+    static String uploadMask(File localFile) {
 
         WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
-        String uploadContext = AccessManager.getSubjectName() + "/" + "WorkstationFileUpload";
+        String uploadContext = uploader.createUploadContext("WorkstationFileUpload",
+                AccessManager.getSubjectName(),
+                IMPORT_STORAGE_DEFAULT_TAGS);
+
         Long guid = TimebasedIdentifierGenerator.generateIdList(1).get(0);
         RemoteLocation location = uploader.uploadFile("UserGeneratedMask_"+guid, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, localFile);
         String uploadPath = location.getRealFilePath();
@@ -34,8 +37,8 @@ public class MaskUtils {
         
         return uploadPath;
     }
-    
-    public static String getFormattedScorePct(ColorDepthMatch match) {
+
+    static String getFormattedScorePct(ColorDepthMatch match) {
         return String.format("%2.0f%%", match.getScorePercent()*100);
     }
 }

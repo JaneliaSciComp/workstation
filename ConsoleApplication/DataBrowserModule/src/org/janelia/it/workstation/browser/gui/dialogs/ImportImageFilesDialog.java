@@ -13,21 +13,12 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.filechooser.FileFilter;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -51,9 +42,6 @@ import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.util.TimebasedIdentifierGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Dialog for importing images using the file import service. 
@@ -536,15 +524,14 @@ public class ImportImageFilesDialog extends ModalDialog {
         log.info("mipsOptions: {}", mipsOptions);
         
         final WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
+
         final String subjectName = AccessManager.getSubjectName();
-        String uploadContext;
-        if (StringUtils.isBlank(subjectName)) {
-            uploadContext = "WorkstationFileUpload";
-        } else {
-            uploadContext = subjectName + "/" + "WorkstationFileUpload";
-        }
+        String uploadContext = uploader.createUploadContext(
+                "WorkstationFileUpload",
+                subjectName,
+                storageTags);
         String uploadPath;
-        
+
         Long guid = TimebasedIdentifierGenerator.generateIdList(1).get(0);
         String storageName = "UserFileImport_"+guid;
         
@@ -586,5 +573,5 @@ public class ImportImageFilesDialog extends ModalDialog {
                 ImmutableMap.of()
         );
     }
-    
+
 }
