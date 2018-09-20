@@ -248,11 +248,11 @@ public class CompressionDialog extends ModalDialog {
             alignedVLCheckbox.setSelected(true);
         }
         
-        if (DomainConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS.equals(dataSet.getSeparationCompressionType())) {
-            sepVLCheckbox.setSelected(true);
+        if (DomainConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J.equals(dataSet.getSeparationCompressionType())) {
+            sepLLCheckbox.setSelected(true);
         }
         else {
-            sepLLCheckbox.setSelected(true);
+            sepVLCheckbox.setSelected(true);
         }
 
         ActivityLogHelper.logUserAction("CompressionDialog.showForDataSet");
