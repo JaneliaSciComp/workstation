@@ -68,6 +68,7 @@ import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
@@ -93,6 +94,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+
+import net.miginfocom.swing.MigLayout;
 
 /**
  * Specialized component for viewing information about Samples, including their LSMs and processing results.  
@@ -840,9 +843,6 @@ public class SampleEditorPanel
         
         private final ArtifactDescriptor resultDescriptor;
         private final PipelineResult result;
-        private JLabel label = new JLabel();
-        private JLabel subLabel1 = new JLabel();
-        private JLabel subLabel2 = new JLabel();
         
         private PipelineResultPanel(PipelineResult result) {
             
@@ -856,13 +856,23 @@ public class SampleEditorPanel
             imagePanel.setLayout(new GridLayout(1, 2, 5, 0));
 
             if (result!=null) {
+                
+                String compressionLabel = result.getCompressionType()==null?"":SampleUtils.getCompressionLabel(result.getCompressionType());
+
+                JLabel label = new JLabel();
+                JLabel rightLabel = new JLabel();
+                JLabel rightLabel2 = new JLabel();
+                JLabel subLabel1 = new JLabel();
+                JLabel subLabel2 = new JLabel();
+                
                 this.resultDescriptor = new ResultArtifactDescriptor(result);
                 label.setText(resultDescriptor.toString());
                 subLabel1.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
                 if (!StringUtils.isBlank(result.getMessage())) {
                     subLabel2.setText(result.getMessage());
                 }
-                
+                rightLabel.setText(compressionLabel);
+                                
                 HasFiles files = result;
                 
                 // Attempt to find a signal MIP to display
@@ -881,11 +891,14 @@ public class SampleEditorPanel
                     imagePanel.add(getImagePanel(signalMip, decorators));
                     imagePanel.add(getImagePanel(refMip, decorators));
                 }
+
+                JPanel titlePanel = new JPanel(new MigLayout("wrap 2, ins 0, fillx"));
                 
-                JPanel titlePanel = new JPanel(new BorderLayout());
-                titlePanel.add(label, BorderLayout.PAGE_START);
-                titlePanel.add(subLabel1, BorderLayout.CENTER);
-                titlePanel.add(subLabel2, BorderLayout.PAGE_END);
+                titlePanel.add(label, "");
+                titlePanel.add(rightLabel, "align right");
+                titlePanel.add(subLabel1, "");
+                titlePanel.add(rightLabel2, "align right");
+                titlePanel.add(subLabel2, "span 2");
                 
                 add(titlePanel, BorderLayout.NORTH);
                 add(imagePanel, BorderLayout.CENTER);
@@ -1156,6 +1169,10 @@ public class SampleEditorPanel
         values.put("GUID", result.getId());
         values.put("Name", result.getName());
         values.put("Purged", result.getPurged());
+
+        if (result.getCompressionType()!=null) {
+            values.put("Compression Strategy", SampleUtils.getCompressionLabel(result.getCompressionType()));
+        }
         
         if (result.getContainerRef()!=null) {
             Long containerId = result.getContainerRef().getTargetId();
