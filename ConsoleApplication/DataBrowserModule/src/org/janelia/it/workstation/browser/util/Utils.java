@@ -679,7 +679,7 @@ public class Utils {
             output = new FileOutputStream(destination);
             
             final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
-            if (totalBytesWritten < length) {
+            if (totalBytesWritten < source.length()) {
                 throw new IOException("bytes written (" + totalBytesWritten + ") for " + destination +
                                       " is less than source length (" + length + ")");
             }
