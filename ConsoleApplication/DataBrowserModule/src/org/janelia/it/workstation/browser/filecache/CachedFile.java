@@ -51,7 +51,7 @@ public class CachedFile {
      * @param  webDavFile  the WebDAV information for the file's remote source.
      * @param  localFile   the local location for the file after retrieval.
      */
-    public CachedFile(WebDavFile webDavFile, File localFile) {
+    CachedFile(WebDavFile webDavFile, File localFile) {
         this.remoteFileName = webDavFile.getWebdavFileKey();
         this.localFile = localFile;
         if (! webDavFile.isDirectory()) {
@@ -65,28 +65,28 @@ public class CachedFile {
     /**
      * @return the source URL for this file.
      */
-    public String getRemoteFileName() {
+    String getRemoteFileName() {
         return remoteFileName;
     }
 
     /**
      * @return the local location of this file after retrieval.
      */
-    public File getLocalFile() {
+    File getLocalFile() {
         return localFile;
     }
 
     /**
      * @return the local location of this file's serialized meta data.
      */
-    public File getMetaFile() {
+    File getMetaFile() {
         return metaFile;
     }
 
     /**
      * @return the number of kilobytes in this file.
      */
-    public long getKilobytes() {
+    long getKilobytes() {
         long kilobytes = 0;
         if (localFile.exists()) {
             final long len = localFile.length();
@@ -100,7 +100,6 @@ public class CachedFile {
 
     @Override
     public String toString() {
-
         return "CachedFile{" +
                 "remoteFileName=" + remoteFileName +
                 ", localFile=" + (localFile == null ? null : localFile.getAbsolutePath()) +
@@ -193,7 +192,7 @@ public class CachedFile {
      * @throws IllegalStateException
      *   if the meta data cannot be written.
      */
-    public void saveMetadata()
+    void saveMetadata()
             throws IllegalStateException {
 
         if (metaFile != null) {
@@ -224,7 +223,7 @@ public class CachedFile {
      *
      * @return true if the specified file is a cached file metadata file; otherwise false.
      */
-    public static boolean isMetaFile(File file) {
+    static boolean isMetaFile(File file) {
         final String name = file.getName();
         return name.endsWith(META_FILE_SUFFIX);
     }
@@ -234,7 +233,7 @@ public class CachedFile {
      *
      * @return the conventional meta file name for the specified cached file.
      */
-    public static String getMetaFileName(File localFile) {
+    static String getMetaFileName(File localFile) {
         return "." + localFile.getName() + META_FILE_SUFFIX;
     }
 
@@ -246,7 +245,7 @@ public class CachedFile {
      *
      * @return {@link CachedFile} instance parsed from the specified file or null if parsing fails.
      */
-    public static CachedFile loadPreviouslyCachedFile(File metaFile) {
+    static CachedFile loadPreviouslyCachedFile(File metaFile) {
 
         CachedFile cachedFile = null;
         FileReader reader = null;

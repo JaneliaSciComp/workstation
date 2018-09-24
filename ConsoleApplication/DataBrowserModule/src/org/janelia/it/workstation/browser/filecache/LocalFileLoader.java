@@ -25,7 +25,7 @@ public class LocalFileLoader {
      *
      * @param  activeDirectory  the active directory for the local file cache.
      */
-    public LocalFileLoader(File activeDirectory) {
+    LocalFileLoader(File activeDirectory) {
         this.activeDirectory = activeDirectory;
         this.locallyCachedFiles = new ArrayList<CachedFile>(1024);
         this.unregisteredFiles = new HashSet<File>(1024);
@@ -34,7 +34,7 @@ public class LocalFileLoader {
     /**
      * @return set of files in the cache that could not be registered.
      */
-    public Set<File> getUnregisteredFiles() {
+    Set<File> getUnregisteredFiles() {
         return unregisteredFiles;
     }
 
@@ -45,7 +45,7 @@ public class LocalFileLoader {
      *
      * @return the list of locally cached files.
      */
-    public List<CachedFile> locateCachedFiles() {
+    List<CachedFile> locateCachedFiles() {
 
         locallyCachedFiles.clear();
         unregisteredFiles.clear();

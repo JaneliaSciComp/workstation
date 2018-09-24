@@ -48,8 +48,16 @@ public class RemoteFileCacheLoader extends CacheLoader<String, CachedFile> {
         // check for catastrophic case of file larger than entire cache
         final long size = webDavFile.getKilobytes();
         if (size < loadedCache.getKilobyteCapacity()) {
-            final String cachedFileName = remoteFileName.startsWith("/") ? remoteFileName.substring(1) : remoteFileName;
-
+            final String cachedFileName;
+            if (remoteFileName.startsWith("jade:///")) {
+                cachedFileName = remoteFileName.substring("jade:///".length());
+            } else if (remoteFileName.startsWith("jade://")) {
+                cachedFileName = remoteFileName.substring("jade://".length());
+            } else if (remoteFileName.startsWith("/")) {
+                cachedFileName = remoteFileName.substring(1);
+            } else {
+                cachedFileName = remoteFileName;
+            }
             // Spent a little time profiling fastest method for deriving
             // a unique name for the temp file in a multi-threaded environment.
             // The chosen Google CharMatcher method typically was 2-3 times faster
