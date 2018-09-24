@@ -1,3 +1,10 @@
+// 7.16
+ 
+Workstation Browser
+* Fixed file upload on Windows
+* Fixed error when clicking on pipeline result without alignment
+* Clicking on a pipeline result now shows details about the plugin used to generate it
+
 // 7.15
  
 Workstation Browser

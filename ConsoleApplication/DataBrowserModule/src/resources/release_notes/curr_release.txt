@@ -1,6 +1,8 @@
-// 7.16
- 
+// 7.17 
+
 Workstation Browser
-* Fixed file upload on Windows
-* Fixed error when clicking on pipeline result without alignment
-* Clicking on a pipeline result now shows details about the plugin used to generate it
+* Improvements to filtering forr color depth MIP viewer
+* Fixed issue with decompressing bzipped LSMs
+* Added compression quality display to all secondary results
+* Improved file uploads
+
