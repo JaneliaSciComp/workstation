@@ -104,7 +104,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setObjective(objective);
-                    refreshCheckboxPanel(false);
+                    refreshCheckboxPanel();
                 }
             });
             group.add(menuItem);
@@ -113,12 +113,7 @@ public final class DownloadVisualPanel1 extends JPanel {
     }
     
     private void setObjective(String objective) {
-        if (objectives.contains(objective)) {
-            this.currObjective = objective;
-        }
-        else {
-            this.currObjective = ALL_VALUE;
-        }
+        this.currObjective = objective;
         objectiveButton.setText("Objective: "+currObjective);
         populateObjectiveButton(objectives);
     }
@@ -132,7 +127,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setArea(area);
-                    refreshCheckboxPanel(false);
+                    refreshCheckboxPanel();
                 }
             });
             group.add(menuItem);
@@ -141,12 +136,7 @@ public final class DownloadVisualPanel1 extends JPanel {
     }
     
     private void setArea(String area) {
-        if (areas.contains(area)) {
-            this.currArea = area;
-        }
-        else {
-            this.currArea = ALL_VALUE;
-        }
+        this.currArea = area;
         areaButton.setText("Area: "+currArea);
         populateAreaButton(areas);
     }
@@ -160,7 +150,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setResultCategory(resultCategory);
-                    refreshCheckboxPanel(false);
+                    refreshCheckboxPanel();
                 }
             });
             group.add(menuItem);
@@ -188,7 +178,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setImageCategory(imageCategory);
-                    refreshCheckboxPanel(false);
+                    refreshCheckboxPanel();
                 }
             });
             group.add(menuItem);
@@ -217,19 +207,19 @@ public final class DownloadVisualPanel1 extends JPanel {
         buildFilterValueLists();
         
         if (defaultResultDescriptor!=null) {
+            log.info("Using defaultResultDescriptor={}", defaultResultDescriptor);
             artifactDescriptors = Arrays.asList(defaultResultDescriptor);
             List<FileType> defaultFileTypes = new ArrayList<>();
             defaultFileTypes.add(FileType.LosslessStack);
             defaultFileTypes.add(FileType.VisuallyLosslessStack);
             defaultResultDescriptor.setSelectedFileTypes(defaultFileTypes);
-            // TODO: in the future, this could filter down to the selected result descriptor 
-            // to make it more obvious what is being downloaded
-            setObjective(ALL_VALUE);
-            setArea(ALL_VALUE);
-            setResultCategory(ALL_VALUE);
-            setImageCategory(ALL_VALUE);
+            setObjective(defaultResultDescriptor.getObjective());
+            setArea(defaultResultDescriptor.getArea());
+            setResultCategory(defaultResultDescriptor.isAligned() ? ResultCategory.ALIGNED.getLabel() : ResultCategory.PROCESSED.getLabel());
+            setImageCategory(ImageCategory.Image3d.getLabel());
         }
         else {
+            log.info("Using existing state={}", state);
             // Only set filters if there is no descriptor override
             setObjective(state.getObjective());
             setArea(state.getArea());
@@ -308,7 +298,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         
         checkboxPanel = new JPanel();
         checkboxPanel.setLayout(new BoxLayout(checkboxPanel, BoxLayout.PAGE_AXIS));
-        refreshCheckboxPanel(true);
+        refreshCheckboxPanel();
         
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(checkboxPanel);
@@ -330,7 +320,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         setArea(ALL_VALUE);
         setResultCategory(ALL_VALUE);
         setImageCategory(ALL_VALUE);
-        refreshCheckboxPanel(false);
+        refreshCheckboxPanel();
         configPane.updateUI();
     }
     
@@ -371,18 +361,24 @@ public final class DownloadVisualPanel1 extends JPanel {
         }
     }
 
-    private void refreshCheckboxPanel(boolean clearFilterIfEmptyList) {
+    private void refreshCheckboxPanel() {
         checkboxPanel.removeAll();
         try {
-            addCheckboxes(initialState.getDownloadObjects(), checkboxPanel, clearFilterIfEmptyList);
+            addCheckboxes(initialState.getDownloadObjects(), checkboxPanel);
             checkboxPanel.updateUI();
         }
         catch (Exception e) {
             FrameworkImplProvider.handleException(e);
         }
+        
+        if (fileTypesCheckboxes.isEmpty()) {
+            // Nothing selected and this is the init step, so clear the filters and re-run
+            checkboxPanel.add(Box.createRigidArea(new Dimension(5,5)));
+            checkboxPanel.add(new JLabel("No results. Try changing your filters above."));
+        }
     }
 
-    private void addCheckboxes(Collection<DownloadObject> domainObjects, JPanel checkboxPanel, boolean clearFilterIfEmptyList) throws Exception {
+    private void addCheckboxes(Collection<DownloadObject> domainObjects, JPanel checkboxPanel) throws Exception {
 
         fileTypesCheckboxes.clear();
         
@@ -450,12 +446,6 @@ public final class DownloadVisualPanel1 extends JPanel {
                 checkboxPanel.add(new JLabel(resultName));
                 checkboxPanel.add(subPanel);
             }
-        }
-        
-        if (fileTypesCheckboxes.isEmpty() && clearFilterIfEmptyList) {
-            // Nothing selected and this is the init step, so clear the filters and re-run
-            log.info("Existing filters match nothing, resetting and trying again.");
-            resetFilters();
         }
     }
     
