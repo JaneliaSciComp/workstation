@@ -3,22 +3,28 @@ package org.janelia.it.workstation.browser.actions;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 
+import org.apache.commons.lang.StringUtils;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.workspace.Node;
+import org.janelia.model.security.util.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,11 +97,32 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
         }
         
         if (!listToDelete.isEmpty()) {
-            int deleteConfirmation = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(),
-                    "There are " + listToDelete.size() + " items in your remove list that will be deleted permanently.",
-                    "Are you sure?", JOptionPane.YES_NO_OPTION);
-            if (deleteConfirmation != 0) {
-                return;
+            
+            Set<String> allReaders = new HashSet<>();
+            for (DomainObject domainObject : listToDelete) {
+                allReaders.addAll(domainObject.getReaders());
+                allReaders.remove(domainObject.getOwnerKey());
+            }
+            allReaders.remove(AccessManager.getSubjectKey());
+            
+            if (!allReaders.isEmpty()) {
+                List<String> sharedWith = allReaders.stream().map(SubjectUtils::getSubjectName).collect(Collectors.toList());    
+                String sharedWithList = StringUtils.join(sharedWith, ", ");
+                
+                int deleteConfirmation = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(),
+                        "There are " + listToDelete.size() + " items in your remove list that will be deleted permanently. These items are shared with: "+sharedWithList+". Delete anyway?",
+                        "Are you sure?", JOptionPane.YES_NO_OPTION);
+                if (deleteConfirmation != 0) {
+                    return;
+                }
+            }
+            else {
+                int deleteConfirmation = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(),
+                        "There are " + listToDelete.size() + " items in your remove list that will be deleted permanently.",
+                        "Are you sure?", JOptionPane.YES_NO_OPTION);
+                if (deleteConfirmation != 0) {
+                    return;
+                }
             }
         }
 
