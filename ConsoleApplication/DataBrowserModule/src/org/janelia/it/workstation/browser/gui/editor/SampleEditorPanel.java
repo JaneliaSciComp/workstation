@@ -404,9 +404,11 @@ public class SampleEditorPanel
     }
     
     private void loadContainers() throws Exception {
+        log.info("Loading containers");
         synchronized (this) {
             this.containers = new HashMap<>();
             for (ContainerizedService container : DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(ContainerizedService.class)) {
+                log.info("Found {}", container);
                 containers.put(container.getId(), container);
             }
         }
@@ -465,11 +467,10 @@ public class SampleEditorPanel
                     lsms = model.getLsmsForSample(sample);
                     lsmAnnotations = model.getAnnotations(DomainUtils.getReferences(lsms));
                     loadPreferences();
-                    loadContainers();
                     prepareLsmResults();
                 }
                 else {
-                    // Everything is already in memory
+                    loadContainers();
                 }
             }
             
