@@ -68,6 +68,7 @@ import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
@@ -92,7 +93,10 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
+
+import net.miginfocom.swing.MigLayout;
 
 /**
  * Specialized component for viewing information about Samples, including their LSMs and processing results.  
@@ -118,9 +122,9 @@ public class SampleEditorPanel
     
     // UI Components
     private final ConfigPanel configPanel;
-    private final DropDownButton viewButton;
-    private final DropDownButton objectiveButton;
-    private final DropDownButton areaButton;
+    private final SingleSelectionButton<String> viewButton;
+    private final SingleSelectionButton<String> objectiveButton;
+    private final SingleSelectionButton<String> areaButton;
     private final SingleSelectionButton<String> alignmentSpaceButton;
     private final Map<String,DropDownButton> historyButtonMap = new HashMap<>();
     private final SelectablePanelListPanel mainPanel;
@@ -137,12 +141,14 @@ public class SampleEditorPanel
     private Map<String,SamplePipelineRun> currRunMap = new HashMap<>();
     private List<LSMImage> lsms;
     private List<Annotation> lsmAnnotations;
+    private List<String> objectives;
+    private List<String> areas;
     private List<String> alignmentSpaces;
-    private String sortCriteria;
     private String currMode = MODE_RESULTS;
     private String currObjective = ALL_VALUE;
     private String currArea = ALL_VALUE;
     private String currAlignmentSpace;
+    private String sortCriteria;
     private Map<Long, ContainerizedService> containers = new HashMap<>();;
     
     public SampleEditorPanel() {
@@ -151,11 +157,62 @@ public class SampleEditorPanel
         setLayout(new BorderLayout());
         setFocusable(true);
         
-        viewButton = new DropDownButton("View: ");
-        populateViewButton();
-        objectiveButton = new DropDownButton("Objective: "+currObjective);
-        areaButton = new DropDownButton("Area: "+currArea);
-        alignmentSpaceButton = new SingleSelectionButton<String>("Alignment Space") {
+        this.viewButton = new SingleSelectionButton<String>("View") {
+            
+            @Override
+            public Collection<String> getValues() {
+                return Arrays.asList(MODE_LSMS, MODE_RESULTS, MODE_COLOR_DEPTH);
+            }
+
+            @Override
+            public String getSelectedValue() {
+                return currMode;
+            }
+            
+            @Override
+            public void updateSelection(String value) {
+                setViewMode(value);
+            }
+        };
+        viewButton.update();
+        
+        this.objectiveButton = new SingleSelectionButton<String>("Objective") {
+            
+            @Override
+            public Collection<String> getValues() {
+                return objectives;
+            }
+
+            @Override
+            public String getSelectedValue() {
+                return currObjective;
+            }
+            
+            @Override
+            public void updateSelection(String value) {
+                setObjective(value);
+            }
+        };
+        
+        this.areaButton = new SingleSelectionButton<String>("Area") {
+            
+            @Override
+            public Collection<String> getValues() {
+                return areas;
+            }
+
+            @Override
+            public String getSelectedValue() {
+                return currArea;
+            }
+            
+            @Override
+            public void updateSelection(String value) {
+                setArea(value);
+            }
+        };
+        
+        this.alignmentSpaceButton = new SingleSelectionButton<String>("Alignment Space") {
             
             @Override
             public Collection<String> getValues() {
@@ -172,7 +229,6 @@ public class SampleEditorPanel
                 setAlignmentSpace(value);
             }
         };
-        alignmentSpaceButton.update();
         
         configPanel = new ConfigPanel(true) {
             @Override
@@ -604,26 +660,35 @@ public class SampleEditorPanel
             
             if (currAlignmentSpace != null) {
             
-                SEARCH: for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
+                for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
 
                     String objective = objectiveSample.getObjective();
                     if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !StringUtils.areEqual(currObjective, objective)) {
                         continue;
                     }
+                    
+                    RUNS : for(SamplePipelineRun run : Lists.reverse(objectiveSample.getPipelineRuns())) {
+                        for (SampleAlignmentResult result : run.getAlignmentResults()) {
 
-                    SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
-                    if (run != null) {
-                        
-                        for (SampleAlignmentResult sampleAlignmentResult : run.getAlignmentResults()) {
-                            if (StringUtils.areEqual(currAlignmentSpace, sampleAlignmentResult.getAlignmentSpace())) {
-                                for (FileType fileType : COLOR_DEPTH_TYPES) {
-                                    if (sampleAlignmentResult.getFiles().containsKey(fileType)) {
-                                        mainPanel.addPanel(new ColorDepthPanel(sampleAlignmentResult, fileType));
-                                    }
-                                }
-                                
-                                break SEARCH;
+                            String area = getArea(result);
+                            if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
+                                continue;
                             }
+                            
+                            String alignmentSpace = result.getAlignmentSpace();
+                            if (!StringUtils.areEqual(currAlignmentSpace, ALL_VALUE) && !StringUtils.areEqual(currAlignmentSpace, alignmentSpace)) {
+                                continue;
+                            }
+                            
+                            log.info("Found matching alignment for currObjective={}, currArea={}, alignmentSpace={}", currObjective, currArea, currAlignmentSpace);
+                            for (FileType fileType : COLOR_DEPTH_TYPES) {
+                                if (result.getFiles().containsKey(fileType)) {
+                                    mainPanel.addPanel(new ColorDepthPanel(result, fileType));
+                                }
+                            }
+                            
+                            // Once a result for the current filter is found, there's no need to look in previous runs
+                            break RUNS;
                         }
                     }
                 }
@@ -709,23 +774,6 @@ public class SampleEditorPanel
 	    return DomainModelViewUtils.getDateString(run.getCreationDate());
 	}	
 	
-    private void populateViewButton() {
-        viewButton.setText(currMode);
-        viewButton.removeAll();
-        ButtonGroup group = new ButtonGroup();
-        for (final String mode : Arrays.asList(MODE_LSMS, MODE_RESULTS, MODE_COLOR_DEPTH)) {
-            JMenuItem menuItem = new JMenuItem(mode);
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    viewButton.setText(mode);
-                    setViewMode(mode);
-                }
-            });
-            group.add(menuItem);
-            viewButton.addMenuItem(menuItem);
-        }
-    }
-
     private void setViewMode(String currMode) {
         ActivityLogHelper.logUserAction("SampleEditorPanel.setViewMode", currMode);
         this.currMode = currMode;
@@ -733,19 +781,8 @@ public class SampleEditorPanel
     }
     
     private void populateObjectiveButton(List<String> objectives) {
-        objectiveButton.setText("Objective: "+currObjective);
-        objectiveButton.removeAll();
-        ButtonGroup group = new ButtonGroup();
-        for (final String objective : objectives) {
-            JMenuItem menuItem = new JRadioButtonMenuItem(objective, StringUtils.areEqual(objective, currObjective));
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    setObjective(objective);
-                }
-            });
-            group.add(menuItem);
-            objectiveButton.addMenuItem(menuItem);
-        }
+        this.objectives = objectives;
+        objectiveButton.update();
     }
     
     private void setObjective(String objective) {
@@ -754,28 +791,12 @@ public class SampleEditorPanel
     }
     
     private void populateAreaButton(List<String> areas) {
-        areaButton.setText("Area: "+currArea);
-        areaButton.removeAll();
-        ButtonGroup group = new ButtonGroup();
-        for (final String area : areas) {
-            JMenuItem menuItem = new JRadioButtonMenuItem(area, StringUtils.areEqual(area, currArea));
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    setArea(area);
-                }
-            });
-            group.add(menuItem);
-            areaButton.addMenuItem(menuItem);
-        }
+        this.areas = areas;
+        areaButton.update();
     }
     
     private void setArea(String area) {
         this.currArea = area;
-        loadDomainObject(sample, true, null);
-    }
-    
-    private void setAlignmentSpace(String alignmentSpace) {
-        this.currAlignmentSpace = alignmentSpace;
         loadDomainObject(sample, true, null);
     }
 
@@ -790,8 +811,7 @@ public class SampleEditorPanel
                 continue;
             }
 
-            SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
-            if (run != null) {
+            for(SamplePipelineRun run : Lists.reverse(objectiveSample.getPipelineRuns())) {
                 for (SampleAlignmentResult result : run.getAlignmentResults()) {
                     
                     String area = getArea(result);
@@ -800,7 +820,18 @@ public class SampleEditorPanel
                     }
                     
                     if (result.getAlignmentSpace()!=null) {
-                        alignmentSpaces.add(result.getAlignmentSpace());
+                        
+                        boolean hasColorDepthMips = false;
+                        for (FileType fileType : COLOR_DEPTH_TYPES) {
+                            if (result.getFiles().containsKey(fileType)) {
+                                hasColorDepthMips = true;
+                                break;
+                            }
+                        }
+                        
+                        if (hasColorDepthMips) {
+                            alignmentSpaces.add(result.getAlignmentSpace());
+                        }
                     }
                 }
             }
@@ -812,6 +843,11 @@ public class SampleEditorPanel
             this.currAlignmentSpace = alignmentSpaces.isEmpty() ? null : alignmentSpaces.iterator().next();
         }
         alignmentSpaceButton.update();
+    }
+    
+    private void setAlignmentSpace(String alignmentSpace) {
+        this.currAlignmentSpace = alignmentSpace;
+        loadDomainObject(sample, true, null);
     }
     
     private boolean areEqualOrEmpty(String value1, String value2) {
@@ -840,9 +876,6 @@ public class SampleEditorPanel
         
         private final ArtifactDescriptor resultDescriptor;
         private final PipelineResult result;
-        private JLabel label = new JLabel();
-        private JLabel subLabel1 = new JLabel();
-        private JLabel subLabel2 = new JLabel();
         
         private PipelineResultPanel(PipelineResult result) {
             
@@ -856,13 +889,23 @@ public class SampleEditorPanel
             imagePanel.setLayout(new GridLayout(1, 2, 5, 0));
 
             if (result!=null) {
+                
+                String compressionLabel = result.getCompressionType()==null?"":SampleUtils.getCompressionLabel(result.getCompressionType());
+
+                JLabel label = new JLabel();
+                JLabel rightLabel = new JLabel();
+                JLabel rightLabel2 = new JLabel();
+                JLabel subLabel1 = new JLabel();
+                JLabel subLabel2 = new JLabel();
+                
                 this.resultDescriptor = new ResultArtifactDescriptor(result);
                 label.setText(resultDescriptor.toString());
                 subLabel1.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
                 if (!StringUtils.isBlank(result.getMessage())) {
                     subLabel2.setText(result.getMessage());
                 }
-                
+                rightLabel.setText(compressionLabel);
+                                
                 HasFiles files = result;
                 
                 // Attempt to find a signal MIP to display
@@ -881,11 +924,14 @@ public class SampleEditorPanel
                     imagePanel.add(getImagePanel(signalMip, decorators));
                     imagePanel.add(getImagePanel(refMip, decorators));
                 }
+
+                JPanel titlePanel = new JPanel(new MigLayout("wrap 2, ins 0, fillx"));
                 
-                JPanel titlePanel = new JPanel(new BorderLayout());
-                titlePanel.add(label, BorderLayout.PAGE_START);
-                titlePanel.add(subLabel1, BorderLayout.CENTER);
-                titlePanel.add(subLabel2, BorderLayout.PAGE_END);
+                titlePanel.add(label, "");
+                titlePanel.add(rightLabel, "align right");
+                titlePanel.add(subLabel1, "");
+                titlePanel.add(rightLabel2, "align right");
+                titlePanel.add(subLabel2, "span 2");
                 
                 add(titlePanel, BorderLayout.NORTH);
                 add(imagePanel, BorderLayout.CENTER);
@@ -1156,6 +1202,10 @@ public class SampleEditorPanel
         values.put("GUID", result.getId());
         values.put("Name", result.getName());
         values.put("Purged", result.getPurged());
+
+        if (result.getCompressionType()!=null) {
+            values.put("Compression Strategy", SampleUtils.getCompressionLabel(result.getCompressionType()));
+        }
         
         if (result.getContainerRef()!=null) {
             Long containerId = result.getContainerRef().getTargetId();
