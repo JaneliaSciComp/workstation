@@ -149,7 +149,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         return showTagsButton;
     }
 
-    public JButton getConfigButton() {
+    public DropDownButton getConfigButton() {
         return configButton;
     }
 

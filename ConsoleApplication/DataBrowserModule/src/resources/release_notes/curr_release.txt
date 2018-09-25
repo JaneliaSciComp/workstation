@@ -2,6 +2,7 @@
 
 Workstation Browser
 * Improvement filtering in color depth MIP viewer
+* Color depth search results now display VT line names 
 * Download wizard remembers filter settings more consistently
 * Fixed issue with decompressing bzipped LSMs
 * Added compression quality display to all secondary results

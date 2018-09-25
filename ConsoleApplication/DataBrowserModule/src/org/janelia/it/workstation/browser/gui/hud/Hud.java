@@ -264,14 +264,21 @@ public class Hud extends ModalDialog {
         setObjectAndToggleDialog(imagePath, toggle, overrideSettings);
     }
 
+    public void setFilepathAndToggleDialog(String imagePath, final boolean toggle, boolean overrideSettings) {
+        setFilepathAndToggleDialog(imagePath, null, toggle, overrideSettings);
+    }
+    
     /**
      * Display an image in the lightbox viewer.
      * @param imagePath
      * @param toggle
      * @param overrideSettings
      */
-    public void setFilepathAndToggleDialog(String imagePath, final boolean toggle, boolean overrideSettings) {
-        if (imagePath!=null) {
+    public void setFilepathAndToggleDialog(String imagePath, String title, final boolean toggle, boolean overrideSettings) {
+        if (title!=null) {
+            this.title = title;
+        }
+        else if (imagePath!=null) {
             this.title = new File(imagePath).getName();
         }
         else {

@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.browser.gui.colordepth;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,11 +13,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -30,11 +34,13 @@ import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
@@ -97,7 +103,13 @@ public class ColorDepthResultIconGridViewer
                 return match.getFile().getName();
             }
             else {
-                return sampleMap.get(match.getSample()).getName();
+                Sample sample = sampleMap.get(match.getSample());
+                if (isShowVtLineNames()) {
+                    if (sample.getVtLine()!=null) {
+                        return sample.getVtLine()+"-"+sample.getSlideCode();
+                    }
+                }
+                return sample.getName();
             }
         }
 
@@ -136,9 +148,46 @@ public class ColorDepthResultIconGridViewer
     public ColorDepthResultIconGridViewer() {
         setImageModel(imageModel);
         this.config = IconGridViewerConfiguration.loadConfig();
-        // Hide config button since the options there don't apply to this viewer
-        getToolbar().getConfigButton().setVisible(false);
+        // Customize the config options
+        DropDownButton configButton = getToolbar().getConfigButton();
+        configButton.removeAll();
+        JCheckBoxMenuItem showVtLineNames = new JCheckBoxMenuItem("Show VT Lines instead of BJD Lines where available");
+        showVtLineNames.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setShowVtLineNames(showVtLineNames.isSelected());
+            }
+        });
+        showVtLineNames.setSelected(isShowVtLineNames());
+        configButton.addMenuItem(showVtLineNames);
         
+    }
+
+    private Boolean isShowVtLineNamesCached;
+    
+    protected void setShowVtLineNames(boolean showVtLineNames) {
+        try {
+            this.isShowVtLineNamesCached = showVtLineNames;
+            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, showVtLineNames);
+            refresh();
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleException(e);
+        }
+    }
+    
+    protected boolean isShowVtLineNames() {
+        if (isShowVtLineNamesCached==null) {
+            boolean defaultValue = true;
+            try {
+                isShowVtLineNamesCached = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, defaultValue);
+                log.info("Got preference: "+isShowVtLineNamesCached);
+            }
+            catch (Exception e) {
+                log.error("Error getting preference", e);
+                isShowVtLineNamesCached = defaultValue;
+            }
+        }
+        return isShowVtLineNamesCached;
     }
     
     @Override
@@ -322,7 +371,7 @@ public class ColorDepthResultIconGridViewer
     private ColorDepthMatchContextMenu getPopupMenu(List<ColorDepthMatch> selected) {
         log.info("Selected objects: "+selected);
         ColorDepthMatchContextMenu popupMenu = new ColorDepthMatchContextMenu(
-                (ColorDepthResult)selectionModel.getParentObject(), selected, sampleMap);
+                (ColorDepthResult)selectionModel.getParentObject(), selected, sampleMap, imageModel);
         popupMenu.addMenuItems();
         return popupMenu;
     }
@@ -373,7 +422,8 @@ public class ColorDepthResultIconGridViewer
             ColorDepthMatch match = selected.get(0);
             
             String filepath = imageModel.getImageFilepath(match);
-            hud.setFilepathAndToggleDialog(filepath, toggle, false);
+            String title = imageModel.getImageTitle(match);
+            hud.setFilepathAndToggleDialog(filepath, title, toggle, false);
         } 
         catch (Exception ex) {
             ConsoleApp.handleException(ex);

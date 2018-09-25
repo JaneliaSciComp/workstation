@@ -22,6 +22,7 @@ import org.janelia.it.workstation.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
+import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.model.domain.Reference;
@@ -39,6 +40,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     
     // Current selection
     protected ColorDepthResult contextObject;
+    protected ImageModel<ColorDepthMatch, String> imageModel;
     protected Map<Reference, Sample> sampleMap;
     protected List<ColorDepthMatch> matches;
     protected boolean multiple;
@@ -48,10 +50,11 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     protected Sample sample;
     protected String matchName;
     
-    public ColorDepthMatchContextMenu(ColorDepthResult result, List<ColorDepthMatch> matches, Map<Reference, Sample> sampleMap) {
+    public ColorDepthMatchContextMenu(ColorDepthResult result, List<ColorDepthMatch> matches, Map<Reference, Sample> sampleMap, ImageModel<ColorDepthMatch, String> imageModel) {
         this.contextObject = result;
         this.matches = matches;
         this.sampleMap = sampleMap;
+        this.imageModel = imageModel;
         this.multiple = matches.size() > 1;
         this.match = matches.size() == 1 ? matches.get(0) : null;
         if (match != null) {
@@ -199,7 +202,8 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.showInLightbox", match);
-                Hud.getSingletonInstance().setFilepathAndToggleDialog(match.getFilepath(), true, false);
+                String title = imageModel.getImageTitle(match);
+                Hud.getSingletonInstance().setFilepathAndToggleDialog(match.getFilepath(), title, true, false);
             }
         });
 

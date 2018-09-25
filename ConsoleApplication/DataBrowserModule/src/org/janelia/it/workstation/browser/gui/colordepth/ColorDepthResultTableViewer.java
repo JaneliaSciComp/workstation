@@ -308,7 +308,7 @@ public class ColorDepthResultTableViewer
         try {
             List<ColorDepthMatch> selected = getSelectedObjects();
             ColorDepthMatchContextMenu popupMenu = new ColorDepthMatchContextMenu(
-                    (ColorDepthResult)selectionModel.getParentObject(), selected, sampleMap);
+                    (ColorDepthResult)selectionModel.getParentObject(), selected, sampleMap, imageModel);
             
             JTable table = getTable();
             ListSelectionModel lsm = table.getSelectionModel();
@@ -520,7 +520,8 @@ public class ColorDepthResultTableViewer
             ColorDepthMatch match = selected.get(0);
             
             String filepath = imageModel.getImageFilepath(match);
-            hud.setFilepathAndToggleDialog(filepath, toggle, false);
+            String title = imageModel.getImageTitle(match);
+            hud.setFilepathAndToggleDialog(filepath, title, toggle, false);
         } 
         catch (Exception ex) {
             ConsoleApp.handleException(ex);

@@ -534,6 +534,8 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(match.getSample());
                 if (sample!=null) {
                     values.put("Name", sample.getName());
+                    values.put("Line", sample.getLine());
+                    values.put("VT Line", sample.getVtLine());
                     // Only display the filepath if user has access to the sample
                     values.put("Filepath", match.getFilepath());
                 }
