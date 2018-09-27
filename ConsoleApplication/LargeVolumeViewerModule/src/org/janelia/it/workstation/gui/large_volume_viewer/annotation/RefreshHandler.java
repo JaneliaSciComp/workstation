@@ -88,7 +88,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         } catch (Exception e) {
             AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
             String error = "Problems initializing connection to message server " + MESSAGESERVER_URL +
-                    ", with credentials username/password: " + MESSAGESERVER_USERACCOUNT + "/" + MESSAGESERVER_PASSWORD;
+                    " with username: " + MESSAGESERVER_USERACCOUNT;
             annotationMgr.presentError(error, "Problem connecting to Message Server");
             e.printStackTrace();
         }
