@@ -409,6 +409,14 @@ public class Hud extends ModalDialog {
             if (fastFile==null) {
                 fastFile = DomainUtils.getFilepath(fileProvider, FileType.FastStack);
             }
+            else {
+                // AllMovie sometimes contains an older file which has this bug:
+                // Encountered MPEG file {...}_movie.mp4, which has 'dead planes' in Z.  Expected Z was 650.  Number of planes read 0.
+                if (fastFile.endsWith("_movie.mp4")) {
+                    // Hack to prevent this older data from loading and breaking the HUD
+                    fastFile = null;
+                }
+            }
         }
         
         return fastFile;
