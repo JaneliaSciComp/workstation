@@ -27,12 +27,14 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
+import javax.swing.UIManager;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -896,6 +898,7 @@ public class SampleEditorPanel
                 JLabel label = new JLabel();
                 JLabel rightLabel = new JLabel();
                 JLabel rightLabel2 = new JLabel();
+                rightLabel2.setForeground(UIManager.getColor("textInactiveText"));
                 JLabel subLabel1 = new JLabel();
                 JLabel subLabel2 = new JLabel();
                 
@@ -906,7 +909,8 @@ public class SampleEditorPanel
                     subLabel2.setText(result.getMessage());
                 }
                 rightLabel.setText(compressionLabel);
-                                
+                rightLabel2.setText(result.getName());
+                
                 HasFiles files = result;
                 
                 // Attempt to find a signal MIP to display
