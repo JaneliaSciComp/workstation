@@ -32,8 +32,6 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
     BlockTiffOctreeLoadAdapter blockTiffOctreeLoadAdapter = new BlockTiffOctreeLoadAdapter();  
     private Long folderOpenTimestamp = 0L;
 
-    //static AtomicInteger ltrCount=new AtomicInteger(0);
-
     public TileStackOctreeLoadAdapter(String remoteBasePath, File topFolder) throws DataSourceInitializeException {
         super();
         this.remoteBasePath=remoteBasePath;
@@ -72,9 +70,6 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
 
     @Override
     public TextureData2dGL loadToRam(TileIndex tileIndex) throws TileLoadError, MissingTileException {
-        //int count=ltrCount.addAndGet(1);
-        //log.info("ltrCount="+count);
-        //log.info("loadToRam() useVolumeCache="+VolumeCache.useVolumeCache());
         long startTime = System.nanoTime();
         if (VolumeCache.useVolumeCache()) {
 
