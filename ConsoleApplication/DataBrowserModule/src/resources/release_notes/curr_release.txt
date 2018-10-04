@@ -1,9 +1,4 @@
-// 7.17 
+// 7.18
 
-Workstation Browser
-* Improvement filtering in color depth MIP viewer
-* Color depth search results now display VT line names 
-* Download wizard remembers filter settings more consistently
-* Fixed issue with decompressing bzipped LSMs
-* Added compression quality display to all secondary results
-* Improved file uploads
+Large Volume Viewer
+* Export swc dialog box is larger and remembers its size

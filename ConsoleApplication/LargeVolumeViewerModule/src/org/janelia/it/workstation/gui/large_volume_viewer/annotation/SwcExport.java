@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.HeadlessException;
@@ -22,6 +23,16 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 
 public class SwcExport {
+
+    private static Dimension dialogSize = new Dimension(1200, 800);
+
+    private static Dimension getDialogSize() {
+        return dialogSize;
+    }
+
+    private static void setDialogSize(Dimension dialogSize) {
+        SwcExport.dialogSize = dialogSize;
+    }
 
     public ExportParameters getExportParameters( String seedName ) throws HeadlessException {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
@@ -84,8 +95,11 @@ public class SwcExport {
         notesPanel.add(notesCheckBox);
         panel.add(notesPanel, c2);
 
+        chooser.setPreferredSize(getDialogSize());
         chooser.setAccessory(panel);
         int returnValue = chooser.showSaveDialog(FrameworkImplProvider.getMainFrame());
+        setDialogSize(chooser.getSize());
+
         final String textInput = downsampleModuloField.getText().trim();
         final boolean notesInput = notesCheckBox.isSelected();
         
