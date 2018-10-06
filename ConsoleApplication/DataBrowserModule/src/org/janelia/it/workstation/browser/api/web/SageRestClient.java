@@ -5,13 +5,13 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
+import org.janelia.it.workstation.browser.model.SplitTypeInfo;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,11 +35,15 @@ public class SageRestClient extends RESTClientBase {
     }
 
     public SageRestClient(String serverUrl) {
-        super(log);
-        log.info("Using server URL: {}",serverUrl);
-        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
+        this(serverUrl, true);
     }
 
+    public SageRestClient(String serverUrl, boolean auth) {
+        super(log);
+        log.info("Using server URL: {}",serverUrl);
+        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, auth);
+    }
+    
     public Collection<String> getPublishingNames(String lineName) throws Exception {
         Set<String> names = new LinkedHashSet<>();
         WebTarget target = service.path("/publishing");
@@ -69,6 +73,44 @@ public class SageRestClient extends RESTClientBase {
         }
     }
 
+    public SplitTypeInfo getSplitTypeInfo(String frag) throws Exception {
+        
+        Set<String> types = new LinkedHashSet<>();
+        WebTarget target = service.path("/frag_halves/"+frag);
+        Response response = target
+                .request("application/json")
+                .get();
+        try {
+            if (response.getStatus()==404) {
+                // SageResponder unfortunately abuses 404 to represent several okay-ish states, so we can't throw an exception in this case
+                log.warn("SageResponder returned 404 for {}", frag);
+                return null;
+            }
+            checkBadResponse(target, response);
+            JsonNode data = response.readEntity(new GenericType<JsonNode>() {});
+            if (data==null) {
+                log.warn("SageResponder frag_halves returned empty result for {}", frag);
+                return null;
+            }
+            
+            JsonNode splitHalves = data.get("split_halves").get(frag);
+            if (splitHalves.isArray()) {
+                for (final JsonNode objNode : splitHalves) {
+                    String type = objNode.get("type").asText();
+                    types.add(type);
+                }
+            }
+            else {
+                throw new IllegalStateException("Unexpected split_halves node type: "+splitHalves.getNodeType().name());
+            }
+            
+            return new SplitTypeInfo(frag, types.contains("AD"), types.contains("DBD"));
+        }
+        finally {
+            response.close();
+        }
+    }
+    
     @SuppressWarnings("unchecked")
     public Map<String, Object> getImageProperties(Integer sageImageId) throws Exception {
         WebTarget target = service.path("/images").path(sageImageId.toString());

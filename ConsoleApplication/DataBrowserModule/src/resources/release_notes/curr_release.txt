@@ -3,6 +3,7 @@
 Workstation Browser
 * It's now possible to select all color depth MIPs for download, 
   without downloading reference channel color depth MIPs
+* Improved deduplication when downloading files
 
 Large Volume Viewer
 * Export swc dialog box is larger and remembers its size

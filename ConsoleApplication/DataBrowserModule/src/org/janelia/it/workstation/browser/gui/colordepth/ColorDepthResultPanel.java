@@ -27,18 +27,21 @@ import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.editor.SingleSelectionButton;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
+import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.WrapLayout;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.browser.model.SplitTypeInfo;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
@@ -87,8 +90,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     /** relevant results for the currently selected mask */
     private List<ColorDepthResult> results = new ArrayList<>();
     private ColorDepthResult currResult;
-    private Map<Reference, Sample> sampleMap = new HashMap<>();
-    private Map<String, ColorDepthMatch> matchMap = new HashMap<>();
+    private ColorDepthResultImageModel imageModel;
     private String sortCriteria;
     private ColorDepthSearchResults searchResults;
     
@@ -199,11 +201,17 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         log.info("loadSearchResults(resultList.size={}, mask={}, isUserDriven={})", resultList.size(), mask.getFilepath(), isUserDriven);
         final StopWatch w = new StopWatch();
         
+        showLoadingIndicator();
+        
         this.search = search;
         this.mask = mask;
-        sampleMap.clear();
-        matchMap.clear();
+        this.imageModel = null;
 
+        log.info("Preparing matching results from {} results", resultList.size());
+        
+        results.clear();
+        results.addAll(resultList);
+        
         SimpleWorker worker = new SimpleWorker() {
 
             String newResultPreference;
@@ -217,8 +225,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
 
                 resultsPerLinePreference = getPreference(PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE);
                 log.info("Got results per line preference: "+resultsPerLinePreference);
-                
-                prepareResults(resultList);
             }
 
             @Override
@@ -252,40 +258,12 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         worker.execute();    
     }
     
-    /**
-     * Runs in background thread.
-     */
-    private void prepareResults(List<ColorDepthResult> resultList) throws Exception {
-
-        log.info("Preparing matching results from {} results", resultList.size());
-        
-        results.clear();
-        results.addAll(resultList);
-
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
-        
-        Set<Reference> sampleRefs = new HashSet<>();
-        for (ColorDepthResult result : resultList) {
-            List<ColorDepthMatch> maskMatches = result.getMaskMatches(mask);
-            
-            // Populate maps
-            for (ColorDepthMatch match : maskMatches) {
-                if (!sampleMap.containsKey(match.getSample())) {
-                    log.trace("Will load {}", match.getSample());
-                    sampleRefs.add(match.getSample());
-                }
-            }
-        }
-
-        sampleMap.putAll(DomainUtils.getMapByReference(model.getDomainObjectsAs(Sample.class, new ArrayList<>(sampleRefs))));
-        
-        log.info("Found {} results for {}", results.size(), mask);
-    }
     
     private void showResults(boolean isUserDriven) {
         log.info("showResults(isUserDriven={})", isUserDriven);
         if (!results.isEmpty()) {
             currResult = results.get(results.size()-1);
+            selectionModel.setParentObject(currResult);
             historyButton.update();
             showCurrSearchResult(isUserDriven);
         }
@@ -301,7 +279,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             return;
         }
         
-        log.debug("showCurrSearchResult(isUserDriven={})",isUserDriven);
+        log.info("showCurrSearchResult(isUserDriven={})",isUserDriven);
 
         if (currResult==null) {
             throw new IllegalStateException("No current result to show");
@@ -311,25 +289,92 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             showNoRun();
             return;
         }
+
+        resultsPanel.showLoadingIndicator();
         
-        int currResultIndex = results.indexOf(currResult);
-        selectionModel.setParentObject(currResult);
+        SimpleWorker worker = new SimpleWorker() {
+            
+            @Override
+            protected void doStuff() throws Exception {
+                List<ColorDepthMatch> maskMatches = currResult.getMaskMatches(mask);
+                log.info("Found {} matches for {}", maskMatches.size(), mask);
+                prepareResults(maskMatches);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                resultsPanel.showSearchResults(searchResults, isUserDriven, null);
+                showMatches();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showNothing();
+                ConsoleApp.handleException(error);
+            }
+        };
+
+        worker.execute(); 
+    }
+
+    /**
+     * Runs in background thread.
+     */
+    private void prepareResults(List<ColorDepthMatch> maskMatches) throws Exception {
+
+        // Fetch associated samples
         
-        List<ColorDepthMatch> maskMatches = currResult.getMaskMatches(mask);
-        log.info("Found {} matches for {}", maskMatches.size(), mask);
+        Set<Reference> sampleRefs = new HashSet<>();            
+        for (ColorDepthMatch match : maskMatches) {
+            log.trace("Will load {}", match.getSample());
+            sampleRefs.add(match.getSample());
+        }
         
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        List<Sample> samples = model.getDomainObjectsAs(Sample.class, new ArrayList<>(sampleRefs));
+        
+        // Fetch split half information
+
+        final SageRestClient sageClient = DomainMgr.getDomainMgr().getSageClient();
+        
+        Set<String> frags = new HashSet<>();
+        for (Sample sample : samples) {
+            String frag = SampleUtils.getFragFromLineName(sample.getLine());
+            if (frag == null) {
+                log.warn("Cannot parse fragment from line: {}", sample.getLine());
+            }
+            else {
+                frags.add(frag);
+            }
+        }
+
+        Map<String, SplitTypeInfo> splitInfos = new HashMap<>();
+        for (String frag : frags) {
+            SplitTypeInfo splitTypeInfo = sageClient.getSplitTypeInfo(frag);
+            if (splitTypeInfo!=null) {
+                log.info("Got split type info for {} -> AD:{},DBD:{}", frag, splitTypeInfo.hasAD(), splitTypeInfo.hasDBD());
+                splitInfos.put(frag, splitTypeInfo);
+            }
+        }
+        
+        // Create and set image model
+        this.imageModel = new ColorDepthResultImageModel(maskMatches, samples, splitInfos);
+        resultsPanel.setImageModel(imageModel);
+        
+        // Filter matches
         maskMatches = maskMatches.stream()
                 .filter(match -> showMatch(match))
                 .sorted(Comparator.comparing(ColorDepthMatch::getScore).reversed())
                 .collect(Collectors.toList());
         
         log.info("Filtered to {} matches which can be displayed", maskMatches.size());
-        
+
         if (newOnlyCheckbox.isSelected()) {
             
             Set<String> filepaths = new HashSet<>();
             
             // First determine what was a match in previous results
+            int currResultIndex = results.indexOf(currResult);
             for (int i=0; i<currResultIndex; i++) {
                 for(ColorDepthMatch match : results.get(i).getMaskMatches(mask)) {
                     filepaths.add(match.getFilepath());
@@ -353,7 +398,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             showNoMatches();
             return;
         }
-        
+
         Integer resultsPerLine = null;
         try {
             resultsPerLine = new Integer(resultsPerLineField.getText());
@@ -365,7 +410,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         // Group matches by line
         Map<String,LineMatches> lines = new LinkedHashMap<>();
         for (ColorDepthMatch match : maskMatches) {
-            Sample sample = sampleMap.get(match.getSample());
+            Sample sample = imageModel.getSample(match);
             String line = sample==null ? ""+match.getSample() : sample.getLine();
             LineMatches lineMatches = lines.get(line);
             if (lineMatches==null) {
@@ -383,13 +428,9 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         }
 
         log.info("Filtered to {} matches, allowing {} results per line, and no duplicate samples", orderedMatches.size(), resultsPerLine);
-        
         searchResults = new ColorDepthSearchResults(orderedMatches);
-        resultsPanel.showSearchResults(searchResults, isUserDriven, null);
-        
-        showMatches();
     }
-
+    
     public void showNothing() {
         removeAll();
         updateUI();
@@ -415,10 +456,16 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         add(resultsPanel, BorderLayout.CENTER);
         updateUI();
     }
+
+    public void showLoadingIndicator() {
+        removeAll();
+        add(new JLabel(Icons.getLoadingIcon()), BorderLayout.CENTER);
+        updateUI();
+    }
     
     private boolean showMatch(ColorDepthMatch match) {
         if (match.getSample()==null) return true; // Match is not bound to a sample
-        Sample sample = sampleMap.get(match.getSample());
+        Sample sample = imageModel.getSample(match);
         // If match is bound to a sample, we need access to it
         return sample != null;
     }
@@ -524,4 +571,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     public void refreshView() {
         showCurrSearchResult(true);
     }
+
+    
 }

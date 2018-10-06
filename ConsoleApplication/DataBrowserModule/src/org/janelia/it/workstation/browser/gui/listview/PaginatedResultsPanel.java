@@ -33,6 +33,7 @@ import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextRegistration;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
+import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
@@ -47,6 +48,7 @@ import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,13 +93,28 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     protected PreferenceSupport preferenceSupport;
     protected SearchProvider searchProvider;
     protected List<? extends ListViewerClassProvider> validViewerTypes;
-
-    public PaginatedResultsPanel(ChildSelectionModel<T,S> selectionModel, PreferenceSupport preferenceSupport, SearchProvider searchProvider, List<? extends ListViewerClassProvider> validViewerTypes) {
+    protected ImageModel<T, S> imageModel;
+    
+    public PaginatedResultsPanel(
+            ChildSelectionModel<T,S> selectionModel, 
+            PreferenceSupport preferenceSupport, 
+            SearchProvider searchProvider, 
+            List<? extends ListViewerClassProvider> validViewerTypes) {
+        this(selectionModel, preferenceSupport, searchProvider, validViewerTypes, null);
+    }
+    
+    public PaginatedResultsPanel(
+            ChildSelectionModel<T,S> selectionModel, 
+            PreferenceSupport preferenceSupport, 
+            SearchProvider searchProvider, 
+            List<? extends ListViewerClassProvider> validViewerTypes,
+            ImageModel<T, S> imageModel) {
                
         this.selectionModel = selectionModel;
         this.preferenceSupport = preferenceSupport;
         this.searchProvider = searchProvider;
         this.validViewerTypes = validViewerTypes;
+        this.imageModel = imageModel;
         
         if (validViewerTypes==null || validViewerTypes.isEmpty()) {
             throw new IllegalArgumentException("PaginatedResultsPanel needs at least one valid viewer type");
@@ -281,9 +298,22 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             resultsView.setSelectionModel(selectionModel);
             resultsView.setPreferenceSupport(preferenceSupport);
             resultsView.setSearchProvider(searchProvider);
+            if (imageModel != null) {
+                resultsView.setImageModel(imageModel);
+            }
         }
     }
-        
+
+    public ImageModel<T, S> getImageModel() {
+        return imageModel;
+    }
+
+    public void setImageModel(ImageModel<T, S> imageModel) {
+        this.imageModel = imageModel;
+        if (resultsView != null) {
+            resultsView.setImageModel(imageModel);
+        }
+    }
 
     private void loadAndSelectAll() {
         

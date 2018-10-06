@@ -2,15 +2,9 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.JCheckBoxMenuItem;
@@ -19,7 +13,6 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -36,16 +29,12 @@ import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
-import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.sample.Sample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,128 +57,34 @@ public class ColorDepthResultIconGridViewer
     // State
     private PreferenceSupport preferenceSupport;
     private AnnotatedObjectList<ColorDepthMatch, String> matchList;
-    private Map<Reference, Sample> sampleMap = new HashMap<>();
-    private Map<String, ColorDepthMatch> matchMap = new HashMap<>();
     private ChildSelectionModel<ColorDepthMatch, String> selectionModel;
+
+    private JCheckBoxMenuItem showVtLineNamesCheckbox;
     
-    private final ImageModel<ColorDepthMatch, String> imageModel = new ImageModel<ColorDepthMatch, String>() {
-
-        @Override
-        public String getImageUniqueId(ColorDepthMatch match) {
-            return match.getFilepath();
-        }
-        
-        @Override
-        public String getImageFilepath(ColorDepthMatch match) {
-            if (!hasAccess(match)) return null;
-            return match.getFilepath();
-        }
-
-        @Override
-        public BufferedImage getStaticIcon(ColorDepthMatch match) {
-            // Assume anything without an image is locked
-            return Icons.getImage("file_lock.png");
-        }
-
-        @Override
-        public ColorDepthMatch getImageByUniqueId(String filepath) throws Exception {
-            return matchMap.get(filepath);
-        }
-        
-        @Override
-        public String getImageTitle(ColorDepthMatch match) {
-            if (!hasAccess(match)) return "Access denied";
-            if (match.getSample()==null) {
-                return match.getFile().getName();
-            }
-            else {
-                Sample sample = sampleMap.get(match.getSample());
-                if (isShowVtLineNames()) {
-                    if (sample.getVtLine()!=null) {
-                        return sample.getVtLine()+"-"+sample.getSlideCode();
-                    }
-                }
-                return sample.getName();
-            }
-        }
-
-        @Override
-        public String getImageSubtitle(ColorDepthMatch match) {
-            return String.format("Score: %d (%s)", match.getScore(), MaskUtils.getFormattedScorePct(match));
-        }
-        
-        @Override
-        public List<ImageDecorator> getDecorators(ColorDepthMatch match) {
-            if (match.getSample()==null) {
-                return Arrays.asList(ImageDecorator.DISCONNECTED);
-            }
-            return Collections.emptyList();
-        }
-
-        @Override
-        public List<Annotation> getAnnotations(ColorDepthMatch imageObject) {
-            return Collections.emptyList();
-        }
-        
-        private boolean hasAccess(ColorDepthMatch match) {
-            if (match.getSample()!=null) {
-                Sample sample = sampleMap.get(match.getSample());
-                if (sample == null) {
-                    // The result maps to a sample, but the user has no access to see it
-                    // TODO: check access to data set?
-                    return false;
-                }
-            }
-            return true;
-        }
-        
-    };
-
     public ColorDepthResultIconGridViewer() {
-        setImageModel(imageModel);
         this.config = IconGridViewerConfiguration.loadConfig();
         // Customize the config options
         DropDownButton configButton = getToolbar().getConfigButton();
         configButton.removeAll();
-        JCheckBoxMenuItem showVtLineNames = new JCheckBoxMenuItem("Show VT Lines instead of BJD Lines where available");
-        showVtLineNames.addActionListener(new ActionListener() {
+        showVtLineNamesCheckbox = new JCheckBoxMenuItem("Show VT Lines instead of BJD Lines where available");
+        showVtLineNamesCheckbox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                setShowVtLineNames(showVtLineNames.isSelected());
+                ColorDepthResultImageModel imageModel = (ColorDepthResultImageModel)getImageModel();
+                imageModel.setShowVtLineNames(showVtLineNamesCheckbox.isSelected());
+                refresh();
             }
         });
-        showVtLineNames.setSelected(isShowVtLineNames());
-        configButton.addMenuItem(showVtLineNames);
+        configButton.addMenuItem(showVtLineNamesCheckbox);
         
     }
 
-    private Boolean isShowVtLineNamesCached;
-    
-    protected void setShowVtLineNames(boolean showVtLineNames) {
-        try {
-            this.isShowVtLineNamesCached = showVtLineNames;
-            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, showVtLineNames);
-            refresh();
-        }
-        catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
-        }
+    @Override
+    public void setImageModel(ImageModel<ColorDepthMatch, String> imageModel) {
+        super.setImageModel(imageModel);
+        ColorDepthResultImageModel model = (ColorDepthResultImageModel)getImageModel();
+        showVtLineNamesCheckbox.setSelected(model.isShowVtLineNames());
     }
-    
-    protected boolean isShowVtLineNames() {
-        if (isShowVtLineNamesCached==null) {
-            boolean defaultValue = true;
-            try {
-                isShowVtLineNamesCached = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, defaultValue);
-                log.info("Got preference: "+isShowVtLineNamesCached);
-            }
-            catch (Exception e) {
-                log.error("Error getting preference", e);
-                isShowVtLineNamesCached = defaultValue;
-            }
-        }
-        return isShowVtLineNamesCached;
-    }
-    
+
     @Override
     public JPanel getPanel() {
         return this;
@@ -280,50 +175,10 @@ public class ColorDepthResultIconGridViewer
     
     @Override
     public void show(AnnotatedObjectList<ColorDepthMatch, String> matchList, Callable<Void> success) {
-        
         this.matchList = matchList;
-        sampleMap.clear();
-        matchMap.clear();
-        
         log.info("show(objects={})",DomainUtils.abbr(matchList.getObjects()));
-
-        SimpleWorker worker = new SimpleWorker() {
-
-            DomainModel model = DomainMgr.getDomainMgr().getModel();
-            List<ColorDepthMatch> matchObjects;
-            
-            @Override
-            protected void doStuff() throws Exception {
-                matchObjects = matchList.getObjects();
-
-                // Populate maps
-                Set<Reference> sampleRefs = new HashSet<>();
-                for (ColorDepthMatch match : matchObjects) {
-                    if (!sampleMap.containsKey(match.getSample())) {
-                        log.trace("Will load {}", match.getSample());
-                        sampleRefs.add(match.getSample());
-                    }
-                    matchMap.put(match.getFilepath(), match);
-                }
-                
-                // This does the same thing as ColorDepthResultPanel, but it should pull samples out of the cache.
-                // This is not really the best thing to depend on, we should have a more direct way of communicating these
-                // objects from ColorDepthResultPanel to this child class. 
-                sampleMap.putAll(DomainUtils.getMapByReference(model.getDomainObjectsAs(Sample.class, new ArrayList<>(sampleRefs))));
-            }
-
-            @Override
-            protected void hadSuccess() {
-                showObjects(matchObjects, success);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
-            }
-        };
-
-        worker.execute();        
+        List<ColorDepthMatch> matchObjects = matchList.getObjects();
+        showObjects(matchObjects, success);        
     }
 
     @Override
@@ -370,8 +225,9 @@ public class ColorDepthResultIconGridViewer
     
     private ColorDepthMatchContextMenu getPopupMenu(List<ColorDepthMatch> selected) {
         log.info("Selected objects: "+selected);
+        ColorDepthResultImageModel imageModel = (ColorDepthResultImageModel)getImageModel();
         ColorDepthMatchContextMenu popupMenu = new ColorDepthMatchContextMenu(
-                (ColorDepthResult)selectionModel.getParentObject(), selected, sampleMap, imageModel);
+                (ColorDepthResult)selectionModel.getParentObject(), selected, imageModel);
         popupMenu.addMenuItems();
         return popupMenu;
     }
@@ -421,6 +277,7 @@ public class ColorDepthResultIconGridViewer
             
             ColorDepthMatch match = selected.get(0);
             
+            ImageModel<ColorDepthMatch, String> imageModel = getImageModel();
             String filepath = imageModel.getImageFilepath(match);
             String title = imageModel.getImageTitle(match);
             hud.setFilepathAndToggleDialog(filepath, title, toggle, false);
@@ -465,6 +322,7 @@ public class ColorDepthResultIconGridViewer
 
     private List<ColorDepthMatch> getSelectedObjects() {
         try {
+            ImageModel<ColorDepthMatch, String> imageModel = getImageModel();
             List<ColorDepthMatch> selected = new ArrayList<>();
             for(String filepath : selectionModel.getSelectedIds()) {
                 ColorDepthMatch match = imageModel.getImageByUniqueId(filepath);
@@ -482,5 +340,4 @@ public class ColorDepthResultIconGridViewer
             return null;
         }
     }
-    
 }

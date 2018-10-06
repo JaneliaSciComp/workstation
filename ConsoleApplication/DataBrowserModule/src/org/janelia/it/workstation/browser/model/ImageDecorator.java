@@ -14,7 +14,9 @@ public enum ImageDecorator {
     PURGED("Purged", Icons.getIcon("decorator_trash.png")),
     SYNC("SAGE Sync", Icons.getIcon("decorator_connect.png")),
     DESYNC("SAGE Desync", Icons.getIcon("decorator_disconnect.png")),
-    DISCONNECTED("Disconnected", Icons.getIcon("decorator_disconnect.png"));
+    DISCONNECTED("Disconnected", Icons.getIcon("decorator_disconnect.png")),
+    AD("AD line is available", Icons.getIcon("split_ad.png")),
+    DBD("DBD line is available", Icons.getIcon("split_dbd.png"));
     
     private final String label;
     private final ImageIcon icon;

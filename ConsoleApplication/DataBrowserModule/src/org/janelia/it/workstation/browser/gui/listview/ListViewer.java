@@ -6,6 +6,7 @@ import java.util.concurrent.Callable;
 import javax.swing.JPanel;
 
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
@@ -47,6 +48,18 @@ public interface ListViewer<T,S> {
      * Configure the search provider for re-sorting, etc. 
      */
     public void setSearchProvider(SearchProvider searchProvider);
+    
+    /**
+     * Returns the current image model.
+     * @return
+     */
+    public ImageModel<T, S> getImageModel();
+    
+    /**
+     * Configure the image model to use for showing objects in the list viewer.
+     * @param imageModel
+     */
+    public void setImageModel(ImageModel<T,S> imageModel);
     
     /**
      * Set a listener for actions from this list viewer.

@@ -601,11 +601,11 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         repaint();
     }
     
-    protected ImageModel<T, S> getImageModel() {
+    public ImageModel<T, S> getImageModel() {
         return imageModel;
     }
 
-    protected void setImageModel(ImageModel<T, S> imageModel) {
+    public void setImageModel(ImageModel<T, S> imageModel) {
         this.imageModel = imageModel;
         imagesPanel.setImageModel(imageModel);
     }
@@ -619,7 +619,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     public SelectionModel<T,S> getSelectionModel() {
         return selectionModel;
     }
-
+    
     public IconGridViewerToolbar getToolbar() {
         return toolbar;
     }
