@@ -17,6 +17,7 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.enums.SplitHalfType;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.Sample;
@@ -123,24 +124,25 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
     
     @Override
     public List<ImageDecorator> getDecorators(ColorDepthMatch match) {
-        List<ImageDecorator> decorators = new ArrayList<>();
-        if (match.getSample()==null) {
-            decorators.add(ImageDecorator.DISCONNECTED);
-        }
-        if (match.getSample()!=null) {
-            Sample sample = sampleMap.get(match.getSample());
-            SplitTypeInfo splitTypeInfo = getSplitTypeInfo(sample);
-            if (splitTypeInfo != null) {
-                if (splitTypeInfo.hasAD()) {
-                    decorators.add(ImageDecorator.AD);
-                }
-                if (splitTypeInfo.hasDBD()) {
-                    decorators.add(ImageDecorator.DBD);
-                }
-            }
-        }
-        
-        return decorators;
+//        List<ImageDecorator> decorators = new ArrayList<>();
+//        if (match.getSample()==null) {
+//            decorators.add(ImageDecorator.DISCONNECTED);
+//        }
+//        else {
+//            Sample sample = sampleMap.get(match.getSample());
+//            SplitTypeInfo splitTypeInfo = getSplitTypeInfo(sample);
+//            if (splitTypeInfo != null) {
+//                if (splitTypeInfo.hasAD()) {
+//                    decorators.add(ImageDecorator.AD);
+//                }
+//                if (splitTypeInfo.hasDBD()) {
+//                    decorators.add(ImageDecorator.DBD);
+//                }
+//            }
+//        }
+//        
+//        return decorators;
+        return Collections.emptyList();
     }
 
     private SplitTypeInfo getSplitTypeInfo(Sample sample) {
@@ -153,9 +155,34 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
         return null;
     }
     
+    private static final String ANNOTATION_OWNER = "group:flylight";
+    
     @Override
-    public List<Annotation> getAnnotations(ColorDepthMatch imageObject) {
-        return Collections.emptyList();
+    public List<Annotation> getAnnotations(ColorDepthMatch match) {
+
+        List<Annotation> annotations = new ArrayList<>();
+        if (match.getSample()!=null) {
+            Sample sample = sampleMap.get(match.getSample());
+            SplitTypeInfo splitTypeInfo = getSplitTypeInfo(sample);
+            if (splitTypeInfo != null) {
+                if (splitTypeInfo.hasAD()) {
+                    Annotation a = new Annotation();
+                    a.setOwnerKey(ANNOTATION_OWNER);
+                    a.setName(SplitHalfType.AD.getName());
+                    a.setComputational(true);
+                    annotations.add(a);
+                }
+                if (splitTypeInfo.hasDBD()) {
+                    Annotation a = new Annotation();
+                    a.setOwnerKey(ANNOTATION_OWNER);
+                    a.setName(SplitHalfType.DBD.getName());
+                    a.setComputational(true);
+                    annotations.add(a);
+                }
+            }
+        }
+        
+        return annotations;
     }
     
     private boolean hasAccess(ColorDepthMatch match) {

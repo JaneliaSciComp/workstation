@@ -1,20 +1,21 @@
 package org.janelia.it.workstation.browser.model;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.janelia.model.domain.enums.SplitHalfType;
+
 /**
- * For a given fly line, does it have an AD or DBD split half available? 
- *
- * @author rokickik
+ * For a given fly frag name, what are the split halves which are available.
  */
 public class SplitTypeInfo {
 
     private String fragName;
-    private boolean hasAD;
-    private boolean hasDBD;
+    private List<SplitHalf> splitHalves;
     
-    public SplitTypeInfo(String fragName, boolean hasAD, boolean hasDBD) {
+    public SplitTypeInfo(String fragName, List<SplitHalf> splitHalves) {
         this.fragName = fragName;
-        this.hasAD = hasAD;
-        this.hasDBD = hasDBD;
+        this.splitHalves = splitHalves;
     }
         
     public String getFragName() {
@@ -22,27 +23,22 @@ public class SplitTypeInfo {
     }
     
     public boolean hasAD() {
-        return hasAD;
+        return !getADSplitHalves().isEmpty();
     }
     
     public boolean hasDBD() {
-        return hasDBD;
+        return !getDBDSplitHalves().isEmpty();
     }
 
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("SplitTypeInfo[");
-        if (fragName != null) {
-            builder.append("fragName=");
-            builder.append(fragName);
-            builder.append(", ");
-        }
-        builder.append("hasAD=");
-        builder.append(hasAD);
-        builder.append(", hasDBD=");
-        builder.append(hasDBD);
-        builder.append("]");
-        return builder.toString();
+    public List<SplitHalf> getSplitHalves() {
+        return splitHalves;
+    }
+
+    public List<SplitHalf> getADSplitHalves() {
+        return splitHalves.stream().filter(s -> s.getType()==SplitHalfType.AD).collect(Collectors.toList());
+    }
+
+    public List<SplitHalf> getDBDSplitHalves() {
+        return splitHalves.stream().filter(s -> s.getType()==SplitHalfType.DBD).collect(Collectors.toList());
     }
 }
