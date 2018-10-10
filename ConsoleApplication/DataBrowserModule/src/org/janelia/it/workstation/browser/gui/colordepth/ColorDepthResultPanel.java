@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.gui.editor.SelectionButton;
 import org.janelia.it.workstation.browser.gui.editor.SingleSelectionButton;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
@@ -44,10 +46,12 @@ import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.enums.SplitHalfType;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.Sample;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -65,6 +69,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private static final String PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE = "CDSResultPerLine";
     private static final String PREFERENCE_CATEGORY_CDS_NEW_RESULTS = "CDSOnlyNewResults";
     private static final int DEFAULT_RESULTS_PER_LINE = 2;
+    private static final List<SplitHalfType> ALL_SPLIT_TYPES = Arrays.asList(SplitHalfType.AD, SplitHalfType.DBD);
 
     private static final String NO_RUN_TEXT = "<html>"
             + "This mask does not have results in the selected search run.<br>"
@@ -94,6 +99,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private ColorDepthResultImageModel imageModel;
     private String sortCriteria;
     private ColorDepthSearchResults searchResults;
+    private final Set<SplitHalfType> selectedSplitTypes = new HashSet<>();
     
     private final ChildSelectionModel<ColorDepthMatch,String> selectionModel = new ChildSelectionModel<ColorDepthMatch,String>() {
 
@@ -169,13 +175,48 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         perLinePanel.add(resultsPerLineField, BorderLayout.WEST);
         perLinePanel.add(new JLabel("results per line"), BorderLayout.CENTER);
         
+        SelectionButton<SplitHalfType> splitTypeButton = new SelectionButton<SplitHalfType>("Split Types") {
+
+            @Override
+            public Collection<SplitHalfType> getValues() {
+                return ALL_SPLIT_TYPES;
+            }
+
+            @Override
+            public Set<SplitHalfType> getSelectedValues() {
+                return selectedSplitTypes;
+            }
+
+            @Override
+            protected void selectAll() {
+                selectedSplitTypes.addAll(ALL_SPLIT_TYPES);
+                refreshView();
+            }
+            @Override
+            protected void clearSelected() {
+                selectedSplitTypes.clear();
+                refreshView();
+            }
+
+            @Override
+            protected void updateSelection(SplitHalfType value, boolean selected) {
+                if (selected) {
+                    selectedSplitTypes.add(value);
+                }
+                else {
+                    selectedSplitTypes.remove(value);
+                }
+                refreshView();
+            }
+        };
+        
         this.topPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 8, 5));
         topPanel.add(new JLabel("History:"));
         topPanel.add(historyButton);
         topPanel.add(new JSeparator(SwingConstants.VERTICAL));
         topPanel.add(newOnlyCheckbox);
-        topPanel.add(new JSeparator(SwingConstants.VERTICAL));
         topPanel.add(perLinePanel);
+        topPanel.add(splitTypeButton);
         
         this.resultsPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, this, this, viewerTypes) {
     
@@ -367,6 +408,29 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         // Filter matches
         maskMatches = maskMatches.stream()
                 .filter(match -> showMatch(match))
+                .filter(match -> {
+        
+                    // Filter by split type. If no split types are selected, then assume the user wants to see everything.
+                    
+                    Sample sample = imageModel.getSample(match);
+                    SplitTypeInfo splitTypeInfo = imageModel.getSplitTypeInfo(sample);
+                    
+                    boolean show = true;
+                    
+                    if (selectedSplitTypes.contains(SplitHalfType.AD)) {
+                        if (splitTypeInfo == null || !splitTypeInfo.hasAD()) {
+                            show = false;
+                        }
+                    }
+                    
+                    if (selectedSplitTypes.contains(SplitHalfType.DBD)) {
+                        if (splitTypeInfo == null || !splitTypeInfo.hasDBD()) {
+                            show = false;
+                        }
+                    }
+                    
+                    return show;
+                })
                 .sorted(Comparator.comparing(ColorDepthMatch::getScore).reversed())
                 .collect(Collectors.toList());
         

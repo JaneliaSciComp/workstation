@@ -552,7 +552,6 @@ public class FilterEditorPanel
                     
                 };
                 
-                facetButton.update();
                 configPanel.addConfigComponent(facetButton);
             }
         }

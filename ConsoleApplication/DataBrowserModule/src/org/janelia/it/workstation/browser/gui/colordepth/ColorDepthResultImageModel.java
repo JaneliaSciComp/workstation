@@ -145,7 +145,7 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
         return Collections.emptyList();
     }
 
-    private SplitTypeInfo getSplitTypeInfo(Sample sample) {
+    public SplitTypeInfo getSplitTypeInfo(Sample sample) {
         if (sample != null) {
             String frag = SampleUtils.getFragFromLineName(sample.getLine());
             if (frag != null) {
