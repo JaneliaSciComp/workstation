@@ -87,7 +87,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
             @Override
             protected JPopupMenu getPopupMenu(AnnotatedImageButton<T, S> button, Annotation annotation) {
-                return IconGridViewerPanel.this.getAnnotationPopupMenu(annotation);
+                return IconGridViewerPanel.this.getAnnotationPopupMenu(button.getUserObject(), annotation);
             }
         };
 
@@ -313,7 +313,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
     protected abstract void moreAnnotationsButtonDoubleClicked(T userObject);
     
-    protected abstract JPopupMenu getAnnotationPopupMenu(Annotation annotation);
+    protected abstract JPopupMenu getAnnotationPopupMenu(T userObject, Annotation annotation);
 
     protected abstract void customizeTitlesPressed();
 

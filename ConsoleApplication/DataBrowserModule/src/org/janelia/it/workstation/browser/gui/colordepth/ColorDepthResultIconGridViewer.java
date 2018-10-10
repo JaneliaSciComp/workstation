@@ -29,6 +29,7 @@ import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.enums.SplitHalfType;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.ontology.Annotation;
@@ -230,7 +231,15 @@ public class ColorDepthResultIconGridViewer
     }
     
     @Override
-    protected JPopupMenu getAnnotationPopupMenu(Annotation annotation) {
+    protected JPopupMenu getAnnotationPopupMenu(ColorDepthMatch match, Annotation annotation) {
+        ColorDepthResultImageModel imageModel = (ColorDepthResultImageModel)getImageModel();
+        if (annotation.getName().equals(SplitHalfType.AD.getName()) 
+                || annotation.getName().equals(SplitHalfType.DBD.getName())) {
+            SplitHalfContextMenu menu = new SplitHalfContextMenu(
+                    imageModel, match, SplitHalfType.valueOf(annotation.getName()));
+            menu.addMenuItems();
+            return menu;
+        }
         return null;
     }
 

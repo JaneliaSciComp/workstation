@@ -35,6 +35,7 @@ import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.interfaces.HasFileGroups;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.FileGroup;
@@ -300,7 +301,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
         }
 
         @Override
-        protected JPopupMenu getAnnotationPopupMenu(Annotation annotation) {
+        protected JPopupMenu getAnnotationPopupMenu(FileGroup userObject, Annotation annotation) {
             return null;
         }
 

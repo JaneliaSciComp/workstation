@@ -425,7 +425,7 @@ public class DomainObjectIconGridViewer
     }
 
     @Override
-    protected JPopupMenu getAnnotationPopupMenu(Annotation annotation) {
+    protected JPopupMenu getAnnotationPopupMenu(DomainObject domainObject, Annotation annotation) {
         AnnotationContextMenu menu = new AnnotationContextMenu(annotation, getSelectedObjects(), imageModel);
         menu.addMenuItems();
         return menu;
