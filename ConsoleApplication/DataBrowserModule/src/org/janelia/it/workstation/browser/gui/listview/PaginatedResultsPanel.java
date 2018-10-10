@@ -533,7 +533,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                             List<T> objects = resultPage.getObjects();
                             if (!objects.isEmpty()) {
                                 log.debug("Auto-selecting first object");
-                                resultsView.select(Arrays.asList(objects.get(0)), true, true, false, notifyModel);
+                                resultsView.select(Arrays.asList(objects.get(0)), true, true, true, notifyModel);
                             }
                         }
                         else {
