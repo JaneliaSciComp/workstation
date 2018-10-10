@@ -1,6 +1,9 @@
 package org.janelia.it.workstation.browser.api;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.janelia.it.workstation.browser.api.web.SageRestClient;
@@ -36,8 +39,10 @@ public class SageResponderTest {
 
     @Test
     public void testSplitHalfInfo() throws Exception {
-        String frag = "BJD_100A01";
-        SplitTypeInfo splitTypeInfo = client.getSplitTypeInfo(frag);
+        String frag = "BJD_109A03";
+        Collection<String> frags = Arrays.asList(frag);
+        Map<String, SplitTypeInfo> splitTypeInfos = client.getSplitTypeInfo(frags);
+        SplitTypeInfo splitTypeInfo = splitTypeInfos.get(frag);
         Assert.assertEquals(frag, splitTypeInfo.getFragName());
         Assert.assertTrue(splitTypeInfo.hasAD());
         Assert.assertTrue(splitTypeInfo.hasDBD());

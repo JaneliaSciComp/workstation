@@ -1,10 +1,15 @@
 package org.janelia.it.workstation.browser.api.web;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -73,42 +78,83 @@ public class SageRestClient extends RESTClientBase {
         }
     }
 
-    public SplitTypeInfo getSplitTypeInfo(String frag) throws Exception {
+    /**
+     * The SAGE Responder expects frag_halves input like this:
+     * Input: {"frags": ["BJD_109A01","BJD_109A03","BJD_109A04"], "usable":1}
+     * 
+     * This class serializes into that input.
+     */
+    private class FragHalvesInput {
+        private List<String> frags;
+        private int usable;
+        public List<String> getFrags() {
+            return frags;
+        }
+        public void setFrags(List<String> frags) {
+            this.frags = frags;
+        }
+        public int getUsable() {
+            return usable;
+        }
+        public void setUsable(int usable) {
+            this.usable = usable;
+        }
+    }
+
+    public Map<String,SplitTypeInfo> getSplitTypeInfo(Collection<String> frags) throws Exception {
+        return getSplitTypeInfo(frags, true);
+    }
+    
+    public Map<String,SplitTypeInfo> getSplitTypeInfo(Collection<String> frags, boolean usable) throws Exception {
+
+        Map<String,SplitTypeInfo> splitHalfInfos = new HashMap<>();
+        if (frags.isEmpty()) {
+            return splitHalfInfos;
+        }
+        
+        FragHalvesInput input = new FragHalvesInput();
+        input.setFrags(new ArrayList<>(frags));
+        input.setUsable(usable ? 1 : 0);
         
         Set<String> types = new LinkedHashSet<>();
-        WebTarget target = service.path("/frag_halves/"+frag);
+        WebTarget target = service.path("/frag_halves");
         Response response = target
                 .request("application/json")
-                .get();
+                .post(Entity.json(input));
         try {
             if (response.getStatus()==404) {
-                // SageResponder unfortunately abuses 404 to represent several okay-ish states, so we can't throw an exception in this case
-                log.warn("SageResponder returned 404 for {}", frag);
-                return null;
+                throw new Exception("SAGE responder returned 404 for frag_halves");
             }
             checkBadResponse(target, response);
             JsonNode data = response.readEntity(new GenericType<JsonNode>() {});
             if (data==null) {
-                log.warn("SageResponder frag_halves returned empty result for {}", frag);
-                return null;
+                throw new Exception("SAGE responder returned empty result for frag_halves");
             }
             
-            JsonNode splitHalves = data.get("split_halves").get(frag);
-            if (splitHalves.isArray()) {
-                for (final JsonNode objNode : splitHalves) {
-                    String type = objNode.get("type").asText();
-                    types.add(type);
+            JsonNode splitHalves = data.get("split_halves");
+            
+            for(Iterator<String> i = splitHalves.fieldNames(); i.hasNext(); ) {
+                String frag = i.next();
+
+                JsonNode jsonNode = splitHalves.get(frag);
+                if (jsonNode.isArray()) {
+                    for (final JsonNode objNode : jsonNode) {
+                        String type = objNode.get("type").asText();
+                        types.add(type);
+                    }
                 }
+                else {
+                    throw new IllegalStateException("Unexpected split_halves node type: "+splitHalves.getNodeType().name());
+                }
+
+                splitHalfInfos.put(frag, new SplitTypeInfo(frag, types.contains("AD"), types.contains("DBD")));
             }
-            else {
-                throw new IllegalStateException("Unexpected split_halves node type: "+splitHalves.getNodeType().name());
-            }
-            
-            return new SplitTypeInfo(frag, types.contains("AD"), types.contains("DBD"));
         }
         finally {
             response.close();
         }
+        
+        return splitHalfInfos;
     }
     
     @SuppressWarnings("unchecked")

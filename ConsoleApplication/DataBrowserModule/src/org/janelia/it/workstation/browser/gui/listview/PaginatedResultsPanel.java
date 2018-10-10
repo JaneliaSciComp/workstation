@@ -493,9 +493,14 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     }
     
     protected void showCurrPage(final boolean isUserDriven, final Callable<Void> success) {
+        
+        log.info("showCurrPage(isUserDriven={}, currPage={})",isUserDriven, currPage);
 
-        log.debug("showCurrPage(isUserDriven={})",isUserDriven);
-
+        if (currPage >= numPages) {
+            log.warn("currPage {} is outside of page count {{}), resetting to first page", currPage, numPages);
+            currPage = 0;
+        }
+        
         resultsView.showLoadingIndicator();
         updatePagingStatus();
                 
@@ -512,9 +517,9 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
             @Override
             protected void hadSuccess() {
-                log.debug("Got results, updating view");
+                log.info("Got results, updating view");
                 final ArrayList<S> selectedRefs = new ArrayList<>(selectionModel.getSelectedIds());
-                log.debug("Got selected refs: {}",selectedRefs);
+                log.info("Got selected refs: {}",selectedRefs);
                 updateResultsView(new Callable<Void>() {   
                     @Override
                     public Void call() throws Exception {

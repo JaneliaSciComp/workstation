@@ -22,6 +22,7 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -180,7 +181,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     
             @Override
             protected ResultPage<ColorDepthMatch, String> getPage(SearchResults<ColorDepthMatch, String> searchResults, int page) throws Exception {
-                return searchResults.getPage(page);
+                log.info("Geting page {} from {} pages", page, searchResults.getNumTotalPages());
+                ResultPage<ColorDepthMatch, String> result = searchResults.getPage(page);
+                log.info("Got result: {}", result);
+                return result;
             }
             @Override
             public String getId(ColorDepthMatch object) {
@@ -289,8 +293,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             showNoRun();
             return;
         }
-
-        resultsPanel.showLoadingIndicator();
         
         SimpleWorker worker = new SimpleWorker() {
             
@@ -349,12 +351,13 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         }
 
         Map<String, SplitTypeInfo> splitInfos = new HashMap<>();
-        for (String frag : frags) {
-            SplitTypeInfo splitTypeInfo = sageClient.getSplitTypeInfo(frag);
-            if (splitTypeInfo!=null) {
-                log.info("Got split type info for {} -> AD:{},DBD:{}", frag, splitTypeInfo.hasAD(), splitTypeInfo.hasDBD());
-                splitInfos.put(frag, splitTypeInfo);
-            }
+
+        try {
+            splitInfos = sageClient.getSplitTypeInfo(frags);
+        }
+        catch (Exception e) {
+            // If split type fails, show an error but keep going
+            FrameworkImplProvider.handleException("Failed to load AB/DBD split half information", e);
         }
         
         // Create and set image model
