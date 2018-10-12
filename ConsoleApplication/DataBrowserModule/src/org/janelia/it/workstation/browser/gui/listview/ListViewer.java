@@ -150,18 +150,18 @@ public interface ListViewer<T,S> {
     public ChildSelectionModel<T, S> getEditSelectionModel();
     
     /**
-     * Called on the specific viewer to toggle edit mode
+     * Enable or disable edit mode, which allows a user to select items using checkboxes instead of 
+     * button selection. This uses the editSelectionModel.
      */
     public void toggleEditMode(boolean editMode);
 
     /**
-     * Used when you have to perform two UI actions sequentially in the same thread
-     * TODO: provide a mechanism for consistently executing UI callback queues, ala Javascript
+     * Refresh edit mode selections.
      */
     public void refreshEditMode();
 
     /**
-     * subgroup of edit items to toggle selection; might want to consider swapping selection model to use checkboxes instead
+     * Select or deselect a group of objects in edit mode. 
      * @param domainObjects list of domain objects for which to change edit selection
      * @param select select if true, deselect if false
      */

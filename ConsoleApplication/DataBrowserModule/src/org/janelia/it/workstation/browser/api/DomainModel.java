@@ -514,6 +514,16 @@ public class DomainModel {
         return domainFacade.getDomainObjects(reverseReference);
     }
 
+    @SuppressWarnings("unchecked")
+    public <T extends DomainObject> List<T> getDomainObjectsAs(Class<T> clazz, ReverseReference reverseReference) throws Exception {
+        List<DomainObject> domainObjects = domainFacade.getDomainObjects(reverseReference);
+        List<T> asClass = new ArrayList<>(); 
+        for (DomainObject domainObject : domainObjects) {
+            asClass.add((T)domainObject);
+        }
+        return asClass;
+    }
+    
     public List<Annotation> getAnnotations(DomainObject domainObject) throws Exception {
         return getAnnotations(Reference.createFor(domainObject));
     }

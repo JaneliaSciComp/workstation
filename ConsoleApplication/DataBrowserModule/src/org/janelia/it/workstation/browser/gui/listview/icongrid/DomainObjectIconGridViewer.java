@@ -77,8 +77,6 @@ public class DomainObjectIconGridViewer
     private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
     private ChildSelectionModel<DomainObject,Reference> selectionModel;
     private ChildSelectionModel<DomainObject,Reference> editSelectionModel;
-
-    // UI state
     private ListViewerActionListener listener;
     private boolean editMode;
     
@@ -236,13 +234,37 @@ public class DomainObjectIconGridViewer
     @Override
     public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
         log.info("selectEditObjects(domainObjects={},select={})", DomainUtils.abbr(domainObjects), select);
-
         if (domainObjects.isEmpty()) {
             return;
         }
         if (select) {
             editSelectionModel.select(domainObjects, true, true);
         }
+    }
+
+    @Override
+    public void toggleEditMode(boolean editMode) {
+        this.editMode = editMode;
+        imagesPanel.setEditMode(editMode);
+    }
+
+    @Override
+    public void refreshEditMode() {
+        imagesPanel.setEditMode(editMode);
+        if (editSelectionModel!=null) {
+            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds(), true);
+        }
+    }
+
+    @Override
+    public void setEditSelectionModel(ChildSelectionModel<DomainObject, Reference> editSelectionModel) {
+        this.editSelectionModel = editSelectionModel;
+        imagesPanel.setEditSelectionModel(editSelectionModel);
+    }
+
+    @Override
+    public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
+        return editSelectionModel;
     }
     
     @Override
@@ -351,31 +373,6 @@ public class DomainObjectIconGridViewer
         };
 
         worker.execute();
-    }
-
-    @Override
-    public void toggleEditMode(boolean editMode) {
-        this.editMode = editMode;
-        imagesPanel.setEditMode(editMode);
-    }
-
-    @Override
-    public void refreshEditMode() {
-        imagesPanel.setEditMode(editMode);
-        if (editSelectionModel!=null) {
-            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds(), true);
-        }
-    }
-
-    @Override
-    public void setEditSelectionModel(ChildSelectionModel<DomainObject, Reference> editSelectionModel) {
-        this.editSelectionModel = editSelectionModel;
-        imagesPanel.setEditSelectionModel(editSelectionModel);
-    }
-
-    @Override
-    public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
-        return editSelectionModel;
     }
 
     @Override
