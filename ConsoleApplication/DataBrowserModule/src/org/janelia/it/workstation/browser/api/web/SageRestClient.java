@@ -14,6 +14,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import org.janelia.it.workstation.browser.api.exceptions.RemoteServiceException;
 import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.it.workstation.browser.model.SplitHalf;
@@ -118,62 +119,72 @@ public class SageRestClient extends RESTClientBase {
         input.setFrags(new ArrayList<>(frags));
         input.setUsable(usable ? 1 : 0);
         
-        WebTarget target = service.path("/frag_halves");
-        Response response = target
-                .request("application/json")
-                .post(Entity.json(input));
         try {
-            if (response.getStatus()==404) {
-                throw new Exception("SAGE responder returned 404 for frag_halves");
-            }
-            checkBadResponse(target, response);
-            JsonNode data = response.readEntity(new GenericType<JsonNode>() {});
-            if (data==null) {
-                throw new Exception("SAGE responder returned empty result for frag_halves");
-            }
+            WebTarget target = service.path("/frag_halves");
+            Response response = target
+                    .request("application/json")
+                    .post(Entity.json(input));
             
-            JsonNode splitHalves = data.get("split_halves");
-            
-            for(Iterator<String> i = splitHalves.fieldNames(); i.hasNext(); ) {
-                String frag = i.next();
-
-                List<SplitHalf> splitHalfList = new ArrayList<>();
+            try {
+                if (response.getStatus()==404) {
+                    throw new RemoteServiceException("SAGE responder returned 404 for frag_halves");
+                }
+                checkBadResponse(target, response);
+                JsonNode data = response.readEntity(new GenericType<JsonNode>() {});
+                if (data==null) {
+                    throw new RemoteServiceException("SAGE responder returned empty result for frag_halves");
+                }
                 
-                JsonNode jsonNode = splitHalves.get(frag);
-                if (jsonNode.isArray()) {
-                    for (final JsonNode objNode : jsonNode) {
-                        
-                        String driver = objNode.get("driver").asText();
-                        String flycoreId = objNode.get("flycore_id").asText();
-                        String info = objNode.get("info").asText();
-                        String line = objNode.get("line").asText();
-                        String project = objNode.get("project").asText();
-                        String robotId = objNode.get("robot_id").asText();
-                        String subcategory = objNode.get("subcategory").asText();
-                        String type = objNode.get("type").asText();
-                        
-                        SplitHalf half = new SplitHalf();
-                        half.setDriver(driver);
-                        half.setFlycoreId(flycoreId);
-                        half.setInfo(info);
-                        half.setLine(line);
-                        half.setProject(project);
-                        half.setRobotId(robotId);
-                        half.setSubcategory(subcategory);
-                        half.setType(SplitHalfType.valueOf(type));
-                        
-                        splitHalfList.add(half);
-                    }
-                }
-                else {
-                    throw new IllegalStateException("Unexpected split_halves node type: "+splitHalves.getNodeType().name());
-                }
+                JsonNode splitHalves = data.get("split_halves");
+                
+                for(Iterator<String> i = splitHalves.fieldNames(); i.hasNext(); ) {
+                    String frag = i.next();
 
-                splitHalfInfos.put(frag, new SplitTypeInfo(frag, splitHalfList));
+                    List<SplitHalf> splitHalfList = new ArrayList<>();
+                    
+                    JsonNode jsonNode = splitHalves.get(frag);
+                    if (jsonNode.isArray()) {
+                        for (final JsonNode objNode : jsonNode) {
+                            
+                            String driver = objNode.get("driver").asText();
+                            String flycoreId = objNode.get("flycore_id").asText();
+                            String info = objNode.get("info").asText();
+                            String line = objNode.get("line").asText();
+                            String project = objNode.get("project").asText();
+                            String robotId = objNode.get("robot_id").asText();
+                            String subcategory = objNode.get("subcategory").asText();
+                            String type = objNode.get("type").asText();
+                            
+                            SplitHalf half = new SplitHalf();
+                            half.setDriver(driver);
+                            half.setFlycoreId(flycoreId);
+                            half.setInfo(info);
+                            half.setLine(line);
+                            half.setProject(project);
+                            half.setRobotId(robotId);
+                            half.setSubcategory(subcategory);
+                            half.setType(SplitHalfType.valueOf(type));
+                            
+                            splitHalfList.add(half);
+                        }
+                    }
+                    else {
+                        throw new IllegalStateException("Unexpected split_halves node type: "+splitHalves.getNodeType().name());
+                    }
+
+                    splitHalfInfos.put(frag, new SplitTypeInfo(frag, splitHalfList));
+                }
+            }
+            finally {
+                response.close();
             }
         }
-        finally {
-            response.close();
+        catch (RemoteServiceException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            log.error("Error getting split half info", e);
+            throw new RemoteServiceException("Could not retrieve split information from SAGE Responder");
         }
         
         return splitHalfInfos;
