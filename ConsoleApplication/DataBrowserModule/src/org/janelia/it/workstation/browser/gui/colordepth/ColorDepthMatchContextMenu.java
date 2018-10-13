@@ -21,7 +21,6 @@ import org.janelia.it.workstation.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
-import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
@@ -127,7 +126,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         // TODO: figure out the result descriptor, or create a new action to make this work
         //return getNamedActionItem(new CreateMaskFromSampleAction(sample, resultDescriptor, typeName));
     }
-   
+
     protected JMenuItem getAddToMaskResultsItem() {
         
         List<Sample> samples = getSamples();

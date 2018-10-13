@@ -79,9 +79,9 @@ public class NeuronSeparationEditorPanel
     // UI Elements
     private final ConfigPanel configPanel;
     private final DropDownButton resultButton;
-    private final JButton editModeButton;
     private final JButton openInNAButton;
     private final JButton fragmentSortButton;
+    private final JButton editModeButton;
     private final JButton editOkButton;
     private final JButton editCancelButton;
     private final PaginatedDomainResultsPanel resultsPanel;
@@ -175,7 +175,7 @@ public class NeuronSeparationEditorPanel
         configPanel.addConfigComponent(editOkButton);
         configPanel.addConfigComponent(editCancelButton);
 
-        resultsPanel = new PaginatedDomainResultsPanel(selectionModel, this, this) {
+        resultsPanel = new PaginatedDomainResultsPanel(selectionModel, editSelectionModel, this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
@@ -186,7 +186,6 @@ public class NeuronSeparationEditorPanel
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->NeuronSeparationEditorPanel"));
-        resultsPanel.getViewer().setEditSelectionModel(editSelectionModel);
     }
 
     private void enterEditMode() {
@@ -334,10 +333,10 @@ public class NeuronSeparationEditorPanel
         
         if (editMode) {
             filteredFragments.addAll(neuronFragments);
-            log.info("Showing all neurons in edit mode");
+            log.info("Showing {} neurons in edit mode", neuronFragments.size());
         }
         else {
-            log.info("Removing hidden neurons from view");
+            log.info("Removing {} hidden neurons from view", hiddenFragments.size());
             for (NeuronFragment neuronFragment : neuronFragments) {
                 if (!hiddenFragments.contains(neuronFragment.getId())) {
                     filteredFragments.add(neuronFragment);
@@ -351,6 +350,7 @@ public class NeuronSeparationEditorPanel
     
     public void showResults(boolean isUserDriven, Callable<Void> success) {
 
+        // Set visibility of the sort button
         fragmentSortButton.setVisible(false);
         for (NeuronFragment neuronFragment : neuronFragments) {
             if (neuronFragment.getVoxelWeight()!=null) {
@@ -361,14 +361,10 @@ public class NeuronSeparationEditorPanel
 
         // Check hidden items
         if (editMode) {
-            if (!hiddenFragments.isEmpty()) {
-                
-                List<DomainObject> hiddenNeuronFrags = neuronFragments.stream()
-                        .filter(n -> hiddenFragments.contains(n.getId()))
-                        .collect(Collectors.toList());
-                
-                resultsPanel.getViewer().selectEditObjects(hiddenNeuronFrags, true);
-            }
+            List<DomainObject> visibleFragments = neuronFragments.stream()
+                    .filter(n -> !hiddenFragments.contains(n.getId()))
+                    .collect(Collectors.toList());
+            resultsPanel.getViewer().selectEditObjects(visibleFragments, true);
         }
         
         add(configPanel, BorderLayout.NORTH);
@@ -463,6 +459,7 @@ public class NeuronSeparationEditorPanel
             List<Object> neuronSepVisibility = (List<Object>)FrameworkImplProvider.getRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
                     Long.toString(separation.getId()), null);
+            log.info("Retrieved {} hidden fragment ids", neuronSepVisibility.size());
 
             // TODO: set up global preference for visibility, allow users to select other user's preferences
             if (neuronSepVisibility!=null) {
@@ -481,7 +478,7 @@ public class NeuronSeparationEditorPanel
                 }
             }
             
-            log.info("Retrieved hidden fragment ids: {}", hiddenFragments);
+            log.info("Got hidden fragments: {}", hiddenFragments);
         }
         catch (Exception e) {
             log.error("Could not load hidden fragments",e);
@@ -492,11 +489,19 @@ public class NeuronSeparationEditorPanel
     
     private void saveHiddenFragments() {
         try {
-            List<Reference> hiddenFragments = editSelectionModel.getSelectedIds();
-            List<Long> visibilities = DomainUtils.getIdsFromReferences(hiddenFragments);
+            List<Reference> visibleFragments = editSelectionModel.getSelectedIds();
+            
+            hiddenFragments.clear();
+            for (NeuronFragment neuronFragment : neuronFragments) {
+                if (!visibleFragments.contains(neuronFragment.getId())) {
+                    hiddenFragments.add(neuronFragment.getId());
+                }
+            }
+            
             FrameworkImplProvider.setRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY, 
-                    Long.toString(separation.getId()), visibilities);
+                    Long.toString(separation.getId()), hiddenFragments);
+            log.info("Saved hidden fragments: {}", hiddenFragments);
         }
         catch (Exception e) {
             FrameworkImplProvider.handleException(e);

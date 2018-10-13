@@ -35,10 +35,11 @@ public abstract class PaginatedDomainResultsPanel extends PaginatedResultsPanel<
     private static final List<ListViewerType> viewerTypes = ImmutableList.of(ListViewerType.IconViewer, ListViewerType.TableViewer);
     
     public PaginatedDomainResultsPanel(
-            ChildSelectionModel<DomainObject, Reference> selectionModel, 
+            ChildSelectionModel<DomainObject, Reference> selectionModel,
+            ChildSelectionModel<DomainObject, Reference> editSelectionModel,
             PreferenceSupport preferenceSupport, 
             SearchProvider searchProvider) {
-        super(selectionModel, preferenceSupport, searchProvider, viewerTypes);
+        super(selectionModel, editSelectionModel, preferenceSupport, searchProvider, viewerTypes);
     }
 
     @Subscribe

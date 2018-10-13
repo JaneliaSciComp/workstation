@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
@@ -19,7 +20,6 @@ import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.ListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
-import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
@@ -47,20 +47,21 @@ public class ColorDepthResultIconGridViewer
     
     private static final Logger log = LoggerFactory.getLogger(ColorDepthResultIconGridViewer.class);
 
+    // UI Components
+    private JCheckBoxMenuItem showVtLineNamesCheckbox;
+    
     // Configuration
-    private IconGridViewerConfiguration config;
     @SuppressWarnings("unused")
     private SearchProvider searchProvider;
-    
+
     // State
     private PreferenceSupport preferenceSupport;
     private AnnotatedObjectList<ColorDepthMatch, String> matchList;
     private ChildSelectionModel<ColorDepthMatch, String> selectionModel;
-
-    private JCheckBoxMenuItem showVtLineNamesCheckbox;
+    private ChildSelectionModel<ColorDepthMatch, String> editSelectionModel;
+    private boolean editMode;
     
     public ColorDepthResultIconGridViewer() {
-        this.config = IconGridViewerConfiguration.loadConfig();
         // Customize the config options
         DropDownButton configButton = getToolbar().getConfigButton();
         configButton.removeAll();
@@ -73,9 +74,8 @@ public class ColorDepthResultIconGridViewer
             }
         });
         configButton.addMenuItem(showVtLineNamesCheckbox);
-        
     }
-
+    
     @Override
     public void setImageModel(ImageModel<ColorDepthMatch, String> imageModel) {
         super.setImageModel(imageModel);
@@ -158,11 +158,6 @@ public class ColorDepthResultIconGridViewer
             }
         });
     }
-    
-    @Override
-    public void selectEditObjects(List<ColorDepthMatch> domainObjects, boolean select) {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public void showLoadingIndicator() {
@@ -178,23 +173,41 @@ public class ColorDepthResultIconGridViewer
         List<ColorDepthMatch> matchObjects = matchList.getObjects();
         showObjects(matchObjects, success);        
     }
-
+    
     @Override
-    public void toggleEditMode(boolean editMode) {
-        throw new UnsupportedOperationException();
+    public void selectEditObjects(List<ColorDepthMatch> domainObjects, boolean select) {
+        log.info("selectEditObjects(domainObjects={},select={})", DomainUtils.abbr(domainObjects), select);
+        if (domainObjects.isEmpty()) {
+            return;
+        }
+        if (select) {
+            editSelectionModel.select(domainObjects, true, true);
+        }
     }
 
     @Override
-    public void refreshEditMode() {}
+    public void toggleEditMode(boolean editMode) {
+        this.editMode = editMode;
+        imagesPanel.setEditMode(editMode);
+    }
+
+    @Override
+    public void refreshEditMode() {
+        imagesPanel.setEditMode(editMode);
+        if (editSelectionModel!=null) {
+            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds(), true);
+        }
+    }
 
     @Override
     public void setEditSelectionModel(ChildSelectionModel<ColorDepthMatch, String> editSelectionModel) {
-        throw new UnsupportedOperationException();   
+        this.editSelectionModel = editSelectionModel;
+        imagesPanel.setEditSelectionModel(editSelectionModel);
     }
 
     @Override
     public ChildSelectionModel<ColorDepthMatch, String> getEditSelectionModel() {
-        throw new UnsupportedOperationException();
+        return editSelectionModel;
     }
     
     @Override
@@ -222,11 +235,44 @@ public class ColorDepthResultIconGridViewer
     }
     
     private ColorDepthMatchContextMenu getPopupMenu(List<ColorDepthMatch> selected) {
-        log.info("Selected objects: "+selected);
+        
         ColorDepthResultImageModel imageModel = (ColorDepthResultImageModel)getImageModel();
         ColorDepthMatchContextMenu popupMenu = new ColorDepthMatchContextMenu(
                 (ColorDepthResult)selectionModel.getParentObject(), selected, imageModel);
-        popupMenu.addMenuItems();
+        
+        if (!selected.isEmpty() && editMode) {
+            // This duplicates addMenuItems, but adds the splitgen item
+
+            popupMenu.add(popupMenu.getTitleItem());
+            popupMenu.add(popupMenu.getCopyNameToClipboardItem());
+
+            popupMenu.setNextAddRequiresSeparator(true);
+
+            JMenuItem splitGenMenuItem = new JMenuItem("  Select For Split Generation");
+            splitGenMenuItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    selectEditObjects(selected, true);
+                    refreshEditMode();
+                }
+            });
+            popupMenu.add(splitGenMenuItem);
+            
+            popupMenu.add(popupMenu.getAddToMaskResultsItem());
+            popupMenu.add(popupMenu.getAddToFolderItem());
+            popupMenu.add(popupMenu.getColorDepthSearchItem());
+            
+            popupMenu.setNextAddRequiresSeparator(true);
+            popupMenu.add(popupMenu.getOpenInFinderItem());
+            popupMenu.add(popupMenu.getOpenWithAppItem());
+
+            popupMenu.setNextAddRequiresSeparator(true);
+            popupMenu.add(popupMenu.getHudMenuItem());
+        }
+        else {
+            popupMenu.addMenuItems();
+        }
+        
         return popupMenu;
     }
     

@@ -538,13 +538,15 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
     }
 
     public void updateEditSelectModel(T imgObject, boolean select) {
+        
         if (editSelectionModel==null) {
-            log.warn("No SelectionModel defined for editing");
-            return;
+            throw new IllegalStateException("No selection model is defined for editing");
         }
+        
         if (select) {
             editSelectionModel.select(imgObject, false, true);
-        } else {
+        } 
+        else {
             editSelectionModel.deselect(imgObject, true);
         }
     }

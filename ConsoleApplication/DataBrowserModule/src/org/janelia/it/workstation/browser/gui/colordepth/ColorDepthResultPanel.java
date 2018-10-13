@@ -2,8 +2,10 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,17 +18,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.ws.rs.core.UriBuilder;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.web.SageRestClient;
@@ -36,6 +42,7 @@ import org.janelia.it.workstation.browser.gui.editor.SelectionButton;
 import org.janelia.it.workstation.browser.gui.editor.SingleSelectionButton;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.WrapLayout;
@@ -43,6 +50,8 @@ import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.SplitTypeInfo;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.Reference;
@@ -51,7 +60,6 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
-import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.Sample;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -68,8 +76,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private static final List<ColorDepthListViewerType> viewerTypes = ImmutableList.of(ColorDepthListViewerType.ColorDepthResultImageViewer, ColorDepthListViewerType.ColorDepthResultTableViewer);
     private static final String PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE = "CDSResultPerLine";
     private static final String PREFERENCE_CATEGORY_CDS_NEW_RESULTS = "CDSOnlyNewResults";
+    private static final String PREFERENCE_CATEGORY_CDS_SPLITHALFTYPES = "CDSSplitHalfTypes";
     private static final int DEFAULT_RESULTS_PER_LINE = 2;
     private static final List<SplitHalfType> ALL_SPLIT_TYPES = Arrays.asList(SplitHalfType.AD, SplitHalfType.DBD);
+    private static final String SPLITGEN_URL = ConsoleProperties.getInstance().getProperty("splitgen.url"); 
 
     private static final String NO_RUN_TEXT = "<html>"
             + "This mask does not have results in the selected search run.<br>"
@@ -89,6 +99,9 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private final PaginatedResultsPanel<ColorDepthMatch, String> resultsPanel;
     private final JLabel noRunLabel;
     private final JLabel noMatchesLabel;
+    private final JButton editModeButton;
+    private final JButton editOkButton;
+    private final JButton editCancelButton;
 
     // State
     private ColorDepthSearch search;
@@ -108,6 +121,14 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             Events.getInstance().postOnEventBus(new ColorDepthMatchSelectionEvent(getSource(), objects, select, clearAll, isUserDriven));
         }
 
+        @Override
+        public String getId(ColorDepthMatch match) {
+            return match.getFilepath();
+        }
+    };
+
+    private final ChildSelectionModel<ColorDepthMatch,String> editSelectionModel = new ChildSelectionModel<ColorDepthMatch,String>() {
+        
         @Override
         public String getId(ColorDepthMatch match) {
             return match.getFilepath();
@@ -206,9 +227,45 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
                 else {
                     selectedSplitTypes.remove(value);
                 }
+                setPreferenceAsync(PREFERENCE_CATEGORY_CDS_SPLITHALFTYPES, value.getName(), selected);
                 refreshView();
             }
         };
+
+        this.editModeButton = new JButton("Generate Splits");
+        editModeButton.setIcon(Icons.getIcon("cart_edit.png"));
+        editModeButton.setFocusable(false);
+        editModeButton.setToolTipText("Select lines to send to the split generation website");
+        editModeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                enterSplitSelection();
+            }
+        });
+        
+        this.editCancelButton = new JButton();
+        editCancelButton.setIcon(Icons.getIcon("cancel.png"));
+        editCancelButton.setVisible(false);
+        editCancelButton.setToolTipText("Leave split generation selection mode");
+        editCancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cancelSplitSelection();
+            }
+        });
+        
+        this.editOkButton = new JButton();
+        editOkButton.setIcon(Icons.getIcon("cart_go.png"));
+        editOkButton.setFocusable(false);
+        editOkButton.setVisible(false);
+        editOkButton.setToolTipText("Open split generation website with selected lines");
+        editOkButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendSplitsToWebsite();
+                cancelSplitSelection();
+            }
+        });
         
         this.topPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 8, 5));
         topPanel.add(new JLabel("History:"));
@@ -217,21 +274,24 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         topPanel.add(newOnlyCheckbox);
         topPanel.add(perLinePanel);
         topPanel.add(splitTypeButton);
+        topPanel.add(editModeButton);
+        topPanel.add(editCancelButton);
+        topPanel.add(editOkButton);
         
-        this.resultsPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, this, this, viewerTypes) {
+        this.resultsPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, editSelectionModel, this, this, viewerTypes) {
     
             @Override
             protected ResultPage<ColorDepthMatch, String> getPage(SearchResults<ColorDepthMatch, String> searchResults, int page) throws Exception {
-                log.info("Geting page {} from {} pages", page, searchResults.getNumTotalPages());
-                ResultPage<ColorDepthMatch, String> result = searchResults.getPage(page);
-                log.info("Got result: {}", result);
-                return result;
+                return searchResults.getPage(page);
             }
+            
             @Override
             public String getId(ColorDepthMatch object) {
                 return object.getFilepath();
             }
         };
+        resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->ColorDepthResultPanel"));
+        resultsPanel.getViewer().setEditSelectionModel(editSelectionModel);
         
         setLayout(new BorderLayout());
     }
@@ -266,10 +326,20 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             protected void doStuff() throws Exception {
                 
                 newResultPreference = getPreference(PREFERENCE_CATEGORY_CDS_NEW_RESULTS);
-                log.info("Got new result preference: "+newResultPreference);
+                log.debug("Got new result preference: "+newResultPreference);
 
                 resultsPerLinePreference = getPreference(PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE);
-                log.info("Got results per line preference: "+resultsPerLinePreference);
+                log.debug("Got results per line preference: "+resultsPerLinePreference);
+                
+                if (getPreference(PREFERENCE_CATEGORY_CDS_SPLITHALFTYPES, SplitHalfType.AD.getName(), false)) {
+                    log.debug("Got split halfs filter preference: AD");
+                    selectedSplitTypes.add(SplitHalfType.AD);
+                }
+                
+                if (getPreference(PREFERENCE_CATEGORY_CDS_SPLITHALFTYPES, SplitHalfType.DBD.getName(), false)) {
+                    log.debug("Got split halfs filter preference: DBD");
+                    selectedSplitTypes.add(SplitHalfType.DBD);
+                }
             }
 
             @Override
@@ -302,7 +372,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
 
         worker.execute();    
     }
-    
     
     private void showResults(boolean isUserDriven) {
         log.info("showResults(isUserDriven={})", isUserDriven);
@@ -639,5 +708,79 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         showCurrSearchResult(true);
     }
 
+
+    private void enterSplitSelection() {
+        editModeButton.setVisible(false);
+        editOkButton.setVisible(true);
+        editCancelButton.setVisible(true);
+        resultsPanel.getViewer().toggleEditMode(true);
+    }
+
+    private void cancelSplitSelection() {
+        editModeButton.setVisible(true);
+        editOkButton.setVisible(false);
+        editCancelButton.setVisible(false);
+        resultsPanel.getViewer().toggleEditMode(false);
+    }
+
+    private void sendSplitsToWebsite() {
+
+        // Ensure that the user has selected some lines
+        List<String> selectedIds = editSelectionModel.getSelectedIds();
+        if (selectedIds.isEmpty()) {
+            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                    "Select some lines to send to the split generation website.", 
+                    "No lines selected", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Collect the user-selected split line ids to send to the website
+        StringBuilder idStr = new StringBuilder();
+        for(String filepath : selectedIds) {
+            ColorDepthMatch match = imageModel.getImageByUniqueId(filepath);
+            if (match != null) {
+                Sample sample = imageModel.getSample(match);
+                if (sample != null) {
+                    String id = getSplitIdentifier(sample);
+                    if (id != null) {
+                        if (idStr.length()>0) idStr.append(' ');
+                        idStr.append(id);
+                    }
+                }
+            }
+        }
+        
+        if (idStr.length()==0) {
+            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                    "No split line identifiers were found", 
+                    "Identifiers missing", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
+        // Create the URL to open 
+        URI uri = UriBuilder.fromPath(SPLITGEN_URL)
+                .path("uname").path(AccessManager.getSubjectName())
+                .path("lnames").path(idStr.toString())
+                .build();
+        
+        // Send the user to the website
+        log.info("Open splitgen website: {}", uri);
+        Utils.openUrlInBrowser(uri.toString());
+    }
     
+    /**
+     * The split generation website doesn't accept regular line names. For VT lines, we
+     * need to strip off the "VT" portion. For regular line names, we just need the plate and well.
+     * @param sample 
+     * @return split identifier suitable for usage with the split gen website
+     */
+    private String getSplitIdentifier(Sample sample) {
+        String vtLine = sample.getVtLine();
+        if (vtLine!=null) {
+            return vtLine.replaceFirst("VT", "");
+        }
+        else {
+            return SampleUtils.getPlateWellFromLineName(sample.getLine());
+        }
+    }
 }

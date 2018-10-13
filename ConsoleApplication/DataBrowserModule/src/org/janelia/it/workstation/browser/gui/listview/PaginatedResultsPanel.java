@@ -48,7 +48,6 @@ import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,27 +89,31 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     
     // State
     protected ChildSelectionModel<T,S> selectionModel;
+    protected ChildSelectionModel<T,S> editSelectionModel;
     protected PreferenceSupport preferenceSupport;
     protected SearchProvider searchProvider;
     protected List<? extends ListViewerClassProvider> validViewerTypes;
     protected ImageModel<T, S> imageModel;
     
     public PaginatedResultsPanel(
-            ChildSelectionModel<T,S> selectionModel, 
+            ChildSelectionModel<T,S> selectionModel,
+            ChildSelectionModel<T,S> editSelectionModel,
             PreferenceSupport preferenceSupport, 
             SearchProvider searchProvider, 
             List<? extends ListViewerClassProvider> validViewerTypes) {
-        this(selectionModel, preferenceSupport, searchProvider, validViewerTypes, null);
+        this(selectionModel, editSelectionModel, preferenceSupport, searchProvider, validViewerTypes, null);
     }
     
     public PaginatedResultsPanel(
             ChildSelectionModel<T,S> selectionModel, 
+            ChildSelectionModel<T,S> editSelectionModel,
             PreferenceSupport preferenceSupport, 
             SearchProvider searchProvider, 
             List<? extends ListViewerClassProvider> validViewerTypes,
             ImageModel<T, S> imageModel) {
                
         this.selectionModel = selectionModel;
+        this.editSelectionModel = editSelectionModel;
         this.preferenceSupport = preferenceSupport;
         this.searchProvider = searchProvider;
         this.validViewerTypes = validViewerTypes;
@@ -296,6 +299,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             });
             Events.getInstance().registerOnEventBus(resultsView);
             resultsView.setSelectionModel(selectionModel);
+            resultsView.setEditSelectionModel(editSelectionModel);
             resultsView.setPreferenceSupport(preferenceSupport);
             resultsView.setSearchProvider(searchProvider);
             if (imageModel != null) {
@@ -477,6 +481,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
     public void reset() {
         selectionModel.reset();
+        editSelectionModel.reset();
         this.currPage = 0;
     }
     
@@ -496,8 +501,8 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
         
         log.info("showCurrPage(isUserDriven={}, currPage={})",isUserDriven, currPage);
 
-        if (currPage >= numPages) {
-            log.warn("currPage {} is outside of page count {{}), resetting to first page", currPage, numPages);
+        if (currPage>0 && currPage >= numPages) {
+            log.warn("currPage {} is outside of page count ({}), resetting to first page", currPage, numPages);
             currPage = 0;
         }
         
@@ -513,11 +518,11 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             @Override
             protected void doStuff() throws Exception {
                 resultPage = getPage(searchResults, currPage);
+                log.info("Got page {} with {} results", currPage, resultPage.getNumPageResults());
             }
 
             @Override
             protected void hadSuccess() {
-                log.info("Got results, updating view");
                 final ArrayList<S> selectedRefs = new ArrayList<>(selectionModel.getSelectedIds());
                 log.info("Got selected refs: {}",selectedRefs);
                 updateResultsView(new Callable<Void>() {   

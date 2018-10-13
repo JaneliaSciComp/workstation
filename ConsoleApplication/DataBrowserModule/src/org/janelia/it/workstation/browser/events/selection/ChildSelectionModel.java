@@ -14,7 +14,8 @@ public abstract class ChildSelectionModel<T,S> extends SelectionModel<T,S> {
         this.parentObject = parentObject;
     }
 
-    protected abstract void selectionChanged(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven);
+    protected void selectionChanged(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven) {
+    }
 
     public abstract S getId(T object);
     

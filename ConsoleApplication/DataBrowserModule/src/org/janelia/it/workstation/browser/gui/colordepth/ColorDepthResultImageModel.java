@@ -32,7 +32,11 @@ import org.slf4j.LoggerFactory;
 public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, String> {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthResultImageModel.class);
+
+    // Constants
+    private static final String SPLIT_ANNOTATION_OWNER = "group:flylight";
     
+    // State
     private Map<Reference, Sample> sampleMap = new HashMap<>();
     private Map<String, ColorDepthMatch> matchMap = new HashMap<>();
     private Map<String, SplitTypeInfo> splitInfos = new HashMap<>();
@@ -75,7 +79,7 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
     }
 
     @Override
-    public ColorDepthMatch getImageByUniqueId(String filepath) throws Exception {
+    public ColorDepthMatch getImageByUniqueId(String filepath) {
         return matchMap.get(filepath);
     }
     
@@ -87,33 +91,14 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
         }
         else {
             Sample sample = sampleMap.get(match.getSample());
-
-            // Get split type information
-            StringBuilder suffix = new StringBuilder();
-            SplitTypeInfo splitTypeInfo = getSplitTypeInfo(sample);
-            if (splitTypeInfo != null) {
-                if (splitTypeInfo.hasAD()) {
-                    suffix.append("AD");
-                }
-                if (splitTypeInfo.hasDBD()) {
-                    if (suffix.length()>0) suffix.append(",");
-                    suffix.append("DBD");
-                }
-            }
-            log.info("splitTypeInfo={}", splitTypeInfo);
-            
-            // Wrap the suffix in parentheses, but only if it has content
-            if (suffix.length()>0) {
-                suffix.insert(0, " (");
-                suffix.append(")");
-            }
             
             if (isShowVtLineNames()) {
                 if (sample.getVtLine()!=null) {
-                    return sample.getVtLine()+"-"+sample.getSlideCode()+suffix;
+                    return sample.getVtLine()+"-"+sample.getSlideCode();
                 }
             }
-            return sample.getName()+""+suffix;
+            
+            return sample.getName();
         }
     }
 
@@ -124,24 +109,6 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
     
     @Override
     public List<ImageDecorator> getDecorators(ColorDepthMatch match) {
-//        List<ImageDecorator> decorators = new ArrayList<>();
-//        if (match.getSample()==null) {
-//            decorators.add(ImageDecorator.DISCONNECTED);
-//        }
-//        else {
-//            Sample sample = sampleMap.get(match.getSample());
-//            SplitTypeInfo splitTypeInfo = getSplitTypeInfo(sample);
-//            if (splitTypeInfo != null) {
-//                if (splitTypeInfo.hasAD()) {
-//                    decorators.add(ImageDecorator.AD);
-//                }
-//                if (splitTypeInfo.hasDBD()) {
-//                    decorators.add(ImageDecorator.DBD);
-//                }
-//            }
-//        }
-//        
-//        return decorators;
         return Collections.emptyList();
     }
 
@@ -155,8 +122,6 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
         return null;
     }
     
-    private static final String ANNOTATION_OWNER = "group:flylight";
-    
     @Override
     public List<Annotation> getAnnotations(ColorDepthMatch match) {
 
@@ -167,14 +132,14 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
             if (splitTypeInfo != null) {
                 if (splitTypeInfo.hasAD()) {
                     Annotation a = new Annotation();
-                    a.setOwnerKey(ANNOTATION_OWNER);
+                    a.setOwnerKey(SPLIT_ANNOTATION_OWNER);
                     a.setName(SplitHalfType.AD.getName());
                     a.setComputational(true);
                     annotations.add(a);
                 }
                 if (splitTypeInfo.hasDBD()) {
                     Annotation a = new Annotation();
-                    a.setOwnerKey(ANNOTATION_OWNER);
+                    a.setOwnerKey(SPLIT_ANNOTATION_OWNER);
                     a.setName(SplitHalfType.DBD.getName());
                     a.setComputational(true);
                     annotations.add(a);
