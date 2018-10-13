@@ -249,6 +249,9 @@ public class DomainObjectIconGridViewer
     public void toggleEditMode(boolean editMode) {
         this.editMode = editMode;
         imagesPanel.setEditMode(editMode);
+        if (editSelectionModel!=null) {
+            editSelectionModel.reset();
+        }
     }
     
     @Override

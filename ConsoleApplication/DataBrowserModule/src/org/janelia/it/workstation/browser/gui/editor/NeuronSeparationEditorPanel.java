@@ -458,10 +458,10 @@ public class NeuronSeparationEditorPanel
             List<Object> neuronSepVisibility = (List<Object>)FrameworkImplProvider.getRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
                     Long.toString(separation.getId()), null);
-            log.info("Retrieved {} hidden fragment ids", neuronSepVisibility.size());
 
             // TODO: set up global preference for visibility, allow users to select other user's preferences
             if (neuronSepVisibility!=null) {
+                log.info("Retrieved {} hidden fragment ids", neuronSepVisibility.size());
     
                 for (Object object : neuronSepVisibility) {
                     // Just some robustness to how the pref values are transmitted on the wire.  
@@ -480,7 +480,7 @@ public class NeuronSeparationEditorPanel
             log.info("Got {} hidden fragments", hiddenFragments.size());
         }
         catch (Exception e) {
-            log.error("Could not load hidden fragments",e);
+            FrameworkImplProvider.handleException("Could not load hidden fragments", e);
         }
         
         return hiddenFragments;
@@ -505,7 +505,7 @@ public class NeuronSeparationEditorPanel
             log.info("Saved {} hidden fragments", hiddenFragments.size());
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkImplProvider.handleException("Could not save hidden fragments", e);
         }
     }
     

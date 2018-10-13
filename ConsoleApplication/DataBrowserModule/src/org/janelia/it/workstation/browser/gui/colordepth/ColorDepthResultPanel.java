@@ -408,13 +408,18 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             protected void doStuff() throws Exception {
                 List<ColorDepthMatch> maskMatches = currResult.getMaskMatches(mask);
                 log.info("Found {} matches for {}", maskMatches.size(), mask);
-                prepareResults(maskMatches);
+                searchResults = prepareResults(maskMatches);
             }
 
             @Override
             protected void hadSuccess() {
-                resultsPanel.showSearchResults(searchResults, isUserDriven, null);
-                showMatches();
+                if (searchResults==null) {
+                    showNoMatches();
+                }
+                else {
+                    resultsPanel.showSearchResults(searchResults, isUserDriven, null);
+                    showMatches();
+                }
             }
 
             @Override
@@ -430,7 +435,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     /**
      * Runs in background thread.
      */
-    private void prepareResults(List<ColorDepthMatch> maskMatches) throws Exception {
+    private ColorDepthSearchResults prepareResults(List<ColorDepthMatch> maskMatches) throws Exception {
 
         // Fetch associated samples
         
@@ -529,8 +534,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         
         if (maskMatches.isEmpty()) {
             // No matches for this mask
-            showNoMatches();
-            return;
+            return null;
         }
 
         Integer resultsPerLine = null;
@@ -562,7 +566,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         }
 
         log.info("Filtered to {} matches, allowing {} results per line, and no duplicate samples", orderedMatches.size(), resultsPerLine);
-        searchResults = new ColorDepthSearchResults(orderedMatches);
+        return new ColorDepthSearchResults(orderedMatches);
     }
     
     public void showNothing() {

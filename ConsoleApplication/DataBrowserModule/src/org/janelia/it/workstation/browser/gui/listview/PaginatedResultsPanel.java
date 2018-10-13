@@ -481,7 +481,9 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
     public void reset() {
         selectionModel.reset();
-        editSelectionModel.reset();
+        if (editSelectionModel != null) {
+            editSelectionModel.reset();
+        }
         this.currPage = 0;
     }
     
