@@ -300,7 +300,6 @@ public class NeuronSeparationEditorPanel
                 sortCriteria = loadSortCriteria();
                 hiddenFragments = loadHiddenFragments();
                 prepareResults();
-                log.info("Showing "+neuronFragments.size()+" neurons");
             }
 
             @Override
@@ -342,6 +341,7 @@ public class NeuronSeparationEditorPanel
                     filteredFragments.add(neuronFragment);
                 }
             }
+            log.info("Showing "+filteredFragments.size()+" neurons");
         }
         
         DomainUtils.sortDomainObjects(filteredFragments, sortCriteria);
@@ -399,7 +399,6 @@ public class NeuronSeparationEditorPanel
                 sortCriteria = loadSortCriteria();
                 hiddenFragments = loadHiddenFragments();
                 prepareResults();
-                log.info("Showing {} items", neuronFragments.size());
             }
 
             @Override
@@ -478,7 +477,7 @@ public class NeuronSeparationEditorPanel
                 }
             }
             
-            log.info("Got hidden fragments: {}", hiddenFragments);
+            log.info("Got {} hidden fragments", hiddenFragments.size());
         }
         catch (Exception e) {
             log.error("Could not load hidden fragments",e);
@@ -489,7 +488,8 @@ public class NeuronSeparationEditorPanel
     
     private void saveHiddenFragments() {
         try {
-            List<Reference> visibleFragments = editSelectionModel.getSelectedIds();
+            List<Long> visibleFragments = DomainUtils.getIdsFromReferences(editSelectionModel.getSelectedIds());
+            log.info("User selected {} visible fragments", visibleFragments.size());
             
             hiddenFragments.clear();
             for (NeuronFragment neuronFragment : neuronFragments) {
@@ -497,11 +497,12 @@ public class NeuronSeparationEditorPanel
                     hiddenFragments.add(neuronFragment.getId());
                 }
             }
+            log.info("Hiding {}/{} fragments", hiddenFragments.size(), neuronFragments.size());
             
             FrameworkImplProvider.setRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY, 
                     Long.toString(separation.getId()), hiddenFragments);
-            log.info("Saved hidden fragments: {}", hiddenFragments);
+            log.info("Saved {} hidden fragments", hiddenFragments.size());
         }
         catch (Exception e) {
             FrameworkImplProvider.handleException(e);
