@@ -20,6 +20,7 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
@@ -37,6 +38,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     
     // Current selection
     protected ColorDepthResult contextObject;
+    protected ChildSelectionModel<ColorDepthMatch,String> editSelectionModel;
     protected ColorDepthResultImageModel imageModel;
     protected List<ColorDepthMatch> matches;
     protected boolean multiple;
@@ -46,10 +48,12 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     protected Sample sample;
     protected String matchName;
     
-    public ColorDepthMatchContextMenu(ColorDepthResult result, List<ColorDepthMatch> matches, ColorDepthResultImageModel imageModel) {
+    public ColorDepthMatchContextMenu(ColorDepthResult result, List<ColorDepthMatch> matches, ColorDepthResultImageModel imageModel, 
+            ChildSelectionModel<ColorDepthMatch,String> editSelectionModel) {
         this.contextObject = result;
         this.matches = matches;
         this.imageModel = imageModel;
+        this.editSelectionModel = editSelectionModel;
         this.multiple = matches.size() > 1;
         this.match = matches.size() == 1 ? matches.get(0) : null;
         if (match != null) {
@@ -91,11 +95,15 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
 
         add(getTitleItem());
         add(getCopyNameToClipboardItem());
-
         setNextAddRequiresSeparator(true);
+
+        if (editSelectionModel != null) {
+            add(getCheckItem(true));
+            add(getCheckItem(false));
+        }
+        
         add(getAddToMaskResultsItem());
         add(getAddToFolderItem());
-        add(getColorDepthSearchItem());
         
         setNextAddRequiresSeparator(true);
         add(getOpenInFinderItem());
@@ -117,14 +125,18 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         return getNamedActionItem(new CopyToClipboardAction("Name",matchName));
     }
 
-
-    protected JMenuItem getColorDepthSearchItem() {
-
-        if (multiple) return null;
-        
-        return null;
-        // TODO: figure out the result descriptor, or create a new action to make this work
-        //return getNamedActionItem(new CreateMaskFromSampleAction(sample, resultDescriptor, typeName));
+    protected JMenuItem getCheckItem(boolean check) {
+        String title = check ? "Check" : "Uncheck";
+        JMenuItem menuItem = new JMenuItem("  "+title+" Selected");
+        menuItem.addActionListener((e) -> {
+            if (check) {
+                editSelectionModel.select(matches, false, true);
+            }
+            else {
+                editSelectionModel.deselect(matches, true);
+            }
+        });
+        return menuItem;
     }
 
     protected JMenuItem getAddToMaskResultsItem() {

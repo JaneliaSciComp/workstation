@@ -198,7 +198,7 @@ public class ColorDepthResultTableViewer
             log.info("Selected objects: "+selected);
             ColorDepthResultImageModel imageModel = (ColorDepthResultImageModel)getImageModel();
             ColorDepthMatchContextMenu popupMenu = new ColorDepthMatchContextMenu(
-                    (ColorDepthResult)selectionModel.getParentObject(), selected, imageModel);
+                    (ColorDepthResult)selectionModel.getParentObject(), selected, imageModel, null);
             
             JTable table = getTable();
             ListSelectionModel lsm = table.getSelectionModel();

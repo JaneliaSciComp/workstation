@@ -9,7 +9,6 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
@@ -35,6 +34,8 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.ontology.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * An IconGridViewer implementation for viewing color depth search results.
@@ -195,7 +196,7 @@ public class ColorDepthResultIconGridViewer
     public void refreshEditMode() {
         imagesPanel.setEditMode(editMode);
         if (editSelectionModel!=null) {
-            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds(), true);
+            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds());
         }
     }
 
@@ -208,6 +209,12 @@ public class ColorDepthResultIconGridViewer
     @Override
     public ChildSelectionModel<ColorDepthMatch, String> getEditSelectionModel() {
         return editSelectionModel;
+    }
+
+    @Subscribe
+    public void handleEditSelection(ColorDepthMatchEditSelectionEvent event) {
+        // Refresh the edit checkboxes any time the edit selection model changes
+        refreshEditMode();
     }
     
     @Override
@@ -235,44 +242,13 @@ public class ColorDepthResultIconGridViewer
     }
     
     private ColorDepthMatchContextMenu getPopupMenu(List<ColorDepthMatch> selected) {
-        
         ColorDepthResultImageModel imageModel = (ColorDepthResultImageModel)getImageModel();
         ColorDepthMatchContextMenu popupMenu = new ColorDepthMatchContextMenu(
-                (ColorDepthResult)selectionModel.getParentObject(), selected, imageModel);
-        
-        if (!selected.isEmpty() && editMode) {
-            // This duplicates addMenuItems, but adds the splitgen item
-
-            popupMenu.add(popupMenu.getTitleItem());
-            popupMenu.add(popupMenu.getCopyNameToClipboardItem());
-
-            popupMenu.setNextAddRequiresSeparator(true);
-
-            JMenuItem splitGenMenuItem = new JMenuItem("  Select For Split Generation");
-            splitGenMenuItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    selectEditObjects(selected, true);
-                    refreshEditMode();
-                }
-            });
-            popupMenu.add(splitGenMenuItem);
-            
-            popupMenu.add(popupMenu.getAddToMaskResultsItem());
-            popupMenu.add(popupMenu.getAddToFolderItem());
-            popupMenu.add(popupMenu.getColorDepthSearchItem());
-            
-            popupMenu.setNextAddRequiresSeparator(true);
-            popupMenu.add(popupMenu.getOpenInFinderItem());
-            popupMenu.add(popupMenu.getOpenWithAppItem());
-
-            popupMenu.setNextAddRequiresSeparator(true);
-            popupMenu.add(popupMenu.getHudMenuItem());
-        }
-        else {
-            popupMenu.addMenuItems();
-        }
-        
+                (ColorDepthResult)selectionModel.getParentObject(), 
+                selected, 
+                imageModel, 
+                editMode ? editSelectionModel : null);
+        popupMenu.addMenuItems();
         return popupMenu;
     }
     

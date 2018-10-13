@@ -21,6 +21,7 @@ import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectEditSelectionEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.IconGridViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
@@ -50,6 +51,8 @@ import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * An IconGridViewer implementation for viewing domain objects. 
@@ -247,12 +250,12 @@ public class DomainObjectIconGridViewer
         this.editMode = editMode;
         imagesPanel.setEditMode(editMode);
     }
-
+    
     @Override
     public void refreshEditMode() {
         imagesPanel.setEditMode(editMode);
-        if (editSelectionModel!=null) {
-            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds(), true);
+        if (editSelectionModel != null) {
+            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds());
         }
     }
 
@@ -265,6 +268,12 @@ public class DomainObjectIconGridViewer
     @Override
     public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
         return editSelectionModel;
+    }
+
+    @Subscribe
+    public void handleEditSelection(DomainObjectEditSelectionEvent event) {
+        // Refresh the edit checkboxes any time the edit selection model changes
+        refreshEditMode();
     }
     
     @Override
@@ -416,7 +425,12 @@ public class DomainObjectIconGridViewer
     }
     
     private DomainObjectContextMenu getPopupMenu(List<DomainObject> domainObjectList) {
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), domainObjectList, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(
+                (DomainObject)selectionModel.getParentObject(), 
+                domainObjectList, 
+                resultButton.getResultDescriptor(),
+                typeButton.getImageTypeName(),
+                editMode ? editSelectionModel : null);
         popupMenu.addMenuItems();
         return popupMenu;
     }

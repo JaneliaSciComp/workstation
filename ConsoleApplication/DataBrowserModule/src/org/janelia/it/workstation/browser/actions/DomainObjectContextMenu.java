@@ -45,6 +45,7 @@ import org.janelia.it.workstation.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthSearchDialog;
 import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromImageAction;
@@ -113,19 +114,22 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     
     // Current selection
     protected DomainObject contextObject;
+    protected ChildSelectionModel<DomainObject,Reference> editSelectionModel;
     protected List<DomainObject> domainObjectList;
     protected DomainObject domainObject;
     protected boolean multiple;
     protected ArtifactDescriptor resultDescriptor;
     protected String typeName;
 
-    public DomainObjectContextMenu(DomainObject contextObject, List<DomainObject> domainObjectList, ArtifactDescriptor resultDescriptor, String typeName) {
+    public DomainObjectContextMenu(DomainObject contextObject, List<DomainObject> domainObjectList, 
+            ArtifactDescriptor resultDescriptor, String typeName, ChildSelectionModel<DomainObject,Reference> editSelectionModel) {
         this.contextObject = contextObject;
         this.domainObjectList = domainObjectList;
         this.domainObject = domainObjectList.size() == 1 ? domainObjectList.get(0) : null;
         this.multiple = domainObjectList.size() > 1;
         this.resultDescriptor = resultDescriptor;
         this.typeName = typeName;
+        this.editSelectionModel = editSelectionModel;
         ActivityLogHelper.logUserAction("DomainObjectContentMenu.create", domainObject);
     }
 
@@ -177,6 +181,11 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getDetailsItem());
         add(getPermissionItem());
 
+        if (editSelectionModel != null) {
+            add(getCheckItem(true));
+            add(getCheckItem(false));
+        }
+        
         add(getAddToFolderItem());
         add(getRelatedItemsItem());
         add(getRemoveFromFolderItem());
@@ -790,6 +799,20 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return rtnVal;
     }
 
+    protected JMenuItem getCheckItem(boolean check) {
+        String title = check ? "Check" : "Uncheck";
+        JMenuItem menuItem = new JMenuItem("  "+title+" Selected");
+        menuItem.addActionListener((e) -> {
+            if (check) {
+                editSelectionModel.select(domainObjectList, false, true);
+            }
+            else {
+                editSelectionModel.deselect(domainObjectList, true);
+            }
+        });
+        return menuItem;
+    }
+    
     protected JMenuItem getAddToFolderItem() {
         AddToFolderAction action = AddToFolderAction.get();
         action.setDomainObjects(domainObjectList);

@@ -438,7 +438,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         for(T object : objects) {
             ids.add(getImageModel().getImageUniqueId(object));
         }
-        imagesPanel.setEditSelection(ids, true);
+        imagesPanel.setEditSelection(ids);
     }
 
     protected void deselectObjects(List<T> objects, boolean isUserDriven) {

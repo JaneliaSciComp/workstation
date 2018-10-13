@@ -529,7 +529,6 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
     }
 
     private boolean setEditSelection(final AnnotatedImageButton<T,S> button, boolean selection) {
-        updateEditSelectModel(button.getUserObject(), selection);
         if (button.getEditModeValue() != selection) {
             button.setEditModeValue(selection);
             return true;
@@ -597,12 +596,15 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         }
     }
 
-    public void setEditSelection(List<S> selectedIds, boolean editSelection) {
+    public void setEditSelection(List<S> selectedIds) {
         for (AnnotatedImageButton<T,S> button : buttons.values()) {
             T imageObject = button.getUserObject();
             S imageId = imageModel.getImageUniqueId(imageObject);
             if (selectedIds.contains(imageId)) {
-                setEditSelection(button, editSelection);
+                setEditSelection(button, true);
+            }
+            else {
+                setEditSelection(button, false);
             }
         }
     }

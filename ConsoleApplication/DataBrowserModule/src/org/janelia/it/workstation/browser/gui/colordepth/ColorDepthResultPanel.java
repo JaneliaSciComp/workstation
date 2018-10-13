@@ -128,6 +128,11 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     };
 
     private final ChildSelectionModel<ColorDepthMatch,String> editSelectionModel = new ChildSelectionModel<ColorDepthMatch,String>() {
+
+        @Override
+        protected void selectionChanged(List<ColorDepthMatch> objects, boolean select, boolean clearAll, boolean isUserDriven) {
+            Events.getInstance().postOnEventBus(new ColorDepthMatchEditSelectionEvent(getSource(), objects, select, clearAll, isUserDriven));
+        }
         
         @Override
         public String getId(ColorDepthMatch match) {
