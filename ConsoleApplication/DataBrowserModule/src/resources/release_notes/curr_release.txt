@@ -1,9 +1,9 @@
 // 7.18
 
 Workstation Browser
-* It's now possible to select all color depth MIPs for download, 
-  without downloading reference channel color depth MIPs
-* Improved deduplication when downloading files
+* Color depth search results can be selected for split generation
+* Easier selection of color depth MIPs for download
+* Duplicate files are now ignored when downloading
 
 Large Volume Viewer
-* Export swc dialog box is larger and remembers its size
+* Export SWC dialog box is larger and remembers its size

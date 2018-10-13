@@ -25,6 +25,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 import javax.ws.rs.core.UriBuilder;
 
@@ -99,9 +100,8 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private final PaginatedResultsPanel<ColorDepthMatch, String> resultsPanel;
     private final JLabel noRunLabel;
     private final JLabel noMatchesLabel;
-    private final JButton editModeButton;
+    private final JToggleButton editModeButton;
     private final JButton editOkButton;
-    private final JButton editCancelButton;
 
     // State
     private ColorDepthSearch search;
@@ -232,25 +232,19 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             }
         };
 
-        this.editModeButton = new JButton("Generate Splits");
-        editModeButton.setIcon(Icons.getIcon("cart_edit.png"));
+        this.editModeButton = new JToggleButton("Generate Splits");
+        editModeButton.setIcon(Icons.getIcon("cart.png"));
         editModeButton.setFocusable(false);
         editModeButton.setToolTipText("Select lines to send to the split generation website");
         editModeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                enterSplitSelection();
-            }
-        });
-        
-        this.editCancelButton = new JButton();
-        editCancelButton.setIcon(Icons.getIcon("cancel.png"));
-        editCancelButton.setVisible(false);
-        editCancelButton.setToolTipText("Leave split generation selection mode");
-        editCancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cancelSplitSelection();
+                if (editModeButton.isSelected()) {
+                    enterSplitSelection();
+                }
+                else {
+                    cancelSplitSelection();
+                }
             }
         });
         
@@ -275,7 +269,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         topPanel.add(perLinePanel);
         topPanel.add(splitTypeButton);
         topPanel.add(editModeButton);
-        topPanel.add(editCancelButton);
         topPanel.add(editOkButton);
         
         this.resultsPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, editSelectionModel, this, this, viewerTypes) {
@@ -708,18 +701,15 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         showCurrSearchResult(true);
     }
 
-
     private void enterSplitSelection() {
-        editModeButton.setVisible(false);
+        editModeButton.setSelected(true);
         editOkButton.setVisible(true);
-        editCancelButton.setVisible(true);
         resultsPanel.getViewer().toggleEditMode(true);
     }
 
     private void cancelSplitSelection() {
-        editModeButton.setVisible(true);
+        editModeButton.setSelected(false);
         editOkButton.setVisible(false);
-        editCancelButton.setVisible(false);
         resultsPanel.getViewer().toggleEditMode(false);
     }
 
