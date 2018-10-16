@@ -1,6 +1,7 @@
 // 7.18
 
 Workstation Browser
+* AD/DBD availability is now displayed on color depth search results
 * Color depth search results can be selected for split generation
 * Easier selection of color depth MIPs for download
 * Duplicate files are now ignored when downloading
