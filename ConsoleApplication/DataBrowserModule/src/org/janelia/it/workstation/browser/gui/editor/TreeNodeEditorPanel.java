@@ -70,7 +70,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
         
         setLayout(new BorderLayout());
         
-        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this, this) {
+        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), null, this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);

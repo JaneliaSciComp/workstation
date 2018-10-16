@@ -87,7 +87,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
             @Override
             protected JPopupMenu getPopupMenu(AnnotatedImageButton<T, S> button, Annotation annotation) {
-                return IconGridViewerPanel.this.getAnnotationPopupMenu(annotation);
+                return IconGridViewerPanel.this.getAnnotationPopupMenu(button.getUserObject(), annotation);
             }
         };
 
@@ -313,7 +313,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
     protected abstract void moreAnnotationsButtonDoubleClicked(T userObject);
     
-    protected abstract JPopupMenu getAnnotationPopupMenu(Annotation annotation);
+    protected abstract JPopupMenu getAnnotationPopupMenu(T userObject, Annotation annotation);
 
     protected abstract void customizeTitlesPressed();
 
@@ -438,7 +438,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         for(T object : objects) {
             ids.add(getImageModel().getImageUniqueId(object));
         }
-        imagesPanel.setEditSelection(ids, true);
+        imagesPanel.setEditSelection(ids);
     }
 
     protected void deselectObjects(List<T> objects, boolean isUserDriven) {
@@ -601,11 +601,11 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         repaint();
     }
     
-    protected ImageModel<T, S> getImageModel() {
+    public ImageModel<T, S> getImageModel() {
         return imageModel;
     }
 
-    protected void setImageModel(ImageModel<T, S> imageModel) {
+    public void setImageModel(ImageModel<T, S> imageModel) {
         this.imageModel = imageModel;
         imagesPanel.setImageModel(imageModel);
     }
@@ -619,7 +619,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     public SelectionModel<T,S> getSelectionModel() {
         return selectionModel;
     }
-
+    
     public IconGridViewerToolbar getToolbar() {
         return toolbar;
     }

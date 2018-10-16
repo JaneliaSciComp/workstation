@@ -21,6 +21,7 @@ import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectEditSelectionEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.IconGridViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
@@ -51,6 +52,8 @@ import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.Subscribe;
+
 /**
  * An IconGridViewer implementation for viewing domain objects. 
  *
@@ -77,8 +80,6 @@ public class DomainObjectIconGridViewer
     private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
     private ChildSelectionModel<DomainObject,Reference> selectionModel;
     private ChildSelectionModel<DomainObject,Reference> editSelectionModel;
-
-    // UI state
     private ListViewerActionListener listener;
     private boolean editMode;
     
@@ -236,13 +237,46 @@ public class DomainObjectIconGridViewer
     @Override
     public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
         log.info("selectEditObjects(domainObjects={},select={})", DomainUtils.abbr(domainObjects), select);
-
         if (domainObjects.isEmpty()) {
             return;
         }
         if (select) {
             editSelectionModel.select(domainObjects, true, true);
         }
+    }
+
+    @Override
+    public void toggleEditMode(boolean editMode) {
+        this.editMode = editMode;
+        imagesPanel.setEditMode(editMode);
+        if (editSelectionModel!=null) {
+            editSelectionModel.reset();
+        }
+    }
+    
+    @Override
+    public void refreshEditMode() {
+        imagesPanel.setEditMode(editMode);
+        if (editSelectionModel != null) {
+            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds());
+        }
+    }
+
+    @Override
+    public void setEditSelectionModel(ChildSelectionModel<DomainObject, Reference> editSelectionModel) {
+        this.editSelectionModel = editSelectionModel;
+        imagesPanel.setEditSelectionModel(editSelectionModel);
+    }
+
+    @Override
+    public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
+        return editSelectionModel;
+    }
+
+    @Subscribe
+    public void handleEditSelection(DomainObjectEditSelectionEvent event) {
+        // Refresh the edit checkboxes any time the edit selection model changes
+        refreshEditMode();
     }
     
     @Override
@@ -354,31 +388,6 @@ public class DomainObjectIconGridViewer
     }
 
     @Override
-    public void toggleEditMode(boolean editMode) {
-        this.editMode = editMode;
-        imagesPanel.setEditMode(editMode);
-    }
-
-    @Override
-    public void refreshEditMode() {
-        imagesPanel.setEditMode(editMode);
-        if (editSelectionModel!=null) {
-            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds(), true);
-        }
-    }
-
-    @Override
-    public void setEditSelectionModel(ChildSelectionModel<DomainObject, Reference> editSelectionModel) {
-        this.editSelectionModel = editSelectionModel;
-        imagesPanel.setEditSelectionModel(editSelectionModel);
-    }
-
-    @Override
-    public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
-        return editSelectionModel;
-    }
-
-    @Override
     public boolean matches(ResultPage<DomainObject, Reference> resultPage, DomainObject domainObject, String text) {
         log.trace("Searching {} for {}", domainObject.getName(), text);
 
@@ -419,13 +428,18 @@ public class DomainObjectIconGridViewer
     }
     
     private DomainObjectContextMenu getPopupMenu(List<DomainObject> domainObjectList) {
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), domainObjectList, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(
+                (DomainObject)selectionModel.getParentObject(), 
+                domainObjectList, 
+                resultButton.getResultDescriptor(),
+                typeButton.getImageTypeName(),
+                editMode ? editSelectionModel : null);
         popupMenu.addMenuItems();
         return popupMenu;
     }
 
     @Override
-    protected JPopupMenu getAnnotationPopupMenu(Annotation annotation) {
+    protected JPopupMenu getAnnotationPopupMenu(DomainObject domainObject, Annotation annotation) {
         AnnotationContextMenu menu = new AnnotationContextMenu(annotation, getSelectedObjects(), imageModel);
         menu.addMenuItems();
         return menu;

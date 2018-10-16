@@ -3,6 +3,7 @@ package org.janelia.it.workstation.browser.model;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -50,8 +51,14 @@ public abstract class DomainObjectImageModel implements ImageModel<DomainObject,
     }
 
     @Override
-    public DomainObject getImageByUniqueId(Reference id) throws Exception {
-        return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
+    public DomainObject getImageByUniqueId(Reference id) {
+        try {
+            return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleException(e);
+            return null;
+        }
     }
     
     @Override

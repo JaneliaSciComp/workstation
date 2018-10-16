@@ -33,6 +33,7 @@ import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextRegistration;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
+import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
@@ -88,16 +89,35 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     
     // State
     protected ChildSelectionModel<T,S> selectionModel;
+    protected ChildSelectionModel<T,S> editSelectionModel;
     protected PreferenceSupport preferenceSupport;
     protected SearchProvider searchProvider;
     protected List<? extends ListViewerClassProvider> validViewerTypes;
-
-    public PaginatedResultsPanel(ChildSelectionModel<T,S> selectionModel, PreferenceSupport preferenceSupport, SearchProvider searchProvider, List<? extends ListViewerClassProvider> validViewerTypes) {
+    protected ImageModel<T, S> imageModel;
+    
+    public PaginatedResultsPanel(
+            ChildSelectionModel<T,S> selectionModel,
+            ChildSelectionModel<T,S> editSelectionModel,
+            PreferenceSupport preferenceSupport, 
+            SearchProvider searchProvider, 
+            List<? extends ListViewerClassProvider> validViewerTypes) {
+        this(selectionModel, editSelectionModel, preferenceSupport, searchProvider, validViewerTypes, null);
+    }
+    
+    public PaginatedResultsPanel(
+            ChildSelectionModel<T,S> selectionModel, 
+            ChildSelectionModel<T,S> editSelectionModel,
+            PreferenceSupport preferenceSupport, 
+            SearchProvider searchProvider, 
+            List<? extends ListViewerClassProvider> validViewerTypes,
+            ImageModel<T, S> imageModel) {
                
         this.selectionModel = selectionModel;
+        this.editSelectionModel = editSelectionModel;
         this.preferenceSupport = preferenceSupport;
         this.searchProvider = searchProvider;
         this.validViewerTypes = validViewerTypes;
+        this.imageModel = imageModel;
         
         if (validViewerTypes==null || validViewerTypes.isEmpty()) {
             throw new IllegalArgumentException("PaginatedResultsPanel needs at least one valid viewer type");
@@ -279,11 +299,25 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             });
             Events.getInstance().registerOnEventBus(resultsView);
             resultsView.setSelectionModel(selectionModel);
+            resultsView.setEditSelectionModel(editSelectionModel);
             resultsView.setPreferenceSupport(preferenceSupport);
             resultsView.setSearchProvider(searchProvider);
+            if (imageModel != null) {
+                resultsView.setImageModel(imageModel);
+            }
         }
     }
-        
+
+    public ImageModel<T, S> getImageModel() {
+        return imageModel;
+    }
+
+    public void setImageModel(ImageModel<T, S> imageModel) {
+        this.imageModel = imageModel;
+        if (resultsView != null) {
+            resultsView.setImageModel(imageModel);
+        }
+    }
 
     private void loadAndSelectAll() {
         
@@ -447,6 +481,9 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
     public void reset() {
         selectionModel.reset();
+        if (editSelectionModel != null) {
+            editSelectionModel.reset();
+        }
         this.currPage = 0;
     }
     
@@ -463,9 +500,14 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     }
     
     protected void showCurrPage(final boolean isUserDriven, final Callable<Void> success) {
+        
+        log.info("showCurrPage(isUserDriven={}, currPage={})",isUserDriven, currPage);
 
-        log.debug("showCurrPage(isUserDriven={})",isUserDriven);
-
+        if (currPage>0 && currPage >= numPages) {
+            log.warn("currPage {} is outside of page count ({}), resetting to first page", currPage, numPages);
+            currPage = 0;
+        }
+        
         resultsView.showLoadingIndicator();
         updatePagingStatus();
                 
@@ -478,13 +520,13 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             @Override
             protected void doStuff() throws Exception {
                 resultPage = getPage(searchResults, currPage);
+                log.info("Got page {} with {} results", currPage, resultPage.getNumPageResults());
             }
 
             @Override
             protected void hadSuccess() {
-                log.debug("Got results, updating view");
                 final ArrayList<S> selectedRefs = new ArrayList<>(selectionModel.getSelectedIds());
-                log.debug("Got selected refs: {}",selectedRefs);
+                log.info("Got selected refs: {}",selectedRefs);
                 updateResultsView(new Callable<Void>() {   
                     @Override
                     public Void call() throws Exception {
@@ -498,7 +540,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                             List<T> objects = resultPage.getObjects();
                             if (!objects.isEmpty()) {
                                 log.debug("Auto-selecting first object");
-                                resultsView.select(Arrays.asList(objects.get(0)), true, true, false, notifyModel);
+                                resultsView.select(Arrays.asList(objects.get(0)), true, true, true, notifyModel);
                             }
                         }
                         else {

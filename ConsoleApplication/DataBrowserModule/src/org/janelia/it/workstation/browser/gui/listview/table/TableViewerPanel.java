@@ -408,11 +408,11 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         return resultsTable.getTable();
     }
 
-    protected ImageModel<T, S> getImageModel() {
+    public ImageModel<T, S> getImageModel() {
         return imageModel;
     }
 
-    protected void setImageModel(ImageModel<T, S> imageModel) {
+    public void setImageModel(ImageModel<T, S> imageModel) {
         this.imageModel = imageModel;
     }
     

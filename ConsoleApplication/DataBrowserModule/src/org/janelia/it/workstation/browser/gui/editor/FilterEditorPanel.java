@@ -283,7 +283,7 @@ public class FilterEditorPanel
         getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
         getActionMap().put("enterAction", mySearchAction);
         
-        this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this, this) {
+        this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), null, this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
@@ -552,7 +552,6 @@ public class FilterEditorPanel
                     
                 };
                 
-                facetButton.update();
                 configPanel.addConfigComponent(facetButton);
             }
         }

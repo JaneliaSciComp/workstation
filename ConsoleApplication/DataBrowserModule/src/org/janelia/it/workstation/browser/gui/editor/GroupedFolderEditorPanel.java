@@ -159,7 +159,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
         groupScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         groupScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
         
-        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), this, this) {
+        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), null, this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);

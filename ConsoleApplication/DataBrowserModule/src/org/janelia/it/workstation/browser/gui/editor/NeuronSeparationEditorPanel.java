@@ -9,11 +9,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
-import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
@@ -27,6 +26,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
@@ -71,31 +71,34 @@ public class NeuronSeparationEditorPanel
     private final static Logger log = LoggerFactory.getLogger(NeuronSeparationEditorPanel.class);
 
     private final static String PREFERENCE_KEY = "NeuronSeparationEditor";
-
+    private final static String DEFAULT_SORT_CRITERIA = "number";
+    
     // Utilities
     private final Debouncer debouncer = new Debouncer();
     
     // UI Elements
     private final ConfigPanel configPanel;
     private final DropDownButton resultButton;
-    private final JButton editModeButton;
     private final JButton openInNAButton;
     private final JButton fragmentSortButton;
+    private final JButton editModeButton;
     private final JButton editOkButton;
     private final JButton editCancelButton;
-    private final JCheckBox enableVisibilityCheckBox;
     private final PaginatedDomainResultsPanel resultsPanel;
     
     // State
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
-    private final DomainObjectSelectionModel editSelectionModel = new DomainObjectSelectionModel();
+    private final DomainObjectEditSelectionModel editSelectionModel = new DomainObjectEditSelectionModel();
     private NeuronSeparation separation;
+    private boolean editMode;
     
     // Results
-    private List<DomainObject> domainObjects;
+    private List<NeuronFragment> neuronFragments;
     private List<Annotation> annotations;
     private DomainObjectSearchResults searchResults;
-    private String sortCriteria = "number";
+    private String sortCriteria = DEFAULT_SORT_CRITERIA;
+
+    private Set<Long> hiddenFragments;
 
     public NeuronSeparationEditorPanel() {
         
@@ -105,10 +108,10 @@ public class NeuronSeparationEditorPanel
         
         resultButton = new DropDownButton();
         
-        editModeButton = new JButton();
+        editModeButton = new JButton("Show/Hide Neurons");
         editModeButton.setIcon(Icons.getIcon("page_white_edit.png"));
         editModeButton.setFocusable(false);
-        editModeButton.setToolTipText("Edit the visibility of the fragments in the current separation");
+        editModeButton.setToolTipText("Edit the visibility of the neuron fragments in the current separation");
         editModeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -172,14 +175,7 @@ public class NeuronSeparationEditorPanel
         configPanel.addConfigComponent(editOkButton);
         configPanel.addConfigComponent(editCancelButton);
 
-        enableVisibilityCheckBox = new JCheckBox(new AbstractAction("Hide/Unhide") {
-            public void actionPerformed(ActionEvent e) {
-                search();
-            }
-        });
-        configPanel.addConfigComponent(enableVisibilityCheckBox);
-
-        resultsPanel = new PaginatedDomainResultsPanel(selectionModel, this, this) {
+        resultsPanel = new PaginatedDomainResultsPanel(selectionModel, editSelectionModel, this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
@@ -190,64 +186,28 @@ public class NeuronSeparationEditorPanel
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->NeuronSeparationEditorPanel"));
-        resultsPanel.getViewer().setEditSelectionModel(editSelectionModel);
     }
 
-    @SuppressWarnings("unchecked")
     private void enterEditMode() {
-        try {
-            enableVisibilityCheckBox.setVisible(false);
-            domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
-            List<DomainObject> neuronFrags = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
-
-            // show checkboxes for all items
-            editModeButton.setVisible(false);
-            editOkButton.setVisible(true);
-            editCancelButton.setVisible(true);
-            resultsPanel.getViewer().toggleEditMode(true);
-
-            // get the visibility preference from the domainmgr
-            List<Long> neuronSepVisibility = (List<Long>)FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
-                    Long.toString(separation.getId()), null);
-            List<DomainObject> visibleNeuronFrags = new ArrayList<DomainObject>();
-            if (neuronSepVisibility!=null) {
-                Set<Long> visibleFragSet = new HashSet<>(neuronSepVisibility);
-                for (int i=0; i<neuronFrags.size(); i++) {
-                    if (visibleFragSet.contains(neuronFrags.get(i).getId())) {
-                        visibleNeuronFrags.add(neuronFrags.get(i));
-                    }
-                }
-                resultsPanel.getViewer().selectEditObjects(visibleNeuronFrags, true);
-            }
-            showResults(true, null);
-        }
-        catch (Exception e) {
-            ConsoleApp.handleException(e);
-        }
+        this.editMode = true;
+        editModeButton.setVisible(false);
+        editOkButton.setVisible(true);
+        editCancelButton.setVisible(true);
+        resultsPanel.getViewer().toggleEditMode(true);
+        search();
     }
 
     private void cancelEditMode() {
-        // show checkboxes for all items
+        this.editMode = false;
         editModeButton.setVisible(true);
         editOkButton.setVisible(false);
         editCancelButton.setVisible(false);
         resultsPanel.getViewer().toggleEditMode(false);
-        enableVisibilityCheckBox.setVisible(true);
         search();
     }
 
     private void saveVisibilities() {
-        try {
-            List<Long> visibilities = new ArrayList<>();
-            List<Reference> visibleFragments = editSelectionModel.getSelectedIds();
-            for (int i = 0; i < visibleFragments.size(); i++) {
-                visibilities.add(visibleFragments.get(i).getTargetId());
-            }
-            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY, Long.toString(separation.getId()), visibilities);
-        }
-        catch (Exception e) {
-            log.error("Problem encountered saving preferences", e);
-        }
+        saveHiddenFragments();
         cancelEditMode();
     }
 
@@ -326,27 +286,20 @@ public class NeuronSeparationEditorPanel
 
             @Override
             protected void doStuff() throws Exception {
-                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                
                 if (separation==null) {
-                    domainObjects = new ArrayList<>();
+                    neuronFragments = new ArrayList<>();
                     annotations = new ArrayList<>();
                 }
                 else {
-                    domainObjects = model.getDomainObjects(separation.getFragmentsReference());
-                    // TODO: set up global preference for visibility, allow users to select other user's preferences
-                    annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));
-                    fragmentSortButton.setVisible(false);
-                    for (DomainObject obj:domainObjects) {
-                        NeuronFragment fragment = (NeuronFragment)obj;
-                        if (fragment.getVoxelWeight()!=null) {
-                            fragmentSortButton.setVisible(true);
-                            break;
-                        }
-                    }
+                    DomainModel model = DomainMgr.getDomainMgr().getModel();
+                    neuronFragments = model.getDomainObjectsAs(NeuronFragment.class, separation.getFragmentsReference());
+                    annotations = model.getAnnotations(DomainUtils.getReferences(neuronFragments));
                 }
-                loadPreferences();
+
+                sortCriteria = loadSortCriteria();
+                hiddenFragments = loadHiddenFragments();
                 prepareResults();
-                log.info("Showing "+domainObjects.size()+" neurons");
             }
 
             @Override
@@ -373,47 +326,58 @@ public class NeuronSeparationEditorPanel
         worker.execute();
     }
 
-    public void showNothing() {
-        removeAll();
-        updateUI();
-    }
-
     private void prepareResults() throws Exception {
         
-        if (enableVisibilityCheckBox.isSelected()) {
-
-            @SuppressWarnings("unchecked")
-            List<Long> neuronSepVisibility = (List<Long>)FrameworkImplProvider.getRemotePreferenceValue(
-                    DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
-                    Long.toString(separation.getId()), null);
-            
-            if (neuronSepVisibility!=null) {
-                Set<Long> fragmentVis = new HashSet<>(neuronSepVisibility);
-                for (int i=domainObjects.size()-1; i>=0; i--) {
-                    NeuronFragment neuronFragment = (NeuronFragment) domainObjects.get(i);
-                    // remove items that are hidden
-                    if (fragmentVis.contains(neuronFragment.getId())) {
-                        domainObjects.remove(i);
-                    }
-
+        List<NeuronFragment> filteredFragments = new ArrayList<>();
+        
+        if (editMode) {
+            filteredFragments.addAll(neuronFragments);
+            log.info("Showing {} neurons in edit mode", neuronFragments.size());
+        }
+        else {
+            log.info("Removing {} hidden neurons from view", hiddenFragments.size());
+            for (NeuronFragment neuronFragment : neuronFragments) {
+                if (!hiddenFragments.contains(neuronFragment.getId())) {
+                    filteredFragments.add(neuronFragment);
                 }
             }
-        } 
-        else {
-            domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
+            log.info("Showing "+filteredFragments.size()+" neurons");
         }
         
-        DomainUtils.sortDomainObjects(domainObjects, sortCriteria);
-        this.searchResults = new DomainObjectSearchResults(domainObjects, annotations);
+        DomainUtils.sortDomainObjects(filteredFragments, sortCriteria);
+        this.searchResults = new DomainObjectSearchResults(filteredFragments, annotations);
     }
-
+    
     public void showResults(boolean isUserDriven, Callable<Void> success) {
+
+        // Set visibility of the sort button
+        fragmentSortButton.setVisible(false);
+        for (NeuronFragment neuronFragment : neuronFragments) {
+            if (neuronFragment.getVoxelWeight()!=null) {
+                fragmentSortButton.setVisible(true);
+                break;
+            }
+        }
+
+        // Check hidden items
+        if (editMode) {
+            List<DomainObject> visibleFragments = neuronFragments.stream()
+                    .filter(n -> !hiddenFragments.contains(n.getId()))
+                    .collect(Collectors.toList());
+            resultsPanel.getViewer().selectEditObjects(visibleFragments, true);
+        }
+        
         add(configPanel, BorderLayout.NORTH);
         add(resultsPanel, BorderLayout.CENTER);
         updateUI();
         resultsPanel.showSearchResults(searchResults, isUserDriven, success);
     }
 
+    public void showNothing() {
+        removeAll();
+        updateUI();
+    }
+    
     @Override
     public String getSortField() {
         return sortCriteria;
@@ -422,7 +386,7 @@ public class NeuronSeparationEditorPanel
     @Override
     public void setSortField(final String sortCriteria) {
         this.sortCriteria = sortCriteria;
-        savePreferences();
+        saveSortCriteria();
     }
 
     @Override
@@ -432,9 +396,9 @@ public class NeuronSeparationEditorPanel
 
             @Override
             protected void doStuff() throws Exception {
-                loadPreferences();
+                sortCriteria = loadSortCriteria();
+                hiddenFragments = loadHiddenFragments();
                 prepareResults();
-                log.info("Showing "+domainObjects.size()+" items");
             }
 
             @Override
@@ -462,23 +426,86 @@ public class NeuronSeparationEditorPanel
         action.actionPerformed(null);
     }
 
-    private void loadPreferences() {
-        if (separation.getId()==null) return;
-        try {
-            sortCriteria = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, "number");
-        }
-        catch (Exception e) {
-            log.error("Could not load sort criteria",e);
-        }
-    }
-
-    private void savePreferences() {
+    private void saveSortCriteria() {
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
             FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);
+        }
+    }
+    
+    private String loadSortCriteria() {
+        try {
+            return FrameworkImplProvider.getRemotePreferenceValue(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, 
+                    PREFERENCE_KEY, DEFAULT_SORT_CRITERIA);
+        }
+        catch (Exception e) {
+            log.error("Could not load sort criteria",e);
+        }
+        return DEFAULT_SORT_CRITERIA;
+    }
+
+    private Set<Long> loadHiddenFragments() {
+
+        Set<Long> hiddenFragments = new HashSet<>();
+        if (separation.getId()==null) return hiddenFragments;
+
+        try {
+            @SuppressWarnings("unchecked")
+            List<Object> neuronSepVisibility = (List<Object>)FrameworkImplProvider.getRemotePreferenceValue(
+                    DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
+                    Long.toString(separation.getId()), null);
+
+            // TODO: set up global preference for visibility, allow users to select other user's preferences
+            if (neuronSepVisibility!=null) {
+                log.info("Retrieved {} hidden fragment ids", neuronSepVisibility.size());
+    
+                for (Object object : neuronSepVisibility) {
+                    // Just some robustness to how the pref values are transmitted on the wire.  
+                    if (object instanceof String) {
+                        hiddenFragments.add(new Long((String)object));
+                    }
+                    else if (object instanceof Long) {
+                        hiddenFragments.add((Long)object);
+                    }
+                    else {
+                        throw new IllegalStateException("Unsupported visibility value type: "+object.getClass().getName());
+                    }
+                }
+            }
+            
+            log.info("Got {} hidden fragments", hiddenFragments.size());
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleException("Could not load hidden fragments", e);
+        }
+        
+        return hiddenFragments;
+    }
+    
+    private void saveHiddenFragments() {
+        try {
+            List<Long> visibleFragments = DomainUtils.getIdsFromReferences(editSelectionModel.getSelectedIds());
+            log.info("User selected {} visible fragments", visibleFragments.size());
+            
+            hiddenFragments.clear();
+            for (NeuronFragment neuronFragment : neuronFragments) {
+                if (!visibleFragments.contains(neuronFragment.getId())) {
+                    hiddenFragments.add(neuronFragment.getId());
+                }
+            }
+            log.info("Hiding {}/{} fragments", hiddenFragments.size(), neuronFragments.size());
+            
+            FrameworkImplProvider.setRemotePreferenceValue(
+                    DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY, 
+                    Long.toString(separation.getId()), hiddenFragments);
+            log.info("Saved {} hidden fragments", hiddenFragments.size());
+        }
+        catch (Exception e) {
+            FrameworkImplProvider.handleException("Could not save hidden fragments", e);
         }
     }
     
@@ -516,6 +543,16 @@ public class NeuronSeparationEditorPanel
         resultsPanel.deactivate();
     }
     
+    private void refresh() {
+        loadSampleResult(separation, false, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                // TODO: reselect the selected neurons
+                return null;
+            }
+        });
+    }
+    
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {
@@ -549,13 +586,7 @@ public class NeuronSeparationEditorPanel
                     }
                     else if (domainObject.getClass().equals(NeuronFragment.class)) {
                         log.info("Some objects of class NeuronFragment were invalidated, reloading...");
-                        loadSampleResult(separation, false, new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                // TODO: reselect the selected neurons
-                                return null;
-                            }
-                        });
+                        refresh();
                     }
                 }
             }

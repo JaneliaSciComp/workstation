@@ -34,7 +34,7 @@ import org.janelia.it.workstation.browser.model.ImageDecorator;
 public class DecoratedImage extends JComponent {
     
     private static final float ICON_OPACITY = 1.0f;
-    private static final float DECORATOR_OPACITY = 0.7f;
+    private static final float DECORATOR_OPACITY = 0.9f;
 
     /**
      * If this is true, then the image will be painted at the size determined by the parent container.

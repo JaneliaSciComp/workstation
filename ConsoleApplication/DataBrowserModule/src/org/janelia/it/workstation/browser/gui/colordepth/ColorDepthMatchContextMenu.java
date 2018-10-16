@@ -5,7 +5,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
@@ -21,11 +20,10 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
+import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
-import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
@@ -40,8 +38,8 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     
     // Current selection
     protected ColorDepthResult contextObject;
-    protected ImageModel<ColorDepthMatch, String> imageModel;
-    protected Map<Reference, Sample> sampleMap;
+    protected ChildSelectionModel<ColorDepthMatch,String> editSelectionModel;
+    protected ColorDepthResultImageModel imageModel;
     protected List<ColorDepthMatch> matches;
     protected boolean multiple;
     
@@ -50,11 +48,12 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     protected Sample sample;
     protected String matchName;
     
-    public ColorDepthMatchContextMenu(ColorDepthResult result, List<ColorDepthMatch> matches, Map<Reference, Sample> sampleMap, ImageModel<ColorDepthMatch, String> imageModel) {
+    public ColorDepthMatchContextMenu(ColorDepthResult result, List<ColorDepthMatch> matches, ColorDepthResultImageModel imageModel, 
+            ChildSelectionModel<ColorDepthMatch,String> editSelectionModel) {
         this.contextObject = result;
         this.matches = matches;
-        this.sampleMap = sampleMap;
         this.imageModel = imageModel;
+        this.editSelectionModel = editSelectionModel;
         this.multiple = matches.size() > 1;
         this.match = matches.size() == 1 ? matches.get(0) : null;
         if (match != null) {
@@ -62,7 +61,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
                 this.matchName = match.getFile().getName();
             }
             else {
-                this.sample = match==null ? null : sampleMap.get(match.getSample());
+                this.sample = match==null ? null : imageModel.getSample(match);
                 this.matchName = multiple ? null : (sample == null ? "Access denied" : sample.getName());
             }
         }
@@ -96,11 +95,15 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
 
         add(getTitleItem());
         add(getCopyNameToClipboardItem());
-
         setNextAddRequiresSeparator(true);
+
+        if (editSelectionModel != null) {
+            add(getCheckItem(true));
+            add(getCheckItem(false));
+        }
+        
         add(getAddToMaskResultsItem());
         add(getAddToFolderItem());
-        add(getColorDepthSearchItem());
         
         setNextAddRequiresSeparator(true);
         add(getOpenInFinderItem());
@@ -122,16 +125,20 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         return getNamedActionItem(new CopyToClipboardAction("Name",matchName));
     }
 
-
-    protected JMenuItem getColorDepthSearchItem() {
-
-        if (multiple) return null;
-        
-        return null;
-        // TODO: figure out the result descriptor, or create a new action to make this work
-        //return getNamedActionItem(new CreateMaskFromSampleAction(sample, resultDescriptor, typeName));
+    protected JMenuItem getCheckItem(boolean check) {
+        String title = check ? "Check" : "Uncheck";
+        JMenuItem menuItem = new JMenuItem("  "+title+" Selected");
+        menuItem.addActionListener((e) -> {
+            if (check) {
+                editSelectionModel.select(matches, false, true);
+            }
+            else {
+                editSelectionModel.deselect(matches, true);
+            }
+        });
+        return menuItem;
     }
-   
+
     protected JMenuItem getAddToMaskResultsItem() {
         
         List<Sample> samples = getSamples();
@@ -214,7 +221,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         List<Sample> samples = new ArrayList<>();
         for(ColorDepthMatch match : matches) {
             if (match.getSample()!=null) {
-                samples.add(sampleMap.get(match.getSample()));
+                samples.add(imageModel.getSample(match));
             }
         }
         return samples;

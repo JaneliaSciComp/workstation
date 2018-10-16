@@ -115,10 +115,9 @@ public abstract class SelectionModel<T,S> {
         
         for(T object : objects) {
             S id = getId(object);
-            if (!selected.contains(id)) {
-                return;
+            if (selected.contains(id)) {
+                selected.remove(id);
             }
-            selected.remove(id);
         }
         log.trace("{} - {} selected", getClass().getSimpleName(), selected.size());
         selectionChanged(objects, false, false, isUserDriven);

@@ -6,6 +6,7 @@ import java.util.concurrent.Callable;
 import javax.swing.JPanel;
 
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
@@ -47,6 +48,18 @@ public interface ListViewer<T,S> {
      * Configure the search provider for re-sorting, etc. 
      */
     public void setSearchProvider(SearchProvider searchProvider);
+    
+    /**
+     * Returns the current image model.
+     * @return
+     */
+    public ImageModel<T, S> getImageModel();
+    
+    /**
+     * Configure the image model to use for showing objects in the list viewer.
+     * @param imageModel
+     */
+    public void setImageModel(ImageModel<T,S> imageModel);
     
     /**
      * Set a listener for actions from this list viewer.
@@ -137,18 +150,18 @@ public interface ListViewer<T,S> {
     public ChildSelectionModel<T, S> getEditSelectionModel();
     
     /**
-     * Called on the specific viewer to toggle edit mode
+     * Enable or disable edit mode, which allows a user to select items using checkboxes instead of 
+     * button selection. This uses the editSelectionModel.
      */
     public void toggleEditMode(boolean editMode);
 
     /**
-     * Used when you have to perform two UI actions sequentially in the same thread
-     * TODO: provide a mechanism for consistently executing UI callback queues, ala Javascript
+     * Refresh edit mode selections.
      */
     public void refreshEditMode();
 
     /**
-     * subgroup of edit items to toggle selection; might want to consider swapping selection model to use checkboxes instead
+     * Select or deselect a group of objects in edit mode. 
      * @param domainObjects list of domain objects for which to change edit selection
      * @param select select if true, deselect if false
      */

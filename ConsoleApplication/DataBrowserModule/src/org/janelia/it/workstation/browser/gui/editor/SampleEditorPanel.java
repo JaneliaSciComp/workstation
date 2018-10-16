@@ -240,7 +240,7 @@ public class SampleEditorPanel
         };
         configPanel.addTitleComponent(viewButton, true, true);
         
-        lsmPanel = new PaginatedDomainResultsPanel(selectionModel, this, this) {
+        lsmPanel = new PaginatedDomainResultsPanel(selectionModel, null, this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);

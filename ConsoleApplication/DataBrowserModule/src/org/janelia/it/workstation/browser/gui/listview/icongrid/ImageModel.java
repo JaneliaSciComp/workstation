@@ -14,7 +14,7 @@ import org.janelia.model.domain.ontology.Annotation;
  */
 public interface ImageModel<T,S> {
 
-    public T getImageByUniqueId(S id) throws Exception;
+    public T getImageByUniqueId(S id);
     
     public S getImageUniqueId(T imageObject);
     
