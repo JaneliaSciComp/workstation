@@ -74,6 +74,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         add(getNeuronAnnotatorLossyItem());
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
+        add(getVvdViewerItem());
         add(getFijiViewerItem());
         add(getDownloadItem());
         
@@ -207,7 +208,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
     protected JMenuItem getVaa3d3dViewItem() {
         String path = DomainUtils.getDefault3dImageFilePath(result);
         if (path==null) return null;
-        return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_3D));
+        return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_VAA3D_3D));
     }
 
     protected JMenuItem getFijiViewerItem() {
@@ -216,6 +217,11 @@ public class SampleResultContextMenu extends PopupContextMenu {
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_FIJI, path, null));
     }
 
+    protected JMenuItem getVvdViewerItem() {
+        String path = DomainUtils.getFilepath(result, FileType.VisuallyLosslessStack);
+        if (path==null) return null;
+        return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VVD, path, null));
+    }
     protected JMenuItem getDownloadItem() {
 
         String path = DomainUtils.getDefault3dImageFilePath(result);

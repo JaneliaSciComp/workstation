@@ -197,8 +197,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getNeuronAnnotatorLossyItem());
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
+        add(getVvdViewerItem());
         add(getFijiViewerItem());
-
         add(getDownloadItem());
 
         // TODO: move these options to a separate "Confocal" module 
@@ -893,7 +893,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (fileProvider==null) return null;
         String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
         if (path==null) return null;
-        return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_3D));
+        return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_VAA3D_3D));
     }
 
     protected JMenuItem getFijiViewerItem() {
@@ -905,6 +905,16 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_FIJI, path, null));
     }
 
+    protected JMenuItem getVvdViewerItem() {
+        if (multiple) return null;
+        HasFiles fileProvider = getSingle3dResult();
+        if (fileProvider==null) return null;
+        String path = DomainUtils.getFilepath(fileProvider, FileType.VisuallyLosslessStack);
+        log.info("GOT PATH {} from {}",path, fileProvider);
+        if (path==null) return null;
+        return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VVD, path, null));
+    }
+    
     protected JMenuItem getRelatedItemsItem() {
         GetRelatedItemsAction action = GetRelatedItemsAction.get();
         action.setDomainObjects(domainObjectList);

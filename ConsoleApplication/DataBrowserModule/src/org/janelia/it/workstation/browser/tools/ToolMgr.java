@@ -13,6 +13,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JOptionPane;
 
@@ -57,24 +58,21 @@ public class ToolMgr extends PreferenceManager {
     }
     
 	private static final String CONSOLE_PORT_VAR_NAME = "WORKSTATION_SERVICE_PORT";
-	
-    public static final String TOOL_FIJI    = "Fiji.app";
-    public static final String TOOL_VAA3D   = "Vaa3d";
-    public static final String TOOL_NA      = "Vaa3d - Neuron Annotator";
-    public static final String suffix = SystemInfo.isWindows ? " /na" : " -na";
 
-    public static final String MODE_3D      = "3D View";
-    public static String rootExecutablePath = ToolMgr.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-
+    public static final String TOOL_FIJI = "Fiji.app";
+    public static final String TOOL_VAA3D = "Vaa3d";
+    public static final String TOOL_NA = "Vaa3d - Neuron Annotator";
+    public static final String TOOL_VVD = "VVD Viewer";
+    public static final String NA_SUFFIX = SystemInfo.isWindows ? " /na" : " -na";
+    public static final String MODE_VAA3D_3D = "3D View";
+    
+    private static String rootExecutablePath = ToolMgr.class.getProtectionDomain().getCodeSource().getLocation().getPath();
     private static TreeMap<String, ToolInfo> toolTreeMap = new TreeMap<String, ToolInfo>();
 
     private ToolMgr() {
-        
         log.info("Initializing Tool Manager");
-        
         DEBUG = false;
         userFileDescription = "Workstation Tools";
-        
         reload();
     }
 
@@ -91,8 +89,8 @@ public class ToolMgr extends PreferenceManager {
         
         // Add Neuron Annotator option to Vaa3d
         if (tmpTool != null) {
-            if (!tmpTool.getPath().endsWith(suffix)) {
-                tmpTool.setPath(tmpTool.getPath()+suffix);
+            if (!tmpTool.getPath().endsWith(NA_SUFFIX)) {
+                tmpTool.setPath(tmpTool.getPath()+NA_SUFFIX);
             }
         }
         
@@ -252,6 +250,11 @@ public class ToolMgr extends PreferenceManager {
             tmpTool.setSourceFile(sourceFile);
             targetMasterCollection.put(ToolInfo.TOOL_PREFIX + tmpTool.getName(), tmpTool);
         }
+        if (!targetMasterCollection.containsKey(ToolInfo.TOOL_PREFIX+PreferenceManager.getKeyForName(TOOL_VVD, true))) {
+            ToolInfo tmpTool = new ToolInfo(TOOL_VVD, "", "vvd16.svg.png");
+            tmpTool.setSourceFile(sourceFile);
+            targetMasterCollection.put(ToolInfo.TOOL_PREFIX + tmpTool.getName(), tmpTool);
+        }
         // end evil hack
     }
 
@@ -303,7 +306,7 @@ public class ToolMgr extends PreferenceManager {
     }
     
     public boolean isSystemTool(String toolName) {
-        return toolName.equals(TOOL_NA) || toolName.equals(TOOL_VAA3D) || toolName.equals(TOOL_FIJI);
+        return toolName.equals(TOOL_NA) || toolName.equals(TOOL_VAA3D) || toolName.equals(TOOL_FIJI) || toolName.equals(TOOL_VVD);
     }
 
     public ToolInfo getTool(String toolName) {
@@ -453,16 +456,14 @@ public class ToolMgr extends PreferenceManager {
 
             worker.execute();
             
-            
-            // TODO: this form of waitFor is not supported until Java 8. Once we move to 8, uncomment this code.
-//            if (p.waitFor(100, TimeUnit.MILLISECONDS)) {
-//                // Process terminated immediately, check the exit code
-//                if (p.exitValue()!=0) {
-//                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
-//                        "'"+toolName+"' could not start. Please check your configuration.", "Error", JOptionPane.ERROR_MESSAGE);
-//                    OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
-//                }
-//            }
+            if (p.waitFor(100, TimeUnit.MILLISECONDS)) {
+                // Process terminated immediately, check the exit code
+                if (p.exitValue()!=0) {
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                        "'"+toolName+"' could not start. Please check your configuration.", "Error", JOptionPane.ERROR_MESSAGE);
+                    OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
+                }
+            }
         }
     }
 
@@ -496,7 +497,7 @@ public class ToolMgr extends PreferenceManager {
                 if (TOOL_VAA3D.equals(toolName)) {
                     arguments.add(SystemInfo.isWindows ? "/i" : "-i");
                     arguments.add(file.getAbsolutePath());
-                    if (MODE_3D.equals(mode)) {
+                    if (MODE_VAA3D_3D.equals(mode)) {
                         arguments.add(SystemInfo.isWindows ? "/v" : "-v");
                     }
                 }
