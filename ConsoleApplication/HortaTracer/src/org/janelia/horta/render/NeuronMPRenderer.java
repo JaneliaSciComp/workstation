@@ -63,10 +63,6 @@ import org.janelia.geometry3d.Matrix4;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
-import org.janelia.horta.actors.ConesActor;
-import org.janelia.horta.actors.ConesMaterial;
-import org.janelia.horta.actors.SpheresActor;
-import org.janelia.horta.actors.SpheresMaterial;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -477,12 +473,7 @@ extends MultipassRenderer
         if (allSwcActor.contains(neuron)) 
             return;
         allSwcActor.addNeuron(neuron);
-        /*
-        SpheresActor sa = allSwcActor.createSpheresActor(neuron);
-        ConesActor ca = allSwcActor.createConesActor(neuron);
-        // this next step is synchronized but fast
-        allSwcActor.setActors(neuron, sa, ca);
-         */
+
         neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
     
