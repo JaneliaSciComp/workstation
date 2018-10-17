@@ -331,14 +331,14 @@ public class ColorDepthResultTableViewer
     @Override
     public boolean matches(ResultPage<ColorDepthMatch, String> resultPage, ColorDepthMatch object, String text) {
         
-        log.debug("Searching {} for {}",object.getFilepath(),text);
+        log.trace("Searching {} for {}",object.getFilepath(),text);
 
         String tupper = text.toUpperCase();
 
         String titleUpper = getImageModel().getImageTitle(object).toUpperCase();
         
-        // Exact matches on filename or title always work
-        if (object.getFilepath().toString().contains(text) || titleUpper.equals(tupper)) {
+        // Matches on filename or title always work, no matter if they're visible or not
+        if (object.getFilepath().toString().contains(text) || titleUpper.contains(tupper)) {
             return true;
         }
 

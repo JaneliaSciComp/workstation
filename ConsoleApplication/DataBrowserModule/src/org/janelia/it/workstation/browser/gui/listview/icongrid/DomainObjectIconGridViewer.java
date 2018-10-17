@@ -3,6 +3,7 @@ package org.janelia.it.workstation.browser.gui.listview.icongrid;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -42,6 +43,7 @@ import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.util.HelpTextUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainObjectAttribute;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
@@ -403,6 +405,24 @@ public class DomainObjectIconGridViewer
             return true;
         }
 
+        for (DomainObjectAttribute attr : DomainUtils.getDisplayAttributes(Arrays.asList(domainObject))) {
+            
+            if (attr.getGetter()!=null) {
+                try {
+                    Object value = attr.getGetter().invoke(domainObject);
+                    if (value != null) {
+                        if (value.toString().toUpperCase().contains(text)) {
+                            return true;
+                        }
+                    }
+                    
+                }
+                catch (Exception e) {
+                    FrameworkImplProvider.handleExceptionQuietly("Error matching on attribute: "+attr.getName(), e);
+                }
+            }
+        }
+        
         for(Annotation annotation : resultPage.getAnnotations(Reference.createFor(domainObject))) {
             if (annotation.getName().toUpperCase().contains(tupper)) {
                 return true;

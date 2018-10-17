@@ -32,6 +32,7 @@ import org.janelia.model.domain.enums.SplitHalfType;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.sample.Sample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -221,15 +222,31 @@ public class ColorDepthResultIconGridViewer
     
     @Override
     public boolean matches(ResultPage<ColorDepthMatch, String> resultPage, ColorDepthMatch object, String text) {
-        log.trace("Searching {} for {}", object.getFilepath(), text);
+
+        log.trace("Searching {} for {}",object.getFilepath(),text);
 
         String tupper = text.toUpperCase();
 
-        String name = getImageModel().getImageTitle(object);
-        if (name!=null && name.toUpperCase().contains(tupper)) {
+        String titleUpper = getImageModel().getImageTitle(object).toUpperCase();
+        
+        // Exact matches on filename or title always work
+        if (object.getFilepath().toString().contains(text) || titleUpper.contains(tupper)) {
             return true;
         }
 
+        ColorDepthResultImageModel imageModel = (ColorDepthResultImageModel)getImageModel();
+        Sample sample = imageModel.getSample(object);
+        if (sample != null) {
+            String line = sample.getLine();
+            if (line != null && line.toUpperCase().contains(text)) return true;
+            
+            String vtline = sample.getVtLine();
+            if (vtline != null && vtline.toUpperCase().contains(text)) return true;
+            
+            String alias = sample.getFlycoreAlias();
+            if (alias != null && alias.toUpperCase().contains(text)) return true;
+        }
+        
         return false;
     }
 

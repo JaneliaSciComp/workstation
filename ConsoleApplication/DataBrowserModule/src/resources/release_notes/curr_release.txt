@@ -5,6 +5,7 @@ Workstation Browser
 * Color depth search results can be selected for split generation
 * Easier selection of color depth MIPs for download
 * Duplicate files are now ignored when downloading
+* "Find" feature (Command-F/Ctrl-F) now searches more attributes, including VT Line 
 
 Large Volume Viewer
 * Export SWC dialog box is larger and remembers its size
