@@ -48,16 +48,14 @@ public class LargeVolumeViewerLocationProvider implements Tiled3dSampleLocationP
 
     @Override
     public void setSampleLocation(SampleLocation sampleLocation) {
-        LargeVolumeViewerTopComponent lvv = 
-                LargeVolumeViewerTopComponent.getInstance();
+        LargeVolumeViewerTopComponent lvv = LargeVolumeViewerTopComponent.getInstance();
         if (! lvv.isOpened()) {
             lvv.open();
         }
         if (lvv.isOpened()) {
             lvv.requestActive();
-            viewer.setLocation(sampleLocation);
-        }
-        else {
+            viewer.setSampleLocation(sampleLocation);
+        } else {
             throw new IllegalStateException("Failed to open Large Volume Viewer.");
         }
     }

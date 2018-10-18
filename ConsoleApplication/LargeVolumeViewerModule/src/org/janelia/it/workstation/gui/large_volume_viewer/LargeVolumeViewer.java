@@ -68,7 +68,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	protected Viewport viewport = renderer.getViewport();
 	protected RubberBand rubberBand = new RubberBand();
 
-	SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
+	private SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
 	protected TileServer tileServer = new TileServer(sharedVolumeImage);
 	protected VolumeImage3d volumeImage = sharedVolumeImage;
 	protected SliceActor sliceActor;
@@ -137,13 +137,13 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	    setWheelMode(WheelMode.Mode.SCAN);
 		glCanvas.getGLAutoDrawable().addGLEventListener(renderer);
 		setCamera(camera);
-		//
+
 		ViewTileManager viewTileManager = new ViewTileManager(this);
 		viewTileManager.setVolumeImage(tileServer.getSharedVolumeImage());
 		viewTileManager.setTextureCache(tileServer.getTextureCache());
 		tileServer.addViewTileManager(viewTileManager);
 		sliceActor = new SliceActor(viewTileManager);
-		//
+
 		// gray background for testing
 		// this.renderer.setBackgroundColor(new Color(0.5f, 0.5f, 0.5f, 0.0f));
 		// renderer.setBackgroundColor(Color.white);
@@ -208,7 +208,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         });
 	}
 
-	public void autoContrastNow() {
+	void autoContrastNow() {
 		ImageBrightnessStats bs = tileServer.getCurrentBrightnessStats();
 		if (bs == null)
 			return;

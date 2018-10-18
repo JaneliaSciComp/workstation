@@ -14,5 +14,5 @@ import java.net.URL;
  * @author fosterl
  */
 public interface VolumeLoadListener {
-    void volumeLoaded(URL vol);
+    void volumeLoaded(URL volumeURI);
 }

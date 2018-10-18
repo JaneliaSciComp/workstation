@@ -6,6 +6,8 @@
 *.ipr
 *.log
 *.iml
+*.bak
+*~
 .gradle
 groovy/.settings
 build

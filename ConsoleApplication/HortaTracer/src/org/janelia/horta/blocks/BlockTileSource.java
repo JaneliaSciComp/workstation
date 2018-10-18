@@ -40,14 +40,13 @@ import org.janelia.geometry3d.ConstVector3;
  */
 public interface BlockTileSource {
 
-    public BlockTileResolution getMaximumResolution();
+    BlockTileResolution getMaximumResolution();
 
-    // TODO: does this check for actual tile existence?
-    public BlockTileKey getBlockKeyAt(ConstVector3 focus, BlockTileResolution resolution);
+    BlockTileKey getBlockKeyAt(ConstVector3 focus, BlockTileResolution resolution);
 
-    public ConstVector3 getBlockCentroid(BlockTileKey centerBlock);
+    ConstVector3 getBlockCentroid(BlockTileKey centerBlock);
 
-    public BlockTileData loadBlock(BlockTileKey key) throws IOException, InterruptedException;
+    BlockTileData loadBlock(BlockTileKey key) throws IOException, InterruptedException;
     
-    public URL getRootUrl();
+    URL getRootUrl();
 }

@@ -276,7 +276,7 @@ public class QuadViewController implements ViewStateListener {
     private class QuadViewLocationAcceptor implements ViewerLocationAcceptor {
 
         @Override
-        public void acceptLocation(SampleLocation sampleLocation) throws Exception {            
+        public void acceptLocation(SampleLocation sampleLocation) throws Exception {
             Vec3 newFocus = new Vec3( 
                     sampleLocation.getFocusXUm(),
                     sampleLocation.getFocusYUm(),

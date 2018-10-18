@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import java.awt.BorderLayout;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -132,7 +132,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
                     @Override
                     protected void doStuff() throws Exception {
-                        success = viewUI.loadFile(sliceSample);
+                        success = viewUI.loadData(sliceSample);
                         volumeLoaded.set(success);
                     }
 
@@ -271,7 +271,7 @@ public class LargeVolumeViewViewer extends JPanel {
         return viewUI.getSampleLocation();
     }
     
-    public void setLocation(SampleLocation sampleLocation) {
+    public void setSampleLocation(SampleLocation sampleLocation) {
         viewUI.setSampleLocation(sampleLocation);
     }
     
@@ -336,12 +336,12 @@ public class LargeVolumeViewViewer extends JPanel {
                 logger.info("instantiating AnnotationModel");
                 annotationModel = new AnnotationModel();
                 Events.getInstance().registerOnEventBus(annotationModel);
-                viewUI = new QuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);
+                viewUI = new URLBasedQuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);
             }
             
             removeAll();
             viewUI.setVisible(true);
-            add(viewUI);
+            add((Component) viewUI);
 
             // Repaint the skeleton
             SkeletonController.getInstance().skeletonChanged(true);

@@ -5,7 +5,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.components;
  */
 
 import org.janelia.it.workstation.gui.large_volume_viewer.VolumeCache;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileStackCacheController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +50,8 @@ public class TileStackCacheStatusPanel extends JPanel implements ActionListener 
             if (!isVisible()) {
                 setVisible(true);
             }
-            cacheStatusMap = TileStackCacheController.getInstance().getCacheStatusMap();
+            // FIXME - put the cache back !!!!!!!!!!
+//            cacheStatusMap = TileStackCacheController.getInstance().getCacheStatusMap();
             repaint();
         } else {
             if (isVisible()) {

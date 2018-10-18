@@ -1,33 +1,24 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SharedVolumeImage 
-implements VolumeImage3d
-{
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+
+public class SharedVolumeImage implements VolumeImage3d {
     private Logger logger = LoggerFactory.getLogger(SharedVolumeImage.class);
-	private AbstractTextureLoadAdapter loadAdapter;
+	private TileStackOctreeLoadAdapter loadAdapter;
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
     private Collection<VolumeLoadListener> volumeLoadListeners = new ArrayList<>();
-    private String remoteBasePath;
+    private URL volumeBaseURL;
 
     public void addVolumeLoadListener( VolumeLoadListener l ) {
         volumeLoadListeners.add(l);
@@ -92,7 +83,6 @@ implements VolumeImage3d
         else {
             return getLoadAdapter().getTileFormat().getOrigin();
         }
-        
     }
 
 	@Override
@@ -102,117 +92,33 @@ implements VolumeImage3d
 		return getLoadAdapter().getTileFormat().getChannelCount();
 	}
 
-    public void setRemoteBasePath(String basePath) {
-        this.remoteBasePath = basePath;
+    public URL getVolumeBaseURL() {
+        return volumeBaseURL;
     }
 
-    public String getRemoteBasePath() {
-        return remoteBasePath;
+    public void setVolumeBaseURL(URL volumeBaseURL) {
+        this.volumeBaseURL = volumeBaseURL;
     }
-
-
-    private AbstractTextureLoadAdapter createLoadAdapter(URL folderUrl) {
-        // Sniff which back end we need
-        AbstractTextureLoadAdapter testLoadAdapter = null;
-        URL testUrl;
-
-        try {
-            testUrl = new URL(folderUrl, "default.0.tif");
-            testUrl.openStream();
-            File fileFolder = new File(folderUrl.toURI());
-            testLoadAdapter = new TileStackOctreeLoadAdapter(remoteBasePath, fileFolder);
-        } catch (IOException | URISyntaxException | DataSourceInitializeException ex) {
-            ConsoleApp.handleException(ex);
-        }
-
-        return testLoadAdapter;
-    }
-        
-	public boolean loadSampleURL(URL folderUrl, TmSample sample) {
-		          // Sanity check before overwriting current view
-            if (folderUrl == null) {
-                return false;
-            }
-
-            loadAdapter = createLoadAdapter(folderUrl);
-
-            if (loadAdapter == null) {
-                return false;
-            }
-
-            // replace origin and scale with sample metadata
-            List<Integer> originList = sample.getOrigin();
-            if (originList!=null) {
-                int[] origin = new int[originList.size()];
-                for (int i = 0; i < originList.size(); i++) {
-                    origin[i] = originList.get(i);
-                }
-
-                List<Double> scaleList = sample.getScaling();
-                double[] scale = new double[scaleList.size()];
-                for (int i = 0; i < scaleList.size(); i++) {
-                    scale[i] = scaleList.get(i);
-                }
-                
-                // fix scale based off number of imagery levels
-                 double divisor = Math.pow(2.0, sample.getNumImageryLevels().intValue() - 1);
-                 for (int i = 0; i < scale.length; i++) {
-                     scale[i] /= divisor;
-                 }
-
-                // Scale must be converted to micrometers.
-                for (int i = 0; i < scale.length; i++) {
-                    scale[i] /= 1000; // nanometers to micrometers
-                }
-                // Origin must be divided by 1000, to convert to micrometers.
-                for (int i = 0; i < origin.length; i++) {
-                    origin[i] = (int) (origin[i] / (1000 * scale[i])); // nanometers to voxels
-                }
-
-                loadAdapter.getTileFormat().setVoxelMicrometers(scale);
-                loadAdapter.getTileFormat().setOrigin(origin);
-            }
-		
-            // Update bounding box
-            // Compute bounding box
-            TileFormat tf = getLoadAdapter().getTileFormat();
-            BoundingBox3d newBox = tf.calcBoundingBox();
-
-            //log.info("Bounding box min Vec3="+newBox.getMin().toString());
-            //log.info("Bounding box max Vec3="+newBox.getMax().toString());
-            boundingBox3d.setMin(newBox.getMin());
-            boundingBox3d.setMax(newBox.getMax());
-
-            logger.info("Volume loaded: {}", folderUrl);
-            fireVolumeLoaded(folderUrl);
-
-            return true;
-	}
 
 	@Override
-	public boolean loadURL(URL folderUrl) {
+	public boolean loadURL(URL volumeBaseURL) {
 		// Sanity check before overwriting current view
-		if (folderUrl == null)
+		if (volumeBaseURL == null)
 			return false;
 		
-		loadAdapter = createLoadAdapter(folderUrl);
+		loadAdapter = new TileStackOctreeLoadAdapter(new TileFormat(), volumeBaseURL);
+		loadAdapter.loadMetadata();
 
-		if (loadAdapter==null)
-			return false;
-		
 		// Update bounding box
 		// Compute bounding box
 		TileFormat tf = getLoadAdapter().getTileFormat();
 		BoundingBox3d newBox = tf.calcBoundingBox();
 
-		//log.info("Bounding box min Vec3="+newBox.getMin().toString());
-		//log.info("Bounding box max Vec3="+newBox.getMax().toString());
-
 		boundingBox3d.setMin(newBox.getMin());
 		boundingBox3d.setMax(newBox.getMax());
 
-        logger.info("Volume loaded: {}", folderUrl);
-		fireVolumeLoaded(folderUrl);
+        logger.info("Volume loaded: {}", volumeBaseURL);
+		fireVolumeLoaded(volumeBaseURL);
 		
 		return true;
 	}
@@ -228,9 +134,9 @@ implements VolumeImage3d
 		return loadAdapter;
 	}
 
-    private void fireVolumeLoaded(URL volume) {
+    private void fireVolumeLoaded(URL volumeBaseURL) {
         for ( VolumeLoadListener l: volumeLoadListeners ) {
-            l.volumeLoaded(volume);
+            l.volumeLoaded(volumeBaseURL);
         }
     }
 }

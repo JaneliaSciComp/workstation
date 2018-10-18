@@ -63,7 +63,6 @@ public class Snapshot3DLauncher {
             CoordinateAxis sliceAxis,
             ObservableCamera3d camera,
             SubvolumeProvider subvolumeProvider,
-            String basePath,
             URL dataUrl,
             ImageColorModel imageColorModel
     ) {
@@ -154,17 +153,6 @@ public class Snapshot3DLauncher {
             snapShot3dSubMenu.add( item );
         }
 
-        /*
-        JMenuItem item = new JMenuItem( "Full raw" );
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                launchRaw3dViewer(-1);
-            }
-        });
-        snapShot3dSubMenu.add( item );
-        */
-        
         rtnVal.add( snapShot3dSubMenu );
 
         return rtnVal;

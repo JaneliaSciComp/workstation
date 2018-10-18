@@ -78,7 +78,8 @@ public class RawFileLocToClipboardAction extends AbstractAction {
 
         StringSelection selection;
         try {
-            RawFileInfo rfi = TiledMicroscopeDomainMgr.getDomainMgr().getNearestChannelFiles(volumeImage.getRemoteBasePath(), voxelCoordArr);
+            // FIXME This should be fixed to use the URL and maybe not use the RawFileInfo
+            RawFileInfo rfi = TiledMicroscopeDomainMgr.getDomainMgr().getNearestChannelFiles(volumeImage.getVolumeBaseURL().toString(), voxelCoordArr);
             File c0File = rfi.getChannel0();
             String filePathStr = c0File.toString().replace(FILE_SEP, LINUX_FILE_SEP);
             // Not truly looking for the file path; just the legs of the path.

@@ -449,18 +449,12 @@ public class Subvolume {
             }
             // ... if that fails, load the data right now.
             if (tileData == null) {
-                if (loadAdapter instanceof BlockTiffOctreeLoadAdapter) {
-                    tileData = new TextureData2dGL(((BlockTiffOctreeLoadAdapter)loadAdapter).loadToRam(tileIx, false));
-                }
-                else {
-                    tileData = new TextureData2dGL(loadAdapter.loadToRam(tileIx));
-                }
+                tileData = new TextureData2dGL(loadAdapter.loadToRam(tileIx));
             }
             if (tileData == null) {
                 logger.info("Found no tile data for " + tileIx);
                 filledToEnd = false;
-            }
-            else if (origin.getZ() >= 0) {
+            } else if (origin.getZ() >= 0) {
                 // If the origin were negative, it would mean there was a
                 // z-drill-in beyond the meaningful boundaries of the nascent
                 //  volume, and no data would be available to be added.

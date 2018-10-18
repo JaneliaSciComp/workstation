@@ -358,13 +358,6 @@ implements BrickInfo
                 }
             });
 
-//            texture.setOptionalFileByteSource(new FileByteSource() {
-//                @Override
-//                public byte[] loadBytesForFile(String filepath) throws Exception {
-//                    return HttpDataSource.getMouseLightTiffBytes(filepath);
-//                }
-//            });
-
         }
 
         if (!texture.loadTiffStack(tileFile)) {

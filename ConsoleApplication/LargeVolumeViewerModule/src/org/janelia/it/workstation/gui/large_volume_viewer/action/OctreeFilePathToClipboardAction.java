@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
+import java.net.URL;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JLabel;
@@ -20,22 +21,22 @@ import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservable
  */
 public class OctreeFilePathToClipboardAction extends AbstractAction {
     private final JLabel statusLabel;
-    private final String remoteBasePath;
+    private final URL volumeBaseURL;
     private final TileFormat tileFormat;
     private final BasicObservableCamera3d camera;
     private final CoordinateAxis axis;
     private final Logger log = LoggerFactory.getLogger(OctreeFilePathToClipboardAction.class);
 
     public OctreeFilePathToClipboardAction(
-            JLabel statusLabel, 
-            String remoteBasePath,
+            JLabel statusLabel,
+            URL volumeBaseURL,
             TileFormat tileFormat,
             BasicObservableCamera3d camera, 
             CoordinateAxis axis
     ) {
         this.statusLabel = statusLabel;
         this.tileFormat = tileFormat;
-        this.remoteBasePath = remoteBasePath;
+        this.volumeBaseURL = volumeBaseURL;
         this.camera = camera;
         this.axis = axis;
         putValue(Action.NAME, "Copy Octree Filepath to Clipboard");
@@ -45,8 +46,7 @@ public class OctreeFilePathToClipboardAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         String content = statusLabel.getText();
         Vec3 vec = ClipboardActionHelper.getCoordVector(content);
-        //Vec3 vec = camera.getFocus();  // Testing, only.
-        
+
         String filePathStr = ClipboardActionHelper.getOctreePathAtCoords(tileFormat, camera, axis, vec);
 
         // Looking for whole path.  Need to strip away any Wndows assumptions.
@@ -56,7 +56,7 @@ public class OctreeFilePathToClipboardAction extends AbstractAction {
                 filePathStr = filePathStr.substring(colonPos+1);
             }
         }
-        filePathStr = remoteBasePath + filePathStr;
+        filePathStr = volumeBaseURL + filePathStr; // FIXME
         ClipboardActionHelper.setClipboard(filePathStr);
         log.info("For location {}, camera={}. File path string {}.", content, vec, filePathStr);
     }

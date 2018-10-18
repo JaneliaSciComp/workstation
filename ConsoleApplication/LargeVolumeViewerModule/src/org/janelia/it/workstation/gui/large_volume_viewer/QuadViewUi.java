@@ -1,66 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_PREFERRED_ID;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Vector;
-
-import javax.media.opengl.GLProfile;
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.ActionMap;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
-import javax.swing.InputMap;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JSeparator;
-import javax.swing.JSlider;
-import javax.swing.JSpinner;
-import javax.swing.JSplitPane;
-import javax.swing.JToggleButton;
-import javax.swing.JToolBar;
-import javax.swing.KeyStroke;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.EtchedBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -145,169 +84,182 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** 
+import javax.media.opengl.GLProfile;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Vector;
+
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_PREFERRED_ID;
+
+/**
  * Main window for QuadView application.
  * Maintained using Google WindowBuilder design tool.
- * 
- * @author Christopher M. Bruns
  *
+ * @author Christopher M. Bruns
  */
 @SuppressWarnings("serial")
-public class QuadViewUi extends JPanel implements VolumeLoadListener
-{
-	private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
-	
+public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
+    private static final Logger LOG = LoggerFactory.getLogger(QuadViewUi.class);
+
     private static final String IMAGES_FOLDER_OPEN = "folder_open.png";
     private static final String IMAGES_GREEN_CHECK = "Green_check.png";
     private static final String IMAGES_SPINNER = "spinner.gif";
     private static final String IMAGES_MOUSE_SCROLL = "mouse_scroll.png";
     private static final String IMAGES_MOUSE_LEFT = "mouse_left.png";
-    
+
     private static final int MINIMUM_MEMORY_REQUIRED_GB = 8;
 
     public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
-	private boolean bAllowOrthoView = false;    // this disabled switching between single and multiple ortho views
+    private boolean bAllowOrthoView = false;    // this disabled switching between single and multiple ortho views
 
-	// One shared camera for all viewers.
-	// (there's only one viewer now actually, but you know...)
-	private BasicObservableCamera3d camera = new BasicObservableCamera3d();
-	GLContextSharer orthoViewContextSharer = new GLContextSharer(glProfile);
+    // One shared camera for all viewers.
+    // (there's only one viewer now actually, but you know...)
+    private BasicObservableCamera3d camera = new BasicObservableCamera3d();
+    GLContextSharer orthoViewContextSharer = new GLContextSharer(glProfile);
 
-	private LargeVolumeViewer largeVolumeViewer = new LargeVolumeViewer(
-			orthoViewContextSharer.getCapabilities(),
-			orthoViewContextSharer.getChooser(),
-			orthoViewContextSharer.getContext(),
-			camera);
+    private LargeVolumeViewer largeVolumeViewer = new LargeVolumeViewer(
+            orthoViewContextSharer.getCapabilities(),
+            orthoViewContextSharer.getChooser(),
+            orthoViewContextSharer.getContext(),
+            camera);
 
-	// TODO - promote volumeImage, colorModel out of sliceviewer
-	TileServer tileServer = largeVolumeViewer.getTileServer();
-	private SharedVolumeImage volumeImage = tileServer.getSharedVolumeImage();
-	private ImageColorModel imageColorModel = new ImageColorModel(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
+    TileServer tileServer = largeVolumeViewer.getTileServer();
+    private SharedVolumeImage volumeImage = tileServer.getSharedVolumeImage();
+    private ImageColorModel imageColorModel = new ImageColorModel(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
     private NeuronStyleModel neuronStyleModel = new NeuronStyleModel();
-    
-	// Four quadrants for orthogonal views
-	OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
-	OrthogonalPanel swViewer = new OrthogonalPanel(CoordinateAxis.Y, orthoViewContextSharer);
-	OrthogonalPanel nwViewer = new OrthogonalPanel(CoordinateAxis.Z, orthoViewContextSharer);
-	// TODO 3D view
-	// TODO obsolete zViewerPanel in favor of OrthogonalPanel
-	JPanel zViewerPanel = new JPanel();
-	JComponent seViewer = zViewerPanel; // should be same as Z...
+
+    // Four quadrants for orthogonal views
+    OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
+    OrthogonalPanel swViewer = new OrthogonalPanel(CoordinateAxis.Y, orthoViewContextSharer);
+    OrthogonalPanel nwViewer = new OrthogonalPanel(CoordinateAxis.Z, orthoViewContextSharer);
+
+    JPanel zViewerPanel = new JPanel();
+    JComponent seViewer = zViewerPanel; // should be same as Z...
     JPanel viewerPanel = new JPanel();
 
     // we never finished the multi-panel orthogonal view, and it's not
     //  on the agenda now; so in this list, only leave the one we use
     // at some point we should disentangle and remove all the unused viewers
-    List<TileConsumer> allSliceViewers = Arrays.asList(new TileConsumer[] {
+    List<TileConsumer> allSliceViewers = Arrays.asList(new TileConsumer[]{
             nwViewer.getViewer()
     });
 
-    /*
-    // old:
-	// Group orthogonal viewers for use in action constructors
-	List<TileConsumer> allSliceViewers = Arrays.asList(new TileConsumer[] {
-			nwViewer.getViewer(),
-			neViewer.getViewer(),
-			swViewer.getViewer(),
-            largeVolumeViewer
-		});
-    */
-	
-	private boolean modifierKeyPressed = false;
-	private JPanel zScanPanel = new JPanel();
-	private JSlider zScanSlider = new JSlider();
-	private JSpinner zScanSpinner = new JSpinner();
+    private boolean modifierKeyPressed = false;
+    private JPanel zScanPanel = new JPanel();
+    private JSlider zScanSlider = new JSlider();
+    private JSpinner zScanSpinner = new JSpinner();
     private SpinnerCalculationValue spinnerValue = new SpinnerCalculationValue(zScanSpinner);
-	private JSlider zoomSlider = new JSlider(SwingConstants.VERTICAL, 0, 1000, 500);
-	
-	//private JPanel colorPanel = new JPanel();
+    private JSlider zoomSlider = new JSlider(SwingConstants.VERTICAL, 0, 1000, 500);
+
     private JMenuBar menuBar = new JMenuBar();
     private JPanel toolBarPanel = new JPanel();
-	private JSplitPane splitPane = new JSplitPane();    
+    private JSplitPane splitPane = new JSplitPane();
     private SliderPanel sliderPanel = new SliderPanel(imageColorModel);
-	private JLabel statusLabel = new JLabel("status area");
-	private LoadStatusLabel loadStatusLabel = new LoadStatusLabel();
-	
-	ZScanMode zScanMode = new ZScanMode(volumeImage);
-	
-	// annotation things
-	private final AnnotationModel annotationModel;
-	private final AnnotationManager annotationMgr;
+    private JLabel statusLabel = new JLabel("status area");
+    private LoadStatusLabel loadStatusLabel = new LoadStatusLabel();
+
+    ZScanMode zScanMode = new ZScanMode(volumeImage);
+
+    // annotation things
+    private final AnnotationModel annotationModel;
+    private final AnnotationManager annotationMgr;
     private final LargeVolumeViewerTranslator largeVolumeViewerTranslator;
     private AnnotationPanel annotationPanel;
 
-	// Actions
-	private final Action openFolderAction = new OpenFolderAction(largeVolumeViewer.getComponent(), this);
-	private RecentFileList recentFileList = new RecentFileList(new JMenu("Open Recent"));
-	private final Action resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
-	private final Action resetColorsAction = new ResetColorsAction(imageColorModel);
-        private final Action refreshSharedUpdatesAction = new RefreshSharedUpdatesAction();
-	// mode actions (and groups)
-	private final ZoomMouseModeAction zoomMouseModeAction = new ZoomMouseModeAction();
-	private final PanModeAction panModeAction = new PanModeAction();
+    // Actions
+    private final Action openFolderAction = new OpenFolderAction(largeVolumeViewer.getComponent(), this);
+    private RecentFileList recentFileList = new RecentFileList(new JMenu("Open Recent"));
+    private final Action resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
+    private final Action resetColorsAction = new ResetColorsAction(imageColorModel);
+    private final Action refreshSharedUpdatesAction = new RefreshSharedUpdatesAction();
+    // mode actions (and groups)
+    private final ZoomMouseModeAction zoomMouseModeAction = new ZoomMouseModeAction();
+    private final PanModeAction panModeAction = new PanModeAction();
     private Skeleton skeleton = new Skeleton();
     private final TraceMouseModeAction traceMouseModeAction = new TraceMouseModeAction();
-    // 
-	private final ButtonGroup mouseModeGroup = new ButtonGroup();
-	private final ZScanScrollModeAction zScanScrollModeAction = new ZScanScrollModeAction();
-	private final ZoomScrollModeAction zoomScrollModeAction = new ZoomScrollModeAction();
-	private final ButtonGroup scrollModeGroup = new ButtonGroup();
-	private final OrthogonalModeAction orthogonalModeAction = new OrthogonalModeAction(this);
-	// zoom actions
-	private final Action zoomInAction = new ZoomInAction(camera);
-	private final Action zoomOutAction = new ZoomOutAction(camera);
-	private final Action zoomMaxAction = new ZoomMaxAction(camera, volumeImage);
-	private final Action resetZoomAction = new ResetZoomAction(allSliceViewers, volumeImage);
-	// Z scan actions
-	private final SliceScanAction nextZSliceAction = new NextZSliceAction(volumeImage, camera);
-	private final SliceScanAction previousZSliceAction = new PreviousZSliceAction(volumeImage, camera);
-	private final SliceScanAction advanceZSlicesAction = new AdvanceZSlicesAction(volumeImage, camera, 10);
-	private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(volumeImage, camera, -10);
+    //
+    private final ButtonGroup mouseModeGroup = new ButtonGroup();
+    private final ZScanScrollModeAction zScanScrollModeAction = new ZScanScrollModeAction();
+    private final ZoomScrollModeAction zoomScrollModeAction = new ZoomScrollModeAction();
+    private final ButtonGroup scrollModeGroup = new ButtonGroup();
+    private final OrthogonalModeAction orthogonalModeAction = new OrthogonalModeAction(this);
+    // zoom actions
+    private final Action zoomInAction = new ZoomInAction(camera);
+    private final Action zoomOutAction = new ZoomOutAction(camera);
+    private final Action zoomMaxAction = new ZoomMaxAction(camera, volumeImage);
+    private final Action resetZoomAction = new ResetZoomAction(allSliceViewers, volumeImage);
+    // Z scan actions
+    private final SliceScanAction nextZSliceAction = new NextZSliceAction(volumeImage, camera);
+    private final SliceScanAction previousZSliceAction = new PreviousZSliceAction(volumeImage, camera);
+    private final SliceScanAction advanceZSlicesAction = new AdvanceZSlicesAction(volumeImage, camera, 10);
+    private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(volumeImage, camera, -10);
     // go to actions
     private final GoToLocationAction goToLocationAction = new GoToLocationAction(camera);
-    
+
     private QuadViewController quadViewController;
     private URL loadedUrl;
 
-	// annotation-related
+    // annotation-related
     private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction(this);
     private final BacktrackNeuronAction backtrackNeuronAction = new BacktrackNeuronAction(this);
     private TileFormat tileFormat;
-    
+
     private Snapshot3DLauncher snapshot3dLauncher;
     private SkeletonController skeletonController;
     private AnnotationSkeletonViewLauncher annotationSkeletonViewLauncher;
     private TaskWorkflowViewLauncher taskWorkflowViewLauncher;
     private PathTraceRequestListener pathTraceListener;
     private WorkspaceClosureListener wsCloseListener;
-    
-	private final Action clearCacheAction = new AbstractAction() {
-		private static final long serialVersionUID = 1L;
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			clearCache();
-		}
-	};
-	private final Action autoContrastAction = new AbstractAction() {
-		private static final long serialVersionUID = 1L;
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			largeVolumeViewer.autoContrastNow();
-		}
-	};
-	private final Action collectGarbageAction = new AbstractAction() {
-		private static final long serialVersionUID = 1L;
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			System.gc();
-		}
-	};
+
+    private final Action clearCacheAction = new AbstractAction() {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            clearCache();
+        }
+    };
+    private final Action autoContrastAction = new AbstractAction() {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            largeVolumeViewer.autoContrastNow();
+        }
+    };
+    private final Action collectGarbageAction = new AbstractAction() {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public void actionPerformed(ActionEvent arg0) {
+            System.gc();
+        }
+    };
 
     private int zSliceIndexForZMicrons(double zMicrons) {
-        return (int)Math.round(zMicrons / volumeImage.getZResolution() - 0.5);
+        return (int) Math.round(zMicrons / volumeImage.getZResolution() - 0.5);
     }
-    
+
     public void focusChanged(Vec3 focus) {
         int z = zSliceIndexForZMicrons(focus.getZ());
         zScanSlider.setValue(z);
@@ -319,7 +271,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         double zoomMax = Math.log(getMaxZoom()) / Math.log(2.0);
         double zoomLog = Math.log(zoom) / Math.log(2.0);
         double relativeZoom = (zoomLog - zoomMin) / (zoomMax - zoomMin);
-        int sliderValue = (int)Math.round(relativeZoom * 1000.0);
+        int sliderValue = (int) Math.round(relativeZoom * 1000.0);
         zoomSlider.setValue(sliderValue);
     }
 
@@ -333,7 +285,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
 
     public void setCameraFocus(Vec3 focus) {
-        log.info("Setting camera focus: {}", focus);
+        LOG.info("Setting camera focus: {}", focus);
         camera.setFocus(focus);
     }
 
@@ -344,11 +296,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public boolean setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
         return camera.setPixelsPerSceneUnit(pixelsPerSceneUnit);
     }
-    
+
     public double getPixelsPerSceneUnit() {
         return camera.getPixelsPerSceneUnit();
     }
-    
+
     /**
      * move toward the neuron root to the next branch or the root
      */
@@ -376,11 +328,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         }
     }
 
-	/**
-	 * Create the frame.
-	 */
-	public QuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel)
-	{
+    /**
+     * Create the frame.
+     */
+    public QuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel) {
         new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
 
         this.annotationModel = annotationModel;
@@ -389,38 +340,31 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
-		largeVolumeViewer.setImageColorModel(imageColorModel);
+        largeVolumeViewer.setImageColorModel(imageColorModel);
         largeVolumeViewer.setNeuronStyleModel(neuronStyleModel);
-		sliderPanel.setVisible(false);
-        
+        sliderPanel.setVisible(false);
+
         camera.addCameraListener(new CameraListener() {
             @Override
             public void zoomChanged(Double zoom) {
                 // Re-position the 3D cache.
-                //CacheController cacheController = CacheController.getInstance();
-                //cacheController.zoomChanged(zoom);
-                TileStackCacheController.getInstance().setZoom(zoom);
                 QuadViewUi.this.zoomChanged(zoom);
             }
 
             @Override
             public void focusChanged(Vec3 focus) {
-                TileStackCacheController.getInstance().setFocus(focus);
                 QuadViewUi.this.focusChanged(focus);
             }
 
             @Override
             public void viewChanged() {
                 // Re-position the 3D cache.
-                //CacheController cacheController = CacheController.getInstance();
-                //cacheController.focusChanged(camera.getFocus());
-                TileStackCacheController.getInstance().setFocus(camera.getFocus());
                 tileServer.refreshCurrentTileSet();
                 // If we are using this optimization, the anchor set needs to be updated whenever the view is changed
                 if (ApplicationPanel.isAnchorsInViewport()) {
                     getSkeletonActor().getModel().forceUpdateAnchors();
                 }
-            }            
+            }
         });
 
         setupUi(parentFrame, overrideFrameMenuBar);
@@ -431,13 +375,13 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         // connect up text UI and model with graphic UI(s):
         getSkeletonActor().getModel().addAnchorUpdateListener(annotationMgr);
-                
+
         // Nb: skeleton.anchorMovedSilentSignal intentionally does *not* connect to annotationMgr!
         quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer);
         largeVolumeViewerTranslator.setViewStateListener(quadViewController);
         annotationPanel.setViewStateListener(quadViewController);
         annotationModel.setViewStateListener(quadViewController);
-        
+
         // Toggle skeleton actor with v key
         // see note in interceptModeChangeGestures() regarding which input map
         InputMap inputMap = viewerPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
@@ -447,15 +391,13 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         actionMap.put("vKeyPressed", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-    			// log.info("Skeleton off");
-    			getSkeletonActor().setVisible(false);
+                getSkeletonActor().setVisible(false);
             }
         });
         actionMap.put("vKeyReleased", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-    			// log.info("Skeleton on");
-    			getSkeletonActor().setVisible(true);
+                getSkeletonActor().setVisible(true);
             }
         });
 
@@ -464,22 +406,19 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         skeletonController.registerForEvents(largeVolumeViewer.getSkeletonActor());
         largeVolumeViewerTranslator.connectSkeletonSignals(skeleton, skeletonController);
 
-		// must come after setupUi() (etc), since it triggers UI changes:
-		annotationMgr.setInitialObject(initialObject);
+        // must come after setupUi() (etc), since it triggers UI changes:
+        annotationMgr.setInitialObject(initialObject);
 
-        //
         clearCacheAction.putValue(Action.NAME, "Clear Cache");
-        clearCacheAction.putValue(Action.SHORT_DESCRIPTION, 
-				"Empty image cache (for testing only)");
-        //
+        clearCacheAction.putValue(Action.SHORT_DESCRIPTION, "Empty image cache (for testing only)");
+
         autoContrastAction.putValue(Action.NAME, "Auto Contrast");
-        autoContrastAction.putValue(Action.SHORT_DESCRIPTION, 
-				"Optimize contrast for current view");
-        // 
+        autoContrastAction.putValue(Action.SHORT_DESCRIPTION, "Optimize contrast for current view");
+
         collectGarbageAction.putValue(Action.NAME, "Collect Garbage");
-        //
+
         largeVolumeViewer.setSkeleton(skeleton);
-        //
+
         largeVolumeViewer.setWheelMode(WheelMode.Mode.SCAN);
         // Respond to orthogonal mode changes
         setZViewMode();
@@ -492,43 +431,40 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         quadViewController.registerForEvents(zScanScrollModeAction);
         quadViewController.registerForEvents(tileServer);
         quadViewController.registerForEvents(goToLocationAction);
-        // TODO other orthogonal viewers
+
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
         quadViewController.registerForEvents(imageColorModel);
-        quadViewController.unregisterOrthPanels();        
+        quadViewController.unregisterOrthPanels();
         quadViewController.registerAsOrthPanelForRepaint(seViewer); // Must do separately.
         skeletonController.registerForEvents(quadViewController);  // Pass-through
         for (OrthogonalPanel v : viewPanels) {
             quadViewController.registerForEvents(v);
             v.setCamera(camera);
-            // TODO - move most of this setup into OrthogonalViewer class.
             v.setSharedVolumeImage(volumeImage);
             v.setNavigationMenuItemGenerator(new MenuItemGenerator() {
                 @Override
                 public List<JMenuItem> getMenus(MouseEvent event) {
                     List<JMenuItem> result = new Vector<>();
-                    
+
                     // Add menus/items for relocating per other views.
                     SynchronizationHelper helper = new SynchronizationHelper();
                     Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
-                        helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                            helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                     Tiled3dSampleLocationProviderAcceptor originator =
-                        helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                            helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                     RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-                    // JMenu navigateToHortaMenu = new JMenu("Navigate to this location in Horta");
+
                     for (JMenuItem navItem : menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor())) {
                         result.add(navItem);
                     }
-                    // result.add(navigateToHortaMenu);
-
                     return result;
                 }
             });
             v.setSystemMenuItemGenerator(new MenuItemGenerator() {
                 @Override
                 public List<JMenuItem> getMenus(MouseEvent event) {
-                    List<JMenuItem> result = new Vector<>();                    
+                    List<JMenuItem> result = new Vector<>();
                     result.add(addFileMenuItem());
                     result.add(addCopyMicronLocMenuItem());
                     result.add(addCopyTileLocMenuItem());
@@ -537,8 +473,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.addAll(taskWorkflowViewLauncher.getMenuItems());
-                    result.add(addViewMenuItem());                    
-                    
+                    result.add(addViewMenuItem());
+
                     return result;
                 }
             });
@@ -547,7 +483,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
             final boolean bShowTileOutlines = false; // Debugging aid
             if (bShowTileOutlines) {
-            	v.getViewer().addActor(new TileOutlineActor(v.getViewTileManager())); // for debugging
+                v.getViewer().addActor(new TileOutlineActor(v.getViewTileManager())); // for debugging
             }
             // Add skeleton actor AFTER slice actor
             v.getViewer().setSkeletonActor(sharedSkeletonActor);
@@ -555,7 +491,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         // Set starting interaction modes
         traceMouseModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
         zoomScrollModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
-	}
+    }
 
     public void setOrthogonalMode(OrthogonalMode mode) {
         if (mode == OrthogonalMode.ORTHOGONAL)
@@ -567,7 +503,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public void updateSliderLockButtons() {
         sliderPanel.updateLockButtons();
     }
-    
+
     public void setLoadStatus(LoadStatus loadStatus) {
         loadStatusLabel.setLoadStatus(loadStatus);
     }
@@ -588,32 +524,47 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             pathTraceListener.pathTrace(request);
         }
     }
-    
+
     public Skeleton getSkeleton() {
         return skeleton;
     }
-    
+
     public NeuronStyleModel getNeuronStyleModel() {
         return neuronStyleModel;
     }
-    
+
     public AnnotationModel getAnnotationModel() {
         return annotationModel;
     }
-    
-	public void clearCache() {
-		tileServer.clearCache();
-	}
-	
-	public BoundingBox3d getBoundingBox() {
-	    return volumeImage.getBoundingBox3d();
-	}
-	
+
+    public void clearCache() {
+        tileServer.clearCache();
+    }
+
+    public BoundingBox3d getBoundingBox() {
+        return volumeImage.getBoundingBox3d();
+    }
+
     public TileFormat getTileFormat() {
         return tileFormat;
     }
 
-    // TODO update zoom range too?
+    Snapshot3DLauncher initializeSnapshot3dLauncher(URL volumeBaseURL) {
+        snapshot3dLauncher = new Snapshot3DLauncher(
+                largeVolumeViewer.getTileServer(),
+                largeVolumeViewer.getSliceAxis(),
+                camera,
+                getSubvolumeProvider(),
+                volumeBaseURL,
+                imageColorModel
+        );
+        snapshot3dLauncher.setAnnotationManager(annotationMgr);
+        annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
+        taskWorkflowViewLauncher = new TaskWorkflowViewLauncher();
+        volumeImage.setVolumeBaseURL(volumeBaseURL);
+        return snapshot3dLauncher;
+    }
+
     private void updateRanges() {
         // Z range
         double zMin = volumeImage.getBoundingBox3d().getMin().getZ();
@@ -647,12 +598,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             spinnerValue.setOffsetFromZero(zOrigin);
 
             zScanSpinner.setModel(
-                new SpinnerNumberModel(
-                    spinnerValue.getInternalValue(z), 
-                    spinnerValue.getInternalValue(z0), 
-                    spinnerValue.getInternalValue(z1),
-                    1
-                )
+                    new SpinnerNumberModel(
+                            spinnerValue.getInternalValue(z),
+                            spinnerValue.getInternalValue(z0),
+                            spinnerValue.getInternalValue(z1),
+                            1
+                    )
             );
             updateSWCDataConverter();
 
@@ -671,17 +622,17 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         snapshot3dLauncher.setMaxIntensity(volumeImage.getMaximumIntensity());
         snapshot3dLauncher.setNumberOfChannels(volumeImage.getNumberOfChannels());
     }
-    
-	private double getMaxZoom() {
-		double maxRes = Math.min(volumeImage.getXResolution(), Math.min(
-				volumeImage.getYResolution(),
-				volumeImage.getZResolution()));
-		return 300.0 / maxRes; // 300 pixels per voxel is probably zoomed enough...
-	}
-	
-	private double getMinZoom() {
-		double result = getMaxZoom();
-		BoundingBox3d box = volumeImage.getBoundingBox3d();
+
+    private double getMaxZoom() {
+        double maxRes = Math.min(volumeImage.getXResolution(), Math.min(
+                volumeImage.getYResolution(),
+                volumeImage.getZResolution()));
+        return 300.0 / maxRes; // 300 pixels per voxel is probably zoomed enough...
+    }
+
+    private double getMinZoom() {
+        double result = getMaxZoom();
+        BoundingBox3d box = volumeImage.getBoundingBox3d();
         Vec3 volSize = new Vec3(box.getWidth(), box.getHeight(), box.getDepth());
         // note: this used to loop over allSliceViewers, at a point in time
         //  when we thought we would have more than one, to find the active one;
@@ -700,8 +651,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             result = Math.min(z, result);
         }
         return result;
-	}
-	
+    }
+
     private void updateSWCDataConverter() {
         SWCDataConverter swcDataConverter = new SWCDataConverter();
         swcDataConverter.setSWCExchanger(
@@ -709,224 +660,226 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         annotationModel.setSWCDataConverter(swcDataConverter);
     }
-	
-	private void setOrthogonalMode() {
-		nwViewer.setVisible(true);
-		neViewer.setVisible(true);
-		swViewer.setVisible(true);
-		seViewer.setVisible(true);
-		tileServer.refreshCurrentTileSet();
-	}
-	
-	private SkeletonActor getSkeletonActor() {
-		return largeVolumeViewer.getSkeletonActor();
-	}
-	
-	private void setZViewMode() {
-		nwViewer.setVisible(true);
-		neViewer.setVisible(false);
-		swViewer.setVisible(false);
-		seViewer.setVisible(false);
-		tileServer.refreshCurrentTileSet();
-	}
-	
-	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
+
+    private void setOrthogonalMode() {
+        nwViewer.setVisible(true);
+        neViewer.setVisible(true);
+        swViewer.setVisible(true);
+        seViewer.setVisible(true);
+        tileServer.refreshCurrentTileSet();
+    }
+
+    private SkeletonActor getSkeletonActor() {
+        return largeVolumeViewer.getSkeletonActor();
+    }
+
+    private void setZViewMode() {
+        nwViewer.setVisible(true);
+        neViewer.setVisible(false);
+        swViewer.setVisible(false);
+        seViewer.setVisible(false);
+        tileServer.refreshCurrentTileSet();
+    }
+
+    private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
         setBounds(100, 100, 994, 653);
         setBorder(new EmptyBorder(5, 5, 5, 5));
-		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-		// glassPane.setVisible(true);
+        // glassPane.setVisible(true);
         setupMenu(parentFrame, overrideFrameMenuBar);
         JPanel toolBarPanel = setupToolBar();
-		
-		// JSplitPane splitPane = new JSplitPane();
-		splitPane.setResizeWeight(1.00);
+
+        // JSplitPane splitPane = new JSplitPane();
+        splitPane.setResizeWeight(1.00);
         // FW-2805: specify min size explicitly, or it'll grab a large
         //  default minimum from who knows where and blow the vertical extent way up:
         splitPane.setMinimumSize(new Dimension(0, 10));
-		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-		toolBarPanel.add(splitPane, BorderLayout.CENTER);
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        toolBarPanel.add(splitPane, BorderLayout.CENTER);
 
         JPanel rightComponentPanel = new JPanel();
-        rightComponentPanel.setLayout( new BorderLayout() );
-        rightComponentPanel.add( sliderPanel, BorderLayout.CENTER );
-        ColorButtonPanel colorButtonPanel = new ColorButtonPanel( imageColorModel, 1 );
-        rightComponentPanel.add( colorButtonPanel, BorderLayout.EAST );
-		splitPane.setRightComponent(rightComponentPanel);
+        rightComponentPanel.setLayout(new BorderLayout());
+        rightComponentPanel.add(sliderPanel, BorderLayout.CENTER);
+        ColorButtonPanel colorButtonPanel = new ColorButtonPanel(imageColorModel, 1);
+        rightComponentPanel.add(colorButtonPanel, BorderLayout.EAST);
+        splitPane.setRightComponent(rightComponentPanel);
         imageColorModel.addColorModelInitListener(new ColorModelInitListener() {
             @Override
             public void colorModelInit() {
                 splitPane.resetToPreferredSizes();
-            }            
+            }
         });
 
-        
+
         sliderPanel.setTop(SliderPanel.VIEW.LVV);
         sliderPanel.guiInit();
-        
+
         JSplitPane splitPane_1 = new JSplitPane();
-		splitPane_1.setResizeWeight(1.00);
-		splitPane.setLeftComponent(splitPane_1);
+        splitPane_1.setResizeWeight(1.00);
+        splitPane.setLeftComponent(splitPane_1);
 
         // this contains the viewer panel plus the z scroll bar
         JPanel viewerPlusPanel = new JPanel();
         viewerPlusPanel.setLayout(new BoxLayout(viewerPlusPanel, BoxLayout.X_AXIS));
-		splitPane_1.setLeftComponent(viewerPlusPanel);
+        splitPane_1.setLeftComponent(viewerPlusPanel);
 
         viewerPlusPanel.add(viewerPanel);
-		viewerPanel.setLayout(new GridBagLayout());
+        viewerPanel.setLayout(new GridBagLayout());
 
-		// Stupid WindowBuilder won't accept reuse of GridBagConstraints object;
-		// ...so the usual Java "create another class"...
-		class QuadrantConstraints extends GridBagConstraints {
-			public QuadrantConstraints(int x, int y) {
-				this.gridx = x; this.gridy = y;
-				this.gridwidth = 1; this.gridheight = 1;
-				this.fill = GridBagConstraints.BOTH;
-				this.weightx = 1.0;
-				this.weighty = 1.0;
-				this.insets = new Insets(1,1,1,1);				
-			}
-		}
-		
-		// Four quadrants for orthogonal views
-		// One panel for Z slice viewer (upper left northwest)
-		viewerPanel.add(nwViewer, new QuadrantConstraints(0,0));
-		// other three quadrants
-		viewerPanel.add(neViewer, new QuadrantConstraints(1,0));
-		viewerPanel.add(swViewer, new QuadrantConstraints(0,1));
-		viewerPanel.add(seViewer, new QuadrantConstraints(1,1));
-		
-		largeVolumeViewer.setCamera(camera);
-		largeVolumeViewer.getComponent().setBackground(Color.DARK_GRAY);
-		zViewerPanel.setLayout(new BoxLayout(zViewerPanel, BoxLayout.Y_AXIS));
-		zViewerPanel.add(largeVolumeViewer.getComponent());
-		
-		// JPanel zScanPanel = new JPanel();
-		zViewerPanel.add(zScanPanel);
-		zScanPanel.setLayout(new BoxLayout(zScanPanel, BoxLayout.X_AXIS));
-	
+        // Stupid WindowBuilder won't accept reuse of GridBagConstraints object;
+        // ...so the usual Java "create another class"...
+        class QuadrantConstraints extends GridBagConstraints {
+            public QuadrantConstraints(int x, int y) {
+                this.gridx = x;
+                this.gridy = y;
+                this.gridwidth = 1;
+                this.gridheight = 1;
+                this.fill = GridBagConstraints.BOTH;
+                this.weightx = 1.0;
+                this.weighty = 1.0;
+                this.insets = new Insets(1, 1, 1, 1);
+            }
+        }
+
+        // Four quadrants for orthogonal views
+        // One panel for Z slice viewer (upper left northwest)
+        viewerPanel.add(nwViewer, new QuadrantConstraints(0, 0));
+        // other three quadrants
+        viewerPanel.add(neViewer, new QuadrantConstraints(1, 0));
+        viewerPanel.add(swViewer, new QuadrantConstraints(0, 1));
+        viewerPanel.add(seViewer, new QuadrantConstraints(1, 1));
+
+        largeVolumeViewer.setCamera(camera);
+        largeVolumeViewer.getComponent().setBackground(Color.DARK_GRAY);
+        zViewerPanel.setLayout(new BoxLayout(zViewerPanel, BoxLayout.Y_AXIS));
+        zViewerPanel.add(largeVolumeViewer.getComponent());
+
+        // JPanel zScanPanel = new JPanel();
+        zViewerPanel.add(zScanPanel);
+        zScanPanel.setLayout(new BoxLayout(zScanPanel, BoxLayout.X_AXIS));
+
         ToolButton button_2 = new ToolButton(goBackZSlicesAction);
-		button_2.setAction(goBackZSlicesAction);
-		button_2.setMargin(new Insets(0, 0, 0, 0));
-		button_2.setHideActionText(true);
-		button_2.setAlignmentX(0.5f);
-		zScanPanel.add(button_2);
-		
-		ToolButton button_1 = new ToolButton(previousZSliceAction);
-		button_1.setAction(previousZSliceAction);
-		button_1.setMargin(new Insets(0, 0, 0, 0));
-		button_1.setHideActionText(true);
-		button_1.setAlignmentX(0.5f);
-		zScanPanel.add(button_1);
-		zScanSlider.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent arg0) {
-				setZSlice(zScanSlider.getValue());
-			}
-		});
-		
-		// JSlider zScanSlider = new JSlider();
-		zScanSlider.setPreferredSize(new Dimension(32767, 29));
-		zScanSlider.setMajorTickSpacing(10);
-		zScanSlider.setPaintTicks(true);
-		zScanPanel.add(zScanSlider);
-		
-		ToolButton button_3 = new ToolButton(nextZSliceAction);
-		button_3.setAction(nextZSliceAction);
-		button_3.setMargin(new Insets(0, 0, 0, 0));
-		button_3.setHideActionText(true);
-		button_3.setAlignmentX(0.5f);
-		zScanPanel.add(button_3);
-		
-		ToolButton button_4 = new ToolButton(advanceZSlicesAction);
-		button_4.setAction(advanceZSlicesAction);
-		button_4.setMargin(new Insets(0, 0, 0, 0));
-		button_4.setHideActionText(true);
-		button_4.setAlignmentX(0.5f);
-		zScanPanel.add(button_4);
-		zScanSpinner.addChangeListener(new ChangeListener() {
+        button_2.setAction(goBackZSlicesAction);
+        button_2.setMargin(new Insets(0, 0, 0, 0));
+        button_2.setHideActionText(true);
+        button_2.setAlignmentX(0.5f);
+        zScanPanel.add(button_2);
+
+        ToolButton button_1 = new ToolButton(previousZSliceAction);
+        button_1.setAction(previousZSliceAction);
+        button_1.setMargin(new Insets(0, 0, 0, 0));
+        button_1.setHideActionText(true);
+        button_1.setAlignmentX(0.5f);
+        zScanPanel.add(button_1);
+        zScanSlider.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent arg0) {
+                setZSlice(zScanSlider.getValue());
+            }
+        });
+
+        // JSlider zScanSlider = new JSlider();
+        zScanSlider.setPreferredSize(new Dimension(32767, 29));
+        zScanSlider.setMajorTickSpacing(10);
+        zScanSlider.setPaintTicks(true);
+        zScanPanel.add(zScanSlider);
+
+        ToolButton button_3 = new ToolButton(nextZSliceAction);
+        button_3.setAction(nextZSliceAction);
+        button_3.setMargin(new Insets(0, 0, 0, 0));
+        button_3.setHideActionText(true);
+        button_3.setAlignmentX(0.5f);
+        zScanPanel.add(button_3);
+
+        ToolButton button_4 = new ToolButton(advanceZSlicesAction);
+        button_4.setAction(advanceZSlicesAction);
+        button_4.setMargin(new Insets(0, 0, 0, 0));
+        button_4.setHideActionText(true);
+        button_4.setAlignmentX(0.5f);
+        zScanPanel.add(button_4);
+        zScanSpinner.addChangeListener(new ChangeListener() {
             @Override
-			public void stateChanged(ChangeEvent arg0) {
+            public void stateChanged(ChangeEvent arg0) {
                 //(Integer)zScanSpinner.getValue()
-				setZSlice(spinnerValue.getValue());
-			}
-		});
-		
-		// JSpinner zScanSpinner = new JSpinner();
-		zScanSpinner.setPreferredSize(new Dimension(75, 28));
-		zScanSpinner.setMaximumSize(new Dimension(120, 28));
-		zScanSpinner.setMinimumSize(new Dimension(65, 28));
-		zScanPanel.add(zScanSpinner);
-		
-		JPanel controlsPanel = new JPanel();
-		splitPane_1.setRightComponent(controlsPanel);
-		controlsPanel.setLayout(new BoxLayout(controlsPanel, BoxLayout.X_AXIS));
-		
-		JPanel panel_1 = new JPanel();
-		panel_1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		viewerPlusPanel.add(panel_1);
-		panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.Y_AXIS));
-		
-		ToolButton zoomInButton = new ToolButton(zoomInAction);
-		zoomInButton.setAlignmentX(0.5f);
-		zoomInButton.setMargin(new Insets(0, 0, 0, 0));
-		zoomInButton.setHideActionText(true);
-		zoomInButton.setAction(zoomInAction);
-		// Use a more modest auto repeat for zoom
-		zoomInButton.setAutoRepeatDelay(150);
-		panel_1.add(zoomInButton);
-		
-		// JSlider zoomSlider = new JSlider();
-		zoomSlider.setOrientation(SwingConstants.VERTICAL);
-		zoomSlider.setMaximum(1000);
-		// Kludge to get decent vertical JSlider on Windows
-		zoomSlider.setPaintTicks(true);
-		zoomSlider.setMajorTickSpacing(1000);
-		//
-		panel_1.add(zoomSlider);
-		zoomSlider.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent arg0) {
-				int value = zoomSlider.getValue();
-				double relativeZoom = value / 1000.0;
-				// log scale
-				double zoomMin = Math.log(getMinZoom()) / Math.log(2.0);
-				double zoomMax = Math.log(getMaxZoom()) / Math.log(2.0);
-				double zoom = zoomMin + relativeZoom * (zoomMax - zoomMin);
-				zoom = Math.pow(2.0, zoom);
-				camera.setPixelsPerSceneUnit(zoom);
-			}
-		});
-		
-		ToolButton zoomOutButton = new ToolButton(zoomOutAction);
-		zoomOutButton.setAction(zoomOutAction);
-		zoomOutButton.setMargin(new Insets(0, 0, 0, 0));
-		zoomOutButton.setHideActionText(true);
-		zoomOutButton.setAlignmentX(0.5f);
-		zoomOutButton.setAutoRepeatDelay(150); // slow down auto zoom
-		panel_1.add(zoomOutButton);
-		
-		JPanel buttonsPanel = new JPanel();
-		controlsPanel.add(buttonsPanel);
-		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
-		
-		JButton btnNewButton_1 = new JButton("New button");
-		btnNewButton_1.setAction(resetZoomAction);
-		buttonsPanel.add(btnNewButton_1);
-		
-		JButton btnNewButton = new JButton("New button");
-		btnNewButton.setAction(zoomMaxAction);
-		buttonsPanel.add(btnNewButton);
-		
-		JButton resetViewButton = new JButton("New button");
-		resetViewButton.setAction(resetViewAction);
-		buttonsPanel.add(resetViewButton);
+                setZSlice(spinnerValue.getValue());
+            }
+        });
+
+        // JSpinner zScanSpinner = new JSpinner();
+        zScanSpinner.setPreferredSize(new Dimension(75, 28));
+        zScanSpinner.setMaximumSize(new Dimension(120, 28));
+        zScanSpinner.setMinimumSize(new Dimension(65, 28));
+        zScanPanel.add(zScanSpinner);
+
+        JPanel controlsPanel = new JPanel();
+        splitPane_1.setRightComponent(controlsPanel);
+        controlsPanel.setLayout(new BoxLayout(controlsPanel, BoxLayout.X_AXIS));
+
+        JPanel panel_1 = new JPanel();
+        panel_1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+        viewerPlusPanel.add(panel_1);
+        panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.Y_AXIS));
+
+        ToolButton zoomInButton = new ToolButton(zoomInAction);
+        zoomInButton.setAlignmentX(0.5f);
+        zoomInButton.setMargin(new Insets(0, 0, 0, 0));
+        zoomInButton.setHideActionText(true);
+        zoomInButton.setAction(zoomInAction);
+        // Use a more modest auto repeat for zoom
+        zoomInButton.setAutoRepeatDelay(150);
+        panel_1.add(zoomInButton);
+
+        // JSlider zoomSlider = new JSlider();
+        zoomSlider.setOrientation(SwingConstants.VERTICAL);
+        zoomSlider.setMaximum(1000);
+        // Kludge to get decent vertical JSlider on Windows
+        zoomSlider.setPaintTicks(true);
+        zoomSlider.setMajorTickSpacing(1000);
+        //
+        panel_1.add(zoomSlider);
+        zoomSlider.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent arg0) {
+                int value = zoomSlider.getValue();
+                double relativeZoom = value / 1000.0;
+                // log scale
+                double zoomMin = Math.log(getMinZoom()) / Math.log(2.0);
+                double zoomMax = Math.log(getMaxZoom()) / Math.log(2.0);
+                double zoom = zoomMin + relativeZoom * (zoomMax - zoomMin);
+                zoom = Math.pow(2.0, zoom);
+                camera.setPixelsPerSceneUnit(zoom);
+            }
+        });
+
+        ToolButton zoomOutButton = new ToolButton(zoomOutAction);
+        zoomOutButton.setAction(zoomOutAction);
+        zoomOutButton.setMargin(new Insets(0, 0, 0, 0));
+        zoomOutButton.setHideActionText(true);
+        zoomOutButton.setAlignmentX(0.5f);
+        zoomOutButton.setAutoRepeatDelay(150); // slow down auto zoom
+        panel_1.add(zoomOutButton);
+
+        JPanel buttonsPanel = new JPanel();
+        controlsPanel.add(buttonsPanel);
+        buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
+
+        JButton btnNewButton_1 = new JButton("New button");
+        btnNewButton_1.setAction(resetZoomAction);
+        buttonsPanel.add(btnNewButton_1);
+
+        JButton btnNewButton = new JButton("New button");
+        btnNewButton.setAction(zoomMaxAction);
+        buttonsPanel.add(btnNewButton);
+
+        JButton resetViewButton = new JButton("New button");
+        resetViewButton.setAction(resetViewAction);
+        buttonsPanel.add(resetViewButton);
 
         JButton gotoLocationButton = new JButton("New button");
         gotoLocationButton.setAction(goToLocationAction);
         buttonsPanel.add(gotoLocationButton);
 
         final JCheckBox useHttpCheckbox = new JCheckBox("Use Http");
-        if(HttpDataSource.useHttp()) {
+        if (HttpDataSource.useHttp()) {
             HttpDataSource.setRestServer(ConsoleProperties.getInstance().getProperty("mouselight.rest.url"));
             useHttpCheckbox.setSelected(true);
         } else {
@@ -935,10 +888,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         useHttpCheckbox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange()==ItemEvent.DESELECTED) {
+                if (e.getStateChange() == ItemEvent.DESELECTED) {
                     useHttpCheckbox.setSelected(false);
                     HttpDataSource.setUseHttp(false);
-                } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                } else if (e.getStateChange() == ItemEvent.SELECTED) {
                     HttpDataSource.setRestServer(ConsoleProperties.getInstance().getProperty("mouselight.rest.url"));
                     useHttpCheckbox.setSelected(true);
                     HttpDataSource.setUseHttp(true);
@@ -946,20 +899,20 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }
         });
         buttonsPanel.add(useHttpCheckbox);
-        
+
         JButton loadUpdatesButton = new JButton("Refresh Updates");
-	loadUpdatesButton.setAction(refreshSharedUpdatesAction);
-        
+        loadUpdatesButton.setAction(refreshSharedUpdatesAction);
+
         final JCheckBox receiveSharedUpdatesCheckbox = new JCheckBox("Shared Updates");
         receiveSharedUpdatesCheckbox.setSelected(true);
         receiveSharedUpdatesCheckbox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange()==ItemEvent.DESELECTED) {
+                if (e.getStateChange() == ItemEvent.DESELECTED) {
                     receiveSharedUpdatesCheckbox.setSelected(false);
                     annotationModel.setReceiveUpdates(false);
                     loadUpdatesButton.setEnabled(true);
-                } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                } else if (e.getStateChange() == ItemEvent.SELECTED) {
                     receiveSharedUpdatesCheckbox.setSelected(true);
                     annotationModel.setReceiveUpdates(true);
                     loadUpdatesButton.setEnabled(false);
@@ -967,26 +920,26 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }
         });
         buttonsPanel.add(receiveSharedUpdatesCheckbox);
-        
 
-	buttonsPanel.add(loadUpdatesButton);
+
+        buttonsPanel.add(loadUpdatesButton);
 
         buttonsPanel.add(new TileStackCacheStatusPanel());
 
-		Component verticalGlue = Box.createVerticalGlue();
-		buttonsPanel.add(verticalGlue);
-		
-		buttonsPanel.add(loadStatusLabel);
+        Component verticalGlue = Box.createVerticalGlue();
+        buttonsPanel.add(verticalGlue);
+
+        buttonsPanel.add(loadStatusLabel);
 
         final JCheckBox volumeCacheCheckbox = new JCheckBox("Volume Cache");
         volumeCacheCheckbox.setSelected(VolumeCache.useVolumeCache());
         volumeCacheCheckbox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange()==ItemEvent.DESELECTED) {
+                if (e.getStateChange() == ItemEvent.DESELECTED) {
                     volumeCacheCheckbox.setSelected(false);
                     VolumeCache.setVolumeCache(false);
-                } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                } else if (e.getStateChange() == ItemEvent.SELECTED) {
                     volumeCacheCheckbox.setSelected(true);
                     VolumeCache.setVolumeCache(true);
                 }
@@ -994,33 +947,33 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         });
         buttonsPanel.add(volumeCacheCheckbox);
 
-		JButton btnClearCache = new JButton("Clear Cache");
-		btnClearCache.setAction(clearCacheAction);
-		buttonsPanel.add(btnClearCache);
-		
-		Component verticalGlue_1 = Box.createVerticalGlue();
-		buttonsPanel.add(verticalGlue_1);
-		
-		JButton autoContrastButton = new JButton();
-		autoContrastButton.setAction(autoContrastAction);
-		buttonsPanel.add(autoContrastButton);
-		
-		JButton resetColorsButton = new JButton();
-		resetColorsButton.setAction(resetColorsAction);
-		buttonsPanel.add(resetColorsButton);
-		
+        JButton btnClearCache = new JButton("Clear Cache");
+        btnClearCache.setAction(clearCacheAction);
+        buttonsPanel.add(btnClearCache);
+
+        Component verticalGlue_1 = Box.createVerticalGlue();
+        buttonsPanel.add(verticalGlue_1);
+
+        JButton autoContrastButton = new JButton();
+        autoContrastButton.setAction(autoContrastAction);
+        buttonsPanel.add(autoContrastButton);
+
+        JButton resetColorsButton = new JButton();
+        resetColorsButton.setAction(resetColorsAction);
+        buttonsPanel.add(resetColorsButton);
+
         annotationPanel = new AnnotationPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
         controlsPanel.add(annotationPanel);
 
 
-		JPanel statusBar = new JPanel();
-		statusBar.setMaximumSize(new Dimension(32767, 30));
-		statusBar.setMinimumSize(new Dimension(10, 30));
-		add(statusBar);
-		statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.X_AXIS));
-		
-		statusBar.add(statusLabel);
-		
+        JPanel statusBar = new JPanel();
+        statusBar.setMaximumSize(new Dimension(32767, 30));
+        statusBar.setMinimumSize(new Dimension(10, 30));
+        add(statusBar);
+        statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.X_AXIS));
+
+        statusBar.add(statusLabel);
+
         // For large volume viewer popup menu.
         largeVolumeViewer.setSystemMenuItemGenerator(new MenuItemGenerator() {
             @Override
@@ -1031,17 +984,16 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 return result;
             }
         });
-	}
+    }
 
-	private void interceptModifierKeyPresses() 
-	{ 
+    private void interceptModifierKeyPresses() {
         // Intercept Shift key strokes at the highest level JComponent we can find.
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, KeyEvent.SHIFT_DOWN_MASK, false),
-        		"ModifierPressed");
+                "ModifierPressed");
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, KeyEvent.CTRL_DOWN_MASK, false),
                 "ModifierPressed");
-        
+
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0, true),
                 "ModifierReleased");
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true),
@@ -1064,33 +1016,32 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 setModifierKeyPressed(false);
             }
         });
-	}
-	
-	private void interceptModeChangeGestures()
-	{
+    }
+
+    private void interceptModeChangeGestures() {
         // Press "H" (hand) for Pan mode, etc.
         Action modeActions[] = {
-        		panModeAction, 
-        		zoomMouseModeAction, 
-        		traceMouseModeAction,
-        		zoomInAction,
-        		zoomOutAction,
-        		nextZSliceAction,
-        		previousZSliceAction,
+                panModeAction,
+                zoomMouseModeAction,
+                traceMouseModeAction,
+                zoomInAction,
+                zoomOutAction,
+                nextZSliceAction,
+                previousZSliceAction,
                 goToLocationAction
-        		};
+        };
         // input map for viewer area, not all of QuadViewUi or anything that has
         //  text entry fields, or we'll trigger actions while typing in them!
         InputMap inputMap = viewerPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         for (Action action : modeActions) {
-        	KeyStroke accelerator = (KeyStroke)action.getValue(Action.ACCELERATOR_KEY);
-        	String actionName = (String)action.getValue(Action.NAME);
+            KeyStroke accelerator = (KeyStroke) action.getValue(Action.ACCELERATOR_KEY);
+            String actionName = (String) action.getValue(Action.NAME);
             inputMap.put(accelerator, actionName);
-        	viewerPanel.getActionMap().put(actionName, action);
+            viewerPanel.getActionMap().put(actionName, action);
         }
-	}
+    }
 
-	private void interceptResizeEvents() {
+    private void interceptResizeEvents() {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -1100,8 +1051,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 }
             }
         });
-	}
-	
+    }
+
     private void setupAnnotationGestures() {
         // like the two "intercept" routines, but annotation-related;
         //  broken out for clarity and organization more than anything
@@ -1113,124 +1064,121 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         /// see note in interceptModeChangeGestures() re: which input map
         InputMap inputMap = viewerPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         for (Action action : modeActions) {
-            KeyStroke accelerator = (KeyStroke)action.getValue(Action.ACCELERATOR_KEY);
-            String actionName = (String)action.getValue(Action.NAME);
+            KeyStroke accelerator = (KeyStroke) action.getValue(Action.ACCELERATOR_KEY);
+            String actionName = (String) action.getValue(Action.NAME);
             inputMap.put(accelerator, actionName);
             viewerPanel.getActionMap().put(actionName, action);
         }
 
     }
 
-	private JPanel setupToolBar() {
-		add(toolBarPanel);
-		toolBarPanel.setLayout(new BorderLayout(0, 0));
-		
-		JToolBar toolBar = new JToolBar();
-		toolBarPanel.add(toolBar, BorderLayout.NORTH);
-		
-		JLabel lblNewLabel_1 = new JLabel("");
-		lblNewLabel_1.setToolTipText("Mouse Mode:");
-		lblNewLabel_1.setFocusable(false);
-		lblNewLabel_1.setIcon(Icons.getIcon(IMAGES_MOUSE_LEFT));
-		toolBar.add(lblNewLabel_1);
+    private JPanel setupToolBar() {
+        add(toolBarPanel);
+        toolBarPanel.setLayout(new BorderLayout(0, 0));
 
-		// TODO - create a shared base class for these mode buttons
-		JToggleButton traceMouseModeButton = new JToggleButton("Trace");
-		mouseModeGroup.add(traceMouseModeButton);
-		traceMouseModeButton.setAction(traceMouseModeAction);
-		traceMouseModeButton.setMargin(new Insets(0, 0, 0, 0));
-		traceMouseModeButton.setHideActionText(true);
-		traceMouseModeButton.setFocusable(false);
-		toolBar.add(traceMouseModeButton);
-		
-		JToggleButton tglBtnPanMode = new JToggleButton("");
-		mouseModeGroup.add(tglBtnPanMode);
-		tglBtnPanMode.setSelected(true);
-		tglBtnPanMode.setAction(panModeAction);
-		tglBtnPanMode.setMargin(new Insets(0, 0, 0, 0));
-		tglBtnPanMode.setHideActionText(true);
-		tglBtnPanMode.setFocusable(false);
-		toolBar.add(tglBtnPanMode);
-		
-		JToggleButton tglbtnZoomMouseMode = new JToggleButton("");
-		mouseModeGroup.add(tglbtnZoomMouseMode);
-		tglbtnZoomMouseMode.setMargin(new Insets(0, 0, 0, 0));
-		tglbtnZoomMouseMode.setFocusable(false);
-		tglbtnZoomMouseMode.setHideActionText(true);
-		tglbtnZoomMouseMode.setAction(zoomMouseModeAction);
-		toolBar.add(tglbtnZoomMouseMode);
+        JToolBar toolBar = new JToolBar();
+        toolBarPanel.add(toolBar, BorderLayout.NORTH);
 
-		toolBar.addSeparator();
-		
-		JLabel scrollModeLabel = new JLabel("");
-		scrollModeLabel.setIcon(Icons.getIcon(IMAGES_MOUSE_SCROLL));
-		scrollModeLabel.setFocusable(false);
-		toolBar.add(scrollModeLabel);
-		
-		JToggleButton toggleButton = new JToggleButton("");
-		scrollModeGroup.add(toggleButton);
-		toggleButton.setSelected(true);
-		toggleButton.setAction(zScanScrollModeAction);
-		toggleButton.setMargin(new Insets(0, 0, 0, 0));
-		toggleButton.setHideActionText(true);
-		toggleButton.setFocusable(false);
-		toolBar.add(toggleButton);
-		
-		JToggleButton toggleButton_1 = new JToggleButton("");
-		scrollModeGroup.add(toggleButton_1);
-		toggleButton_1.setAction(zoomScrollModeAction);
-		toggleButton_1.setMargin(new Insets(0, 0, 0, 0));
-		toggleButton_1.setHideActionText(true);
-		toggleButton_1.setFocusable(false);
-		toolBar.add(toggleButton_1);
-		
-		toolBar.addSeparator();
-		
-		// disable orthogonal mode button; we never finished the feature
+        JLabel lblNewLabel_1 = new JLabel("");
+        lblNewLabel_1.setToolTipText("Mouse Mode:");
+        lblNewLabel_1.setFocusable(false);
+        lblNewLabel_1.setIcon(Icons.getIcon(IMAGES_MOUSE_LEFT));
+        toolBar.add(lblNewLabel_1);
+
+        // TODO - create a shared base class for these mode buttons
+        JToggleButton traceMouseModeButton = new JToggleButton("Trace");
+        mouseModeGroup.add(traceMouseModeButton);
+        traceMouseModeButton.setAction(traceMouseModeAction);
+        traceMouseModeButton.setMargin(new Insets(0, 0, 0, 0));
+        traceMouseModeButton.setHideActionText(true);
+        traceMouseModeButton.setFocusable(false);
+        toolBar.add(traceMouseModeButton);
+
+        JToggleButton tglBtnPanMode = new JToggleButton("");
+        mouseModeGroup.add(tglBtnPanMode);
+        tglBtnPanMode.setSelected(true);
+        tglBtnPanMode.setAction(panModeAction);
+        tglBtnPanMode.setMargin(new Insets(0, 0, 0, 0));
+        tglBtnPanMode.setHideActionText(true);
+        tglBtnPanMode.setFocusable(false);
+        toolBar.add(tglBtnPanMode);
+
+        JToggleButton tglbtnZoomMouseMode = new JToggleButton("");
+        mouseModeGroup.add(tglbtnZoomMouseMode);
+        tglbtnZoomMouseMode.setMargin(new Insets(0, 0, 0, 0));
+        tglbtnZoomMouseMode.setFocusable(false);
+        tglbtnZoomMouseMode.setHideActionText(true);
+        tglbtnZoomMouseMode.setAction(zoomMouseModeAction);
+        toolBar.add(tglbtnZoomMouseMode);
+
+        toolBar.addSeparator();
+
+        JLabel scrollModeLabel = new JLabel("");
+        scrollModeLabel.setIcon(Icons.getIcon(IMAGES_MOUSE_SCROLL));
+        scrollModeLabel.setFocusable(false);
+        toolBar.add(scrollModeLabel);
+
+        JToggleButton toggleButton = new JToggleButton("");
+        scrollModeGroup.add(toggleButton);
+        toggleButton.setSelected(true);
+        toggleButton.setAction(zScanScrollModeAction);
+        toggleButton.setMargin(new Insets(0, 0, 0, 0));
+        toggleButton.setHideActionText(true);
+        toggleButton.setFocusable(false);
+        toolBar.add(toggleButton);
+
+        JToggleButton toggleButton_1 = new JToggleButton("");
+        scrollModeGroup.add(toggleButton_1);
+        toggleButton_1.setAction(zoomScrollModeAction);
+        toggleButton_1.setMargin(new Insets(0, 0, 0, 0));
+        toggleButton_1.setHideActionText(true);
+        toggleButton_1.setFocusable(false);
+        toolBar.add(toggleButton_1);
+
+        toolBar.addSeparator();
+
+        // disable orthogonal mode button; we never finished the feature
         // we use a single ortho view, but we can't switch to a multi-panel ortho view
-		if (bAllowOrthoView) {
-			JButton orthogonalModeButton = new JButton("");
-			orthogonalModeButton.setAction(orthogonalModeAction);
-			orthogonalModeButton.setMargin(new Insets(0, 0, 0, 0));
-			orthogonalModeButton.setHideActionText(true);
-			orthogonalModeButton.setFocusable(false);
-			toolBar.add(orthogonalModeButton);
-		} else {
-			// orthogonalModeButton.setEnabled(false);
-		}
-		
-		return toolBarPanel;
-	}
+        if (bAllowOrthoView) {
+            JButton orthogonalModeButton = new JButton("");
+            orthogonalModeButton.setAction(orthogonalModeAction);
+            orthogonalModeButton.setMargin(new Insets(0, 0, 0, 0));
+            orthogonalModeButton.setHideActionText(true);
+            orthogonalModeButton.setFocusable(false);
+            toolBar.add(orthogonalModeButton);
+        }
 
-	private void setModifierKeyPressed(boolean pressed) 
-	{
-		// Has the status changed since last time?
-		if (pressed == modifierKeyPressed)
-			return; // no change
-		modifierKeyPressed = pressed; // changed!
-		// Shift to select zoom scroll mode
-		if (pressed)
-			zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
-		else if (zScanScrollModeAction.isEnabled())
-			zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
-	}
-	
-	private boolean setZSlice(int z) {
-		Vec3 oldFocus = camera.getFocus();
-		int oldValue = zSliceIndexForZMicrons(oldFocus.getZ());
-		if (oldValue == z)
-			return false; // camera is already pretty close
-		double halfVoxel = 0.5 * volumeImage.getZResolution();
-		double newZ = z * volumeImage.getZResolution() + halfVoxel;
-		double minZ = volumeImage.getBoundingBox3d().getMin().getZ() + halfVoxel;
-		double maxZ = volumeImage.getBoundingBox3d().getMax().getZ() - halfVoxel;
-		newZ = Math.max(newZ, minZ);
-		newZ = Math.min(newZ, maxZ);
-                if (!Double.isNaN(newZ)) {
-                    camera.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
-                }
-		return true;
-	}
+        return toolBarPanel;
+    }
+
+    private void setModifierKeyPressed(boolean pressed) {
+        // Has the status changed since last time?
+        if (pressed == modifierKeyPressed)
+            return; // no change
+        modifierKeyPressed = pressed; // changed!
+        // Shift to select zoom scroll mode
+        if (pressed)
+            zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+        else if (zScanScrollModeAction.isEnabled())
+            zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+    }
+
+    private boolean setZSlice(int z) {
+        Vec3 oldFocus = camera.getFocus();
+        int oldValue = zSliceIndexForZMicrons(oldFocus.getZ());
+        if (oldValue == z)
+            return false; // camera is already pretty close
+        double halfVoxel = 0.5 * volumeImage.getZResolution();
+        double newZ = z * volumeImage.getZResolution() + halfVoxel;
+        double minZ = volumeImage.getBoundingBox3d().getMin().getZ() + halfVoxel;
+        double maxZ = volumeImage.getBoundingBox3d().getMax().getZ() - halfVoxel;
+        newZ = Math.max(newZ, minZ);
+        newZ = Math.min(newZ, maxZ);
+        if (!Double.isNaN(newZ)) {
+            camera.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+        }
+        return true;
+    }
 
     private void setupMenu(JFrame parentFrame, boolean overrideFrameMenuBar) {
         if (overrideFrameMenuBar) {
@@ -1239,8 +1187,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             addEditMenuItem();
             addViewMenuItem();
             addHelpMenuItem();
-        }
-        else {
+        } else {
             toolBarPanel.add(addViewMenuItem());
         }
     }
@@ -1265,7 +1212,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         JRadioButtonMenuItem traceMouseModeItem = new JRadioButtonMenuItem();
         traceMouseModeItem.setAction(traceMouseModeAction);
         mnMouseMode.add(traceMouseModeItem);
-        
+
         JMenu mnScrollMode = new JMenu("Scroll Mode");
         mnScrollMode.setIcon(Icons.getIcon(IMAGES_MOUSE_SCROLL));
         mnView.add(mnScrollMode);
@@ -1337,7 +1284,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         return mnFile;
     }
-    
+
     public JMenuItem addCopyMicronLocMenuItem() {
         JMenuItem mnCopyMicron = new JMenuItem(
                 new MicronsToClipboardAction(statusLabel)
@@ -1348,12 +1295,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public JMenuItem addCopyOctreePathMenuItem() {
         JMenuItem menuItem = new JMenuItem(
                 new OctreeFilePathToClipboardAction(
-                        statusLabel, tileServer.getSharedVolumeImage().getRemoteBasePath(), tileFormat, camera, CoordinateAxis.Z
+                        statusLabel, tileServer.getSharedVolumeImage().getVolumeBaseURL(), tileFormat, camera, CoordinateAxis.Z
                 )
         );
         return menuItem;
     }
-    
+
     public JMenuItem addCopyTileLocMenuItem() {
         JMenuItem mnCopyTileInx = new JMenuItem(
                 new TileLocToClipboardAction(
@@ -1362,7 +1309,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         return mnCopyTileInx;
     }
-    
+
     public JMenuItem addCopyTileFileLocMenuItem() {
         JMenuItem mnCopyTileFileLoc = new JMenuItem(
                 new RawFileLocToClipboardAction(
@@ -1371,7 +1318,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         return mnCopyTileFileLoc;
     }
-    
+
     public JMenuItem addEditMenuItem() {
         JMenu mnEdit = new JMenu("Edit");
         menuBar.add(mnEdit);
@@ -1399,130 +1346,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
      * @return
      * @throws MalformedURLException
      */
-
-    public boolean loadFile(TmSample sample) throws MalformedURLException {
-        String canonicalLinuxPath = sample.getFilepath();
-        log.info("loadFile: {}", canonicalLinuxPath);
-        
-        // on Linux, this just works, as the input path is the Linux path;
-        //  for Mac and Windows, we need to guess the mount point of the
-        //  shared disk and alter the path accordingly
-
-        File testFile = new File(canonicalLinuxPath); // Maybe it just works...
-        if (!testFile.exists()) {
-            // must be on Mac or Windows; but first, which of the
-            //  possible Linux prefixes are we looking at?
-            // OK to compare as strings, because we know the
-            //  input path is Linux
-            String [] mbmPrefixes = {
-                    "/groups/mousebrainmicro/mousebrainmicro/",
-                    "/groups/mousebrainmicro/mousebrainmicro/from_tier2",
-                    "/nobackup/mousebrainmicro/",
-                    "/nobackup2/mouselight",
-                    "/tier2/mousebrainmicro/mousebrainmicro/",
-                    "/nrs/mouselight",
-                    "/nrs/mltest/",
-                    "/groups/jacs",
-                    "/groups/dickson/dicksonlab",
-            };
-            Path linuxPrefix = null;
-            for (String testPrefix: mbmPrefixes) {
-                if (canonicalLinuxPath.startsWith(testPrefix)) {
-                    linuxPrefix = new File(testPrefix).toPath();
-                }
-            }
-            int pathPrefixDepth = 0;
-            if (linuxPrefix != null) // Avoid NPE
-                pathPrefixDepth = linuxPrefix.getNameCount();
-            Path partialPath = testFile.toPath().subpath(pathPrefixDepth, testFile.toPath().getNameCount());           
-            // System.out.println("linuxPrefix = " + linuxPrefix);
-            // System.out.println("linuxPrefix = " + linuxPrefix);
-            // System.out.println("partialPath = " + partialPath);
-
-            // now we just need to assemble pieces: a root plus a mount name
-            //  plus the partial path we just extracted; the root is OS dependent:
-            String osName = System.getProperty("os.name").toLowerCase();
-            List<Path> prefixesToTry = new Vector<>();
-            if (osName.contains("win")) {
-                for (File fileRoot : File.listRoots()) {
-                    prefixesToTry.add(fileRoot.toPath());
-                }
-            } else if (osName.contains("os x")) {
-                // for Mac, it's a lot simpler:
-                prefixesToTry.add(new File("/Volumes").toPath());
-            }
-            // System.out.println("prefixes to try: " + prefixesToTry);
-
-            // the last, middle piece can be nothing or one of these
-            //  mounts names (nothing = enclosing dir is mounted directly
-            String [] mountNames = {"", "mousebrainmicro", "mouselight",
-                    "nobackup/mousebrainmicro", "nobackup2/mouselight",
-                    "nobackup/mousebrainmicro/from_tier2", "mousebrainmicro/from_tier2",
-                    "mousebrainmicro/mousebrainmicro", "nrs/mouselight",
-                    "mltest", "dicksonlab"};
-
-            boolean found = false;
-            for (Path prefix: prefixesToTry) {
-                if (found) {
-                    break;
-                }
-                for (String mount: mountNames) {
-                    if (mount.length() > 0) {
-                        testFile = prefix.resolve(new File(mount).toPath()).resolve(partialPath).toFile();
-                    } else {
-                        testFile = prefix.resolve(partialPath).toFile();
-                    }
-                    // System.out.println("trying " + testFile);
-                    if (testFile.exists()) {
-                        // System.out.println("file exists: " + testFile);
-                        found = true;
-                        break;
-                    }
-                }
-            }
-        } // end if Mac or Windows
-        // by now, if we ain't got the path, we ain't got the path
-        if (!testFile.exists()) {
-            JOptionPane.showMessageDialog(this.getParent(),
-                    "Error opening Linux sample path " + canonicalLinuxPath +
-                    " \nIs the file share mounted?",
-                    "Folder does not exist.",
-                    JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-
-        // for Mac/Win, must be a directory (symlinks work on Linux,
-        //  but don't work when mounted on Mac/Win
-        if (System.getProperty("os.name").contains("Mac OS X") ||
-            System.getProperty("os.name").contains("Windows")) {
-            if (!testFile.isDirectory()) {
-                JOptionPane.showMessageDialog(this.getParent(),
-                        "Error opening Linux sample path " + canonicalLinuxPath +
-                                " \nAre you sure this is a directory?",
-                        "Not a directory?",
-                        JOptionPane.ERROR_MESSAGE);
-                return false;
-            }
-        }
-
-        // July 1, 2013 elevate url loading from LargeVolumeViewer to QuadViewUi.
-        URL url = testFile.toURI().toURL();
-        snapshot3dLauncher = new Snapshot3DLauncher(
-                largeVolumeViewer.getTileServer(),
-                largeVolumeViewer.getSliceAxis(),
-                camera,
-                getSubvolumeProvider(),
-                canonicalLinuxPath,
-                url,
-                imageColorModel
-        );
-        snapshot3dLauncher.setAnnotationManager(annotationMgr);
-        annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
-        taskWorkflowViewLauncher = new TaskWorkflowViewLauncher();
-        volumeImage.setRemoteBasePath(canonicalLinuxPath);       
-        
-        return loadURL(url, sample);
-    }
+    public abstract boolean loadData(TmSample sample);
 
     /**
      * this is called only via right-click File > Open folder menu
@@ -1532,47 +1356,20 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         if (wsCloseListener != null) {
             wsCloseListener.closeWorkspace();
         }
-
         // then just go ahead and load the file
-        boolean rtnVal = loadURL(url, null);
+        boolean rtnVal = loadDataFromURL(url);
         updateSWCDataConverter();
         return rtnVal;
     }
 
-    public boolean loadURL(URL url, TmSample sample) {  
-        log.info("loadURL: {}", url);
-        boolean rtnVal = false;
-    	// Check if url exists first...
-    	try {
-            if (url == null) {
-                throw new IllegalArgumentException("Location for re-centering not found.");
-            }
-            url.openStream();
-            if (sample == null) {
-                rtnVal = volumeImage.loadURL(url);
-            } else {
-                rtnVal = volumeImage.loadSampleURL(url, sample);
-            }
-            this.setLoadedUrl(url);            
-            new AnnotationSkeletonViewLauncher(false).refreshTopComponent();
-
-    	} catch (IOException exc) {
-            throw new RuntimeException(
-                    "Error opening folder " + url
-                    +" \nIs the file share mounted?");
-    	}
-
-        try {
-            TileStackCacheController.getInstance().init(url);
-        } 
-        catch (Exception ex) {
-            log.error("Error initializing TileStackCacheController", ex);
-            rtnVal=false;
-        }
-
+    public boolean loadDataFromURL(URL url) {
+        LOG.info("loadDataFromURL: {}", url);
+        boolean rtnVal = volumeImage.loadURL(url);
+        loadedUrl = url;
+        new AnnotationSkeletonViewLauncher(false).refreshTopComponent();
         return rtnVal;
     }
-    
+
     public void setStatusLabelText(String text) {
         statusLabel.setText(text);
     }
@@ -1589,19 +1386,19 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
      * this method returns a provider of read-only subvolume of data (maximum zoom,
      * intended for calculations)
      */
-    public SubvolumeProvider getSubvolumeProvider(){
+    public SubvolumeProvider getSubvolumeProvider() {
         return new SubvolumeProvider(volumeImage, tileServer);
     }
-    
+
     //---------------------------IMPLEMENTS VolumeLoadListener
     @Override
     public void volumeLoaded(URL url) {
         updateRanges();
-        
+
         recentFileList.add(url);
         imageColorModel.reset(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
         resetViewAction.actionPerformed(null);
-        
+
         getSkeletonActor().getModel().setTileFormat(
                 tileServer.getLoadAdapter().getTileFormat());
     }
@@ -1623,17 +1420,17 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public SampleLocation getSampleLocation() {
         BasicSampleLocation result = new BasicSampleLocation();
         result.setSampleUrl(loadedUrl);
-        
+
         result.setSampleId(getSampleId());
         result.setSample(this.annotationModel.getCurrentSample());
         result.setWorkspaceId(getWorkspaceId());
-        
+
         // Use the pointer location, not camera focus
         Vec3 focus = null;
         for (TileConsumer viewer : allSliceViewers) {
             Vec3 w = null;
             if (viewer instanceof OrthogonalViewer) {
-                w = ((OrthogonalViewer)viewer).getPopupPositionInWorld();
+                w = ((OrthogonalViewer) viewer).getPopupPositionInWorld();
             }
             if (w != null) {
                 focus = w;
@@ -1642,16 +1439,16 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         }
         if (focus == null)
             focus = camera.getFocus();
-        
+
         result.setFocusUm(focus.getX(), focus.getY(), focus.getZ());
         TileConsumer viewer = allSliceViewers.get(0);
         result.setMicrometersPerWindowHeight(
                 viewer.getViewport().getHeight()
                         / camera.getPixelsPerSceneUnit());
-        
+
         // TODO neurons
-        
-        
+
+
         return result;
     }
 
@@ -1662,22 +1459,14 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                 sampleLocation.getFocusZUm());
         URL url = sampleLocation.getSampleUrl();
         TileConsumer viewer = allSliceViewers.get(0);
-        float zoom = (float) (viewer.getViewport().getHeight() 
-                / sampleLocation.getMicrometersPerWindowHeight());
+        float zoom = (float) (viewer.getViewport().getHeight() / sampleLocation.getMicrometersPerWindowHeight());
 
         if (url != null) {
-            if (! loadedUrl.equals(url))
+            if (!loadedUrl.equals(url))
                 loadRender(url);
         }
         camera.setFocus(focus);
         camera.setPixelsPerSceneUnit(zoom);
-    }
-    
-    /**
-     * @return the loadedUrl
-     */
-    public URL getLoadedUrl() {
-        return loadedUrl;
     }
 
     private Long getWorkspaceId() {
@@ -1689,51 +1478,46 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
 
     private Long getSampleId() {
-        if (annotationModel == null  ||  annotationModel.getCurrentWorkspace() == null) {
+        if (annotationModel == null || annotationModel.getCurrentWorkspace() == null) {
             return null;
         }
         return this.annotationModel.getCurrentWorkspace().getSampleRef().getTargetId();
     }
 
-    /**
-     * @param loadedUrl the loadedUrl to set
-     */
-    public void setLoadedUrl(URL loadedUrl) {
-        this.loadedUrl = loadedUrl;
-    }
-
     static class LoadStatusLabel extends JLabel {
-    	private LoadStatus loadStatus = null;
-    	private ImageIcon busyIcon;
-    	private ImageIcon checkIcon;
-    	private ImageIcon emptyIcon;
-    	
-    	LoadStatusLabel() {
-    		this.busyIcon = Icons.getIcon(IMAGES_SPINNER);
-    		this.checkIcon = Icons.getIcon(IMAGES_GREEN_CHECK);
-    		this.emptyIcon = Icons.getIcon(IMAGES_FOLDER_OPEN);
-    		// Place text over icon
-    		setHorizontalTextPosition(JLabel.CENTER);
-    		setVerticalTextPosition(JLabel.CENTER);
-    		//
-    		setLoadStatus(TileServer.LoadStatus.UNINITIALIZED);
-    	}
-    	
-    	void setLoadStatus(LoadStatus loadStatus) {
-    		if (this.loadStatus == loadStatus)
-    			return; // no change
-    		this.loadStatus = loadStatus;
-    		setText(Integer.toString(loadStatus.ordinal() - 1));
-    		if (loadStatus.ordinal() >= TileServer.LoadStatus.BEST_TEXTURES_LOADED.ordinal())
-    			setIcon(checkIcon);
-    		else if (loadStatus.ordinal() >= TileServer.LoadStatus.NO_TEXTURES_LOADED.ordinal())
-    			setIcon(busyIcon);
-    		else
-    			setIcon(emptyIcon);
-    	}
+        private LoadStatus loadStatus = null;
+        private ImageIcon busyIcon;
+        private ImageIcon checkIcon;
+        private ImageIcon emptyIcon;
+
+        LoadStatusLabel() {
+            this.busyIcon = Icons.getIcon(IMAGES_SPINNER);
+            this.checkIcon = Icons.getIcon(IMAGES_GREEN_CHECK);
+            this.emptyIcon = Icons.getIcon(IMAGES_FOLDER_OPEN);
+            // Place text over icon
+            setHorizontalTextPosition(JLabel.CENTER);
+            setVerticalTextPosition(JLabel.CENTER);
+            //
+            setLoadStatus(TileServer.LoadStatus.UNINITIALIZED);
+        }
+
+        void setLoadStatus(LoadStatus loadStatus) {
+            if (this.loadStatus == loadStatus)
+                return; // no change
+            this.loadStatus = loadStatus;
+            setText(Integer.toString(loadStatus.ordinal() - 1));
+            if (loadStatus.ordinal() >= TileServer.LoadStatus.BEST_TEXTURES_LOADED.ordinal())
+                setIcon(checkIcon);
+            else if (loadStatus.ordinal() >= TileServer.LoadStatus.NO_TEXTURES_LOADED.ordinal())
+                setIcon(busyIcon);
+            else
+                setIcon(emptyIcon);
+        }
     }
 
     public AnnotationManager getAnnotationMgr() {
         return annotationMgr;
-    };
+    }
+
+    ;
 }

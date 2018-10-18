@@ -54,8 +54,7 @@ public class TexturePreFetcher
 	 *
 	 * Returns "true" if this tile would occupy desired space in the future cache.
 	 */
-	public synchronized boolean loadDisplayedTexture(TileIndex index, TileServer tileServer)
-	{
+	public synchronized boolean loadDisplayedTexture(TileIndex index, TileServer tileServer) {
 		if (textureCache == null)
 			return false;
 		if (loadAdapter == null)
@@ -66,40 +65,32 @@ public class TexturePreFetcher
 		}
 		if (textureCache.containsKey(index))
 			return false; // we already have this one!
-		// TODO - is it already queued?
-		// This "recentRequests" hack is not solving the problem.
-		// if (recentRequests.containsKey(index))
-		// 	return false;
 		if (textureCache.isLoadQueued(index))
 			return false;
 		TileTexture texture = new TileTexture(index, loadAdapter);
 		TextureLoadWorker textureLoadWorker=new TextureLoadWorker(texture, textureCache, tileServer);
-		//long t2=System.nanoTime();
-		//long report2=(t2-t1)/1000000;
-		//log.info("loadDisplayedTexture phase1 ms="+report2);
-		if (VolumeCache.useVolumeCache()) {
-			// Check if already in ram - we only want to launch a new thread if it isn't in ram
-			TileStackCacheController tileStackCacheController=TileStackCacheController.getInstance();
-			File stackFile=tileStackCacheController.getStackFileForTileIndex(index);
-			if (stackFile!=null) {
-				if (tileStackCacheController.getCache().containsFile(stackFile)) {
-					//long t4=System.nanoTime();
-					//long report4=(t4-t2)/1000000;
-					//log.info("loadDisplayedTexture phase2 ms="+report4);
-					//long t5=System.nanoTime();
-					textureLoadWorker.run();
-					//long t6=System.nanoTime();
-					//long report6=(t6-t5)/1000000;
-					//log.info("textureLoadWorker.run() in ms="+report6);
-					return false;
-				}
-			}
-		}
+//		if (VolumeCache.useVolumeCache()) {
+//			// Check if already in ram - we only want to launch a new thread if it isn't in ram
+//			TileStackCacheController tileStackCacheController=TileStackCacheController.getInstance();
+//			File stackFile=tileStackCacheController.getStackFileForTileIndex(index);
+//			if (stackFile!=null) {
+//				if (tileStackCacheController.getCache().containsFile(stackFile)) {
+//					//long t4=System.nanoTime();
+//					//long report4=(t4-t2)/1000000;
+//					//log.info("loadDisplayedTexture phase2 ms="+report4);
+//					//long t5=System.nanoTime();
+//					textureLoadWorker.run();
+//					//long t6=System.nanoTime();
+//					//long report6=(t6-t5)/1000000;
+//					//log.info("textureLoadWorker.run() in ms="+report6);
+//					return false;
+//				}
+//			}
+//		}
 		// TODO - handle MISSING textures vs. ERROR textures
 		Future<?> foo = textureLoadExecutor.submit(textureLoadWorker);
 		futures.put(foo, texture.getIndex());
 		textureCache.setLoadQueued(index, true);
-		// recentRequests.put(index, index);
 		// Lowest resolution textures are in the persistent cache, and thus
 		// do not impact the future cache.
 		return (index.getZoom() != index.getMaxZoom());

@@ -15,7 +15,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransf
 import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.FileBasedBlockTiffOctreeLoadAdapter;
 import org.janelia.it.jacs.shared.lvv.CoordinateToRawTransformFileSource;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
@@ -29,7 +29,7 @@ import com.sun.media.jai.codec.ImageDecoder;
  */
 public class TiffToPam {
 	
-	private BlockTiffOctreeLoadAdapter loadAdapter;
+	private FileBasedBlockTiffOctreeLoadAdapter loadAdapter;
 	private boolean recursive = false;
 
 	/**
@@ -43,20 +43,10 @@ public class TiffToPam {
 		File inputTiffFolder = new File(args[0]);
 		File outputPamFolder = new File(args[1]);
 		TiffToPam tiffToPam = new TiffToPam();
-		tiffToPam.loadAdapter = new BlockTiffOctreeLoadAdapter();
-		try {
-			tiffToPam.loadAdapter.setTopFolderAndCoordinateSource(inputTiffFolder, new CoordinateToRawTransformFileSource() {
-				public CoordinateToRawTransform getCoordToRawTransform(String filePath) throws Exception {
-					return TiledMicroscopeDomainMgr.getDomainMgr().getCoordToRawTransform(filePath);
-				}
-			});
-			tiffToPam.convertFolder(inputTiffFolder, outputPamFolder);
-		} catch (DataSourceInitializeException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
+		tiffToPam.loadAdapter = new FileBasedBlockTiffOctreeLoadAdapter(new TileFormat(), inputTiffFolder);
+		tiffToPam.convertFolder(inputTiffFolder, outputPamFolder);
 	}
-	
+
 	/**
 	 * Recursively convert a folder and all of it's descendants.
 	 * @param inputFolder
@@ -96,14 +86,7 @@ public class TiffToPam {
 				TextureData2dGL tex = new TextureData2dGL(loadAdapter.loadSlice(z, decoder, decoder.length));
 				// Write pam file
 				File pamFile = new File(outputFolder, "slice_"+format.format(z)+".pam");
-				// System.out.println(pamFile.getAbsolutePath());
 				FileOutputStream pamStream0 = new FileOutputStream(pamFile);
-				/*
-				OutputStream pamStream2 = new LZ4BlockOutputStream(
-						pamStream0
-						, 65536
-						, compressor);
-						*/
 				// Write header of pam file
 				PrintWriter writer = new PrintWriter(pamStream0);
 				/*	 

@@ -26,11 +26,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.generator.UmbrellaSlic
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TileServer 
-implements ComponentListener, // so changes in viewer size/visibility can be tracked
-           VolumeLoadListener
-// implements VolumeImage3d
-{
+public class TileServer implements ComponentListener, // so changes in viewer size/visibility can be tracked
+		                           VolumeLoadListener {
 	private static final Logger log = LoggerFactory.getLogger(TileServer.class);
 
 	// Derived from individual ViewTileManagers
@@ -187,11 +184,11 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
         }
 	}
 
-	public SharedVolumeImage getSharedVolumeImage() {
+	SharedVolumeImage getSharedVolumeImage() {
 		return sharedVolumeImage;
 	}
 
-	public void setSharedVolumeImage(SharedVolumeImage sharedVolumeImage) {
+	void setSharedVolumeImage(SharedVolumeImage sharedVolumeImage) {
 		if (this.sharedVolumeImage == sharedVolumeImage)
 			return;
 		this.sharedVolumeImage = sharedVolumeImage;
@@ -260,37 +257,15 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 			for (TileIndex ix : vtm.getNeededTextures()) {
 				if (cacheableTextures.contains(ix))
 					continue; // already noted
-				// log.info("queue load of "+ix);
 
 				long t1=System.nanoTime();
 				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this)) {
-//					int count=displayResCount.addAndGet(1);
-//					log.info("displayResCount="+count);
 					cacheableTextures.add(ix);
 				}
-				//long t2 = (System.nanoTime() - t1)/1000000;
-				//log.info("rearrangeLoadQueue tileIndex="+ix.toString()+" in "+t2+" ms");
 			}
 		}
 
-		//long time=(System.nanoTime()-start)/1000000;
-
-		//log.info("rearrangeLoadQueue total time="+time);
-
 		if (doPrefetch && !VolumeCache.useVolumeCache()) {
-			/* TODO - LOD tiles are not working yet...
-			// Get level-of-detail tiles
-			Iterable<TileIndex> lodGen = new LodGenerator(TileServer.this);
-			for (TileIndex ix : lodGen) {
-				if (cacheableTextures.contains(ix))
-					continue;
-				if (cacheableTextures.size() >= maxCacheable)
-					break;
-				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
-					cacheableTextures.add(ix);
-			}
-			*/
-			
 			// Sort tiles into X, Y, and Z slices to help with generators
 			Map<CoordinateAxis, TileSet> axisTiles = new HashMap<CoordinateAxis, TileSet>();
 			for (Tile2d tile : currentTiles) {
@@ -340,8 +315,6 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 						break;
 
 					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this)) {
-//						int count=umbrellaResCount.addAndGet(1);
-//						log.info("umbrellaResCount="+count);
 						cacheableTextures.add(ix);
 					}
 				}
@@ -354,46 +327,11 @@ implements ComponentListener, // so changes in viewer size/visibility can be tra
 						break;
 
 					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this)) {
-//						int count=fullResCount.addAndGet(1);
-//						log.info("fullResCount="+count);
 						cacheableTextures.add(ix);
 					}
 				}
 			}
-			
-			/*
-			Iterable<TileIndex> zGen = new UmbrellaSliceGenerator(getLoadAdapter().getTileFormat(), currentTiles);
-			// Get nearby Z-tiles, with decreasing LOD
-			for (TileIndex ix : zGen) {
-				// TODO - restrict to Z tiles for testing
-				if (ix.getSliceAxis() != CoordinateAxis.Z) // TODO remove test
-					continue;
-				if (cacheableTextures.contains(ix))
-					continue;
-				if (cacheableTextures.size() >= maxCacheable)
-					break;
-				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
-					cacheableTextures.add(ix);
-			}
-			*/
-			
-			/*
-			// Get more Z-tiles, at current LOD
-			zGen = new ZGenerator(getLoadAdapter().getTileFormat(), currentTiles);
-			for (TileIndex ix : zGen) {
-				if (cacheableTextures.contains(ix))
-					continue;
-				if (cacheableTextures.size() >= maxCacheable)
-					break;
-				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
-					cacheableTextures.add(ix);
-			}
-			*/
-
-		}			
-
-		// log.info("Number of queued textures = "+cacheableTextures.size());
-		
+		}
 		updateLoadStatus();
 	}
 	

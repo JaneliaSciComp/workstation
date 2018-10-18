@@ -31,9 +31,7 @@ public class ClipboardActionHelper {
     }
 
     public static String getOctreePathAtCoords(
-            TileFormat tileFormat, BasicObservableCamera3d camera, CoordinateAxis axis, Vec3 vec
-    ) {
-        //Vec3 vec = camera.getFocus(); // Testing, only. Rules out location drift.
+            TileFormat tileFormat, BasicObservableCamera3d camera, CoordinateAxis axis, Vec3 vec) {
         //  Method return found to be flawed at greater-than-0-level zoom.
         final int requiredZoomLevel = tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
         TileIndex index = tileFormat.tileIndexForXyz(vec, requiredZoomLevel, axis);

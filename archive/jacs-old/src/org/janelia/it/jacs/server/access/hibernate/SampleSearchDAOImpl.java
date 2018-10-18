@@ -176,50 +176,6 @@ public class SampleSearchDAOImpl extends SearchDAOImpl {
         return samplesSearchResultCharts;
     }
 
-//    public Set<Site> getMapInfoForSearchResultsBySearchId(Long searchId, String category)
-//            throws DaoException {
-//        String sql =
-//                "select distinct " +
-//                        "  site.sample_name as siteId, " +
-//                        "  site.location as location, " +
-//                        "  site.latitude as latitude, " +
-//                        "  site.longitude as longitude " +
-//                        "from sample_ts_result nt " +
-//                        "inner join sample_site site on site.sample_id = nt.hit_id " +
-//                        "where nt.node_id = (select node_id from node where task_id = :searchId) ";
-//        _logger.info("Reads per sample sql=" + sql);
-//        SQLQuery sqlQuery = getSession().createSQLQuery(sql);
-//        sqlQuery.setLong("searchId", searchId);
-//        sqlQuery.addScalar("siteId", Hibernate.STRING);
-//        sqlQuery.addScalar("location", Hibernate.STRING);
-//        sqlQuery.addScalar("latitude", Hibernate.STRING);
-//        sqlQuery.addScalar("longitude", Hibernate.STRING);
-//        List<Object[]> results = sqlQuery.list();
-//        int i = 0;
-//        Set<Site> sites = new HashSet<Site>();
-//        for (Object[] result : results) {
-//            GeoPoint geoPoint = new GeoPoint();
-//            try {
-////                geoPoint.setSiteId((Long)result[0]);
-////                geoPoint.setLocation((String)result[1]);
-//                geoPoint.setLatitude((String) result[2]);
-//                geoPoint.setLongitude((String) result[3]);
-//                Site s = new Site();
-//                s.setSiteId((String) result[0]);
-//                s.setSampleLocation((String) result[1]);
-//                s.setLatitude(geoPoint.getLatitude());
-//                s.setLatitudeDouble(geoPoint.getLatitudeAsDouble());
-//                s.setLongitude(geoPoint.getLongitude());
-//                s.setLongitudeDouble(geoPoint.getLongitudeAsDouble());
-//                sites.add(s);
-//            }
-//            catch (Exception e) {
-//                _logger.error("Exception encountered processing site id:" + geoPoint.getSiteId() + " location:" + geoPoint.getLocation() + " latitude:" + geoPoint.getLatitude() + " longitude:" + geoPoint.getLongitude(), e);
-//            }
-//        }
-//        return sites;
-//    }
-
     private ImageModel getSamplesByProjectChart(Long searchId, String resultBaseDirectory)
             throws DaoException {
         String chartTitle = "Samples By Project";
