@@ -1,30 +1,30 @@
-/* 
+/*
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
- * 
+ *
  * Copyright (c) 2014, Howard Hughes Medical Institute, All rights reserved.
- * 
- * Redistribution and use in source and binary forms, with or without 
+ *
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
- *     1. Redistributions of source code must retain the above copyright notice, 
+ *
+ *     1. Redistributions of source code must retain the above copyright notice,
  *        this list of conditions and the following disclaimer.
- *     2. Redistributions in binary form must reproduce the above copyright 
- *        notice, this list of conditions and the following disclaimer in the 
+ *     2. Redistributions in binary form must reproduce the above copyright
+ *        notice, this list of conditions and the following disclaimer in the
  *        documentation and/or other materials provided with the distribution.
- *     3. Neither the name of the Howard Hughes Medical Institute nor the names 
- *        of its contributors may be used to endorse or promote products derived 
+ *     3. Neither the name of the Howard Hughes Medical Institute nor the names
+ *        of its contributors may be used to endorse or promote products derived
  *        from this software without specific prior written permission.
- * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, ANY 
- * IMPLIED WARRANTIES OF MERCHANTABILITY, NON-INFRINGEMENT, OR FITNESS FOR A 
- * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR 
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
- * REASONABLE ROYALTIES; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, ANY
+ * IMPLIED WARRANTIES OF MERCHANTABILITY, NON-INFRINGEMENT, OR FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * REASONABLE ROYALTIES; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.janelia.horta;
@@ -68,24 +68,23 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private SceneWindow sceneWindow;
 
     private static final Logger logger = LoggerFactory.getLogger(SampleLocationAcceptor.class);
-    
+
     public SampleLocationAcceptor(
-            String currentSource, 
-            NeuronTraceLoader loader, 
-            NeuronTracerTopComponent nttc, 
+            String currentSource,
+            NeuronTraceLoader loader,
+            NeuronTracerTopComponent nttc,
             SceneWindow sceneWindow) {
         this.currentSource = currentSource;
         this.loader = loader;
         this.nttc = nttc;
         this.sceneWindow = sceneWindow;
     }
-    
+
     @Override
     public void acceptLocation(final SampleLocation sampleLocation) throws Exception {
         Runnable task = new Runnable() {
             @Override
-            public void run()
-            {
+            public void run() {
                 ProgressHandle progress
                         = ProgressHandleFactory.createHandle("Loading View in Horta...");
                 progress.start();
@@ -103,7 +102,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                             + sampleLocation.getFocusYUm() + ", "
                             + sampleLocation.getFocusZUm());
                     }
-                    
+
                     // First check to see if ktx tiles are available
                     BlockTileSource ktxSource = null;
                     if (nttc.isPreferKtx()) {
@@ -111,16 +110,14 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         if (ktxSource != null) {
                             nttc.setKtxSource(ktxSource);
                         }
-                    }
-                    else {
+                    } else {
                         nttc.setKtxSource(null);
                     }
-                    
+
                     progress.setDisplayName("Centering on location...");
                     setCameraLocation(sampleLocation);
-                    
+
                     if (ktxSource == null) { // Use obsolete single channel raw file loading
-                    // if (true) {
                         StaticVolumeBrickSource volumeSource = setSampleUrl(url, progress);
                         if (volumeSource == null) {
                             throw new IOException("Loading volume source failed");
@@ -128,15 +125,14 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         progress.switchToIndeterminate(); // TODO - enhance tile loading with a progress listener
                         progress.setDisplayName("Loading brain tile image...");
                         loader.loadTileAtCurrentFocus(volumeSource, sampleLocation.getDefaultColorChannel());
-                    }
-                    else { // Load ktx files here
+                    } else { // Load ktx files here
                         progress.switchToIndeterminate(); // TODO: enhance tile loading with a progress listener
                         progress.setDisplayName("Loading KTX brain tile image...");
                         if (nttc.doesUpdateVolumeCache()) {
                             loader.loadTransientKtxTileAtCurrentFocus(ktxSource);
                         }
                         else {
-                            loader.loadPersistentKtxTileAtCurrentFocus(ktxSource);                            
+                            loader.loadPersistentKtxTileAtCurrentFocus(ktxSource);
                         }
                     }
                     nttc.redrawNow();
@@ -146,13 +142,13 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         public void run()
                         {
                             JOptionPane.showMessageDialog(
-                                    sceneWindow.getOuterComponent(), 
-                                    "Error loading brain specimen: " + ex.getMessage(), 
-                                    "Brain Raw Data Error", 
+                                    sceneWindow.getOuterComponent(),
+                                    "Error loading brain specimen: " + ex.getMessage(),
+                                    "Brain Raw Data Error",
                                     JOptionPane.ERROR_MESSAGE);
                         }
-                    });                   
-                } 
+                    });
+                }
                 finally {
                     progress.finish();
                 }
@@ -161,8 +157,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         RequestProcessor.getDefault().post(task);
     }
 
-    private BlockTileSource loadKtxSource(TmSample sample, URL renderedOctreeUrl, ProgressHandle progress) 
-    {
+    private BlockTileSource loadKtxSource(TmSample sample, URL renderedOctreeUrl, ProgressHandle progress) {
         progress.setDisplayName("Checking for ktx rendered tiles");
         BlockTileSource previousSource = nttc.getKtxSource();
         if (previousSource != null) {
@@ -172,22 +167,22 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             if (urlStr.equals(previousUrlStr))
                 return previousSource; // Source did not change
         }
-        
+
         String ktxPathStr = null;
         try {
             URL ktxFolderPathFileUrl = new URL(renderedOctreeUrl, "secondary_folder.txt");
             logger.info("Trying to find KTX path via {}", ktxFolderPathFileUrl);
             InputStream pathStream = ktxFolderPathFileUrl.openStream();
-            ktxPathStr = IOUtils.toString(pathStream).trim();     
+            ktxPathStr = IOUtils.toString(pathStream).trim();
         } catch (MalformedURLException ex) {
             logger.info("Cannot load secondary_folder.txt",ex);
         } catch (IOException ex) {
             logger.info("Cannot load secondary_folder.txt: {}",ex.getMessage());
-            
+
             // not great way to differentiate new style from old style; need to use something other than URL
             ktxPathStr = "ktx/";
         }
-            
+
         try {
              if (!ktxPathStr.endsWith("/"))
                 ktxPathStr = ktxPathStr + "/";
@@ -201,7 +196,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
 
         return null;
     }
-    
+
     private StaticVolumeBrickSource setSampleUrl(URL renderedOctreeUrl, ProgressHandle progress) {
         String urlStr = renderedOctreeUrl.toString();
         // Check: if same as current source, no need to change that.
@@ -235,7 +230,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         catch (IOException | URISyntaxException ex) {
             // Something went wrong with loading the Yaml file
             // Exceptions.printStackTrace(ex);
-            JOptionPane.showMessageDialog(nttc, 
+            JOptionPane.showMessageDialog(nttc,
                     "Problem Loading Raw Tile Information from " + renderedOctreeUrl.getPath() +
                     "\n  Is the render folder drive mounted?"
                     + "\n  Does the render folder contain a " + BASE_YML_FILE + " file ?"
@@ -245,10 +240,10 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         }
 
         logger.info("Finished creating volumeSource from yaml file");
-        
+
         if (null == volumeSource)
             return volumeSource;
-        
+
         // Test for location of first tile, as a sanity check
         if (!HttpDataSource.useHttp()) {
             Double res = volumeSource.getAvailableResolutions().iterator().next();
@@ -268,10 +263,10 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 volumeSource = null; // Don't use this data source
             }
         }
-        
+
         return volumeSource;
     }
-    
+
     private boolean setCameraLocation(SampleLocation sampleLocation) {
         // Now, position this component over other component's
         // focus.
@@ -281,10 +276,10 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             (float)sampleLocation.getFocusXUm(),
             (float)sampleLocation.getFocusYUm(),
             (float)sampleLocation.getFocusZUm());
-        
+
         if (!v.setFocusPosition(focusVector3)) {
             logger.info("New focus is the same as previous focus");
-        }        
+        }
         v.setDefaultFocus(focusVector3);
 
         double zoom = sampleLocation.getMicrometersPerWindowHeight();
@@ -297,5 +292,5 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         v.notifyObservers();
         return true;
     }
-    
+
 }
