@@ -46,17 +46,7 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
         }
         this.resultClass = result.getClass().getName();
         this.aligned = result instanceof SampleAlignmentResult;
-        if (aligned) {
-            this.resultName = ((SampleAlignmentResult) result).getAlignmentSpace();
-            if (StringUtils.isBlank(resultName)) {
-                // If the alignment space is empty, fallback on the result name. 
-                // This shouldn't happen, but it does for legacy or broken data.
-                this.resultName = result.getName();
-            }
-        }
-        else {
-            this.resultName = result.getName();
-        }
+        this.resultName = result.getName();
     }
 
     /**

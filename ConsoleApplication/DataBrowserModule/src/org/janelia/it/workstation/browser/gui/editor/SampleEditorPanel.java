@@ -34,7 +34,6 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -909,7 +908,7 @@ public class SampleEditorPanel
                     subLabel2.setText(result.getMessage());
                 }
                 rightLabel.setText(compressionLabel);
-                rightLabel2.setText(result.getName());
+                //rightLabel2.setText(result.getName());
                 
                 HasFiles files = result;
                 
