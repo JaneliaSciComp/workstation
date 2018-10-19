@@ -404,6 +404,29 @@ public class TiledMicroscopeRestClient {
         }
         return response.readEntity(TmReviewTask.class);
     }
+    
+    public TmReviewTask update(TmReviewTask reviewTask) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(reviewTask);
+        Response response = getMouselightEndpoint("/reviewtask")
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response, "update: "+reviewTask)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(TmReviewTask.class);
+    }   
+    
+    public void remove(TmReviewTask reviewTask) throws Exception {
+        Response response = getMouselightEndpoint("/reviewtask")
+                .queryParam("taskReviewId", reviewTask.getId())
+                .request("application/json")
+                .delete();
+        if (checkBadResponse(response, "remove: " + reviewTask)) {
+            throw new WebApplicationException(response);
+        }
+    }
 
     protected boolean checkBadResponse(Response response, String failureError) {
         int responseStatus = response.getStatus();

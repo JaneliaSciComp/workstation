@@ -280,11 +280,18 @@ public class TiledMicroscopeDomainMgr {
         log.debug("save({})", reviewTask);
         if (reviewTask.getId()==null) {
             reviewTask = client.create(reviewTask);
-            model.notifyDomainObjectChanged(reviewTask);
+        } else {
+            reviewTask = client.update(reviewTask);
         }
+        model.notifyDomainObjectChanged(reviewTask);
         return reviewTask;
     }
     
+    public void remove(TmReviewTask reviewTask) throws Exception {
+        log.debug("remove({})", reviewTask);
+        client.remove(reviewTask);
+        model.notifyDomainObjectRemoved(reviewTask);
+    }
     
     public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate) throws Exception {
         client.updateNeuronStyles(bulkNeuronStyleUpdate);
