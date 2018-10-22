@@ -256,7 +256,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (rootAnnotation!=null) {
             NeuronTree rootNode = createNeuronTreeNode(null, rootAnnotation);
             exploreNeuronBranches(rootNode, neuron, rootAnnotation);
-            TaskWorkflowViewTopComponent.getInstance().createNeuronReview(neuron.getName(), rootNode);
+            TaskWorkflowViewTopComponent.getInstance().createNeuronReview(neuron, rootNode);
         }
     }
     
@@ -273,7 +273,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     NeuronTree createNeuronTreeNode(NeuronTree parentNode, TmGeoAnnotation annotation) {
         Vec3 tempLocation = getTileFormat().micronVec3ForVoxelVec3Centered(
                 new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
-        NeuronTree childNode = new NeuronTree(parentNode, tempLocation);
+        NeuronTree childNode = new NeuronTree(parentNode, tempLocation, annotation.getId());
         if (parentNode!=null)
             parentNode.addChild(childNode);
         return childNode;

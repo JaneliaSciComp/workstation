@@ -4,6 +4,7 @@ import com.mxgraph.model.mxCell;
 import java.util.ArrayList;
 import java.util.List;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 
 /**
  *
@@ -12,13 +13,15 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 public class NeuronTree implements PointDisplay {
     private NeuronTree parent;
     private Vec3 loc;
+    private Long annotationId;
     private List<NeuronTree> children;
     private boolean visited;
     private mxCell cell;
 
-    public NeuronTree(NeuronTree parentNode, Vec3 vertexLoc) {
+    public NeuronTree(NeuronTree parentNode, Vec3 vertexLoc, Long annotation) {
         parent = parentNode;       
         loc = vertexLoc;
+        annotationId = annotation;
         children = new ArrayList<NeuronTree>();        
         visited = false;
     }
@@ -70,6 +73,14 @@ public class NeuronTree implements PointDisplay {
             return true;
         return false;
     }
+
+    public Long getAnnotationId() {
+        return annotationId;
+    }
+
+    public void setAnnotationId(Long annotationId) {
+        this.annotationId = annotationId;
+    }    
 
     public mxCell getGUICell() {
         return cell;

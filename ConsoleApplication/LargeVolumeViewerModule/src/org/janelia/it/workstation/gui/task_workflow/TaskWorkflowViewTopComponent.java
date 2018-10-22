@@ -50,8 +50,11 @@ import org.janelia.it.workstation.browser.gui.keybind.ShortcutTextField;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronReviewItem;
+import org.janelia.model.domain.tiledMicroscope.TmPointListReviewItem;
 import org.janelia.model.domain.tiledMicroscope.TmReviewItem;
 import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -61,6 +64,7 @@ import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
 import org.openide.explorer.view.OutlineView;
 import org.openide.nodes.Node;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -107,8 +111,12 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     private LinkedList<Vec3> normalGroup;
     private String[] reviewOptions;
     private JTable taskReviewTable;
+    private TmNeuronMetadata currNeuron;
     List<ReviewPoint> pointList;
     List<ReviewGroup> groupList;
+    enum REVIEW_CATEGORY {
+        NEURON_REVIEW, POINT_REVIEW
+    };
     boolean firstTime = true;
     static final int NEURONREVIEW_WIDTH = 200;
     
@@ -224,6 +232,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         JScrollPane scrollPane = new JScrollPane(taskReviewTable);
         taskReviewTable.setFillsViewportHeight(true);
         add (scrollPane, BorderLayout.EAST);
+        
+        loadInitialTasks();
         
         // I want most of the components to stack vertically;
         //  components should fill or align left as appropriate
@@ -391,11 +401,19 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         }        
     }
     
-    public void createNeuronReview (String neuronName, NeuronTree tree) {
+    /**
+     * If the neuron needed to be editted
+    */
+    public void regenerateBranchPath (ReviewGroup item) {
+        
+    }
+    
+    public void createNeuronReview (TmNeuronMetadata neuron, NeuronTree tree) {
         // generate gui and mxCells for neurontree
         JScrollPane taskPane = navigator.createGraph(tree, NEURONREVIEW_WIDTH);
         add( taskPane, 
                 BorderLayout.CENTER);
+        currNeuron = neuron;
         
         // from leaf nodes of neurontree generate branches to play back
         List<NeuronTree> leaves = new ArrayList<NeuronTree>();
@@ -600,6 +618,79 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 
 
         }
+    }
+    
+    /**
+     * access the CRUD 
+     */
+    public void loadInitialTasks () {
+        TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+        try {
+            List<TmReviewTask> reviewTasks = persistenceMgr.getReviewTasks();
+            ((TaskReviewTableModel)taskReviewTable.getModel()).loadReviewTasks(reviewTasks);
+        } catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        
+    }
+    
+    
+    /**
+     * takes current point lists and generates a ReviewTask object for persistence.
+     */
+    public void createNewTask(REVIEW_CATEGORY category) {
+        TmReviewTask reviewTask = new TmReviewTask();
+        reviewTask.setCategory(category.toString());
+        reviewTask.setOwner(AccessManager.getSubjectKey());
+        reviewTask.setTitle("Need to add text box under table");
+        for (ReviewGroup branch: groupList) {                      
+             TmReviewItem reviewItem = null;
+             switch (category) {
+                 case NEURON_REVIEW:        
+                     reviewItem = new TmNeuronReviewItem();
+                     ((TmNeuronReviewItem)reviewItem).setNeuronId(currNeuron.getId()); 
+                     for (ReviewPoint point : branch.getPointList()) {
+                         reviewItem.addReviewItem(((NeuronTree)point.getDisplay()).getAnnotationId());
+                     }
+                     
+                     break;
+                 case POINT_REVIEW:
+                     reviewItem = new TmPointListReviewItem();      
+                     for (ReviewPoint point : branch.getPointList()) {
+                         reviewItem.addReviewItem(point.getDisplay().getVertexLocation());
+                     }
+                     break;
+             }
+             if (reviewItem!=null) {
+                 reviewItem.setWorkspaceRef(currNeuron.getWorkspaceRef().toString());
+                 reviewItem.setReviewed(branch.isReviewed());
+             }
+             
+        }
+        TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+        try {
+        } catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        
+    }
+    
+    public void updateCurrentTask (TmReviewTask task) {
+        TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+        try {
+        } catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        
+    }
+        
+    public void deleteTask (TmReviewTask task) {
+        TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+        try {
+        } catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        
     }
 
     /**
