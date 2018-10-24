@@ -23,6 +23,8 @@ public interface PreferenceSupport {
 
     static final Logger log = LoggerFactory.getLogger(PreferenceSupport.class);
 
+    static final String DEFAULT_KEY = "Default";
+    
     /**
      * Implement this to return the current context id to use when saving a preference. This method is called every time 
      * a preference is saved or retrieved, so the return value may change over time if the context changes. 
@@ -38,8 +40,8 @@ public interface PreferenceSupport {
      * @return listenable future
      */
     default SimpleListenableFuture<Void> setPreferenceAsync(final String category, final Object value) {
-        if (getCurrentContextId()==null) return null;
-        return setPreferenceAsync(category, getCurrentContextId().toString(), value);
+        String key = getCurrentContextId()==null?"DEFAULT_KEY":getCurrentContextId().toString();
+        return setPreferenceAsync(category, key, value);
     }
     
     /**
@@ -50,8 +52,8 @@ public interface PreferenceSupport {
      * @throws Exception
      */
     default void setPreference(final String category, final Object value) throws Exception {
-        if (getCurrentContextId()==null) return;
-        setPreference(category, getCurrentContextId().toString(), value);
+        String key = getCurrentContextId()==null?"DEFAULT_KEY":getCurrentContextId().toString();
+        setPreference(category, key, value);
     }
 
     /**
@@ -105,9 +107,9 @@ public interface PreferenceSupport {
      * @return
      */
     default String getPreference(String category) {
-        if (getCurrentContextId()==null) return null;
+        String key = getCurrentContextId()==null?"DEFAULT_KEY":getCurrentContextId().toString();
         try {
-            return FrameworkImplProvider.getRemotePreferenceValue(category, getCurrentContextId().toString(), null);
+            return FrameworkImplProvider.getRemotePreferenceValue(category, key, null);
         }
         catch (Exception e) {
             log.error("Error getting preference", e);

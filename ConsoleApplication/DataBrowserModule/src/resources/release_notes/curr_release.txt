@@ -1,13 +1,4 @@
-// 7.18
+// 7.19
 
 Workstation Browser
-* AD/DBD availability is now displayed on color depth search results
-* Color depth search results can be selected for split generation
-* Easier selection of color depth MIPs for download
-* Duplicate files are now ignored when downloading
-* "Find" feature (Command-F/Ctrl-F) now searches more attributes, including VT Line 
-* Added VVD Viewer to right-click menus, and to the toolbar
-* Made it possible to choose alignments produced by different aligners when displaying MIPs, e.g. JFRC2010 JBA vs. JFRC2010 CMTK
-
-Large Volume Viewer
-* Export SWC dialog box is larger and remembers its size
+* Fixed bug when choosing display result for unsaved searches

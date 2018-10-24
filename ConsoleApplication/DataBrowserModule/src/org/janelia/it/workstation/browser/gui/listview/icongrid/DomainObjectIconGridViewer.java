@@ -315,33 +315,29 @@ public class DomainObjectIconGridViewer
                 // Reload the config
                 config = IconGridViewerConfiguration.loadConfig();
                 
-                final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-                if (parentObject!=null && parentObject.getId()!=null) {
-                    
-                    String preference = preferenceSupport.getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT);
-                    log.info("Got result preference: "+preference);
-                    if (preference!=null) {
-                        try {
-                            ArtifactDescriptor resultDescriptor = DescriptorUtils.deserialize(preference);
-                            resultButton.setResultDescriptor(resultDescriptor);
-                        }
-                        catch (Exception e) {
-                            log.error("Error deserializing preference {}. Clearing it.", preference, e);
-                            preferenceSupport.setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, null);
-                        }
+                String preference = preferenceSupport.getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT);
+                log.info("Got result preference: "+preference);
+                if (preference!=null) {
+                    try {
+                        ArtifactDescriptor resultDescriptor = DescriptorUtils.deserialize(preference);
+                        resultButton.setResultDescriptor(resultDescriptor);
                     }
-                    else {
-                        resultButton.reset();
+                    catch (Exception e) {
+                        log.error("Error deserializing preference {}. Clearing it.", preference, e);
+                        preferenceSupport.setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, null);
                     }
-                    
-                    String preference2 = preferenceSupport.getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE);
-                    log.info("Got image type preference: "+preference2);
-                    if (preference2!=null) {
-                        typeButton.setImageTypeName(preference2);
-                    }
-                    else {
-                        typeButton.reset();
-                    }   
+                }
+                else {
+                    resultButton.reset();
+                }
+                
+                String preference2 = preferenceSupport.getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE);
+                log.info("Got image type preference: "+preference2);
+                if (preference2!=null) {
+                    typeButton.setImageTypeName(preference2);
+                }
+                else {
+                    typeButton.reset();
                 }
 
                 resultButton.populate(domainObjectList.getObjects());
