@@ -47,7 +47,7 @@ public class JadeServiceClient extends RESTClientBase {
     }
     
     public String findStorageURL(String storagePath) {
-        Client httpclient = createHttpClient();
+        Client httpclient = createHttpClient(objectMapper);
         Preconditions.checkArgument(storagePath != null && storagePath.trim().length() > 0);
         WebTarget target = httpclient.target(JADE_BASE_URL)
                 .path("storage_volumes")

@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.browser.api.http;
 
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.slf4j.Logger;
 
@@ -47,8 +49,14 @@ public class RESTClientBase {
         }
     }
 
-    protected Client createHttpClient() {
+    protected Client createHttpClient(ObjectMapper objectMapper) {
+        JacksonJaxbJsonProvider jacksonProvider = new JacksonJaxbJsonProvider();
+        jacksonProvider.setMapper(objectMapper);
+        ClientConfig clientConfig = new ClientConfig()
+                .register(jacksonProvider);
+
         return ClientBuilder.newBuilder()
+                .withConfig(clientConfig)
                 .build();
     }
 
