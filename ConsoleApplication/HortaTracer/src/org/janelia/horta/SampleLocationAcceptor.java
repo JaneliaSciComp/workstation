@@ -29,29 +29,18 @@
  */
 package org.janelia.horta;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.text.ParseException;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import org.apache.commons.io.IOUtils;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
-import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
 import org.janelia.horta.blocks.BlockTileSource;
-import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
+import org.janelia.horta.blocks.JadeKtxOctreeBlockTileSource;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
+import org.janelia.it.workstation.browser.api.web.JadeServiceClient;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.scenewindow.SceneWindow;
 import org.netbeans.api.progress.ProgressHandle;
@@ -59,6 +48,17 @@ import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.text.ParseException;
+
+import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
 
 public class SampleLocationAcceptor implements ViewerLocationAcceptor {
 
@@ -98,9 +98,9 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     // trying to run down a bug:
                     if (sample == null) {
                         logger.info("found null sample for sample url " + url + " at coordinates "
-                            + sampleLocation.getFocusXUm() + ", "
-                            + sampleLocation.getFocusYUm() + ", "
-                            + sampleLocation.getFocusZUm());
+                                + sampleLocation.getFocusXUm() + ", "
+                                + sampleLocation.getFocusYUm() + ", "
+                                + sampleLocation.getFocusZUm());
                     }
 
                     // First check to see if ktx tiles are available
@@ -130,8 +130,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         progress.setDisplayName("Loading KTX brain tile image...");
                         if (nttc.doesUpdateVolumeCache()) {
                             loader.loadTransientKtxTileAtCurrentFocus(ktxSource);
-                        }
-                        else {
+                        } else {
                             loader.loadPersistentKtxTileAtCurrentFocus(ktxSource);
                         }
                     }
@@ -139,8 +138,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 } catch (final IOException ex) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
-                        public void run()
-                        {
+                        public void run() {
                             JOptionPane.showMessageDialog(
                                     sceneWindow.getOuterComponent(),
                                     "Error loading brain specimen: " + ex.getMessage(),
@@ -148,8 +146,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                                     JOptionPane.ERROR_MESSAGE);
                         }
                     });
-                }
-                finally {
+                } finally {
                     progress.finish();
                 }
             }
@@ -168,31 +165,34 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 return previousSource; // Source did not change
         }
 
-        String ktxPathStr = null;
-        try {
-            URL ktxFolderPathFileUrl = new URL(renderedOctreeUrl, "secondary_folder.txt");
-            logger.info("Trying to find KTX path via {}", ktxFolderPathFileUrl);
-            InputStream pathStream = ktxFolderPathFileUrl.openStream();
-            ktxPathStr = IOUtils.toString(pathStream).trim();
-        } catch (MalformedURLException ex) {
-            logger.info("Cannot load secondary_folder.txt",ex);
-        } catch (IOException ex) {
-            logger.info("Cannot load secondary_folder.txt: {}",ex.getMessage());
+        BlockTileSource ktxSource = new JadeKtxOctreeBlockTileSource(new JadeServiceClient(), sample.getFilepath());
 
-            // not great way to differentiate new style from old style; need to use something other than URL
-            ktxPathStr = "ktx/";
-        }
 
-        try {
-             if (!ktxPathStr.endsWith("/"))
-                ktxPathStr = ktxPathStr + "/";
-            URL ktxFolderUrl = new URL(renderedOctreeUrl, ktxPathStr);
-            BlockTileSource ktxSource = new KtxOctreeBlockTileSource(ktxFolderUrl, sample);
-            nttc.setKtxSource(ktxSource);
-            return ktxSource;
-        } catch (Exception ex) {
-            logger.info("Cannot load ktx directory strucutre: {}",ex.getMessage());
-        }
+//        String ktxPathStr = null;
+//        try {
+//            URL ktxFolderPathFileUrl = new URL(renderedOctreeUrl, "secondary_folder.txt");
+//            logger.info("Trying to find KTX path via {}", ktxFolderPathFileUrl);
+//            InputStream pathStream = ktxFolderPathFileUrl.openStream();
+//            ktxPathStr = IOUtils.toString(pathStream).trim();
+//        } catch (MalformedURLException ex) {
+//            logger.info("Cannot load secondary_folder.txt",ex);
+//        } catch (IOException ex) {
+//            logger.info("Cannot load secondary_folder.txt: {}",ex.getMessage());
+//
+//            // not great way to differentiate new style from old style; need to use something other than URL
+//            ktxPathStr = "ktx/";
+//        }
+
+//        try {
+//             if (!ktxPathStr.endsWith("/"))
+//                ktxPathStr = ktxPathStr + "/";
+//            URL ktxFolderUrl = new URL(renderedOctreeUrl, ktxPathStr);
+//            BlockTileSource ktxSource = new KtxOctreeBlockTileSource(ktxFolderUrl, sample);
+//            nttc.setKtxSource(ktxSource);
+//            return ktxSource;
+//        } catch (Exception ex) {
+//            logger.info("Cannot load ktx directory strucutre: {}",ex.getMessage());
+//        }
 
         return null;
     }
@@ -219,21 +219,19 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             URL yamlUrl = yamlUri.toURL();
             try (InputStream stream1 = yamlUrl.openStream()) {
                 volumeSource = nttc.loadYaml(stream1, loader, progress);
-            }
-            catch (ParseException ex) {
+            } catch (ParseException ex) {
                 JOptionPane.showMessageDialog(nttc,
                         "Problem Loading Raw Tile Information from " + yamlUrlString +
-                        "\n  Does the transform contain barycentric coordinates?",
+                                "\n  Does the transform contain barycentric coordinates?",
                         "Tilebase File Problem", JOptionPane.ERROR_MESSAGE);
             }
-        }
-        catch (IOException | URISyntaxException ex) {
+        } catch (IOException | URISyntaxException ex) {
             // Something went wrong with loading the Yaml file
             // Exceptions.printStackTrace(ex);
             JOptionPane.showMessageDialog(nttc,
                     "Problem Loading Raw Tile Information from " + renderedOctreeUrl.getPath() +
-                    "\n  Is the render folder drive mounted?"
-                    + "\n  Does the render folder contain a " + BASE_YML_FILE + " file ?"
+                            "\n  Is the render folder drive mounted?"
+                            + "\n  Does the render folder contain a " + BASE_YML_FILE + " file ?"
                     ,
                     "Tilebase File Problem",
                     JOptionPane.ERROR_MESSAGE);
@@ -273,9 +271,9 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
         Vantage v = pCam.getVantage();
         Vector3 focusVector3 = new Vector3(
-            (float)sampleLocation.getFocusXUm(),
-            (float)sampleLocation.getFocusYUm(),
-            (float)sampleLocation.getFocusZUm());
+                (float) sampleLocation.getFocusXUm(),
+                (float) sampleLocation.getFocusYUm(),
+                (float) sampleLocation.getFocusZUm());
 
         if (!v.setFocusPosition(focusVector3)) {
             logger.info("New focus is the same as previous focus");
@@ -284,9 +282,9 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
 
         double zoom = sampleLocation.getMicrometersPerWindowHeight();
         if (zoom > 0) {
-            v.setSceneUnitsPerViewportHeight((float)zoom);
+            v.setSceneUnitsPerViewportHeight((float) zoom);
             // logger.info("Set micrometers per view height to " + zoom);
-            v.setDefaultSceneUnitsPerViewportHeight((float)zoom);
+            v.setDefaultSceneUnitsPerViewportHeight((float) zoom);
         }
 
         v.notifyObservers();

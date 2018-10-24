@@ -1,10 +1,13 @@
 package org.janelia.it.workstation.browser.api.http;
 
+import org.janelia.it.workstation.browser.api.AccessManager;
+import org.slf4j.Logger;
+
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
-
-import org.slf4j.Logger;
 
 public class RESTClientBase {
 
@@ -43,5 +46,13 @@ public class RESTClientBase {
             throw new WebApplicationException(response);
         }
     }
-    
+
+    protected Client createHttpClient() {
+        return ClientBuilder.newBuilder()
+                .build();
+    }
+
+    protected String getAccessToken() {
+        return AccessManager.getAccessManager().getToken();
+    }
 }

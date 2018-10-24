@@ -65,8 +65,8 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
         TILE_DATA loadTile(TILE_KEY key) throws InterruptedException, IOException;
     }
     
-    private final Map<TILE_KEY, RequestProcessor.Task> queuedTiles = new ConcurrentHashMap();
-    private final Map<TILE_KEY, RequestProcessor.Task> loadingTiles = new ConcurrentHashMap();
+    private final Map<TILE_KEY, RequestProcessor.Task> queuedTiles = new ConcurrentHashMap<>();
+    private final Map<TILE_KEY, RequestProcessor.Task> loadingTiles = new ConcurrentHashMap<>();
 
     private final Set<TILE_KEY> nearVolumeMetadata = new ConcurrentHashSet<>();
     
