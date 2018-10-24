@@ -210,7 +210,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource {
         KtxOctreeBlockTileKey key = (KtxOctreeBlockTileKey) key0;
         Vector3 blockOrigin = new Vector3(origin);
         Vector3 subBlockExtent = outerCorner.minus(origin);
-        for (int p : key.path) {
+        for (int p : key.getOctreePath()) {
             subBlockExtent.setX(subBlockExtent.getX() / 2.0f);
             subBlockExtent.setY(subBlockExtent.getY() / 2.0f);
             subBlockExtent.setZ(subBlockExtent.getZ() / 2.0f);
@@ -274,7 +274,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource {
     public ConstVector3 getBlockCentroid(BlockTileKey centerBlock) {
         ConstVector3 blockOrigin = getBlockOrigin(centerBlock);
         KtxOctreeBlockTileKey key = (KtxOctreeBlockTileKey) centerBlock;
-        KtxOctreeResolution resolution = new KtxOctreeResolution(key.path.size());
+        KtxOctreeResolution resolution = new KtxOctreeResolution(key.getKeyDepth());
         ConstVector3 blockExtent = getBlockSize(resolution);
         Vector3 centroid = new Vector3(blockExtent);
         centroid.multiplyScalar(0.5f);
@@ -325,106 +325,4 @@ public class KtxOctreeBlockTileSource implements BlockTileSource {
         }
         return true;
     }
-
-    static public class KtxOctreeBlockTileData
-            extends KtxData
-            implements BlockTileData {
-
-    }
-
-
-    static public class KtxOctreeBlockTileKey
-            implements BlockTileKey {
-        private final KtxOctreeBlockTileSource source;
-        private final List<Integer> path;
-
-        private KtxOctreeBlockTileKey(List<Integer> octreePath, KtxOctreeBlockTileSource source) {
-            this.source = source;
-            this.path = octreePath;
-        }
-
-        @Override
-        public ConstVector3 getCentroid() {
-            return source.getBlockCentroid(this);
-        }
-
-        @Override
-        public BlockTileSource getSource() {
-            return source;
-        }
-
-        @Override
-        public String toString() {
-            List<String> steps = new ArrayList<>();
-            for (Integer s : path) {
-                steps.add(s.toString());
-            }
-            String subfolderStr = Joiner.on("/").join(steps);
-            return subfolderStr;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 3;
-            hash = 53 * hash + Objects.hashCode(this.source);
-            hash = 53 * hash + Objects.hashCode(this.path);
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final KtxOctreeBlockTileKey other = (KtxOctreeBlockTileKey) obj;
-            if (!Objects.equals(this.source, other.source)) {
-                return false;
-            }
-            if (!Objects.equals(this.path, other.path)) {
-                return false;
-            }
-            return true;
-        }
-    }
-
-
-    static public class KtxOctreeResolution
-            implements BlockTileResolution {
-        final int octreeLevel; // zero-based level; zero means tip of pyramid
-
-        public KtxOctreeResolution(int octreeLevel) {
-            this.octreeLevel = octreeLevel;
-        }
-
-        @Override
-        public int hashCode() {
-            return octreeLevel;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final KtxOctreeResolution other = (KtxOctreeResolution) obj;
-            if (this.octreeLevel != other.octreeLevel) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public int compareTo(BlockTileResolution o) {
-            KtxOctreeResolution rhs = (KtxOctreeResolution) o;
-            return octreeLevel < rhs.octreeLevel ? -1 : octreeLevel > rhs.octreeLevel ? 1 : 0;
-        }
-
-    }
-
 }

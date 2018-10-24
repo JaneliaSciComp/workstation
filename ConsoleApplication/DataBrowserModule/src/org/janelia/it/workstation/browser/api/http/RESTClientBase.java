@@ -1,7 +1,8 @@
 package org.janelia.it.workstation.browser.api.http;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.slf4j.Logger;
 

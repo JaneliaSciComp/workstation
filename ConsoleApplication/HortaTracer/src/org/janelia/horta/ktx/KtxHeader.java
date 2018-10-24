@@ -134,8 +134,6 @@ public class KtxHeader {
             int nullPos = s.indexOf(0);
             String key = s.substring(0, nullPos);
             String value = s.substring(nullPos + 1);
-            // System.out.println(key);
-            // System.out.println(value);
             keyValueMetadata.put(key, value);
         }
         return this;
