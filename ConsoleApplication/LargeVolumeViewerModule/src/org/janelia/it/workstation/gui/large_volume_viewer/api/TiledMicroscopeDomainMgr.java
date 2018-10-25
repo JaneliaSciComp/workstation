@@ -80,12 +80,12 @@ public class TiledMicroscopeDomainMgr {
             sample.setName(name);
             sample.setFilepath(filepath);
             Map originMap = (Map)constants.get("origin");
-            List<Integer> origin = new ArrayList();
+            List<Integer> origin = new ArrayList<>();
             origin.add ((Integer)originMap.get("x"));
             origin.add ((Integer)originMap.get("y"));
             origin.add ((Integer)originMap.get("z"));            
             Map scalingMap = (Map)constants.get("scaling");
-            List<Double> scaling = new ArrayList();
+            List<Double> scaling = new ArrayList<>();
             scaling.add ((Double)scalingMap.get("x"));
             scaling.add ((Double)scalingMap.get("y"));
             scaling.add ((Double)scalingMap.get("z"));

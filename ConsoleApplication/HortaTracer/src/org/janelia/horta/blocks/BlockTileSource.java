@@ -38,15 +38,10 @@ import org.janelia.geometry3d.ConstVector3;
  *
  * @author brunsc
  */
-public interface BlockTileSource {
-
-    BlockTileResolution getMaximumResolution();
-
-    BlockTileKey getBlockKeyAt(ConstVector3 focus, BlockTileResolution resolution);
-
+public interface BlockTileSource<K extends BlockTileKey, R extends BlockTileResolution, D extends BlockTileData> {
+    R getMaximumResolution();
+    K getBlockKeyAt(ConstVector3 focus, R resolution);
     ConstVector3 getBlockCentroid(BlockTileKey centerBlock);
-
-    BlockTileData loadBlock(BlockTileKey key) throws IOException, InterruptedException;
-    
-    URL getRootUrl();
+    D loadBlock(K key) throws IOException, InterruptedException;
+    URL getOriginatingSampleURL();
 }

@@ -27,18 +27,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package org.janelia.horta.blocks;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.actors.TetVolumeMeshActor;
 import org.janelia.horta.ktx.KtxData;
-import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,10 +42,12 @@ import org.slf4j.LoggerFactory;
  *
  * @author brunsc
  */
-public class KtxBlockLoadRunner 
-extends ComposableObservable
-implements Runnable
-{
+public class KtxBlockLoadRunner
+        extends ComposableObservable
+        implements Runnable {
+
+    private static final Logger LOG = LoggerFactory.getLogger(KtxBlockLoadRunner.class);
+
     public enum State {
         INITIAL,
         LOADING,
@@ -59,64 +57,58 @@ implements Runnable
     }
 
     private InputStream inputStream;
-    private BlockTileSource blockTileSource;
-    private BlockTileKey blockTileKey;
-    
+    private KtxOctreeBlockTileSource ktxBlockTileSource;
+    private KtxOctreeBlockTileKey ktxOctreeBlockTileKey;
+
     public State state = State.INITIAL;
     public TetVolumeMeshActor blockActor;
-    
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    
+
     public KtxBlockLoadRunner(InputStream stream) {
         this.inputStream = stream;
     }
 
-    public KtxBlockLoadRunner(BlockTileSource source, BlockTileKey key) {
-        this.blockTileSource = source;
-        this.blockTileKey = key;
+    public KtxBlockLoadRunner(KtxOctreeBlockTileSource source, KtxOctreeBlockTileKey key) {
+        this.ktxBlockTileSource = source;
+        this.ktxOctreeBlockTileKey = key;
     }
 
     private void loadFromBlockSource() {
-        KtxOctreeBlockTileSource s = (KtxOctreeBlockTileSource) blockTileSource;
-        try (InputStream is = s.streamForKey(blockTileKey)) {
+        try (InputStream is = ktxBlockTileSource.streamKeyBlock(ktxOctreeBlockTileKey)) {
             loadStream(is);
         } catch (IOException ex) {
-            logger.warn("IOException loading tile {} from block source", blockTileKey);
+            LOG.warn("IOException loading tile {} from block source", ktxOctreeBlockTileKey);
             state = State.FAILED;
         }
     }
-    
+
     @Override
-    public void run() 
-    {
+    public void run() {
         if (inputStream == null) {
             loadFromBlockSource();
-        }
-        else {
+        } else {
             loadStream(inputStream);
         }
     }
-    
+
     private void loadStream(InputStream stream) {
         long start = System.nanoTime();
         state = State.LOADING;
         KtxData ktxData = new KtxData();
         String blockDescription = "Some Ktx block...";
-        if (blockTileKey != null)
-            blockDescription = blockTileKey.toString();
-        // Thank you Java 7 for try-with-resources
-        try
-        {
+        if (ktxOctreeBlockTileKey != null) {
+            blockDescription = ktxOctreeBlockTileKey.toString();
+        }
+        try {
             ktxData.loadStreamInterruptably(stream);
-            if (blockTileKey == null)
+            if (ktxOctreeBlockTileKey == null) {
                 blockDescription = ktxData.header.keyValueMetadata.get("octree_path");
+            }
         } catch (IOException ex) {
             state = State.FAILED;
-            logger.warn("IOException loading tile {} from stream", blockDescription);
-            // Exceptions.printStackTrace(ex);
+            LOG.warn("IOException loading tile {} from stream", blockDescription);
             return;
         } catch (InterruptedException ex) {
-            logger.info("loading tile {} was interrupted", blockDescription);
+            LOG.info("loading tile {} was interrupted", blockDescription);
             state = State.INTERRUPTED;
             return;
         }
@@ -125,10 +117,10 @@ implements Runnable
         state = State.LOADED;
         setChanged();
         long end = System.nanoTime();
-        double elapsed = (end - start)/1.0e9;
-        logger.info(String.format("Ktx tile load for "+ blockDescription +" took %.3f seconds", elapsed));
+        double elapsed = (end - start) / 1.0e9;
+        LOG.info(String.format("Ktx tile load for " + blockDescription + " took %.3f seconds", elapsed));
         // notify listeners
         notifyObservers();
     }
-    
+
 }

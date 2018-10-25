@@ -69,13 +69,12 @@ import org.janelia.horta.blocks.BlockTileKey;
 import org.janelia.horta.blocks.BlockTileResolution;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.Finest8DisplayBlockChooser;
+import org.janelia.horta.blocks.KtxOctreeBlockTileData;
+import org.janelia.horta.blocks.KtxOctreeBlockTileKey;
+import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.blocks.KtxTileCache;
-import org.janelia.horta.blocks.OneFineDisplayBlockChooser;
-import org.janelia.horta.blocks.XYDisplayBlockChooser;
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.Lookups;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Volume rendering actor for blocks consisting of five tetrahedral components.
@@ -85,9 +84,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Christopher Bruns
  */
-public class TetVolumeActor extends BasicGL3Actor 
-implements DepthSlabClipper
-{
+public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
     private static TetVolumeActor singletonInstance;
     
     // Singleton access
@@ -107,18 +104,12 @@ implements DepthSlabClipper
     private final float[] zNearFar = new float[] {0.1f, 100.0f, 1.0f}; // absolute clip for shader
     // Initialize tracing channel to average of the first two channels
     private final UnmixingParameters unmixMinScale = new UnmixingParameters(new float[] {0.0f, 0.0f, 0.5f, 0.5f});
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private VolumeState volumeState = new VolumeState();
 
     private final BlockSorter blockSorter = new BlockSorter();    
     private final KtxTileCache dynamicTiles = new KtxTileCache(null);
-    private final BlockChooser chooser1 = new OneFineDisplayBlockChooser(); // for proof-of-concept and debugging
-    private final BlockChooser chooser8 = new Finest8DisplayBlockChooser();
-    private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooser8);
-    // this is a test alternate block chooser (a wide xy array of blocks); not currently used
-    // private final BlockChooser chooserxy = new XYDisplayBlockChooser();
-    // private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooserxy);
-    
+    private final BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> chooser8 = new Finest8DisplayBlockChooser();
+    private final BlockDisplayUpdater<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> blockDisplayUpdater = new BlockDisplayUpdater<>(chooser8);
     private final Collection<GL3Resource> obsoleteActors = new ArrayList<>();
 
     // Singleton actor has private constructor
@@ -150,13 +141,11 @@ implements DepthSlabClipper
     }
 
     public Object3d addPersistentBlock(Object3d child) {
-        // logger.info("Special Ktx volume block added");
         return addChild(child);
     }
     
     public void addTransientBlock(BlockTileKey key) {
-        // logger.info("Special Ktx volume block added");
-        dynamicTiles.addDesiredTile(key);
+        dynamicTiles.addDesiredTile((KtxOctreeBlockTileKey) key);
     }
     
     public void setVolumeState(VolumeState volumeState) {
@@ -167,9 +156,9 @@ implements DepthSlabClipper
         blockDisplayUpdater.setVantage(vantage);
     }
     
-    public void setKtxTileSource(BlockTileSource source) {
+    public void setKtxTileSource(KtxOctreeBlockTileSource source) {
         dynamicTiles.setSource(source);
-        blockDisplayUpdater.setKtxSource(source);
+        blockDisplayUpdater.setBlockTileSource(source);
     }
     
     public ObservableInterface getDynamicTileUpdateObservable() {
@@ -472,7 +461,7 @@ implements DepthSlabClipper
     }
     
     public void clearAllBlocks() {
-        dynamicTiles.updateDesiredTiles(Collections.<BlockTileKey>emptyList());
+        dynamicTiles.updateDesiredTiles(Collections.<KtxOctreeBlockTileKey>emptyList());
         for (Object3d actor : getChildren()) {
             if (! (actor instanceof GL3Resource))
                 continue;

@@ -45,7 +45,7 @@ import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.MeshActor;
 import org.janelia.horta.blocks.BlockTileResolution;
-import org.janelia.horta.blocks.KtxOctreeBlockTileSource.KtxOctreeResolution;
+import org.janelia.horta.blocks.KtxOctreeResolution;
 import org.janelia.horta.ktx.KtxData;
 
 /**

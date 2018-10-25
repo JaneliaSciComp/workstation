@@ -27,7 +27,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package org.janelia.horta.blocks;
 
 import java.io.IOException;
@@ -35,29 +34,28 @@ import java.util.Collection;
 import java.util.Map;
 import javax.media.opengl.GL3;
 import org.janelia.horta.actors.SortableBlockActor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author brunsc
  */
-public class KtxTileCache 
-extends BasicTileCache<BlockTileKey, SortableBlockActor>
-{
-    private BlockTileSource source;
-    
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-    
-    public KtxTileCache(BlockTileSource source) {
+public class KtxTileCache extends BasicTileCache<KtxOctreeBlockTileKey, SortableBlockActor> {
+
+    private KtxOctreeBlockTileSource source;
+
+    public KtxTileCache(KtxOctreeBlockTileSource source) {
         this.source = source;
     }
-    
+
+    public void setSource(KtxOctreeBlockTileSource source) {
+        this.source = source;
+    }
+
     @Override
-    LoadRunner<BlockTileKey, SortableBlockActor> getLoadRunner() {
-        return new LoadRunner<BlockTileKey, SortableBlockActor>() {
+    LoadRunner<KtxOctreeBlockTileKey, SortableBlockActor> getLoadRunner() {
+        return new LoadRunner<KtxOctreeBlockTileKey, SortableBlockActor>() {
             @Override
-            public SortableBlockActor loadTile(BlockTileKey key) throws InterruptedException, IOException {
+            public SortableBlockActor loadTile(KtxOctreeBlockTileKey key) throws InterruptedException, IOException {
                 final KtxBlockLoadRunner loader = new KtxBlockLoadRunner(source, key);
                 loader.run();
                 return loader.blockActor;
@@ -65,27 +63,24 @@ extends BasicTileCache<BlockTileKey, SortableBlockActor>
         };
     }
 
-    public void setSource(BlockTileSource source) {
-        this.source = source;
-    }
-  
     public void disposeObsoleteTiles(GL3 gl) {
         Collection<SortableBlockActor> obs = popObsoleteTiles();
-        if (! obs.isEmpty()) {
+        if (!obs.isEmpty()) {
             // log.info("Disposing {} tile(s)", obs.size());
         }
         for (SortableBlockActor actor : obs) {
             actor.dispose(gl);
         }
     }
-    
+
     public void disposeGL(GL3 gl) {
         disposeActorGroup(gl, nearVolumeInRam);
     }
-    
-    private void disposeActorGroup(GL3 gl, Map<BlockTileKey, SortableBlockActor> group) {
-        for (SortableBlockActor actor : group.values())
+
+    private void disposeActorGroup(GL3 gl, Map<KtxOctreeBlockTileKey, SortableBlockActor> group) {
+        for (SortableBlockActor actor : group.values()) {
             actor.dispose(gl);
-        group.clear();        
+        }
+        group.clear();
     }
 }

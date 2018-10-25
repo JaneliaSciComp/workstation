@@ -34,9 +34,6 @@ import org.janelia.horta.render.NeuronMPRenderer;
 import org.janelia.horta.actors.ScaleBar;
 import org.janelia.horta.actors.CenterCrossHairActor;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
-// import com.jogamp.opengl.util.awt.TextRenderer;
-// import com.jogamp.opengl.util.awt.Screenshot;
-// import org.janelia.geometry3d.ChannelBrightnessModel;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -164,15 +161,15 @@ import org.janelia.gltools.material.TransparentEnvelope;
 import org.janelia.horta.actions.ResetHortaRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
+import org.janelia.horta.blocks.JadeKtxOctreeBlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.camera.CatmullRomSplineKernel;
 import org.janelia.horta.camera.Interpolator;
-import org.janelia.horta.camera.InterpolatorKernel;
-import org.janelia.horta.camera.LinearInterpolatorKernel;
 import org.janelia.horta.camera.PrimitiveInterpolator;
 import org.janelia.horta.camera.Vector3Interpolator;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
+import org.janelia.it.workstation.browser.api.web.JadeServiceClient;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -185,8 +182,6 @@ import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
-import org.openide.util.lookup.AbstractLookup;
-import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
@@ -222,8 +217,7 @@ import org.slf4j.LoggerFactory;
     "HINT_NeuronTracerTopComponent=Horta Neuron Tracer window"
 })
 public final class NeuronTracerTopComponent extends TopComponent
-        implements VolumeProjection, YamlStreamLoader
-{
+        implements VolumeProjection, YamlStreamLoader {
     public static final String PREFERRED_ID = "NeuronTracerTopComponent";
     public static final String BASE_YML_FILE = "tilebase.cache.yml";
     
@@ -248,7 +242,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     // Old way for loading raw tiles
     private StaticVolumeBrickSource volumeSource;
     // New way for loading ktx tiles
-    private BlockTileSource ktxSource;
+    private KtxOctreeBlockTileSource ktxSource;
     
     private CenterCrossHairActor crossHairActor;
     private ScaleBar scaleBar = new ScaleBar();
@@ -2317,11 +2311,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         activeNeuronSet.updateObjectMeshName(oldName, updatedName);
     }
 
-    public BlockTileSource getKtxSource() {
+    public KtxOctreeBlockTileSource getKtxSource() {
         return ktxSource;
     }
 
-    public void setKtxSource(BlockTileSource ktxSource) {
+    public void setKtxSource(KtxOctreeBlockTileSource ktxSource) {
         this.ktxSource = ktxSource;
         TetVolumeActor.getInstance().setKtxTileSource(ktxSource);
         // Don't load both ktx and raw tiles at the same time
@@ -2339,7 +2333,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void loadPersistentTileAtLocation(Vector3 location) throws IOException
     {
         if (ktxSource == null) {
-            BlockTileSource source = promptUserForKtxFolder();
+            KtxOctreeBlockTileSource source = openTileSource();
             if (source == null)
                 return;
             setKtxSource(source);
@@ -2347,37 +2341,15 @@ public final class NeuronTracerTopComponent extends TopComponent
         loader.loadKtxTileAtLocation(ktxSource, location, true);
     }
     
-    private BlockTileSource promptUserForKtxFolder() {
-        String folderSelection = JOptionPane.showInputDialog(
-                this,
-                "Where is the ktx brain image folder?",
-                "/nobackup2/mouselight/brunsc/ktxtest/2016-07-18b"
-        );
-        if (folderSelection == null) {
-            return null; // User cancelled
-        }
-        File folder = new File(folderSelection);
-        if (!folder.exists()) {
-            // Maybe that was a linux path
-            folder = new File(OsFilePathRemapper.remapLinuxPath(folderSelection));
-        }
-        if (!folder.exists()) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "ERROR: No such file or folder " + folderSelection,
-                    "Ktx Folder Not Found",
-                    JOptionPane.WARNING_MESSAGE);
-            return null;
-        }
-        logger.info("Ktx source folder = " + folderSelection);
+    private KtxOctreeBlockTileSource openTileSource() {
         try {
-            return new KtxOctreeBlockTileSource(folder.toURI().toURL(), this.getCurrentSample());
-        } catch (IOException ex) {
+            return new JadeKtxOctreeBlockTileSource(new JadeServiceClient(), null, this.getCurrentSample());
+        } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
             JOptionPane.showMessageDialog(
                     this,
-                    "ERROR: Error reading ktx folder " + folder,
-                    "ERROR: Error reading ktx folder " + folder,
+                    "ERROR: Error initilizing KTX source for sample at " + this.getCurrentSample().getFilepath(),
+                    "ERROR: Error initilizing KTX source for sample at " + this.getCurrentSample().getFilepath(),
                     JOptionPane.ERROR_MESSAGE);                    
             return null;
         }

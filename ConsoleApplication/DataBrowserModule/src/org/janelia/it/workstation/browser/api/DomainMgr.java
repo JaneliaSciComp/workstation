@@ -212,6 +212,7 @@ public class DomainMgr {
         return preferenceMap.get(mapKey);
     }
 
+    @SuppressWarnings("unchecked")
     <T> T getPreferenceValue(String category, String key, T defaultValue) throws Exception {
         Preference preference = getPreference(category, key);
         if (preference==null) return defaultValue;

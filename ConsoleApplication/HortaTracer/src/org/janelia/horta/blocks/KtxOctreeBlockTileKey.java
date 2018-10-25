@@ -1,18 +1,22 @@
 package org.janelia.horta.blocks;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.janelia.geometry3d.ConstVector3;
-import org.python.google.common.base.Joiner;
 
 public class KtxOctreeBlockTileKey implements BlockTileKey {
-    private final BlockTileSource source;
+
+    private final KtxOctreeBlockTileSource tileSource;
     private final List<Integer> octreePath;
 
-    KtxOctreeBlockTileKey(List<Integer> octreePath, BlockTileSource source) {
-        this.source = source;
+    KtxOctreeBlockTileKey(KtxOctreeBlockTileSource tileSource, List<Integer> octreePath) {
+        this.tileSource = tileSource;
         this.octreePath = octreePath;
+    }
+
+    @Override
+    public ConstVector3 getCentroid() {
+        return tileSource.getBlockCentroid(this);
     }
 
     List<Integer> getOctreePath() {
@@ -24,44 +28,33 @@ public class KtxOctreeBlockTileKey implements BlockTileKey {
     }
 
     String getKeyPath() {
-        return octreePath.stream()
-                .map(octant -> octant.toString())
-                .reduce((o1, o2) -> o1 + "/" + o2)
-                .orElse("");
+        return octreeString("/");
     }
 
     String getKeyBlockName(String compressionScheme) {
-        String block = octreePath.stream()
-                .map(octant -> octant.toString())
-                .reduce((o1, o2) -> o1 + "" + o2)
-                .orElse("");
-        return "block" + compressionScheme + block + ".ktx";
+        return "block" + compressionScheme + octreeString("") + ".ktx";
     }
 
-    @Override
-    public ConstVector3 getCentroid() {
-        return source.getBlockCentroid(this);
-    }
-
-    @Override
-    public BlockTileSource getSource() {
-        return source;
+    private String octreeString(String delimiter) {
+        StringBuilder builder = new StringBuilder();
+        for (Integer octant : octreePath) {
+            if (builder.length() > 0) {
+                builder.append(delimiter);
+            }
+            builder.append(octant);
+        }
+        return builder.toString();
     }
 
     @Override
     public String toString() {
-        List<String> steps = new ArrayList<>();
-        for (Integer s : octreePath) {
-            steps.add(s.toString());
-        }
-        String subfolderStr = Joiner.on("/").join(steps);
-        return subfolderStr;
+        return octreeString("/");
     }
 
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 53 * hash + Objects.hashCode(this.source);
+        hash = 53 * hash + Objects.hashCode(this.tileSource);
         hash = 53 * hash + Objects.hashCode(this.octreePath);
         return hash;
     }
@@ -75,7 +68,7 @@ public class KtxOctreeBlockTileKey implements BlockTileKey {
             return false;
         }
         final KtxOctreeBlockTileKey other = (KtxOctreeBlockTileKey) obj;
-        if (!Objects.equals(this.source, other.source)) {
+        if (!Objects.equals(this.tileSource, other.tileSource)) {
             return false;
         }
         if (!Objects.equals(this.octreePath, other.octreePath)) {

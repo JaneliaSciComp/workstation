@@ -30,29 +30,34 @@
 
 package org.janelia.horta.blocks;
 
-import org.janelia.it.workstation.browser.api.web.JadeServiceClient;
-
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 
-public class JadeKtxOctreeBlockTileSource extends KtxOctreeBlockTileSource {
+/**
+ * @author brunsc
+ */
+public class FileKtxOctreeBlockTileSource extends KtxOctreeBlockTileSource {
 
-    private final JadeServiceClient jadeServiceClient;
-
-    public JadeKtxOctreeBlockTileSource(JadeServiceClient jadeServiceClient, URL originatingSampleURL, TmSample sample) {
+    public FileKtxOctreeBlockTileSource(URL originatingSampleURL, TmSample sample) {
         super(originatingSampleURL, sample);
-        this.jadeServiceClient = jadeServiceClient;
     }
 
     @Override
     protected String getSourceServerURL(TmSample sample) {
-        return jadeServiceClient.findStorageURL(sample.getFilepath());
+        return sampleKtxTilesBaseDir;
     }
  
+    @Override
     protected InputStream streamKeyBlock(KtxOctreeBlockTileKey octreeKey) {
-        String octreeKeyBlockPath = getKeyBlockPathURI(octreeKey).toString();
-        return jadeServiceClient.streamContent(sourceServerURL, octreeKeyBlockPath);
+        try {
+            return Files.newInputStream(Paths.get(getKeyBlockPathURI(octreeKey)));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
-
 }

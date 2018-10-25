@@ -27,7 +27,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package org.janelia.horta.blocks;
 
 import java.io.IOException;
@@ -56,20 +55,21 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Generic version of HortaVolumeCache, for use with newer Ktx block loading
+ *
  * @author brunsc
  */
-public abstract class BasicTileCache<TILE_KEY, TILE_DATA> 
-{
-    public static interface LoadRunner<TILE_KEY, TILE_DATA>
-    {
+public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
+
+    public static interface LoadRunner<TILE_KEY, TILE_DATA> {
+
         TILE_DATA loadTile(TILE_KEY key) throws InterruptedException, IOException;
     }
-    
+
     private final Map<TILE_KEY, RequestProcessor.Task> queuedTiles = new ConcurrentHashMap<>();
     private final Map<TILE_KEY, RequestProcessor.Task> loadingTiles = new ConcurrentHashMap<>();
 
     private final Set<TILE_KEY> nearVolumeMetadata = new ConcurrentHashSet<>();
-    
+
     protected final Map<TILE_KEY, TILE_DATA> nearVolumeInRam = new ConcurrentHashMap<>();
     protected final Map<TILE_KEY, TILE_DATA> obsoleteTiles = new ConcurrentHashMap<>();
 
@@ -78,9 +78,8 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
     private final ObservableInterface displayChangeObservable = new ComposableObservable();
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    
-    public BasicTileCache() 
-    {
+
+    public BasicTileCache() {
         Preferences pref = NbPreferences.forModule(TileLoadingPanel.class);
 
         String concurrentLoadsStr = pref.get(TileLoadingPanel.PREFERENCE_CONCURRENT_LOADS, TileLoadingPanel.PREFERENCE_CONCURRENT_LOADS_DEFAULT);
@@ -94,77 +93,85 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
                 }
             }
         });
-        
+
     }
-    
+
     abstract LoadRunner<TILE_KEY, TILE_DATA> getLoadRunner();
 
     public int getBlockCount() {
         return nearVolumeMetadata.size();
     }
-    
+
     public synchronized void addDesiredTile(TILE_KEY key) {
-        if (nearVolumeMetadata.contains(key))
+        if (nearVolumeMetadata.contains(key)) {
             return; // already queued
+        }
         nearVolumeMetadata.add(key);
-        if (nearVolumeInRam.containsKey(key))
+        if (nearVolumeInRam.containsKey(key)) {
             return; // already loaded
+        }
         queueLoad(key, getLoadRunner());
     }
-    
-    public synchronized void updateDesiredTiles(List<TILE_KEY> desiredTiles) 
-    {
+
+    public synchronized void updateDesiredTiles(List<TILE_KEY> desiredTiles) {
         List<TILE_KEY> newTiles = new ArrayList<>();
         Set<TILE_KEY> desiredSet = new HashSet<>();
         for (TILE_KEY key : desiredTiles) {
             desiredSet.add(key);
-            if (! nearVolumeMetadata.contains(key))
+            if (!nearVolumeMetadata.contains(key)) {
                 nearVolumeMetadata.add(key);
+            }
 
-            if (queuedTiles.containsKey(key))
+            if (queuedTiles.containsKey(key)) {
                 continue; // already queued
-            if (loadingTiles.containsKey(key))
+            }
+            if (loadingTiles.containsKey(key)) {
                 continue; // already loading
-            if (nearVolumeInRam.containsKey(key))
+            }
+            if (nearVolumeInRam.containsKey(key)) {
                 continue; // already loaded
+            }
             newTiles.add(key);
         }
-        
+
         // Remove obsolete tiles from loading and loaded
         Iterator<TILE_KEY> iter = nearVolumeMetadata.iterator();
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             TILE_KEY key = iter.next();
-            if (! desiredSet.contains(key))
+            if (!desiredSet.contains(key)) {
                 iter.remove();
+            }
         }
         Iterator<Map.Entry<TILE_KEY, RequestProcessor.Task>> mapIter = queuedTiles.entrySet().iterator();
-        while(mapIter.hasNext()) {
+        while (mapIter.hasNext()) {
             Map.Entry<TILE_KEY, RequestProcessor.Task> entry = mapIter.next();
             TILE_KEY key = entry.getKey();
-            if (! desiredSet.contains(key)) {
+            if (!desiredSet.contains(key)) {
                 RequestProcessor.Task task = queuedTiles.get(key);
-                if (task != null)
+                if (task != null) {
                     task.cancel();
+                }
                 mapIter.remove();
             }
         }
         mapIter = loadingTiles.entrySet().iterator();
-        while(mapIter.hasNext()) {
+        while (mapIter.hasNext()) {
             Map.Entry<TILE_KEY, RequestProcessor.Task> entry = mapIter.next();
             TILE_KEY key = entry.getKey();
-            if (! desiredSet.contains(key)) {
+            if (!desiredSet.contains(key)) {
                 RequestProcessor.Task task = loadingTiles.get(key);
-                if (task != null)
+                if (task != null) {
                     task.cancel();
+                }
                 mapIter.remove();
             }
         }
         boolean displayChanged = false;
         Iterator<Map.Entry<TILE_KEY, TILE_DATA>> mapIter2 = nearVolumeInRam.entrySet().iterator();
-        while(mapIter2.hasNext()) {
+        while (mapIter2.hasNext()) {
             Map.Entry<TILE_KEY, TILE_DATA> entry = mapIter2.next();
             TILE_KEY key = entry.getKey();
-            if (! desiredSet.contains(key)) {
+            if (!desiredSet.contains(key)) {
                 TILE_DATA data = entry.getValue();
                 log.info("Preparing to dispose of tile {}", key.toString());
                 obsoleteTiles.put(key, data);
@@ -172,11 +179,11 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
                 displayChanged = true;
             }
         }
-        
+
         for (TILE_KEY key : newTiles) {
             queueLoad(key, getLoadRunner());
         }
-        
+
         if (displayChanged) {
             // No, don't update when blocks are removed, only when they are added.
             // displayChangeObservable.setChanged();
@@ -187,7 +194,7 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
     public ObservableInterface getDisplayChangeObservable() {
         return displayChangeObservable;
     }
-    
+
     public Collection<TILE_DATA> popObsoleteTiles() {
         Collection<TILE_DATA> result = new ArrayList<>(obsoleteTiles.values());
         if (!result.isEmpty()) {
@@ -197,14 +204,14 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
     }
 
     private synchronized boolean queueLoad(
-            final TILE_KEY key, 
-            final LoadRunner<TILE_KEY, TILE_DATA> loadRunner)
-    {
-        if (queuedTiles.containsKey(key))
+            final TILE_KEY key,
+            final LoadRunner<TILE_KEY, TILE_DATA> loadRunner) {
+        if (queuedTiles.containsKey(key)) {
             return false; // already queued
-        if (loadingTiles.containsKey(key))
+        }
+        if (loadingTiles.containsKey(key)) {
             return false; // already loading
-        
+        }
         Runnable loadTask = new Runnable() {
             @Override
             public void run() {
@@ -217,10 +224,10 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
                 }
 
                 // Move from "queued" to "loading" state
-                synchronized(queuedTiles) {
+                synchronized (queuedTiles) {
                     RequestProcessor.Task task = queuedTiles.get(key);
-                    if (task==null) {
-                        log.warn("Tile has no task: "+key.toString());
+                    if (task == null) {
+                        log.warn("Tile has no task: " + key.toString());
                         return;
                     }
                     loadingTiles.put(key, task);
@@ -231,31 +238,31 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
 
                 try {
                     // Check whether this tile is still relevant
-                    if (! nearVolumeMetadata.contains(key)) {
+                    if (!nearVolumeMetadata.contains(key)) {
                         return;
                     }
 
                     // Maybe after that wait, this tile is no longer needed
-                    if (! nearVolumeMetadata.contains(key)) {
+                    if (!nearVolumeMetadata.contains(key)) {
                         return;
                     }
 
                     progress.start();
                     progress.setDisplayName("Loading Tile " + key.toString() + " ...");
                     progress.switchToIndeterminate();
-                    
+
                     TILE_DATA tileTexture = loadRunner.loadTile(key);
-                    
+
                     if (tileTexture == null) {
                         log.info("Tile loaded was null {}", key.toString());
                         return;
                     }
-                    
-                    if (! nearVolumeMetadata.contains(key)) {
+
+                    if (!nearVolumeMetadata.contains(key)) {
                         log.info("Tile loaded was no longer needed {}", key.toString());
                         return; // no longer needed
                     }
-                    
+
                     if (nearVolumeInRam.containsKey(key)) {
                         log.info("Tile loaded was already loaded {}", key.toString());
                         return; // already loaded by another thread?
@@ -264,18 +271,17 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
                     nearVolumeInRam.put(key, tileTexture);
                     displayChangeObservable.setChanged();
                     displayChangeObservable.notifyObservers();
-                }
-                catch (IOException ex) {
+                } catch (IOException ex) {
                     Exceptions.printStackTrace(ex);
                 } catch (InterruptedException ex) {
                     log.info("loadTask was interrupted {}", key.toString());
                     Exceptions.printStackTrace(ex);
-                }
-                finally {
+                } finally {
                     loadingTiles.remove(key);
                     progress.finish();
                 }
-            };
+            }
+        ;
         };
 
         // Submit load task asynchronously
@@ -286,7 +292,7 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
         }
         return true;
     }
-    
+
     private void setConcurrentLoads(String preferenceValue) {
         int loadThreads = Integer.parseInt(preferenceValue);
         log.info("Configuring loadThreads={}", loadThreads);
@@ -295,15 +301,18 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
         }
         loadProcessor = new RequestProcessor("VolumeTileLoad", loadThreads, true);
     }
-    
+
     public boolean canDisplay() {
-        if (nearVolumeInRam.isEmpty())
+        if (nearVolumeInRam.isEmpty()) {
             return false;
-        if (nearVolumeMetadata.isEmpty())
+        }
+        if (nearVolumeMetadata.isEmpty()) {
             return false;
+        }
         for (TILE_KEY key : nearVolumeMetadata) {
-            if (nearVolumeInRam.containsKey(key))
+            if (nearVolumeInRam.containsKey(key)) {
                 return true;
+            }
         }
         return false;
     }
@@ -311,10 +320,11 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
     public Collection<TILE_DATA> getDisplayedActors() {
         List<TILE_DATA> result = new ArrayList<>();
         for (TILE_KEY key : nearVolumeMetadata) {
-            if (nearVolumeInRam.containsKey(key))
+            if (nearVolumeInRam.containsKey(key)) {
                 result.add(nearVolumeInRam.get(key));
+            }
         }
         return result;
     }
-    
+
 }

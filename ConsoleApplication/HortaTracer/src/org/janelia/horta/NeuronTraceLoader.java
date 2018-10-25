@@ -40,43 +40,35 @@ import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.horta.actors.TetVolumeActor;
-import org.janelia.horta.blocks.BlockTileKey;
-import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxBlockLoadRunner;
+import org.janelia.horta.blocks.KtxOctreeBlockTileKey;
+import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.openide.awt.StatusDisplayer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Helper to Neuron tracing viewer.  Carries out load.
+ * Helper to Neuron tracing viewer. Carries out load.
  *
  * @author fosterl
  */
 public class NeuronTraceLoader {
-    private final Logger logger = LoggerFactory.getLogger(NeuronTraceLoader.class);
-    
+
     private final NeuronTracerTopComponent nttc;
     private final NeuronMPRenderer neuronMPRenderer;
     private final SceneWindow sceneWindow;
     private int defaultColorChannel = 0;
-    // private TracingInteractor tracingInteractor;
-    
+
     public NeuronTraceLoader(
-            NeuronTracerTopComponent nttc, 
-            NeuronMPRenderer neuronMPRenderer, 
-            SceneWindow sceneWindow 
-            // TracingInteractor tracingInteractor
-            ) {
+            NeuronTracerTopComponent nttc,
+            NeuronMPRenderer neuronMPRenderer,
+            SceneWindow sceneWindow) {
         this.nttc = nttc;
         this.neuronMPRenderer = neuronMPRenderer;
         this.sceneWindow = sceneWindow;
-        // this.tracingInteractor = tracingInteractor;
     }
-
 
     /**
      * Animates to next point in 3D space TODO - run this in another thread
@@ -84,12 +76,11 @@ public class NeuronTraceLoader {
      * @param xyz
      * @param vantage
      */
-    public boolean animateToFocusXyz(Vector3 xyz, Vantage vantage, int milliseconds) 
-    {
+    public boolean animateToFocusXyz(Vector3 xyz, Vantage vantage, int milliseconds) {
         // Disable auto loading during move
         boolean wasCacheEnabled = nttc.doesUpdateVolumeCache();
         nttc.setUpdateVolumeCache(false);
-        
+
         Vector3 startPos = new Vector3(vantage.getFocusPosition());
         Vector3 endPos = new Vector3(xyz);
         long startTime = System.nanoTime();
@@ -126,17 +117,16 @@ public class NeuronTraceLoader {
             sceneWindow.getGLAutoDrawable().display();
             // sceneWindow.getInnerComponent().repaint();
         }
-        
+
         nttc.setUpdateVolumeCache(wasCacheEnabled);
         return didMove;
     }
 
-    public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource ) throws IOException {
-        return loadTileAtCurrentFocus( volumeSource, defaultColorChannel );
+    public BrickInfo loadTileAtCurrentFocus(StaticVolumeBrickSource volumeSource) throws IOException {
+        return loadTileAtCurrentFocus(volumeSource, defaultColorChannel);
     }
-    
-    public static BrickInfoSet getBricksForCameraResolution(StaticVolumeBrickSource volumeSource, PerspectiveCamera camera) 
-    {
+
+    public static BrickInfoSet getBricksForCameraResolution(StaticVolumeBrickSource volumeSource, PerspectiveCamera camera) {
         double screenPixelResolution = camera.getVantage().getSceneUnitsPerViewportHeight()
                 / camera.getViewport().getHeightPixels();
         double minDist = Double.MAX_VALUE;
@@ -151,40 +141,41 @@ public class NeuronTraceLoader {
         Double brickResolution = bestRes;
         assert brickResolution != null : "No best-resolution found.  Volume Source=" + volumeSource;
 
-        BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution); 
+        BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution);
         return brickInfoSet;
     }
-    
+
     /**
      * Helper method toward automatic tile loading
      */
-    public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource, int colorChannel ) throws IOException {
+    public BrickInfo loadTileAtCurrentFocus(StaticVolumeBrickSource volumeSource, int colorChannel) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
-        
+
         // Remember most recently loaded color channel for next time
         defaultColorChannel = colorChannel;
 
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
         BrickInfoSet brickInfoSet = getBricksForCameraResolution(volumeSource, pCam);
-        
+
         BrickInfo brickInfo = brickInfoSet.getBestContainingBrick(pCam.getVantage().getFocusPosition());
 
         // Check for existing brick already loaded here
         BrainTileInfo brainTileInfo = (BrainTileInfo) brickInfo;
         boolean tileAlreadyLoaded = false;
         for (GL3Actor actor : neuronMPRenderer.getVolumeActors()) {
-            if (!(actor instanceof BrickActor))
+            if (!(actor instanceof BrickActor)) {
                 continue;
-            BrickActor ba = (BrickActor)actor;
-            if ( ba.getBrainTile().isSameBrick(brainTileInfo) 
-                    && (colorChannel == brainTileInfo.getColorChannelIndex()) ) // reload if color changed
+            }
+            BrickActor ba = (BrickActor) actor;
+            if (ba.getBrainTile().isSameBrick(brainTileInfo)
+                    && (colorChannel == brainTileInfo.getColorChannelIndex())) // reload if color changed
             {
                 tileAlreadyLoaded = true;
                 break;
             }
         }
-        
-        if ( (! tileAlreadyLoaded) && (! nttc.doesUpdateVolumeCache())) {
+
+        if ((!tileAlreadyLoaded) && (!nttc.doesUpdateVolumeCache())) {
             GL3Actor boxMesh = nttc.createBrickActor((BrainTileInfo) brickInfo, colorChannel);
 
             StatusDisplayer.getDefault().setStatusText(
@@ -193,35 +184,37 @@ public class NeuronTraceLoader {
                     + " seconds."
             );
 
-            nttc.registerLoneDisplayedTile((BrickActor)boxMesh);
-            
+            nttc.registerLoneDisplayedTile((BrickActor) boxMesh);
+
             // Clear, so only one tiles is shown at a time (two tiles are in memory during transition)
             neuronMPRenderer.clearVolumeActors();
             neuronMPRenderer.addVolumeActor(boxMesh);
         }
-        
+
         return brickInfo;
     }
 
-    protected void loadKtxTileAtLocation(BlockTileSource ktxSource, Vector3 location, final boolean loadPersistent) 
-            throws IOException
-    {
-        if (ktxSource == null)
+    protected void loadKtxTileAtLocation(KtxOctreeBlockTileSource ktxSource, Vector3 location, final boolean loadPersistent)
+            throws IOException {
+        if (ktxSource == null) {
             return;
-        BlockTileKey centerKey = ktxSource.getBlockKeyAt(location, ktxSource.getMaximumResolution());
-        if (centerKey == null)
+        }
+        KtxOctreeBlockTileKey centerKey = ktxSource.getBlockKeyAt(location, ktxSource.getMaximumResolution());
+        if (centerKey == null) {
             return;
-        
+        }
+
         if (loadPersistent) {
             final KtxBlockLoadRunner loader = new KtxBlockLoadRunner(ktxSource, centerKey);
             loader.addObserver(new Observer() {
                 @Override
                 public void update(Observable o, Object arg) {
-                    if (loader.state != KtxBlockLoadRunner.State.LOADED)
+                    if (loader.state != KtxBlockLoadRunner.State.LOADED) {
                         return;
+                    }
                     TetVolumeActor parentActor = TetVolumeActor.getInstance();
                     parentActor.addPersistentBlock(loader.blockActor);
-                    if ( ! neuronMPRenderer.containsVolumeActor(parentActor) ) { // just add singleton actor once...
+                    if (!neuronMPRenderer.containsVolumeActor(parentActor)) { // just add singleton actor once...
                         parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
                         neuronMPRenderer.addVolumeActor(parentActor);
                     }
@@ -230,27 +223,24 @@ public class NeuronTraceLoader {
                 }
             });
             loader.run();
-        }
-        else {
+        } else {
             TetVolumeActor parentActor = TetVolumeActor.getInstance();
-            if ( ! neuronMPRenderer.containsVolumeActor(parentActor) ) { // just add singleton actor once...
+            if (!neuronMPRenderer.containsVolumeActor(parentActor)) { // just add singleton actor once...
                 parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
                 neuronMPRenderer.addVolumeActor(parentActor);
             }
             parentActor.addTransientBlock(centerKey);
         }
     }
-    
-    public void loadPersistentKtxTileAtCurrentFocus(BlockTileSource ktxSource) 
-            throws IOException
-    {
+
+    public void loadPersistentKtxTileAtCurrentFocus(KtxOctreeBlockTileSource ktxSource)
+            throws IOException {
         Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
         loadKtxTileAtLocation(ktxSource, focus, true);
     }
-    
-    public void loadTransientKtxTileAtCurrentFocus(BlockTileSource ktxSource) 
-            throws IOException
-    {
+
+    public void loadTransientKtxTileAtCurrentFocus(KtxOctreeBlockTileSource ktxSource)
+            throws IOException {
         Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
         loadKtxTileAtLocation(ktxSource, focus, false);
     }

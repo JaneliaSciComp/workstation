@@ -940,6 +940,7 @@ public class DomainModel {
         notifyDomainObjectRemoved(release);
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends DomainObject> T save(T domainObject) throws Exception {
         T canonicalObject;
         synchronized (modelLock) {

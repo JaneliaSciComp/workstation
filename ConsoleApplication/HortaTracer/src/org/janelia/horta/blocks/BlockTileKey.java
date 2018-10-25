@@ -37,8 +37,5 @@ import org.janelia.geometry3d.ConstVector3;
  * @author brunsc
  */
 public interface BlockTileKey {
-
-    public ConstVector3 getCentroid();
-    
-    public BlockTileSource getSource();
+    ConstVector3 getCentroid();
 }

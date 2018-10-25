@@ -57,17 +57,18 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
+import jersey.repackaged.com.google.common.base.Objects;
 
 import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
+import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 
 public class SampleLocationAcceptor implements ViewerLocationAcceptor {
+    private static final Logger LOG = LoggerFactory.getLogger(SampleLocationAcceptor.class);
 
     private String currentSource;
     private NeuronTraceLoader loader;
     private NeuronTracerTopComponent nttc;
     private SceneWindow sceneWindow;
-
-    private static final Logger logger = LoggerFactory.getLogger(SampleLocationAcceptor.class);
 
     public SampleLocationAcceptor(
             String currentSource,
@@ -97,16 +98,15 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
 
                     // trying to run down a bug:
                     if (sample == null) {
-                        logger.info("found null sample for sample url " + url + " at coordinates "
+                        LOG.info("found null sample for sample url " + url + " at coordinates "
                                 + sampleLocation.getFocusXUm() + ", "
                                 + sampleLocation.getFocusYUm() + ", "
                                 + sampleLocation.getFocusZUm());
                     }
 
                     // First check to see if ktx tiles are available
-                    BlockTileSource ktxSource = null;
                     if (nttc.isPreferKtx()) {
-                        ktxSource = loadKtxSource(sample, url, progress);
+                        KtxOctreeBlockTileSource ktxSource = loadKtxSource(sample, url, progress);
                         if (ktxSource != null) {
                             nttc.setKtxSource(ktxSource);
                         }
@@ -117,7 +117,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     progress.setDisplayName("Centering on location...");
                     setCameraLocation(sampleLocation);
 
-                    if (ktxSource == null) { // Use obsolete single channel raw file loading
+                    if (nttc.getKtxSource() == null) { // Use obsolete single channel raw file loading
                         StaticVolumeBrickSource volumeSource = setSampleUrl(url, progress);
                         if (volumeSource == null) {
                             throw new IOException("Loading volume source failed");
@@ -129,9 +129,9 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         progress.switchToIndeterminate(); // TODO: enhance tile loading with a progress listener
                         progress.setDisplayName("Loading KTX brain tile image...");
                         if (nttc.doesUpdateVolumeCache()) {
-                            loader.loadTransientKtxTileAtCurrentFocus(ktxSource);
+                            loader.loadTransientKtxTileAtCurrentFocus(nttc.getKtxSource());
                         } else {
-                            loader.loadPersistentKtxTileAtCurrentFocus(ktxSource);
+                            loader.loadPersistentKtxTileAtCurrentFocus(nttc.getKtxSource());
                         }
                     }
                     nttc.redrawNow();
@@ -154,47 +154,15 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         RequestProcessor.getDefault().post(task);
     }
 
-    private BlockTileSource loadKtxSource(TmSample sample, URL renderedOctreeUrl, ProgressHandle progress) {
+    private KtxOctreeBlockTileSource loadKtxSource(TmSample sample, URL renderedOctreeUrl, ProgressHandle progress) {
         progress.setDisplayName("Checking for ktx rendered tiles");
-        BlockTileSource previousSource = nttc.getKtxSource();
+        KtxOctreeBlockTileSource previousSource = nttc.getKtxSource();
         if (previousSource != null) {
-            String urlStr = renderedOctreeUrl.toString();
-            String previousUrlStr = previousSource.getRootUrl().toString();
-            logger.trace("previousUrlStr: {}", previousUrlStr);
-            if (urlStr.equals(previousUrlStr))
+            LOG.trace("previousUrl: {}", previousSource.getOriginatingSampleURL());
+            if (Objects.equal(renderedOctreeUrl, previousSource.getOriginatingSampleURL()))
                 return previousSource; // Source did not change
         }
-
-        BlockTileSource ktxSource = new JadeKtxOctreeBlockTileSource(new JadeServiceClient(), sample.getFilepath());
-
-
-//        String ktxPathStr = null;
-//        try {
-//            URL ktxFolderPathFileUrl = new URL(renderedOctreeUrl, "secondary_folder.txt");
-//            logger.info("Trying to find KTX path via {}", ktxFolderPathFileUrl);
-//            InputStream pathStream = ktxFolderPathFileUrl.openStream();
-//            ktxPathStr = IOUtils.toString(pathStream).trim();
-//        } catch (MalformedURLException ex) {
-//            logger.info("Cannot load secondary_folder.txt",ex);
-//        } catch (IOException ex) {
-//            logger.info("Cannot load secondary_folder.txt: {}",ex.getMessage());
-//
-//            // not great way to differentiate new style from old style; need to use something other than URL
-//            ktxPathStr = "ktx/";
-//        }
-
-//        try {
-//             if (!ktxPathStr.endsWith("/"))
-//                ktxPathStr = ktxPathStr + "/";
-//            URL ktxFolderUrl = new URL(renderedOctreeUrl, ktxPathStr);
-//            BlockTileSource ktxSource = new KtxOctreeBlockTileSource(ktxFolderUrl, sample);
-//            nttc.setKtxSource(ktxSource);
-//            return ktxSource;
-//        } catch (Exception ex) {
-//            logger.info("Cannot load ktx directory strucutre: {}",ex.getMessage());
-//        }
-
-        return null;
+        return new JadeKtxOctreeBlockTileSource(new JadeServiceClient(), renderedOctreeUrl, sample);
     }
 
     private StaticVolumeBrickSource setSampleUrl(URL renderedOctreeUrl, ProgressHandle progress) {
@@ -215,7 +183,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     yamlUrlString,
                     uri.getFragment()
             );
-            logger.info("Constructed URI: {}.", uri);
+            LOG.info("Constructed URI: {}.", uri);
             URL yamlUrl = yamlUri.toURL();
             try (InputStream stream1 = yamlUrl.openStream()) {
                 volumeSource = nttc.loadYaml(stream1, loader, progress);
@@ -237,7 +205,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     JOptionPane.ERROR_MESSAGE);
         }
 
-        logger.info("Finished creating volumeSource from yaml file");
+        LOG.info("Finished creating volumeSource from yaml file");
 
         if (null == volumeSource)
             return volumeSource;
@@ -276,7 +244,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 (float) sampleLocation.getFocusZUm());
 
         if (!v.setFocusPosition(focusVector3)) {
-            logger.info("New focus is the same as previous focus");
+            LOG.info("New focus is the same as previous focus");
         }
         v.setDefaultFocus(focusVector3);
 

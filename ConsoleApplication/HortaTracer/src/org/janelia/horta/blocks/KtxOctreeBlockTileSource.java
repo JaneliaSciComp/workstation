@@ -30,289 +30,265 @@
 
 package org.janelia.horta.blocks;
 
-import java.io.BufferedInputStream;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import jersey.repackaged.com.google.common.collect.ImmutableList;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
-import org.janelia.horta.ktx.KtxData;
 import org.janelia.horta.ktx.KtxHeader;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.openide.util.Exceptions;
-import org.python.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * @author brunsc
  */
-public class KtxOctreeBlockTileSource implements BlockTileSource {
-    private final URL rootUrl;
+public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockTileKey, KtxOctreeResolution, KtxOctreeBlockTileData> {
+    private static final Logger LOG = LoggerFactory.getLogger(KtxOctreeBlockTileSource.class);
 
-    private final KtxHeader rootHeader;
-    // private final File rootFolder;
-    private final KtxOctreeResolution maximumResolution;
+    private final URL originatingSampleURL;
+    protected final String sourceServerURL;
+    protected final String sampleKtxTilesBaseDir;
+    protected final KtxOctreeBlockTileKey rootKey;
+    protected final KtxHeader rootHeader;
+    protected final KtxOctreeResolution maximumResolution;
+    protected final ConstVector3 origin;
+    protected final Vector3 outerCorner;
 
-    private final ConstVector3 origin;
-    private final Vector3 outerCorner;
-    private final KtxOctreeBlockTileKey rootKey;
-
-    private final String compressionString;
-
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    // Like "1/2/3/3"
-    private String subfolderForKey(KtxOctreeBlockTileKey key) {
-        String result = key.toString();
-        if (result.length() > 0)
-            result = result + "/"; // Add trailing (but not initial) slash
-        return result;
+    @SuppressWarnings("OverridableMethodCallInConstructor")
+    public KtxOctreeBlockTileSource(URL originatingSampleURL, TmSample sample) {
+        Preconditions.checkArgument(sample.getFilepath() != null && sample.getFilepath().trim().length() > 0);
+        this.originatingSampleURL = originatingSampleURL;
+        this.sampleKtxTilesBaseDir = getKtxBaseDir(sample.getFilepath());
+        this.sourceServerURL = getSourceServerURL(sample);
+        this.rootKey = new KtxOctreeBlockTileKey(this, Collections.<Integer>emptyList());
+        this.rootHeader = createKtxHeader(rootKey);
+        this.maximumResolution = createKtxResolution(rootHeader);
+        Pair<ConstVector3, Vector3> volumeCorners = getVolumeCorners(sample, rootHeader);
+        this.origin = volumeCorners.getLeft();
+        this.outerCorner = volumeCorners.getRight();
     }
 
-    private URL folderForKey(BlockTileKey key0) {
-        KtxOctreeBlockTileKey key = (KtxOctreeBlockTileKey) key0;
-        String subfolderStr = subfolderForKey(key);
-        URL folderUrl = null;
+    private String getKtxBaseDir(String sampleDir) {
+        if (sampleDir.endsWith("/")) {
+            return sampleDir + "ktx/";
+        } else {
+            return sampleDir + "/ktx/";
+        }
+    }
+
+    protected abstract String getSourceServerURL(TmSample sample);
+
+    protected URI getKeyBlockPathURI(KtxOctreeBlockTileKey key) {
+        return URI.create(sampleKtxTilesBaseDir)
+                .resolve(key.getKeyPath())
+                .resolve(key.getKeyBlockName("_8_xy_"))
+                ;
+    }
+
+    private KtxHeader createKtxHeader(KtxOctreeBlockTileKey octreeRootKey) {
         try {
-            folderUrl = new URL(rootUrl, subfolderStr);
-        } catch (MalformedURLException ex) {
-            Exceptions.printStackTrace(ex);
+            KtxHeader ktxHeader = new KtxHeader();
+            ktxHeader.loadStream(streamKeyBlock(octreeRootKey));
+            return ktxHeader;
+        } catch (IOException e) {
+            LOG.error("Error loading KTX header for {}({}) from {}",
+                    octreeRootKey, getKeyBlockPathURI(octreeRootKey), sourceServerURL);
+            throw new IllegalStateException(e);
         }
-        return folderUrl;
     }
 
-    private URL blockUrlForKey(KtxOctreeBlockTileKey key, String compressionString) throws IOException {
-        URL folder = folderForKey(key);
-
-        String subfolderStr = subfolderForKey(key);
-        subfolderStr = subfolderStr.replaceAll("/", "");
-        String fileName = "block" + compressionString + subfolderStr + ".ktx";
-
-        URL blockUrl = new URL(folder, fileName);
-        return blockUrl;
-    }
-
-    public InputStream streamForKey(BlockTileKey key) throws IOException {
-        URL url = blockUrlForKey((KtxOctreeBlockTileKey) key, compressionString);
-        return new BufferedInputStream(url.openStream());
-    }
-
-    public KtxOctreeBlockTileSource(URL rootUrl, TmSample sample) throws IOException {
-        this.rootUrl = rootUrl;
-        rootKey = new KtxOctreeBlockTileKey(new ArrayList<Integer>(), this);
-
-        String[] pathParts = rootUrl.getPath().split("/");
-        String specimenName = pathParts[pathParts.length - 1];
-
-        // Figure out what the file names should be for this data set.
-        // Try the redundant specimen name scheme first, since it's currently used by most MouseLight data. 
-        // TODO: Once we move away from it, we can flip these two options.
-        String[] namingSchemesToTry = new String[]{"_" + specimenName, ""};
-        // Try different compression schemes.
-        String[] compressionStringsToTry = new String[]{"_8_xy_", "_"};
-        InputStream stream = null;
-        IOException exception = null;
-        String chosenCompressionString = null;
-        OUTER:
-        for (String nameScheme : namingSchemesToTry) {
-            for (String cs : compressionStringsToTry) {
-                String scheme = nameScheme + cs;
-                URL url = blockUrlForKey(rootKey, scheme);
-                try {
-                    stream = new BufferedInputStream(url.openStream());
-                } catch (IOException exc) {
-                    logger.info("Tried looking for KTX tiles at {}", exc.getMessage());
-                    exception = exc;
-                    continue;
-                }
-                logger.info("Found KTX tiles at {}", url);
-                chosenCompressionString = scheme;
-                break OUTER;
-            }
-        }
-        if (stream == null)
-            throw exception;
-        compressionString = chosenCompressionString;
-
-        rootHeader = new KtxHeader();
-        rootHeader.loadStream(stream);
-
+    private KtxOctreeResolution createKtxResolution(KtxHeader ktxHeader) {
         // Parse maximum resolution
-        int maxRes = Integer.parseInt(rootHeader.keyValueMetadata.get("multiscale_total_levels").trim()) - 1;
-        maximumResolution = new KtxOctreeResolution(maxRes);
+        int maxRes = Integer.parseInt(ktxHeader.keyValueMetadata.get("multiscale_total_levels").trim()) - 1;
+        return new KtxOctreeResolution(maxRes);
+    }
 
-        // Parse outer corner locations of volume block
-        // Trivia note: All this parsing would be a one-liner in PERL.
+    private Pair<ConstVector3, Vector3> getVolumeCorners(TmSample sample, KtxHeader ktxHeader) {
         String cornersString = rootHeader.keyValueMetadata.get("corner_xyzs").trim();
-        // logger.info(cornersString);
-        // [(68097.320000000007, 13754.192000000001, 27557.100000000002), (79094.79800000001, 13754.192000000001, 27557.100000000002), (68097.320000000007, 21962.162, 27557.100000000002), (79094.79800000001, 21962.162, 27557.100000000002), (68097.320000000007, 13754.192000000001, 42164.300000000003), (79094.79800000001, 13754.192000000001, 42164.300000000003), (68097.320000000007, 21962.162, 42164.300000000003), (79094.79800000001, 21962.162, 42164.300000000003)]
+        /*
+        Example of what the corners string looks like:
+        [
+            (68097.320000000007, 13754.192000000001, 27557.100000000002), 
+            (79094.79800000001, 13754.192000000001, 27557.100000000002), 
+            (68097.320000000007, 21962.162, 27557.100000000002), 
+            (79094.79800000001, 21962.162, 27557.100000000002),
+            (68097.320000000007, 13754.192000000001, 42164.300000000003), 
+            (79094.79800000001, 13754.192000000001, 42164.300000000003),
+            (68097.320000000007, 21962.162, 42164.300000000003), 
+            (79094.79800000001, 21962.162, 42164.300000000003)
+        ]
+        */
         String numberPattern = "[-+]?[0-9]+(?:\\.[0-9]+)?";
         String tuple3Pattern = "\\((" + numberPattern + ", " + numberPattern + ", " + numberPattern + ")\\)";
         // Extract just the first and last corner locations from the corner list
         Pattern p = Pattern.compile("^\\[" + tuple3Pattern + ".*" + tuple3Pattern + "\\]$");
         Matcher m = p.matcher(cornersString);
         if (!m.matches()) {
-            throw new IOException("Error parsing Ktx block corners");
+            LOG.error("Error parsing out the corners from {} using {}", cornersString, p);
+            throw new IllegalArgumentException("Error extracting the corners from " + cornersString);
         }
-        // logger.info("Matches");
-        // logger.info("" + m.groupCount());
-        // logger.info(m.group(1));
-        // logger.info(m.group(2));
-        //String[] originStrings = m.group(1).split(", ");
         String[] originStrings = m.group(1).split(", ");
         String[] outerCornerStrings = m.group(2).split(", ");
-        List<Integer> sampleOrigin = sample.getOrigin();
-        if (sampleOrigin == null) {
-            origin = new Vector3(
+        List<Integer> sampleOriginComps = sample.getOrigin();
+        ConstVector3 sampleOrigin;
+        if (sampleOriginComps == null || sampleOriginComps.isEmpty()) {
+            sampleOrigin = new Vector3(
                     Float.parseFloat(originStrings[0]),
                     Float.parseFloat(originStrings[1]),
                     Float.parseFloat(originStrings[2]));
         } else {
-            origin = new Vector3(
-                    new BigDecimal(sampleOrigin.get(0)).movePointLeft(3).floatValue(),
-                    new BigDecimal(sampleOrigin.get(1)).movePointLeft(3).floatValue(),
-                    new BigDecimal(sampleOrigin.get(2)).movePointLeft(3).floatValue());
+            sampleOrigin = new Vector3(
+                    new BigDecimal(sampleOriginComps.get(0)).movePointLeft(3).floatValue(),
+                    new BigDecimal(sampleOriginComps.get(1)).movePointLeft(3).floatValue(),
+                    new BigDecimal(sampleOriginComps.get(2)).movePointLeft(3).floatValue());
         }
-        outerCorner = new Vector3(
-                Float.parseFloat(outerCornerStrings[0]),
-                Float.parseFloat(outerCornerStrings[1]),
-                Float.parseFloat(outerCornerStrings[2]));
-        // logger.info("" + origin);
-        // logger.info("" + outerCorner);
-        assert origin.getX() < outerCorner.getX();
-        assert origin.getY() < outerCorner.getY();
-        assert origin.getZ() < outerCorner.getZ();
+        return ImmutablePair.of(
+                sampleOrigin,
+                new Vector3(
+                        Float.parseFloat(outerCornerStrings[0]),
+                        Float.parseFloat(outerCornerStrings[1]),
+                        Float.parseFloat(outerCornerStrings[2]))
+        );
     }
 
+    protected abstract InputStream streamKeyBlock(KtxOctreeBlockTileKey octreeKey);
+
     @Override
-    public BlockTileResolution getMaximumResolution() {
+    public KtxOctreeResolution getMaximumResolution() {
         return maximumResolution;
     }
 
-    public ConstVector3 getBlockSize(BlockTileResolution resolution) {
+    ConstVector3 getMaximumResolutionBlockSize() {
         Vector3 rootBlockSize = outerCorner.minus(origin);
-        float scale = (float) Math.pow(2.0, ((KtxOctreeResolution) resolution).octreeLevel);
-        Vector3 result = rootBlockSize.multiplyScalar(1.0f / scale);
-        return result;
+        float scale = (float) Math.pow(2.0, maximumResolution.octreeLevel);
+        return rootBlockSize.multiplyScalar(1.0f / scale);
     }
 
-    public ConstVector3 getBlockOrigin(BlockTileKey key0) {
-        KtxOctreeBlockTileKey key = (KtxOctreeBlockTileKey) key0;
-        Vector3 blockOrigin = new Vector3(origin);
-        Vector3 subBlockExtent = outerCorner.minus(origin);
-        for (int p : key.getOctreePath()) {
-            subBlockExtent.setX(subBlockExtent.getX() / 2.0f);
-            subBlockExtent.setY(subBlockExtent.getY() / 2.0f);
-            subBlockExtent.setZ(subBlockExtent.getZ() / 2.0f);
-
-            if (p % 2 == 0) // large X (2,4,6,8)
-                blockOrigin.setX(blockOrigin.getX() + subBlockExtent.getX());
-            if (p > 4) // large Z (5,6,7,8)
-                blockOrigin.setZ(blockOrigin.getZ() + subBlockExtent.getZ());
-            if ((p == 3) || (p == 4) || (p == 7) || (p == 8)) // large Y (3,4,7,8)
-                blockOrigin.setY(blockOrigin.getY() + subBlockExtent.getY());
-        }
-        return blockOrigin;
+    private ConstVector3 getBlockSize(KtxOctreeResolution resolution) {
+        Vector3 rootBlockSize = outerCorner.minus(origin);
+        float scale = (float) Math.pow(2.0, resolution.octreeLevel);
+        return rootBlockSize.multiplyScalar(1.0f / scale);
     }
 
     @Override
-    public BlockTileKey getBlockKeyAt(ConstVector3 location, BlockTileResolution resolution0) {
-        if (resolution0 == null)
-            resolution0 = getMaximumResolution();
-        KtxOctreeResolution resolution = (KtxOctreeResolution) resolution0;
-        if (resolution.compareTo(getMaximumResolution()) > 0)
+    public KtxOctreeBlockTileKey getBlockKeyAt(ConstVector3 focusLocation, KtxOctreeResolution resolution) {
+        KtxOctreeResolution ktxResolution;
+        if (resolution == null) {
+            ktxResolution = maximumResolution;
+        } else {
+            ktxResolution = resolution;
+        }
+        if (ktxResolution.compareTo(getMaximumResolution()) > 0)
             return null; // no resolution that high
 
-        if (location.getX() < origin.getX()) return null;
-        if (location.getY() < origin.getY()) return null;
-        if (location.getZ() < origin.getZ()) return null;
+        if (focusLocation.getX() < origin.getX()) return null;
+        if (focusLocation.getY() < origin.getY()) return null;
+        if (focusLocation.getZ() < origin.getZ()) return null;
 
-        if (location.getX() > outerCorner.getX()) return null;
-        if (location.getY() > outerCorner.getY()) return null;
-        if (location.getZ() > outerCorner.getZ()) return null;
+        if (focusLocation.getX() > outerCorner.getX()) return null;
+        if (focusLocation.getY() > outerCorner.getY()) return null;
+        if (focusLocation.getZ() > outerCorner.getZ()) return null;
 
         List<Integer> octreePath = new ArrayList<>();
         Vector3 subBlockOrigin = new Vector3(origin);
         Vector3 subBlockExtent = outerCorner.minus(origin);
-        while (octreePath.size() < resolution.octreeLevel) {
+        while (octreePath.size() < ktxResolution.octreeLevel) {
             // Reduce block size to half, per octree level
             subBlockExtent.setX(subBlockExtent.getX() / 2.0f);
             subBlockExtent.setY(subBlockExtent.getY() / 2.0f);
             subBlockExtent.setZ(subBlockExtent.getZ() / 2.0f);
 
             int octreeStep = 1;
-            if (location.getX() > subBlockOrigin.getX() + subBlockExtent.getX()) { // larger X
+            if (focusLocation.getX() > subBlockOrigin.getX() + subBlockExtent.getX()) { // larger X
                 octreeStep += 1;
                 subBlockOrigin.setX(subBlockOrigin.getX() + subBlockExtent.getX());
             }
-            if (location.getY() > subBlockOrigin.getY() + subBlockExtent.getY()) { // larger Y
+            if (focusLocation.getY() > subBlockOrigin.getY() + subBlockExtent.getY()) { // larger Y
                 octreeStep += 2;
                 subBlockOrigin.setY(subBlockOrigin.getY() + subBlockExtent.getY());
             }
-            if (location.getZ() > subBlockOrigin.getZ() + subBlockExtent.getZ()) { // larger Z
+            if (focusLocation.getZ() > subBlockOrigin.getZ() + subBlockExtent.getZ()) { // larger Z
                 octreeStep += 4;
                 subBlockOrigin.setZ(subBlockOrigin.getZ() + subBlockExtent.getZ());
             }
-
             octreePath.add(octreeStep);
         }
-
-        return new KtxOctreeBlockTileKey(octreePath, this);
+        return new KtxOctreeBlockTileKey(this, ImmutableList.copyOf(octreePath));
     }
 
     @Override
     public ConstVector3 getBlockCentroid(BlockTileKey centerBlock) {
-        ConstVector3 blockOrigin = getBlockOrigin(centerBlock);
-        KtxOctreeBlockTileKey key = (KtxOctreeBlockTileKey) centerBlock;
-        KtxOctreeResolution resolution = new KtxOctreeResolution(key.getKeyDepth());
-        ConstVector3 blockExtent = getBlockSize(resolution);
+        KtxOctreeBlockTileKey octreeCenterBlockKey = (KtxOctreeBlockTileKey) centerBlock;
+        ConstVector3 blockOrigin = getBlockOrigin(octreeCenterBlockKey);
+        KtxOctreeResolution ktxResolution = new KtxOctreeResolution(octreeCenterBlockKey.getKeyDepth());
+        ConstVector3 blockExtent = getBlockSize(ktxResolution);
         Vector3 centroid = new Vector3(blockExtent);
         centroid.multiplyScalar(0.5f);
         centroid = centroid.plus(blockOrigin);
         return centroid;
     }
 
+    private ConstVector3 getBlockOrigin(KtxOctreeBlockTileKey octreeKey) {
+        Vector3 blockOrigin = new Vector3(origin);
+        Vector3 subBlockExtent = outerCorner.minus(origin);
+        for (int p : octreeKey.getOctreePath()) {
+            subBlockExtent.setX(subBlockExtent.getX() / 2.0f);
+            subBlockExtent.setY(subBlockExtent.getY() / 2.0f);
+            subBlockExtent.setZ(subBlockExtent.getZ() / 2.0f);
+            if (p % 2 == 0) { // large X (2,4,6,8)
+                blockOrigin.setX(blockOrigin.getX() + subBlockExtent.getX());
+            }
+            if (p > 4) { // large Z (5,6,7,8)
+                blockOrigin.setZ(blockOrigin.getZ() + subBlockExtent.getZ());
+            }
+            if ((p == 3) || (p == 4) || (p == 7) || (p == 8)) { // large Y (3,4,7,8)
+                blockOrigin.setY(blockOrigin.getY() + subBlockExtent.getY());
+            }
+        }
+        return blockOrigin;
+    }
 
     @Override
-    public BlockTileData loadBlock(BlockTileKey key)
-            throws IOException, InterruptedException {
-        long t0 = System.nanoTime();
-        try (InputStream stream = streamForKey(key)) {
+    public KtxOctreeBlockTileData loadBlock(KtxOctreeBlockTileKey key) throws IOException, InterruptedException {
+        try (InputStream stream = streamKeyBlock(key)) {
             KtxOctreeBlockTileData data = new KtxOctreeBlockTileData();
             data.loadStreamInterruptably(stream);
-            long t1 = System.nanoTime();
-            float elapsed = (t1 - t0) / 1e9f;
-            logger.info("Ktx tile '" + key + "' stream load took "
-                    + new DecimalFormat("#0.000").format(elapsed)
-                    + "seconds");
             return data;
         }
     }
 
     @Override
-    public URL getRootUrl() {
-        return rootUrl;
+    public URL getOriginatingSampleURL() {
+        return originatingSampleURL;
     }
-
+    
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 53 * hash + Objects.hashCode(this.rootUrl.getFile());
+        int hash = 3;
+        hash = 59 * hash + Objects.hashCode(this.sourceServerURL);
+        hash = 59 * hash + Objects.hashCode(this.sampleKtxTilesBaseDir);
         return hash;
     }
 
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
         if (obj == null) {
             return false;
         }
@@ -320,7 +296,10 @@ public class KtxOctreeBlockTileSource implements BlockTileSource {
             return false;
         }
         final KtxOctreeBlockTileSource other = (KtxOctreeBlockTileSource) obj;
-        if (!Objects.equals(this.rootUrl.getFile(), other.rootUrl.getFile())) {
+        if (!Objects.equals(this.sourceServerURL, other.sourceServerURL)) {
+            return false;
+        }
+        if (!Objects.equals(this.sampleKtxTilesBaseDir, other.sampleKtxTilesBaseDir)) {
             return false;
         }
         return true;
