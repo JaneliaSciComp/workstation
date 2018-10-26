@@ -16,11 +16,10 @@ import org.slf4j.LoggerFactory;
 // Shared base class for Mip3d and LargeVolumeViewer
 public abstract class BaseGLViewer
         extends GLJPanel // in case lightweight widget is required
-        implements MouseListener, MouseMotionListener,
-        MouseWheelListener {
+        implements MouseListener, MouseMotionListener, MouseWheelListener {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger log = LoggerFactory.getLogger(Mip3d.class);
+    private static final Logger LOG = LoggerFactory.getLogger(BaseGLViewer.class);
     // setup OpenGL Version 2
     protected static GLProfile profile = null;
     protected static GLCapabilities capabilities = null;
@@ -32,12 +31,13 @@ public abstract class BaseGLViewer
         } catch (Throwable th) {
             profile = null;
             capabilities = null;
-            log.warn("JOGL is unavailable. No 3D images will be shown.");
+            LOG.warn("JOGL is unavailable. No 3D images will be shown.");
         }
     }
 
     public JPopupMenu popupMenu;
 
+    @SuppressWarnings("OverridableMethodCallInConstructor")
     public BaseGLViewer() {
         super(capabilities);
         popupMenu = new JPopupMenu();
