@@ -107,9 +107,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     // First check to see if ktx tiles are available
                     if (nttc.isPreferKtx()) {
                         KtxOctreeBlockTileSource ktxSource = loadKtxSource(sample, url, progress);
-                        if (ktxSource != null) {
-                            nttc.setKtxSource(ktxSource);
-                        }
+                        nttc.setKtxSource(ktxSource);
                     } else {
                         nttc.setKtxSource(null);
                     }
