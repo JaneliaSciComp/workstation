@@ -673,10 +673,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
             }
 
-            // TEMP
-            //brainGlow = new BrainGlow();
-            //brainGlow.start();  // TEMP
-
         } catch ( Throwable th ) {
             FrameworkImplProvider.handleException( th );
         }
@@ -688,7 +684,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
         // Must find the best downsample rate.
         GpuSampler sampler = new GpuSampler( this.getBackground() );
-        GLProfile profile = GLProfile.get(GLProfile.GL2);
+        GLProfile profile = GLProfile.get(GLProfile.GL3);
         GLCapabilities capabilities = new GLCapabilities(profile);
         GLJPanel feedbackPanel = new GLJPanel( capabilities );
         feedbackPanel.setName( SAMPLER_PANEL_NAME );
