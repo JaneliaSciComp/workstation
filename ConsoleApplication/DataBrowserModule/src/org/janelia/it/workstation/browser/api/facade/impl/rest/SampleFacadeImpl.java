@@ -16,8 +16,8 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SampleFacade;
 import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.dto.SampleDispatchRequest;
+import org.janelia.model.domain.dto.SampleReprocessingRequest;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.LineRelease;
@@ -174,16 +174,12 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
     }
 
     @Override
-    public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception {
-        SampleDispatchRequest dispatchRequest = new SampleDispatchRequest();
-        dispatchRequest.setProcessLabel(reprocessPurpose);
-        dispatchRequest.setSampleReferences(sampleRefs);
-        dispatchRequest.setReuse(reuse);
+    public String dispatchSamples(SampleReprocessingRequest request) throws Exception {
         Response response = service.path("process/sample")
-                .path("dispatch")
+                .path("reprocess")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
-                .post(Entity.json(dispatchRequest));
+                .post(Entity.json(request));
         if (checkBadResponse(response.getStatus(), "problem making request to dispatch samples")) {
             throw new WebApplicationException(response);
         }

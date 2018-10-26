@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.dto.SampleReprocessingRequest;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.LineRelease;
@@ -85,13 +85,9 @@ public interface SampleFacade {
 
     /**
      * Dispatches the given samples for processing.
-     * @param sampleRefs references to the samples
-     * @param reprocessPurpose description of the purpose of reprocessing these samples
-     * @param reuse if true, existing results from the most recent pipeline run will be reused
-     * @return
      * @throws Exception
      */
-    public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception;
+    public String dispatchSamples(SampleReprocessingRequest request) throws Exception;
 
     /**
      * Returns the list of data sets available for color depth search in a given alignment space.

@@ -4,10 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Dialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
@@ -31,7 +29,6 @@ import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
-import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.Sample;
