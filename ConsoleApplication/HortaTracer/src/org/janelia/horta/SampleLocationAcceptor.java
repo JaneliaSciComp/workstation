@@ -159,7 +159,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             if (Objects.equal(renderedOctreeUrl, previousSource.getOriginatingSampleURL()))
                 return previousSource; // Source did not change
         }
-        return new JadeKtxOctreeBlockTileSource(new JadeServiceClient(), renderedOctreeUrl, sample);
+        return new JadeKtxOctreeBlockTileSource(new JadeServiceClient(), renderedOctreeUrl).init(sample);
     }
 
     private StaticVolumeBrickSource setSampleUrl(URL renderedOctreeUrl, ProgressHandle progress) {

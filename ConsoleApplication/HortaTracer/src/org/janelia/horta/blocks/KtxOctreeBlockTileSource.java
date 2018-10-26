@@ -56,22 +56,24 @@ import org.slf4j.LoggerFactory;
 /**
  * @author brunsc
  */
-public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockTileKey, KtxOctreeResolution, KtxOctreeBlockTileData> {
+public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockTileKey> {
     private static final Logger LOG = LoggerFactory.getLogger(KtxOctreeBlockTileSource.class);
 
     private final URL originatingSampleURL;
-    protected final String sourceServerURL;
-    protected final String sampleKtxTilesBaseDir;
-    protected final KtxOctreeBlockTileKey rootKey;
-    protected final KtxHeader rootHeader;
-    protected final KtxOctreeResolution maximumResolution;
-    protected final ConstVector3 origin;
-    protected final Vector3 outerCorner;
+    protected String sampleKtxTilesBaseDir;
+    protected String sourceServerURL;
+    protected KtxOctreeBlockTileKey rootKey;
+    protected KtxHeader rootHeader;
+    protected KtxOctreeResolution maximumResolution;
+    protected ConstVector3 origin;
+    protected Vector3 outerCorner;
 
-    @SuppressWarnings("OverridableMethodCallInConstructor")
-    public KtxOctreeBlockTileSource(URL originatingSampleURL, TmSample sample) {
-        Preconditions.checkArgument(sample.getFilepath() != null && sample.getFilepath().trim().length() > 0);
+    KtxOctreeBlockTileSource(URL originatingSampleURL) {
         this.originatingSampleURL = originatingSampleURL;
+    }
+
+    public KtxOctreeBlockTileSource init(TmSample sample) {
+        Preconditions.checkArgument(sample.getFilepath() != null && sample.getFilepath().trim().length() > 0);
         this.sampleKtxTilesBaseDir = getKtxBaseDir(sample.getFilepath());
         this.sourceServerURL = getSourceServerURL(sample);
         this.rootKey = new KtxOctreeBlockTileKey(this, Collections.<Integer>emptyList());
@@ -79,7 +81,8 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         this.maximumResolution = createKtxResolution(rootHeader);
         Pair<ConstVector3, Vector3> volumeCorners = getVolumeCorners(sample, rootHeader);
         this.origin = volumeCorners.getLeft();
-        this.outerCorner = volumeCorners.getRight();
+        this.outerCorner = volumeCorners.getRight();       
+        return this;
     }
 
     private String getKtxBaseDir(String sampleDir) {
@@ -168,25 +171,25 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
     protected abstract InputStream streamKeyBlock(KtxOctreeBlockTileKey octreeKey);
 
     @Override
-    public KtxOctreeResolution getMaximumResolution() {
+    public BlockTileResolution getMaximumResolution() {
         return maximumResolution;
     }
 
     ConstVector3 getMaximumResolutionBlockSize() {
         Vector3 rootBlockSize = outerCorner.minus(origin);
-        float scale = (float) Math.pow(2.0, maximumResolution.octreeLevel);
+        float scale = (float) Math.pow(2.0, maximumResolution.getResolution());
         return rootBlockSize.multiplyScalar(1.0f / scale);
     }
 
     private ConstVector3 getBlockSize(KtxOctreeResolution resolution) {
         Vector3 rootBlockSize = outerCorner.minus(origin);
-        float scale = (float) Math.pow(2.0, resolution.octreeLevel);
+        float scale = (float) Math.pow(2.0, resolution.getResolution());
         return rootBlockSize.multiplyScalar(1.0f / scale);
     }
 
     @Override
-    public KtxOctreeBlockTileKey getBlockKeyAt(ConstVector3 focusLocation, KtxOctreeResolution resolution) {
-        KtxOctreeResolution ktxResolution;
+    public KtxOctreeBlockTileKey getBlockKeyAt(ConstVector3 focusLocation, BlockTileResolution resolution) {
+        BlockTileResolution ktxResolution;
         if (resolution == null) {
             ktxResolution = maximumResolution;
         } else {
@@ -206,7 +209,7 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         List<Integer> octreePath = new ArrayList<>();
         Vector3 subBlockOrigin = new Vector3(origin);
         Vector3 subBlockExtent = outerCorner.minus(origin);
-        while (octreePath.size() < ktxResolution.octreeLevel) {
+        while (octreePath.size() < ktxResolution.getResolution()) {
             // Reduce block size to half, per octree level
             subBlockExtent.setX(subBlockExtent.getX() / 2.0f);
             subBlockExtent.setY(subBlockExtent.getY() / 2.0f);
@@ -263,7 +266,7 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
     }
 
     @Override
-    public KtxOctreeBlockTileData loadBlock(KtxOctreeBlockTileKey key) throws IOException, InterruptedException {
+    public BlockTileData loadBlock(KtxOctreeBlockTileKey key) throws IOException, InterruptedException {
         try (InputStream stream = streamKeyBlock(key)) {
             KtxOctreeBlockTileData data = new KtxOctreeBlockTileData();
             data.loadStreamInterruptably(stream);

@@ -49,7 +49,7 @@ public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTi
     @Override
     public List<KtxOctreeBlockTileKey> chooseBlocks(KtxOctreeBlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus) {
         // Find up to eight closest blocks adjacent to focus
-        KtxOctreeResolution maxResolution = source.getMaximumResolution();
+        BlockTileResolution maxResolution = source.getMaximumResolution();
 
         ConstVector3 blockSize = source.getMaximumResolutionBlockSize();
         float dxa[] = new float[]{

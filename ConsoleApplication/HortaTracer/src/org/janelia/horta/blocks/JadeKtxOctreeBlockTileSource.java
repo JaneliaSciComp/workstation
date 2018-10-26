@@ -40,8 +40,8 @@ public class JadeKtxOctreeBlockTileSource extends KtxOctreeBlockTileSource {
 
     private final JadeServiceClient jadeServiceClient;
 
-    public JadeKtxOctreeBlockTileSource(JadeServiceClient jadeServiceClient, URL originatingSampleURL, TmSample sample) {
-        super(originatingSampleURL, sample);
+    public JadeKtxOctreeBlockTileSource(JadeServiceClient jadeServiceClient, URL originatingSampleURL) {
+        super(originatingSampleURL);
         this.jadeServiceClient = jadeServiceClient;
     }
 
@@ -50,6 +50,7 @@ public class JadeKtxOctreeBlockTileSource extends KtxOctreeBlockTileSource {
         return jadeServiceClient.findStorageURL(sample.getFilepath());
     }
  
+    @Override
     protected InputStream streamKeyBlock(KtxOctreeBlockTileKey octreeKey) {
         String octreeKeyBlockPath = getKeyBlockPathURI(octreeKey).toString();
         return jadeServiceClient.streamContent(sourceServerURL, octreeKeyBlockPath);

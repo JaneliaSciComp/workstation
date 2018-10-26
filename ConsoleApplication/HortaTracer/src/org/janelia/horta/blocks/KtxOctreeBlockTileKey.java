@@ -28,7 +28,8 @@ public class KtxOctreeBlockTileKey implements BlockTileKey {
     }
 
     String getKeyPath() {
-        return octreeString("/");
+        String keyPath = octreeString("/");
+        return keyPath.length() == 0 ? keyPath : keyPath + "/";
     }
 
     String getKeyBlockName(String compressionScheme) {

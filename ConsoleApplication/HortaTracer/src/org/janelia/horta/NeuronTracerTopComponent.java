@@ -2279,7 +2279,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     private KtxOctreeBlockTileSource openTileSource() {
         try {
-            return new JadeKtxOctreeBlockTileSource(new JadeServiceClient(), null, this.getCurrentSample());
+            return new JadeKtxOctreeBlockTileSource(new JadeServiceClient(), null).init(this.getCurrentSample());
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
             JOptionPane.showMessageDialog(

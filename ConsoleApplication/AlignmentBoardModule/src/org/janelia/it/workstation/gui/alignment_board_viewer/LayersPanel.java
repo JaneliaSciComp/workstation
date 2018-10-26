@@ -252,14 +252,6 @@ public class LayersPanel extends JPanel {
         });
         
         setTransferHandler(new AlignmentBoardDomainObjectTransferHandler(null, null));
-        /*
-        {
-            @Override
-            public JComponent getDropTargetComponent() {
-                return LayersPanel.this;
-            }
-        });
-        */
        
         addComponentListener(new ComponentAdapter() {
             @Override

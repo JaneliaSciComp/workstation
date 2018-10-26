@@ -2,12 +2,17 @@ package org.janelia.horta.blocks;
 
 public class KtxOctreeResolution implements BlockTileResolution {
 
-    final int octreeLevel; // zero-based level; zero means tip of pyramid
+    private final int octreeLevel; // zero-based level; zero means tip of pyramid
 
     public KtxOctreeResolution(int octreeLevel) {
         this.octreeLevel = octreeLevel;
     }
 
+    @Override
+    public int getResolution() {
+        return octreeLevel;
+    }
+    
     @Override
     public int hashCode() {
         return octreeLevel;

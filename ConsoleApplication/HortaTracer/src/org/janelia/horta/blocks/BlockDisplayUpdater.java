@@ -44,7 +44,7 @@ import org.janelia.geometry3d.Vector3;
  *
  * @author brunsc
  */
-public class BlockDisplayUpdater<BTK extends BlockTileKey, BTS extends BlockTileSource> {
+public class BlockDisplayUpdater<BTK extends BlockTileKey, BTS extends BlockTileSource<BTK>> {
 
     private final CameraObserver cameraObserver = new CameraObserver();
     private final ObservableInterface displayChangeObservable = new ComposableObservable();

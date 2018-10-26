@@ -27,7 +27,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package org.janelia.horta.actors;
 
 import java.util.ArrayList;
@@ -48,35 +47,34 @@ import org.janelia.horta.blocks.BlockTileSource;
  *
  * @author brunsc
  */
-public class DynamicRegionBlockActorSet
-implements SortableBlockActorSource // designed to be contained within a TetVolumeActor
-, GL3Resource
-{
-    private final BlockTileSource tileSource;
-    private final BlockChooser tileChooser;
-    private final Map<BlockTileKey, SortableBlockActor> blockActors = new HashMap<>(); 
+public class DynamicRegionBlockActorSet<K extends BlockTileKey>
+        implements SortableBlockActorSource, // designed to be contained within a TetVolumeActor
+                   GL3Resource {
+
+    private final BlockTileSource<K> tileSource;
+    private final BlockChooser<K, BlockTileSource<K>> tileChooser;
+    private final Map<K, SortableBlockActor> blockActors = new HashMap<>();
     private Collection<SortableBlockActor> obsoleteActors = new ArrayList<>();
-    
-    public DynamicRegionBlockActorSet(BlockTileSource tileSource, BlockChooser tileChooser) {
+
+    public DynamicRegionBlockActorSet(BlockTileSource<K> tileSource, BlockChooser<K, BlockTileSource<K>> tileChooser) {
         this.tileSource = tileSource;
         this.tileChooser = tileChooser;
     }
-    
-    public synchronized void updateActors(Vector3 focus, Vector3 previousFocus) 
-    {
-        List<BlockTileKey> desiredBlocks = tileChooser.chooseBlocks(tileSource, focus, previousFocus);
-        List<BlockTileKey> newBlocks = new ArrayList<>();
-        Set<BlockTileKey> desiredSet = new HashSet<>();
+
+    public synchronized void updateActors(Vector3 focus, Vector3 previousFocus) {
+        List<K> desiredBlocks = tileChooser.chooseBlocks(tileSource, focus, previousFocus);
+        List<K> newBlocks = new ArrayList<>();
+        Set<K> desiredSet = new HashSet<>();
         boolean bChanged = false;
-        for (BlockTileKey key : desiredBlocks) {
+        for (K key : desiredBlocks) {
             desiredSet.add(key);
-            if (! blockActors.containsKey(key)) {
+            if (!blockActors.containsKey(key)) {
                 newBlocks.add(key);
                 bChanged = true;
             }
         }
         for (BlockTileKey key : blockActors.keySet()) {
-            if (! desiredSet.contains(key)) {
+            if (!desiredSet.contains(key)) {
                 SortableBlockActor actor = blockActors.remove(key);
                 obsoleteActors.add(actor);
                 bChanged = true;
@@ -84,11 +82,11 @@ implements SortableBlockActorSource // designed to be contained within a TetVolu
         }
         // TODO: - load more blocks from source
     }
-    
+
     @Override
     public Collection<SortableBlockActor> getSortableBlockActors() {
         return blockActors.values();
-    }    
+    }
 
     @Override
     public void dispose(GL3 gl) {
@@ -103,5 +101,6 @@ implements SortableBlockActorSource // designed to be contained within a TetVolu
     }
 
     @Override
-    public void init(GL3 gl) {}
+    public void init(GL3 gl) {
+    }
 }

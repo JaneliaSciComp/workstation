@@ -27,7 +27,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package org.janelia.horta.nodes;
 
 import java.util.Collection;
@@ -36,7 +35,6 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.gltools.GL3Actor;
@@ -49,13 +47,13 @@ import org.openide.nodes.Node;
  *
  * @author Christopher Bruns
  */
-class HortaWorkspaceChildFactory extends ChildFactory
-{
+class HortaWorkspaceChildFactory extends ChildFactory {
+
     private final HortaMetaWorkspace workspace;
     private final Collection<MeshActor> meshActors = new HashSet<>();
     private final Observer refresher;
 
-    public HortaWorkspaceChildFactory(HortaMetaWorkspace workspace, List<MeshActor> meshActorList, ObservableInterface meshObserver)  {
+    public HortaWorkspaceChildFactory(HortaMetaWorkspace workspace, List<MeshActor> meshActorList, ObservableInterface meshObserver) {
         this.workspace = workspace;
         this.meshActors.addAll(meshActorList);
         refresher = new Observer() {
@@ -65,21 +63,20 @@ class HortaWorkspaceChildFactory extends ChildFactory
             }
         };
         workspace.addObserver(refresher);
-        
+
         meshObserver.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
                 NeuronTracerTopComponent hortaTracer = NeuronTracerTopComponent.getInstance();
                 meshActors.addAll(hortaTracer.getMeshActors());
-                refresh(false);                
+                refresh(false);
             }
         });
     }
 
     @Override
-    protected boolean createKeys(List toPopulate)
-    {
-        for (GL3Actor meshActor: meshActors) {
+    protected boolean createKeys(List toPopulate) {
+        for (GL3Actor meshActor : meshActors) {
             toPopulate.add(meshActor);
         }
         for (NeuronSet neuronList : workspace.getNeuronSets()) {
@@ -88,22 +85,20 @@ class HortaWorkspaceChildFactory extends ChildFactory
             if (neuronList.size() == 0) {
                 // Listen for changes to empty neuron list content
                 neuronList.getMembershipChangeObservable().addObserver(refresher);
-            }
-            else {
+            } else {
                 toPopulate.add(neuronList);
             }
         }
         return true;
     }
-    
+
     @Override
-    protected Node createNodeForKey(Object key)
-    {
+    protected Node createNodeForKey(Object key) {
         if (key instanceof NeuronSet) {
-            return new NeuronSetNode((NeuronSet)key);
+            return new NeuronSetNode((NeuronSet) key);
         } else if (key instanceof MeshActor) {
-            return new MeshNode((MeshActor)key);
+            return new MeshNode((MeshActor) key);
         }
         return null;
-    }    
+    }
 }
