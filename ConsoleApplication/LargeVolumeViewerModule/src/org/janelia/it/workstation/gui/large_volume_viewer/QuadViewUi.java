@@ -98,15 +98,12 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Vector;
 
 import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_PREFERRED_ID;
 
@@ -445,7 +442,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
             v.setNavigationMenuItemGenerator(new MenuItemGenerator() {
                 @Override
                 public List<JMenuItem> getMenus(MouseEvent event) {
-                    List<JMenuItem> result = new Vector<>();
+                    List<JMenuItem> result = new ArrayList<>();
 
                     // Add menus/items for relocating per other views.
                     SynchronizationHelper helper = new SynchronizationHelper();
@@ -464,7 +461,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
             v.setSystemMenuItemGenerator(new MenuItemGenerator() {
                 @Override
                 public List<JMenuItem> getMenus(MouseEvent event) {
-                    List<JMenuItem> result = new Vector<>();
+                    List<JMenuItem> result = new ArrayList<>();
                     result.add(addFileMenuItem());
                     result.add(addCopyMicronLocMenuItem());
                     result.add(addCopyTileLocMenuItem());
@@ -978,7 +975,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         largeVolumeViewer.setSystemMenuItemGenerator(new MenuItemGenerator() {
             @Override
             public List<JMenuItem> getMenus(MouseEvent event) {
-                List<JMenuItem> result = new Vector<JMenuItem>();
+                List<JMenuItem> result = new ArrayList<>();
                 result.add(addFileMenuItem());
                 result.add(addViewMenuItem());
                 return result;
