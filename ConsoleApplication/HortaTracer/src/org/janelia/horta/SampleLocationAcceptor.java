@@ -34,7 +34,6 @@ import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
-import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.JadeKtxOctreeBlockTileSource;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;

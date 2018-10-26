@@ -6,8 +6,6 @@ import java.net.URL;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.httpclient.HttpClient;
 import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * {@link HttpClient} wrapper for submitting WebDAV requests.
@@ -15,8 +13,6 @@ import org.slf4j.LoggerFactory;
  * @author Eric Trautman
  */
 abstract class AbstractStorageClient {
-
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractStorageClient.class);
 
     final String baseUrl;
     final HttpClientProxy httpClient;

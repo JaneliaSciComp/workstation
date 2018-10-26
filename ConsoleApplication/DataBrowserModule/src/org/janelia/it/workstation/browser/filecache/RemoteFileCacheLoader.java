@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.UUID;
 
 import javax.servlet.http.HttpServletResponse;
@@ -66,15 +65,12 @@ public class RemoteFileCacheLoader extends CacheLoader<String, CachedFile> {
             // but performed much worse as concurrency increased past ten threads.
             final File tempFile = new File(loadedCache.getTempDirectory(), UUID.randomUUID().toString());
             final File activeFile = new File(loadedCache.getActiveDirectory(), cachedFileName);
-
             cachedFile = loadRemoteFile(webDavFile, tempFile, activeFile);
-
         } else {
             throw new IllegalStateException(
                     size + " kilobyte file exceeds cache capacity of " +
                     loadedCache.getKilobyteCapacity());
         }
-
         return cachedFile;
     }
 
