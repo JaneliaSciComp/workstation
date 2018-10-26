@@ -27,7 +27,7 @@ public abstract class BaseGLViewer
 
     static {
         try {
-            profile = GLProfile.get(GLProfile.GL3);
+            profile = GLProfile.get(GLProfile.GL2);
             capabilities = new GLCapabilities(profile);
         } catch (Throwable th) {
             profile = null;

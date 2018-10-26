@@ -128,7 +128,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     private static final int MINIMUM_MEMORY_REQUIRED_GB = 8;
 
-    public static GLProfile glProfile = GLProfile.get(GLProfile.GL3);
+    public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
     private boolean bAllowOrthoView = false;    // this disabled switching between single and multiple ortho views
 

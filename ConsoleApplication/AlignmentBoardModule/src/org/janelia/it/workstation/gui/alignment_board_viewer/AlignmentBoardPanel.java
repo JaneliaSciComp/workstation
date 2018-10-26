@@ -684,7 +684,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
         // Must find the best downsample rate.
         GpuSampler sampler = new GpuSampler( this.getBackground() );
-        GLProfile profile = GLProfile.get(GLProfile.GL3);
+        GLProfile profile = GLProfile.get(GLProfile.GL2);
         GLCapabilities capabilities = new GLCapabilities(profile);
         GLJPanel feedbackPanel = new GLJPanel( capabilities );
         feedbackPanel.setName( SAMPLER_PANEL_NAME );
