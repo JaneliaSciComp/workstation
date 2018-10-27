@@ -2,3 +2,5 @@
 
 Workstation Browser
 * Fixed bug when choosing display result for unsaved searches
+* You can now choose to reuse previous results when reprocessing samples
+
