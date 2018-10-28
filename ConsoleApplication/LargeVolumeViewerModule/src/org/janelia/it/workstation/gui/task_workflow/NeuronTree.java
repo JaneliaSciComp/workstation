@@ -15,6 +15,7 @@ public class NeuronTree implements PointDisplay {
     private Vec3 loc;
     private Long annotationId;
     private List<NeuronTree> children;
+    private int width; // number of leaves underneath this node
     private boolean visited;
     private mxCell cell;
 
@@ -24,6 +25,7 @@ public class NeuronTree implements PointDisplay {
         annotationId = annotation;
         children = new ArrayList<NeuronTree>();        
         visited = false;
+        width = 0;
     }
     
     public void addChild (NeuronTree tree) {
@@ -46,11 +48,17 @@ public class NeuronTree implements PointDisplay {
     public List<PointDisplay> generateRootToLeaf() {
         List<PointDisplay> rootToLeaf = new ArrayList<PointDisplay>();        
         NeuronTree currentNode = this;
-        while (currentNode.getParent()!=null && !currentNode.getParent().getVisited()) {
-             rootToLeaf.add(0, currentNode);
+        currentNode.setVisited(true);
+        while (currentNode.getParent()!=null) {
+             if (!currentNode.getParent().getVisited()) {
+                 rootToLeaf.add(0, currentNode);
+                 currentNode.setVisited(true);
+             }
+             currentNode.setWidth(currentNode.getWidth()+1);
              currentNode = currentNode.getParent();
-             currentNode.setVisited(true);
-        }               
+        }
+        currentNode.setWidth(currentNode.getWidth()+1);
+
         return rootToLeaf;
     }
     
@@ -58,6 +66,14 @@ public class NeuronTree implements PointDisplay {
         if (children.size()==0)
             return true;
         return false;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
     }
     
     public boolean getVisited () {

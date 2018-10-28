@@ -42,6 +42,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -74,6 +75,7 @@ public class BasicNeuronModel implements NeuronModel
     private String name = "(unnamed neuron)";
     private List<NeuronVertex> nodes = new ArrayList<>();
     private List<NeuronEdge> edges = new ArrayList<>();
+    private HashSet<NeuronVertex> reviewedNodes = new HashSet<>();
     private final ObservableInterface colorChangeObservable = new ComposableObservable();
     private final ObservableInterface geometryChangeObservable = new ComposableObservable();
     private final ObservableInterface visibilityChangeObservable = new ComposableObservable();
@@ -261,6 +263,21 @@ public class BasicNeuronModel implements NeuronModel
     public Collection<NeuronEdge> getEdges()
     {
         return edges;
+    }
+
+    @Override
+    public Collection<NeuronVertex> getReviewedVertices() {
+        return reviewedNodes;
+    }
+
+    @Override
+    public void addReviewedVertices(Collection<NeuronVertex> vertexList) {
+        reviewedNodes.addAll(vertexList);
+    }
+
+    @Override
+    public void clearVertices(Collection<NeuronVertex> vertexList) {
+        reviewedNodes.removeAll(vertexList);
     }
 
     @Override

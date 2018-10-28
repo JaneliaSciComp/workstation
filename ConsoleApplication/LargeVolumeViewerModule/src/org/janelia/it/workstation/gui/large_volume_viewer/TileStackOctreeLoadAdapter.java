@@ -102,7 +102,7 @@ final double elapsedMs;
                 }
             //}
 
-            log.info("loadToRam() timeMs="+elapsedMs);
+            //log.info("loadToRam() timeMs="+elapsedMs);
  
             if (textureData2d!=null) {
                 return new TextureData2dGL(textureData2d);

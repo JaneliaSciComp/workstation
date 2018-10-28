@@ -239,8 +239,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         JButton addTaskButton = new JButton("Create Task From Current");
         addTaskButton.addActionListener(event -> createNewTask());
         taskPanel.add(addTaskButton);
-        
-       // add (scrollPane, BorderLayout.EAST);       
+        //add(scrollPane, BorderLayout.NORTH);
         
         GridBagConstraints cVert = new GridBagConstraints();
         cVert.gridx = 0;
@@ -253,7 +252,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         JPanel taskButtonsPanel = new JPanel();
         taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
         taskButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        add(taskButtonsPanel, BorderLayout.NORTH);
+        add(taskButtonsPanel, BorderLayout.SOUTH);
         
         JButton playButton = new JButton("Review Group/Branch");
         playButton.addActionListener(event -> playBranch());
@@ -399,7 +398,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     private void generateLeaves(List<NeuronTree> leaves, NeuronTree node) {
         for (NeuronTree childNode: node.getChildren()) {
             if (childNode.isLeaf()) {
-                leaves.add(node);            
+                leaves.add(childNode);
             } else {
                 generateLeaves (leaves, childNode);
             }
@@ -407,20 +406,13 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     }
     
     /**
-     * If the neuron needed to be editted
+     * If the neuron was edited, you want to automatically reload the dendrogram
     */
     public void regenerateBranchPath (ReviewGroup item) {
         
     }
     
     public void createNeuronReview (TmNeuronMetadata neuron, NeuronTree tree) {
-        // generate gui and mxCells for neurontree
-        JScrollPane taskPane = navigator.createGraph(tree, NEURONREVIEW_WIDTH);
-        add( taskPane, 
-                BorderLayout.CENTER);
-        currNeuron = neuron;
-        currCategory = REVIEW_CATEGORY.NEURON_REVIEW;        
-        
         // from leaf nodes of neurontree generate branches to play back
         List<NeuronTree> leaves = new ArrayList<NeuronTree>();
         generateLeaves (leaves, tree);
@@ -428,7 +420,16 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         for (NeuronTree leaf: leaves) {
             pathList.add(leaf.generateRootToLeaf());
         }
-        
+
+        // generate gui and mxCells for neurontree
+        JScrollPane taskPane = navigator.createGraph(tree, NEURONREVIEW_WIDTH);
+        add( taskPane,
+                BorderLayout.CENTER);
+        revalidate();
+        repaint();
+        currNeuron = neuron;
+        currCategory = REVIEW_CATEGORY.NEURON_REVIEW;
+
         // add reference between review point and neuronTree, for updates to the GUI 
         // when point has been reviewed
         loadPointList(pathList);
@@ -644,7 +645,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     public void createNewTask() {
         currTask = new TmReviewTask();
         currTask.setCategory(currCategory.toString());
-        currTask.setOwner(AccessManager.getSubjectKey());
+        currTask.setOwnerKey(AccessManager.getSubjectKey());
         if (currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
             currTask.setTitle(currNeuron.getName());
         }
@@ -760,7 +761,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             List row = new ArrayList<Object>();
             row.add(reviewTask.getTitle());
             row.add(reviewTask.getCategory());
-            row.add(reviewTask.getOwner());
+            row.add(reviewTask.getOwnerKey());
             int completed = 0;
             for (TmReviewItem reviewItem : reviewTask.getReviewItems()) {
                 completed += reviewItem.isReviewed() ? 1 : 0;

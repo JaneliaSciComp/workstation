@@ -58,6 +58,11 @@ extends Hideable, NonInteractable, UserToggleRadius
     
     Collection<NeuronVertex> getVertexes();
     Collection<NeuronEdge> getEdges();
+
+    // returns vertices that have been reviewed
+    Collection<NeuronVertex> getReviewedVertices();
+    void addReviewedVertices(Collection<NeuronVertex> vertexList);
+    void clearVertices (Collection<NeuronVertex> vertexList);
     
     // Adding a vertex is so common that it gets its own signal
     NeuronVertexCreationObservable getVertexCreatedObservable(); // vertices added to neuron
