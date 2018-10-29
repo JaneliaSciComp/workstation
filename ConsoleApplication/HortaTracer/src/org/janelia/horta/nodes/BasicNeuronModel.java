@@ -85,6 +85,7 @@ public class BasicNeuronModel implements NeuronModel
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private boolean visible = true;
     private boolean userToggleRadius = false;
+    private boolean underReview = false;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final NeuronSet parentSet;
 
@@ -244,6 +245,16 @@ public class BasicNeuronModel implements NeuronModel
     }
 
     @Override
+    public boolean getReviewMode() {
+        return underReview;
+    }
+
+    @Override
+    public void setReviewMode(boolean reviewMode) {
+        underReview = reviewMode;
+    }
+
+    @Override
     public boolean isVisible()
     {
         return visible;
@@ -267,17 +278,22 @@ public class BasicNeuronModel implements NeuronModel
 
     @Override
     public Collection<NeuronVertex> getReviewedVertices() {
-        return reviewedNodes;
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean isReviewedVertex(NeuronVertex vertex) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void addReviewedVertices(Collection<NeuronVertex> vertexList) {
-        reviewedNodes.addAll(vertexList);
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void clearVertices(Collection<NeuronVertex> vertexList) {
-        reviewedNodes.removeAll(vertexList);
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override

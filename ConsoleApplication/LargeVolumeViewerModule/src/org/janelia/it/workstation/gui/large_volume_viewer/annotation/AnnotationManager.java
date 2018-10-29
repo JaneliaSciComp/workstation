@@ -256,6 +256,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (rootAnnotation!=null) {
             NeuronTree rootNode = createNeuronTreeNode(null, rootAnnotation);
             exploreNeuronBranches(rootNode, neuron, rootAnnotation);
+            TaskWorkflowViewTopComponent.getInstance().setAnnotationManager(this);
             TaskWorkflowViewTopComponent.getInstance().createNeuronReview(neuron, rootNode);
         }
     }
@@ -831,6 +832,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         };
         merger.execute();
+    }
+
+    public void setBranchReviewed(TmNeuronMetadata neuron, List<Long> annIdList) {
+        List<TmGeoAnnotation> annotationList = new ArrayList<TmGeoAnnotation>();
+        for (Long annId: annIdList) {
+            annotationList.add(annotationModel.getGeoAnnotationFromID(neuron, annId));
+        }
+        annotationModel.branchReviewed(neuron, annotationList);
     }
 
     private class TmDisplayNeuron {

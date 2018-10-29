@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.task_workflow;
 import Jama.Matrix;
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,6 +38,9 @@ import java.util.Stack;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableModel;
+
+import groovy.swing.impl.TableLayout;
+import loci.plugins.config.SpringUtilities;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
@@ -49,6 +53,7 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.keybind.ShortcutTextField;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
@@ -104,11 +109,12 @@ import org.slf4j.LoggerFactory;
 public final class TaskWorkflowViewTopComponent extends TopComponent implements ExplorerManager.Provider {
     public static final String PREFERRED_ID = "TaskWorkflowViewTopComponent";
     public static final String LABEL_TEXT = "Task Workflow";
-    
+    private AnnotationManager annManager;
+
     enum REVIEW_CATEGORY {
         NEURON_REVIEW, POINT_REVIEW
     };
-    static final int NEURONREVIEW_WIDTH = 200;    
+    static final int NEURONREVIEW_WIDTH = 500;
     
     private final ExplorerManager reviewManager = new ExplorerManager();
     private LinkedList<Vec3> normalGroup;
@@ -186,7 +192,11 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 
     private static final Logger log = LoggerFactory.getLogger(TaskWorkflowViewTopComponent.class);
 
-    public void nextTask() {
+    public void setAnnotationManager (AnnotationManager manager) {
+        annManager = manager;
+    }
+
+    public void nextBranch() {
         if (currGroupIndex!=-1) {
             ReviewGroup currGroup = groupList.get(currGroupIndex);
             if (currPointIndex<currGroup.getPointList().size()-1) {
@@ -203,7 +213,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         }        
     }
 
-    public void prevTask() {
+    public void prevBranch() {
        if (currGroupIndex!=-1) {
             if (currPointIndex>0) {
                 ReviewGroup currGroup = groupList.get(currGroupIndex);
@@ -252,7 +262,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         JPanel taskButtonsPanel = new JPanel();
         taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
         taskButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        add(taskButtonsPanel, BorderLayout.SOUTH);
+        //add(taskButtonsPanel, BorderLayout.SOUTH);
         
         JButton playButton = new JButton("Review Group/Branch");
         playButton.addActionListener(event -> playBranch());
@@ -277,15 +287,6 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 */
         
         
-    }
-
-    /**
-     * given a list of points, start the workflow from scratch
-     */
-    private void startWorkflow(String neuronName) {
-        //rootNode = new ReviewListNode(neuronName, groupList);
-        //reviewManager.setRootContext(rootNode);
-
     }
     
     private void playBranch() {
@@ -422,17 +423,63 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         }
 
         // generate gui and mxCells for neurontree
-        JScrollPane taskPane = navigator.createGraph(tree, NEURONREVIEW_WIDTH);
-        add( taskPane,
+        JScrollPane treePane = navigator.createGraph(tree, NEURONREVIEW_WIDTH);
+
+        // lay out buttons and info in a floating panel on top of the dendrogram
+        JLayeredPane containerPanel = new JLayeredPane();
+        containerPanel.setPreferredSize(new Dimension(500, 500));
+        containerPanel.setBackground(Color.blue);
+        containerPanel.setBounds(0, 0, 500, 500);
+        JPanel infoPane = new JPanel();
+        infoPane.setPreferredSize(new Dimension(100, 50));
+        JCheckBox reviewCheckbox = new JCheckBox("Reviewed");
+        reviewCheckbox.addActionListener(evt -> setBranchReviewed());
+        infoPane.add(reviewCheckbox);
+        infoPane.add(new JTextField("ASDFASDFASF"));
+        SpringLayout infoLayout = new SpringLayout();
+        infoPane.setLayout(infoLayout);
+        SpringUtilities.makeGrid(infoPane,
+                1, 2,
+                5, 5,
+                15, 15);
+
+        // peg the info panel in the upper right corner or the dendrogram
+        JPanel northToolPane = new JPanel(new BorderLayout());
+        northToolPane.setOpaque(false);
+        northToolPane.add(infoPane, BorderLayout.EAST);
+        JPanel toolPane = new JPanel(new BorderLayout());
+        toolPane.setOpaque(false);
+        toolPane.setLayout(new BorderLayout());
+        toolPane.add(northToolPane, BorderLayout.NORTH);
+
+        //containerPanel.add(treePane);
+        containerPanel.add(toolPane, JLayeredPane.PALETTE_LAYER);
+
+
+        add( containerPanel,
                 BorderLayout.CENTER);
-        revalidate();
-        repaint();
+
         currNeuron = neuron;
         currCategory = REVIEW_CATEGORY.NEURON_REVIEW;
 
         // add reference between review point and neuronTree, for updates to the GUI 
         // when point has been reviewed
         loadPointList(pathList);
+    }
+
+    public void setBranchReviewed() {
+        if (currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
+            // get the current branch tmGeoAnnotations and update dendrogram
+            ReviewGroup branch = groupList.get(currGroupIndex);
+            List<ReviewPoint> pointList = branch.getPointList();
+            List<Long> annotationList = new ArrayList<>();
+            for (ReviewPoint point : pointList) {
+                NeuronTree pointData = (NeuronTree)point.getDisplay();
+                annotationList.add(pointData.getAnnotationId());
+                pointData.getGUICell().setAttribute("fillColor", "white");
+            }
+            //annManager.setBranchReviewed(currNeuron, annotationList);
+        }
     }
 
     /**

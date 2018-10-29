@@ -402,6 +402,8 @@ implements NeuronSet, TaskReviewListener
     public void neuronBranchReviewed(TmNeuronMetadata neuron, List<TmGeoAnnotation> annList) {
         // determine the neuronvertices for each of these and add them to the model
         NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+        if (!neuronModel.getReviewMode())
+            neuronModel.setReviewMode(true);
         List<NeuronVertex> vertexList = new ArrayList<>();
         if (annList!=null && annList.size()>0) {
             for (TmGeoAnnotation annotation : annList) {
@@ -411,6 +413,7 @@ implements NeuronSet, TaskReviewListener
             }
             neuronModel.addReviewedVertices(vertexList);
         }
+        repaintHorta(neuronModel);
     }
 
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener

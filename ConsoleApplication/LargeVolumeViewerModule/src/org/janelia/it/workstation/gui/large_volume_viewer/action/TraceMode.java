@@ -726,10 +726,10 @@ implements MouseMode, KeyListener
 			}
 			break;
                 case KeyEvent.VK_P:
-			TaskWorkflowViewTopComponent.getInstance().nextTask();
+			TaskWorkflowViewTopComponent.getInstance().nextBranch();
 			break;
                 case KeyEvent.VK_O:
-			TaskWorkflowViewTopComponent.getInstance().prevTask();
+			TaskWorkflowViewTopComponent.getInstance().prevBranch();
 			break;               
 		}
                 

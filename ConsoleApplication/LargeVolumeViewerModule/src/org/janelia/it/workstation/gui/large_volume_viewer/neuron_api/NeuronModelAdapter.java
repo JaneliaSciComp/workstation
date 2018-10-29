@@ -90,7 +90,7 @@ public class NeuronModelAdapter implements NeuronModel
     private boolean nonInteractable;
     private boolean visible;
     private boolean userToggleRadius;
-    private boolean reviewed;
+    private boolean underReview = false;
     private String ownerKey;
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
@@ -452,6 +452,16 @@ public class NeuronModelAdapter implements NeuronModel
     }
 
     @Override
+    public boolean getReviewMode() {
+        return underReview;
+    }
+
+    @Override
+    public void setReviewMode(boolean reviewMode) {
+        underReview = reviewMode;
+    }
+
+    @Override
     public ObservableInterface getColorChangeObservable()
     {
         return colorChangeObservable;
@@ -482,6 +492,13 @@ public class NeuronModelAdapter implements NeuronModel
     @Override
     public Collection<NeuronVertex> getReviewedVertices() {
         return reviewedNodes;
+    }
+
+    @Override
+    public boolean isReviewedVertex(NeuronVertex vertex) {
+        if (reviewedNodes.contains(vertex))
+            return true;
+        return false;
     }
 
     @Override

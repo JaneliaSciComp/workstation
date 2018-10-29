@@ -227,6 +227,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         taskReviewListeners.add(reviewListener);
     }
 
+    public void branchReviewed (TmNeuronMetadata neuron, List<TmGeoAnnotation> annotations) {
+        for (TaskReviewListener listener: taskReviewListeners) {
+            listener.neuronBranchReviewed(neuron, annotations);
+        }
+    }
+
     public void removeBackgroundAnnotationListener(BackgroundAnnotationListener listener) {
         backgroundAnnotationListeners.remove(listener);
     }
@@ -2354,13 +2360,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     public void fireBackgroundNeuronDeleted(TmNeuronMetadata neuron) {
-        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {     
+        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
             b.neuronModelDeleted(neuron);
         }
     }
 
     public void fireBackgroundNeuronChanged(TmNeuronMetadata neuron) {
-        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {     
+        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
             b.neuronModelChanged(neuron);
         }
     }

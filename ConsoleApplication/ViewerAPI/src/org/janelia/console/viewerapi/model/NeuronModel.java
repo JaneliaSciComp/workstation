@@ -47,7 +47,11 @@ extends Hideable, NonInteractable, UserToggleRadius
     
     Color getColor();
     void setColor(Color color);
-    
+
+    // used to limit impact for neuron vbo checking
+    boolean getReviewMode();
+    void setReviewMode(boolean reviewMode);
+
     Long getNeuronId();
     
     String getOwnerKey();
@@ -61,6 +65,7 @@ extends Hideable, NonInteractable, UserToggleRadius
 
     // returns vertices that have been reviewed
     Collection<NeuronVertex> getReviewedVertices();
+    boolean isReviewedVertex (NeuronVertex vertex);
     void addReviewedVertices(Collection<NeuronVertex> vertexList);
     void clearVertices (Collection<NeuronVertex> vertexList);
     

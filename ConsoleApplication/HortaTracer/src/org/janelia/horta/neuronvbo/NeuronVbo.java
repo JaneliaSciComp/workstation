@@ -69,6 +69,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
     // Be sure to synchronize these constants with the actual shader vertex attribute (in) layout
     private final static int XYZR_ATTRIB = 1;
     private final static int RGBV_ATTRIB = 2;
+    private final static float REVIEWED_GRAY_COLOR = 200;
 
     private final Set<NeuronModel> neurons = new HashSet<>();
     private int vboVertices = 0;
@@ -348,9 +349,15 @@ public class NeuronVbo implements Iterable<NeuronModel>
                     radius = 0.3f;
                 }
                 vertexAttributes.add(radius); // radius
-                vertexAttributes.add(rgb[0]); // red
-                vertexAttributes.add(rgb[1]); // green
-                vertexAttributes.add(rgb[2]); // blue
+                if (neuron.getReviewMode() && neuron.isReviewedVertex(vertex)) {
+                    vertexAttributes.add(REVIEWED_GRAY_COLOR); // red
+                    vertexAttributes.add(REVIEWED_GRAY_COLOR); // green
+                    vertexAttributes.add(REVIEWED_GRAY_COLOR); // blue
+                } else {
+                    vertexAttributes.add(rgb[0]); // red
+                    vertexAttributes.add(rgb[1]); // green
+                    vertexAttributes.add(rgb[2]); // blue
+                }
                 vertexAttributes.add(visibility); // visibility
                 vertexCount += 1;
             }
