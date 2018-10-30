@@ -213,7 +213,13 @@ public class NeuronVbo implements Iterable<NeuronModel>
         float rgb[] = {0,0,0,1};
         neuron.getColor().getRGBComponents(rgb);
         boolean bChanged = false; // nothing has changed yet
-
+        
+        // check for whether the neuron is under review
+        if (neuron.getReviewMode()) {
+            buffersNeedRebuild = true;
+            return false;
+        }
+        
         // sanity check
         // Do we already have most of the information for this neuron tabulated?
         if ( neuronOffsets.containsKey(neuron)

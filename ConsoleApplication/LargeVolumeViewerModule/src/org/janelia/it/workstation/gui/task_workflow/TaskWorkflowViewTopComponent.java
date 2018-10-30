@@ -21,6 +21,7 @@ import javax.swing.table.TableCellEditor;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mxgraph.model.mxCell;
 import java.awt.Color;
 import java.awt.Event;
 import java.awt.Frame;
@@ -199,32 +200,53 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     public void nextBranch() {
         if (currGroupIndex!=-1) {
             ReviewGroup currGroup = groupList.get(currGroupIndex);
-            if (currPointIndex<currGroup.getPointList().size()-1) {
-                currPointIndex++;
-                gotoPoint(currGroup.getPointList().get(currPointIndex));
-            } else {
-                if (currGroupIndex<groupList.size()-1) {
-                    currGroupIndex++;
-                    currGroup = groupList.get(currGroupIndex);
-                    currPointIndex = 0;
-                    gotoPoint(currGroup.getPointList().get(currPointIndex));
+            if (!currGroup.isReviewed() && currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
+                // clear current review markers
+                List<ReviewPoint> pointList = currGroup.getPointList();
+                Object[] cells = new Object[pointList.size()];
+                for (int i=0; i<pointList.size(); i++) {
+                    cells[i] = ((NeuronTree)pointList.get(i).getDisplay()).getGUICell();
                 }
+                navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.OPEN);
             }
+            if (currGroupIndex<groupList.size()-1) {
+                currGroupIndex++;
+                currGroup = groupList.get(currGroupIndex);
+                if (!currGroup.isReviewed() && currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {
+                    List<ReviewPoint> pointList = currGroup.getPointList();
+
+                    Object[] cells = new Object[pointList.size()];
+                    for (int i = 0; i < pointList.size(); i++) {
+                        cells[i] = ((NeuronTree) pointList.get(i).getDisplay()).getGUICell();
+                    }
+                    navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
+                }
+            }            
         }        
     }
 
     public void prevBranch() {
        if (currGroupIndex!=-1) {
+           ReviewGroup currGroup = groupList.get(currGroupIndex);
+            if (!currGroup.isReviewed() && currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
+                // clear current review markers
+                List<ReviewPoint> pointList = currGroup.getPointList();
+                Object[] cells = new Object[pointList.size()];
+                for (int i=0; i<pointList.size(); i++) {
+                    cells[i] = ((NeuronTree)pointList.get(i).getDisplay()).getGUICell();
+                }
+                navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.OPEN);
+            }
             if (currPointIndex>0) {
-                ReviewGroup currGroup = groupList.get(currGroupIndex);
-                currPointIndex--;
-                gotoPoint(currGroup.getPointList().get(currPointIndex));
-            } else {
-                if (currGroupIndex>0) {
-                    currGroupIndex--;
-                    ReviewGroup currGroup = groupList.get(currGroupIndex);
-                    currPointIndex = currGroup.getPointList().size()-1;
-                    gotoPoint(currGroup.getPointList().get(currPointIndex));
+                currGroupIndex--;
+                currGroup = groupList.get(currGroupIndex);
+                if (!currGroup.isReviewed() && currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {
+                    List<ReviewPoint> pointList = currGroup.getPointList();
+                    Object[] cells = new Object[pointList.size()];
+                    for (int i = 0; i < pointList.size(); i++) {
+                        cells[i] = ((NeuronTree) pointList.get(i).getDisplay()).getGUICell();
+                    }
+                    navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
                 }
             }
         }  
@@ -243,13 +265,11 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         taskPanel.setLayout(new BorderLayout());
         List<TmReviewTask> tasks = retrieveTasks();
         ((TaskReviewTableModel)taskReviewTable.getModel()).loadReviewTasks(tasks);
+        taskReviewTable.setPreferredSize(new Dimension (500,200));
         JScrollPane scrollPane = new JScrollPane(taskReviewTable);
         taskReviewTable.setFillsViewportHeight(true);
-        taskPanel.add(scrollPane, BorderLayout.CENTER);
-        JButton addTaskButton = new JButton("Create Task From Current");
-        addTaskButton.addActionListener(event -> createNewTask());
-        taskPanel.add(addTaskButton);
-        //add(scrollPane, BorderLayout.NORTH);
+        taskPanel.add(scrollPane, BorderLayout.CENTER);                             
+        add(taskPanel, BorderLayout.NORTH);
         
         GridBagConstraints cVert = new GridBagConstraints();
         cVert.gridx = 0;
@@ -257,26 +277,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         cVert.anchor = GridBagConstraints.PAGE_START;
         cVert.fill = GridBagConstraints.HORIZONTAL;
         cVert.weighty = 0.0;
-
-        // task transition buttons (next, previous, etc)
-        JPanel taskButtonsPanel = new JPanel();
-        taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
-        taskButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        //add(taskButtonsPanel, BorderLayout.SOUTH);
-        
-        JButton playButton = new JButton("Review Group/Branch");
-        playButton.addActionListener(event -> playBranch());
-        taskButtonsPanel.add(playButton);
-        
-
-        // workflow management buttons: load, done (?)
-        /*JPanel workflowButtonsPanel = new JPanel();
-        workflowButtonsPanel.setLayout(new BoxLayout(workflowButtonsPanel, BoxLayout.LINE_AXIS));
-        workflowButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        add(workflowButtonsPanel, BorderLayout.SOUTH);
-
-        workflowButtonsPanel.add(Box.createHorizontalGlue());
-
+/*
         JButton loadButton = new JButton("Load point list...");
         loadButton.addActionListener(event -> onLoadButton());
         workflowButtonsPanel.add(loadButton);
@@ -336,12 +337,22 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     
      private void reviewGroup(int groupIndex) {
          ReviewGroup group = groupList.get(groupIndex);
-
+         currGroupIndex = groupIndex;
+         
          List<SampleLocation> playList = new ArrayList<SampleLocation>();
          SynchronizationHelper helper = new SynchronizationHelper();
          Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-
-         for (ReviewPoint point : group.getPointList()) {
+         Object[] guiCells = new Object[group.getPointList().size()];
+         if (currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
+             int i=0;
+             for (ReviewPoint point : group.getPointList()) {
+                 guiCells[i++] = (((NeuronTree)point.getDisplay()).getGUICell());                   
+             }
+             navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
+         }
+             
+         /*
+         for (ReviewPoint point : group.getPointList()) {           
              SampleLocation sampleLocation = originator.getSampleLocation();
              sampleLocation.setFocusUm(point.getLocation().getX(), point.getLocation().getY(), point.getLocation().getZ());
              sampleLocation.setMicrometersPerWindowHeight(point.getZoomLevel());
@@ -354,7 +365,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
              if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
                  acceptor.playSampleLocations(playList);
              }
-         }
+         }*/
     }
 
     /**
@@ -414,6 +425,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     }
     
     public void createNeuronReview (TmNeuronMetadata neuron, NeuronTree tree) {
+        
         // from leaf nodes of neurontree generate branches to play back
         List<NeuronTree> leaves = new ArrayList<NeuronTree>();
         generateLeaves (leaves, tree);
@@ -424,43 +436,43 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 
         // generate gui and mxCells for neurontree
         JScrollPane treePane = navigator.createGraph(tree, NEURONREVIEW_WIDTH);
-
-        // lay out buttons and info in a floating panel on top of the dendrogram
-        JLayeredPane containerPanel = new JLayeredPane();
-        containerPanel.setPreferredSize(new Dimension(500, 500));
-        containerPanel.setBackground(Color.blue);
-        containerPanel.setBounds(0, 0, 500, 500);
         JPanel infoPane = new JPanel();
         infoPane.setPreferredSize(new Dimension(100, 50));
         JCheckBox reviewCheckbox = new JCheckBox("Reviewed");
         reviewCheckbox.addActionListener(evt -> setBranchReviewed());
-        infoPane.add(reviewCheckbox);
-        infoPane.add(new JTextField("ASDFASDFASF"));
-        SpringLayout infoLayout = new SpringLayout();
-        infoPane.setLayout(infoLayout);
-        SpringUtilities.makeGrid(infoPane,
-                1, 2,
-                5, 5,
-                15, 15);
+       // infoPane.add(reviewCheckbox);
+        
+        JPanel containerPanel = new JPanel();
+        containerPanel.setLayout(new BorderLayout());
+        containerPanel.add( treePane,
+                BorderLayout.SOUTH);
+        JPanel taskButtonsPanel = new JPanel();
+        taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
+        taskButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 
-        // peg the info panel in the upper right corner or the dendrogram
-        JPanel northToolPane = new JPanel(new BorderLayout());
-        northToolPane.setOpaque(false);
-        northToolPane.add(infoPane, BorderLayout.EAST);
-        JPanel toolPane = new JPanel(new BorderLayout());
-        toolPane.setOpaque(false);
-        toolPane.setLayout(new BorderLayout());
-        toolPane.add(northToolPane, BorderLayout.NORTH);
+        JButton prevBranchButton = new JButton("Prev Branch");
+        prevBranchButton.addActionListener(event -> prevBranch());
+        taskButtonsPanel.add(prevBranchButton);
 
-        //containerPanel.add(treePane);
-        containerPanel.add(toolPane, JLayeredPane.PALETTE_LAYER);
-
-
-        add( containerPanel,
-                BorderLayout.CENTER);
-
+        JButton nextBranchButton = new JButton("Next Branch");
+        nextBranchButton.addActionListener(event -> nextBranch());
+        taskButtonsPanel.add(nextBranchButton);              
+        
+        JButton playButton = new JButton("Play Branch");
+        playButton.addActionListener(event -> playBranch());
+        taskButtonsPanel.add(playButton);
+        
+        JButton createTaskButton = new JButton("Create Task From Current");
+        createTaskButton.addActionListener(event -> createNewTask());
+        taskButtonsPanel.add(createTaskButton);           
+        
+        taskButtonsPanel.add(reviewCheckbox);
+        containerPanel.add (taskButtonsPanel,
+                BorderLayout.NORTH);
         currNeuron = neuron;
         currCategory = REVIEW_CATEGORY.NEURON_REVIEW;
+        
+        add (containerPanel, BorderLayout.SOUTH);
 
         // add reference between review point and neuronTree, for updates to the GUI 
         // when point has been reviewed
@@ -468,17 +480,22 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     }
 
     public void setBranchReviewed() {
-        if (currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
+        if (!groupList.get(currGroupIndex).isReviewed() && currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
             // get the current branch tmGeoAnnotations and update dendrogram
             ReviewGroup branch = groupList.get(currGroupIndex);
+            branch.setReviewed(true);
             List<ReviewPoint> pointList = branch.getPointList();
             List<Long> annotationList = new ArrayList<>();
-            for (ReviewPoint point : pointList) {
+            Object[] guiCells = new Object[pointList.size()];
+            for (int i=0; i<pointList.size(); i++) {
+                ReviewPoint point = pointList.get(i);                   
                 NeuronTree pointData = (NeuronTree)point.getDisplay();
+                pointData.setReviewed(true);
                 annotationList.add(pointData.getAnnotationId());
-                pointData.getGUICell().setAttribute("fillColor", "white");
+                guiCells[i] = pointData.getGUICell();
             }
-            //annManager.setBranchReviewed(currNeuron, annotationList);
+            navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.REVIEWED);
+            annManager.setBranchReviewed(currNeuron, annotationList);
         }
     }
 
@@ -690,7 +707,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
      * takes current point lists and generates a ReviewTask object for persistence.
      */
     public void createNewTask() {
-        currTask = new TmReviewTask();
+        currTask = new TmReviewTask();   
+        currTask.setWorkspaceRef(currNeuron.getWorkspaceRef().toString());
         currTask.setCategory(currCategory.toString());
         currTask.setOwnerKey(AccessManager.getSubjectKey());
         if (currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
@@ -715,15 +733,15 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                      break;
              }
              if (reviewItem!=null) {
-                 reviewItem.setWorkspaceRef(currNeuron.getWorkspaceRef().toString());
                  reviewItem.setReviewed(branch.isReviewed());
-             }
-             
+                 currTask.addReviewItem(reviewItem); 
+             }            
         }
         try {
             TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
             currTask = persistenceMgr.save(currTask);
             ((TaskReviewTableModel)taskReviewTable.getModel()).addReviewTask(currTask);
+            ((TaskReviewTableModel)taskReviewTable.getModel()).fireTableDataChanged();
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
         }
@@ -799,8 +817,10 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         }
         
         public void loadReviewTasks(List<TmReviewTask> reviewTasks) {            
-            for (TmReviewTask task: reviewTasks) {                
-                addReviewTask(task);
+            if (reviewTasks!=null) {
+                for (TmReviewTask task: reviewTasks) {                
+                    addReviewTask(task);
+                }
             }
         }
         
@@ -808,12 +828,16 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             List row = new ArrayList<Object>();
             row.add(reviewTask.getTitle());
             row.add(reviewTask.getCategory());
+            row.add(reviewTask.getWorkspaceRef());
             row.add(reviewTask.getOwnerKey());
-            int completed = 0;
-            for (TmReviewItem reviewItem : reviewTask.getReviewItems()) {
-                completed += reviewItem.isReviewed() ? 1 : 0;
+            row.add(reviewTask.getCreationDate());
+            int completed = 0;           
+            if (reviewTask.getReviewItems().size() > 0) {
+                for (TmReviewItem reviewItem : reviewTask.getReviewItems()) {
+                    completed += reviewItem.isReviewed() ? 1 : 0;
+                }
+                row.add(completed / reviewTask.getReviewItems().size());
             }
-            row.add(completed / reviewTask.getReviewItems().size());
 
             data.add(row);
         }

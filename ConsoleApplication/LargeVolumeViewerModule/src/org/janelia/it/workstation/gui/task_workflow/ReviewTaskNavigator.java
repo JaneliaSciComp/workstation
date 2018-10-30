@@ -4,6 +4,7 @@ import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.view.*;
 import com.mxgraph.*;
 import com.mxgraph.model.mxCell;
+import com.mxgraph.util.mxConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,9 @@ public class ReviewTaskNavigator implements MouseWheelListener {
     
     static final int HORIZ_OFFSET = 25;
     static final int VERT_OFFSET = 15;
+    public enum CELL_STATUS {
+        OPEN, UNDER_REVIEW, REVIEWED
+    };
     
     ReviewTaskNavigator() {
         
@@ -74,10 +78,10 @@ public class ReviewTaskNavigator implements MouseWheelListener {
     }
     
     private void traceNode(int level, mxCell prevPoint, NeuronTree node, int currx, int curry) {
-        log.info("LEVEL {}", level);
         // add current node
         mxCell nodePoint = (mxCell) graph.insertVertex(parent, null, "", currx, curry, 10,
                 10, "orthogonal=true;shape=ellipse;perimeter=ellipsePerimeter;fillColor=red");
+        node.setGUICell(nodePoint);
         if (prevPoint != null)
             graph.insertEdge(parent, null, "", prevPoint, nodePoint, "style=orthogonal;strokeWidth=3;endArrow=none;strokeColor=green");
         List<NeuronTree> childNodes = node.getChildren();
@@ -97,6 +101,25 @@ public class ReviewTaskNavigator implements MouseWheelListener {
             currx += centerOffset;
 
         }        
+    }
+    
+    public void updateCellStatus (Object[] cells, CELL_STATUS status) {   
+        graph.getModel().beginUpdate();
+        try {
+            switch (status) {
+                case OPEN:
+                    graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "#ff0000", cells);
+                    break;
+                case UNDER_REVIEW:
+                    graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "#ffff00", cells);
+                    break;
+                case REVIEWED:                    
+                    graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "#ffffff", cells);
+                    break;
+            }
+        } finally {
+            graph.getModel().endUpdate();
+        }
     }
 
     @Override

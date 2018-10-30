@@ -413,7 +413,9 @@ implements NeuronSet, TaskReviewListener
             }
             neuronModel.addReviewedVertices(vertexList);
         }
-        repaintHorta(neuronModel);
+        neuronModel.getColorChangeObservable().hasChanged();
+        neuronModel.getColorChangeObservable().notifyObservers();
+        repaintHorta();
     }
 
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener
