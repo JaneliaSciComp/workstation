@@ -6,34 +6,31 @@
 
 package org.janelia.it.workstation.gui.passive_3d;
 
+import org.janelia.console.viewerapi.controller.ColorModelListener;
+import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
+import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
+import org.janelia.model.domain.tiledMicroscope.TmColorModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JSeparator;
-
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
-import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
-import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
-import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
-import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationsConstants;
-import org.janelia.console.viewerapi.controller.ColorModelListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
-import org.janelia.model.domain.tiledMicroscope.TmColorModel;
-import org.janelia.model.rendering.CoordinateAxis;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Sources menu items for presenting the user with their 3D viewer.

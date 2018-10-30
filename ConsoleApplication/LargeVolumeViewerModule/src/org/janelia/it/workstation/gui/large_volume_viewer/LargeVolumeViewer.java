@@ -1,14 +1,13 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.apache.commons.lang.SystemUtils;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.jacs.shared.lvv.ChannelBrightnessStats;
 import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
-import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
-import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
@@ -17,39 +16,34 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.TraceMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZScanMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorStateUpdater;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.openide.util.NbPreferences;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesChooser;
 import javax.media.opengl.GLContext;
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.event.*;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.prefs.PreferenceChangeEvent;
 import java.util.prefs.PreferenceChangeListener;
-
-import org.apache.commons.lang.SystemUtils;
-import org.janelia.model.rendering.CoordinateAxis;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, RepaintListener {

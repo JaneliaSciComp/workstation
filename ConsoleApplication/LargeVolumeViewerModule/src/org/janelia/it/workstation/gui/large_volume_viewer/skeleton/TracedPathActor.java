@@ -1,24 +1,23 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
+import org.janelia.it.workstation.tracing.SegmentIndex;
+import org.janelia.it.workstation.tracing.VoxelPosition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.glu.GLU;
-
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
-import org.janelia.it.workstation.tracing.SegmentIndex;
-import org.janelia.it.workstation.tracing.VoxelPosition;
-import org.janelia.model.rendering.CoordinateAxis;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 
 public class TracedPathActor
         implements GLActor {

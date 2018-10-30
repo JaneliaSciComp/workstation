@@ -1,16 +1,13 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import Jama.Matrix;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchoredVoxelPathListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronStyleChangeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NextParentListener;
@@ -35,9 +32,11 @@ import org.janelia.model.util.MatrixUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import Jama.Matrix;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
-import org.janelia.model.rendering.CoordinateAxis;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA. User: olbrisd Date: 7/9/13 Time: 2:06 PM

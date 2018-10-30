@@ -4,18 +4,14 @@ package org.janelia.it.workstation.gui.large_volume_viewer.components;
  * Created by murphys on 11/6/2015.
  */
 
-import org.janelia.it.workstation.gui.large_volume_viewer.VolumeCache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.Collection;
-import java.util.Map;
+import javax.swing.*;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileStackCacheController;
+import org.janelia.it.workstation.gui.large_volume_viewer.VolumeCache;
 
 /**
  * Created by murphys on 11/4/2015.
@@ -30,13 +26,11 @@ public class TileStackCacheStatusPanel extends JPanel implements ActionListener 
     private static final int BOX_XBORDER=2;
     private static final int BOX_YBORDER=2;
 
-    private final Logger log = LoggerFactory.getLogger(TileStackCacheStatusPanel.class);
-
     private int completeCount = 0;
     private long combinedLoadTime = 0;
 
     private Timer timer=new Timer(500 /*ms*/, this);
-    Map<File, int[]> cacheStatusMap;
+    Collection<int[]> cachingMap;
     Color[] statusColors=new Color[] { Color.RED, Color.YELLOW, Color.GREEN };
     int zLevelCenter=3;
 
@@ -50,8 +44,7 @@ public class TileStackCacheStatusPanel extends JPanel implements ActionListener 
             if (!isVisible()) {
                 setVisible(true);
             }
-            // FIXME - put the cache back !!!!!!!!!!
-//            cacheStatusMap = TileStackCacheController.getInstance().getCacheStatusMap();
+            cachingMap = TileStackCacheController.getInstance().getCachingMap();
             repaint();
         } else {
             if (isVisible()) {
@@ -77,16 +70,14 @@ public class TileStackCacheStatusPanel extends JPanel implements ActionListener 
 
     @Override
     public void paint(Graphics graphics) {
-        if (cacheStatusMap==null)
+        if (cachingMap==null)
             return;
         BufferedImage image=new BufferedImage(PANEL_WIDTH, PANEL_HEIGHT, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = image.createGraphics();
         g.setBackground(Color.BLACK);
 
-        Collection<int[]> statusList = cacheStatusMap.values();
-
-        for (int[] statusArr : statusList) {
-            int[] xy=getStatusBoxCoordinates(statusArr);
+        for (int[] statusArr : cachingMap) {
+            int[] xy = getStatusBoxCoordinates(statusArr);
             g.setColor(statusColors[statusArr[3]]);
             g.fillRect(xy[0], xy[1], BOX_XSIZE, BOX_YSIZE);
         }

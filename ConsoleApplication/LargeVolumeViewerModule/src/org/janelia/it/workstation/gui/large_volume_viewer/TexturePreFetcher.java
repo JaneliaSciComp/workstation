@@ -68,24 +68,14 @@ public class TexturePreFetcher
 		if (textureCache.isLoadQueued(index))
 			return false;
 		TileTexture texture = new TileTexture(index, loadAdapter);
-		TextureLoadWorker textureLoadWorker=new TextureLoadWorker(texture, textureCache, tileServer);
+		TextureLoadWorker textureLoadWorker = new TextureLoadWorker(texture, textureCache, tileServer);
 		if (VolumeCache.useVolumeCache()) {
 			// Check if already in ram - we only want to launch a new thread if it isn't in ram
 			TileStackCacheController tileStackCacheController = TileStackCacheController.getInstance();
-//			File stackFile=tileStackCacheController.getStackFileForTileIndex(index);
-//			if (stackFile!=null) {
-//				if (tileStackCacheController.getCache().containsFile(stackFile)) {
-//					//long t4=System.nanoTime();
-//					//long report4=(t4-t2)/1000000;
-//					//log.info("loadDisplayedTexture phase2 ms="+report4);
-//					//long t5=System.nanoTime();
-//					textureLoadWorker.run();
-//					//long t6=System.nanoTime();
-//					//long report6=(t6-t5)/1000000;
-//					//log.info("textureLoadWorker.run() in ms="+report6);
-//					return false;
-//				}
-//			}
+                        if (!tileStackCacheController.hasTile(index)) {
+                            textureLoadWorker.run();
+                            return false;                            
+                        }
 		}
 		// TODO - handle MISSING textures vs. ERROR textures
 		Future<?> foo = textureLoadExecutor.submit(textureLoadWorker);

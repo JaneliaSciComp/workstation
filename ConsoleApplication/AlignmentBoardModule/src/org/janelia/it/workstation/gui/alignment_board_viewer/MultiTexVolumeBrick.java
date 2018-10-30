@@ -1,29 +1,28 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer;
 
-import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.jogamp.common.nio.Buffers;
-import java.util.Arrays;
-
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.alignment_board_viewer.shader.MultiTexVolumeBrickShader;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.alignment_board_viewer.shader.MultiTexVolumeBrickShader;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr;
+import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
-import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.*;
-import javax.swing.*;
-import org.janelia.model.rendering.CoordinateAxis;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
+
+import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
 
 /**
  * Class draws a transparent rectangular volume with a 3D opengl texture

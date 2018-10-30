@@ -1,10 +1,10 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.generator;
 
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
 
 import java.util.Iterator;
-import org.janelia.model.rendering.CoordinateAxis;
 
 /**
  * Generates tile indices that span entire volume at lowest resolution.

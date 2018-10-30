@@ -1,13 +1,21 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
+import org.apache.commons.lang.SystemUtils;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.PanMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.TraceMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.ZScanMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
@@ -32,8 +40,6 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.Vector;
-import org.apache.commons.lang.SystemUtils;
-import org.janelia.model.rendering.CoordinateAxis;
 
 /**
  * Intended replacement class for LargeVolumeViewer, generalized for X,Y,Z

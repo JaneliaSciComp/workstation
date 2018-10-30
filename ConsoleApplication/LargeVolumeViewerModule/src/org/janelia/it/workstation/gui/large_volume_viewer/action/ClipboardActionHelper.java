@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.FileBasedOctreeMetadataSniffer;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
@@ -12,10 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.io.File;
 import java.nio.file.Path;
-
-import org.janelia.model.rendering.CoordinateAxis;
 
 /**
  * Helps classes that do similar things to move stuff into the clipboard.

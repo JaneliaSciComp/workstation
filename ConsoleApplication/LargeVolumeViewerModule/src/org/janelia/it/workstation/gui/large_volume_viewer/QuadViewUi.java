@@ -9,6 +9,7 @@ import org.janelia.console.viewerapi.ToolButton;
 import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
@@ -105,7 +106,6 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_PREFERRED_ID;
-import org.janelia.model.rendering.CoordinateAxis;
 
 /**
  * Main window for QuadView application.
@@ -345,17 +345,20 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
             @Override
             public void zoomChanged(Double zoom) {
                 // Re-position the 3D cache.
+                TileStackCacheController.getInstance().setZoom(zoom);
                 QuadViewUi.this.zoomChanged(zoom);
             }
 
             @Override
             public void focusChanged(Vec3 focus) {
+                TileStackCacheController.getInstance().setFocus(focus);
                 QuadViewUi.this.focusChanged(focus);
             }
 
             @Override
             public void viewChanged() {
                 // Re-position the 3D cache.
+                TileStackCacheController.getInstance().setFocus(camera.getFocus());
                 tileServer.refreshCurrentTileSet();
                 // If we are using this optimization, the anchor set needs to be updated whenever the view is changed
                 if (ApplicationPanel.isAnchorsInViewport()) {
@@ -917,7 +920,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
             }
         });
         buttonsPanel.add(receiveSharedUpdatesCheckbox);
-
 
         buttonsPanel.add(loadUpdatesButton);
 

@@ -1,5 +1,11 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import com.sun.media.jai.codec.ImageDecoder;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.FileBasedBlockTiffOctreeLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -10,13 +16,6 @@ import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-
-import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.FileBasedBlockTiffOctreeLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-
-import com.sun.media.jai.codec.ImageDecoder;
-import org.janelia.model.rendering.CoordinateAxis;
 
 /**
  * Convert block tiff octree render artifacts to slice pam/lz4 artifacts.

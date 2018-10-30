@@ -1,16 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
-
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
 import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
@@ -22,9 +12,19 @@ import org.janelia.it.workstation.gui.large_volume_viewer.generator.InterleavedI
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.MinResSliceGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.SliceGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.generator.UmbrellaSliceGenerator;
-import org.janelia.model.rendering.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
 
 public class TileServer implements ComponentListener, // so changes in viewer size/visibility can be tracked
         VolumeLoadListener {
