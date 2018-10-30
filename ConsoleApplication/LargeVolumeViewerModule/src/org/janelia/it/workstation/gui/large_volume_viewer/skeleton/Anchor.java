@@ -3,34 +3,34 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonAnchorListener;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.model.rendering.CoordinateAxis;
 
 public class Anchor {
 
-	public enum Type {
-		UNDEFINED,
-		SOMA,
-		AXON,
-		DENDRITE,
-		APICAL_DENDRITE,
-		FORK_POINT,
-		END_POINT,
-		CUSTOM
-	};
-	
-	private Long annotationID;
+    public enum Type {
+        UNDEFINED,
+        SOMA,
+        AXON,
+        DENDRITE,
+        APICAL_DENDRITE,
+        FORK_POINT,
+        END_POINT,
+        CUSTOM
+    };
+
+    private Long annotationID;
     private Long neuronID;
-	private Vec3 location;
-	private Type anchorType = Type.UNDEFINED;
-	private double radius = 1.0;
-	// No explicit edge objects, just symmetric neighbor references
-	private Set<Anchor> neighbors = new LinkedHashSet<>();
+    private Vec3 location;
+    private Type anchorType = Type.UNDEFINED;
+    private double radius = 1.0;
+    // No explicit edge objects, just symmetric neighbor references
+    private Set<Anchor> neighbors = new LinkedHashSet<>();
 
     private SkeletonAnchorListener skeletonAnchorListener;
-    
+
     // the difference between skel-anchor listener methods: 
     //  one is triggered by
     //  user mouse actions, will trigger things happening due
@@ -38,31 +38,29 @@ public class Anchor {
     // the "silent" version is triggered
     //  programmatically and won't cause anything other than
     //  the positioning and drawing of the anchor
-
     /**
      * Construct a valid anchor, based on information provided from external
-     * source, such as database.  Translates from external to view-like
-     * location.
-     * 
+     * source, such as database. Translates from external to view-like location.
+     *
      * @param locationInVoxel coords for anchor.
      * @param parent (possibly null) parent, or previous node in tree.
      * @param tileFormat for translations.
      */
-	public Anchor(Vec3 locationInVoxel, Anchor parent, Long neuronID, TileFormat tileFormat) {
+    public Anchor(Vec3 locationInVoxel, Anchor parent, Long neuronID, TileFormat tileFormat) {
         TileFormat.MicrometerXyz micron = tileFormat.micrometerXyzForVoxelXyz(
                 new TileFormat.VoxelXyz(
-                        (int)locationInVoxel.getX(),
-                        (int)locationInVoxel.getY(),
-                        (int)locationInVoxel.getZ()
-                ), 
+                        (int) locationInVoxel.getX(),
+                        (int) locationInVoxel.getY(),
+                        (int) locationInVoxel.getZ()
+                ),
                 CoordinateAxis.Z
         );
         // Need to bias the position towards the center of the voxel.
-		this.location = tileFormat.centerJustifyMicrometerCoordsAsVec3(micron);
+        this.location = tileFormat.centerJustifyMicrometerCoordsAsVec3(micron);
         this.neuronID = neuronID;
-		addNeighbor(parent);
-	}
-	
+        addNeighbor(parent);
+    }
+
     /**
      * @param skeletonAnchorListener the skeletonAnchorListener to set
      */
@@ -71,44 +69,48 @@ public class Anchor {
     }
 
     public boolean addNeighbor(Anchor neighbor) {
-		if (neighbor == null)
-			return false;
-		if (neighbor == this)
-			return false;
-		if (neighbors.contains(neighbor))
-			return false;
-		neighbors.add(neighbor);
-		neighbor.addNeighbor(this); // ensure reciprocity
-		return true;
+        if (neighbor == null) {
+            return false;
+        }
+        if (neighbor == this) {
+            return false;
+        }
+        if (neighbors.contains(neighbor)) {
+            return false;
+        }
+        neighbors.add(neighbor);
+        neighbor.addNeighbor(this); // ensure reciprocity
+        return true;
     }
 
     public Vec3 getLocation() {
-            return location;
+        return location;
     }
 
     public Type getAnchorType() {
-            return anchorType;
+        return anchorType;
     }
 
     public Long getGuid() {
-            return this.annotationID;
+        return this.annotationID;
     }
 
     public void setGuid(Long id) {
-            this.annotationID = id;
+        this.annotationID = id;
     }
 
     public double getRadius() {
-            return radius;
+        return radius;
     }
 
     public Set<Anchor> getNeighbors() {
-            return neighbors;
+        return neighbors;
     }
 
     public void setLocation(Vec3 location) {
-        if (location.equals(this.location))
+        if (location.equals(this.location)) {
             return;
+        }
         this.location = location;
         if (skeletonAnchorListener != null) {
             skeletonAnchorListener.anchorMoved(this);
@@ -116,27 +118,26 @@ public class Anchor {
     }
 
     /**
-     * update the anchor location, but send the signal
-     * on the "silent" channel that will not initiate
-     * further actions; meant to be used when setting
-     * an anchor location programmatically rather
-     * than by the user
+     * update the anchor location, but send the signal on the "silent" channel
+     * that will not initiate further actions; meant to be used when setting an
+     * anchor location programmatically rather than by the user
      */
     public void setLocationSilent(Vec3 location) {
-            if (location.equals(this.location))
-                    return;
-            this.location = location;
-    if (skeletonAnchorListener != null) {
-        skeletonAnchorListener.anchorMovedSilent(this);
-    }
+        if (location.equals(this.location)) {
+            return;
+        }
+        this.location = location;
+        if (skeletonAnchorListener != null) {
+            skeletonAnchorListener.anchorMovedSilent(this);
+        }
     }
 
     public void setAnchorType(Type anchorType) {
-            this.anchorType = anchorType;
+        this.anchorType = anchorType;
     }
 
     public void setRadius(double radius) {
-            this.radius = radius;
+        this.radius = radius;
     }
 
     public Long getNeuronID() {

@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.FileBasedOctreeMetadataSniffer;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
@@ -14,6 +13,9 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
+import java.nio.file.Path;
+
+import org.janelia.model.rendering.CoordinateAxis;
 
 /**
  * Helps classes that do similar things to move stuff into the clipboard.
@@ -36,9 +38,9 @@ public class ClipboardActionHelper {
         //  Method return found to be flawed at greater-than-0-level zoom.
         final int requiredZoomLevel = tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
         TileIndex index = tileFormat.tileIndexForXyz(vec, requiredZoomLevel, axis);
-        File path = FileBasedOctreeMetadataSniffer.getOctreeFilePath(index, tileFormat);
+        Path path = FileBasedOctreeMetadataSniffer.getOctreeFilePath(index, tileFormat);
         String filePathStr = path.toString().replace(FILE_SEP, LINUX_FILE_SEP);
-        log.info("Returning {} for required zoom of {}, and full zoom path is {}.", path.toString(), requiredZoomLevel, filePathStr);
+        log.info("Returning {} for required zoom of {}, and full zoom path is {}.", path, requiredZoomLevel, filePathStr);
         return filePathStr;
     }
 

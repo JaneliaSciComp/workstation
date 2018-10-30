@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.model.rendering.CoordinateAxis;
 
 /**
  * Converts the text, as it is expected, in the status label, into a tile
@@ -26,9 +26,9 @@ public class TileLocToClipboardAction extends AbstractAction {
     private final Logger log = LoggerFactory.getLogger(TileLocToClipboardAction.class);
 
     public TileLocToClipboardAction(
-            JLabel statusLabel, 
+            JLabel statusLabel,
             TileFormat tileFormat,
-            BasicObservableCamera3d camera, 
+            BasicObservableCamera3d camera,
             CoordinateAxis axis
     ) {
         this.statusLabel = statusLabel;
@@ -49,7 +49,7 @@ public class TileLocToClipboardAction extends AbstractAction {
         if (SystemInfo.isWindows) {
             int colonPos = filePathStr.indexOf(":");
             if (colonPos != -1) {
-                filePathStr = filePathStr.substring(colonPos+1);
+                filePathStr = filePathStr.substring(colonPos + 1);
             }
         }
         ClipboardActionHelper.setClipboard(filePathStr);

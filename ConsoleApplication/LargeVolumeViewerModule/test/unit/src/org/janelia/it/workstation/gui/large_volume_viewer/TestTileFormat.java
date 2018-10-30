@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.octree.ZoomLevel;

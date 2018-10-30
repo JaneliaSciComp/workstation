@@ -25,11 +25,10 @@ public class TileStackOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter {
 
     BlockTiffOctreeLoadAdapter blockTiffOctreeLoadAdapter;
 
-    TileStackOctreeLoadAdapter(TileFormat tileFormat, URL baseURL) {
-        super(tileFormat);
-        URI baseURI = URI.create(baseURL.toString());
+    TileStackOctreeLoadAdapter(TileFormat tileFormat, URI baseURI) {
+        super(tileFormat, baseURI);
         if (baseURI.getScheme().startsWith("file")) {
-            blockTiffOctreeLoadAdapter = new FileBasedBlockTiffOctreeLoadAdapter(tileFormat, new File(baseURI));
+            blockTiffOctreeLoadAdapter = new FileBasedBlockTiffOctreeLoadAdapter(tileFormat, baseURI);
         } else if (baseURI.getScheme().startsWith("http")) {
             blockTiffOctreeLoadAdapter = new RestServiceBasedBlockTiffOctreeLoadAdapter(tileFormat, baseURI);
         } else {

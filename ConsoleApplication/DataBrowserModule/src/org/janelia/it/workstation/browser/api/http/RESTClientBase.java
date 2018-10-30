@@ -14,6 +14,17 @@ import javax.ws.rs.core.Response;
 
 public class RESTClientBase {
 
+    protected static Client createHttpClient(ObjectMapper objectMapper) {
+        JacksonJaxbJsonProvider jacksonProvider = new JacksonJaxbJsonProvider();
+        jacksonProvider.setMapper(objectMapper);
+        ClientConfig clientConfig = new ClientConfig()
+                .register(jacksonProvider);
+
+        return ClientBuilder.newBuilder()
+                .withConfig(clientConfig)
+                .build();
+    }
+
     protected final Logger log;
     
     protected RESTClientBase(Logger log) {
@@ -48,17 +59,6 @@ public class RESTClientBase {
             log.error("Request for {} returned {} {}", target.getUri(), responseStatus, status);
             throw new WebApplicationException(response);
         }
-    }
-
-    protected Client createHttpClient(ObjectMapper objectMapper) {
-        JacksonJaxbJsonProvider jacksonProvider = new JacksonJaxbJsonProvider();
-        jacksonProvider.setMapper(objectMapper);
-        ClientConfig clientConfig = new ClientConfig()
-                .register(jacksonProvider);
-
-        return ClientBuilder.newBuilder()
-                .withConfig(clientConfig)
-                .build();
     }
 
     protected String getAccessToken() {

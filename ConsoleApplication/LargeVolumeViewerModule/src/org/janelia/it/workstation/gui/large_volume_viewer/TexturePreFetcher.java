@@ -69,9 +69,9 @@ public class TexturePreFetcher
 			return false;
 		TileTexture texture = new TileTexture(index, loadAdapter);
 		TextureLoadWorker textureLoadWorker=new TextureLoadWorker(texture, textureCache, tileServer);
-//		if (VolumeCache.useVolumeCache()) {
-//			// Check if already in ram - we only want to launch a new thread if it isn't in ram
-//			TileStackCacheController tileStackCacheController=TileStackCacheController.getInstance();
+		if (VolumeCache.useVolumeCache()) {
+			// Check if already in ram - we only want to launch a new thread if it isn't in ram
+			TileStackCacheController tileStackCacheController = TileStackCacheController.getInstance();
 //			File stackFile=tileStackCacheController.getStackFileForTileIndex(index);
 //			if (stackFile!=null) {
 //				if (tileStackCacheController.getCache().containsFile(stackFile)) {
@@ -86,7 +86,7 @@ public class TexturePreFetcher
 //					return false;
 //				}
 //			}
-//		}
+		}
 		// TODO - handle MISSING textures vs. ERROR textures
 		Future<?> foo = textureLoadExecutor.submit(textureLoadWorker);
 		futures.put(foo, texture.getIndex());

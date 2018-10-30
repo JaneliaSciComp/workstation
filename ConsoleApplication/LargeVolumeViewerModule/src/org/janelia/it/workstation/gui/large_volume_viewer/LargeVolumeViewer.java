@@ -6,7 +6,6 @@ import org.janelia.it.jacs.shared.lvv.ChannelBrightnessStats;
 import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
@@ -48,6 +47,7 @@ import java.util.prefs.PreferenceChangeEvent;
 import java.util.prefs.PreferenceChangeListener;
 
 import org.apache.commons.lang.SystemUtils;
+import org.janelia.model.rendering.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

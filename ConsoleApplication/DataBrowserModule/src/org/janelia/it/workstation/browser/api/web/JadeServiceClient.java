@@ -27,14 +27,11 @@ public class JadeServiceClient extends RESTClientBase {
 
     private static class JadeResults<T> {
         @JsonProperty
+        @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
         private List<T> resultList;
     }
 
     private static class JadeStorageVolume {
-        @JsonProperty
-        private String storageHost; // storage host
-        @JsonProperty
-        private String name; // volume name
         @JsonProperty
         private String storageServiceURL;
     }

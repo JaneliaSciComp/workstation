@@ -9,15 +9,13 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JLabel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
 import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
+import org.janelia.model.rendering.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +24,7 @@ import org.slf4j.LoggerFactory;
  * and uses the coords to lookup the tile file at that location.
  */
 public class RawFileLocToClipboardAction extends AbstractAction {
+
     //todo move this to common location
     private final static String FILE_SEP = System.getProperty("file.separator");
     private final static String LINUX_FILE_SEP = "/";
@@ -35,16 +34,15 @@ public class RawFileLocToClipboardAction extends AbstractAction {
     private final BasicObservableCamera3d camera;
     private final CoordinateAxis axis;
     private final SharedVolumeImage volumeImage;
-    
+
     private final Logger log = LoggerFactory.getLogger(RawFileLocToClipboardAction.class);
 
     public RawFileLocToClipboardAction(
-            JLabel statusLabel, 
-            TileFormat tileFormat, 
+            JLabel statusLabel,
+            TileFormat tileFormat,
             SharedVolumeImage volumeImage,
-            BasicObservableCamera3d camera, 
-            CoordinateAxis axis
-    ) {
+            BasicObservableCamera3d camera,
+            CoordinateAxis axis) {
         this.statusLabel = statusLabel;
         this.tileFormat = tileFormat;
         this.camera = camera;
@@ -58,10 +56,10 @@ public class RawFileLocToClipboardAction extends AbstractAction {
         String content = statusLabel.getText();
         final MicronCoordsFormatter micronCoordsFormatter = new MicronCoordsFormatter(null);
         double[] micronLocation = micronCoordsFormatter.messageToTuple(content);
-        
-        int[] micronIntCoords = new int[ micronLocation.length ];
-        for (int i = 0; i < micronLocation.length; i++ ) {
-            micronIntCoords[i] = (int)micronLocation[i];
+
+        int[] micronIntCoords = new int[micronLocation.length];
+        for (int i = 0; i < micronLocation.length; i++) {
+            micronIntCoords[i] = (int) micronLocation[i];
         }
         log.info("Translated [" + content + "] to [" + micronIntCoords[0] + "," + micronIntCoords[1] + "," + micronIntCoords[2] + "]");
         TileFormat.VoxelXyz voxelCoords
@@ -72,7 +70,7 @@ public class RawFileLocToClipboardAction extends AbstractAction {
                                 micronIntCoords[2]
                         )
                 );
-        int[] voxelCoordArr = new int[] {
+        int[] voxelCoordArr = new int[]{
             voxelCoords.getX(), voxelCoords.getY(), voxelCoords.getZ()
         };
 
@@ -100,4 +98,3 @@ public class RawFileLocToClipboardAction extends AbstractAction {
         clipboard.setContents(selection, selection);
     }
 }
-

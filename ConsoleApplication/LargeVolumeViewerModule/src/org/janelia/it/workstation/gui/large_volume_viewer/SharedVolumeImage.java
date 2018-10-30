@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
@@ -9,13 +10,14 @@ import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 
 public class SharedVolumeImage implements VolumeImage3d {
     private Logger logger = LoggerFactory.getLogger(SharedVolumeImage.class);
-	private TileStackOctreeLoadAdapter loadAdapter;
+	private BlockTiffOctreeLoadAdapter loadAdapter;
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
     private Collection<VolumeLoadListener> volumeLoadListeners = new ArrayList<>();
     private URL volumeBaseURL;
@@ -106,7 +108,8 @@ public class SharedVolumeImage implements VolumeImage3d {
 		if (volumeBaseURL == null)
 			return false;
 		
-		loadAdapter = new TileStackOctreeLoadAdapter(new TileFormat(), volumeBaseURL);
+		loadAdapter = TileStackCacheController.createInstance(
+				new TileStackOctreeLoadAdapter(new TileFormat(), URI.create(volumeBaseURL.toString())));
 		loadAdapter.loadMetadata();
 
 		// Update bounding box

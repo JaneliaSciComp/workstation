@@ -9,7 +9,6 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.glu.GLU;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
@@ -17,17 +16,18 @@ import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
+import org.janelia.model.rendering.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TracedPathActor 
-implements GLActor
-{
-    private static Logger logger = LoggerFactory.getLogger( TracedPathActor.class );
+public class TracedPathActor
+        implements GLActor {
+
+    private static Logger logger = LoggerFactory.getLogger(TracedPathActor.class);
     protected static GLU glu = new GLU();
 
     private final int floatsPerVertex = 3;
-    private final int bytesPerFloat = Float.SIZE/8;
+    private final int bytesPerFloat = Float.SIZE / 8;
     private int vertexLocation = 0; // shader program uniform index
     private BoundingBox3d boundingBox = new BoundingBox3d();
     private int vertexVbo = 0;
@@ -35,20 +35,19 @@ implements GLActor
     private ByteBuffer vertexByteBuffer;
     private int pointCount = 0;
     private boolean bIsInitialized = false;
-	private SegmentIndex segmentIndex;
-	// For determining if traced path is still appropriate
-	AnchoredVoxelPath segment;
+    private SegmentIndex segmentIndex;
+    // For determining if traced path is still appropriate
+    AnchoredVoxelPath segment;
     private TileFormat tileFormat;
     // can't always calculate vertices right away, so track if we have:
     private boolean verticesReady = false;
 
-    public TracedPathActor(AnchoredVoxelPath segment, TileFormat tileFormat)
-    {
-    	this.segment = segment;
+    public TracedPathActor(AnchoredVoxelPath segment, TileFormat tileFormat) {
+        this.segment = segment;
         this.tileFormat = tileFormat;
 
-    	// TODO guid
-    	//
+        // TODO guid
+        //
         pointCount = segment.getPath().size();
 
         if (tileFormat != null) {
@@ -62,7 +61,7 @@ implements GLActor
     private void storeVertices() {
         long totalVertexByteCount = floatsPerVertex * bytesPerFloat * pointCount;
         vertexByteBuffer = ByteBuffer.allocateDirect(
-                (int)totalVertexByteCount);
+                (int) totalVertexByteCount);
         vertexByteBuffer.order(ByteOrder.nativeOrder());
         FloatBuffer vertices = vertexByteBuffer.asFloatBuffer();
         vertices.rewind();
@@ -74,11 +73,12 @@ implements GLActor
             );
             Vec3 v = tileFormat.centerJustifyMicrometerCoordsAsVec3(microns);
             boundingBox.include(v);
-            vertices.put((float)v.getX());
-            vertices.put((float)v.getY());
-            vertices.put((float)v.getZ());
-            if (floatsPerVertex >= 4)
+            vertices.put((float) v.getX());
+            vertices.put((float) v.getY());
+            vertices.put((float) v.getZ());
+            if (floatsPerVertex >= 4) {
                 vertices.put(1.0f);
+            }
         }
         vertices.rewind();
 
@@ -86,10 +86,11 @@ implements GLActor
 
     private void checkGlError(GL gl, String message) {
         int errorNumber = gl.glGetError();
-        if (errorNumber <= 0)
+        if (errorNumber <= 0) {
             return;
+        }
         String errorStr = glu.gluErrorString(errorNumber);
-        logger.error( "OpenGL Error " + errorNumber + ": " + errorStr + ": " + message );  
+        logger.error("OpenGL Error " + errorNumber + ": " + errorStr + ": " + message);
     }
 
     @Override
@@ -106,8 +107,9 @@ implements GLActor
 
         GL gl = glDrawable.getGL();
         checkGlError(gl, "render traced path 87");
-        if (! bIsInitialized)
+        if (!bIsInitialized) {
             init(glDrawable);
+        }
         GL2GL3 gl2gl3 = gl.getGL2GL3();
         checkGlError(gl, "render traced path 91");
         // gl2gl3.glBindVertexArray(vertexArrayObject);
@@ -125,10 +127,10 @@ implements GLActor
     }
 
     public AnchoredVoxelPath getSegment() {
-		return segment;
-	}
+        return segment;
+    }
 
-	@Override
+    @Override
     public void init(GLAutoDrawable glDrawable) {
         GL gl = glDrawable.getGL();
         checkGlError(gl, "init traced path 116");
@@ -150,8 +152,8 @@ implements GLActor
         FloatBuffer vertices = vertexByteBuffer.asFloatBuffer();
         vertices.rewind();
         checkGlError(gl, "init traced path 131");
-        gl.glBufferData(GL.GL_ARRAY_BUFFER, 
-                vertexByteBuffer.capacity(), 
+        gl.glBufferData(GL.GL_ARRAY_BUFFER,
+                vertexByteBuffer.capacity(),
                 vertices, GL.GL_STATIC_DRAW);
         checkGlError(gl, "init traced path 135");
         // gl2gl3.glBindVertexArray(0);
@@ -177,9 +179,9 @@ implements GLActor
         bIsInitialized = false;
     }
 
-	public SegmentIndex getSegmentIndex() {
-		return segmentIndex;
-	}
+    public SegmentIndex getSegmentIndex() {
+        return segmentIndex;
+    }
 
     public TileFormat getTileFormat() {
         return tileFormat;
@@ -188,6 +190,5 @@ implements GLActor
     public void setTileFormat(TileFormat tileFormat) {
         this.tileFormat = tileFormat;
     }
-
 
 }

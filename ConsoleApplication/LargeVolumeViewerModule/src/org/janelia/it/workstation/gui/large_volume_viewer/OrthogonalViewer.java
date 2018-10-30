@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.browser.gui.support.Icons;
@@ -34,23 +33,25 @@ import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.Vector;
 import org.apache.commons.lang.SystemUtils;
+import org.janelia.model.rendering.CoordinateAxis;
 
 /**
- * Intended replacement class for LargeVolumeViewer,
- * generalized for X,Y,Z orthogonal views
+ * Intended replacement class for LargeVolumeViewer, generalized for X,Y,Z
+ * orthogonal views
+ *
  * @author brunsc
  *
  */
 public class OrthogonalViewer
-// extends GLJPanel
-implements MouseModalWidget, TileConsumer, RepaintListener
-{
+        // extends GLJPanel
+        implements MouseModalWidget, TileConsumer, RepaintListener {
+
     private static final Logger log = LoggerFactory.getLogger(OrthogonalViewer.class);
 
-	private Camera3d camera;
-	private VolumeImage3d volume;
-	private CoordinateAxis sliceAxis;
-	private SliceRenderer renderer = new SliceRenderer();
+    private Camera3d camera;
+    private VolumeImage3d volume;
+    private CoordinateAxis sliceAxis;
+    private SliceRenderer renderer = new SliceRenderer();
 
     private MouseMode mouseMode;
     private MouseMode.Mode mouseModeId;
@@ -72,30 +73,27 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     private List<AwtActor> hudActors = new Vector<>();
 
     private MessageListener messageListener;
-    
-	private TileServer tileServer;
+
+    private TileServer tileServer;
 
     // May 2015 extend by containment, not inheritance
     // Store GLCanvas or GLJPanel in terms of these interfaces:
     GLDrawableWrapper glCanvas;
-    
+
     public OrthogonalViewer(CoordinateAxis axis) {
-		init(axis);
-	}
-	
-	public OrthogonalViewer(CoordinateAxis axis, 
-			GLCapabilities capabilities,
-			GLCapabilitiesChooser chooser,
-			GLContext sharedContext) 
-	{
+        init(axis);
+    }
+
+    public OrthogonalViewer(CoordinateAxis axis,
+            GLCapabilities capabilities,
+            GLCapabilitiesChooser chooser,
+            GLContext sharedContext) {
         // Use GLCanvas on Linux, for better frame rate on EnginFrame
         // But not on Windows, so we could still use Java2D decorations
         // if (false)
         // if (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX) 
-        if (SystemUtils.IS_OS_LINUX) 
-        {
-            glCanvas = new GLCanvasWrapper(capabilities, chooser, sharedContext) 
-            {
+        if (SystemUtils.IS_OS_LINUX) {
+            glCanvas = new GLCanvasWrapper(capabilities, chooser, sharedContext) {
                 @Override
                 public void paintComponent(Graphics g) {
                     super.paintComponent(g);
@@ -112,17 +110,19 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                 @Override
                 public void paintComponent(Graphics g) {
                     super.paintComponent(g);
-                    Graphics2D g2 = (Graphics2D)g;
-                    for (AwtActor actor : hudActors)
-                        if (actor.isVisible())
+                    Graphics2D g2 = (Graphics2D) g;
+                    for (AwtActor actor : hudActors) {
+                        if (actor.isVisible()) {
                             actor.paint(g2);
+                        }
+                    }
                 }
             };
         }
-        
-		init(axis);
-	}
-	
+
+        init(axis);
+    }
+
     /**
      * @param messageListener the messageListener to set
      */
@@ -130,25 +130,28 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         this.messageListener = messageListener;
     }
 
-	public void addActor(GLActor actor) {
-		renderer.addActor(actor);
-	}
+    public void addActor(GLActor actor) {
+        renderer.addActor(actor);
+    }
 
-	public void addActor(AwtActor actor) {
-		hudActors.add(actor);
-	}
+    public void addActor(AwtActor actor) {
+        hudActors.add(actor);
+    }
 
-	private void init(CoordinateAxis axis) {
-		this.sliceAxis = axis;
-		if (axis == CoordinateAxis.Z)
-		    setViewerInGround(new Rotation3d()); // identity rotation, canonical orientation
-		else if (axis == CoordinateAxis.X) // y-down, z-left, x-away
-		    getViewerInGround().setFromCanonicalRotationAboutPrincipalAxis(
-		            1, CoordinateAxis.Y);
-		else // Y-away, x-right, z-up
-		    getViewerInGround().setFromCanonicalRotationAboutPrincipalAxis(
-		            3, CoordinateAxis.X);
-		glCanvas.getGLAutoDrawable().addGLEventListener(renderer);
+    private void init(CoordinateAxis axis) {
+        this.sliceAxis = axis;
+        if (axis == CoordinateAxis.Z) {
+            setViewerInGround(new Rotation3d()); // identity rotation, canonical orientation
+        } else if (axis == CoordinateAxis.X) // y-down, z-left, x-away
+        {
+            getViewerInGround().setFromCanonicalRotationAboutPrincipalAxis(
+                    1, CoordinateAxis.Y);
+        } else // Y-away, x-right, z-up
+        {
+            getViewerInGround().setFromCanonicalRotationAboutPrincipalAxis(
+                    3, CoordinateAxis.X);
+        }
+        glCanvas.getGLAutoDrawable().addGLEventListener(renderer);
         setMouseMode(MouseMode.Mode.PAN);
         setWheelMode(WheelMode.Mode.ZOOM);
         rubberBand.setRepaintListener(this);
@@ -160,56 +163,64 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         pointComputer.setWidget(this, false);
         pointComputer.setViewerInGround(getViewerInGround());
         //
-		renderer.setBackgroundColor(Color.black);
+        renderer.setBackgroundColor(Color.black);
         // PopupMenu
         glCanvas.getInnerAwtComponent().addMouseListener(new MouseHandler() {
             @Override
             protected void popupTriggered(MouseEvent e) {
                 // System.out.println("popup");
-                if (e.isConsumed()) 
+                if (e.isConsumed()) {
                     return;
+                }
                 popupPoint = e.getPoint();
                 JPopupMenu popupMenu = new JPopupMenu();
-                
+
                 // Annotators requested "Navigate to Horta..." menus to appear first
                 for (JMenuItem item : navigationMenuItemGenerator.getMenus(e)) {
-                    if (item == null)
+                    if (item == null) {
                         popupMenu.addSeparator();
-                    else
-                        popupMenu.add(item);                    
+                    } else {
+                        popupMenu.add(item);
+                    }
                 }
-                
+
                 // Mode specific menu items first
                 List<JMenuItem> modeItems = modeMenuItemGenerator.getMenus(e);
                 List<JMenuItem> systemMenuItems = systemMenuItemGenerator.getMenus(e);
-                if ((modeItems.size() == 0) && (systemMenuItems.size() == 0))
+                if ((modeItems.size() == 0) && (systemMenuItems.size() == 0)) {
                     return;
+                }
                 if (modeItems.size() > 0) {
                     for (JMenuItem item : modeItems) {
-                        if (item == null)
+                        if (item == null) {
                             popupMenu.addSeparator();
-                        else
+                        } else {
                             popupMenu.add(item);
+                        }
                     }
-                    if (systemMenuItems.size() > 0)
+                    if (systemMenuItems.size() > 0) {
                         popupMenu.addSeparator();
+                    }
                 }
                 // Generic menu items last
                 for (JMenuItem item : systemMenuItems) {
-                    if (item == null)
+                    if (item == null) {
                         popupMenu.addSeparator();
-                    else
+                    } else {
                         popupMenu.add(item);
+                    }
                 }
-                
+
                 // Dummy "cancel" item at very bottom
                 popupMenu.addSeparator();
                 popupMenu.add(new JMenuItem(new AbstractAction("Cancel [Escape]") {
                     private static final long serialVersionUID = 1L;
+
                     @Override
-                    public void actionPerformed(ActionEvent e) {} // does nothing (closes context menu)
+                    public void actionPerformed(ActionEvent e) {
+                    } // does nothing (closes context menu)
                 }));
-                
+
                 popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 e.consume();
             }
@@ -218,13 +229,15 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         reticleActor = new ReticleActor(getViewport());
         reticleActor.setVisible(false);
         hudActors.add(reticleActor);
-	}
-    
-	public void setCamera(ObservableCamera3d camera) {
-        if (camera == null)
+    }
+
+    public void setCamera(ObservableCamera3d camera) {
+        if (camera == null) {
             return;
-        if (camera == this.camera)
+        }
+        if (camera == this.camera) {
             return;
+        }
         this.camera = camera;
         // Update image whenever camera changes
         camera.addCameraListener(new CameraListenerAdapter() {
@@ -241,29 +254,28 @@ implements MouseModalWidget, TileConsumer, RepaintListener
             skeletonActor.setCamera(camera);
             skeletonActor.setViewport(getViewport());
             skeletonActor.setPointComputer(pointComputer);
-	    }
-	}
-	
-	public void setNavigationMenuItemGenerator(MenuItemGenerator navigationMenuItemGenerator) 
-	{
-		this.navigationMenuItemGenerator = navigationMenuItemGenerator;
-	}
+        }
+    }
 
-	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) 
-	{
-		this.systemMenuItemGenerator = systemMenuItemGenerator;
-	}
+    public void setNavigationMenuItemGenerator(MenuItemGenerator navigationMenuItemGenerator) {
+        this.navigationMenuItemGenerator = navigationMenuItemGenerator;
+    }
 
-	public void setVolumeImage3d(VolumeImage3d volume) {
-		this.volume = volume;
-		// TODO put bounding box in BasicMouseMode
-		if (mouseModeId == MouseMode.Mode.PAN) {
-		    ((PanMode)mouseMode).setBoundingBox(volume.getBoundingBox3d());
-		}
-		if (mouseModeId == MouseMode.Mode.TRACE) {
-		    ((TraceMode)mouseMode).setBoundingBox(volume.getBoundingBox3d());
-		}
-	}
+    public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) {
+        this.systemMenuItemGenerator = systemMenuItemGenerator;
+    }
+
+    public void setVolumeImage3d(VolumeImage3d volume) {
+        this.volume = volume;
+        // TODO put bounding box in BasicMouseMode
+        if (mouseModeId == MouseMode.Mode.PAN) {
+            ((PanMode) mouseMode).setBoundingBox(volume.getBoundingBox3d());
+        }
+        if (mouseModeId == MouseMode.Mode.TRACE) {
+            ((TraceMode) mouseMode).setBoundingBox(volume.getBoundingBox3d());
+        }
+    }
+
     @Override
     public void mouseClicked(MouseEvent event) {
         mouseMode.mouseClicked(event);
@@ -273,9 +285,9 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     @Override
     public void mouseEntered(MouseEvent event) {
         mouseMode.mouseEntered(event);
-        if (! reticleActor.isVisible()) {
-        	reticleActor.setVisible(true);
-        	repaint();
+        if (!reticleActor.isVisible()) {
+            reticleActor.setVisible(true);
+            repaint();
         }
     }
 
@@ -283,8 +295,8 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     public void mouseExited(MouseEvent event) {
         mouseMode.mouseExited(event);
         if (reticleActor.isVisible()) {
-        	reticleActor.setVisible(false);
-        	repaint();
+            reticleActor.setVisible(false);
+            repaint();
         }
     }
 
@@ -317,70 +329,70 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 
     @Override
     public void setMouseMode(Mode modeId) {
-        if (modeId == this.mouseModeId)
+        if (modeId == this.mouseModeId) {
             return; // no change
+        }
         this.mouseModeId = modeId;
         if (modeId == MouseMode.Mode.PAN) {
             PanMode panMode = new PanMode();
             panMode.setViewerInGround(getViewerInGround());
-            if (volume != null)
+            if (volume != null) {
                 panMode.setBoundingBox(volume.getBoundingBox3d());
+            }
             this.mouseMode = panMode;
-        }
-        else if (modeId == MouseMode.Mode.TRACE) {
+        } else if (modeId == MouseMode.Mode.TRACE) {
             TraceMode traceMode = new TraceMode(skeletonActor.getModel().getSkeleton());
             traceMode.setViewport(getViewport());
             traceMode.setActor(skeletonActor);
             traceMode.setViewerInGround(getViewerInGround());
-            if (volume != null)
+            if (volume != null) {
                 traceMode.setBoundingBox(volume.getBoundingBox3d());
+            }
             this.mouseMode = traceMode;
-        }
-        else if (modeId == MouseMode.Mode.ZOOM) {
+        } else if (modeId == MouseMode.Mode.ZOOM) {
             this.mouseMode = new ZoomMode();
-        }
-        else {
+        } else {
             log.error("Unknown mouse mode");
             return;
         }
         this.mouseMode.setCamera(camera);
         this.mouseMode.setWidget(this, true);
-        glCanvas.getOuterJComponent().setToolTipText(mouseMode.getToolTipText());        
+        glCanvas.getOuterJComponent().setToolTipText(mouseMode.getToolTipText());
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
 
 //	public AwtActor getReticle() {
 //		return reticleActor;
 //	}
-
-	@Override
-	public Rotation3d getViewerInGround() {
+    @Override
+    public Rotation3d getViewerInGround() {
         return renderer.getViewerInGround();
     }
 
     public void setViewerInGround(Rotation3d viewerInGround) {
         renderer.setViewerInGround(viewerInGround);
         pointComputer.setViewerInGround(viewerInGround);
-        if (this.mouseMode instanceof BasicMouseMode)
-        	((BasicMouseMode)this.mouseMode).setViewerInGround(viewerInGround);
+        if (this.mouseMode instanceof BasicMouseMode) {
+            ((BasicMouseMode) this.mouseMode).setViewerInGround(viewerInGround);
+        }
     }
 
     @Override
     public void setWheelMode(WheelMode.Mode mode) {
-        if (this.wheelModeId == mode)
+        if (this.wheelModeId == mode) {
             return;
+        }
         this.wheelModeId = mode;
         if (wheelModeId == WheelMode.Mode.ZOOM) {
             this.wheelMode = new ZoomMode();
-        }
-        else if (wheelModeId == WheelMode.Mode.SCAN) {
+        } else if (wheelModeId == WheelMode.Mode.SCAN) {
             ZScanMode scanMode = new ZScanMode(volume);
             scanMode.setSliceAxis(sliceAxis);
             if (tileServer != null) {
-            	AbstractTextureLoadAdapter loadAdapter = tileServer.getLoadAdapter();
-            	if (loadAdapter != null) {
-            		scanMode.setTileFormat(loadAdapter.getTileFormat());
-            	}
+                AbstractTextureLoadAdapter loadAdapter = tileServer.getLoadAdapter();
+                if (loadAdapter != null) {
+                    scanMode.setTileFormat(loadAdapter.getTileFormat());
+                }
             }
             this.wheelMode = scanMode;
         }
@@ -410,154 +422,163 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         return glCanvas.getOuterJComponent();
     }
 
-	public void setSkeletonActor(SkeletonActor skeletonActor) {
-		if (this.skeletonActor == skeletonActor)
-			return;
-		this.skeletonActor = skeletonActor;
-		skeletonActor.setCamera(camera);
+    public void setSkeletonActor(SkeletonActor skeletonActor) {
+        if (this.skeletonActor == skeletonActor) {
+            return;
+        }
+        this.skeletonActor = skeletonActor;
+        skeletonActor.setCamera(camera);
         skeletonActor.setViewport(getViewport());
         skeletonActor.setPointComputer(pointComputer);
         skeletonActor.getModel().getUpdater().addListener(this);
         renderer.addActor(skeletonActor);
-	}
-
-	@Override
-	public Camera3d getCamera() {
-		return camera;
-	}
-
-	@Override
-	public MouseMode getMouseMode() {
-		return mouseMode;
-	}
-
-	public SliceActor getSliceActor() {
-		return sliceActor;
-	}
-
-	public void setSliceActor(SliceActor sliceActor) {
-		if (this.sliceActor == sliceActor)
-			return;
-		this.sliceActor = sliceActor;
-		addActor(sliceActor);
-	}
-
-	@Override
-	public CoordinateAxis getSliceAxis() {
-		return sliceAxis;
-	}
-
-	public void incrementSlice(int sliceCount) {
-		if (sliceCount == 0)
-			return;
-		if (camera == null)
-			return;
-		if (volume == null)
-			return;
-		int ix = sliceAxis.index(); // X, Y, or Z
-		double res = volume.getResolution(ix);
-		// At lower zoom, we must jump multiple slices to see a different image
-		int deltaSlice = 1;
-		TileSet someTiles = sliceActor.getViewTileManager().getLatestTiles();
-		if (someTiles.size() > 0)
-			deltaSlice = someTiles.iterator().next().getIndex().getDeltaSlice();
-		Vec3 dFocus = new Vec3(0,0,0);
-		dFocus.set(ix, sliceCount * res * deltaSlice);
-		camera.setFocus(camera.getFocus().plus(dFocus));
-	}
-	
-	@Override
-	public void keyTyped(KeyEvent event) {
-		mouseMode.keyTyped(event);
-	}
-
-	@Override
-	public void keyPressed(KeyEvent event) {
-		mouseMode.keyPressed(event);
-	}
-
-	@Override
-	public void keyReleased(KeyEvent event) {
-		mouseMode.keyReleased(event);
-	}
+    }
 
     @Override
-    public boolean isShowing()
-    {
+    public Camera3d getCamera() {
+        return camera;
+    }
+
+    @Override
+    public MouseMode getMouseMode() {
+        return mouseMode;
+    }
+
+    public SliceActor getSliceActor() {
+        return sliceActor;
+    }
+
+    public void setSliceActor(SliceActor sliceActor) {
+        if (this.sliceActor == sliceActor) {
+            return;
+        }
+        this.sliceActor = sliceActor;
+        addActor(sliceActor);
+    }
+
+    @Override
+    public CoordinateAxis getSliceAxis() {
+        return sliceAxis;
+    }
+
+    public void incrementSlice(int sliceCount) {
+        if (sliceCount == 0) {
+            return;
+        }
+        if (camera == null) {
+            return;
+        }
+        if (volume == null) {
+            return;
+        }
+        int ix = sliceAxis.index(); // X, Y, or Z
+        double res = volume.getResolution(ix);
+        // At lower zoom, we must jump multiple slices to see a different image
+        int deltaSlice = 1;
+        TileSet someTiles = sliceActor.getViewTileManager().getLatestTiles();
+        if (someTiles.size() > 0) {
+            deltaSlice = someTiles.iterator().next().getIndex().getDeltaSlice();
+        }
+        Vec3 dFocus = new Vec3(0, 0, 0);
+        dFocus.set(ix, sliceCount * res * deltaSlice);
+        camera.setFocus(camera.getFocus().plus(dFocus));
+    }
+
+    @Override
+    public void keyTyped(KeyEvent event) {
+        mouseMode.keyTyped(event);
+    }
+
+    @Override
+    public void keyPressed(KeyEvent event) {
+        mouseMode.keyPressed(event);
+    }
+
+    @Override
+    public void keyReleased(KeyEvent event) {
+        mouseMode.keyReleased(event);
+    }
+
+    @Override
+    public boolean isShowing() {
         return glCanvas.getInnerAwtComponent().isShowing();
     }
 
     @Override
-    public void repaint()
-    {
+    public void repaint() {
         glCanvas.repaint();
     }
 
-	public static class IncrementSliceAction extends AbstractAction {
-		private int increment;
-		private OrthogonalViewer viewer;
+    public static class IncrementSliceAction extends AbstractAction {
 
-		IncrementSliceAction(int increment, OrthogonalViewer viewer) {
-			this.increment = increment;
-			this.viewer = viewer;
-		}
+        private int increment;
+        private OrthogonalViewer viewer;
 
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			viewer.incrementSlice(increment);
-		}
-	}
-	
-	public static class PreviousSliceAction extends IncrementSliceAction {
-		PreviousSliceAction(OrthogonalViewer viewer) {
-			super(-1, viewer);
-			putValue(NAME, "Previous "+viewer.sliceAxis.getName()+" Slice");
-			putValue(SMALL_ICON, Icons.getIcon("z_stack_up.png"));
-			putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_UP);
-			KeyStroke accelerator = KeyStroke.getKeyStroke(
-				KeyEvent.VK_PAGE_UP, 0);
-			putValue(ACCELERATOR_KEY, accelerator);
-			putValue(SHORT_DESCRIPTION,
-					"View previous "+viewer.sliceAxis.getName()+" slice"
-					+"\n (Shortcut: "+accelerator+")"
-					);		
-		}
-	}
-	
-	public static class NextSliceAction extends IncrementSliceAction {
-		NextSliceAction(OrthogonalViewer viewer) {
-			super(1, viewer);
-			putValue(NAME, "Next "+viewer.sliceAxis.getName()+" Slice");
-			putValue(SMALL_ICON, Icons.getIcon("z_stack_down.png"));
-			putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_DOWN);
-			KeyStroke accelerator = KeyStroke.getKeyStroke(
-				KeyEvent.VK_PAGE_DOWN, 0);
-			putValue(ACCELERATOR_KEY, accelerator);
-			putValue(SHORT_DESCRIPTION,
-					"View next "+viewer.sliceAxis.getName()+" slice"
-					+"\n (Shortcut: "+accelerator+")"
-					);		
-		}
-	}
+        IncrementSliceAction(int increment, OrthogonalViewer viewer) {
+            this.increment = increment;
+            this.viewer = viewer;
+        }
 
-	public void setTileServer(TileServer tileServer) {
-		if (tileServer == this.tileServer)
-			return;
-		this.tileServer = tileServer;
-		// Prepare to update tile set if viewer resizes
-		glCanvas.getInnerAwtComponent().removeComponentListener(tileServer); // in case it's already there
-		glCanvas.getInnerAwtComponent().addComponentListener(tileServer);
-	}
-    
-    
-    Vec3 getPopupPositionInWorld()
-    {
-        if (popupPoint == null)
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            viewer.incrementSlice(increment);
+        }
+    }
+
+    public static class PreviousSliceAction extends IncrementSliceAction {
+
+        PreviousSliceAction(OrthogonalViewer viewer) {
+            super(-1, viewer);
+            putValue(NAME, "Previous " + viewer.sliceAxis.name() + " Slice");
+            putValue(SMALL_ICON, Icons.getIcon("z_stack_up.png"));
+            putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_UP);
+            KeyStroke accelerator = KeyStroke.getKeyStroke(
+                    KeyEvent.VK_PAGE_UP, 0);
+            putValue(ACCELERATOR_KEY, accelerator);
+            putValue(SHORT_DESCRIPTION,
+                    "View previous " + viewer.sliceAxis.name() + " slice"
+                    + "\n (Shortcut: " + accelerator + ")"
+            );
+        }
+    }
+
+    public static class NextSliceAction extends IncrementSliceAction {
+
+        NextSliceAction(OrthogonalViewer viewer) {
+            super(1, viewer);
+            putValue(NAME, "Next " + viewer.sliceAxis.name() + " Slice");
+            putValue(SMALL_ICON, Icons.getIcon("z_stack_down.png"));
+            putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_DOWN);
+            KeyStroke accelerator = KeyStroke.getKeyStroke(
+                    KeyEvent.VK_PAGE_DOWN, 0);
+            putValue(ACCELERATOR_KEY, accelerator);
+            putValue(SHORT_DESCRIPTION,
+                    "View next " + viewer.sliceAxis.name() + " slice"
+                    + "\n (Shortcut: " + accelerator + ")"
+            );
+        }
+    }
+
+    public void setTileServer(TileServer tileServer) {
+        if (tileServer == this.tileServer) {
+            return;
+        }
+        this.tileServer = tileServer;
+        // Prepare to update tile set if viewer resizes
+        glCanvas.getInnerAwtComponent().removeComponentListener(tileServer); // in case it's already there
+        glCanvas.getInnerAwtComponent().addComponentListener(tileServer);
+    }
+
+    Vec3 getPopupPositionInWorld() {
+        if (popupPoint == null) {
             return null;
+        }
         return pointComputer.worldFromPixel(popupPoint);
     }
 
-    /** Convenience method to repeat this simple notification. */
+    /**
+     * Convenience method to repeat this simple notification.
+     */
     private void sendLocationMessage(Point point) {
         if (messageListener != null) {
             String msg = micronCoordsFormatter.formatForPresentation(point);

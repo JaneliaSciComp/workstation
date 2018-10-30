@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import org.janelia.it.jacs.shared.lvv.*;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.octree.ZoomLevel;
 import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
@@ -32,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.tracing.VoxelPosition;
+import org.janelia.model.rendering.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

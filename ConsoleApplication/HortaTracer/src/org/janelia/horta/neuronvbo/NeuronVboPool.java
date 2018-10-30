@@ -50,20 +50,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * For improved rendering performance with large numbers of neurons, NeuronVboPool
- * distributes all the neurons among a finite set of vertex buffer objects. Instead
- * of using a separate vbo for each neuron, like we were doing before.
+ * For improved rendering performance with large numbers of neurons,
+ * NeuronVboPool distributes all the neurons among a finite set of vertex buffer
+ * objects. Instead of using a separate vbo for each neuron, like we were doing
+ * before.
+ *
  * @author brunsc
  */
-public class NeuronVboPool implements Iterable<NeuronModel>
-{
+public class NeuronVboPool implements Iterable<NeuronModel> {
+
     // Use pool size to balance:
     //  a) static rendering performance (more vbos means more draw calls, means slower rendering)
     //  b) edit update speed (more vbos means fewer neurons per vbo, means faster edit-to-display time)
     // Weird: POOL_SIZE=30 animates much faster than POOL_SIZE=5 with about 120 neurons / 300,000 vertices
     // (smaller blocks for the win...)
     private final static int POOL_SIZE = 30;
-    
+
     // Maintain vbos in a structure sorted by how much stuff is in each one.
     private final NavigableMap<Integer, Deque<NeuronVbo>> vbos = new TreeMap<>();
     // private final List<NeuronVbo> vbos;
@@ -72,7 +74,6 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     // private Set<NeuronModel> dirtyNeurons; // Track incremental updates
     // private Map<NeuronModel, NeuronVbo> neuronVbos;
     // TODO: increase after initial debugging
-    
     // Shaders...
     // Be sure to synchronize these constants with the actual shader source uniform layout
     private final ShaderProgram conesShader = new ConesShader();
@@ -84,25 +85,23 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     private final static int RADIUS_OFFSET_UNIFORM = 5;
     private final static int RADIUS_SCALE_UNIFORM = 6;
     private final Texture2d lightProbeTexture;
-    
+
     private float minPixelRadius = 0.8f; // TODO: expose as adjustable parameter
     private float radiusOffset = 0.0f; // amount to add to every radius, in micrometers
     private float radiusScale = 1.0f; // amount to multiply every radius, in micrometers
-    
+
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    
-    public NeuronVboPool() 
-    {
-        // this.vbos = new ArrayList<>();
+
+    public NeuronVboPool() {
         for (int i = 0; i < POOL_SIZE; ++i) {
             insertVbo(new NeuronVbo());
         }
-        
+
         lightProbeTexture = new Texture2d();
         try {
             lightProbeTexture.loadFromPpm(getClass().getResourceAsStream(
                     "/org/janelia/gltools/material/lightprobe/"
-                            + "Office1W165Both.ppm"));
+                    + "Office1W165Both.ppm"));
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
         }
@@ -110,28 +109,30 @@ public class NeuronVboPool implements Iterable<NeuronModel>
 
     private void insertVbo(NeuronVbo vbo) {
         Integer vboSize = vboSize(vbo);
-        if (! vbos.containsKey(vboSize))
+        if (!vbos.containsKey(vboSize)) {
             vbos.put(vboSize, new ConcurrentLinkedDeque<NeuronVbo>());
+        }
         Collection<NeuronVbo> subList = vbos.get(vboSize);
         subList.add(vbo);
     }
-    
+
     // Method vboSize is used to determine whether one vbo has more stuff in
     // it than another
     private static Integer vboSize(NeuronVbo vbo) {
         return vbo.getVertexCount();
     }
-    
+
     private NeuronVbo popEmptiestVbo() {
         Map.Entry<Integer, Deque<NeuronVbo>> entry = vbos.firstEntry();
         Integer vboSize = entry.getKey();
         Deque<NeuronVbo> vboDeque = entry.getValue();
         NeuronVbo vbo = vboDeque.removeFirst();
-        if (vboDeque.isEmpty())
+        if (vboDeque.isEmpty()) {
             vbos.remove(vboSize); // That was the last of its kind
+        }
         return vbo;
     }
-    
+
     public float getRadiusOffset() {
         return radiusOffset;
     }
@@ -147,36 +148,34 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     public void setRadiusScale(float radiusScale) {
         this.radiusScale = radiusScale;
     }
-    
+
     private void setUniforms(
-            GL3 gl, 
-            float[] modelViewMatrix, 
-            float[] projectionMatrix, 
-            float[] screenSize) 
-    {
+            GL3 gl,
+            float[] modelViewMatrix,
+            float[] projectionMatrix,
+            float[] screenSize) {
         gl.glUniformMatrix4fv(VIEW_UNIFORM, 1, false, modelViewMatrix, 0);
         gl.glUniformMatrix4fv(PROJECTION_UNIFORM, 1, false, projectionMatrix, 0);
         gl.glUniform2fv(SCREENSIZE_UNIFORM, 1, screenSize, 0);
         gl.glUniform1i(LIGHTPROBE_UNIFORM, 0);
         gl.glUniform1f(RADIUS_OFFSET_UNIFORM, radiusOffset);
-        gl.glUniform1f(RADIUS_SCALE_UNIFORM, radiusScale);        
+        gl.glUniform1f(RADIUS_SCALE_UNIFORM, radiusScale);
     }
-    
-    void display(GL3 gl, AbstractCamera camera) 
-    {
+
+    void display(GL3 gl, AbstractCamera camera) {
         float[] modelViewMatrix = camera.getViewMatrix().asArray();
         float[] projectionMatrix = camera.getProjectionMatrix().asArray();
-        float[] screenSize = new float[] {
+        float[] screenSize = new float[]{
             camera.getViewport().getWidthPixels(),
             camera.getViewport().getHeightPixels()
         };
         lightProbeTexture.bind(gl, 0);
-        
-        float micrometersPerPixel = 
-                camera.getVantage().getSceneUnitsPerViewportHeight()
-                    / camera.getViewport().getHeightPixels();
+
+        float micrometersPerPixel
+                = camera.getVantage().getSceneUnitsPerViewportHeight()
+                / camera.getViewport().getHeightPixels();
         radiusOffset = minPixelRadius * micrometersPerPixel;
-        
+
         // First pass: draw all the connections (edges) between adjacent neuron anchor nodes.
         // These edges are drawn as truncated cones, tapering width between
         // the radii of the adjacent nodes.
@@ -185,7 +184,7 @@ public class NeuronVboPool implements Iterable<NeuronModel>
         for (NeuronVbo vbo : new VboIterable()) {
             vbo.displayEdges(gl);
         }
-        
+
         // TODO: Second pass: repeat display loop for spheres/nodes
         spheresShader.load(gl);
         setUniforms(gl, modelViewMatrix, projectionMatrix, screenSize);
@@ -212,21 +211,20 @@ public class NeuronVboPool implements Iterable<NeuronModel>
         }
     }
 
-    void add(NeuronModel neuron) 
-    {
+    void add(NeuronModel neuron) {
         // To keep the vbos balanced, always insert into the emptiest vbo
         NeuronVbo emptiestVbo = popEmptiestVbo();
         final boolean doLogStats = false;
         if (doLogStats) {
-            log.info("Emptiest vbo ({}) contains {} neurons and {} vertices", 
-                    emptiestVbo.toString(), 
+            log.info("Emptiest vbo ({}) contains {} neurons and {} vertices",
+                    emptiestVbo.toString(),
                     emptiestVbo.getNeuronCount(),
                     emptiestVbo.getVertexCount());
         }
         emptiestVbo.add(neuron);
         if (doLogStats) {
-            log.info("Emptiest vbo ({}) now contains {} neurons and {} vertices after insersion", 
-                    emptiestVbo.toString(), 
+            log.info("Emptiest vbo ({}) now contains {} neurons and {} vertices after insersion",
+                    emptiestVbo.toString(),
                     emptiestVbo.getNeuronCount(),
                     emptiestVbo.getVertexCount());
         }
@@ -235,16 +233,19 @@ public class NeuronVboPool implements Iterable<NeuronModel>
 
     boolean remove(NeuronModel neuron) {
         for (NeuronVbo vbo : new VboIterable()) {
-            if (vbo.remove(neuron))
+            if (vbo.remove(neuron)) {
                 return true;
+            }
         }
         return false;
     }
 
     boolean isEmpty() {
-        for (NeuronVbo vbo : new VboIterable())
-            if (! vbo.isEmpty())
+        for (NeuronVbo vbo : new VboIterable()) {
+            if (!vbo.isEmpty()) {
                 return false;
+            }
+        }
         return true;
     }
 
@@ -258,8 +259,9 @@ public class NeuronVboPool implements Iterable<NeuronModel>
     boolean contains(NeuronModel neuron) {
         for (Iterator<NeuronVbo> it = new VboIterator(); it.hasNext();) {
             NeuronVbo vbo = it.next();
-            if (vbo.contains(neuron))
+            if (vbo.contains(neuron)) {
                 return true;
+            }
         }
         return false;
     }
@@ -275,93 +277,92 @@ public class NeuronVboPool implements Iterable<NeuronModel>
             vbo.checkForChanges();
         }
     }
-    
+
     void checkForChanges(NeuronModel neuron) {
         for (Iterator<NeuronVbo> it = new VboIterator(); it.hasNext();) {
             NeuronVbo vbo = it.next();
-            if (vbo.contains(neuron))
+            if (vbo.contains(neuron)) {
                 vbo.checkForChanges();
+            }
         }
     }
-    
-    private static class ConesShader extends BasicShaderProgram
-    {
-        public ConesShader()
-        {
+
+    private static class ConesShader extends BasicShaderProgram {
+
+        public ConesShader() {
             try {
                 // Cones and spheres share a vertex shader
                 getShaderSteps().add(new ShaderStep(GL3.GL_VERTEX_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "SpheresColorVrtx430.glsl"))
+                                + "SpheresColorVrtx430.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_GEOMETRY_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "imposter_fns330.glsl"))
+                                + "imposter_fns330.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_GEOMETRY_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "ConesColorGeom430.glsl"))
+                                + "ConesColorGeom430.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "imposter_fns330.glsl"))
+                                + "imposter_fns330.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "ConesColorFrag430.glsl"))
+                                + "ConesColorFrag430.glsl"))
                 );
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
-            }        
+            }
         }
     }
 
-    private static class SpheresShader extends BasicShaderProgram
-    {
-        public SpheresShader()
-        {
+    private static class SpheresShader extends BasicShaderProgram {
+
+        public SpheresShader() {
             try {
                 getShaderSteps().add(new ShaderStep(GL3.GL_VERTEX_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "SpheresColorVrtx430.glsl"))
+                                + "SpheresColorVrtx430.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_GEOMETRY_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "SpheresColorGeom430.glsl"))
+                                + "SpheresColorGeom430.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "imposter_fns330.glsl"))
+                                + "imposter_fns330.glsl"))
                 );
                 getShaderSteps().add(new ShaderStep(GL3.GL_FRAGMENT_SHADER,
                         getClass().getResourceAsStream(
                                 "/org/janelia/horta/shader/"
-                                        + "SpheresColorFrag430.glsl"))
+                                + "SpheresColorFrag430.glsl"))
                 );
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
-            }        
+            }
         }
     }
 
-    private class VboIterable implements Iterable<NeuronVbo>
-    {
+    private class VboIterable implements Iterable<NeuronVbo> {
+
         @Override
         public Iterator<NeuronVbo> iterator() {
             return new VboIterator();
-        }   
+        }
     }
-    
-    private class VboIterator implements Iterator<NeuronVbo>
-    {
+
+    private class VboIterator implements Iterator<NeuronVbo> {
+
         private final Collection<NeuronVbo> EMPTY_LIST = Collections.<NeuronVbo>emptyList();
 
         private final Iterator<Integer> sizeIterator;
@@ -374,16 +375,15 @@ public class NeuronVboPool implements Iterable<NeuronModel>
                 vboIterator = vbos.get(currentSize).iterator();
             }
         }
-        
-        private void advanceToNextVbo()
-        {
+
+        private void advanceToNextVbo() {
             // Advance to next actual neuron
-            while ( sizeIterator.hasNext() && (! vboIterator.hasNext()) ) {
+            while (sizeIterator.hasNext() && (!vboIterator.hasNext())) {
                 Integer currentSize = sizeIterator.next();
                 vboIterator = vbos.get(currentSize).iterator();
             }
         }
-        
+
         @Override
         public boolean hasNext() {
             advanceToNextVbo();
@@ -398,17 +398,17 @@ public class NeuronVboPool implements Iterable<NeuronModel>
 
         @Override
         public void remove() {
-            throw new UnsupportedOperationException();   
+            throw new UnsupportedOperationException();
         }
     }
-    
-    private class NeuronIterator implements Iterator<NeuronModel> 
-    {
+
+    private class NeuronIterator implements Iterator<NeuronModel> {
+
         private final Collection<NeuronModel> EMPTY_LIST = Collections.<NeuronModel>emptyList();
 
         private final Iterator<NeuronVbo> vboIterator;
         private Iterator<NeuronModel> neuronIterator = EMPTY_LIST.iterator(); // iterator for one vbo
-        
+
         public NeuronIterator() {
             vboIterator = new VboIterator();
             if (vboIterator.hasNext()) {
@@ -416,33 +416,30 @@ public class NeuronVboPool implements Iterable<NeuronModel>
                 neuronIterator = currentVbo.iterator();
             }
         }
-        
-        private void advanceToNextNeuron()
-        {
+
+        private void advanceToNextNeuron() {
             // Advance to next actual neuron
-            while ( vboIterator.hasNext() && (! neuronIterator.hasNext()) ) {
+            while (vboIterator.hasNext() && (!neuronIterator.hasNext())) {
                 NeuronVbo currentVbo = vboIterator.next();
                 neuronIterator = currentVbo.iterator();
             }
         }
-        
+
         @Override
-        public boolean hasNext() 
-        {
+        public boolean hasNext() {
             advanceToNextNeuron();
             return neuronIterator.hasNext();
         }
 
         @Override
-        public NeuronModel next() 
-        {
+        public NeuronModel next() {
             advanceToNextNeuron();
             return neuronIterator.next();
         }
-        
+
         @Override
         public void remove() {
-            throw new UnsupportedOperationException();   
+            throw new UnsupportedOperationException();
         }
     }
 }

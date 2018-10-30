@@ -10,9 +10,9 @@ import java.nio.ShortBuffer;
 
 import javax.media.opengl.GL2;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.utils.NotThreadSafe;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
+import org.janelia.model.rendering.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +26,9 @@ public class VtxCoordBufMgr {
     private static final int VERTICES_PER_SLICE = 6;
     private static final int COORDS_PER_VERTEX = 3;
     private static final int NUM_AXES = 3;
+
+    private final Logger LOG = LoggerFactory.getLogger(VtxCoordBufMgr.class);
+
 
     private int vertexAttributeLoc = 0;
     private int texCoordAttributeLoc = 1;
@@ -47,8 +50,6 @@ public class VtxCoordBufMgr {
     private int[] indexBufferHandles;
 
     private TextureMediator textureMediator;
-
-    private final Logger logger = LoggerFactory.getLogger(VtxCoordBufMgr.class);
 
     public VtxCoordBufMgr() {
     }
@@ -78,7 +79,7 @@ public class VtxCoordBufMgr {
         vertexCountByAxis = new int[ NUM_AXES ];
         if ( texCoordBuf[ 0 ] == null  &&  textureMediator != null ) {
             // Compute sizes, and allocate buffers.
-            logger.info("Allocating buffers");
+            LOG.info("Allocating buffers");
             for ( int i = 0; i < NUM_BUFFERS_PER_TYPE; i++ ) {
                 // Three coords per vertex.  Six vertexes per slice.  Times number of slices.
                 int numVertices = VERTICES_PER_SLICE * computeEffectiveAxisLen(i % NUM_AXES);
@@ -248,7 +249,7 @@ public class VtxCoordBufMgr {
         gl.glFrontFace(GL2.GL_CW);
 
         // Point to the right vertex set.
-        logger.debug("Bind Coords: vertex");
+        LOG.debug("Bind Coords: vertex");
         bindCoordsBuffer(gl, axis, geometryVertexBufferHandles, direction);
 
         // 3 floats per coord. Stride is 0, offset to first is 0.
@@ -256,7 +257,7 @@ public class VtxCoordBufMgr {
         gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, 0, 0);
 
         // Point to the right texture coordinate set.
-        logger.debug("Bind Coords: tex coords");
+        LOG.debug("Bind Coords: tex coords");
         bindCoordsBuffer(gl, axis, textureCoordBufferHandles, direction);
 
         // 3 floats per coord. Stride is 0, offset to first is 0.
@@ -268,7 +269,7 @@ public class VtxCoordBufMgr {
         // bindCoordsBuffer( gl, axis, indexBufferHandles, direction );
         int err = gl.glGetError();
         if ( err != 0 ) {
-            logger.error("GL Error {}.", err);
+            LOG.error("GL Error {}.", err);
         }
 
         gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -276,9 +277,9 @@ public class VtxCoordBufMgr {
         // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
         // and expect vertex-count worth of vertices to examine.
         if ( drawWithElements ) {
-            logger.debug("Bind for draw");
+            LOG.debug("Bind for draw");
             bindIndexBuffer( gl, axis, indexBufferHandles, direction );
-            logger.debug("Draw Elements");
+            LOG.debug("Draw Elements");
             gl.glDrawElements( GL2.GL_TRIANGLES, getVertexCount( axis ), GL2.GL_UNSIGNED_SHORT, 0 );
         }
         else {
@@ -290,7 +291,7 @@ public class VtxCoordBufMgr {
     /** Throws rows used ONLY for non-textured rendering.  Shapes only. */
     public void drawNoTex( GL2 gl, CoordinateAxis axis, double direction ) {
 
-        logger.info("Using VBO");
+        LOG.info("Using VBO");
         // Point to the right vertex set.
 
         gl.glShadeModel(GL2.GL_SMOOTH);
@@ -305,7 +306,7 @@ public class VtxCoordBufMgr {
 
         int err = gl.glGetError();
         if ( err != 0 ) {
-            logger.error("GL Error {}.", err);
+            LOG.error("GL Error {}.", err);
         }
 
         // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
@@ -339,7 +340,7 @@ public class VtxCoordBufMgr {
                 }
                 else {
 					final long bufferSize = (long) (buffers[ i ].capacity() * classSize);
-					logger.debug("glBufferData: type={}, bufferSize={}, sizeof buffer={}, thread={}", 
+					LOG.debug("glBufferData: type={}, bufferSize={}, sizeof buffer={}, thread={}", 
 							type, 
 							bufferSize, 
 							buffers[i].capacity(),
@@ -362,7 +363,7 @@ public class VtxCoordBufMgr {
 
             }
 
-            if (logger.isDebugEnabled()) {
+            if (LOG.isDebugEnabled()) {
                 dumpBuffer(buffers);
             }
         }
@@ -436,15 +437,15 @@ public class VtxCoordBufMgr {
     private int bindBuffer(GL2 gl, CoordinateAxis axis, int[] handles, double direction, int bufferType ) {
         int bufferOffset = convertAxisDirectionToOffset(axis, direction);
         gl.glBindBuffer(bufferType, handles[bufferOffset]);
-        logger.debug("Returning buffer offset of {} for {}.", bufferOffset, axis.getName() + ":" + direction);
-        logger.debug("Buffer handle is {}.", handles[bufferOffset]);
+        LOG.debug("Returning buffer offset of {} for {}.", bufferOffset, axis.name() + ":" + direction);
+        LOG.debug("Buffer handle is {}.", handles[bufferOffset]);
         return handles[ bufferOffset ];
     }
 
     private int convertAxisDirectionToOffset(CoordinateAxis axis, double direction) {
         int directionOffset = 0;
         if ( axis == null  ||  (direction != 1.0  &&  direction != -1.0) ) {
-            logger.error("Failed to bind buffer for {}, {}.", axis == null ? "null" : axis.getName(), direction);
+            LOG.error("Failed to bind buffer for {}, {}.", axis == null ? "null" : axis.name(), direction);
             return -1;
         }
         else {

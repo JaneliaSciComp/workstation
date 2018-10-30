@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.viewer3d.learning;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
@@ -11,6 +10,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
 import java.nio.*;
+import org.janelia.model.rendering.CoordinateAxis;
 
 public class Rubics implements GLActor {
 
@@ -84,7 +84,6 @@ public class Rubics implements GLActor {
 
     public void draw( GLAutoDrawable glDrawable ) throws Exception {
         GL2 gl = glDrawable.getGL().getGL2();
-//        new RectSolid().draw( gl );
         errorCheck( gl, "Before rubics draw...");
         appearance( gl );
         bufferManager.drawNoTex( gl, CoordinateAxis.Z, 1.0 );

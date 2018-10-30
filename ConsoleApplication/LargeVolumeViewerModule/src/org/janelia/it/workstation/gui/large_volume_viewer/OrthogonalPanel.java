@@ -12,7 +12,6 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
@@ -23,6 +22,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageList
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.model.rendering.CoordinateAxis;
 
 /*
  * GUI widget combining a large volume viewer with a slice slider.
@@ -83,7 +83,7 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		add(viewer.getComponent());
 		scanPanel.setLayout(new BoxLayout(scanPanel, BoxLayout.X_AXIS));
-		scanPanel.add(new JLabel(" "+axis.getName()));
+		scanPanel.add(new JLabel(" "+axis.name()));
 		scanPanel.add(new ToolButton(new OrthogonalViewer.PreviousSliceAction(viewer)));
 		slider.setMajorTickSpacing(10);
 		slider.setPaintTicks(true); // Avoid windows slider display bug
