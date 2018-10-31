@@ -15,6 +15,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -22,6 +24,7 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
 
     private static Logger LOG = LoggerFactory.getLogger(CachedBlockTiffOctreeLoadAdapter.class);
 
+    private final ScheduledThreadPoolExecutor tileLoadThreadPool;
     private final LoadingCache<TileIndex, Optional<TextureData2d>> tileCache;
 
     private final LocalFileTileCacheLoader tileCacheLoader;
@@ -41,6 +44,7 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                 .maximumSize(200)
                 .build(tileCacheLoader);
         this.tileCachingMap = new LinkedHashMap<>();
+        this.tileLoadThreadPool = new ScheduledThreadPoolExecutor(1);
     }
 
     @Override
@@ -95,8 +99,8 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                     tileLoader.getTileFormat().getIndexStyle(),
                     CoordinateAxis.Z
             );
+            tileLoadThreadPool.getQueue().clear();
             tileCache.getUnchecked(focusTileIndex);
-            
             Stream.of(
                     // immediate neighboring tiles
                     generateOffsets(-1, 1, 0), // same level
@@ -111,8 +115,8 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                     .forEach(tileWithOffsets -> {
                         TileIndex ti = tileWithOffsets.getLeft();
                         int[] offsets = tileWithOffsets.getRight();
-                        offsets[3] = 1; 
                         tileCachingMap.put(ti, offsets);
+                        submitCacheTileRequest(ti);
                         tileCache.getUnchecked(ti)
                                 .map(td -> {
                                     offsets[3] = 2;
@@ -124,6 +128,18 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                                 });
                     });    
         }
+    }
+
+    private void submitCacheTileRequest(TileIndex tileIndex) {
+       tileLoadThreadPool.schedule(() -> {
+           int[] offsetsWithStatus = tileCachingMap.get(tileIndex);
+           offsetsWithStatus[3] = 1;
+           tileCachingMap.put(tileIndex, offsetsWithStatus);
+           offsetsWithStatus[3] = tileCache.getUnchecked(tileIndex)
+                   .map(td -> 2)
+                   .orElse(0);
+           tileCachingMap.put(tileIndex, offsetsWithStatus);
+       }, 100, TimeUnit.MILLISECONDS);
     }
 
     private Stream<int[]> generateOffsets(int from, int to, int zOffset) {

@@ -143,7 +143,6 @@ public class MultiTexVolumeBrick implements VolumeBrickI {
                     LOG.error("Failed to enable buffers");
                 } else {
                     bufferManager.dropBuffers();
-
                     bBuffersNeedUpload = false;
                     reportError(gl, "init mux brick - buffers");
                 }
@@ -164,7 +163,6 @@ public class MultiTexVolumeBrick implements VolumeBrickI {
             LOG.warn("No textures for volume brick.");
             return;
         }
-
         GL2 gl = glDrawable.getGL().getGL2();
         reportError(gl, "Upon entry to mux-tex display.");
         if (!bIsInitialized) {

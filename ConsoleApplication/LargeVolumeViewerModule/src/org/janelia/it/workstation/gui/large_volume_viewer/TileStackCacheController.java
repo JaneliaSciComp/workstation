@@ -1,12 +1,10 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import java.util.Collection;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
 import org.janelia.it.jacs.shared.lvv.TextureData2d;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
-
-import java.util.Set;
-import org.janelia.it.jacs.shared.geom.Vec3;
 
 
 public class TileStackCacheController extends BlockTiffOctreeLoadAdapter {

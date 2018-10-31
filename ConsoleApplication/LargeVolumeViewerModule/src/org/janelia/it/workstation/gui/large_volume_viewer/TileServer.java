@@ -1,5 +1,15 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
 import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
@@ -15,21 +25,10 @@ import org.janelia.it.workstation.gui.large_volume_viewer.generator.UmbrellaSlic
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
-
 public class TileServer implements ComponentListener, // so changes in viewer size/visibility can be tracked
         VolumeLoadListener {
 
-    private static final Logger log = LoggerFactory.getLogger(TileServer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TileServer.class);
 
     // Derived from individual ViewTileManagers
     public static enum LoadStatus {
@@ -90,7 +89,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         // queue load of all low resolution textures
         minResPreFetcher.clear();
         TileFormat format = sharedVolumeImage.getLoadAdapter().getTileFormat();
-        List<MinResSliceGenerator> generators = new Vector<MinResSliceGenerator>();
+        List<MinResSliceGenerator> generators = new ArrayList<>();
         if (format.isHasXSlices()) {
             generators.add(new MinResSliceGenerator(format, CoordinateAxis.X));
         }
@@ -115,8 +114,6 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         for (TileIndex i : tileGenerator) {
             minResPreFetcher.loadDisplayedTexture(i, TileServer.this);
         }
-        // log.info(tileCount+" min resolution tiles queued");
-        return;
     }
 
     /**
@@ -158,10 +155,8 @@ public class TileServer implements ComponentListener, // so changes in viewer si
             startMinResPreFetch();
         }
     }
-
-    ;
 	
-	public TileSet createLatestTiles() {
+    public TileSet createLatestTiles() {
         TileSet result = new TileSet();
         for (ViewTileManager vtm : viewTileManagers) {
             if (vtm.getTileConsumer().isShowing()) {
@@ -183,7 +178,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         if (this.loadStatus == loadStatus) {
             return; // no change
         }
-        log.debug("Load status changed to " + loadStatus);
+        LOG.debug("Load status changed to " + loadStatus);
         this.loadStatus = loadStatus;
         if (loadStatusListener != null) {
             loadStatusListener.updateLoadStatus(loadStatus);
@@ -289,8 +284,8 @@ public class TileServer implements ComponentListener, // so changes in viewer si
                 axisTiles.get(axis).add(tile);
             }
             // Create one umbrella generator for each (used) direction.
-            List<Iterable<TileIndex>> umbrellas = new Vector<Iterable<TileIndex>>();
-            List<Iterable<TileIndex>> fullSlices = new Vector<Iterable<TileIndex>>();
+            List<Iterable<TileIndex>> umbrellas = new ArrayList<>();
+            List<Iterable<TileIndex>> fullSlices = new ArrayList<>();
             for (CoordinateAxis axis : axisTiles.keySet()) {
                 TileSet tiles = axisTiles.get(axis);
                 // Umbrella Z scan
@@ -356,13 +351,13 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     // Part of new way July 9, 2013
     public void refreshCurrentTileSet() {
         TileSet tiles = createLatestTiles();
-        Set<TileIndex> indices = new HashSet<TileIndex>();
+        Set<TileIndex> indices = new HashSet<>();
         for (Tile2d t : tiles) {
             indices.add(t.getIndex());
         }
         if (indices.equals(currentDisplayTiles)) {
             return; // no change
-        }		// log.info("Tile Set Changed!");
+        }
         currentDisplayTiles = indices;
         rearrangeLoadQueue(tiles);
     }
@@ -370,7 +365,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     // TODO - could move this to TextureCache class?
     public void setCacheSizesAsFractionOfMaxHeap(double historyFraction, double futureFraction) {
         if ((historyFraction + futureFraction) >= 1.0) {
-            log.warn("Combined cache sizes are larger than max heap size.");
+            LOG.warn("Combined cache sizes are larger than max heap size.");
         }
         Runtime rt = Runtime.getRuntime();
         long maxHeapBytes = rt.maxMemory();

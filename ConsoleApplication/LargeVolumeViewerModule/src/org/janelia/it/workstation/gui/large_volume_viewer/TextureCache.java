@@ -5,10 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.StatusUpdateListener;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,12 +16,11 @@ import org.slf4j.LoggerFactory;
  */
 public class TextureCache 
 {
-    private static final Logger log = LoggerFactory.getLogger(TextureCache.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TextureCache.class);
 
     private HistoryCache historyCache = new HistoryCache(2000); // textures that have been displayed, ordered by LRU
     private HistoryCache futureCache = new HistoryCache(3000); // textures we predict will be displayed
     private PersistentCache persistentCache = new PersistentCache(); // lowest resolution textures for everything
-    // private Set<TileIndex> queuedRequests = new HashSet<TileIndex>();
     private Map<TileIndex, Long> queuedTextureTime = new HashMap<>();
     private StatusUpdateListener queueDrainedListener;
 
@@ -38,14 +35,10 @@ public class TextureCache
         }
         else {
             futureCache.put(index, texture);
-//            if (! futureCache.containsKey(index)) {
-//                log.error("Future cache insert failed.");
-//            }
         }
     }
 
     synchronized public void clear() {
-        // log.info("Clearing texture cache");
         futureCache.clear();
         historyCache.clear();
         persistentCache.clear();
@@ -80,7 +73,7 @@ public class TextureCache
             return false;
         Long queuedTextureTimeForIndex = queuedTextureTime.get(index);
         if (queuedTextureTimeForIndex == null) {
-            log.warn("Queued Texture Time had no entry for index {}.  Setting queued time to 0.", index);
+            LOG.warn("Queued Texture Time had no entry for index {}.  Setting queued time to 0.", index);
             queuedTextureTimeForIndex = System.nanoTime();
         }
         long elapsed = System.nanoTime() - queuedTextureTimeForIndex;
@@ -120,7 +113,7 @@ public class TextureCache
             return;
         if (futureCache.remove(tile.getIndex()) != null) {
             historyCache.put(tile.getIndex(), tile); // move texture to the front of the queue
-            log.trace("Successfully removed {} from future cache.", tile);
+            LOG.trace("Successfully removed {} from future cache.", tile);
         }
     }
     
