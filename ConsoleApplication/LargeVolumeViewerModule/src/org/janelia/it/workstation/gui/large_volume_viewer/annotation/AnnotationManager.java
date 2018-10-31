@@ -244,19 +244,29 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
         ngDialog.showDialog();
     }
+    
+    public NeuronTree generateNeuronTreeForReview(Long neuronId) {
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
+        TmGeoAnnotation rootAnnotation = neuron.getFirstRoot();
+        if (rootAnnotation!=null) {
+            NeuronTree rootNode = createNeuronTreeNode(null, rootAnnotation);
+            exploreNeuronBranches(rootNode, neuron, rootAnnotation);
+            return rootNode;
+        }
+        return null;
+    }
 
     /**
      * recursive function to map a TmGeoAnnotation root to a NeuronTree root 
      * main reason is that NeuronTree is more concerned with display and review;
      * these aren't related to the persistence so didn't want to pollute the model
      **/    
-    public void generateReviewPointList(Anchor anchor) {
-        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(anchor.getNeuronID());
+    public void generateReviewPointList(Long neuronId) {
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
         TmGeoAnnotation rootAnnotation = neuron.getFirstRoot();
         if (rootAnnotation!=null) {
             NeuronTree rootNode = createNeuronTreeNode(null, rootAnnotation);
             exploreNeuronBranches(rootNode, neuron, rootAnnotation);
-            TaskWorkflowViewTopComponent.getInstance().setAnnotationManager(this);
             TaskWorkflowViewTopComponent.getInstance().createNeuronReview(neuron, rootNode);
         }
     }
