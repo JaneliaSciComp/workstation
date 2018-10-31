@@ -1,57 +1,58 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import org.janelia.console.viewerapi.model.ImageColorModel;
 import javax.swing.BoundedRangeModel;
 import javax.swing.JSlider;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 
 public class BasicColorSlider extends JSlider {
-	private static final long serialVersionUID = 1L;
 
-	protected int channelIndex;
-	protected ImageColorModel imageColorModel;
-	protected int handleWidthPixels = 23;
-	protected int leftMarginPixels = 10;
-	protected int rightMarginPixels = 10;
-	protected int handleWidthValue = 10;
+    private static final long serialVersionUID = 1L;
 
-	public BasicColorSlider() {
-		super();
-	}
+    protected int channelIndex;
+    protected ImageColorModel imageColorModel;
+    protected int handleWidthPixels = 23;
+    protected int leftMarginPixels = 10;
+    protected int rightMarginPixels = 10;
+    protected int handleWidthValue = 10;
 
-	public BasicColorSlider(int orientation) {
-		super(orientation);
-	}
+    public BasicColorSlider() {
+        super();
+    }
 
-	public BasicColorSlider(BoundedRangeModel brm) {
-		super(brm);
-	}
+    public BasicColorSlider(int orientation) {
+        super(orientation);
+    }
 
-	public BasicColorSlider(int min, int max) {
-		super(min, max);
-	}
+    public BasicColorSlider(BoundedRangeModel brm) {
+        super(brm);
+    }
 
-	public BasicColorSlider(int min, int max, int value) {
-		super(min, max, value);
-	}
+    public BasicColorSlider(int min, int max) {
+        super(min, max);
+    }
 
-	public BasicColorSlider(int orientation, int min, int max, int value) {
-		super(orientation, min, max, value);
-	}
+    public BasicColorSlider(int min, int max, int value) {
+        super(min, max, value);
+    }
 
-	public int getChannelIndex() {
-		return channelIndex;
-	}
+    public BasicColorSlider(int orientation, int min, int max, int value) {
+        super(orientation, min, max, value);
+    }
 
-	public void setChannelIndex(int channelIndex) {
-		this.channelIndex = channelIndex;
-	}
+    public int getChannelIndex() {
+        return channelIndex;
+    }
 
-	public ImageColorModel getImageColorModel() {
-		return imageColorModel;
-	}
+    public void setChannelIndex(int channelIndex) {
+        this.channelIndex = channelIndex;
+    }
 
-	public void setImageColorModel(ImageColorModel imageColorModel) {
-		this.imageColorModel = imageColorModel;
-	}
+    public ImageColorModel getImageColorModel() {
+        return imageColorModel;
+    }
+
+    public void setImageColorModel(ImageColorModel imageColorModel) {
+        this.imageColorModel = imageColorModel;
+    }
 
 }

@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 @OnStart
 public class Startup implements Runnable {
 
-    private static final Logger log = LoggerFactory.getLogger(Startup.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Startup.class);
     
     private static boolean brandingValidationException = false;
     
@@ -49,7 +49,7 @@ public class Startup implements Runnable {
          *  300  FINEST      "trace"
          *       ALL
          */
-        System.setProperty("org.janelia.it.workstation.browser.level", "INFO");
+        System.setProperty("org.janelia.it.level", "FINE");
         //System.setProperty("org.janelia.it.workstation.browser.gui.dialogs.download.level", "FINEST");
         
         try {
@@ -57,7 +57,7 @@ public class Startup implements Runnable {
             LogManager.getLogManager().readConfiguration();
         }
         catch (IOException e) {
-            log.error("Problem encountered configuring logging levels", e);
+            LOG.error("Problem encountered configuring logging levels", e);
         }
         
         // Get root logger
@@ -75,7 +75,7 @@ public class Startup implements Runnable {
         // Override the NetBeans default of "system-wide proxy", because it causes performance problems with VPN clients
         int proxyPref = NbPreferences.root().node("org/netbeans/core").getInt("proxyType", -1);
         if (proxyPref==-1) {
-            log.info("Defaulting to direct non-proxy connection");
+            LOG.info("Defaulting to direct non-proxy connection");
             NbPreferences.root().node("org/netbeans/core").putInt("proxyType", 0);
         }
 
@@ -88,7 +88,7 @@ public class Startup implements Runnable {
             BrandingConfig.getBrandingConfig().validateBrandingConfig();
         }
         catch (Throwable t) {
-            log.error("Error validating branding config", t);
+            LOG.error("Error validating branding config", t);
             // Save this error state so that it can be shown to the user later, once the MainWindow is visible.
             brandingValidationException = true;
         }

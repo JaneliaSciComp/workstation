@@ -5,7 +5,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
  */
 public class VolumeCache {
 
-    private static boolean volumeCache=false;
+    private static boolean volumeCache = false;
 
     public static boolean useVolumeCache() {
         return volumeCache;

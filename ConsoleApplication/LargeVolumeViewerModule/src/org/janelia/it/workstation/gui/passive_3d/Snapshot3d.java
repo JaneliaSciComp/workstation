@@ -44,7 +44,6 @@ public class Snapshot3d extends JPanel {
     private boolean hasBeenFiltered = false;
 
     private static Snapshot3d snapshotInstance;
-    private final Logger logger = LoggerFactory.getLogger(Snapshot3d.class);
 
     public static Snapshot3d getInstance() {
         if (snapshotInstance == null) {
@@ -127,7 +126,7 @@ public class Snapshot3d extends JPanel {
                 return o1.getHeader().compareTo(o2.getHeader());
             }
         };
-        Collections.sort(new ArrayList(textureDatas), comparator);
+        Collections.sort(new ArrayList<>(textureDatas), comparator);
 
         VolumeModel volumeModel = mip3d.getVolumeModel();
         volumeModel.removeAllListeners();
@@ -201,7 +200,7 @@ public class Snapshot3d extends JPanel {
 
         public SnapshotWorker(VolumeSource collector) {
             this.volumeSource = collector;
-            textureDatas = Collections.<TextureDataI>synchronizedCollection(new ArrayList<TextureDataI>());
+            textureDatas = Collections.<TextureDataI>synchronizedCollection(new ArrayList<>());
         }
 
         @Override

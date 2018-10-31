@@ -2,6 +2,17 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -11,18 +22,9 @@ import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
 public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter {
 
-    private static Logger LOG = LoggerFactory.getLogger(CachedBlockTiffOctreeLoadAdapter.class);
+    private final static Logger LOG = LoggerFactory.getLogger(CachedBlockTiffOctreeLoadAdapter.class);
 
     private final ScheduledThreadPoolExecutor tileLoadThreadPool;
     private final LoadingCache<TileIndex, Optional<TextureData2d>> tileCache;
@@ -32,6 +34,7 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
     // holds the coord of the loading tiles relative to the current focus
     // this is only for display purposes
     private final Map<TileIndex, int[]> tileCachingMap;
+    private final Set<TileIndex> neighborhoodTiles;
 
     private Double zoom;
     private Vec3 focus;
@@ -44,7 +47,8 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                 .maximumSize(200)
                 .build(tileCacheLoader);
         this.tileCachingMap = new LinkedHashMap<>();
-        this.tileLoadThreadPool = new ScheduledThreadPoolExecutor(1);
+        this.tileLoadThreadPool = new ScheduledThreadPoolExecutor(4);
+        this.neighborhoodTiles = new HashSet<>();
     }
 
     @Override
@@ -55,8 +59,14 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
     @Override
     public TextureData2d loadToRam(TileIndex tileIndex)
             throws TileLoadError, MissingTileException  {
+        LOG.debug("Load to RAM tile {}", tileIndex);
         if (isEnabled()) {
-            return tileCache.getUnchecked(tileIndex).orElse(null);
+            if (neighborhoodTiles.contains(tileIndex)) {
+                return tileCache.getUnchecked(tileIndex)
+                        .orElseThrow(() -> new MissingTileException("Tile " + tileIndex + "does not exist"));
+            } else {
+                throw new TileLoadError("no longer in cache neighborhood");
+            }
         } else {
             return tileLoader.loadToRam(tileIndex);
         }
@@ -99,9 +109,12 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                     tileLoader.getTileFormat().getIndexStyle(),
                     CoordinateAxis.Z
             );
+            neighborhoodTiles.clear();
             tileLoadThreadPool.getQueue().clear();
             tileCache.getUnchecked(focusTileIndex);
+            tileCachingMap.clear();
             Stream.of(
+                    generateOffsets(0, 0, 0), // focus tile
                     // immediate neighboring tiles
                     generateOffsets(-1, 1, 0), // same level
                     generateOffsets(-1, 1, 1), // 1 level down
@@ -116,37 +129,22 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                         TileIndex ti = tileWithOffsets.getLeft();
                         int[] offsets = tileWithOffsets.getRight();
                         tileCachingMap.put(ti, offsets);
+                        neighborhoodTiles.add(ti);
                         submitCacheTileRequest(ti);
-                        tileCache.getUnchecked(ti)
-                                .map(td -> {
-                                    offsets[3] = 2;
-                                    return td;
-                                })
-                                .orElseGet(() -> {
-                                    offsets[3] = 0;
-                                    return null;
-                                });
                     });    
         }
     }
 
     private void submitCacheTileRequest(TileIndex tileIndex) {
        tileLoadThreadPool.schedule(() -> {
-           int[] offsetsWithStatus = tileCachingMap.get(tileIndex);
-           offsetsWithStatus[3] = 1;
-           tileCachingMap.put(tileIndex, offsetsWithStatus);
-           offsetsWithStatus[3] = tileCache.getUnchecked(tileIndex)
-                   .map(td -> 2)
-                   .orElse(0);
-           tileCachingMap.put(tileIndex, offsetsWithStatus);
+           return tileCache.getUnchecked(tileIndex);
        }, 100, TimeUnit.MILLISECONDS);
     }
 
     private Stream<int[]> generateOffsets(int from, int to, int zOffset) {
-        int initialStatus = 0; // initial status
         return IntStream.rangeClosed(from, to)
                 .mapToObj(yOffset -> yOffset)
-                .flatMap(yOffset -> IntStream.rangeClosed(from, to).mapToObj(xOffset -> new int[]{xOffset, yOffset, zOffset, initialStatus}));
+                .flatMap(yOffset -> IntStream.rangeClosed(from, to).mapToObj(xOffset -> new int[]{xOffset, yOffset, zOffset}));
     }
 
     private TileIndex translateTile(TileIndex tile, int xOffset, int yOffset, int zOffset) {
@@ -165,7 +163,22 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
     }
 
     Collection<int[]> getCachingMap() {
-        return tileCachingMap.values();
+        return tileCachingMap.entrySet().stream()
+                .map(entry -> {
+                    int[] offsets = entry.getValue();
+                    TileIndex tileKey = entry.getKey();
+                    int status;
+                    Optional<TextureData2d> tile = tileCache.getIfPresent(tileKey);
+                    if (tile != null) {
+                        status = tile.map(td -> 2).orElse(0);
+                    } else if (tileCacheLoader.isLoading(tileKey)) {
+                        status = 1;
+                    } else {
+                        status = 0;
+                    }
+                    return new int[]{offsets[0], offsets[1], offsets[2], status};
+                })
+                .collect(Collectors.toList());
     }
     
 }

@@ -1,5 +1,9 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import java.net.URI;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
 import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
@@ -9,11 +13,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadL
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
 
 public class SharedVolumeImage implements VolumeImage3d {
 
@@ -110,7 +109,7 @@ public class SharedVolumeImage implements VolumeImage3d {
 
     @Override
     public boolean loadURL(URL volumeBaseURL) {
-        // Sanity check before overwriting current view
+        // Sanity check before overwriting current view                                                                                                                                                                                                                                                                     
         if (volumeBaseURL == null) {
             return false;
         }
