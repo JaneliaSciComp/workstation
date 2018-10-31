@@ -382,10 +382,9 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                  guiCells[i++] = (((NeuronTree)point.getDisplay()).getGUICell());                   
              }
              navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
-         }
-             
-         /*
-         for (ReviewPoint point : group.getPointList()) {           
+         }             
+         
+        /* for (ReviewPoint point : group.getPointList()) {           
              SampleLocation sampleLocation = originator.getSampleLocation();
              sampleLocation.setFocusUm(point.getLocation().getX(), point.getLocation().getY(), point.getLocation().getZ());
              sampleLocation.setMicrometersPerWindowHeight(point.getZoomLevel());

@@ -48,14 +48,19 @@ public class NeuronTree implements PointDisplay {
     public List<PointDisplay> generateRootToLeaf() {
         List<PointDisplay> rootToLeaf = new ArrayList<PointDisplay>();        
         NeuronTree currentNode = this;
+        rootToLeaf.add(0, currentNode);
         currentNode.setVisited(true);
         while (currentNode.getParent()!=null) {
-             if (!currentNode.getParent().getVisited()) {
+             if (!currentNode.getVisited()) {
                  rootToLeaf.add(0, currentNode);
                  currentNode.setVisited(true);
              }
              currentNode.setWidth(currentNode.getWidth()+1);
              currentNode = currentNode.getParent();
+        }
+        if (currentNode.getParent()==null && !currentNode.getVisited()) {
+            rootToLeaf.add(0, currentNode);
+            currentNode.setVisited(true);
         }
         currentNode.setWidth(currentNode.getWidth()+1);
 
