@@ -61,12 +61,8 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
             throws TileLoadError, MissingTileException  {
         LOG.debug("Load to RAM tile {}", tileIndex);
         if (isEnabled()) {
-            if (neighborhoodTiles.contains(tileIndex)) {
-                return tileCache.getUnchecked(tileIndex)
-                        .orElseThrow(() -> new MissingTileException("Tile " + tileIndex + "does not exist"));
-            } else {
-                throw new TileLoadError("no longer in cache neighborhood");
-            }
+            return tileCache.getUnchecked(tileIndex)
+                    .orElseThrow(() -> new MissingTileException("Tile " + tileIndex + "does not exist"));
         } else {
             return tileLoader.loadToRam(tileIndex);
         }

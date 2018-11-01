@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory;
  * Wrap texture cache so indices can be interpolated for either quadtrees
  * or octrees.
  */
-public class TextureCache 
-{
+public class TextureCache {
+
     private static final Logger LOG = LoggerFactory.getLogger(TextureCache.class);
 
     private HistoryCache historyCache = new HistoryCache(2000); // textures that have been displayed, ordered by LRU
@@ -32,8 +32,7 @@ public class TextureCache
         if (index.getZoom() == index.getMaxZoom()) {
             // log.info("adding persistent texture "+index);
             persistentCache.put(texture.getIndex(), texture);
-        }
-        else {
+        } else {
             futureCache.put(index, texture);
         }
     }
@@ -50,27 +49,29 @@ public class TextureCache
                 || historyCache.containsKey(index)
                 || futureCache.containsKey(index);
     }
-    
+
     synchronized TileTexture get(TileIndex index) {
-        if (persistentCache.containsKey(index))
+        if (persistentCache.containsKey(index)) {
             return persistentCache.get(index);
-        else if (historyCache.containsKey(index))
+        } else if (historyCache.containsKey(index)) {
             return historyCache.get(index);
-        else
+        } else {
             return futureCache.get(index);
+        }
     }
 
     // Keep track of recently queued textures, to avoid redundant loads
-    
     public boolean hasQueuedTextures() {
-        if (queuedTextureTime.isEmpty())
+        if (queuedTextureTime.isEmpty()) {
             return false;
+        }
         return true;
     }
-    
+
     public boolean isLoadQueued(TileIndex index) {
-        if (! queuedTextureTime.containsKey(index))
+        if (!queuedTextureTime.containsKey(index)) {
             return false;
+        }
         Long queuedTextureTimeForIndex = queuedTextureTime.get(index);
         if (queuedTextureTimeForIndex == null) {
             LOG.warn("Queued Texture Time had no entry for index {}.  Setting queued time to 0.", index);
@@ -86,39 +87,43 @@ public class TextureCache
         }
         return true; // queued for less than 5 seconds
     }
-    
+
     public void setLoadQueued(TileIndex index, boolean isQueued) {
         if (isQueued) {
             queuedTextureTime.put(index, System.nanoTime());
         } else {
-            if (! queuedTextureTime.containsKey(index))
+            if (!queuedTextureTime.containsKey(index)) {
                 return;
-            queuedTextureTime.remove(index); 
-            if (queuedTextureTime.isEmpty()  &&  queueDrainedListener != null) {
+            }
+            queuedTextureTime.remove(index);
+            if (queuedTextureTime.isEmpty() && queueDrainedListener != null) {
                 queueDrainedListener.update();
             }
         }
     }
-    
+
     //
-    
     // Indicate that a particular texture has been viewed, rather than simply
     // pre-fetched.
     public synchronized void markHistorical(TileTexture tile) {
-        if (tile == null)
+        if (tile == null) {
             return;
+        }
         // Only future cached textures need to be moved.
         // (textures in the persistent cache should remain there)
-        if (persistentCache.containsKey(tile.getIndex()))
+        if (persistentCache.containsKey(tile.getIndex())) {
             return;
+        }
         if (futureCache.remove(tile.getIndex()) != null) {
             historyCache.put(tile.getIndex(), tile); // move texture to the front of the queue
             LOG.trace("Successfully removed {} from future cache.", tile);
         }
     }
-    
-    public int size() {return futureCache.size() + historyCache.size() + persistentCache.size();}
-    
+
+    public int size() {
+        return futureCache.size() + historyCache.size() + persistentCache.size();
+    }
+
     public synchronized Collection<TileTexture> values() {
         Set<TileTexture> result = new HashSet<TileTexture>();
         result.addAll(historyCache.values());
@@ -126,9 +131,10 @@ public class TextureCache
         result.addAll(persistentCache.values());
         return result;
     }
-    
+
     /**
      * Do not use to modify future cache.
+     *
      * @return
      */
     public HistoryCache getFutureCache() {
