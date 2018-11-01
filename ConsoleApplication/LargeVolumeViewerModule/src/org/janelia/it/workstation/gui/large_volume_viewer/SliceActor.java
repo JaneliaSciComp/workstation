@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -13,10 +16,6 @@ import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreat
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
-
 /**
  * Attempt to factor out GLActor portion of RavelerTileServer, if it's not
  * already too late.
@@ -24,11 +23,9 @@ import javax.media.opengl.GLAutoDrawable;
  * @author Christopher M. Bruns
  *
  */
-public class SliceActor
-        implements GLActor {
+public class SliceActor implements GLActor {
 
-    @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(SliceActor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SliceActor.class);
 
     private ViewTileManager viewTileManager;
 
@@ -59,13 +56,12 @@ public class SliceActor
                 int[] txIds = tc.popObsoleteTextureIds();
                 int historySize = tc.getHistoryCache().size();
                 int futureSize = tc.getFutureCache().size();
-                //log.info("historySize="+historySize+" futureSize="+futureSize+" txIds="+txIds.length);
                 if (txIds.length > 0) {
                     long startTime = System.nanoTime();
                     gl.glDeleteTextures(txIds.length, txIds, 0);
                     long endTime = System.nanoTime();
                     long nTime = endTime - startTime;
-                    log.info("glDeleteTextures for " + txIds.length + " took " + nTime + " nano seconds");
+                    LOG.info("glDeleteTextures for " + txIds.length + " took " + nTime + " nano seconds");
                 }
             }
         }
@@ -123,8 +119,7 @@ public class SliceActor
                 numeralShader.setQuarterRotations(0);
             } else if (sliceAxis == CoordinateAxis.X) {
                 numeralShader.setQuarterRotations(1);
-            } else // Y
-            {
+            } else { // Y
                 numeralShader.setQuarterRotations(3);
             }
             // render numerals
