@@ -28,6 +28,8 @@ public class NeuronStyle {
     //  note that our neuron IDs are all of the form 8*n+4,
     //  so make sure the length of this list is mutually prime,
     //  so we can maximize the color distribution
+    // old list, hand picked by me (djo); tends to have too many greens,
+    //  which is not good because green is our default signal color
     private static Color[] neuronColors = {
         Color.red,
         Color.blue,
@@ -44,6 +46,38 @@ public class NeuronStyle {
         new Color(0.5f, 0.0f, 1.0f),
         new Color(0.5f, 1.0f, 0.0f)
     };
+
+    /*
+    private static Color[] neuronColors = {
+        // these are the so-called "Kelly colors", well-separated visually;
+        // see https://stackoverflow.com/a/4382138 and http://eleanormaclure.files.wordpress.com/2011/03/colour-coding.pdf
+        // in limited testing, these colors seemed less saturated and less bright than the
+        //  default set above; not clear they are an improvement overall; probably need to test
+        //  more carefully, by comparing them when they are actually on signal, and showing tracers
+        // for now, hold off on enabling them
+        Color.decode("#FFB300"), // Vivid Yellow
+        Color.decode("#803E75"), // Strong Purple
+        Color.decode("#FF6800"), // Vivid Orange
+        Color.decode("#A6BDD7"), // Very Light Blue
+        Color.decode("#C10020"), // Vivid Red
+        Color.decode("#CEA262"), // Grayish Yellow
+        Color.decode("#817066"), // Medium Gray
+        Color.decode("#007D34"), // Vivid Green
+        Color.decode("#F6768E"), // Strong Purplish Pink
+        Color.decode("#00538A"), // Strong Blue
+        Color.decode("#FF7A5C"), // Strong Yellowish Pink
+        Color.decode("#53377A"), // Strong Violet
+        Color.decode("#FF8E00"), // Vivid Orange Yellow
+        Color.decode("#B32851"), // Strong Purplish Red
+        Color.decode("#F4C800"), // Vivid Greenish Yellow
+        Color.decode("#7F180D"), // Strong Reddish Brown
+        Color.decode("#93AA00"), // Vivid Yellowish Green
+        Color.decode("#593315"), // Deep Yellowish Brown
+        Color.decode("#F13A13") // Vivid Reddish Orange
+        // we want a prime number of entries, so leave off the last one
+        // Color.decode("#232C16")  // Dark Olive Green
+    };
+    */
 
     /**
      * get a default style for a neuron
