@@ -3,15 +3,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 import com.google.common.cache.CacheLoader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -68,15 +62,34 @@ public class LocalFileTileCacheLoader extends CacheLoader<TileIndex, Optional<Te
             }
         }
 
-        private void touchFile(File f) {
-            f.setLastModified(System.currentTimeMillis());
-            addFile(f);
-        }
-
         private void addAll(LocalCache other) {
             other.localFilesSet.forEach((f) -> {
                 this.addFile(f);
             });
+        }
+
+        private boolean hasPath(Path fp) {
+            return localFilesSet.contains(fp.toFile());
+        }
+
+        private void makeSpaceFor(File newFile) {
+            long newFileSize = newFile.length();
+            if (localFilesSet.size() + 1 > MAX_CACHE_LENGTH) {
+                // remove until the number of entries is <= 75% of max
+                while (localFilesSet.size() > MAX_CACHE_LENGTH * 3 / 4) {
+                    if (!removeOldest()) {
+                        return;
+                    }
+                }
+            }
+            if (cacheSize + newFileSize > MAX_CACHE_SIZE) {
+                // remove until the size is <= 75% of max
+                while (cacheSize > MAX_CACHE_SIZE * 3 / 4) {
+                    if (!removeOldest()) {
+                        return;
+                    }
+                }
+            }
         }
 
         private boolean removeOldest() {
@@ -110,24 +123,9 @@ public class LocalFileTileCacheLoader extends CacheLoader<TileIndex, Optional<Te
             }
         }
 
-        private void makeSpaceFor(File newFile) {
-            long newFileSize = newFile.length();
-            if (localFilesSet.size() + 1 > MAX_CACHE_LENGTH) {
-                // remove until the number of entries is <= 75% of max
-                while (localFilesSet.size() > MAX_CACHE_LENGTH * 3 / 4) {
-                    if (!removeOldest()) {
-                        return;
-                    }
-                } 
-            }
-            if (cacheSize + newFileSize > MAX_CACHE_SIZE) {
-                // remove until the size is <= 75% of max
-                while (cacheSize > MAX_CACHE_SIZE * 3 / 4) {
-                    if (!removeOldest()) {
-                        return;
-                    }
-                }
-            }
+        private void touchFile(File f) {
+            f.setLastModified(System.currentTimeMillis());
+            addFile(f);
         }
 
     }
@@ -200,6 +198,11 @@ public class LocalFileTileCacheLoader extends CacheLoader<TileIndex, Optional<Te
 
     boolean isLoading(TileIndex tile) {
         return currentlyLoadingTiles.contains(tile);
+    }
+
+    boolean isCachedLocally(TileIndex tile) {
+        Path tileImagePath = getSliceImagePathFromTileIndex(tile);
+        return tileImagePath != null && localCache.hasPath(tileImagePath);
     }
 
     private Path getSliceImagePathFromTileIndex(TileIndex tileIndex) {

@@ -167,6 +167,8 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                     Optional<TextureData2d> tile = tileCache.getIfPresent(tileKey);
                     if (tile != null) {
                         status = tile.map(td -> 2).orElse(0);
+                    } else if (tileCacheLoader.isCachedLocally(tileKey)) {
+                        status = 1;
                     } else if (tileCacheLoader.isLoading(tileKey)) {
                         status = 1;
                     } else {
