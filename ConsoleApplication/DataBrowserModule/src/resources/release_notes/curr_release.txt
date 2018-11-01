@@ -1,6 +1,4 @@
-// 7.19
+// 7.20
 
-Workstation Browser
-* Fixed bug when choosing display result for unsaved searches
-* You can now choose to reuse previous results when reprocessing samples
-
+Large Volume Viewer
+* Import SWC dialog box is larger and remembers its size
