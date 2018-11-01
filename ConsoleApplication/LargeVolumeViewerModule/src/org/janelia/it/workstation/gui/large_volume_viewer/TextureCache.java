@@ -26,11 +26,7 @@ public class TextureCache {
 
     public synchronized void add(TileTexture texture) {
         TileIndex index = texture.getIndex();
-        if (containsKey(index)) {
-            //log.warn("Adding texture that is already in cache "+index);
-        }
         if (index.getZoom() == index.getMaxZoom()) {
-            // log.info("adding persistent texture "+index);
             persistentCache.put(texture.getIndex(), texture);
         } else {
             futureCache.put(index, texture);
@@ -102,7 +98,6 @@ public class TextureCache {
         }
     }
 
-    //
     // Indicate that a particular texture has been viewed, rather than simply
     // pre-fetched.
     public synchronized void markHistorical(TileTexture tile) {
@@ -125,7 +120,7 @@ public class TextureCache {
     }
 
     public synchronized Collection<TileTexture> values() {
-        Set<TileTexture> result = new HashSet<TileTexture>();
+        Set<TileTexture> result = new HashSet<>();
         result.addAll(historyCache.values());
         result.addAll(futureCache.values());
         result.addAll(persistentCache.values());

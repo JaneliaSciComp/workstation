@@ -1,5 +1,10 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -14,12 +19,6 @@ import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 /**
  * ViewTileManager is a per-viewer implementation of tile management that used
  * to be in the (per-specimen) TileServer class.
@@ -30,7 +29,7 @@ import java.util.Set;
 public class ViewTileManager {
 
     @SuppressWarnings("unused")
-    private static final Logger log = LoggerFactory.getLogger(ViewTileManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ViewTileManager.class);
 
     /**
      * @param loadStatusChangedListener the loadStatusChangedListener to set
@@ -39,43 +38,40 @@ public class ViewTileManager {
         this.loadStatusChangedListener = loadStatusChangedListener;
     }
 
-    /*
-	 * A TileSet is a group of rectangles that complete the LargeVolumeViewer image
-	 * display.
-	 * 
-	 * Three TileSets are maintained:
-	 * 1) Latest tiles : the tiles representing the current view
-	 * 2) LastGood tiles : the most recent tile set that could be successfully 
-	 *    displayed.
-	 * 3) Emergency tiles : a tile set that is updated with moderate frequency.
-	 * 
-	 * We would always prefer to display the Latest tiles. But frequently
-	 * the image data for those tiles are not yet available. So we choose
-	 * among the three tile sets to give the best appearance of a responsive
-	 * interface.
-	 * 
-	 * The tricky part occurs when the user is rapidly changing the view,
-	 * faster than we can load the tile images. We load tile images in
-	 * multiple threads, but still it is not always possible to keep up. So
-	 * one important optimization is to first insert every desired tile image
-	 * into the load queue, but then when it is time to actually load an image,
-	 * make another check to ensure that the image is still desired. Otherwise
-	 * the view can fall farther and farther behind the current state.
-	 * 
-	 * One approach is to display Latest tiles if they are ready, or the
-	 * LastGood tiles otherwise. The problem with this approach is that if
-	 * the user is rapidly changing the view, there is never time to fully
-	 * update the Latest tiles before they become stale. So the user just
-	 * sees a static ancient LastGood tile set. Precisely when the user most
-	 * hopes to see things moving fast.  That is where 'emergency' tiles
-	 * come in.
-	 * 
-	 * Sets of emergency tiles are fully loaded as fast as possible, but
-	 * no faster. They are not dropped from the load queue, nor are they
-	 * updated until the previous set of emergency tiles has loaded and
-	 * displayed. During rapid user interaction, the use of emergency
-	 * tiles allows the scene to update in the fastest possible way, giving
-	 * the comforting impression of responsiveness. 
+    /**
+     * A TileSet is a group of rectangles that complete the LargeVolumeViewer
+     * image display.
+     *
+     * Three TileSets are maintained: 1) Latest tiles : the tiles representing
+     * the current view 2) LastGood tiles : the most recent tile set that could
+     * be successfully displayed. 3) Emergency tiles : a tile set that is
+     * updated with moderate frequency.
+     *
+     * We would always prefer to display the Latest tiles. But frequently the
+     * image data for those tiles are not yet available. So we choose among the
+     * three tile sets to give the best appearance of a responsive interface.
+     *
+     * The tricky part occurs when the user is rapidly changing the view, faster
+     * than we can load the tile images. We load tile images in multiple
+     * threads, but still it is not always possible to keep up. So one important
+     * optimization is to first insert every desired tile image into the load
+     * queue, but then when it is time to actually load an image, make another
+     * check to ensure that the image is still desired. Otherwise the view can
+     * fall farther and farther behind the current state.
+     *
+     * One approach is to display Latest tiles if they are ready, or the
+     * LastGood tiles otherwise. The problem with this approach is that if the
+     * user is rapidly changing the view, there is never time to fully update
+     * the Latest tiles before they become stale. So the user just sees a static
+     * ancient LastGood tile set. Precisely when the user most hopes to see
+     * things moving fast. That is where 'emergency' tiles come in.
+     *
+     * Sets of emergency tiles are fully loaded as fast as possible, but no
+     * faster. They are not dropped from the load queue, nor are they updated
+     * until the previous set of emergency tiles has loaded and displayed.
+     * During rapid user interaction, the use of emergency tiles allows the
+     * scene to update in the fastest possible way, giving the comforting
+     * impression of responsiveness.
      */
     public static enum LoadStatus {
         NO_TEXTURES_LOADED,
@@ -112,7 +108,6 @@ public class ViewTileManager {
 
     public void textureLoaded(TileIndex index) {
         if (displayableTextures.contains(index)) {
-            // log.info("Needed texture loaded! "+index);
             tileConsumer.repaint();
         }
     }
@@ -274,12 +269,10 @@ public class ViewTileManager {
                 setLoadStatus(LoadStatus.IMPERFECT_TEXTURES_LOADED);
             }
             // TODO - status
-            // log.info("Using Latest tiles");
             emergencyTiles = latestTiles;
             lastGoodTiles = latestTiles;
             result = latestTiles;
         } else if (emergencyTiles.canDisplay()) {
-            // log.info("Using Emergency tiles");
             lastGoodTiles = emergencyTiles;
             result = emergencyTiles;
             // These emergency tiles will now be displayed.
@@ -287,7 +280,6 @@ public class ViewTileManager {
             emergencyTiles = latestTiles;
             setLoadStatus(LoadStatus.STALE_TEXTURES_LOADED);
         } else {
-            // log.info("Using LastGood tiles");
             // Fall back to a known displayable
             result = lastGoodTiles;
             if (lastGoodTiles == null) {
@@ -311,26 +303,17 @@ public class ViewTileManager {
         // Then load the best ones
         newNeededTextures.addAll(latestTiles.getBestNeededTextures());
         // Use set/getNeededTextures() methods for thread safety
-        // log.info("Needed textures:");
-        /*
-		for (TileIndex ix : newNeededTextures) {
-			log.info("  "+ix);
-		}
-         */
         if (!newNeededTextures.equals(neededTextures)) {
             synchronized (neededTextures) {
                 neededTextures.clear();
                 neededTextures.addAll(newNeededTextures);
             }
         }
-        // queueTextureLoad(getNeededTextures());
-
         if ((!latestTiles.equals(previousTiles))
                 && (latestTiles != null)
                 && (latestTiles.size() > 0)) {
             previousTiles = latestTiles;
         }
-
         // Remember which textures might be useful
         // Even if it's LOADED, it might not be PAINTED yet.
         displayableTextures.clear();
@@ -375,7 +358,7 @@ public class ViewTileManager {
         bldr.append("TileInx=[" + tile.getIndex().getX() + ":" + tile.getIndex().getY() + ":" + tile.getIndex().getZ() + "]");
         bldr.append(" TileBB=[" + tile.getBoundingBox3d().getMin() + ":" + tile.getBoundingBox3d().getMax() + "]");
         bldr.append(" ZoomLevel=[" + tile.getIndex().getZoom() + "]");
-        log.info(bldr.toString());
+        LOG.info(bldr.toString());
     }
 
     private void rearrangeFromRotationAxis(Rotation3d viewerInGround, int[] xyzFromWhd) {
