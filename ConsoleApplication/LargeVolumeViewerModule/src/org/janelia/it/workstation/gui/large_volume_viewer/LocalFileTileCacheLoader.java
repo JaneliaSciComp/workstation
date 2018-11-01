@@ -6,13 +6,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NavigableSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter.MissingTileException;
 import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter.TileLoadError;
@@ -36,18 +36,15 @@ public class LocalFileTileCacheLoader extends CacheLoader<TileIndex, Optional<Te
 
     private static class LocalCache {
 
-        private final NavigableSet<File> localFilesSet = new TreeSet(new Comparator<File>() {
-            @Override
-            public int compare(File o1, File o2) {
-                long t1 = o1.lastModified();
-                long t2 = o2.lastModified();
-                if (t1 < t2) {
-                    return -1;
-                } else if (t1 == t2) {
-                    return o1.compareTo(o2);
-                } else {
-                    return 1;
-                }
+        private final NavigableSet<File> localFilesSet = new TreeSet<>((File o1, File o2) -> {
+            long t1 = o1.lastModified();
+            long t2 = o2.lastModified();
+            if (t1 < t2) {
+                return -1;
+            } else if (t1 == t2) {
+                return o1.compareTo(o2);
+            } else {
+                return 1;
             }
         });
         private long cacheSize = 0;
@@ -76,19 +73,24 @@ public class LocalFileTileCacheLoader extends CacheLoader<TileIndex, Optional<Te
             long newFileSize = newFile.length();
             if (localFilesSet.size() + 1 > MAX_CACHE_LENGTH) {
                 // remove until the number of entries is <= 75% of max
-                while (localFilesSet.size() > MAX_CACHE_LENGTH * 3 / 4) {
-                    if (!removeOldest()) {
-                        return;
-                    }
-                }
+                removeUntil(fc -> fc.localFilesSet.size() > MAX_CACHE_LENGTH * 3 / 4);
             }
             if (cacheSize + newFileSize > MAX_CACHE_SIZE) {
                 // remove until the size is <= 75% of max
-                while (cacheSize > MAX_CACHE_SIZE * 3 / 4) {
-                    if (!removeOldest()) {
-                        return;
-                    }
-                }
+                removeUntil(fc -> fc.cacheSize > MAX_CACHE_SIZE * 3 / 4);
+            }
+        }
+
+        private boolean remove(File f) {
+            LOG.debug("Delete {} from cache", f);
+            if (localFilesSet.remove(f)) {
+                cacheSize -= f.length();
+            }
+            try {
+                return Files.deleteIfExists(f.toPath());
+            } catch (IOException e) {
+                LOG.warn("Error removing {}", f, e);
+                return false;
             }
         }
 
@@ -110,16 +112,11 @@ public class LocalFileTileCacheLoader extends CacheLoader<TileIndex, Optional<Te
             }
         }
 
-        private boolean remove(File f) {
-            LOG.debug("Delete {} from cache", f);
-            if (localFilesSet.remove(f)) {
-                cacheSize -= f.length();
-            }
-            try {
-                return Files.deleteIfExists(f.toPath());
-            } catch (IOException e) {
-                LOG.warn("Error removing {}", f, e);
-                return false;
+        private void removeUntil(Predicate<LocalCache> fcChecker) {
+            while (fcChecker.test(this)) {
+                if (!removeOldest()) {
+                    return;
+                }
             }
         }
 

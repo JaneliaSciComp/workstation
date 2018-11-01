@@ -57,11 +57,12 @@ import org.slf4j.LoggerFactory;
  * Generic version of HortaVolumeCache, for use with newer Ktx block loading
  *
  * @author brunsc
+ * @param <TILE_KEY> - tile key type
+ * @param <TILE_DATA> - tile data type
  */
 public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
 
     public static interface LoadRunner<TILE_KEY, TILE_DATA> {
-
         TILE_DATA loadTile(TILE_KEY key) throws InterruptedException, IOException;
     }
 

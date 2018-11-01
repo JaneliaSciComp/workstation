@@ -19,11 +19,13 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
 import org.janelia.it.jacs.shared.lvv.TextureData2d;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter {
 
+    private static final int MAX_CACHE_SIZE = ConsoleProperties.getInt("console.lvv.tileCacheSize", 300);
     private final static Logger LOG = LoggerFactory.getLogger(CachedBlockTiffOctreeLoadAdapter.class);
 
     private final ScheduledThreadPoolExecutor tileLoadThreadPool;
@@ -44,7 +46,7 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
         this.tileLoader = tileLoader;
         this.tileCacheLoader = new LocalFileTileCacheLoader(tileLoader);
         this.tileCache = CacheBuilder.newBuilder()
-                .maximumSize(200)
+                .maximumSize(MAX_CACHE_SIZE)
                 .build(tileCacheLoader);
         this.tileCachingMap = new LinkedHashMap<>();
         this.tileLoadThreadPool = new ScheduledThreadPoolExecutor(4);

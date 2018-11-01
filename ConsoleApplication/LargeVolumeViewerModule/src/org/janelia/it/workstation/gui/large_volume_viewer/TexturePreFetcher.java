@@ -13,10 +13,10 @@ import org.janelia.it.jacs.shared.lvv.TileIndex;
 public class TexturePreFetcher {
 
     private static final String TEX_FETCH_THREADNAME_PREFIX = "TexturePreFetch";
+    private final ThreadPoolExecutor textureLoadExecutor;
+    private final Map<Future<?>, TileIndex> futures = new HashMap<>();
     private TextureCache textureCache; // holds texture
     private AbstractTextureLoadAdapter loadAdapter; // knows how to load textures
-    private ThreadPoolExecutor textureLoadExecutor;
-    private Map<Future<?>, TileIndex> futures = new HashMap<>();
 
     public TexturePreFetcher(int threadPoolSize) {
         textureLoadExecutor = new ThreadPoolExecutor(
@@ -79,13 +79,6 @@ public class TexturePreFetcher {
                 }
             }
             blockingQueue.clear();
-            /*
-			Set<TileIndex> queued = textureCache.getQueuedRequests();
-			if (queued == null)
-				return;
-			queued.clear(); // removes too many...		
-             */
-            //or else copy its contents here with a while loop and remove()
         }
         futures.clear();
     }
