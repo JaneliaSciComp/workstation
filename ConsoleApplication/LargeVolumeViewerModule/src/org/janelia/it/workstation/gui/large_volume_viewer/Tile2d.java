@@ -1,6 +1,10 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import com.google.common.base.Preconditions;
 import com.jogamp.opengl.util.texture.TextureCoords;
+import java.awt.geom.Point2D;
+import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
@@ -11,10 +15,6 @@ import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
-import java.awt.geom.Point2D;
 
 /**
  * One rectangular region that forms part of the LargeVolumeViewer display.
@@ -39,20 +39,18 @@ public class Tile2d implements GLActor {
         BEST_TEXTURE_LOADED
     }
 
-    private static final Logger log = LoggerFactory.getLogger(Tile2d.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Tile2d.class);
 
+    private final TileIndex index;
+    private final TileFormat tileFormat;
     private LoadStatus loadStatus = LoadStatus.NO_TEXTURE_LOADED;
     private TileTexture bestTexture;
-    private TileIndex index;
     private double yMax = 0; // To help flip Raveler tiles in Y
-    private TileFormat tileFormat;
     private int filter = GL2.GL_LINEAR;
     private BoundingBox3d boundingBox3d;
 
     public Tile2d(TileIndex key, TileFormat tileFormat) {
-        if (key == null) {
-            log.error("Tile with null index constructed");
-        }
+        Preconditions.checkArgument(key != null, "Attempt to construct a tile with a null tile key");
         this.index = key;
         this.tileFormat = tileFormat;
         this.boundingBox3d = computeBoundingBox();
@@ -65,7 +63,7 @@ public class Tile2d implements GLActor {
         }
         TileIndex ix = getIndex();
         if (ix == null) {
-            log.error("Tile with null index");
+            LOG.error("Tile with null index");
             return;
         }
         TileTexture texture = textureCache.get(ix);
@@ -75,35 +73,15 @@ public class Tile2d implements GLActor {
             setLoadStatus(LoadStatus.BEST_TEXTURE_LOADED);
             return;
         }
-        if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X)) {
-            // log.info("cache miss "+ix);
-        }
         ix = ix.zoomOut(); // Try some lower resolution textures
-        if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X)) {
-            // log.info("try lower texture "+ix);
-        }
         while (ix != null) {
             texture = textureCache.get(ix);
-            if (texture == null) {
-                // log.info("cache miss no texture "+ix);
-                if (ix.getZoom() == ix.getMaxZoom()) {
-                    // log.warn("should already have this persistent texture "+ix+", "+textureCache.size());
-                    // texture = textureCache.get(ix);
-                }
-            } else if (texture.getLoadStatus().ordinal() < TileTexture.LoadStatus.RAM_LOADED.ordinal()) {
-                // log.info("cache miss texture not loaded "+ix);
-            } else {
-                if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X)) {
-                    // log.info("choosing lower texture "+ix);
-                }
+            if (texture != null && texture.getLoadStatus().ordinal() >= TileTexture.LoadStatus.RAM_LOADED.ordinal()) {
                 bestTexture = texture;
                 setLoadStatus(LoadStatus.COARSE_TEXTURE_LOADED);
                 return;
             }
             ix = ix.zoomOut();
-            if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X)) {
-                // log.info("try lower texture "+ix);
-            }
         }
         // No texture was found; maybe next time
         // log.info("texture cache miss "+getIndex());
@@ -171,7 +149,7 @@ public class Tile2d implements GLActor {
 
     public void display(GLAutoDrawable glDrawable, Camera3d camera) {
         if (bestTexture == null) {
-            log.info("tile with no texture " + getIndex());
+            LOG.info("tile with no texture " + getIndex());
             return;
         }
         if (getLoadStatus().ordinal() < LoadStatus.COARSE_TEXTURE_LOADED.ordinal()) {
@@ -182,7 +160,7 @@ public class Tile2d implements GLActor {
         bestTexture.init(gl);
         PyramidTexture texture = bestTexture.getTexture();
         if (texture == null) {
-            if (log.isDebugEnabled()) {
+            if (LOG.isDebugEnabled()) {
                 new Exception("Texture is null").printStackTrace();
             }
             return;
