@@ -37,6 +37,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDom
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TaskReviewListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
@@ -136,6 +137,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private final Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
     private final Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
     private final Collection<BackgroundAnnotationListener> backgroundAnnotationListeners = new ArrayList<>();
+    private final Collection<TaskReviewListener> taskReviewListeners = new ArrayList<>();
 
     private final TmModelManipulator neuronManager;
 
@@ -219,6 +221,16 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     
     public void addBackgroundAnnotationListener(BackgroundAnnotationListener listener) {
         backgroundAnnotationListeners.add(listener);
+    }
+
+    public void addTaskReviewListener(TaskReviewListener reviewListener) {
+        taskReviewListeners.add(reviewListener);
+    }
+
+    public void branchReviewed (TmNeuronMetadata neuron, List<TmGeoAnnotation> annotations) {
+        for (TaskReviewListener listener: taskReviewListeners) {
+            listener.neuronBranchReviewed(neuron, annotations);
+        }
     }
 
     public void removeBackgroundAnnotationListener(BackgroundAnnotationListener listener) {
@@ -2348,13 +2360,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     public void fireBackgroundNeuronDeleted(TmNeuronMetadata neuron) {
-        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {     
+        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
             b.neuronModelDeleted(neuron);
         }
     }
 
     public void fireBackgroundNeuronChanged(TmNeuronMetadata neuron) {
-        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {     
+        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
             b.neuronModelChanged(neuron);
         }
     }
@@ -2444,6 +2456,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public void setSelectMode(boolean select) {
         this.select = select;
     }
-    
-    
+
+
 }

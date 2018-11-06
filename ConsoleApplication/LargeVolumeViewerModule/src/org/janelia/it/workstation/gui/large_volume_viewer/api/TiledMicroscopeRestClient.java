@@ -49,6 +49,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
 
 /**
  * A web client providing access to the Tiled Microscope REST Service.
@@ -387,6 +388,42 @@ public class TiledMicroscopeRestClient {
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(neuronIds));
         if (checkBadResponse(response, "bulkEditTags")) {
+            throw new WebApplicationException(response);
+        }
+    }
+    
+    public TmReviewTask create(TmReviewTask reviewTask) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(reviewTask);
+        Response response = getMouselightEndpoint("/reviewtask")
+                .request("application/json")
+                .put(Entity.json(query));
+        if (checkBadResponse(response, "create: "+reviewTask)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(TmReviewTask.class);
+    }
+    
+    public TmReviewTask update(TmReviewTask reviewTask) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(reviewTask);
+        Response response = getMouselightEndpoint("/reviewtask")
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response, "update: "+reviewTask)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(TmReviewTask.class);
+    }   
+    
+    public void remove(TmReviewTask reviewTask) throws Exception {
+        Response response = getMouselightEndpoint("/reviewtask")
+                .queryParam("taskReviewId", reviewTask.getId())
+                .request("application/json")
+                .delete();
+        if (checkBadResponse(response, "remove: " + reviewTask)) {
             throw new WebApplicationException(response);
         }
     }

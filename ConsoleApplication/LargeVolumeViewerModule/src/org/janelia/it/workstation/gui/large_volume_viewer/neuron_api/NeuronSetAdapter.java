@@ -56,6 +56,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationM
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.PredefinedNote;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TaskReviewListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
@@ -81,7 +82,7 @@ import org.slf4j.LoggerFactory;
  */
 public class NeuronSetAdapter
 extends BasicNeuronSet
-implements NeuronSet// , LookupListener
+implements NeuronSet, TaskReviewListener
 {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
@@ -261,6 +262,7 @@ implements NeuronSet// , LookupListener
         annotationModel.addGlobalAnnotationListener(globalAnnotationListener);
         annotationModel.addBackgroundAnnotationListener(backgroundAnnotationListener);
         annotationModel.addTmGeoAnnotationModListener(annotationModListener);
+        annotationModel.addTaskReviewListener(this);
         getMembershipChangeObservable().notifyObservers();
         log.info("Observing new Annotation Model {}", annotationModel);
     }
@@ -394,6 +396,26 @@ implements NeuronSet// , LookupListener
         } catch (Exception error) {
             ConsoleApp.handleException(error);
         }
+    }
+
+    @Override
+    public void neuronBranchReviewed(TmNeuronMetadata neuron, List<TmGeoAnnotation> annList) {
+        // determine the neuronvertices for each of these and add them to the model
+        NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+        if (!neuronModel.getReviewMode())
+            neuronModel.setReviewMode(true);
+        List<NeuronVertex> vertexList = new ArrayList<>();
+        if (annList!=null && annList.size()>0) {
+            for (TmGeoAnnotation annotation : annList) {
+                NeuronVertex vertex = neuronModel.getVertexForAnnotation(annotation);
+                if (vertex!=null)
+                    vertexList.add(vertex);
+            }
+            neuronModel.addReviewedVertices(vertexList);
+        }
+        neuronModel.getColorChangeObservable().hasChanged();
+        neuronModel.getColorChangeObservable().notifyObservers();
+        repaintHorta();
     }
 
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener

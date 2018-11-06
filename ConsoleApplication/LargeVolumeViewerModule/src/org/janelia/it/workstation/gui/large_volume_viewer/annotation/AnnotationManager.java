@@ -55,6 +55,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.Anch
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.it.workstation.gui.task_workflow.NeuronTree;
 import org.janelia.it.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
@@ -243,53 +244,50 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
         ngDialog.showDialog();
     }
+    
+    public NeuronTree generateNeuronTreeForReview(Long neuronId) {
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
+        TmGeoAnnotation rootAnnotation = neuron.getFirstRoot();
+        if (rootAnnotation!=null) {
+            NeuronTree rootNode = createNeuronTreeNode(null, rootAnnotation);
+            exploreNeuronBranches(rootNode, neuron, rootAnnotation);
+            return rootNode;
+        }
+        return null;
+    }
 
-    void addBranchAnnotation(List<Vec3> branch, TmGeoAnnotation annotation) {
+    /**
+     * recursive function to map a TmGeoAnnotation root to a NeuronTree root 
+     * main reason is that NeuronTree is more concerned with display and review;
+     * these aren't related to the persistence so didn't want to pollute the model
+     **/    
+    public void generateReviewPointList(Long neuronId) {
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
+        TmGeoAnnotation rootAnnotation = neuron.getFirstRoot();
+        if (rootAnnotation!=null) {
+            NeuronTree rootNode = createNeuronTreeNode(null, rootAnnotation);
+            exploreNeuronBranches(rootNode, neuron, rootAnnotation);
+            TaskWorkflowViewTopComponent.getInstance().createNeuronReview(neuron, rootNode);
+        }
+    }
+    
+    void exploreNeuronBranches (NeuronTree node, TmNeuronMetadata neuron, TmGeoAnnotation currVertex) {
+        List<TmGeoAnnotation> children = neuron.getChildrenOfOrdered(currVertex);
+
+        // now start new branches for each of the other children
+        for (TmGeoAnnotation child: children) {
+             NeuronTree childNode = createNeuronTreeNode(node, child);
+             exploreNeuronBranches(childNode, neuron, child);
+        }
+    }
+    
+    NeuronTree createNeuronTreeNode(NeuronTree parentNode, TmGeoAnnotation annotation) {
         Vec3 tempLocation = getTileFormat().micronVec3ForVoxelVec3Centered(
                 new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
-        branch.add(tempLocation);
-    }
-    
-    /**
-     * recursive function to generate all the branch points for a neuron
-     **/
-    void exploreNeuronBranches (List<List<Vec3>> branchList, List<Vec3> currentBranch, TmNeuronMetadata neuron, TmGeoAnnotation neuronVertex) {
-        List<TmGeoAnnotation> branchChildren = neuron.getChildrenOf(neuronVertex);
-
-        if (branchChildren.size()>1) {
-            // pick ordered to find and trace out the main branch
-            List<TmGeoAnnotation> ordered = neuron.getChildrenOfOrdered(neuronVertex);
-            addBranchAnnotation(currentBranch, ordered.get(0));
-            exploreNeuronBranches(branchList, currentBranch, neuron, ordered.get(0));
-
-            // now start new branches for each of the other children
-            for (int i=1; i<ordered.size(); i++) {
-                List<Vec3> newBranch = new ArrayList<>();
-                addBranchAnnotation(newBranch, ordered.get(i));
-                exploreNeuronBranches(branchList, newBranch, neuron, ordered.get(i));
-            }
-        } else if (branchChildren.size()==1) {
-            // continue branch
-            addBranchAnnotation(currentBranch, branchChildren.get(0));
-            exploreNeuronBranches(branchList, currentBranch, neuron, branchChildren.get(0));
-        } else {
-            // tip node; add branch to branchlist
-            branchList.add(currentBranch);
-        }
-        
-    }
-    
-    public void generateReviewPointList(Anchor anchor) {
-        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(anchor.getNeuronID());
-        TmGeoAnnotation rootNode = neuron.getFirstRoot();
-        if (rootNode!=null) {
-            List<List<Vec3>> branchList = new ArrayList<>();
-            List<Vec3> currentBranch = new ArrayList<Vec3>();
-            addBranchAnnotation(currentBranch, rootNode);
-            exploreNeuronBranches(branchList, currentBranch, neuron, rootNode);
-            System.out.println("sdfsdf" + rootNode.getChildIds());
-            TaskWorkflowViewTopComponent.getInstance().loadPointList(neuron.getName(), branchList, true);
-        }
+        NeuronTree childNode = new NeuronTree(parentNode, tempLocation, annotation.getId());
+        if (parentNode!=null)
+            parentNode.addChild(childNode);
+        return childNode;
     }
     
     public void showNeuronHistory() {
@@ -846,6 +844,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         merger.execute();
     }
 
+    public void setBranchReviewed(TmNeuronMetadata neuron, List<Long> annIdList) {
+        List<TmGeoAnnotation> annotationList = new ArrayList<TmGeoAnnotation>();
+        for (Long annId: annIdList) {
+            annotationList.add(annotationModel.getGeoAnnotationFromID(neuron, annId));
+        }
+        annotationModel.branchReviewed(neuron, annotationList);
+    }
+
     private class TmDisplayNeuron {
     	private TmNeuronMetadata tmNeuronMetadata;
     	TmDisplayNeuron(TmNeuronMetadata tmNeuronMetadata) {
@@ -859,6 +865,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     		return tmNeuronMetadata;
     	}
     }
+    
+
 
     public void moveNeuriteRequested(Anchor anchor) {
         if (anchor == null) {

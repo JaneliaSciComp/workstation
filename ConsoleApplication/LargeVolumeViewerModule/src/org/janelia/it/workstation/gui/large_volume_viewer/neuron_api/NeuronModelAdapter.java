@@ -89,13 +89,15 @@ public class NeuronModelAdapter implements NeuronModel
     // private AnnotationModel annotationModel;
     private boolean nonInteractable;
     private boolean visible;
-    private boolean userToggleRadius; 
+    private boolean userToggleRadius;
+    private boolean underReview = false;
     private String ownerKey;
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
     // private TmWorkspace workspace;
     // private TmSample sample;
     private NeuronSetAdapter neuronSet;
+    private HashSet<NeuronVertex> reviewedNodes = new HashSet<>();
 
     public NeuronModelAdapter(TmNeuronMetadata neuron, NeuronSetAdapter workspace)
             // AnnotationModel annotationModel, TmWorkspace workspace, TmSample sample)
@@ -450,6 +452,16 @@ public class NeuronModelAdapter implements NeuronModel
     }
 
     @Override
+    public boolean getReviewMode() {
+        return underReview;
+    }
+
+    @Override
+    public void setReviewMode(boolean reviewMode) {
+        underReview = reviewMode;
+    }
+
+    @Override
     public ObservableInterface getColorChangeObservable()
     {
         return colorChangeObservable;
@@ -475,6 +487,28 @@ public class NeuronModelAdapter implements NeuronModel
     public Collection<NeuronEdge> getEdges()
     {
         return edges;
+    }
+
+    @Override
+    public Collection<NeuronVertex> getReviewedVertices() {
+        return reviewedNodes;
+    }
+
+    @Override
+    public boolean isReviewedVertex(NeuronVertex vertex) {
+        if (reviewedNodes.contains(vertex))
+            return true;
+        return false;
+    }
+
+    @Override
+    public void addReviewedVertices(Collection<NeuronVertex> vertexList) {
+        reviewedNodes.addAll(vertexList);
+    }
+
+    @Override
+    public void clearVertices(Collection<NeuronVertex> vertexList) {
+        reviewedNodes.removeAll(vertexList);
     }
 
     @Override

@@ -575,7 +575,7 @@ implements MouseMode, KeyListener
                     AbstractAction generateReviewPointList = new AbstractAction("Generate point review list...") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().generateReviewPointList(hover);
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().generateReviewPointList(hover.getNeuronID());
                         }
                     };
                     generateReviewPointList.setEnabled(controller.editsAllowed());
@@ -726,10 +726,10 @@ implements MouseMode, KeyListener
 			}
 			break;
                 case KeyEvent.VK_P:
-			TaskWorkflowViewTopComponent.getInstance().nextTask();
+			TaskWorkflowViewTopComponent.getInstance().nextBranch();
 			break;
                 case KeyEvent.VK_O:
-			TaskWorkflowViewTopComponent.getInstance().prevTask();
+			TaskWorkflowViewTopComponent.getInstance().prevBranch();
 			break;               
 		}
                 

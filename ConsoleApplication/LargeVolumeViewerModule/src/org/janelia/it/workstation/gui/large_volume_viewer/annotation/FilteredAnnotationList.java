@@ -148,7 +148,14 @@ public class FilteredAnnotationList extends JPanel {
                             // everyone else, shift camera to annotation
                             if (panListener != null) {
                                 if (ann != null) {
-                                    panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                                    for (int i=0; i<10; i++) {
+                                        panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()+i*10));
+                                       /* try {
+                                            Thread.sleep(40);
+                                        } catch (Exception e) {
+                                            
+                                        }*/
+                                    }
                                    Vec3 location = annotationMgr.getTileFormat().micronVec3ForVoxelVec3Centered(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
                                     // send event to Horta to also center on this item
                                     
