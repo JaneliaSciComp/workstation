@@ -7,17 +7,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -28,7 +25,6 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
@@ -41,8 +37,6 @@ import org.janelia.model.domain.enums.SubjectRole;
 import org.janelia.model.domain.sample.Sample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.miginfocom.swing.MigLayout;
 
 /**
  * Created by fosterl on 8/15/2016.
@@ -159,6 +153,7 @@ public class RerunSamplesAction extends AbstractAction {
                 request.setReuseProcessing(dialog.isReuseProcessing());
                 request.setReusePost(dialog.isReusePost());
                 request.setReuseAlignment(dialog.isReuseAlignment());
+                request.setReuseSeparation(dialog.isReuseSeparation());
                 request.setKeepExistingResults(dialog.isKeepExistingResults());
                 request.setExtraOptions(dialog.getExtraOptions());
                 
@@ -187,7 +182,8 @@ public class RerunSamplesAction extends AbstractAction {
         private final JCheckBox reuseSummaryCheckbox;
         private final JCheckBox reuseProcessingCheckbox; 
         private final JCheckBox reusePostCheckbox; 
-        private final JCheckBox reuseAlignmentCheckbox; 
+        private final JCheckBox reuseAlignmentCheckbox;
+        private final JCheckBox reuseSeparationCheckbox;
         private final JCheckBox keepResultsCheckbox;
         private final JTextField extraOptionsField;
         
@@ -213,6 +209,9 @@ public class RerunSamplesAction extends AbstractAction {
             this.reuseAlignmentCheckbox = new JCheckBox();
             mainPanel.addItem("Alignment", reuseAlignmentCheckbox);
 
+            this.reuseSeparationCheckbox = new JCheckBox();
+            mainPanel.addItem("Separation", reuseSeparationCheckbox);
+            
             mainPanel.addSeparator("Other options");
             this.keepResultsCheckbox = new JCheckBox();
             mainPanel.addItem("Keep previous results", keepResultsCheckbox);
@@ -291,7 +290,10 @@ public class RerunSamplesAction extends AbstractAction {
         public boolean isReuseAlignment() {
             return reuseAlignmentCheckbox.isSelected();
         }
-
+        
+        public boolean isReuseSeparation() {
+            return reuseSeparationCheckbox.isSelected();
+        }
 
         public boolean isKeepExistingResults() {
             return keepResultsCheckbox.isSelected();
