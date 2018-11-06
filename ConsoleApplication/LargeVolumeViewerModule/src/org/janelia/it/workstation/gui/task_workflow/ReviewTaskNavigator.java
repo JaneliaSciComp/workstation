@@ -5,6 +5,11 @@ import com.mxgraph.view.*;
 import com.mxgraph.*;
 import com.mxgraph.model.mxCell;
 import com.mxgraph.util.mxConstants;
+import com.mxgraph.util.mxRectangle;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.ScrollPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +40,7 @@ public class ReviewTaskNavigator implements MouseWheelListener {
         
     }
     
-    public JScrollPane createGraph(NeuronTree tree, int width) {
+    public JScrollPane createGraph(NeuronTree tree, int leaves, int width, int height) {
         graph = new mxGraph() { 
             @Override
             public boolean isCellEditable(Object cell){ 
@@ -63,18 +68,29 @@ public class ReviewTaskNavigator implements MouseWheelListener {
         };
         graph.orderCells(false);
         parent = graph.getDefaultParent();
-
+        
         graph.getModel().beginUpdate();
         try {
-            traceNode (0, null, tree, 250,0);
+            traceNode (0, null, tree, (int)(leaves*HORIZ_OFFSET/2),0);
         } finally {
             graph.getModel().endUpdate();
         }
-
+        
+        mxRectangle bounds = graph.getGraphBounds();
+        
         graphComponent = new mxGraphComponent(graph);
         graphComponent.addMouseWheelListener(this);
+        double largestDim = bounds.getHeight();
+        if (largestDim>bounds.getWidth()) {
+            graphComponent.zoom(height/bounds.getHeight());
+        } else {
+            graphComponent.zoom(width/bounds.getWidth());
+        }
+        graphComponent.scrollCellToVisible(tree.getGUICell());
+        graphComponent.scrollToCenter(true);
         graphComponent.setPanning(true);
-        return graphComponent;
+
+        return graphComponent;        
     }
     
     private void traceNode(int level, mxCell prevPoint, NeuronTree node, int currx, int curry) {
@@ -125,9 +141,9 @@ public class ReviewTaskNavigator implements MouseWheelListener {
     @Override
     public void mouseWheelMoved(MouseWheelEvent e) {
         if (e.getWheelRotation() < 0){
-            graphComponent.zoomIn();
+            graphComponent.zoomIn();                     
         } else {
-            graphComponent.zoomOut();
+            graphComponent.zoomOut();                        
         }
     }
 }

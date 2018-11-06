@@ -29,6 +29,7 @@
  */
 package org.janelia.horta;
 
+import com.jogamp.opengl.util.FPSAnimator;
 import org.janelia.console.viewerapi.controller.UnmixingListener;
 import org.janelia.horta.render.NeuronMPRenderer;
 import org.janelia.horta.actors.ScaleBar;
@@ -173,6 +174,8 @@ import org.janelia.horta.camera.PrimitiveInterpolator;
 import org.janelia.horta.camera.Vector3Interpolator;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -238,6 +241,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     // Avoid letting double clicks move twice
     private long previousClickTime = Long.MIN_VALUE;
     private final long minClickInterval = 400 * 1000000;
+    private final long REVIEW_PLAYBACK_INTERVAL = 20;
 
     // Cache latest hover information
     private Vector3 mouseStageLocation = null;
@@ -263,6 +267,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     private boolean doCubifyVoxels = false; // Always begin in "no distortion" state
     
+    // review animation
+    private FPSAnimator fps;
     private boolean pausePlayback = false;
     
     private final NeuronEditDispatcher neuronEditDispatcher;
@@ -507,6 +513,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         loadStartupPreferences();
         
         metaWorkspace.notifyObservers();
+        fps = new FPSAnimator(sceneWindow.getGLAutoDrawable(), (int)REVIEW_PLAYBACK_INTERVAL, true);
 
     }
     
@@ -557,42 +564,75 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new URI(currentSource).toURL();
     }
     
-    public void playSampleLocations(List<SampleLocation> locationList) {
-        try {
-            for (SampleLocation sampleLocation : locationList) {
-                if (this.pausePlayback)
-                    return;
-                Quaternion q = new Quaternion();
-                float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
-                if (quaternionRotation != null) {
-                    q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
-                }
-                ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                        currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
-                );
+    public void playSampleLocations(final List<SampleLocation> locationList) {
+        SimpleWorker scrollWorker = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                try {                    
+                    fps.start();
+                    SampleLocation sampleLocation = locationList.get(0);
+                    Quaternion q = new Quaternion();
+                    float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
+                    if (quaternionRotation != null) {
+                        q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
+                    }
+                    ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+                            currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
+                    );
+                    acceptor.acceptLocation(sampleLocation);
+                    Vantage vantage = sceneWindow.getVantage();
+                    vantage.setRotationInGround(new Rotation().setFromQuaternion(q));                    
+                    Thread.sleep (REVIEW_PLAYBACK_INTERVAL);
 
-                // figure out number of steps
-                Vantage vantage = sceneWindow.getVantage();
-                float[] startLocation = vantage.getFocus();
-                double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm() - startLocation[0], 2)
-                         + Math.pow(sampleLocation.getFocusYUm() - startLocation[1], 2)
-                         + Math.pow(sampleLocation.getFocusZUm() - startLocation[2], 2));
-                // # of steps is 1 per uM
-                int steps = (int) Math.round(distance);
-                if (steps < 1) {
-                    steps = 1;
+                    for (int i = 1; i < locationList.size(); i++) {                        
+                        sampleLocation = locationList.get(i);
+                        
+                        q = new Quaternion();
+                        quaternionRotation = sampleLocation.getRotationAsQuaternion();
+                        if (quaternionRotation != null) {
+                            q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
+                        }
+                        acceptor = new SampleLocationAcceptor(
+                                currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
+                        );
+
+                        // figure out number of steps
+                        vantage = sceneWindow.getVantage();
+                        float[] startLocation = vantage.getFocus();
+                        double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm() - startLocation[0], 2)
+                                + Math.pow(sampleLocation.getFocusYUm() - startLocation[1], 2)
+                                + Math.pow(sampleLocation.getFocusZUm() - startLocation[2], 2));
+                        // # of steps is 1 per uM
+                        int steps = (int) Math.round(distance);
+                        if (steps < 1) {
+                            steps = 1;
+                        }
+
+                        animateToLocationWithRotation(acceptor, q, sampleLocation, steps);
+
+                        activityLogger.logHortaLaunch(sampleLocation);
+                        currentSource = sampleLocation.getSampleUrl().toString();
+                        defaultColorChannel = sampleLocation.getDefaultColorChannel();
+                        volumeCache.setColorChannel(defaultColorChannel);
+                    }
+                    
+                    fps.stop();
+                } catch (Exception ex) {
+                    Exceptions.printStackTrace(ex);
                 }
-                
-                animateToLocationWithRotation(acceptor, q, sampleLocation, steps);
-                
-                activityLogger.logHortaLaunch(sampleLocation);
-                currentSource = sampleLocation.getSampleUrl().toString();
-                defaultColorChannel = sampleLocation.getDefaultColorChannel();
-                volumeCache.setColorChannel(defaultColorChannel);
             }
-        } catch (Exception ex) {
-            Exceptions.printStackTrace(ex);
-        }
+
+            @Override
+            protected void hadSuccess() {
+
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+            }
+        };
+        scrollWorker.execute();
+
     }
     
     public void setSampleLocation(SampleLocation sampleLocation) {
@@ -930,6 +970,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 (float)endLocation.getFocusZUm());
         double currWay = 0;
         for (int i=0; i<steps; i++) { 
+            Thread.sleep(REVIEW_PLAYBACK_INTERVAL);
             SampleLocation sampleLocation = new BasicSampleLocation();
             currWay += stepSize;
             Vector3 iFocus = vec3Interpolator.interpolate_equidistant(currWay, 
@@ -939,7 +980,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             vantage.setFocus(iFocus.getX(), iFocus.getY(), iFocus.getZ());
             vantage.setRotationInGround(new Rotation().setFromQuaternion(iRotate));
             vantage.notifyObservers();
-            sceneWindow.redrawImmediately();
+            //sceneWindow.redrawImmediately();
         }
     }
 
