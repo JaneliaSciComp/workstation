@@ -187,6 +187,7 @@
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/slf4j-jdk14-1.7.21.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/amqp-client-5.0.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/jacs-messaging-1.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/jgraphx-3.9.8.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="release/modules/ext/javassist-3.21.0-GA.jar"/>
 	<classpathentry kind="output" path="build_eclipse"/>
