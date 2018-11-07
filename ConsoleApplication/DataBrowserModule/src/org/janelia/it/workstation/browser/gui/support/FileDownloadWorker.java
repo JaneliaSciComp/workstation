@@ -229,7 +229,13 @@ public class FileDownloadWorker {
                                 throw new CancellationException();
                             }
                             else {
-                                FrameworkImplProvider.handleExceptionQuietly(e);
+                                if (errors==1) {
+                                    // First exception is shown to the user
+                                    FrameworkImplProvider.handleException(e);
+                                }
+                                else {
+                                    FrameworkImplProvider.handleExceptionQuietly(e);
+                                }
                             }
                         }
                         
