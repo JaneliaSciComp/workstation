@@ -231,7 +231,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public TmWorkspace getCurrentWorkspace() {
         return currentWorkspace;
     }
-    
+
     public TmWorkspace getWorkspace(Long workspaceID) throws Exception {
         return tmDomainMgr.getWorkspace(workspaceID);
     }
@@ -574,7 +574,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      */
     public synchronized void changeNeuronOwner(Long neuronID, Subject newOwner) throws Exception {
         final TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronID);
-        // CompletableFuture<Boolean> future = getNeuronManager().requestOwnershipChange(neuron);
         CompletableFuture<Boolean> future = getNeuronManager().requestAssignmentChange(neuron, newOwner.getKey());
         if (future == null) {
             presentError("Error while attempting to request ownership of " + neuron.getName(), "Error changing owner");
