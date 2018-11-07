@@ -73,13 +73,13 @@ public class StorageClientMgr {
                     }
                 })
                 .forEach(p -> storagePathPrefixCandidates.add(0, p));
-        log.info("storagePathPrefixCandidates={}", storagePathPrefixCandidates);
+        log.debug("storagePathPrefixCandidates={}", storagePathPrefixCandidates);
         AgentStorageClient storageClient;
         synchronized(STORAGE_WORKERS_CACHE) {
             for (String pathPrefix : storagePathPrefixCandidates) {
                 storageClient = STORAGE_WORKERS_CACHE.getIfPresent(pathPrefix);
                 if (storageClient != null) {
-                    log.info("Found storage client for {} in cache", pathPrefix);
+                    log.debug("Found storage client for {} in cache", pathPrefix);
                     return storageClient;
                 }
             }
@@ -108,7 +108,7 @@ public class StorageClientMgr {
                 STORAGE_WORKERS_CACHE.put(storageKey, storageClient);
                 log.info("Created storage client for {}", storageKey);
             } else {
-                log.info("No storage agent cached for {}", standardPathName);
+                log.warn("No storage agent cached for {}", standardPathName);
             }
         }
         return storageClient;

@@ -82,6 +82,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
             // Async cache-behind
             log.trace("Async cache-behind loading: {}",imageFilename);
             URLProxy imageFileURL = FileMgr.getFileMgr().getURL(imageFilename, true);
+            log.info("Loading image from {}", imageFileURL);
             maxSizeImage = Utils.readImage(imageFileURL);
             if (maxSizeImage != null && imageCache != null) {
                 imageCache.put(imageFilename, maxSizeImage);
