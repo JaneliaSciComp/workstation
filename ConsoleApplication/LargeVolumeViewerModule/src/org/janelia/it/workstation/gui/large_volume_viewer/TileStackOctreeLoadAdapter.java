@@ -87,23 +87,23 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         } else {
 
             TextureData2d textureData2d;
-final double elapsedMs;
-          /*  if (HttpDataSource.useHttp()) {
-                textureData2d = HttpDataSource.getSample2DTile(tileIndex);
-                elapsedMs = (double) (System.nanoTime() - startTime) / 1000000.0;
-                if (textureData2d != null) {
-                    activityLog.logTileLoad(getRelativeSlice(tileIndex), tileIndex, elapsedMs, folderOpenTimestamp);
-                }
-            } else {*/
-                textureData2d = blockTiffOctreeLoadAdapter.loadToRam(tileIndex);
-                elapsedMs = (double) (System.nanoTime() - startTime) / 1000000.0;
-                if (textureData2d != null) {
-                    activityLog.logTileLoad(getRelativeSlice(tileIndex), tileIndex, elapsedMs, folderOpenTimestamp);
-                }
-            //}
 
-            //log.info("loadToRam() timeMs="+elapsedMs);
- 
+            if (HttpDataSource.useHttp()) {
+                textureData2d = HttpDataSource.getSample2DTile(tileIndex);
+                final double elapsedMs = (double) (System.nanoTime() - startTime) / 1000000.0;
+                if (textureData2d != null) {
+                    activityLog.logTileLoad(getRelativeSlice(tileIndex), tileIndex, elapsedMs, folderOpenTimestamp);
+                }
+            } else {
+                textureData2d = blockTiffOctreeLoadAdapter.loadToRam(tileIndex);
+                final double elapsedMs = (double) (System.nanoTime() - startTime) / 1000000.0;
+                if (textureData2d != null) {
+                    activityLog.logTileLoad(getRelativeSlice(tileIndex), tileIndex, elapsedMs, folderOpenTimestamp);
+                }
+            }
+
+            //log.info("loadToRam() timeMs="+loadTime);
+
             if (textureData2d!=null) {
                 return new TextureData2dGL(textureData2d);
             } else {
