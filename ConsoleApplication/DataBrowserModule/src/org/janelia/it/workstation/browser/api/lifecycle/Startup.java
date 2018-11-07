@@ -3,6 +3,8 @@ package org.janelia.it.workstation.browser.api.lifecycle;
 import java.io.IOException;
 import java.util.logging.LogManager;
 
+import javax.imageio.ImageIO;
+
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ServiceMgr;
 import org.janelia.it.workstation.browser.events.Events;
@@ -79,6 +81,8 @@ public class Startup implements Runnable {
             NbPreferences.root().node("org/netbeans/core").putInt("proxyType", 0);
         }
 
+        ImageIO.setUseCache(false);
+        
         // Create the main console app frame
         ConsoleApp app = ConsoleApp.getConsoleApp();
         
