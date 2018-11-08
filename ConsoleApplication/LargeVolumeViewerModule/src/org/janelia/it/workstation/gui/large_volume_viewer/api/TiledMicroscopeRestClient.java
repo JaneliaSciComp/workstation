@@ -20,7 +20,7 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.http.HttpServiceUtils;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.dto.BulkNeuronStyleUpdate;
+import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;

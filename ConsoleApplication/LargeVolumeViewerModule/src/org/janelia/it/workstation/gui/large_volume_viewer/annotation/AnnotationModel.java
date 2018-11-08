@@ -43,7 +43,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVol
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.tiledMicroscope.TmModelManipulator;
 import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.dto.BulkNeuronStyleUpdate;
+import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;

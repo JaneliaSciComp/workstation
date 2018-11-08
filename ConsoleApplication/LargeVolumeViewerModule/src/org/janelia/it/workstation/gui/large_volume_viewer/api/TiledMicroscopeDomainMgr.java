@@ -9,7 +9,7 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.model.access.domain.DomainObjectComparator;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.dto.BulkNeuronStyleUpdate;
+import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
