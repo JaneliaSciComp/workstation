@@ -84,6 +84,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
+import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
@@ -565,11 +566,13 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
     
     public void playSampleLocations(final List<SampleLocation> locationList) {
+       
         SimpleWorker scrollWorker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                try {                    
+                try {                       
                     fps.start();
+                     sceneWindow.setControlsVisibility(true);
                     SampleLocation sampleLocation = locationList.get(0);
                     Quaternion q = new Quaternion();
                     float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
