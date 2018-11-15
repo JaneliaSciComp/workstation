@@ -1547,8 +1547,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         if (initialObject instanceof TmSample) {
             sampleID = initialObject.getId();
-        }
-        else if (initialObject instanceof TmWorkspace) {
+        } else if (initialObject instanceof TmWorkspace) {
             sampleID = getSampleID();
             if (sampleID == null) {
                 presentError("Sample ID is null; did the previous sample or workspace finish loading?\n\nCould not create workspace!",
@@ -1578,7 +1577,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
         final String workspaceName = dialog.showForSample(getAnnotationModel().getCurrentSample());
         
-        if (workspaceName==null) {
+        if (workspaceName == null) {
             log.info("Aborting workspace creation: no valid name was provided by the user");
             return;
         }

@@ -250,7 +250,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                     log.info("RefreshHandler.invokeLater: handled ownership decision update in {} ms", stopWatch2.getElapsedTime());
                 });
             } else if (action == MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
-                // complete the future outside of the swing thread, since the GUI thread is blocked
+                // complete the future outside of the swing thread, since the copyGUI thread is blocked
                 StopWatch stopWatch2 = new StopWatch();
                 TmProtobufExchanger exchanger = new TmProtobufExchanger();
                 byte[] msgBody = message.getBody();
