@@ -8,6 +8,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.media.multipart.BodyPart;
@@ -28,26 +47,6 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.ClientRequestContext;
-import javax.ws.rs.client.ClientRequestFilter;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 /**
  * A web client providing access to the Tiled Microscope REST Service.
  *
@@ -55,15 +54,15 @@ import java.util.Map.Entry;
  */
 public class TiledMicroscopeRestClient {
 
-    private static final Logger log = LoggerFactory.getLogger(TiledMicroscopeRestClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TiledMicroscopeRestClient.class);
 
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
+    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("mouselight.rest.url");
     private static final String REMOTE_MOUSELIGHT_DATA_PREFIX = "mouselight/data";
 
     private final Client client;
 
     public TiledMicroscopeRestClient() {
-        log.info("Using server URL: {}",REMOTE_API_URL);
+        LOG.info("Using server URL: {}",REMOTE_API_URL);
 
         this.client = ClientBuilder.newClient();
         
@@ -72,7 +71,7 @@ public class TiledMicroscopeRestClient {
         mapper.addHandler(new DeserializationProblemHandler() {
             @Override
             public boolean handleUnknownProperty(DeserializationContext ctxt, JsonParser jp, JsonDeserializer<?> deserializer, Object beanOrClass, String propertyName) throws IOException, JsonProcessingException {
-                log.error("Failed to deserialize property which does not exist in model: {}.{}",beanOrClass.getClass().getName(),propertyName);
+                LOG.error("Failed to deserialize property which does not exist in model: {}.{}",beanOrClass.getClass().getName(),propertyName);
                 return true;
             }
         });
@@ -309,7 +308,7 @@ public class TiledMicroscopeRestClient {
     public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
        List<TmNeuronMetadata> list = update(Arrays.asList(Pair.of(neuronMetadata, protobufStream)));
        if (list.isEmpty()) return null;
-       if (list.size()>1) log.warn("update(TmNeuronMetadata) returned more than one result.");
+       if (list.size()>1) LOG.warn("update(TmNeuronMetadata) returned more than one result.");
        return list.get(0);
     }
 
@@ -352,7 +351,7 @@ public class TiledMicroscopeRestClient {
         }
 
         List<TmNeuronMetadata> list = response.readEntity(new GenericType<List<TmNeuronMetadata>>() {});
-        log.info("Updated {} in {} ms",logStr,w.getElapsedTime());
+        LOG.info("Updated {} in {} ms",logStr,w.getElapsedTime());
         return list;
     }
 
@@ -393,9 +392,9 @@ public class TiledMicroscopeRestClient {
         int responseStatus = response.getStatus();
         Response.Status status = Response.Status.fromStatusCode(response.getStatus());
         if (responseStatus<200 || responseStatus>=300) {
-            log.error("Problem making request for {}", failureError);
+            LOG.error("Problem making request for {}", failureError);
             // TODO: we want to print the request URI here, but I don't have time to search through the JAX-RS APIs right now
-            log.error("Server responded with error code: {} {}",response.getStatus(), status);
+            LOG.error("Server responded with error code: {} {}",response.getStatus(), status);
             return true;
         }
         return false;
@@ -403,8 +402,8 @@ public class TiledMicroscopeRestClient {
 
     protected boolean checkBadResponse(int responseStatus, String failureError) {
         if (responseStatus<200 || responseStatus>=300) {
-            log.error("ERROR RESPONSE: " + responseStatus);
-            log.error(failureError);
+            LOG.error("ERROR RESPONSE: " + responseStatus);
+            LOG.error(failureError);
             return true;
         }
         return false;

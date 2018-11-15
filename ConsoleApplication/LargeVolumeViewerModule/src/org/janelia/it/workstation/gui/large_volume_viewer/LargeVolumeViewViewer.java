@@ -49,8 +49,9 @@ public class LargeVolumeViewViewer extends JPanel {
 
     private final Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
 
-    private TmSample sliceSample;
     private DomainObject initialObject;
+    private TmSample sliceSample;
+    private TmWorkspace currentWorkspace;
     private Vec3 initialViewFocus;
     private Double initialZoom;
     private AnnotationModel annotationModel;
@@ -81,28 +82,23 @@ public class LargeVolumeViewViewer extends JPanel {
 
             @Override
             protected void doStuff() throws Exception {
-                
                 initialObject = domainObject;
-
                 // initial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
-                //  the initial entity, but we need the sample either way to be able to open it:
+                // the initial entity, but we need the sample either way to be able to open it:
                 if (initialObject instanceof TmSample) {
                     sliceSample = (TmSample) initialObject;
-                }
-                else if (initialObject instanceof TmWorkspace) {
-                    TmWorkspace workspace = (TmWorkspace) initialObject;
+                } else if (initialObject instanceof TmWorkspace) {
+                    currentWorkspace = (TmWorkspace) initialObject;
                     try {
-                        sliceSample = TiledMicroscopeDomainMgr.getDomainMgr().getSample(workspace);
-                    }
-                    catch (Exception e) {
-                        logger.error("Error getting sample for "+workspace, e);
+                        sliceSample = TiledMicroscopeDomainMgr.getDomainMgr().getSample(currentWorkspace);
+                    } catch (Exception e) {
+                        logger.error("Error getting sample for {}", currentWorkspace, e);
                     }
                 }
             }
 
             @Override
             protected void hadSuccess() {
-            	
                 if (sliceSample == null) {
                     JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
                             "Could not find sample entity for this workspace!",
@@ -118,6 +114,95 @@ public class LargeVolumeViewViewer extends JPanel {
                 
             	logger.info("Found sample {}", sliceSample.getId());
 
+                // track whether volume load succeeded; see note later
+                AtomicBoolean volumeLoaded = new AtomicBoolean(false);
+
+                // Join the two futures
+                ListenableFuture<List<Void>> combinedFuture = Futures.allAsList(Arrays.asList(loadWorkspace(), loadVolume(volumeLoaded)));
+                Futures.addCallback(combinedFuture, new FutureCallback<List<Void>>() {
+                    public void onSuccess(List<Void> result) {
+                        // check if the volume actually loaded; we handle exceptions, so
+                        //  not all failures end up in onFailure()!
+                        if (volumeLoaded.get()) {
+                            logger.info("Loading completed");
+                            if (annotationModel == null) {
+                                // trying to diagnose how this could happen...
+                                logger.info("found null annotationModel");
+                            }
+                            annotationModel.loadComplete();
+                        } else {
+                            // same as onFailure() (code copied):
+                            logger.error("LVVV load failed; volume loader failed");
+                            try {
+                                if (annotationModel != null) {
+                                    annotationModel.clear();
+                                    annotationModel.loadComplete();
+                                }
+                            }
+                            catch (Exception e) {
+                                logger.error("Error loading empty workspace after failed workspace load",e);
+                            }
+                        }
+                    }
+
+                    public void onFailure(Throwable t) {
+                        // If either load failed
+                        logger.error("LVVV load failed; combined future failed", t);
+                        try {
+                            if (annotationModel!=null) {
+                                annotationModel.clear();
+                                annotationModel.loadComplete();
+                            }
+                        }
+                        catch (Exception e) {
+                            logger.error("Error loading empty workspace after failed workspace load",e);
+                        }
+                    }
+                });
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+
+            private SimpleListenableFuture<Void> loadWorkspace() {
+                // independently of the image volume load, we load the annotation data:
+                final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading metadata...");
+                progress2.start();
+                progress2.setDisplayName("Loading metadata");
+                progress2.switchToIndeterminate();
+
+                SimpleWorker workspaceLoader = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        if (initialObject == null) {
+                            // this is a request to clear the workspace
+                            annotationModel.clear();
+                        } else if (initialObject instanceof TmSample) {
+                            annotationModel.loadSample((TmSample)initialObject);
+                        } else if (initialObject instanceof TmWorkspace) {
+                            annotationModel.loadWorkspace((TmWorkspace)initialObject);
+                        }
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        logger.info("Metadata loading completed");
+                        progress2.finish();
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        logger.error("workspace loader failed", error);
+                        progress2.finish();
+                        ConsoleApp.handleException(error);
+                    }
+                };
+                return workspaceLoader.executeWithFuture();
+            }
+            
+            private SimpleListenableFuture<Void> loadVolume(AtomicBoolean volumeLoaded) {
                 // but now we have to do the loads in other threads, so we don't lock the UI;
                 //  first start up the image volume load
                 final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading image data...");
@@ -125,8 +210,6 @@ public class LargeVolumeViewViewer extends JPanel {
                 progress.setDisplayName("Loading image data");
                 progress.switchToIndeterminate();
 
-                // track whether volume load succeeded; see note later
-                AtomicBoolean volumeLoaded = new AtomicBoolean(false);
                 SimpleWorker volumeLoader = new SimpleWorker() {
                     boolean success = false;
 
@@ -169,94 +252,8 @@ public class LargeVolumeViewViewer extends JPanel {
                         ConsoleApp.handleException(error);
                     }
                 };
-                
-                SimpleListenableFuture<Void> future1 = volumeLoader.executeWithFuture();
-
-                // independently of the image volume load, we load the annotation data:
-                final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading metadata...");
-                progress2.start();
-                progress2.setDisplayName("Loading metadata");
-                progress2.switchToIndeterminate();
-                
-                SimpleWorker workspaceLoader = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        if (initialObject == null) {
-                            // this is a request to clear the workspace
-                            annotationModel.clear();
-                        }
-                        else if (initialObject instanceof TmSample) {
-                            annotationModel.loadSample((TmSample)initialObject);
-                        }
-                        else if (initialObject instanceof TmWorkspace) {
-                            annotationModel.loadWorkspace((TmWorkspace)initialObject);
-                        }
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        logger.info("Metadata loading completed");
-                        progress2.finish();
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        logger.error("workspace loader failed", error);
-                        progress2.finish();
-                        ConsoleApp.handleException(error);
-                    }
-                };
-                
-                SimpleListenableFuture<Void> future2 = workspaceLoader.executeWithFuture();
-                
-                // Join the two futures
-                ListenableFuture<List<Void>> combinedFuture = Futures.allAsList(Arrays.asList(future1, future2));
-                Futures.addCallback(combinedFuture, new FutureCallback<List<Void>>() {
-                    public void onSuccess(List<Void> result) {
-                        // check if the volume actually loaded; we handle exceptions, so
-                        //  not all failures end up in onFailure()!
-                        if (volumeLoaded.get()) {
-                            logger.info("Loading completed");
-                            if (annotationModel == null) {
-                                // trying to diagnose how this could happen...
-                                logger.info("found null annotationModel");
-                            }
-                            annotationModel.loadComplete();
-                        } else {
-                            // same as onFailure() (code copied):
-                            logger.error("LVVV load failed; volume loader failed");
-                            try {
-                                if (annotationModel != null) {
-                                    annotationModel.clear();
-                                    annotationModel.loadComplete();
-                                }
-                            }
-                            catch (Exception e) {
-                                logger.error("Error loading empty workspace after failed workspace load",e);
-                            }
-                        }
-                    }
-                    public void onFailure(Throwable t) {
-                        // If either load failed
-                        logger.error("LVVV load failed; combined future failed", t);
-                        try {
-                            if (annotationModel!=null) {
-                                annotationModel.clear();
-                                annotationModel.loadComplete();
-                            }
-                        }
-                        catch (Exception e) {
-                            logger.error("Error loading empty workspace after failed workspace load",e);
-                        }
-                    }
-                });
+                return volumeLoader.executeWithFuture();
             }
-
-            @Override
-            protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
-            }
-
         };
         worker.execute();
 
@@ -334,7 +331,7 @@ public class LargeVolumeViewViewer extends JPanel {
             if ( viewUI == null ) {
                 // trying to diagnost how this can be null later
                 logger.info("instantiating AnnotationModel");
-                annotationModel = new AnnotationModel();
+                annotationModel = new AnnotationModel(sliceSample, currentWorkspace);
                 Events.getInstance().registerOnEventBus(annotationModel);
                 viewUI = new URLBasedQuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);
             }

@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.launch;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
@@ -7,7 +9,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.concurrent.CancellationException;
-
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -15,28 +16,18 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.tiledMicroscope.SwcImportTask;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.api.facade.interfaces.LegacyFacade;
 import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
@@ -50,7 +41,7 @@ import org.slf4j.LoggerFactory;
 @ServiceProvider(service = ObjectOpenAcceptor.class, path = ObjectOpenAcceptor.LOOKUP_PATH)
 public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
     
-    private static final Logger log = LoggerFactory.getLogger(LoadedWorkspaceCreator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoadedWorkspaceCreator.class);
 
     private static final int MENU_ORDER = 500;
    
@@ -63,7 +54,7 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
         String workspaceName = dialog.showForSample(sample);
         if (workspaceName==null) {
-            log.info("Aborting workspace creation: no valid name was provided by the user");
+            LOG.info("Aborting workspace creation: no valid name was provided by the user");
             return;
         }
 
@@ -177,7 +168,6 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
 
     private Long startImportSWC(Long sampleId, String workspace, String swcFolder, boolean withSystemOwner) {
         AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
-        final String subjectName = AccessManager.getSubjectName();
         ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
                 .add("-sampleId", sampleId.toString());
         serviceArgsBuilder.add("-workspace", workspace);

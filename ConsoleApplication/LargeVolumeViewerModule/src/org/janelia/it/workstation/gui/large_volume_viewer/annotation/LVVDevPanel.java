@@ -185,42 +185,6 @@ public class LVVDevPanel extends JPanel {
                 worker.execute();
             }
         });
-        // buttons.add(testButton2);
-
-
-        /*
-        // this would have been an embedded Groovy console, but we decided not
-        //  to go this way; there were inconvenient unsolved problems (below),
-        //  plus Todd wasn't keen on having this in production, though he did
-        //  leave the door open to having it as a module that only deployed
-        //  to developers
-        // main inconvenient issues found so far: (1) didn't see how to set
-        //  class path for the console; (2) the variables sent into the
-        //  console are frozen snapshots, and you'd really want them to
-        //  stay up to date (maybe need to write some function that
-        //  on-demand updates them?)
-        JButton groovyButton = new JButton("Groovy");
-        groovyButton.setAction(new AbstractAction("Groovy console") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Console console = new Console();
-
-                // I want the same class path as running code, but it's
-                //  not clear how; the console class doesn't have
-                //  rational-looking calls for that, only calls that
-                //  mimic the GUI (where the user provides info)
-
-                // copy some variables we'll use (snapshots!  don't necessarily
-                //  reflect current state of GUI!
-                console.setVariable("annMgr", annotationMgr);
-                console.setVariable("annModel", annotationModel);
-                console.setVariable("lvvTrans", largeVolumeViewerTranslator);
-                console.run();
-            }
-        });
-        add(groovyButton);
-        */
-
     }
 
 }

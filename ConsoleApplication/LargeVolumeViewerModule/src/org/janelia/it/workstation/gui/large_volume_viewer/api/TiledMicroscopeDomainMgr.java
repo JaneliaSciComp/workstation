@@ -218,7 +218,7 @@ public class TiledMicroscopeDomainMgr {
         log.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
         List<TmNeuronMetadata> neurons = new ArrayList<>();
-        for(Pair<TmNeuronMetadata,InputStream> pair : client.getWorkspaceNeuronPairs(workspaceId)) {
+        for(Pair<TmNeuronMetadata, InputStream> pair : client.getWorkspaceNeuronPairs(workspaceId)) {
             TmNeuronMetadata neuronMetadata = pair.getLeft();
             exchanger.deserializeNeuron(pair.getRight(), neuronMetadata);
             log.trace("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);

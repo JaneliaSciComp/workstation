@@ -5,6 +5,24 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import javax.swing.*;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
@@ -56,25 +74,6 @@ import org.janelia.model.security.Subject;
 import org.janelia.model.util.MatrixUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * This class is responsible for handling requests from the AnnotationManager.  those
@@ -146,8 +145,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private static final Double SPLIT_ANCHOR_DISTANCE = 60.0;
 
 
-    public AnnotationModel() {
-        log.info("Creating new AnnotationModel {}", this);
+    public AnnotationModel(TmSample currentSample, TmWorkspace currentWorkspace) {
+        this.currentSample = currentSample;
+        this.currentWorkspace = currentWorkspace;
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         this.modelAdapter = new DomainMgrTmModelAdapter();
         this.neuronManager = new TmModelManipulator(modelAdapter);
@@ -298,7 +298,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(() -> fireWorkspaceUnloaded(currentWorkspace));
     }
     
-    public synchronized void loadSample(final TmSample sample) throws Exception {
+    public synchronized void loadSample(final TmSample sample) {
         if (sample == null) {
             throw new IllegalArgumentException("Cannot load null sample");
         }
@@ -530,7 +530,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      */
     public synchronized TmNeuronMetadata createNeuron(String name) throws Exception {
         CompletableFuture<TmNeuronMetadata> future = neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
-        TmNeuronMetadata neuron = future.get(2, TimeUnit.SECONDS);
+        TmNeuronMetadata neuron = future.get(15, TimeUnit.SECONDS);
 
         // Update local workspace
         log.info("Neuron was created: "+neuron);

@@ -433,9 +433,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void volumeLoaded(URL url) {
         if (initialObject instanceof TmSample) {
             activityLog.setTileFormat(getTileFormat(), initialObject.getId());
-        }
-        else if (initialObject instanceof TmWorkspace) {
-            activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat(), getSampleID());
+        } else if (initialObject instanceof TmWorkspace) {
+            TmWorkspace initialWorkspace = (TmWorkspace) initialObject;
+            activityLog.setTileFormat(getTileFormat(), initialWorkspace.getSampleId());
         }
     }
 

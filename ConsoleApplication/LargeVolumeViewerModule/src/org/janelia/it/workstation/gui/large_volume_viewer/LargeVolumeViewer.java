@@ -1,5 +1,17 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.geom.Point2D;
+import java.util.List;
+import java.util.prefs.PreferenceChangeEvent;
+import java.util.prefs.PreferenceChangeListener;
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLCapabilitiesChooser;
+import javax.media.opengl.GLContext;
+import javax.swing.*;
 import org.apache.commons.lang.SystemUtils;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
@@ -31,19 +43,6 @@ import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.openide.util.NbPreferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLCapabilitiesChooser;
-import javax.media.opengl.GLContext;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.geom.Point2D;
-import java.util.List;
-import java.util.prefs.PreferenceChangeEvent;
-import java.util.prefs.PreferenceChangeListener;
 
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, RepaintListener {
@@ -85,8 +84,6 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
             ObservableCamera3d camera) {
         // Use GLCanvas on Linux, for better frame rate on EnginFrame
         // But not on Windows, so we could still use Java2D decorations
-        // if (false)
-        // if (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_LINUX) 
         if (SystemUtils.IS_OS_LINUX) {
             glCanvas = new GLCanvasWrapper(capabilities, chooser, sharedContext) {
                 @Override
@@ -146,16 +143,15 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
         // Initialize pointComputer for interconverting pixelXY <=> sceneXYZ
         pointComputer.setCamera(getCamera());
         pointComputer.setWidget(this, false);
-        //
+
         renderer.addActor(skeletonActor);
         SkeletonActorStateUpdater sasUpdater = skeletonActor.getModel().getUpdater();
         sasUpdater.addListener(this);
-        //
+
         // PopupMenu
         glCanvas.getInnerAwtComponent().addMouseListener(new MouseHandler() {
             @Override
             protected void popupTriggered(MouseEvent e) {
-                // System.out.println("popup");
                 if (e.isConsumed()) {
                     return;
                 }
@@ -238,7 +234,6 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
         if (bs.size() > 1) {
             imageColorModel.getChannel(maxChan).setWhiteLevel(max);
             imageColorModel.getChannel(minChan).setBlackLevel(min);
-            // log.info("max = "+max+"; min = "+min);
         }
     }
 
