@@ -147,17 +147,17 @@ public class GLJComponentFactory
         
         @Override
         public void addPauseListener (ActionListener listener) {
-            playReverseButton.addActionListener(listener);
+            playPauseButton.addActionListener(listener);
         }
         
         @Override
         public void addPlayForwardListener (ActionListener listener) {
-            playReverseButton.addActionListener(listener);
+            playForwardButton.addActionListener(listener);
         }
         
         @Override        
         public void addPlayReverseListener (ActionListener listener) {
-            playForwardButton.addActionListener(listener);
+            playReverseButton.addActionListener(listener);
         }
         
         @Override

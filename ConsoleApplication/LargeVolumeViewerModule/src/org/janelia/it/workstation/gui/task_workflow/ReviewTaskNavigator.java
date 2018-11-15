@@ -4,12 +4,16 @@ import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.view.*;
 import com.mxgraph.*;
 import com.mxgraph.model.mxCell;
+import com.mxgraph.swing.handler.mxPanningHandler;
 import com.mxgraph.util.mxConstants;
+import com.mxgraph.util.mxEvent;
+import com.mxgraph.util.mxEventSource.mxIEventListener;
 import com.mxgraph.util.mxRectangle;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.ScrollPane;
+import java.awt.event.MouseEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,33 +44,24 @@ public class ReviewTaskNavigator implements MouseWheelListener {
         
     }
     
-    public JScrollPane createGraph(NeuronTree tree, int leaves, int width, int height) {
+    public void addCellListener (mxIEventListener listener) {
+        graph.getSelectionModel().addListener(mxEvent.CHANGE, listener);
+    }
+    
+    public JScrollPane createGraph(NeuronTree tree, int leaves, int width, int height) {       
         graph = new mxGraph() { 
             @Override
-            public boolean isCellEditable(Object cell){ 
-                if (cell instanceof mxCell) { 
-                    mxCell c = (mxCell)cell; 
-                    if (c.isEdge()) { 
-                        return false; 
-                    } else  
-                        return true;                     
-                } 
+            public boolean isCellEditable(Object cell){                
                 return false; 
             } 
             
             @Override
-            public boolean isCellSelectable(Object cell){ 
-                if (cell instanceof mxCell) { 
-                    mxCell c = (mxCell)cell;                    
-                    if (c.isEdge()) { 
-                        return false; 
-                    } else  
-                        return true;                     
-                } 
+            public boolean isCellMovable(Object cell){                
                 return false; 
-            } 
+            }     
         };
         graph.orderCells(false);
+
         parent = graph.getDefaultParent();
         
         graph.getModel().beginUpdate();
@@ -78,7 +73,35 @@ public class ReviewTaskNavigator implements MouseWheelListener {
         
         mxRectangle bounds = graph.getGraphBounds();
         
-        graphComponent = new mxGraphComponent(graph);
+        graphComponent = new mxGraphComponent(graph) {
+            @Override 
+            public boolean isPanningEvent(MouseEvent evt) {
+                return true;
+            }
+            
+            @Override 
+            protected mxPanningHandler createPanningHandler() {
+                return new mxPanningHandler(this) {
+                    @Override
+                    public void mouseDragged(MouseEvent e) {
+                        if (!e.isConsumed() && start != null) {
+                            int dx = e.getX() - start.x;
+                            int dy = e.getY() - start.y;
+                            
+                            Rectangle r = graphComponent.getViewport().getViewRect();
+                            
+                            int right = r.x + ((dx > 0) ? 0 : r.width) - dx;
+                            int bottom = r.y + ((dy > 0) ? 0 : r.height) - dy;
+                            
+                            graphComponent.getGraphControl().scrollRectToVisible(
+                                    new Rectangle(right, bottom, 0, 0));
+
+                            e.consume();
+                        }
+                    }
+                };
+            }
+        };
         graphComponent.addMouseWheelListener(this);
         double largestDim = bounds.getHeight();
         if (largestDim>bounds.getWidth()) {
@@ -89,6 +112,8 @@ public class ReviewTaskNavigator implements MouseWheelListener {
         graphComponent.scrollCellToVisible(tree.getGUICell());
         graphComponent.scrollToCenter(true);
         graphComponent.setPanning(true);
+        graphComponent.setAutoExtend(true);
+        graphComponent.refresh();
 
         return graphComponent;        
     }
