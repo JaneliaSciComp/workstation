@@ -30,13 +30,13 @@
 package org.janelia.scenewindow;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelListener;
+
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLEventListener;
@@ -46,10 +46,8 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
-import org.janelia.console.viewerapi.SimpleIcons;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+
 import org.openide.util.ImageUtilities;
 
 /**
