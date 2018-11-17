@@ -1,9 +1,5 @@
-// 7.20
+// 7.21
 
 Workstation Browser
-* Improved performance for image browsing
-* Added the possibility to reuse existing neuron separation results when reprocessing a sample
-
-Large Volume Viewer
-* Import SWC dialog box is larger and remembers its size
-* Added new tool for neuron skeleton review
+* Fixed intermittent error when canceling downloads
+* Fixed bug with right-click on the tables
