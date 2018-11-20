@@ -18,6 +18,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.ProgressMonitor;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -137,7 +138,7 @@ public class RerunSamplesAction extends AbstractAction {
             if (result2 != 0) return;
         }
         
-        SimpleWorker sw = new SimpleWorker() {
+        SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
@@ -172,7 +173,8 @@ public class RerunSamplesAction extends AbstractAction {
             }
             
         };
-        sw.execute();
+        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Marking samples for reprocessing", "", 0, 100));
+        worker.execute();
     }
     
 
