@@ -43,10 +43,10 @@ import org.slf4j.LoggerFactory;
  */
 public class RerunSamplesAction extends AbstractAction {
 
-    private static Logger log = LoggerFactory.getLogger(RerunSamplesAction.class);
+    private static final Logger log = LoggerFactory.getLogger(RerunSamplesAction.class);
     
     private static final int MAX_SAMPLE_RERUN_COUNT = 10;
-    private List<Sample> samples;
+    private final List<Sample> samples;
 
     /**
      * Returns action or null.  Action will be returned, if the selected objects contain one or more samples, the
@@ -70,11 +70,11 @@ public class RerunSamplesAction extends AbstractAction {
                     log.info("Null sample status in selection Name={}, ID={}.", sample.getName(), sample.getId());
                 }
                 
-                boolean canWrite = ClientDomainUtils.hasWriteAccess(sample) || AccessManager.getAccessManager().isAdmin();
+                boolean canWrite = ClientDomainUtils.hasWriteAccess(sample);
+                boolean canRerun = (!PipelineStatus.Processing.toString().equals(sample.getStatus())  &&
+                        !PipelineStatus.Scheduled.toString().equals(sample.getStatus()));
                 
-                if (canWrite &&
-                        !PipelineStatus.Processing.toString().equals(sample.getStatus())  &&
-                        !PipelineStatus.Scheduled.toString().equals(sample.getStatus())) {
+                if ((canWrite && canRerun) || AccessManager.getAccessManager().isAdmin()) {
                     samples.add(sample);
                 }
             }
