@@ -45,8 +45,9 @@ public class ConsoleApp {
 
     private static final Logger log = LoggerFactory.getLogger(ConsoleApp.class);
 
-    private static final String JACS_SERVER = System.getProperty("jacs.server"); 
-    
+    private static final String JACS_SERVER = System.getProperty("jacs.server.name");
+    private static final String JACS_PORT = System.getProperty("jacs.server.port");
+
     // Singleton
     private static ConsoleApp instance;
     public static synchronized ConsoleApp getConsoleApp() {
@@ -92,18 +93,16 @@ public class ConsoleApp {
         if (JACS_SERVER==null) {
             this.remoteHostname = ConsoleProperties.getInstance().getProperty("interactive.server.url"); 
             log.info("Using remote hostname defined in console.properties as interactive.server.url: "+remoteHostname);
-        }
-        else {
+        } else {
             this.remoteHostname = JACS_SERVER;
             log.info("Using remote hostname defined by -Djacs.server parameter: "+remoteHostname);
         }
 
-        if (JACS_SERVER==null) {
+        if (JACS_SERVER == null) {
             this.remoteRestUrl = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"); 
             log.info("Using remote REST URL defined in console.properties as domain.facade.rest.url: "+remoteRestUrl);
-        }
-        else {
-            this.remoteRestUrl = String.format("http://%s:8180/rest-v2/", JACS_SERVER);
+        } else {
+            this.remoteRestUrl = String.format("http://%s:%s/api/rest-v2/", JACS_SERVER, JACS_PORT);
             log.info("Derived remote REST URL from -Djacs.server parameter: "+remoteRestUrl);
         }        
         

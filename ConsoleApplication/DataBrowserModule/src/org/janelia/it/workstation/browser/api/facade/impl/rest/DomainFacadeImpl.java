@@ -59,11 +59,10 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
 
     @Override
     public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) throws Exception {
-        Response response = service.path("data/domainobject")
+        Response response = service.path("data/domainobject/name")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("name", name)
                 .queryParam("domainClass", domainClass.getName())
-                .path("name")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server using name: " + name)) {
@@ -90,8 +89,7 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setReferences(refList);
-        Response response = service.path("data/domainobject")
-                .path("details")
+        Response response = service.path("data/domainobject/details")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server: " + refList)) {
@@ -102,13 +100,12 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
     
     @Override
     public List<DomainObject> getDomainObjects(ReverseReference reference) throws Exception {
-        Response response = service.path("data/domainobject")
+        Response response = service.path("data/domainobject/reverseLookup")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("referenceId", reference.getReferenceId())
                 .queryParam("referenceAttr", reference.getReferenceAttr())
                 .queryParam("count", reference.getCount())
                 .queryParam("referenceClass", reference.getReferringClassName())
-                .path("reverseLookup")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server using reverser reference: " + reference)) {
@@ -125,8 +122,7 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         query.setObjectType(className);
         query.setObjectIds(new ArrayList<>(ids));
 
-        Response response = service.path("data/domainobject")
-                .path("details")
+        Response response = service.path("data/domainobject/details")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request getDomainObjects from server: " + ids)) {
@@ -142,10 +138,9 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         query.setObjectType(className);
         query.setSubjectKey(AccessManager.getSubjectKey());
 
-        Response response = service.path("data/domainobject")
+        Response response = service.path("data/domainobject/class")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("domainClass", className)
-                .path("class")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getAllDomainObjectsByClass from server: " + className)) {
@@ -214,8 +209,7 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setReferences(deleteObjectRefs);
-        Response response = service.path("data/domainobject")
-                .path("remove")
+        Response response = service.path("data/domainobject/remove")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request to remove objectList: " + deleteObjectRefs)) {

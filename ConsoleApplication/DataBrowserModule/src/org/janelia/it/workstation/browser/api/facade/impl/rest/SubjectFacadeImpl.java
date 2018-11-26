@@ -40,8 +40,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
     
     @Override
     public List<Subject> getSubjects() throws Exception {
-        Response response = service.path("data/user")
-                .path("subjects")
+        Response response = service.path("data/user/subjects")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getSubjects to server")) {
@@ -52,8 +51,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
     @Override
     public Subject getSubjectByNameOrKey(String key) throws Exception {
-        Response response = service.path("data/user")
-                .path("subject")
+        Response response = service.path("data/user/subject")
                 .queryParam("subjectKey", key)
                 .request("application/json")
                 .get();
@@ -77,8 +75,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
     @Override
     public List<Preference> getPreferences() throws Exception {
-        Response response = service.path("data/user")
-                .path("preferences")
+        Response response = service.path("data/user/preferences")
                 .queryParam("subjectKey", DomainMgr.getPreferenceSubject())
                 .request("application/json")
                 .get();
@@ -93,8 +90,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(DomainMgr.getPreferenceSubject());
         query.setPreference(preference);
-        Response response = service.path("data/user")
-                .path("preferences")
+        Response response = service.path("data/user/preferences")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request savePreferences to server: " + preference)) {

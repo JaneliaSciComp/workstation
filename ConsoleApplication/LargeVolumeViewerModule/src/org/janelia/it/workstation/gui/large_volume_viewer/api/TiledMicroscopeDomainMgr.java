@@ -1,5 +1,12 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.api;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
@@ -18,14 +25,6 @@ import org.janelia.model.domain.workspace.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Singleton for managing the Tiled Microscope Domain Model and related data access.
  *
@@ -33,7 +32,7 @@ import java.util.Map;
  */
 public class TiledMicroscopeDomainMgr {
 
-    private static final Logger log = LoggerFactory.getLogger(TiledMicroscopeDomainMgr.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TiledMicroscopeDomainMgr.class);
 
     // Singleton
     private static TiledMicroscopeDomainMgr instance;
@@ -62,17 +61,17 @@ public class TiledMicroscopeDomainMgr {
     }
     
     public TmSample getSample(Long sampleId) throws Exception {
-        log.debug("getSample(sampleId={})",sampleId);
+        LOG.debug("getSample(sampleId={})",sampleId);
         return model.getDomainObject(TmSample.class, sampleId);
     }
 
     public TmSample getSample(TmWorkspace workspace) throws Exception {
-        log.debug("getSample({})",workspace);
+        LOG.debug("getSample({})",workspace);
         return getSample(workspace.getSampleRef().getTargetId());
     }
 
     public TmSample createSample(String name, String filepath) throws Exception {
-        log.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
+        LOG.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
         Map<String,Object> constants = client.getTmSampleConstants(filepath);
         if (constants!=null) {
             TmSample sample = new TmSample();
@@ -111,7 +110,7 @@ public class TiledMicroscopeDomainMgr {
     }
 
     public TmSample save(TmSample sample) throws Exception {
-        log.debug("save({})",sample);
+        LOG.debug("save({})",sample);
         TmSample canonicalObject;
         synchronized (this) {
             canonicalObject = model.putOrUpdate(sample.getId()==null ? client.create(sample) : client.update(sample));
@@ -126,7 +125,7 @@ public class TiledMicroscopeDomainMgr {
     }
 
     public void remove(TmSample sample) throws Exception {
-        log.debug("remove({})",sample);
+        LOG.debug("remove({})",sample);
         client.remove(sample);
         model.notifyDomainObjectRemoved(sample);
     }
@@ -140,7 +139,7 @@ public class TiledMicroscopeDomainMgr {
     }
 
     public TmWorkspace getWorkspace(Long workspaceId) throws Exception {
-        log.debug("getWorkspace(workspaceId={})",workspaceId);
+        LOG.debug("getWorkspace(workspaceId={})",workspaceId);
         TmWorkspace workspace = model.getDomainObject(TmWorkspace.class, workspaceId);
         if (workspace==null) {
             throw new Exception("Workspace with id="+workspaceId+" does not exist");
@@ -149,7 +148,7 @@ public class TiledMicroscopeDomainMgr {
     }
     
     public TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {
-        log.debug("createWorkspace(sampleId={}, name={})", sampleId, name);
+        LOG.debug("createWorkspace(sampleId={}, name={})", sampleId, name);
         TmSample sample = getSample(sampleId);
         if (sample==null) {
             throw new IllegalArgumentException("TM sample does not exist: "+sampleId);
@@ -174,7 +173,7 @@ public class TiledMicroscopeDomainMgr {
     }
 
     public TmWorkspace copyWorkspace(TmWorkspace workspace, String name, String assignOwner) throws Exception {
-        log.debug("copyWorkspace(workspace={}, name={}, neuronOwner={})", workspace, name, assignOwner);
+        LOG.debug("copyWorkspace(workspace={}, name={}, neuronOwner={})", workspace, name, assignOwner);
         
         TmWorkspace workspaceCopy = client.copy(workspace, name, assignOwner);
         
@@ -194,7 +193,7 @@ public class TiledMicroscopeDomainMgr {
     }
 
     public TmWorkspace save(TmWorkspace workspace) throws Exception {
-        log.debug("save({})", workspace);
+        LOG.debug("save({})", workspace);
         TmWorkspace canonicalObject;
         synchronized (this) {
             canonicalObject = model.putOrUpdate(workspace.getId()==null ? client.create(workspace) : client.update(workspace));
@@ -209,27 +208,27 @@ public class TiledMicroscopeDomainMgr {
     }
 
     public void remove(TmWorkspace workspace) throws Exception {
-        log.debug("remove({})", workspace);
+        LOG.debug("remove({})", workspace);
         client.remove(workspace);
         model.notifyDomainObjectRemoved(workspace);
     }
     
     public List<TmNeuronMetadata> getWorkspaceNeurons(Long workspaceId) throws Exception {
-        log.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
+        LOG.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
         List<TmNeuronMetadata> neurons = new ArrayList<>();
         for(Pair<TmNeuronMetadata, InputStream> pair : client.getWorkspaceNeuronPairs(workspaceId)) {
             TmNeuronMetadata neuronMetadata = pair.getLeft();
             exchanger.deserializeNeuron(pair.getRight(), neuronMetadata);
-            log.trace("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);
+            LOG.trace("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);
             neurons.add(neuronMetadata);
         }
-        log.trace("Loaded {} neurons for workspace {}", neurons.size(), workspaceId);
+        LOG.trace("Loaded {} neurons for workspace {}", neurons.size(), workspaceId);
         return neurons;
     }
 
     public TmNeuronMetadata saveMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
-        log.debug("save({})", neuronMetadata);
+        LOG.debug("save({})", neuronMetadata);
         TmNeuronMetadata savedMetadata;
         if (neuronMetadata.getId()==null) {
             savedMetadata = client.createMetadata(neuronMetadata);
@@ -243,7 +242,7 @@ public class TiledMicroscopeDomainMgr {
     }
 
     public List<TmNeuronMetadata> saveMetadata(List<TmNeuronMetadata> neuronList) throws Exception {
-        log.debug("save({})", neuronList);
+        LOG.debug("save({})", neuronList);
         for(TmNeuronMetadata tmNeuronMetadata : neuronList) {
             if (tmNeuronMetadata.getId()==null) {
                 throw new IllegalArgumentException("Bulk neuron creation is currently unsupported");
@@ -257,7 +256,7 @@ public class TiledMicroscopeDomainMgr {
     }
     
     public TmNeuronMetadata save(TmNeuronMetadata neuronMetadata) throws Exception {
-        log.debug("save({})", neuronMetadata);
+        LOG.debug("save({})", neuronMetadata);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
         InputStream protobufStream = new ByteArrayInputStream(exchanger.serializeNeuron(neuronMetadata));
         TmNeuronMetadata savedMetadata;
@@ -280,7 +279,7 @@ public class TiledMicroscopeDomainMgr {
     }
     
     public void remove(TmNeuronMetadata tmNeuron) throws Exception {
-        log.debug("remove({})", tmNeuron);
+        LOG.debug("remove({})", tmNeuron);
         TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
         neuronMetadata.setId(tmNeuron.getId());
         client.remove(neuronMetadata);
@@ -288,22 +287,22 @@ public class TiledMicroscopeDomainMgr {
     }
 
     public void bulkEditNeuronTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) throws Exception {
-        log.debug("bulkEditTags({})", neurons);
+        LOG.debug("bulkEditTags({})", neurons);
         client.changeTags(neurons, tags, tagState);
     }
 
     public CoordinateToRawTransform getCoordToRawTransform(String basePath) throws Exception {
-        log.debug("getCoordToRawTransform({})", basePath);
+        LOG.debug("getCoordToRawTransform({})", basePath);
         return DomainMgr.getDomainMgr().getLegacyFacade().getLvvCoordToRawTransform(basePath);
     }
 
     public Map<Integer, byte[]> getTextureBytes(String basePath, int[] viewerCoord, int[] dimensions) throws Exception {
-        log.debug("getTextureBytes({}, viewerCoord={}, dimensions={})", basePath, viewerCoord, dimensions);
+        LOG.debug("getTextureBytes({}, viewerCoord={}, dimensions={})", basePath, viewerCoord, dimensions);
         return DomainMgr.getDomainMgr().getLegacyFacade().getTextureBytes(basePath, viewerCoord, dimensions);
     }
 
     public RawFileInfo getNearestChannelFiles(String basePath, int[] viewerCoord) throws Exception {
-        log.debug("getNearestChannelFiles({}, viewerCoord={})", basePath, viewerCoord);
+        LOG.debug("getNearestChannelFiles({}, viewerCoord={})", basePath, viewerCoord);
         return DomainMgr.getDomainMgr().getLegacyFacade().getNearestChannelFiles(basePath, viewerCoord);
     }
 }

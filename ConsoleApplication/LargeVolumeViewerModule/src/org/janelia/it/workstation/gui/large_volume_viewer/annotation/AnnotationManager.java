@@ -1499,9 +1499,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         ArrayList<Long> intList = new ArrayList<Long>();
         Pattern pattern = Pattern.compile("Neuron[ _]([0-9]+)");
         for (TmNeuronMetadata neuron : annotationModel.getNeuronList()) {
-            Matcher matcher = pattern.matcher(neuron.getName());
-            if (matcher.matches()) {
-                intList.add(Long.parseLong(matcher.group(1)));
+            if (neuron.getName() != null) {
+                Matcher matcher = pattern.matcher(neuron.getName());
+                if (matcher.matches()) {
+                    intList.add(Long.parseLong(matcher.group(1)));
+                }
             }
         }
 

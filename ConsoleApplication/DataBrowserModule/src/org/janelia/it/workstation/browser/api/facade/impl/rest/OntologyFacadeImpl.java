@@ -90,8 +90,7 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
         List<Integer> ordering = new ArrayList<>();
         ordering.add(index);
         query.setOrdering(ordering);
-        Response response = service.path("data/ontology")
-                .path("terms")
+        Response response = service.path("data/ontology/terms")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request addOntologyTerms to server: " + ontologyId + "," + parentTermId + "," + terms)) {
@@ -102,8 +101,7 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
 
     @Override
     public Ontology removeTerm(Long ontologyId, Long parentTermId, Long termId) throws Exception {
-        Response response = service.path("data/ontology")
-                .path("terms")
+        Response response = service.path("data/ontology/terms")
                 .queryParam("ontologyId", ontologyId)
                 .queryParam("parentTermId", parentTermId)
                 .queryParam("termId", termId)
@@ -130,8 +128,7 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
             orderList.add(new Integer(order[i]));
         }
         query.setOrdering(orderList);
-        Response response = service.path("data/ontology")
-                .path("terms")
+        Response response = service.path("data/ontology/terms")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request reorderOntologyTerms to server: " + ontologyId + "," + parentTermId + "," + order)) {
@@ -146,8 +143,7 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setReferences(new ArrayList<>(references));
 
-        Response response = service.path("data/annotation")
-                .path("details")
+        Response response = service.path("data/annotation/details")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request getAnnotations from server: " + references)) {

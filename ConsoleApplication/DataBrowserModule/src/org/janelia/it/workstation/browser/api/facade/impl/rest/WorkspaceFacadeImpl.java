@@ -76,14 +76,19 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
 
     @Override
     public Collection<Workspace> getWorkspaces() throws Exception {
+        String currentSubjectKey = AccessManager.getSubjectKey();
         Response response = service.path("data/workspaces")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("subjectKey", currentSubjectKey)
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getWorkspaces from server")) {
             throw new WebApplicationException(response);
         }
-        return response.readEntity(new GenericType<List<Workspace>>() {});
+        try {
+            return response.readEntity(new GenericType<List<Workspace>>() {});
+        } catch (Exception e) {
+            throw new WebApplicationException("Error de-serializing all workspaces for " + currentSubjectKey, e);
+        }
     }
 
     @Override
