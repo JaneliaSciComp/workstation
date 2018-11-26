@@ -29,6 +29,7 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
+import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
@@ -158,12 +159,13 @@ public class RerunSamplesAction extends AbstractAction {
                 request.setKeepExistingResults(dialog.isKeepExistingResults());
                 request.setExtraOptions(dialog.getExtraOptions());
                 
+                log.info("Dispatching {} samples", samples.size());
                 model.dispatchSamples(request);
             }
 
             @Override
             protected void hadSuccess() {
-                log.debug("Successfully dispatched "+samples.size()+" samples.");
+                log.info("Successfully dispatched {} samples.", samples.size());
                 DomainExplorerTopComponent.getInstance().refresh(true, true, null);
             }
 
@@ -173,7 +175,7 @@ public class RerunSamplesAction extends AbstractAction {
             }
             
         };
-        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Marking samples for reprocessing", "", 0, 100));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Marking samples for reprocessing", ""));
         worker.execute();
     }
     
