@@ -40,13 +40,6 @@ public class AB2Controller implements GLEventListener, AB2EventHandler {
     private int pickCounter=0;
     private AB2UserContext userContext=new AB2UserContext();
     private boolean needsRepaint=false;
-    //private boolean startDelayComplete=false;
-
-    //private int glWidth;
-    //private int glHeight;
-
-    // We are changing this design so that actors handle their own select events
-    // private Map<Integer,AB2Event> pickEventLookup=new HashMap<>();
 
     public static AB2Controller getController() {
         if (instance==null) {
