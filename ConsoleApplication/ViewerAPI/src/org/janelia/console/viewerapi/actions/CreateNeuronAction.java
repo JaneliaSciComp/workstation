@@ -125,6 +125,10 @@ public final class CreateNeuronAction extends AbstractAction
         Pattern pattern = Pattern.compile("Neuron[ _]([0-9]+)");
         Long maximum = 0L;
         for (NeuronModel neuron : workspace) {
+            if (neuron.getName() == null) {
+                // skip unnamed neurons
+                continue;
+            }
             Matcher matcher = pattern.matcher(neuron.getName());
             if (matcher.matches()) {
                 Long index = Long.parseLong(matcher.group(1));
