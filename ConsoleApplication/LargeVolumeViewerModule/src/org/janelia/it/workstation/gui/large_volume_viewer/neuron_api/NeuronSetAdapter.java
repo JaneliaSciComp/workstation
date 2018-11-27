@@ -82,7 +82,7 @@ public class NeuronSetAdapter
         extends BasicNeuronSet
         implements NeuronSet {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     TmWorkspace workspace; // LVV workspace, as opposed to Horta workspace
     AnnotationModel annotationModel;
@@ -154,19 +154,19 @@ public class NeuronSetAdapter
     private void updateVoxToMicronMatrices(TmSample sample) {
         // If we try to get the matrix too early, it comes back null, so populate just-in-time
         if (sample == null) {
-            log.error("Attempt to get voxToMicronMatrix for null sample");
+            LOG.error("Attempt to get voxToMicronMatrix for null sample");
             return;
         }
         String serializedVoxToMicronMatrix = sample.getVoxToMicronMatrix();
         if (serializedVoxToMicronMatrix == null) {
-            log.error("Found null voxToMicronMatrix");
+            LOG.error("Found null voxToMicronMatrix");
             return;
         }
         voxToMicronMatrix = MatrixUtilities.deserializeMatrix(serializedVoxToMicronMatrix, "voxToMicronMatrix");
 
         String serializedMicronToVoxMatrix = sample.getMicronToVoxMatrix();
         if (serializedMicronToVoxMatrix == null) {
-            log.error("Found null micronToVoxMatrix");
+            LOG.error("Found null micronToVoxMatrix");
             return;
         }
         micronToVoxMatrix = MatrixUtilities.deserializeMatrix(serializedMicronToVoxMatrix, "micronToVoxMatrix");
@@ -238,7 +238,7 @@ public class NeuronSetAdapter
             neuron = annotationModel.createNeuron(neuronName);
             getMembershipChangeObservable().setChanged();
         } catch (Exception ex) {
-            log.warn("Error creating neuron", ex);
+            LOG.warn("Error creating neuron", ex);
             return null;
         }
         return new NeuronModelAdapter(neuron, this);
@@ -262,7 +262,7 @@ public class NeuronSetAdapter
         annotationModel.addBackgroundAnnotationListener(backgroundAnnotationListener);
         annotationModel.addTmGeoAnnotationModListener(annotationModListener);
         getMembershipChangeObservable().notifyObservers();
-        log.info("Observing new Annotation Model {}", annotationModel);
+        LOG.info("Observing new Annotation Model {}", annotationModel);
     }
 
     // Sometimes the TmWorkspace instance changes, even though the semantic workspace has not changed.
@@ -273,7 +273,7 @@ public class NeuronSetAdapter
         if (w == workspace) {
             return; // unchanged
         }
-        log.info("Workspace changed");
+        LOG.info("Workspace changed");
         setWorkspace(w);
     }
 
@@ -411,7 +411,7 @@ public class NeuronSetAdapter
         @Override
         public void annotationAdded(TmGeoAnnotation annotation) {
 
-            log.debug("annotationAdded");
+            LOG.debug("annotationAdded");
 
             sanityCheckWorkspace(); // beware of shifting sands beneath us...
             // updateEdges(); // Brute force approach reanalyzes all edges            
@@ -420,13 +420,13 @@ public class NeuronSetAdapter
 
             NeuronModelAdapter neuron = neuronModelForTmGeoAnnotation(annotation);
             if (neuron == null) {
-                log.error("could not find NeuronModel for newly added TmGeoAnnotation");
+                LOG.error("could not find NeuronModel for newly added TmGeoAnnotation");
                 return;
             }
 
             NeuronVertex newVertex = neuron.addVertex(annotation);
             if (newVertex == null) {
-                log.error("NeuronModelAdapter.addVertex() returned null");
+                LOG.error("NeuronModelAdapter.addVertex() returned null");
                 return;
             }
             neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
@@ -451,14 +451,14 @@ public class NeuronSetAdapter
                 addedSignal.notifyObservers(new VertexWithNeuron(newVertex, neuron));
             }
 
-            log.debug("Adding vertex: {}", newVertex);
+            LOG.debug("Adding vertex: {}", newVertex);
             spatialIndex.addToIndex(newVertex);
         }
 
         @Override
         public void annotationsDeleted(List<TmGeoAnnotation> annotations) {
 
-            log.debug("annotationDeleted");
+            LOG.debug("annotationDeleted");
 
             sanityCheckWorkspace(); // beware of shifting sands beneath us...
 
@@ -486,7 +486,7 @@ public class NeuronSetAdapter
                 }
                 deletedVerticesByNeuron.get(neuron).add(vertex);
 
-                log.debug("Removing vertex: {}", vertex);
+                LOG.debug("Removing vertex: {}", vertex);
                 spatialIndex.removeFromIndex(vertex);
             }
 
@@ -506,7 +506,7 @@ public class NeuronSetAdapter
         @Override
         public void annotationReparented(TmGeoAnnotation annotation, Long prevNeuronId) {
 
-            log.debug("annotationReparented");
+            LOG.debug("annotationReparented");
 
             sanityCheckWorkspace(); // beware of shifting sands beneath us...
             updateEdges(); // updateEdges() is required for post-merge update in Horta. TODO: is performance optimization needed here?
@@ -515,18 +515,18 @@ public class NeuronSetAdapter
                 NeuronModelAdapter oldNeuronModel = innerList.getCachedNeuron(prevNeuronId);
                 NeuronVertex oldVertex = oldNeuronModel.getVertexForAnnotation(annotation);
                 if (oldVertex != null) {
-                    log.debug("Removing vertex: {}", oldVertex);
+                    LOG.debug("Removing vertex: {}", oldVertex);
                     spatialIndex.removeFromIndex(oldVertex);
                 }
             }
 
             NeuronModelAdapter neuronModel = neuronModelForTmGeoAnnotation(annotation);
             if (neuronModel == null) {
-                log.error("could not find NeuronModel for newly added TmGeoAnnotation");
+                LOG.error("could not find NeuronModel for newly added TmGeoAnnotation");
                 return;
             }
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
-                log.debug("Adding vertex: {}", neuronVertex);
+                LOG.debug("Adding vertex: {}", neuronVertex);
                 spatialIndex.addToIndex(neuronVertex);
             }
 
@@ -542,21 +542,21 @@ public class NeuronSetAdapter
         @Override
         public void annotationMoved(TmGeoAnnotation movedAnnotation) {
 
-            log.debug("annotationMoved");
+            LOG.debug("annotationMoved");
 
             sanityCheckWorkspace();
             NeuronModelAdapter neuron = neuronModelForTmGeoAnnotation(movedAnnotation);
             if (neuron == null) {
-                log.warn("Could not find neuron for moved anchor");
+                LOG.warn("Could not find neuron for moved anchor");
                 return;
             }
             NeuronVertex movedVertex = neuron.getVertexForAnnotation(movedAnnotation);
             if (movedVertex == null) {
-                log.info("Skipping moved anchor not yet instantiated in Horta");
+                LOG.info("Skipping moved anchor not yet instantiated in Horta");
                 return;
             }
 
-            log.debug("Updating vertex: {}", movedVertex);
+            LOG.debug("Updating vertex: {}", movedVertex);
             spatialIndex.updateIndex(movedVertex);
 
             NeuronVertexUpdateObservable signal = neuron.getVertexUpdatedObservable();
@@ -568,24 +568,24 @@ public class NeuronSetAdapter
 
         @Override
         public void annotationNotMoved(TmGeoAnnotation annotation) {
-            log.debug("annotationNotMoved");
+            LOG.debug("annotationNotMoved");
             // updateEdges();
         }
 
         @Override
         public void annotationRadiusUpdated(TmGeoAnnotation annotation) {
 
-            log.debug("annotationRadiusUpdated");
+            LOG.debug("annotationRadiusUpdated");
 
             sanityCheckWorkspace();
             NeuronModelAdapter neuron = neuronModelForTmGeoAnnotation(annotation);
             if (neuron == null) {
-                log.warn("Could not find neuron for reradiused anchor");
+                LOG.warn("Could not find neuron for reradiused anchor");
                 return;
             }
             NeuronVertex movedVertex = neuron.getVertexForAnnotation(annotation);
             if (movedVertex == null) {
-                log.info("Skipping reradiused anchor not yet instantiated in Horta");
+                LOG.info("Skipping reradiused anchor not yet instantiated in Horta");
                 return;
             }
             NeuronVertexUpdateObservable signal = neuron.getVertexUpdatedObservable();
@@ -629,7 +629,7 @@ public class NeuronSetAdapter
             // Remove all the existing cached vertices for this neuron
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
-                log.debug("Removing cached vertex: {}", neuronVertex);
+                LOG.debug("Removing cached vertex: {}", neuronVertex);
                 spatialIndex.removeFromIndex(neuronVertex);
             }
             // merge in the latest vertices and update the geometry
@@ -637,7 +637,7 @@ public class NeuronSetAdapter
 
             // Re-create all the vertices for the neuron, and re-add them to the spatial index
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
-                log.debug("Re-adding vertex: {}", neuronVertex);
+                LOG.debug("Re-adding vertex: {}", neuronVertex);
                 spatialIndex.addToIndex(neuronVertex);
             }
 
@@ -648,7 +648,7 @@ public class NeuronSetAdapter
         public void neuronModelCreated(TmNeuronMetadata neuron) {
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
-                log.debug("Adding vertex: {}", neuronVertex);
+                LOG.debug("Adding vertex: {}", neuronVertex);
                 spatialIndex.addToIndex(neuronVertex);
             }
             neuronModel.getGeometryChangeObservable().setChanged();
@@ -658,11 +658,11 @@ public class NeuronSetAdapter
 
         @Override
         public void neuronModelDeleted(TmNeuronMetadata neuron) {
-            log.info("Neuron deleted: {}", neuron);
+            LOG.info("Neuron deleted: {}", neuron);
             Collection<NeuronVertex> deletedVertices = new ArrayList<>();
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
-                log.debug("Removing vertex: {}", neuronVertex);
+                LOG.debug("Removing vertex: {}", neuronVertex);
                 spatialIndex.removeFromIndex(neuronVertex);
                 deletedVertices.add(neuronVertex);
             }
@@ -695,7 +695,7 @@ public class NeuronSetAdapter
 
         @Override
         public void workspaceLoaded(final TmWorkspace workspace) {
-            log.info("Workspace loaded");
+            LOG.info("Workspace loaded");
             setWorkspace(workspace);
 
             if (workspace == null) {
@@ -747,10 +747,10 @@ public class NeuronSetAdapter
 
         @Override
         public void neuronCreated(TmNeuronMetadata neuron) {
-            log.info("Neuron created: {}", neuron);
+            LOG.info("Neuron created: {}", neuron);
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
-                log.debug("Adding vertex: {}", neuronVertex);
+                LOG.debug("Adding vertex: {}", neuronVertex);
                 spatialIndex.addToIndex(neuronVertex);
             }
             neuronModel.getGeometryChangeObservable().setChanged();
@@ -761,11 +761,11 @@ public class NeuronSetAdapter
 
         @Override
         public void neuronDeleted(TmNeuronMetadata neuron) {
-            log.info("Neuron deleted: {}", neuron);
+            LOG.info("Neuron deleted: {}", neuron);
             Collection<NeuronVertex> deletedVertices = new ArrayList<>();
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
-                log.debug("Removing vertex: {}", neuronVertex);
+                LOG.debug("Removing vertex: {}", neuronVertex);
                 spatialIndex.removeFromIndex(neuronVertex);
                 deletedVertices.add(neuronVertex);
             }
@@ -783,18 +783,18 @@ public class NeuronSetAdapter
         @Override
         public void neuronChanged(TmNeuronMetadata neuron) {
 
-            log.info("Neuron changed: {}", neuron);
+            LOG.info("Neuron changed: {}", neuron);
 
             // Remove all the existing cached vertices for this neuron
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
-                log.debug("Removing cached vertex: {}", neuronVertex);
+                LOG.debug("Removing cached vertex: {}", neuronVertex);
                 spatialIndex.removeFromIndex(neuronVertex);
             }
 
             // Re-create all the vertices for the neuron, and re-add them to the spatial index
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
-                log.debug("Re-adding vertex: {}", neuronVertex);
+                LOG.debug("Re-adding vertex: {}", neuronVertex);
                 spatialIndex.addToIndex(neuronVertex);
             }
 
@@ -818,7 +818,7 @@ public class NeuronSetAdapter
         @Override
         public void neuronRadiusUpdated(TmNeuronMetadata neuron) {
 
-            log.debug("neuronRadiusUpdated");
+            LOG.debug("neuronRadiusUpdated");
 
             // neuron radius update can only be triggered if there are
             //  annotations, so this should be safe:
