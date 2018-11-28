@@ -1563,6 +1563,7 @@
                 <package>org.janelia.messaging.utility.bot.neurongenerator.geom</package>
                 <package>org.janelia.messaging.utility.bot.neurongenerator.units</package>
                 <package>org.janelia.messaging.utility.swc</package>
+                <package>org.janelia.configutils</package>
                 <package>org.janelia.model.access.domain</package>
                 <package>org.janelia.model.access.tiledMicroscope</package>
                 <package>org.janelia.model.domain</package>

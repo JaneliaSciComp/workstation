@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ConsoleProperties extends XProperties {
+public class ConsoleProperties extends ConfigProperties {
 
     private static final Logger log = LoggerFactory.getLogger(ConsoleProperties.class);
     

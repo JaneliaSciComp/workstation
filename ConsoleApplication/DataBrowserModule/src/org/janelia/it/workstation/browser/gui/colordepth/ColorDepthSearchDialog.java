@@ -348,14 +348,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
                     mask.setName(maskNameStr);
                     mask = model.save(mask);
                 }
-                
-//                String maskName = maskNameStr;
-//                if (colorDepthSearch != null && !maskName.matches("#\\d+$")) {
-//                    // Add mask numbering automatically
-//                    List<ColorDepthMask> masks = model.getDomainObjectsAs(ColorDepthMask.class, colorDepthSearch.getMasks());
-//                    maskName = ClientDomainUtils.getNextNumberedName(masks, maskName, false);
-//                }
-                
+
                 if (newSearchRadioButton.isSelected()) {
                     colorDepthSearch.setName(searchNameField.getText());   
                 }             
