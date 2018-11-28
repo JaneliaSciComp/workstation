@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.browser.util;
 
-import com.google.common.collect.Maps;
 import java.util.Properties;
 import org.janelia.configutils.ConfigValueResolver;
 
@@ -33,7 +32,7 @@ public class ConfigProperties extends Properties {
     /**
      * Creates an empty property list with the specified defaults.
      * 
-     * @param defaults java.util.Properties
+     * @param defaults
      */
     public ConfigProperties(Properties defaults) {
         super(defaults);
@@ -52,7 +51,7 @@ public class ConfigProperties extends Properties {
     @Override
     public String getProperty(String key) {
         String value = super.getProperty(key);
-        return configValueResolver.resolve(value, Maps.fromProperties(this));
+        return configValueResolver.resolve(value, (String k) -> super.getProperty(k));
     }
 
 }
