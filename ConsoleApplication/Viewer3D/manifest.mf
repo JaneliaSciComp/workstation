@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
 OpenIDE-Module: org.janelia.it.workstation.gui.viewer3d/1
 OpenIDE-Module-Localizing-Bundle: org/janelia/it/workstation/gui/viewer3d/Bundle.properties
-OpenIDE-Module-Specification-Version: 2.45
+OpenIDE-Module-Specification-Version: 2.46
 
