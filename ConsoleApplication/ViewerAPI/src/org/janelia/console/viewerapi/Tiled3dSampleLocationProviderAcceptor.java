@@ -48,7 +48,7 @@ public interface Tiled3dSampleLocationProviderAcceptor {
     /** Only acceptor or both type should be called here. */
     void setSampleLocation(SampleLocation location);
     /** workaround to play a whole set of sample locations */    
-    void playSampleLocations(List<SampleLocation> locationList);
+    void playSampleLocations(List<SampleLocation> locationList, boolean autoRotation, int speed);
     
     /** Provider, or both-type: @return where-at, in case reload required. */
     SampleLocation getSampleLocation();

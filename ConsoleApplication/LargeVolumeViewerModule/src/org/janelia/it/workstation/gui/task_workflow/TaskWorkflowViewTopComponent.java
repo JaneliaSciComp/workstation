@@ -144,6 +144,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     private JScrollPane dendroPane;
     private JPanel dendroContainerPanel;
     private JCheckBox reviewCheckbox;
+    private JCheckBox rotationCheckbox;
+    private JTextField speedSpinner;
     int currGroupIndex;
     int currPointIndex;
     
@@ -258,6 +260,10 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             reviewCheckbox.setSelected(true);
             reviewCheckbox.setEnabled(false);
         }
+        
+        // navigate viewer to starting point
+        ReviewPoint startPoint = currGroup.getPointList().get(0);
+        gotoPoint(startPoint);
     }
 
     public void prevBranch() {
@@ -436,7 +442,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
          Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
          for (Tiled3dSampleLocationProviderAcceptor acceptor : locationAcceptors) {
              if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
-                 acceptor.playSampleLocations(playList);
+                 acceptor.playSampleLocations(playList, rotationCheckbox.isSelected(), Integer.parseInt(speedSpinner.getText()));
              }
          }
     }
@@ -638,13 +644,22 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             reviewCheckbox.setEnabled(false);
         }
         taskButtonsPanel.add(reviewCheckbox);
+        
+        rotationCheckbox = new JCheckBox("Auto Rotation");       
+        taskButtonsPanel.add(rotationCheckbox);
 
+        speedSpinner = new JTextField(3);
+        speedSpinner.setText("20");
+        taskButtonsPanel.add(speedSpinner);
+        JLabel speedSpinnerLabel = new JLabel("Speed");
+        taskButtonsPanel.add(speedSpinnerLabel);
+        
         dendroContainerPanel.add(taskButtonsPanel);
         dendroContainerPanel.add(dendroPane);
         dendroContainerPanel.validate();
         dendroContainerPanel.repaint();
     }
-
+    
     public void setBranchReviewed() {
         if (reviewCheckbox.isSelected() && !groupList.get(currGroupIndex).isReviewed() && currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
             // get the current branch tmGeoAnnotations and update dendrogram

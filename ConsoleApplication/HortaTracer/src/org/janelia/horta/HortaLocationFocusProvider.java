@@ -121,7 +121,7 @@ public class HortaLocationFocusProvider implements Tiled3dSampleLocationProvider
     }
 
     @Override
-    public void playSampleLocations(List<SampleLocation> locationList) {
+    public void playSampleLocations(List<SampleLocation> locationList, boolean autoRotation, int speed) {
        NeuronTracerTopComponent nttc = getNeuronTracer();
         if (nttc == null) {
             throw new IllegalStateException("Failed to find Neuron Tracer.");
@@ -132,7 +132,7 @@ public class HortaLocationFocusProvider implements Tiled3dSampleLocationProvider
         if (nttc.isOpened()) {
             nttc.requestActive();
             try {                
-                nttc.playSampleLocations(locationList);
+                nttc.playSampleLocations(locationList, autoRotation, speed);
             } catch (Exception ex) {
                 logger.error(ex.getMessage());
                 ex.printStackTrace();

@@ -33,8 +33,10 @@ public class PlayReviewManager {
     private NeuronTraceLoader loader;
     private NeuronTracerTopComponent neuronTracer;
     private String currentSource;
+    private boolean autoRotation;
+    private int fps;
     
-    enum PlayDirection {
+    public enum PlayDirection {
         FORWARD, REVERSE
     };
     private int DEFAULT_REVIEW_PLAYBACK_INTERVAL = 20;
@@ -65,13 +67,16 @@ public class PlayReviewManager {
         });
     }
 
-    public void reviewPoints(final List<SampleLocation> locationList, final String currentSource) {
+    public void reviewPoints(final List<SampleLocation> locationList, final String currentSource, final boolean autoRotation, final int speed) {
         if (playState == null) {
             playState = new PlayState();
             playState.setPlayList(locationList);
             playState.setCurrentStep(0);
         }
+        this.fps = speed;
+        this.fpsAnimator.setFPS(speed);
         this.currentSource = currentSource;
+        this.autoRotation = autoRotation;
         SimpleWorker scrollWorker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
@@ -89,7 +94,7 @@ public class PlayReviewManager {
                     acceptor.acceptLocation(sampleLocation);
                     Vantage vantage = sceneWindow.getVantage();
                     vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
-                    Thread.sleep(DEFAULT_REVIEW_PLAYBACK_INTERVAL);
+                    Thread.sleep(1000*1/fps);
 
                     for (int i = 1; i < locationList.size(); i++) {
                         sampleLocation = locationList.get(i);
@@ -141,7 +146,7 @@ public class PlayReviewManager {
 
     }
 
-    private void resumePlaythrough(final PlayDirection direction) {
+    public void resumePlaythrough(final PlayDirection direction) {
         SimpleWorker scrollWorker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
@@ -247,7 +252,7 @@ public class PlayReviewManager {
                 (float) endLocation.getFocusZUm());
         double currWay = 0;
         for (int i = 0; i < steps; i++) {
-            Thread.sleep(DEFAULT_REVIEW_PLAYBACK_INTERVAL);
+            Thread.sleep(1000*1/fps);
             SampleLocation sampleLocation = new BasicSampleLocation();
             currWay += stepSize;
             Vector3 iFocus = vec3Interpolator.interpolate_equidistant(currWay,
@@ -255,7 +260,8 @@ public class PlayReviewManager {
             Quaternion iRotate = rotationInterpolator.interpolate_equidistant(currWay,
                     startRotation, startRotation, endRotation, endRotation);
             vantage.setFocus(iFocus.getX(), iFocus.getY(), iFocus.getZ());
-            vantage.setRotationInGround(new Rotation().setFromQuaternion(iRotate));
+            if (autoRotation)
+                vantage.setRotationInGround(new Rotation().setFromQuaternion(iRotate));
             vantage.notifyObservers();
             //sceneWindow.redrawImmediately();
         }
