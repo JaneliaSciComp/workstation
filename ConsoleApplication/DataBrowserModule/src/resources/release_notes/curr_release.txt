@@ -1,5 +1,6 @@
-// 7.21
+// 7.22
 
 Workstation Browser
-* Fixed intermittent error when canceling downloads
-* Fixed bug with right-click on the tables
+* Added progress indication for reprocessing  
+
+

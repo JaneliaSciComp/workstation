@@ -1,3 +1,9 @@
+// 7.21
+
+Workstation Browser
+* Fixed intermittent error when canceling downloads
+* Fixed bug with right-click on the tables
+
 // 7.20
 
 Workstation Browser
