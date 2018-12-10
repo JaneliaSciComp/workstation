@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
         id = "ReversePlayReviewAction"
 )
 @ActionRegistration(
-        displayName = "Forward Playback",
+        displayName = "Reverse Playback",
         lazy = true
 )
 @ActionReferences({
@@ -32,7 +32,7 @@ public class ReversePlayReviewAction extends AbstractAction {
 
     private static final Logger log = LoggerFactory.getLogger(ReversePlayReviewAction.class);
     public ReversePlayReviewAction() {
-        super("Forward Play Review");
+        super("Reverse Play Review");
     }
     
     @Override
