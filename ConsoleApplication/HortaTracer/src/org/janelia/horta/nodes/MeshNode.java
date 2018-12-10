@@ -30,7 +30,11 @@
 
 package org.janelia.horta.nodes;
 
+import java.awt.Event;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.MeshActor;
@@ -70,6 +74,13 @@ public class MeshNode extends AbstractNode
     @Override
     public Image getOpenedIcon(int i) {
         return getIcon(i);
+    }
+    
+    @Override
+    public Action[] getActions (boolean popup) {
+        return new Action[] { 
+            new DeleteAction(this.meshActor) 
+        };
     }
     
     public boolean isVisible() {
@@ -123,5 +134,18 @@ public class MeshNode extends AbstractNode
         } 
         sheet.put(set); 
         return sheet; 
+    }
+    
+    private class DeleteAction extends AbstractAction {
+        MeshActor mesh;
+        public DeleteAction(MeshActor mesh) {
+            putValue (NAME, "DELETE");
+            this.mesh = mesh;
+        }
+        
+        @Override
+        public void actionPerformed (ActionEvent e) {
+            NeuronTracerTopComponent.getInstance().removeMeshActor(mesh);
+        }
     }
 }

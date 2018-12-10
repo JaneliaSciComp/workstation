@@ -381,6 +381,25 @@ implements NeuronSet, TaskReviewListener
             ConsoleApp.handleException(error);
         }
     }
+    
+    @Override
+    public void removeObjectMesh(String meshName) {
+        try {
+            TmObjectMesh deleteMesh = null;
+            List<TmObjectMesh> meshList = annotationModel.getCurrentWorkspace().getObjectMeshList();
+            for (TmObjectMesh mesh: meshList) {
+                if (mesh.getName().equals(meshName)) {
+                    deleteMesh = mesh;
+                }
+            }
+            if (deleteMesh!=null) {
+                annotationModel.getCurrentWorkspace().removeObjectMesh(deleteMesh);
+                annotationModel.saveCurrentWorkspace();
+            }
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
+    }
 
     @Override
     public void updateObjectMeshName(String oldName, String updatedName) {
