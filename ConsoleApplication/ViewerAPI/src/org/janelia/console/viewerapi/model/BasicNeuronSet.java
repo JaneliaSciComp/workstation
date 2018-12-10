@@ -280,6 +280,11 @@ implements NeuronSet
     public void addObjectMesh(TmObjectMesh mesh) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+    
+    @Override
+    public void removeObjectMesh(String meshName) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     @Override
     public void updateObjectMeshName(String oldName, String updatedName) {

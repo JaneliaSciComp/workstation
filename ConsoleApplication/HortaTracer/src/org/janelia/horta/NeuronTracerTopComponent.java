@@ -600,6 +600,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     NeuronVertex vertex = neuron.getVertexByGuid(vertexId);
                     if (neuron!=null && vertex !=null) {
                         tracingInteractor.selectParentVertex(vertex, neuron);
+                        activeNeuronSet.setPrimaryAnchor(vertex);
                     }
                 }
             }
@@ -2255,6 +2256,11 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     public void addMeshActor(MeshActor meshActor) {
         neuronMPRenderer.addMeshActor(meshActor);
+    }
+    
+    public void removeMeshActor(MeshActor meshActor) {
+        neuronMPRenderer.removeMeshActor(meshActor);        
+        activeNeuronSet.removeObjectMesh(meshActor.getMeshName());
     }
     
     public void saveObjectMesh (String meshName, String filename) {

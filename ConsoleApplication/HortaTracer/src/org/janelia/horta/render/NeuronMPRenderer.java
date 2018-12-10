@@ -179,6 +179,11 @@ extends MultipassRenderer
         setOpaqueBufferDirty();
     }
     
+    public void removeMeshActor(MeshActor meshActor) {
+        opaqueRenderPass.removeActor(meshActor);
+        setOpaqueBufferDirty();
+    }
+    
     public void addVolumeActor(GL3Actor boxMesh) {
         volumeRenderPass.addActor(boxMesh);
         setIntensityBufferDirty();
