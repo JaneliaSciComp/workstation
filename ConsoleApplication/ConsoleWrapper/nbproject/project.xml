@@ -1585,6 +1585,7 @@
                 <package>org.janelia.model.domain.support</package>
                 <package>org.janelia.model.domain.tiledMicroscope</package>
                 <package>org.janelia.model.domain.workspace</package>
+                <package>org.janelia.model.rendering</package>
                 <package>org.janelia.model.sage</package>
                 <package>org.janelia.model.security</package>
                 <package>org.janelia.model.security.util</package>

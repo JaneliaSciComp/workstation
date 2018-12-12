@@ -20,11 +20,11 @@ import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.facade.interfaces.LegacyFacade;
 import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeRestClient;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
 import org.janelia.model.domain.DomainObject;
@@ -90,7 +90,6 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
         buttonPanel.add(cancelButton, SystemInfo.isMac ? BorderLayout.LINE_START : BorderLayout.LINE_END);
         inputDialog.add(buttonPanel);
         inputDialog.add(errorLabel);
-        final LegacyFacade cf = DomainMgr.getDomainMgr().getLegacyFacade();
 
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Send path to linux.");
@@ -115,8 +114,8 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
                             bldr.append(nextChar);
                             break;
                     }
-
                 }
+                TiledMicroscopeRestClient cf = new TiledMicroscopeRestClient();
                 String swcFolder = bldr.toString().trim();
                 if (! cf.isServerPathAvailable(swcFolder, true) ) {
                     errorLabel.setText("'" + swcFolder + "' not found on server. Please Try again.");

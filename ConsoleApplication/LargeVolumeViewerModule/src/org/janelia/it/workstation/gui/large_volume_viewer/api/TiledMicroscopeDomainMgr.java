@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -96,8 +95,7 @@ public class TiledMicroscopeDomainMgr {
             } else {
                 sample.setNumImageryLevels(Long.parseLong((String)constants.get("numberLevels")));
             }
-            
-            
+
             // call out to server to get origin/scaling information
             sample = save(sample);
 
@@ -293,16 +291,16 @@ public class TiledMicroscopeDomainMgr {
 
     public CoordinateToRawTransform getCoordToRawTransform(String basePath) throws Exception {
         LOG.debug("getCoordToRawTransform({})", basePath);
-        return DomainMgr.getDomainMgr().getLegacyFacade().getLvvCoordToRawTransform(basePath);
+        return client.getLvvCoordToRawTransform(basePath);
     }
 
-    public Map<Integer, byte[]> getTextureBytes(String basePath, int[] viewerCoord, int[] dimensions) throws Exception {
+    public byte[] getRawTextureBytes(String basePath, int[] viewerCoord, int[] dimensions, int channel) throws Exception {
         LOG.debug("getTextureBytes({}, viewerCoord={}, dimensions={})", basePath, viewerCoord, dimensions);
-        return DomainMgr.getDomainMgr().getLegacyFacade().getTextureBytes(basePath, viewerCoord, dimensions);
+        return client.getRawTextureBytes(basePath, viewerCoord, dimensions, channel);
     }
 
-    public RawFileInfo getNearestChannelFiles(String basePath, int[] viewerCoord) throws Exception {
-        LOG.debug("getNearestChannelFiles({}, viewerCoord={})", basePath, viewerCoord);
-        return DomainMgr.getDomainMgr().getLegacyFacade().getNearestChannelFiles(basePath, viewerCoord);
+    public String getNearestChannelFilesURL(String basePath, int[] viewerCoord) {
+        LOG.debug("getNearestChannelFilesURL({}, viewerCoord={})", basePath, viewerCoord);
+        return client.getNearestChannelFilesURL(basePath, viewerCoord);
     }
 }

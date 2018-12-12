@@ -6,16 +6,13 @@
 
 package org.janelia.it.workstation.gui.passive_3d;
 
-import java.util.Map;
 import javax.media.opengl.GL2;
-
-import org.janelia.it.jacs.shared.img_3d_loader.AbstractVolumeFileLoader;
 import org.janelia.it.jacs.shared.img_3d_loader.ByteArrayLoader;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.viewer3d.loader.TifTextureBuilder;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
@@ -89,7 +86,8 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         };        
         
         progressMonitor.setNote("Reading volume data.");
-        Map<Integer,byte[]> byteBuffers = TiledMicroscopeDomainMgr.getDomainMgr().getTextureBytes(baseDirectoryPath, voxelizedCoords, dimensions);
+        byte[] channel0Buffer = TiledMicroscopeDomainMgr.getDomainMgr().getRawTextureBytes(baseDirectoryPath, voxelizedCoords, dimensions, 0);
+        byte[] channel1Buffer = TiledMicroscopeDomainMgr.getDomainMgr().getRawTextureBytes(baseDirectoryPath, voxelizedCoords, dimensions, 1);
         
         progressMonitor.setNote("Loading volume data.");        
         TifTextureBuilder tifTextureBuilder = new TifTextureBuilder();
@@ -97,16 +95,21 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         progressMonitor.setNote("Starting data load...");
         Double[] spinAboutZTransform = SPIN_ABOUT_Z;
         ByteArrayLoader loader = new ByteArrayLoader();
-        AbstractVolumeFileLoader baseLoader = (AbstractVolumeFileLoader)loader;
-        baseLoader.setSx(dimensions[0]);
-        baseLoader.setSy(dimensions[1]);
-        baseLoader.setSz(dimensions[2]);
-        baseLoader.setChannelCount(1);
-        baseLoader.setPixelBytes(2);
+        loader.setSx(dimensions[0]);
+        loader.setSy(dimensions[1]);
+        loader.setSz(dimensions[2]);
+        loader.setPixelBytes(2); 
         tifTextureBuilder.setVolumeFileLoader( loader );
-        loadChannel(1, byteBuffers.get( 0 ), spinAboutZTransform, tifTextureBuilder, loader, volumeListener);
-        loadChannel(2, byteBuffers.get( 1 ), spinAboutZTransform, tifTextureBuilder, loader, volumeListener);
-
+        int channelCount = 0;
+        if (channel0Buffer != null && channel0Buffer.length > 0) {
+            loadChannel(1, channel0Buffer, spinAboutZTransform, tifTextureBuilder, loader, volumeListener);
+            channelCount++;
+        }
+        if (channel1Buffer != null && channel1Buffer.length > 0) {
+            loadChannel(2, channel1Buffer, spinAboutZTransform, tifTextureBuilder, loader, volumeListener);
+            channelCount++;
+        }
+        loader.setChannelCount(channelCount);
         progressMonitor.setNote("Launching viewer.");
     }
 

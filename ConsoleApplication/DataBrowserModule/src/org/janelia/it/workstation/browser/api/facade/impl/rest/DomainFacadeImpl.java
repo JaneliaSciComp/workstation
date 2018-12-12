@@ -221,8 +221,7 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
     public void removeObjectStorage(List<String> storagePaths) {
         WebTarget storageService = RestJsonClientManager.getInstance().getTarget(REMOTE_STORAGE_URL, true);
         for (String storagePath : storagePaths) {
-            Response response = storageService.path("storage_content")
-                    .path("storage_path_redirect")
+            Response response = storageService.path("storage_content/storage_path_redirect")
                     .path(storagePath)
                     .request("application/json")
                     .delete();

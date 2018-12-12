@@ -1,22 +1,20 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JLabel;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
 import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
-import java.io.File;
 
 /**
  * Converts the text, as it is expected, in the status label, into coordinates,
@@ -73,26 +71,7 @@ public class RawFileLocToClipboardAction extends AbstractAction {
             voxelCoords.getX(), voxelCoords.getY(), voxelCoords.getZ()
         };
 
-        StringSelection selection;
-        try {
-            // FIXME This should be fixed to use the URL and maybe not use the RawFileInfo
-            RawFileInfo rfi = TiledMicroscopeDomainMgr.getDomainMgr().getNearestChannelFiles(volumeImage.getVolumeBaseURL().toString(), voxelCoordArr);
-            File c0File = rfi.getChannel0();
-            String filePathStr = c0File.toString().replace(FILE_SEP, LINUX_FILE_SEP);
-            // Not truly looking for the file path; just the legs of the path.
-            if (SystemInfo.isWindows) {
-                int colonPos = filePathStr.indexOf(":");
-                if (colonPos != -1) {
-                    filePathStr = filePathStr.substring(colonPos + 1);
-                }
-            }
-            selection = new StringSelection(filePathStr);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            final String msg = "Failed to copy file location to clipboard.";
-            selection = new StringSelection(msg);
-            log.error(msg);
-        }
+        StringSelection selection = new StringSelection(TiledMicroscopeDomainMgr.getDomainMgr().getNearestChannelFilesURL(volumeImage.getVolumeBaseURL().toString(), voxelCoordArr));
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(selection, selection);
     }

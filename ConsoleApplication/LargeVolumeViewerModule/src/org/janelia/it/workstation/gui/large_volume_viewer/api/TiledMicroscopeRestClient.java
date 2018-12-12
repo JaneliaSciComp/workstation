@@ -8,8 +8,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,6 +36,7 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.MultiPartMediaTypes;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.http.HttpServiceUtils;
@@ -43,6 +46,7 @@ import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.rendering.RenderedVolume;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +61,8 @@ public class TiledMicroscopeRestClient {
     private static final Logger LOG = LoggerFactory.getLogger(TiledMicroscopeRestClient.class);
 
     private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("mouselight.rest.url");
-    private static final String REMOTE_MOUSELIGHT_DATA_PREFIX = "mouselight/data";
+
+    private static final String REMOTE_STORAGE_URL = ConsoleProperties.getInstance().getProperty("jadestorage.rest.url");
 
     private final Client client;
 
@@ -91,13 +96,20 @@ public class TiledMicroscopeRestClient {
         client.register(MultiPartFeature.class);
     }
 
-    public WebTarget getMouselightEndpoint(String suffix) {
-        return client.target(REMOTE_API_URL + REMOTE_MOUSELIGHT_DATA_PREFIX + suffix)
+    private WebTarget getMouselightDataEndpoint(String suffix) {
+        return getMouselightEndpoint()
+                .path("mouselight/data")
+                .path(suffix)
+                ;
+    }
+
+    private WebTarget getMouselightEndpoint() {
+        return client.target(REMOTE_API_URL)
                 .queryParam("subjectKey", AccessManager.getSubjectKey());
     }
-    
+
     public List<String> getTmSamplePaths() throws Exception {
-        Response response = getMouselightEndpoint("/sampleRootPaths")
+        Response response = getMouselightDataEndpoint("/sampleRootPaths")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response, "getTmSamplePaths")) {
@@ -107,7 +119,7 @@ public class TiledMicroscopeRestClient {
     }
 
     public void updateSamplePaths(List<String> paths) throws Exception {
-        Response response = getMouselightEndpoint("/sampleRootPaths")
+        Response response = getMouselightDataEndpoint("/sampleRootPaths")
                 .request("application/json")
                 .post(Entity.json(paths));
         if (checkBadResponse(response, "update: " + paths)) {
@@ -116,7 +128,7 @@ public class TiledMicroscopeRestClient {
     }
     
     public Collection<TmSample> getTmSamples() throws Exception {
-        Response response = getMouselightEndpoint("/sample")
+        Response response = getMouselightDataEndpoint("/sample")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response, "getTmSamples")) {
@@ -126,7 +138,7 @@ public class TiledMicroscopeRestClient {
     }
         
     public Map<String,Object> getTmSampleConstants(String samplePath) throws Exception {
-        Response response = getMouselightEndpoint("/sample/constants")
+        Response response = getMouselightDataEndpoint("/sample/constants")
                 .queryParam("samplePath", samplePath)
                 .request("application/json")
                 .get();
@@ -140,7 +152,7 @@ public class TiledMicroscopeRestClient {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(tmSample);
-        Response response = getMouselightEndpoint("/sample")
+        Response response = getMouselightDataEndpoint("/sample")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response, "create: "+tmSample)) {
@@ -153,7 +165,7 @@ public class TiledMicroscopeRestClient {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(tmSample);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = getMouselightEndpoint("/sample")
+        Response response = getMouselightDataEndpoint("/sample")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response, "update: " + tmSample)) {
@@ -163,7 +175,7 @@ public class TiledMicroscopeRestClient {
     }
 
     public void remove(TmSample tmSample) throws Exception {
-        Response response = getMouselightEndpoint("/sample")
+        Response response = getMouselightDataEndpoint("/sample")
                 .queryParam("sampleId", tmSample.getId())
                 .request("application/json")
                 .delete();
@@ -173,7 +185,7 @@ public class TiledMicroscopeRestClient {
     }
 
     public Collection<TmWorkspace> getTmWorkspaces() throws Exception {
-        Response response = getMouselightEndpoint("/workspace")
+        Response response = getMouselightDataEndpoint("/workspace")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response, "getTmWorkspaces")) {
@@ -183,7 +195,7 @@ public class TiledMicroscopeRestClient {
     }
 
     public Collection<TmWorkspace> getTmWorkspacesForSample(Long sampleId) throws Exception {
-        Response response = getMouselightEndpoint("/workspace")
+        Response response = getMouselightDataEndpoint("/workspace")
                 .queryParam("sampleId", sampleId)
                 .request("application/json")
                 .get();
@@ -197,7 +209,7 @@ public class TiledMicroscopeRestClient {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(tmWorkspace);
-        Response response = getMouselightEndpoint("/workspace")
+        Response response = getMouselightDataEndpoint("/workspace")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response, "create: "+tmWorkspace)) {
@@ -216,7 +228,7 @@ public class TiledMicroscopeRestClient {
         if (assignOwner!=null) {
             query.setObjectType(assignOwner);
         }
-        Response response = getMouselightEndpoint("/workspace/copy")
+        Response response = getMouselightDataEndpoint("/workspace/copy")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response, "create: "+tmWorkspace)) {
@@ -229,7 +241,7 @@ public class TiledMicroscopeRestClient {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(tmWorkspace);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = getMouselightEndpoint("/workspace")
+        Response response = getMouselightDataEndpoint("/workspace")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response, "update: " + tmWorkspace)) {
@@ -239,7 +251,7 @@ public class TiledMicroscopeRestClient {
     }
 
     public void remove(TmWorkspace tmWorkspace) throws Exception {
-        Response response = getMouselightEndpoint("/workspace")
+        Response response = getMouselightDataEndpoint("/workspace")
                 .queryParam("workspaceId", tmWorkspace.getId())
                 .request("application/json")
                 .delete();
@@ -249,7 +261,7 @@ public class TiledMicroscopeRestClient {
     }
 
     public Collection<Pair<TmNeuronMetadata,InputStream>> getWorkspaceNeuronPairs(Long workspaceId) throws Exception {
-        Response response = getMouselightEndpoint("/workspace/neuron")
+        Response response = getMouselightDataEndpoint("/workspace/neuron")
                 .queryParam("workspaceId", workspaceId)
                 .request("multipart/mixed")
                 .get();
@@ -279,7 +291,7 @@ public class TiledMicroscopeRestClient {
     public TmNeuronMetadata createMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
         FormDataMultiPart multiPart = new FormDataMultiPart()
                 .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE);
-        Response response = getMouselightEndpoint("/workspace/neuron")
+        Response response = getMouselightDataEndpoint("/workspace/neuron")
                 .request()
                 .put(Entity.entity(multiPart, multiPart.getMediaType()));
         if (checkBadResponse(response, "createMetadata: "+neuronMetadata)) {
@@ -292,7 +304,7 @@ public class TiledMicroscopeRestClient {
         FormDataMultiPart multiPart = new FormDataMultiPart()
                 .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE)
                 .field("protobufBytes", protobufStream, MediaType.APPLICATION_OCTET_STREAM_TYPE);
-        Response response = getMouselightEndpoint("/workspace/neuron")
+        Response response = getMouselightDataEndpoint("/workspace/neuron")
                 .request()
                 .put(Entity.entity(multiPart, multiPart.getMediaType()));
         if (checkBadResponse(response, "create: "+neuronMetadata)) {
@@ -343,7 +355,7 @@ public class TiledMicroscopeRestClient {
             logStr = neuronPairs.size()+" neurons";
         }
         
-        Response response = getMouselightEndpoint("/workspace/neuron")
+        Response response = getMouselightDataEndpoint("/workspace/neuron")
                 .request()
                 .post(Entity.entity(multiPartEntity, MultiPartMediaTypes.MULTIPART_MIXED));
         if (checkBadResponse(response, "update: " +logStr)) {
@@ -357,7 +369,7 @@ public class TiledMicroscopeRestClient {
 
     public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate) throws Exception {
         if (bulkNeuronStyleUpdate.getNeuronIds()==null || bulkNeuronStyleUpdate.getNeuronIds().isEmpty()) return;
-        Response response = getMouselightEndpoint("/workspace/neuronStyle")
+        Response response = getMouselightDataEndpoint("/workspace/neuronStyle")
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(bulkNeuronStyleUpdate));
         if (checkBadResponse(response, "updateNeuronStyles")) {
@@ -366,7 +378,7 @@ public class TiledMicroscopeRestClient {
     }
     
     public void remove(TmNeuronMetadata neuronMetadata) throws Exception {
-        Response response = getMouselightEndpoint("/workspace/neuron")
+        Response response = getMouselightDataEndpoint("/workspace/neuron")
                 .queryParam("neuronId", neuronMetadata.getId())
                 .request()
                 .delete();
@@ -378,7 +390,7 @@ public class TiledMicroscopeRestClient {
     public void changeTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) throws Exception {
         if (neurons.isEmpty()) return;
         List<Long> neuronIds = DomainUtils.getIds(neurons);
-        Response response = getMouselightEndpoint("/workspace/neuronTags")
+        Response response = getMouselightDataEndpoint("/workspace/neuronTags")
                 .queryParam("tags", StringUtils.join(tags, ","))
                 .queryParam("tagState", tagState)
                 .request(MediaType.APPLICATION_JSON)
@@ -386,6 +398,71 @@ public class TiledMicroscopeRestClient {
         if (checkBadResponse(response, "bulkEditTags")) {
             throw new WebApplicationException(response);
         }
+    }
+
+    public CoordinateToRawTransform getLvvCoordToRawTransform(String basePath) {
+        Response response = client.target(getMouselightStreamURI(basePath, "volume_info"))
+                .request(MediaType.APPLICATION_JSON)
+                .get()
+                ;
+        if (checkBadResponse(response, "lvvTransform")) {
+            throw new WebApplicationException(response);
+        }
+        RenderedVolume renderedVolume = response.readEntity(RenderedVolume.class);
+        return new CoordinateToRawTransform(renderedVolume.getOriginVoxel(), renderedVolume.getMicromsPerVoxel(), renderedVolume.getNumZoomLevels());
+    }
+
+    public byte[] getRawTextureBytes(String basePath, int[] viewerCoord, int[] dimensions, int channel) throws Exception {
+        Response response = client.target(getMouselightStreamURI(basePath, "closest_raw_tile_stream"))
+                .queryParam("x", viewerCoord[0])
+                .queryParam("y", viewerCoord[1])
+                .queryParam("z", viewerCoord[2])
+                .queryParam("sx", dimensions[0])
+                .queryParam("sy", dimensions[1])
+                .queryParam("sz", dimensions[2])
+                .queryParam("channel", channel)
+                .request(MediaType.APPLICATION_OCTET_STREAM)
+                .get()
+                ;
+        if (checkBadResponse(response, "raw image bytes")) {
+            throw new WebApplicationException(response);
+        }
+        if (response.getStatus() == Response.Status.NO_CONTENT.getStatusCode()) {
+            return null;
+        } else {
+            InputStream rawBytesStream = response.readEntity(InputStream.class);
+            return ByteStreams.toByteArray(rawBytesStream);
+        }
+    }
+
+    public String getNearestChannelFilesURL(String basePath, int[] viewerCoord) {
+        return getMouselightStreamURI(basePath, "closest_raw_tile_stream")
+                    .resolve(String.format("?x=%d&y=%dz=%d", viewerCoord[0], viewerCoord[1], viewerCoord[2]))
+                    .toString();
+    }
+
+    private URI getMouselightStreamURI(String basePath, String suffix) {
+        String suffixPath = suffix.endsWith("/") ? suffix : suffix + "/";
+        if (basePath.startsWith("http://") || basePath.startsWith("https://")) {
+            return URI.create(basePath)
+                    .resolve(suffixPath);
+        } else {
+            return URI.create(REMOTE_API_URL)
+                    .resolve("mouselight/")
+                    .resolve(suffixPath)
+                    .resolve(basePath);
+        }
+    }
+
+    public boolean isServerPathAvailable(String serverPath, boolean directoryOnly) {
+        Response response = client.target(REMOTE_STORAGE_URL)
+                .path("storage_content/storage_path_redirect")
+                .path(serverPath)
+                .queryParam("directoryOnly", directoryOnly)
+                .request()
+                .head();
+        int responseStatus = response.getStatus();
+        return responseStatus == 200;
     }
 
     protected boolean checkBadResponse(Response response, String failureError) {

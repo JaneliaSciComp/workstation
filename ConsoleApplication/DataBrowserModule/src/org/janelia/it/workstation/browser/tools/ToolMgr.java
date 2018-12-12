@@ -44,10 +44,10 @@ import com.google.common.eventbus.Subscribe;
  */
 public class ToolMgr extends PreferenceManager {
 	
-	private static final Logger log = LoggerFactory.getLogger(ToolMgr.class);
-
+    private static final Logger log = LoggerFactory.getLogger(ToolMgr.class);
     // Singleton
     private static ToolMgr toolMgr;
+
     public static synchronized ToolMgr getToolMgr() {
         if (toolMgr==null) {
             toolMgr = new ToolMgr();

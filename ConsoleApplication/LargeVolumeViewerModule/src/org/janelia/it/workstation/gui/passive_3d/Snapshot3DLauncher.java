@@ -39,7 +39,8 @@ import java.util.List;
  */
 public class Snapshot3DLauncher {
     private static final String RENDERED_VOLUME_TEXT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  %4$dx%5$dx%6$d.  Rendered Data.";
-    private final static String RAW_VOLUME_TEXT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  %4$dx%5$dx%6$d.  Raw Data.";
+    private static final String RAW_VOLUME_TEXT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  %4$dx%5$dx%6$d.  Raw Data.";
+    private static final Logger LOG = LoggerFactory.getLogger(Snapshot3DLauncher.class);
 
     private CoordinateAxis sliceAxis;
     private TileServer tileServer;
@@ -53,7 +54,6 @@ public class Snapshot3DLauncher {
     private Integer numberOfChannels;
     private AnnotationManager annotationManager;
     private ActivityLogHelper activityLog;
-    private Logger logger = LoggerFactory.getLogger( Snapshot3DLauncher.class );
     
     public Snapshot3DLauncher(
             TileServer tileServer,
@@ -173,33 +173,33 @@ public class Snapshot3DLauncher {
     }
     
     /** Launches a 3D popup containing raw data represented by camera position. */
-    public void launchRaw3dViewer( int[] dimensions ) {
+    public void launchRaw3dViewer(int[] dimensions) {
         saveColorPreference();
-        try {            
-            RawTiffVolumeSource collector = new RawTiffVolumeSource( 
-                    tileServer.getLoadAdapter().getTileFormat(), camera, basePath 
+        try {
+            RawTiffVolumeSource collector = new RawTiffVolumeSource(
+                    tileServer.getLoadAdapter().getTileFormat(), camera, basePath != null ? basePath : dataUrl.toString()
             );
-            if ( dimensions != null ) {
+            if (dimensions != null) {
                 collector.setDimensions(dimensions);
             }
-            final String labelText = labelTextForRaw3d( dimensions );
+            final String labelText = labelTextForRaw3d(dimensions);
             final String frameTitle = "Fetching raw data";
             activityLog.logSnapshotLaunch(labelText, annotationManager.getInitialObject().getId());
             makeAndLaunch(frameTitle, collector, labelText);
 
-        } catch ( Exception ex ) {
+        } catch (Exception ex) {
             System.err.println("Failed to launch viewer: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
 
-    public void launch3dViewer( int cubicDimension ) {
-        int[] dimensions = new int[] { cubicDimension, cubicDimension, cubicDimension };
-        launch3dViewer( dimensions );
+    public void launch3dViewer(int cubicDimension) {
+        int[] dimensions = new int[]{cubicDimension, cubicDimension, cubicDimension};
+        launch3dViewer(dimensions);
     }
     
     /** Launches a 3D popup static-block viewer. */
-    public void launch3dViewer( int[] dimensions ) {
+    public void launch3dViewer(int[] dimensions) {
         saveColorPreference();
         try {         
             final TileFormat tileFormat = tileServer.getLoadAdapter().getTileFormat();
@@ -212,7 +212,6 @@ public class Snapshot3DLauncher {
                     tileFormat.getVoxelMicrometers(),
                     dataUrl
             );            
-
             activityLog.logSnapshotLaunch(labelText, annotationManager.getInitialObject().getId());
             makeAndLaunch(frameTitle, collector, labelText);
 
@@ -272,7 +271,7 @@ public class Snapshot3DLauncher {
         }
         String colorModelSerializeString = independentCM.asString();
         if ( annotationManager != null && colorModelSerializeString != null ) {
-            logger.debug("Saving color model {}.", colorModelSerializeString);
+            LOG.debug("Saving color model {}.", colorModelSerializeString);
             annotationManager.saveColorModel3d(independentCM);
         }
     }

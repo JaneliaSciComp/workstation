@@ -315,7 +315,8 @@ public class StateMgr {
     }
     
     public Task getTaskById(Long taskId) throws Exception {
-        return DomainMgr.getDomainMgr().getLegacyFacade().getTaskById(taskId);
+        return null;
+//!!!!!        return DomainMgr.getDomainMgr().getLegacyFacade().getTaskById(taskId);
     }
     
     public Task submitJob(String processDefName, String displayName) throws Exception {
@@ -330,7 +331,8 @@ public class StateMgr {
     }
 
     public Task saveOrUpdateTask(Task task) throws Exception {
-        return DomainMgr.getDomainMgr().getLegacyFacade().saveOrUpdateTask(task);
+        return task;
+//!!!!!!        return DomainMgr.getDomainMgr().getLegacyFacade().saveOrUpdateTask(task);
     }
     
     private Task submitJob(GenericTask genericTask) throws Exception {
@@ -340,7 +342,8 @@ public class StateMgr {
     }
 
     public void submitJob(String processDefName, Task task) throws Exception {
-        DomainMgr.getDomainMgr().getLegacyFacade().submitJob(processDefName, task.getObjectId());
+
+//!!!!        DomainMgr.getDomainMgr().getLegacyFacade().submitJob(processDefName, task.getObjectId());
     }
 
     /**
@@ -353,6 +356,6 @@ public class StateMgr {
      * @throws Exception
      */
     public void dispatchJob(String processDefName, Task task) throws Exception {
-        DomainMgr.getDomainMgr().getLegacyFacade().dispatchJob(processDefName, task.getObjectId());
+//!!!!!        DomainMgr.getDomainMgr().getLegacyFacade().dispatchJob(processDefName, task.getObjectId());
     }
 }

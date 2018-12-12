@@ -11,9 +11,7 @@ import java.util.stream.Collectors;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.exceptions.SystemError;
-import org.janelia.it.workstation.browser.api.facade.impl.ejb.LegacyFacadeImpl;
 import org.janelia.it.workstation.browser.api.facade.interfaces.DomainFacade;
-import org.janelia.it.workstation.browser.api.facade.interfaces.LegacyFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.OntologyFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SampleFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
@@ -68,7 +66,6 @@ public class DomainMgr {
     private SubjectFacade subjectFacade;
     private WorkspaceFacade workspaceFacade;
     private SageRestClient sageClient;
-    private LegacyFacade legacyFacade;
     
     private DomainModel model;
     private Map<String,Preference> preferenceMap;
@@ -84,7 +81,6 @@ public class DomainMgr {
             subjectFacade = getNewInstance(reflections, SubjectFacade.class);
             workspaceFacade = getNewInstance(reflections, WorkspaceFacade.class);
             sageClient = new SageRestClient();
-            legacyFacade = new LegacyFacadeImpl();   
         }
         catch (Exception e) {
             ConsoleApp.handleException(e);
@@ -139,10 +135,6 @@ public class DomainMgr {
     
     public SageRestClient getSageClient() {
         return sageClient;
-    }
-
-    public LegacyFacade getLegacyFacade() {
-        return legacyFacade;
     }
 
     @Subscribe

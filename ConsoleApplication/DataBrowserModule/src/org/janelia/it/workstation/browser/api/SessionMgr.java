@@ -12,7 +12,6 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.facade.impl.ejb.EJBFactory;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionEndEvent;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
@@ -59,19 +58,19 @@ public class SessionMgr {
         Subject loggedInSubject = event.getSubject();
         String userName = loggedInSubject==null?null:loggedInSubject.getName();
         this.username = userName;
-        try {
-            UserToolEvent loginEvent = EJBFactory.getRemoteComputeBean().beginSession(
-                    userName,
-                    ConsoleProperties.getString("console.Title"),
-                    ConsoleProperties.getString("console.versionNumber"));
-            if (null!=loginEvent && null!=loginEvent.getSessionId()) {
-                this.currentSessionId = loginEvent.getSessionId();
-            }
-            ActivityLogHelper.logSessionBegin();
-        }
-        catch (Exception e) {
-            FrameworkImplProvider.handleExceptionQuietly(e);
-        }
+//        try {
+//            UserToolEvent loginEvent = EJBFactory.getRemoteComputeBean().beginSession(
+//                    userName,
+//                    ConsoleProperties.getString("console.Title"),
+//                    ConsoleProperties.getString("console.versionNumber"));
+//            if (null!=loginEvent && null!=loginEvent.getSessionId()) {
+//                this.currentSessionId = loginEvent.getSessionId();
+//            }
+//            ActivityLogHelper.logSessionBegin();
+//        }
+//        catch (Exception e) {
+//            FrameworkImplProvider.handleExceptionQuietly(e);
+//        }
     }
 
     @Subscribe
@@ -79,27 +78,28 @@ public class SessionMgr {
         Subject subject = event.getSubject();
         String userName = subject==null?null:subject.getName();
         this.username = null;
-        try {
-            if (currentSessionId!=null) {
-                EJBFactory.getRemoteComputeBean().endSession(
-                        userName,
-                    ConsoleProperties.getString("console.Title"),
-                    currentSessionId);
-                this.currentSessionId = null;
-            }
-            ActivityLogHelper.logSessionEnd();
-        }
-        catch (Exception e) {
-            FrameworkImplProvider.handleExceptionQuietly(e);
-        }
+//        try {
+//            if (currentSessionId!=null) {
+//                EJBFactory.getRemoteComputeBean().endSession(
+//                        userName,
+//                    ConsoleProperties.getString("console.Title"),
+//                    currentSessionId);
+//                this.currentSessionId = null;
+//            }
+//            ActivityLogHelper.logSessionEnd();
+//        }
+//        catch (Exception e) {
+//            FrameworkImplProvider.handleExceptionQuietly(e);
+//        }
+        this.currentSessionId = null;
     }
     
     private void addEventToSession(UserToolEvent event) {
-        EJBFactory.getRemoteComputeBean().addEventToSessionAsync(event);
+//        EJBFactory.getRemoteComputeBean().addEventToSessionAsync(event);
     }
 
     private void addEventsToSession(UserToolEvent[] events) {
-        EJBFactory.getRemoteComputeBean().addEventsToSessionAsync(events);
+//        EJBFactory.getRemoteComputeBean().addEventsToSessionAsync(events);
     }
 
     private String getLogEventUserLogin() {
