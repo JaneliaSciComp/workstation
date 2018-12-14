@@ -110,7 +110,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
             ConnectionManager connManager = ConnectionManager.getInstance();
             connManager.configureTarget(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD);
             messageSender = new Sender();
-            messageSender.init(connManager, MESSAGESERVER_UPDATESEXCHANGE, MESSAGESERVER_ROUTINGKEY);
+            messageSender.init(connManager, MESSAGESERVER_UPDATESEXCHANGE, MESSAGESERVER_ROUTINGKEY, 1);
         } 
         return messageSender;
     }

@@ -79,10 +79,10 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             ConnectionManager connManager = ConnectionManager.getInstance();
             connManager.configureTarget(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD);
             connManager.setThreadPoolSize(20);
-            msgChannel = connManager.getConnection();
+            msgChannel = connManager.getConnection(1);
         
             msgReceiver = new Receiver();
-            msgReceiver.init(connManager, "ModelRefresh", true);
+            msgReceiver.init(connManager, "ModelRefresh", true, 1);
             msgReceiver.setupReceiver(this);
             log.info("Established connection to message server " + MESSAGESERVER_URL);
         } catch (Exception e) {
