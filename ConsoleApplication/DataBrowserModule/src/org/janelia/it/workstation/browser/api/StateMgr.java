@@ -25,9 +25,9 @@ import org.janelia.it.workstation.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
-import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.selection.OntologySelectionEvent;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
+import org.janelia.it.workstation.browser.model.RecentFolder;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBind;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBindings;
 import org.janelia.it.workstation.browser.util.RendererType2D;
@@ -69,6 +69,7 @@ public class StateMgr {
     public final static String RECENTLY_OPENED_HISTORY = "Browser.RecentlyOpenedHistory";
     public static final int MAX_RECENTLY_OPENED_HISTORY = 10;
     public static final String ADD_TO_FOLDER_HISTORY = "ADD_TO_FOLDER_HISTORY";
+    public static final String ADD_TO_RESULTSET_HISTORY = "ADD_TO_RESULTSET_HISTORY";
     public static final int MAX_ADD_TO_ROOT_HISTORY = 5;
     
     private final Map<TopComponent,NavigationHistory> navigationHistoryMap = new HashMap<>();
@@ -281,12 +282,47 @@ public class StateMgr {
         updateHistoryProperty(RECENTLY_OPENED_HISTORY, MAX_RECENTLY_OPENED_HISTORY, ref);
     }
 
-    public List<String> getAddToFolderHistory() {
-        return getHistoryProperty(ADD_TO_FOLDER_HISTORY);
+    public List<RecentFolder> getAddToFolderHistory() {
+        List<String> recentFolderStrs = getHistoryProperty(ADD_TO_FOLDER_HISTORY);
+        List<RecentFolder> recentFolders = new ArrayList<>();
+        
+        for(String recentFolderStr : recentFolderStrs) {
+            if (recentFolderStr.contains(":")) {
+                String[] arr = recentFolderStr.split("\\:");
+                String path = arr[0];
+                String label = arr[1];
+                recentFolders.add(new RecentFolder(path, label));
+            }
+        }
+        
+        return recentFolders;
+    }
+    
+    public void updateAddToFolderHistory(RecentFolder folder) {
+        // TODO: update automatically when a folder is deleted, so it no longer appears in the recent list
+        String recentFolderStr = folder.getPath()+":"+folder.getLabel();
+        updateHistoryProperty(ADD_TO_FOLDER_HISTORY, MAX_ADD_TO_ROOT_HISTORY, recentFolderStr);
     }
 
-    public void updateAddToFolderHistory(String ref) {
-        updateHistoryProperty(ADD_TO_FOLDER_HISTORY, MAX_ADD_TO_ROOT_HISTORY, ref);
+    public List<RecentFolder> getAddToResultSetHistory() {
+        List<String> recentFolderStrs = getHistoryProperty(ADD_TO_RESULTSET_HISTORY);
+        List<RecentFolder> recentFolders = new ArrayList<>();
+        
+        for(String recentFolderStr : recentFolderStrs) {
+            if (recentFolderStr.contains(":")) {
+                String[] arr = recentFolderStr.split("\\:");
+                String path = arr[0];
+                String label = arr[1];
+                recentFolders.add(new RecentFolder(path, label));
+            }
+        }
+        
+        return recentFolders;
+    }
+    
+    public void updateAddToResultSetHistory(RecentFolder folder) {
+        String recentFolderStr = folder.getPath()+":"+folder.getLabel();
+        updateHistoryProperty(ADD_TO_RESULTSET_HISTORY, MAX_ADD_TO_ROOT_HISTORY, recentFolderStr);
     }
     
     private List<String> getHistoryProperty(String prop) {

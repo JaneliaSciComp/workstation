@@ -20,6 +20,7 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.support.TreeNodeChooser;
+import org.janelia.it.workstation.browser.model.RecentFolder;
 import org.janelia.it.workstation.browser.nb_action.NodePresenterAction;
 import org.janelia.it.workstation.browser.nodes.GroupedFolderNode;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
@@ -31,8 +32,8 @@ import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.model.domain.workspace.ProxyGroup;
 import org.janelia.model.domain.workspace.GroupedFolder;
+import org.janelia.model.domain.workspace.ProxyGroup;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
 import org.openide.nodes.Node;
@@ -170,15 +171,16 @@ public class AddToResultsAction extends NodePresenterAction {
         newFolderMenu.add(chooseItem);
         newFolderMenu.addSeparator();
 
-        List<String> addHistory = StateMgr.getStateMgr().getAddToFolderHistory();
+        List<RecentFolder> addHistory = StateMgr.getStateMgr().getAddToResultSetHistory();
         if (addHistory!=null && !addHistory.isEmpty()) {
 
             JMenuItem item = new JMenuItem("Recent:");
             item.setEnabled(false);
             newFolderMenu.add(item);
 
-            for (String path : addHistory) {
+            for (RecentFolder recentFolder : addHistory) {
 
+                String path = recentFolder.getPath();
                 if (path.contains("#")) {
                     log.warn("Ignoring reference in add history: "+path);
                     continue;
@@ -186,28 +188,15 @@ public class AddToResultsAction extends NodePresenterAction {
                 
                 final Long[] idPath = NodeUtils.createIdPath(path);
                 final Long folderId = idPath[idPath.length-1];
-                
-                GroupedFolder folder;
-                try {
-                    folder = model.getDomainObject(GroupedFolder.class, folderId);
-                    if (folder == null) continue;
-                }
-                catch (Exception e) {
-                    log.error("Error getting recent folder with id "+folderId,e);
-                    continue;
-                }
 
-                final GroupedFolder finalFolder = folder;
-
-                JMenuItem commonRootItem = new JMenuItem(folder.getName());
+                JMenuItem commonRootItem = new JMenuItem(recentFolder.getLabel());
                 commonRootItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
                         ActivityLogHelper.logUserAction("AddToResultsAction.recentResultSet", folderId);
-                        addUniqueItemsToFolder(finalFolder, idPath);
+                        addUniqueItemsToFolder(folderId, idPath);
                     }
                 });
 
-                commonRootItem.setEnabled(ClientDomainUtils.hasWriteAccess(finalFolder));
                 newFolderMenu.add(commonRootItem);
             }
         }
@@ -215,6 +204,37 @@ public class AddToResultsAction extends NodePresenterAction {
         return newFolderMenu;
     }
 
+    private void addUniqueItemsToFolder(Long folderId, final Long[] idPath) {
+
+        SimpleWorker worker = new SimpleWorker() {
+            
+            private GroupedFolder folder;
+            
+            @Override
+            protected void doStuff() throws Exception {
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                folder = model.getDomainObject(GroupedFolder.class, folderId);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                if (folder==null) {
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "This result set no longer exists.", "Result set no longer exists", JOptionPane.ERROR_MESSAGE);
+                }
+                else {
+                    addUniqueItemsToFolder(folder, idPath);
+                }
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+        };
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));
+        worker.execute();
+    }
+    
     private void addUniqueItemsToFolder(final GroupedFolder groupedFolder, final Long[] idPath) {
 
         Reference groupRef = Reference.createFor(mask);
@@ -277,7 +297,7 @@ public class AddToResultsAction extends NodePresenterAction {
                         
                         model.addChildren(group, domainObjects);
 
-                        updateHistory(idPath);
+                        updateHistory(idPath, groupedFolder.getName());
                     }
 
                     @Override
@@ -310,9 +330,9 @@ public class AddToResultsAction extends NodePresenterAction {
         return null;
     }
     
-    protected void updateHistory(final Long[] idPath) throws Exception {
+    protected void updateHistory(final Long[] idPath, String label) throws Exception {
         // Update history
         String pathString = NodeUtils.createPathString(idPath);
-        StateMgr.getStateMgr().updateAddToFolderHistory(pathString);
+        StateMgr.getStateMgr().updateAddToResultSetHistory(new RecentFolder(pathString, label));
     }
 }

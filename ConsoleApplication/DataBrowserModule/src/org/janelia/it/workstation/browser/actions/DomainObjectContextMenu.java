@@ -910,7 +910,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         HasFiles fileProvider = getSingle3dResult();
         if (fileProvider==null) return null;
         String path = DomainUtils.getFilepath(fileProvider, FileType.VisuallyLosslessStack);
-        log.info("GOT PATH {} from {}",path, fileProvider);
         if (path==null) return null;
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VVD, path, null));
     }

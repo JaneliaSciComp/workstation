@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -25,6 +26,7 @@ import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.support.TreeNodeChooser;
 import org.janelia.it.workstation.browser.model.DomainObjectMapper;
 import org.janelia.it.workstation.browser.model.MappingType;
+import org.janelia.it.workstation.browser.model.RecentFolder;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.UserViewConfiguration;
@@ -120,7 +122,6 @@ public class GetRelatedItemsAction extends NodePresenterAction {
     private JMenu createClassMenu(MappingType targetType) {
         
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
-        final DomainModel model = DomainMgr.getDomainMgr().getModel();
         
         JMenu classMenu = new JMenu(targetType.getLabel());
 
@@ -145,6 +146,7 @@ public class GetRelatedItemsAction extends NodePresenterAction {
 
                     @Override
                     protected void doStuff() throws Exception {
+                        DomainModel model = DomainMgr.getDomainMgr().getModel();
                         folder = new TreeNode();
                         folder.setName(folderName);
                         folder = model.create(folder);
@@ -202,15 +204,16 @@ public class GetRelatedItemsAction extends NodePresenterAction {
         classMenu.add(chooseItem);
         classMenu.addSeparator();
 
-        List<String> addHistory = StateMgr.getStateMgr().getAddToFolderHistory();
+        List<RecentFolder> addHistory = StateMgr.getStateMgr().getAddToFolderHistory();
         if (addHistory!=null && !addHistory.isEmpty()) {
 
             JMenuItem item = new JMenuItem("Recent:");
             item.setEnabled(false);
             classMenu.add(item);
 
-            for (String path : addHistory) {
-
+            for (RecentFolder recentFolder : addHistory) {
+                
+                String path = recentFolder.getPath();
                 if (path.contains("#")) {
                     log.warn("Ignoring reference in add history: "+path);
                     continue;
@@ -219,27 +222,14 @@ public class GetRelatedItemsAction extends NodePresenterAction {
                 final Long[] idPath = NodeUtils.createIdPath(path);
                 final Long folderId = idPath[idPath.length-1];
                 
-                TreeNode folder;
-                try {
-                    folder = model.getDomainObject(TreeNode.class, folderId);
-                    if (folder == null) continue;
-                }
-                catch (Exception e) {
-                    log.error("Error getting recent folder with id "+folderId,e);
-                    continue;
-                }
-
-                final TreeNode finalFolder = folder;
-
-                JMenuItem commonRootItem = new JMenuItem(folder.getName());
+                JMenuItem commonRootItem = new JMenuItem(recentFolder.getLabel());
                 commonRootItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
                         ActivityLogHelper.logUserAction("AddToFolderAction.recentFolder", folderId);
-                        addUniqueItemsToFolder(finalFolder, idPath, targetType);
+                        addUniqueItemsToFolder(folderId, idPath, targetType);
                     }
                 });
 
-                commonRootItem.setEnabled(ClientDomainUtils.hasWriteAccess(finalFolder));
                 classMenu.add(commonRootItem);
             }
         }
@@ -247,7 +237,40 @@ public class GetRelatedItemsAction extends NodePresenterAction {
         return classMenu;
     }
 
-    private <T extends DomainObject> void addUniqueItemsToFolder(final TreeNode treeNode, final Long[] idPath, final MappingType targetType) {
+    private void addUniqueItemsToFolder(Long folderId, Long[] idPath, final MappingType targetType) {
+
+        SimpleWorker worker = new SimpleWorker() {
+            
+            private TreeNode treeNode;
+            
+            @Override
+            protected void doStuff() throws Exception {
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                treeNode = model.getDomainObject(TreeNode.class, folderId);
+                
+            }
+
+            @Override
+            protected void hadSuccess() {
+                if (treeNode==null) {
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "This folder no longer exists.", "Folder no longer exists", JOptionPane.ERROR_MESSAGE);
+                }
+                else {
+                    addUniqueItemsToFolder(treeNode, idPath, targetType);
+                }
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+        };
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));
+        worker.execute();
+        
+    }
+    
+    private void addUniqueItemsToFolder(final TreeNode treeNode, final Long[] idPath, final MappingType targetType) {
 
         final DomainObjectMapper mapper = new DomainObjectMapper(domainObjects);
 
@@ -372,7 +395,7 @@ public class GetRelatedItemsAction extends NodePresenterAction {
 
         // Update history
         String pathString = NodeUtils.createPathString(idPath);
-        StateMgr.getStateMgr().updateAddToFolderHistory(pathString);
+        StateMgr.getStateMgr().updateAddToFolderHistory(new RecentFolder(pathString, treeNode.getName()));
     }
         
 }
