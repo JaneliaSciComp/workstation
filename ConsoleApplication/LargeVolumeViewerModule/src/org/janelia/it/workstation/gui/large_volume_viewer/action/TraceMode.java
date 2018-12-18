@@ -371,42 +371,44 @@ implements MouseMode, KeyListener
                 final Anchor hover = getHoverAnchor();
                 Anchor parent = skeletonActor.getModel().getNextParent();
                 result.add(null); // separator
-                
-                 // boo
-                         AbstractAction scrollBrainAction = new AbstractAction("Scroll through Sample(Z)") {
+
+                // always available:
+                AbstractAction scrollBrainAction = new AbstractAction("Scroll through Sample(Z)") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                         SimpleWorker scrollWorker = new SimpleWorker() {
                             @Override
-                            public void actionPerformed(ActionEvent e) {
-                                 SimpleWorker scrollWorker = new SimpleWorker() {
-                                    @Override
-                                    protected void doStuff() throws Exception {
-                                        Vec3 cameraPos = getBoundingBox().getCenter();
-                                        cameraPos.setZ(getBoundingBox().getMinZ());
-                                        Thread.sleep(2000);
-                                        controller.setLVVFocus(cameraPos);
-                                        float step = 40;
-                                        while (cameraPos.getZ() < getBoundingBox().getMaxZ()) {
-                                            Thread.sleep(100);
-                                            cameraPos = cameraPos.plus(new Vec3(0, 0, step));
-                                            controller.setLVVFocus(cameraPos);
-                                        }
-                                    }
+                            protected void doStuff() throws Exception {
+                                // grab current camera position and zoom and loop in z from there
+                                Vec3 cameraPos = getCamera().getFocus();
+                                cameraPos.setZ(getBoundingBox().getMinZ());
+                                Thread.sleep(2000);
+                                controller.setLVVFocus(cameraPos);
+                                float step = 40;
+                                while (cameraPos.getZ() < getBoundingBox().getMaxZ()) {
+                                    Thread.sleep(100);
+                                    cameraPos = cameraPos.plus(new Vec3(0, 0, step));
+                                    controller.setLVVFocus(cameraPos);
+                                }
+                            }
 
-                                    @Override
-                                    protected void hadSuccess() {
+                            @Override
+                            protected void hadSuccess() {
 
-                                    }
+                            }
 
-                                    @Override
-                                    protected void hadError(Throwable error) {
-                                    }
-                                };
-                                scrollWorker.execute();                                                               //
+                            @Override
+                            protected void hadError(Throwable error) {
                             }
                         };
-                        scrollBrainAction.setEnabled(true);
-                        result.add(new JMenuItem(scrollBrainAction));
+                        scrollWorker.execute();                                                               //
+                    }
+                };
+                scrollBrainAction.setEnabled(true);
+                result.add(new JMenuItem(scrollBrainAction));
                 ///// Popup menu items that do not require an anchor under the mouse /////
-                if (hover == null) { // No anchor under mouse? Maybe user wants to create a new anchor.
+                if (hover == null) {
+                    // No anchor under mouse? Maybe user wants to create a new anchor.
                     if (parent == null) {
                         // Start new tree
                         AbstractAction beginNeuriteHereAction = new AbstractAction("Begin new neurite here [Shift-click]") {

@@ -1,3 +1,16 @@
+// 7.22
+
+Workstation Browser
+* Added progress indication for reprocessing  
+
+Horta
+* Shortcuts for Stop, Reverse, and Forward flythroughs
+* Navigate to branch automatically with selection
+* Control to adjust speed (fps) for flythrough
+* Control to allow manual rotation (disable auto) for flythrough
+* Fix for setting the right parent anchor in Horta when selecting in the Annotation View
+* Delete for Object Meshes in the Scene Window 
+
 // 7.21
 
 Workstation Browser
