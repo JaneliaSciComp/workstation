@@ -13,6 +13,7 @@ import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import javax.swing.SwingUtilities;
 import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
 import org.janelia.messaging.client.ConnectionManager;
@@ -63,18 +64,20 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
     }
     
     private RefreshHandler() {
-        
     }
     
-    public static RefreshHandler getInstance() {
-        if (handler==null) {
-            handler = new RefreshHandler();
-            handler.init();
+    public static Optional<RefreshHandler> getInstance() {
+        if (handler == null) {
+            RefreshHandler uninitializedHandler = new RefreshHandler();
+            if (uninitializedHandler.init())
+                handler = uninitializedHandler;
+            else
+                return Optional.empty();
         }
-        return handler;
+        return Optional.of(handler);
     }
 
-    private void init() {
+    private boolean init() {
         try {
             ConnectionManager connManager = ConnectionManager.getInstance();
             connManager.configureTarget(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD);
@@ -85,12 +88,14 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             msgReceiver.init(connManager, "ModelRefresh", true, 1);
             msgReceiver.setupReceiver(this);
             log.info("Established connection to message server " + MESSAGESERVER_URL);
+            return true;
         } catch (Exception e) {
             AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
             String error = "Problems initializing connection to message server " + MESSAGESERVER_URL +
                     " with username: " + MESSAGESERVER_USERACCOUNT;
             annotationMgr.presentError(error, "Problem connecting to Message Server");
-            e.printStackTrace();
+            log.error(error, e);
+            return false;
         }
     }
     
@@ -132,7 +137,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                  
              } catch (Exception e) {
                  // skip this update
-                 e.printStackTrace();
+                 log.error("Error refreshing the annotation model", e);
              }
         }
         updatesMap.clear();
@@ -151,7 +156,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
              exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
              
              // assume this has to do with neuron CRUD; otherwise ignore
-             Map neuronData = new HashMap<String,Object>();
+             Map neuronData = new HashMap<>();
              neuronData.put("neuron", neuron);
              neuronData.put("action", action);
              neuronData.put("user", user);
@@ -285,25 +290,25 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                                     break;
                                 case NEURON_SAVE_NEURONDATA:
                                 case NEURON_SAVE_METADATA:
-                                    if (!user.equals(AccessManager.getSubjectKey())) {
-                                        log.info("remote processing save neuron " + neuron.getName());
-                                        exchanger = new TmProtobufExchanger();
-                                        msgBody = message.getBody();
-                                        exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
-                                        annotationModel.getNeuronManager().addNeuron(neuron);
-                                        annotationModel.fireBackgroundNeuronChanged(neuron);
-                                        log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
-                                    }
+                                    // no longer checking if the user is different because I want this to work even if
+                                    // the same user has the workstation opened on two machines
+                                    log.info("remote processing save neuron " + neuron.getName());
+                                    exchanger = new TmProtobufExchanger();
+                                    msgBody = message.getBody();
+                                    exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+                                    annotationModel.getNeuronManager().addNeuron(neuron);
+                                    annotationModel.fireBackgroundNeuronChanged(neuron);
+                                    log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
                                     break;
                                 case NEURON_DELETE:
                                     log.info("remote processing delete neuron" + neuron.getName());
-                                    if (!user.equals(AccessManager.getSubjectKey())) {
-                                        exchanger = new TmProtobufExchanger();
-                                        msgBody = message.getBody();
-                                        exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
-                                        annotationModel.fireBackgroundNeuronDeleted(neuron);
-                                        log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
-                                    }
+                                    // no longer checking if the user is different because I want this to work even if
+                                    // the same user has the workstation opened on two machines
+                                    exchanger = new TmProtobufExchanger();
+                                    msgBody = message.getBody();
+                                    exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+                                    annotationModel.fireBackgroundNeuronDeleted(neuron);
+                                    log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
                                     break;
                             }
                             stopWatch2.stop();

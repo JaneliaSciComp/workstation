@@ -355,8 +355,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         try {
             loadUserPreferences();
             // register with Message Server to receive async updates
-            RefreshHandler refreshHandler = RefreshHandler.getInstance();
-            refreshHandler.setAnnotationModel(this);
+            RefreshHandler.getInstance().ifPresent(rh -> rh.setAnnotationModel(this));
         } catch (Exception error) {
             ConsoleApp.handleException(error);
         }
@@ -366,13 +365,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
 
     }
-    
+
     public void setReceiveUpdates(boolean receiveUpdates) {
-        RefreshHandler.getInstance().setReceiveUpdates(receiveUpdates);
+        RefreshHandler.getInstance().ifPresent(rh -> rh.setReceiveUpdates(receiveUpdates));
     }
     
     public void refreshNeuronUpdates() {
-        RefreshHandler.getInstance().refreshNeuronUpdates();
+        RefreshHandler.getInstance().ifPresent(rh -> rh.refreshNeuronUpdates());
     }
 
     public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
@@ -2164,10 +2163,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public void saveUserTags() throws Exception {
-        // for now translate this into a set for much faster persistence        
-       // comment for now since users don't want to save their hide preferences between sessions
-       // FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_TAGS, 
-       //         this.getCurrentSample().getId().toString(), currentTagMap.getUserTags().keySet());       
+       // empty because for now since don't want to save their hide preferences between sessions
     }
     
 
