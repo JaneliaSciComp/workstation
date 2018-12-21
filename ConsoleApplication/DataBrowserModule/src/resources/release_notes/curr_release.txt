@@ -1,4 +1,7 @@
 // 7.23
 
+Data Browser
+* Improved right-click context menu performance
+
 Large Volume Viewer
 * "Scroll through Z" feature uses current camera view instead of recentering now
