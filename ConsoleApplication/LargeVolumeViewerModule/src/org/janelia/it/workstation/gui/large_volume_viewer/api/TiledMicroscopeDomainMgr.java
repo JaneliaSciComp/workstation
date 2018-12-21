@@ -274,7 +274,7 @@ public class TiledMicroscopeDomainMgr {
     }
     
     public TmReviewTask save(TmReviewTask reviewTask) throws Exception {
-        log.debug("save({})", reviewTask);
+        LOG.debug("save({})", reviewTask);
         if (reviewTask.getId()==null) {
             reviewTask = client.create(reviewTask);
         } else {
@@ -285,7 +285,7 @@ public class TiledMicroscopeDomainMgr {
     }
     
     public void remove(TmReviewTask reviewTask) throws Exception {
-        log.debug("remove({})", reviewTask);
+        LOG.debug("remove({})", reviewTask);
         client.remove(reviewTask);
         model.notifyDomainObjectRemoved(reviewTask);
     }
@@ -303,7 +303,7 @@ public class TiledMicroscopeDomainMgr {
     }
     
     public List<TmReviewTask> getReviewTasks() throws Exception {
-        log.debug("getReviewTasks()");
+        LOG.debug("getReviewTasks()");
         List<TmReviewTask> reviewTasks = model.getAllDomainObjectsByClass(TmReviewTask.class);
         return reviewTasks;
     }
