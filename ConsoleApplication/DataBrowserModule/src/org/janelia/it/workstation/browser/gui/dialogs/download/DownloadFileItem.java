@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -52,6 +53,7 @@ public class DownloadFileItem {
     public static final String ATTR_LABEL_EXTENSION = "Extension";
     public static final String ATTR_LABEL_GUID = "GUID";
     public static final String ATTR_LABEL_INDEX = "Index";
+    public static final String ATTR_LABEL_FOLDERS = "Folders";
     
     private final Path downloadsDir = SystemInfo.getDownloadsDir();
     private final List<String> itemPath;
@@ -69,6 +71,8 @@ public class DownloadFileItem {
     private String sourceExtension;
     private String targetExtension;
     private boolean is3d;
+
+    private String folderPath;
     
     public DownloadFileItem(List<String> itemPath, DomainObject domainObject, int index) {
         this.itemPath = itemPath;
@@ -76,12 +80,13 @@ public class DownloadFileItem {
         this.index = index;
     }
     
-    public void init(ArtifactDescriptor artifactDescriptor, HasFiles fileProvider, FileType fileType, Map<String,String> outputExtensions, boolean splitChannels, boolean flattenStructure, String filenamePattern) {
+    public void init(ArtifactDescriptor artifactDescriptor, HasFiles fileProvider, FileType fileType, Map<String,String> outputExtensions, boolean splitChannels, boolean flattenStructure, String filenamePattern, Set<Path> paths) {
 
         log.debug("Domain object type: {}",domainObject.getType());
         log.debug("Domain object id: {}",domainObject.getId());
         log.debug("File provider: {}",fileProvider.getClass().getName());
         log.debug("File type: {}",fileType);
+        log.debug("Item path: {}",itemPath);
         
         this.fileProvider = fileProvider;
         this.splitChannels = splitChannels;
@@ -137,29 +142,45 @@ public class DownloadFileItem {
             this.targetExtension = sourceExtension;
         }
         log.debug("Output extension: {}",sourceExtension);
-                
-        // Build the path
-        Path itemDir = null;
+        
         if (itemPath!=null && !flattenStructure) {
+
+            // Prepend {Folders} if user hasn't already placed it somewhere in the pattern
+            String folderPattern = "{"+ATTR_LABEL_FOLDERS+"}";
+            if (!filenamePattern.contains(folderPattern) && !flattenStructure) {
+                filenamePattern = folderPattern+"/"+filenamePattern;
+            }
+            
+            // Include folder structure
             StringBuilder pathBuilder = new StringBuilder();
             for(String item : itemPath) {
                 if (pathBuilder.length()!=0) pathBuilder.append("/");
                 pathBuilder.append(item);
             }
-            itemDir = downloadsDir.resolve(pathBuilder.toString());
-        }
-        else {
-            itemDir = downloadsDir;
+            folderPath = sanitizeFilepath(pathBuilder.toString());
         }
 
         try {
-            targetRelativePath = constructFilePath(filenamePattern);
-            targetLocalPath = itemDir.resolve(targetRelativePath);
-            log.debug("Target path: {}", targetLocalPath.toString());
-            log.debug("Target extension: {}", this.targetExtension);
+            log.debug("Constructing file name with "+filenamePattern);
+            int i = 0;
+            do {
+                targetRelativePath = constructFilePath(filenamePattern, i);
+                targetLocalPath = downloadsDir.resolve(targetRelativePath);
+                log.debug("Target path: {}", targetLocalPath.toString());
+                log.debug("Target extension: {}", this.targetExtension);
+                if (i>1000) throw new RuntimeException("Too many file duplicates");
+                i++;
+            }
+            // Deduplicate file names by adding _2, _3, etc
+            while (paths!=null && paths.contains(targetLocalPath));
         }
         catch (Exception e) {
+            // TODO: this may pop up a ton of dialog boxes, need to throttle it
             ConsoleApp.handleException(e);
+        }
+
+        if (targetRelativePath == null) {
+            errorMessage = "Error getting file for "+domainObject.getName();
         }
     }
     
@@ -174,7 +195,7 @@ public class DownloadFileItem {
         return null;
     }
     
-    private String constructFilePath(String filePattern) throws Exception {
+    private String constructFilePath(String filePattern, int i) throws Exception {
 
         log.debug("Objects used for path constructions: ");
         
@@ -263,12 +284,16 @@ public class DownloadFileItem {
             }
         }
         
+        if (folderPath!=null) {
+            keyValues.put(ATTR_LABEL_FOLDERS, folderPath);
+        }
+        
         keyValues.put(ATTR_LABEL_INDEX, index);
         
         log.debug("Filepath pattern: {}", filePattern);
         String filepath = StringUtils.replaceVariablePattern(filePattern, keyValues);
         log.debug("Interpolated filepath: {}", filepath);
-        filepath = filepath.replaceAll("[^\\w\\.\\(\\)\\- /]", "_"); // Remove special characters
+        filepath = sanitizeFilepath(filepath);
         filepath = filepath.replaceAll("^/+", ""); // Remove leading slashes which happen if path variables are not interpolated
         log.debug("Corrected filepath: {}", filepath);
         
@@ -278,16 +303,25 @@ public class DownloadFileItem {
             sb.append("_#");
         }
 
-        if (!StringUtils.isEmpty(targetExtension)) {
-            sb.append(".").append(targetExtension);
+        if (i>0) {
+            sb.append("_"+(i+1));
         }
-        else {
-            sb.append(".").append(sourceExtension);
-        }
+        
+        // Append extension
+        sb.append(".").append(StringUtils.isEmpty(targetExtension) ? sourceExtension : targetExtension);
         
         log.debug("Final file path: {}", sb);
         return sb.toString();
-
+    }
+    
+    /**
+     * Remove special characters from filepaths so that they don't create problems.
+     * @param filepath
+     * @return
+     */
+    private String sanitizeFilepath(String filepath) {
+        // TODO: this method should be OS-specific, and allow certain useful characters like &
+        return filepath.replaceAll("[^\\w\\.\\(\\)\\- /]", "_");
     }
     
     public List<String> getItemPath() {
@@ -325,15 +359,13 @@ public class DownloadFileItem {
     public boolean is3d() {
         return is3d;
     }
+    
+    public boolean hasError() {
+        return errorMessage != null;
+    }
 
     @Override
     public String toString() {
-    	if (errorMessage!=null) {
-			return errorMessage;
-		}
-    	if (targetRelativePath == null) {
-    		return "Error getting file for "+domainObject.getName();
-    	}
-    	return targetRelativePath;
+    	return hasError() ? errorMessage : targetRelativePath;
     }
 }

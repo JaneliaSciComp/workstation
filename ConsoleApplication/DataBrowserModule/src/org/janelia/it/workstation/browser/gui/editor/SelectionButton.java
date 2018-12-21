@@ -31,6 +31,7 @@ public abstract class SelectionButton<T> extends DropDownButton {
 
     public SelectionButton(String label) {
         this.label = label;
+        update();
     }
         
     public void update() {

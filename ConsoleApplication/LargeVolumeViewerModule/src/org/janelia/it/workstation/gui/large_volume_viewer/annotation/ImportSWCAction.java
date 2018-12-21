@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.ArrayList;
@@ -20,6 +21,16 @@ import org.janelia.it.workstation.browser.ConsoleApp;
  * @author fosterl
  */
 public class ImportSWCAction extends AbstractAction {
+
+    private static Dimension dialogSize = new Dimension(1200, 800);
+
+    private static Dimension getDialogSize() {
+        return dialogSize;
+    }
+
+    private static void setDialogSize(Dimension dialogSize) {
+        ImportSWCAction.dialogSize = dialogSize;
+    }
 
     private boolean neuronPerRoot = false;
     private AnnotationPanel annotationPanel;
@@ -55,7 +66,9 @@ public class ImportSWCAction extends AbstractAction {
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             final FileFilter swcAndDirFilter = new SwcDirAndFileFilter();
             chooser.setFileFilter(swcAndDirFilter);
+            chooser.setPreferredSize(getDialogSize());
             int returnValue = chooser.showOpenDialog(FrameworkImplProvider.getMainFrame());
+            setDialogSize(chooser.getSize());
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 List<File> swcFiles = getFilesList(chooser.getSelectedFile());
                 if (swcFiles.size() > 0) {

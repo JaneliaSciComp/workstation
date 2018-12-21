@@ -3,6 +3,7 @@ package org.janelia.it.workstation.browser.gui.listview.icongrid;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -21,6 +22,7 @@ import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectEditSelectionEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.IconGridViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
@@ -41,6 +43,7 @@ import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.util.HelpTextUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.DomainObjectAttribute;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
@@ -50,6 +53,8 @@ import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * An IconGridViewer implementation for viewing domain objects. 
@@ -77,8 +82,6 @@ public class DomainObjectIconGridViewer
     private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
     private ChildSelectionModel<DomainObject,Reference> selectionModel;
     private ChildSelectionModel<DomainObject,Reference> editSelectionModel;
-
-    // UI state
     private ListViewerActionListener listener;
     private boolean editMode;
     
@@ -236,13 +239,46 @@ public class DomainObjectIconGridViewer
     @Override
     public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
         log.info("selectEditObjects(domainObjects={},select={})", DomainUtils.abbr(domainObjects), select);
-
         if (domainObjects.isEmpty()) {
             return;
         }
         if (select) {
             editSelectionModel.select(domainObjects, true, true);
         }
+    }
+
+    @Override
+    public void toggleEditMode(boolean editMode) {
+        this.editMode = editMode;
+        imagesPanel.setEditMode(editMode);
+        if (editSelectionModel!=null) {
+            editSelectionModel.reset();
+        }
+    }
+    
+    @Override
+    public void refreshEditMode() {
+        imagesPanel.setEditMode(editMode);
+        if (editSelectionModel != null) {
+            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds());
+        }
+    }
+
+    @Override
+    public void setEditSelectionModel(ChildSelectionModel<DomainObject, Reference> editSelectionModel) {
+        this.editSelectionModel = editSelectionModel;
+        imagesPanel.setEditSelectionModel(editSelectionModel);
+    }
+
+    @Override
+    public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
+        return editSelectionModel;
+    }
+
+    @Subscribe
+    public void handleEditSelection(DomainObjectEditSelectionEvent event) {
+        // Refresh the edit checkboxes any time the edit selection model changes
+        refreshEditMode();
     }
     
     @Override
@@ -279,33 +315,29 @@ public class DomainObjectIconGridViewer
                 // Reload the config
                 config = IconGridViewerConfiguration.loadConfig();
                 
-                final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-                if (parentObject!=null && parentObject.getId()!=null) {
-                    
-                    String preference = preferenceSupport.getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT);
-                    log.info("Got result preference: "+preference);
-                    if (preference!=null) {
-                        try {
-                            ArtifactDescriptor resultDescriptor = DescriptorUtils.deserialize(preference);
-                            resultButton.setResultDescriptor(resultDescriptor);
-                        }
-                        catch (Exception e) {
-                            log.error("Error deserializing preference {}. Clearing it.", preference, e);
-                            preferenceSupport.setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, null);
-                        }
+                String preference = preferenceSupport.getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT);
+                log.info("Got result preference: "+preference);
+                if (preference!=null) {
+                    try {
+                        ArtifactDescriptor resultDescriptor = DescriptorUtils.deserialize(preference);
+                        resultButton.setResultDescriptor(resultDescriptor);
                     }
-                    else {
-                        resultButton.reset();
+                    catch (Exception e) {
+                        log.error("Error deserializing preference {}. Clearing it.", preference, e);
+                        preferenceSupport.setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, null);
                     }
-                    
-                    String preference2 = preferenceSupport.getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE);
-                    log.info("Got image type preference: "+preference2);
-                    if (preference2!=null) {
-                        typeButton.setImageTypeName(preference2);
-                    }
-                    else {
-                        typeButton.reset();
-                    }   
+                }
+                else {
+                    resultButton.reset();
+                }
+                
+                String preference2 = preferenceSupport.getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE);
+                log.info("Got image type preference: "+preference2);
+                if (preference2!=null) {
+                    typeButton.setImageTypeName(preference2);
+                }
+                else {
+                    typeButton.reset();
                 }
 
                 resultButton.populate(domainObjectList.getObjects());
@@ -354,31 +386,6 @@ public class DomainObjectIconGridViewer
     }
 
     @Override
-    public void toggleEditMode(boolean editMode) {
-        this.editMode = editMode;
-        imagesPanel.setEditMode(editMode);
-    }
-
-    @Override
-    public void refreshEditMode() {
-        imagesPanel.setEditMode(editMode);
-        if (editSelectionModel!=null) {
-            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds(), true);
-        }
-    }
-
-    @Override
-    public void setEditSelectionModel(ChildSelectionModel<DomainObject, Reference> editSelectionModel) {
-        this.editSelectionModel = editSelectionModel;
-        imagesPanel.setEditSelectionModel(editSelectionModel);
-    }
-
-    @Override
-    public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
-        return editSelectionModel;
-    }
-
-    @Override
     public boolean matches(ResultPage<DomainObject, Reference> resultPage, DomainObject domainObject, String text) {
         log.trace("Searching {} for {}", domainObject.getName(), text);
 
@@ -394,6 +401,24 @@ public class DomainObjectIconGridViewer
             return true;
         }
 
+        for (DomainObjectAttribute attr : DomainUtils.getDisplayAttributes(Arrays.asList(domainObject))) {
+            
+            if (attr.getGetter()!=null) {
+                try {
+                    Object value = attr.getGetter().invoke(domainObject);
+                    if (value != null) {
+                        if (value.toString().toUpperCase().contains(text)) {
+                            return true;
+                        }
+                    }
+                    
+                }
+                catch (Exception e) {
+                    FrameworkImplProvider.handleExceptionQuietly("Error matching on attribute: "+attr.getName(), e);
+                }
+            }
+        }
+        
         for(Annotation annotation : resultPage.getAnnotations(Reference.createFor(domainObject))) {
             if (annotation.getName().toUpperCase().contains(tupper)) {
                 return true;
@@ -419,13 +444,18 @@ public class DomainObjectIconGridViewer
     }
     
     private DomainObjectContextMenu getPopupMenu(List<DomainObject> domainObjectList) {
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), domainObjectList, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(
+                (DomainObject)selectionModel.getParentObject(), 
+                domainObjectList, 
+                resultButton.getResultDescriptor(),
+                typeButton.getImageTypeName(),
+                editMode ? editSelectionModel : null);
         popupMenu.addMenuItems();
         return popupMenu;
     }
 
     @Override
-    protected JPopupMenu getAnnotationPopupMenu(Annotation annotation) {
+    protected JPopupMenu getAnnotationPopupMenu(DomainObject domainObject, Annotation annotation) {
         AnnotationContextMenu menu = new AnnotationContextMenu(annotation, getSelectedObjects(), imageModel);
         menu.addMenuItems();
         return menu;

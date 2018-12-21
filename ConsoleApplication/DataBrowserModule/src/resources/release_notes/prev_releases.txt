@@ -1,3 +1,62 @@
+// 7.22
+
+Workstation Browser
+* Added progress indication for reprocessing  
+
+Horta
+* Shortcuts for Stop, Reverse, and Forward flythroughs
+* Navigate to branch automatically with selection
+* Control to adjust speed (fps) for flythrough
+* Control to allow manual rotation (disable auto) for flythrough
+* Fix for setting the right parent anchor in Horta when selecting in the Annotation View
+* Delete for Object Meshes in the Scene Window 
+
+// 7.21
+
+Workstation Browser
+* Fixed intermittent error when canceling downloads
+* Fixed bug with right-click on the tables
+
+// 7.20
+
+Workstation Browser
+* Improved performance for image browsing
+* Added the possibility to reuse existing neuron separation results when reprocessing a sample
+
+Large Volume Viewer
+* Import SWC dialog box is larger and remembers its size
+* Added new tool for neuron skeleton review
+
+// 7.19
+
+Workstation Browser
+* Fixed bug when choosing display result for unsaved searches
+* You can now choose to reuse previous results when reprocessing samples
+
+// 7.18
+
+Workstation Browser
+* AD/DBD availability is now displayed on color depth search results
+* Color depth search results can be selected for split generation
+* Easier selection of color depth MIPs for download
+* Duplicate files are now ignored when downloading
+* "Find" feature (Command-F/Ctrl-F) now searches more attributes, including VT Line 
+* Added VVD Viewer to right-click menus, and to the toolbar
+* Made it possible to choose alignments produced by different aligners when displaying MIPs, e.g. JFRC2010 JBA vs. JFRC2010 CMTK
+
+Large Volume Viewer
+* Export SWC dialog box is larger and remembers its size
+
+// 7.17 
+
+Workstation Browser
+* Improvement filtering in color depth MIP viewer
+* Color depth search results now display VT line names 
+* Download wizard remembers filter settings more consistently
+* Fixed issue with decompressing bzipped LSMs
+* Added compression quality display to all secondary results
+* Improved file uploads
+
 // 7.16
  
 Workstation Browser

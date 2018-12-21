@@ -112,7 +112,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
                 controller.changed();
             }
         });
-        JLabel titleLabel3 = new JLabel("Z-slice Thickness (microns): ");
+        JLabel titleLabel3 = new JLabel("Z-slice Thickness (pixels): ");
         titleLabel3.setLabelFor(zThicknessField);
         attrPanel.add(titleLabel3,"gap para");
         attrPanel.add(zThicknessField,"gap para, width 80:100:100, growx");

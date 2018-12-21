@@ -209,7 +209,9 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         try {
             List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
             // TODO: should this use the same result as the icon grid viewer?
-            DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject) selectionModel.getParentObject(), selected, ArtifactDescriptor.LATEST, null);
+            DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(
+                    (DomainObject) selectionModel.getParentObject(), 
+                    selected, ArtifactDescriptor.LATEST, null, null);
 
             JTable table = getTable();
             ListSelectionModel lsm = table.getSelectionModel();

@@ -32,16 +32,23 @@ package org.janelia.scenewindow;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelListener;
+
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.awt.GLJPanel;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+
+import org.openide.util.ImageUtilities;
 
 /**
  *
@@ -71,11 +78,18 @@ public class GLJComponentFactory
     {
         private final Dimension tinySize = new Dimension(0, 0);
         private GLCanvas glCanvas;
+        private JPanel playPanel;
+        private JButton playReverseButton;
+        private JButton playForwardButton;
+        private JButton playPauseButton;
 
         public GLCanvasInJPanelComponent(GLCapabilities capabilities) {
             super(new BorderLayout());
             glCanvas = new GLCanvas(capabilities);
             add(glCanvas, BorderLayout.CENTER);
+        
+            buildControlsPanel();
+           
             // This workaround avoids horrible GLCanvas resize behavior...
             glCanvas.addGLEventListener(new GLEventListener() {
                 @Override
@@ -92,6 +106,27 @@ public class GLJComponentFactory
                 }
             });
         }
+        
+        private void buildControlsPanel() {
+            playPanel = new JPanel();
+            BoxLayout boxLayout = new BoxLayout(playPanel, BoxLayout.X_AXIS);
+            playPanel.setLayout(boxLayout);
+            
+            playReverseButton = new JButton();
+            playReverseButton.setIcon(new ImageIcon(ImageUtilities.loadImage("org/janelia/horta/images/control_rewind_blue.png")));             
+            playPanel.add(playReverseButton);
+               
+            playPauseButton = new JButton();
+            playPauseButton.setIcon(new ImageIcon(ImageUtilities.loadImage("org/janelia/horta/images/control_pause_blue.png")));
+            playPanel.add(playPauseButton);
+            
+            playForwardButton = new JButton();
+            playForwardButton.setIcon(new ImageIcon(ImageUtilities.loadImage("org/janelia/horta/images/control_fastforward_blue.png")));
+            playPanel.add(playForwardButton);
+
+            add(playPanel, BorderLayout.SOUTH);
+            playPanel.setVisible(false);
+        }
 
         @Override
         public Component getInnerComponent() {
@@ -103,6 +138,26 @@ public class GLJComponentFactory
             return this;
         }
 
+        @Override
+        public void setControlsVisibility (boolean visible) {
+            playPanel.setVisible(visible);
+        }
+        
+        @Override
+        public void addPauseListener (ActionListener listener) {
+            playPauseButton.addActionListener(listener);
+        }
+        
+        @Override
+        public void addPlayForwardListener (ActionListener listener) {
+            playForwardButton.addActionListener(listener);
+        }
+        
+        @Override        
+        public void addPlayReverseListener (ActionListener listener) {
+            playReverseButton.addActionListener(listener);
+        }
+        
         @Override
         public GLAutoDrawable getGLAutoDrawable() {
             return glCanvas;
@@ -154,6 +209,26 @@ public class GLJComponentFactory
        public GLAutoDrawable getGLAutoDrawable() {
            return this;
        }
+
+        @Override
+        public void setControlsVisibility(boolean visible) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void addPlayForwardListener(ActionListener listener) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void addPlayReverseListener(ActionListener listener) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void addPauseListener(ActionListener listener) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
 
    }
 

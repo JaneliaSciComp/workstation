@@ -10,8 +10,13 @@ import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -37,9 +42,11 @@ import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.model.access.domain.ChanSpecUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.SampleAlignmentResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,9 +59,9 @@ public final class DownloadVisualPanel3 extends JPanel {
     private static final int MAX_LOG_ITEMS = 50;
     
     private static final String FILE_PATTERN_HELP =
-            "<html><font color='#959595' size='-1'>The naming pattern can use any attribute on the items being downloaded.<br>"
-            + "It may also use the following special attributes: {Sample Name}, {Result Name}, {File Name}, {Extension}<br>"
-            + "Each attribute may include multiple names as a fallback, e.g.: {Fly Core Alias|Line}"
+            "<html><font color='#959595' size='-1'>The file naming pattern allows you to customize how the files are saved on your local disk. It can use any attribute on the items being downloaded.<br>"
+            + "It may also use the following special attributes: {Sample Name}, {Result Name}, {File Name}, {Extension}, {Index}, {Folders}<br>"
+            + "Each attribute may include multiple names as a fallback, e.g.: {Fly Core Alias|VT Line|Line}, or a default value {Fly Core Alias|\"NoAlias\"}"
             + "</font></html>";
     
     public static final String[] STANDARD_FILE_PATTERNS = {
@@ -220,7 +227,10 @@ public final class DownloadVisualPanel3 extends JPanel {
             return;
         }
 
-        downloadItems.clear();
+        filePatternCombo.setEnabled(false);
+        mainPane.removeAll();
+        mainPane.add(new JLabel(Icons.getLoadingIcon()));
+        
         final boolean flattenStructure = isFlattenStructure();
         final String filenamePattern = getFilenamePattern();
         
@@ -231,10 +241,19 @@ public final class DownloadVisualPanel3 extends JPanel {
             @Override
             protected void doStuff() throws Exception {
 
+                Map<Integer,FileType> colorDepthTypes = new HashMap<>();
+                colorDepthTypes.put(0, FileType.ColorDepthMip1);
+                colorDepthTypes.put(1, FileType.ColorDepthMip2);
+                colorDepthTypes.put(2, FileType.ColorDepthMip3);
+                colorDepthTypes.put(3, FileType.ColorDepthMip4);
+                
                 int index = 0;
+                
+                Set<Path> paths = new HashSet<>();
                 
                 for(DownloadObject downloadObject : downloadObjects) {
                     DomainObject domainObject = downloadObject.getDomainObject();
+                    log.debug("-------------------------------------------------------------------------");
                     log.debug("Inspecting download object '{}'", domainObject);
                     
                     for (ArtifactDescriptor artifactDescriptor : artifactDescriptors) {
@@ -242,28 +261,61 @@ public final class DownloadVisualPanel3 extends JPanel {
 
                         for (HasFiles hasFiles : artifactDescriptor.getFileSources(domainObject)) {
                             log.debug("    Checking source item '{}'", hasFiles);
-                            for (FileType fileType : artifactDescriptor.getSelectedFileTypes()) {
+                            
+                            // Replace aggregate with individual color depth MIPs
+                            List<FileType> selectedFileTypes = new ArrayList<>(artifactDescriptor.getSelectedFileTypes());
+                            if (selectedFileTypes.contains(FileType.ColorDepthMips)) {
+                                selectedFileTypes.remove(FileType.ColorDepthMips);
+                                if (hasFiles instanceof SampleAlignmentResult) {
+                                    SampleAlignmentResult alignment = (SampleAlignmentResult)hasFiles;
+                                    List<Integer> signalChans = ChanSpecUtils.getSignalChannelIndexList(alignment.getChannelSpec());
+                                    for(Integer signalChan : signalChans) {
+                                        selectedFileTypes.add(colorDepthTypes.get(signalChan));
+                                    }
+                                }
+                                else {
+                                    throw new IllegalStateException("Color depth MIPs selected for unaligned data");
+                                }
+                            }
+                            
+                            for (FileType fileType : selectedFileTypes) {
                                 log.debug("      Adding item for file type '{}'", fileType);
-                                DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject, index++);
-                                downloadItem.init(artifactDescriptor, hasFiles, fileType, outputExtensions, splitChannels && fileType.is3dImage(), flattenStructure, filenamePattern);
-
-                                if (downloadFileItems.size() < MAX_LOG_ITEMS) {
-                                    log.info("Target path: {}", downloadItem.getTargetFile());
-                                }
-                                else if (downloadFileItems.size() == MAX_LOG_ITEMS) {
-                                    log.info("File list truncated after {} items", MAX_LOG_ITEMS);
-                                }
                                 
-                                downloadFileItems.add(downloadItem);
+                                DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject, index++);
+                                downloadItem.init(artifactDescriptor, hasFiles, fileType, outputExtensions, splitChannels && fileType.is3dImage(), flattenStructure, filenamePattern, paths);
+
+                                if (!downloadItem.hasError()) {
+                                    if (index < MAX_LOG_ITEMS) {
+                                        log.info("Download {}, descriptor={}, fileSource={}", domainObject, artifactDescriptor, hasFiles);
+                                        log.info("         {} to {}", fileType, downloadItem.getTargetFile());
+                                    }
+                                    else if (index == MAX_LOG_ITEMS) {
+                                        log.info("File list logging truncated after {} items", MAX_LOG_ITEMS);
+                                    }
+                                    downloadFileItems.add(downloadItem);
+                                    paths.add(downloadItem.getTargetFile());
+                                }
+                                else {
+                                    log.debug("Cannot download item: "+downloadItem);
+                                }
                                 
                             }
                         }
                     }
+
+                    Collections.sort(downloadFileItems, new Comparator<DownloadFileItem>() {
+                        @Override
+                        public int compare(DownloadFileItem o1, DownloadFileItem o2) {
+                            return o1.toString().compareTo(o2.toString());
+                        }
+                    });
                 }    
             }
             
             @Override
             protected void hadSuccess() {
+
+                downloadItems = downloadFileItems;
                 
                 int count = 0;
                 DefaultListModel<DownloadFileItem> dlm = (DefaultListModel<DownloadFileItem>) downloadItemList.getModel();
@@ -276,9 +328,8 @@ public final class DownloadVisualPanel3 extends JPanel {
                 
                 // Update GUI
                 downloadItemCountLabel.setText(count+" files");
-
-                downloadItems = downloadFileItems;
                 
+                filePatternCombo.setEnabled(true);
                 mainPane.removeAll();
                 mainPane.add(downloadItemList);
                 mainPane.updateUI();

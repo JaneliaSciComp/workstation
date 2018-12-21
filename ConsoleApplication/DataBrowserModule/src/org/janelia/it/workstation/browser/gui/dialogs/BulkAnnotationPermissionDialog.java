@@ -136,7 +136,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
             return;
         }
         
-        ChildSelectionModel selectionModel = listView.getEditor().getSelectionModel();
+        ChildSelectionModel<?,?> selectionModel = listView.getEditor().getSelectionModel();
         if (selectionModel==null) {
             showSelectionMessage();
             return;

@@ -73,21 +73,23 @@ public class NeuronModelAdapter implements NeuronModel {
     private final ObservableInterface colorChangeObservable = new ComposableObservable();
     private final ObservableInterface geometryChangeObservable = new ComposableObservable();
     private final ObservableInterface visibilityChangeObservable = new ComposableObservable();
-    private final NeuronVertexCreationObservable membersAddedObservable
-            = new BasicNeuronVertexCreationObservable();
-    private final NeuronVertexUpdateObservable vertexUpdatedObservable
-            = new BasicNeuronVertexUpdateObservable();
-    private final NeuronVertexDeletionObservable membersRemovedObservable
-            = new BasicNeuronVertexDeletionObservable();
+    private final NeuronVertexCreationObservable membersAddedObservable = 
+            new BasicNeuronVertexCreationObservable();
+    private final NeuronVertexUpdateObservable vertexUpdatedObservable =
+            new BasicNeuronVertexUpdateObservable();
+    private final NeuronVertexDeletionObservable membersRemovedObservable = 
+            new BasicNeuronVertexDeletionObservable();
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // private AnnotationModel annotationModel;
     private boolean nonInteractable;
     private boolean visible;
     private boolean userToggleRadius;
+    private boolean underReview = false;
     private String ownerKey;
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
     private NeuronSetAdapter neuronSet;
+    private HashSet<NeuronVertex> reviewedNodes = new HashSet<>();
 
     public NeuronModelAdapter(TmNeuronMetadata neuron, NeuronSetAdapter workspace) {
         assert neuron != null;
@@ -106,9 +108,8 @@ public class NeuronModelAdapter implements NeuronModel {
     }
 
     public NeuronVertex getVertexForAnnotation(TmGeoAnnotation annotation) {
-        if (annotation == null) {
+        if (annotation == null)
             return null;
-        }
         return vertexes.getVertexByGuid(annotation.getId());
     }
 
@@ -120,9 +121,9 @@ public class NeuronModelAdapter implements NeuronModel {
     // Special method for adding annotation anchors from the Horta side
     @Override
     public NeuronVertex appendVertex(NeuronVertex parent, float[] micronXyz, float radius) {
-        if ((parent != null) && (!(parent instanceof NeuronVertexAdapter))) {
+        if ((parent != null) && (!(parent instanceof NeuronVertexAdapter)))
             return null; // TODO: error?
-        }
+
         // Convert micron coordinates to voxel coordinates
         Matrix m2v = neuronSet.getMicronToVoxMatrix();
         // Matrix m2v = MatrixUtilities.deserializeMatrix(sample.getMicronToVoxMatrix(), "micronToVoxMatrix");
@@ -168,9 +169,8 @@ public class NeuronModelAdapter implements NeuronModel {
 
     @Override
     public boolean transferNeurite(NeuronVertex anchor) {
-        if (!(anchor instanceof NeuronVertexAdapter)) {
+        if (!(anchor instanceof NeuronVertexAdapter))
             return false;
-        }
         NeuronVertexAdapter nva = (NeuronVertexAdapter) anchor;
         try {
             neuronSet.annotationModel.moveNeurite(nva.getTmGeoAnnotation(), neuron);
@@ -182,12 +182,10 @@ public class NeuronModelAdapter implements NeuronModel {
 
     @Override
     public boolean splitNeurite(NeuronVertex anchor1, NeuronVertex anchor2) {
-        if (!(anchor1 instanceof NeuronVertexAdapter)) {
+        if (!(anchor1 instanceof NeuronVertexAdapter))
             return false;
-        }
-        if (!(anchor2 instanceof NeuronVertexAdapter)) {
+        if (!(anchor2 instanceof NeuronVertexAdapter))
             return false;
-        }
         NeuronVertexAdapter nva1 = (NeuronVertexAdapter) anchor1;
         NeuronVertexAdapter nva2 = (NeuronVertexAdapter) anchor2;
 
@@ -204,9 +202,9 @@ public class NeuronModelAdapter implements NeuronModel {
             newRootId = id2;
         }
 
-        if (newRootId == null) {
+        if (newRootId == null)
             return false; // anchors not connected, or anchor's id is null
-        }
+
         try {
             neuronSet.annotationModel.splitNeurite(neuronId, newRootId);
             return true;
@@ -217,13 +215,11 @@ public class NeuronModelAdapter implements NeuronModel {
 
     @Override
     public boolean mergeNeurite(NeuronVertex source, NeuronVertex target) {
-        if (!(source instanceof NeuronVertexAdapter)) {
+        if (!(source instanceof NeuronVertexAdapter))
             return false;
-        }
         NeuronVertexAdapter sourceNVA = (NeuronVertexAdapter) source;
-        if (!(target instanceof NeuronVertexAdapter)) {
+        if (!(target instanceof NeuronVertexAdapter))
             return false;
-        }
         NeuronVertexAdapter targetNVA = (NeuronVertexAdapter) target;
 
         TmGeoAnnotation sourceAnn = sourceNVA.getTmGeoAnnotation();
@@ -233,9 +229,8 @@ public class NeuronModelAdapter implements NeuronModel {
         Long targetID = targetAnn.getId();
 
         // Borrow logic from AnnotationManager::canMergeNeurite()::520
-        if (sourceID.equals(targetID)) {
+        if (sourceID.equals(targetID))
             return false; // cannot merge with itself
-        }
         if (neuronSet.annotationModel.getNeuriteRootAnnotation(sourceAnn).getId().equals(
                 neuronSet.annotationModel.getNeuriteRootAnnotation(targetAnn).getId())) {
             return false;
@@ -263,9 +258,8 @@ public class NeuronModelAdapter implements NeuronModel {
     @Override
     public boolean updateVertexRadius(NeuronVertex vertex, float micronRadius) {
         try {
-            if (!(vertex instanceof NeuronVertexAdapter)) {
+            if (!(vertex instanceof NeuronVertexAdapter))
                 return false;
-            }
             NeuronVertexAdapter nva = (NeuronVertexAdapter) vertex;
             TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
             neuronSet.annotationModel.updateAnnotationRadius(annotation.getNeuronId(), annotation.getId(), micronRadius);
@@ -279,9 +273,8 @@ public class NeuronModelAdapter implements NeuronModel {
     @Override
     public boolean moveVertex(NeuronVertex vertex, float[] micronXyz) {
         try {
-            if (!(vertex instanceof NeuronVertexAdapter)) {
+            if (!(vertex instanceof NeuronVertexAdapter))
                 return false;
-            }
             NeuronVertexAdapter nva = (NeuronVertexAdapter) vertex;
 
             // Be Careful! I'm calling setLocation() here, so I don't have
@@ -308,22 +301,19 @@ public class NeuronModelAdapter implements NeuronModel {
     @Override
     public boolean deleteVertex(NeuronVertex doomedVertex) {
         try {
-            if (!(doomedVertex instanceof NeuronVertexAdapter)) {
+            if (!(doomedVertex instanceof NeuronVertexAdapter))
                 return false;
-            }
             NeuronVertexAdapter nva = (NeuronVertexAdapter) doomedVertex;
             TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
 
             // Borrow some defensive logic from AnnotationManager.java::405
-            if (annotation == null) {
+            if (annotation == null)
                 return false; // no such anchor
-            }
-            if (annotation.isRoot() && annotation.getChildIds().size() > 0) {
+            if (annotation.isRoot() && annotation.getChildIds().size() > 0)
                 return false; // non-empty root cannot be deleted
-            }
-            if (annotation.getChildIds().size() > 1) {
+            if (annotation.getChildIds().size() > 1)
                 return false; // non-terminal cannot be deleted
-            }
+
             neuronSet.annotationModel.deleteLink(annotation);
             ActivityLogHelper.getInstance().logExternallyDeleteLink(neuronSet.workspace.getSampleRef().getTargetId(), neuronSet.workspace.getId(), annotation);
             return true;
@@ -350,22 +340,20 @@ public class NeuronModelAdapter implements NeuronModel {
             return null;
         }
         // Add edge
-        if (vertexId.equals(parentId)) {
+        if (vertexId.equals(parentId))
             return newVertex; // Self parent, so no edge. TODO: maybe this never happens
-        }        // comment from TmGeoAnnotation.java: "parentID is the neuron (if root annotation) or another TmGeoAnn"
-        if (annotation.getNeuronId().equals(parentId)) {
+        // comment from TmGeoAnnotation.java: "parentID is the neuron (if root annotation) or another TmGeoAnn"
+        if (annotation.getNeuronId().equals(parentId))
             return newVertex; // It appears parentId==neuronId for (parentless) root/seed points
-        }
-        assert (vertexes.containsKey(parentId));
+        assert(vertexes.containsKey(parentId));
         edges.add(new NeuronEdgeAdapter(newVertex, vertexes.getVertexByGuid(parentId)));
         getGeometryChangeObservable().setChanged(); // mark dirty, but don't sweep (notifyObservers) yet
         return newVertex;
     }
 
     public void updateWrapping(TmNeuronMetadata neuron) {
-        if (this.neuron == neuron) {
+        if (this.neuron == neuron)
             return;
-        }
         assert neuron != null;
         this.neuron = neuron;
         this.vertexes.updateWrapping(neuron.getGeoAnnotationMap());
@@ -394,9 +382,8 @@ public class NeuronModelAdapter implements NeuronModel {
     public Color getColor() {
         // Use just-in-time fetching of color, since NeuronStyle might not be
         // set yet at WorkspaceLoaded time.
-        if (cachedColor != null) {
+        if (cachedColor != null)
             return cachedColor;
-        }
         NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
         if (style != null) {
             cachedColor = style.getColor();
@@ -407,12 +394,10 @@ public class NeuronModelAdapter implements NeuronModel {
 
     @Override
     public void setColor(Color color) {
-        if (color == null) {
+        if (color == null)
             return;
-        }
-        if (color.equals(cachedColor)) {
+        if (color.equals(cachedColor))
             return;
-        }
         cachedColor = color;
 
         // Set color in actual wrapped Style
@@ -439,6 +424,16 @@ public class NeuronModelAdapter implements NeuronModel {
     }
 
     @Override
+    public boolean getReviewMode() {
+        return underReview;
+    }
+
+    @Override
+    public void setReviewMode(boolean reviewMode) {
+        underReview = reviewMode;
+    }
+
+    @Override
     public ObservableInterface getColorChangeObservable() {
         return colorChangeObservable;
     }
@@ -459,6 +454,28 @@ public class NeuronModelAdapter implements NeuronModel {
     @Override
     public Collection<NeuronEdge> getEdges() {
         return edges;
+    }
+
+    @Override
+    public Collection<NeuronVertex> getReviewedVertices() {
+        return reviewedNodes;
+    }
+
+    @Override
+    public boolean isReviewedVertex(NeuronVertex vertex) {
+        if (reviewedNodes.contains(vertex))
+            return true;
+        return false;
+    }
+
+    @Override
+    public void addReviewedVertices(Collection<NeuronVertex> vertexList) {
+        reviewedNodes.addAll(vertexList);
+    }
+
+    @Override
+    public void clearVertices(Collection<NeuronVertex> vertexList) {
+        reviewedNodes.removeAll(vertexList);
     }
 
     @Override
@@ -578,9 +595,7 @@ public class NeuronModelAdapter implements NeuronModel {
     }
 
     // TODO: - implement Edges correctly
-    private static class EdgeList
-            implements Collection<NeuronEdge> // extends ArrayList<NeuronEdge> 
-    {
+    private static class EdgeList implements Collection<NeuronEdge> {
 
         private final VertexList vertices;
         // Cache edge set for efficient updates
@@ -600,30 +615,25 @@ public class NeuronModelAdapter implements NeuronModel {
             for (NeuronVertex v : vertices) {
                 NeuronVertexAdapter v1 = (NeuronVertexAdapter) v;
                 TmGeoAnnotation child = v1.getTmGeoAnnotation();
-                if (child == null) {
+                if (child == null)
                     continue;
-                }
                 Long parentId = child.getParentId();
                 TmGeoAnnotation parent = vertices.getAnnotationByGuid(parentId);
-                if (parent == null) {
+                if (parent == null)
                     continue;
-                }
                 NeuronEdge edge = new NeuronEdgeAdapter(
                         vertices.getVertexByGuid(child.getId()),
                         vertices.getVertexByGuid(parentId));
                 freshEdges.add(edge);
-                if (!cachedEdges.contains(edge)) {
+                if (!cachedEdges.contains(edge))
                     newEdges.add(edge);
-                }
             }
             for (NeuronEdge edge : cachedEdges) {
-                if (!freshEdges.contains(edge)) {
+                if (!freshEdges.contains(edge))
                     obsoleteEdges.add(edge);
-                }
             }
-            if (newEdges.isEmpty() && obsoleteEdges.isEmpty()) {
+            if (newEdges.isEmpty() && obsoleteEdges.isEmpty())
                 return false; // no change
-            }
             cachedEdges.removeAll(obsoleteEdges);
             cachedEdges.addAll(newEdges);
             return true;

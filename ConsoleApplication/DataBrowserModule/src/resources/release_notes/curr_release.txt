@@ -1,9 +1,7 @@
-// 7.17 
+// 7.23
 
-Workstation Browser
-* Improvement filtering in color depth MIP viewer
-* Color depth search results now display VT line names 
-* Download wizard remembers filter settings more consistently
-* Fixed issue with decompressing bzipped LSMs
-* Added compression quality display to all secondary results
-* Improved file uploads
+Data Browser
+* Improved right-click context menu performance
+
+Large Volume Viewer
+* "Scroll through Z" feature uses current camera view instead of recentering now

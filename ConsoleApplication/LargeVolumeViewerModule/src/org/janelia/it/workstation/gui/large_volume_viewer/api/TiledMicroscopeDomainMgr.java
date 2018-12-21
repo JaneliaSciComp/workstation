@@ -18,6 +18,7 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
+import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.domain.workspace.TreeNode;
@@ -272,6 +273,23 @@ public class TiledMicroscopeDomainMgr {
         return savedMetadata;
     }
     
+    public TmReviewTask save(TmReviewTask reviewTask) throws Exception {
+        log.debug("save({})", reviewTask);
+        if (reviewTask.getId()==null) {
+            reviewTask = client.create(reviewTask);
+        } else {
+            reviewTask = client.update(reviewTask);
+        }
+        model.notifyDomainObjectChanged(reviewTask);
+        return reviewTask;
+    }
+    
+    public void remove(TmReviewTask reviewTask) throws Exception {
+        log.debug("remove({})", reviewTask);
+        client.remove(reviewTask);
+        model.notifyDomainObjectRemoved(reviewTask);
+    }
+    
     public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate) throws Exception {
         client.updateNeuronStyles(bulkNeuronStyleUpdate);
     }
@@ -282,6 +300,12 @@ public class TiledMicroscopeDomainMgr {
         neuronMetadata.setId(tmNeuron.getId());
         client.remove(neuronMetadata);
         model.notifyDomainObjectRemoved(neuronMetadata);
+    }
+    
+    public List<TmReviewTask> getReviewTasks() throws Exception {
+        log.debug("getReviewTasks()");
+        List<TmReviewTask> reviewTasks = model.getAllDomainObjectsByClass(TmReviewTask.class);
+        return reviewTasks;
     }
 
     public void bulkEditNeuronTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) throws Exception {

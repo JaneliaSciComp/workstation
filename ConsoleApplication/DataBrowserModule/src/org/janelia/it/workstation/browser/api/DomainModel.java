@@ -3,7 +3,6 @@ package org.janelia.it.workstation.browser.api;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -32,6 +31,7 @@ import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;
+import org.janelia.model.domain.dto.SampleReprocessingRequest;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.gui.search.Filter;
@@ -514,6 +514,16 @@ public class DomainModel {
         return domainFacade.getDomainObjects(reverseReference);
     }
 
+    @SuppressWarnings("unchecked")
+    public <T extends DomainObject> List<T> getDomainObjectsAs(Class<T> clazz, ReverseReference reverseReference) throws Exception {
+        List<DomainObject> domainObjects = domainFacade.getDomainObjects(reverseReference);
+        List<T> asClass = new ArrayList<>(); 
+        for (DomainObject domainObject : domainObjects) {
+            asClass.add((T)domainObject);
+        }
+        return asClass;
+    }
+    
     public List<Annotation> getAnnotations(DomainObject domainObject) throws Exception {
         return getAnnotations(Reference.createFor(domainObject));
     }
@@ -982,8 +992,8 @@ public class DomainModel {
         return subjectFacade.getOrCreateUser(username);
     }
     
-    public String dispatchSamples(List<Reference> sampleRefs, String reprocessPurpose, boolean reuse) throws Exception {
-        return sampleFacade.dispatchSamples(sampleRefs, reprocessPurpose, reuse);
+    public String dispatchSamples(SampleReprocessingRequest request) throws Exception {
+        return sampleFacade.dispatchSamples(request);
     }
 
     public ColorDepthSearch createColorDepthSearch(ColorDepthSearch search) throws Exception {

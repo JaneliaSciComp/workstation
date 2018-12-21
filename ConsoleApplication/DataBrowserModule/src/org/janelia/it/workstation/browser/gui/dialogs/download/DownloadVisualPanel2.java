@@ -190,7 +190,7 @@ public final class DownloadVisualPanel2 extends JPanel {
                                 
                                 if (fileType.is3dImage()) {
                                     DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject, index++);
-                                    downloadItem.init(artifactDescriptor, hasFiles, fileType, null, false, false, "{GUID}_{File Name}");
+                                    downloadItem.init(artifactDescriptor, hasFiles, fileType, null, false, false, "{GUID}_{File Name}", null);
                                     String sourceExtension = downloadItem.getSourceExtension();
                                     if (sourceExtension!=null) {
                                         countedExtensions.add(sourceExtension);

@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -261,6 +260,7 @@ public class NeuronSetAdapter
         annotationModel.addGlobalAnnotationListener(globalAnnotationListener);
         annotationModel.addBackgroundAnnotationListener(backgroundAnnotationListener);
         annotationModel.addTmGeoAnnotationModListener(annotationModListener);
+        annotationModel.addTaskReviewListener(this);
         getMembershipChangeObservable().notifyObservers();
         LOG.info("Observing new Annotation Model {}", annotationModel);
     }
@@ -389,6 +389,25 @@ public class NeuronSetAdapter
             ConsoleApp.handleException(error);
         }
     }
+    
+    @Override
+    public void removeObjectMesh(String meshName) {
+        try {
+            TmObjectMesh deleteMesh = null;
+            List<TmObjectMesh> meshList = annotationModel.getCurrentWorkspace().getObjectMeshList();
+            for (TmObjectMesh mesh: meshList) {
+                if (mesh.getName().equals(meshName)) {
+                    deleteMesh = mesh;
+                }
+            }
+            if (deleteMesh!=null) {
+                annotationModel.getCurrentWorkspace().removeObjectMesh(deleteMesh);
+                annotationModel.saveCurrentWorkspace();
+            }
+        } catch (Exception error) {
+            ConsoleApp.handleException(error);
+        }
+    }
 
     @Override
     public void updateObjectMeshName(String oldName, String updatedName) {
@@ -406,8 +425,27 @@ public class NeuronSetAdapter
         }
     }
 
-    private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener {
+    @Override
+    public void neuronBranchReviewed(TmNeuronMetadata neuron, List<TmGeoAnnotation> annList) {
+        // determine the neuronvertices for each of these and add them to the model
+        NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+        if (!neuronModel.getReviewMode())
+            neuronModel.setReviewMode(true);
+        List<NeuronVertex> vertexList = new ArrayList<>();
+        if (annList!=null && annList.size()>0) {
+            for (TmGeoAnnotation annotation : annList) {
+                NeuronVertex vertex = neuronModel.getVertexForAnnotation(annotation);
+                if (vertex!=null)
+                    vertexList.add(vertex);
+            }
+            neuronModel.addReviewedVertices(vertexList);
+        }
+        neuronModel.getColorChangeObservable().hasChanged();
+        neuronModel.getColorChangeObservable().notifyObservers();
+        repaintHorta();
+    }
 
+    private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener {
         @Override
         public void annotationAdded(TmGeoAnnotation annotation) {
 

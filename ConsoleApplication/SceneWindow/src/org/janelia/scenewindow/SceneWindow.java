@@ -31,6 +31,7 @@ package org.janelia.scenewindow;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.event.ActionListener;
 import java.util.Collection;
 import java.util.Observable;
 import java.util.Observer;
@@ -109,6 +110,26 @@ public class SceneWindow implements GLJComponent, Scene {
     public GLAutoDrawable getGLAutoDrawable() {
         return glCanvas.getGLAutoDrawable();
     }
+    
+    @Override
+    public void setControlsVisibility(boolean visible) {
+        glCanvas.setControlsVisibility(visible);
+    }
+    
+    @Override
+    public void addPlayForwardListener(ActionListener listener) {
+        glCanvas.addPlayForwardListener(listener);
+    }
+
+    @Override
+    public void addPlayReverseListener(ActionListener listener) {
+        glCanvas.addPlayReverseListener(listener);
+    }
+
+    @Override
+    public void addPauseListener(ActionListener listener) {
+        glCanvas.addPauseListener(listener);
+    }    
 
     // immediate blocking repainting
     public boolean redrawImmediately() {
@@ -223,5 +244,4 @@ public class SceneWindow implements GLJComponent, Scene {
         scene.setName(name);
         return this;
     }
-
 }

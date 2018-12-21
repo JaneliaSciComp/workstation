@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -58,6 +59,7 @@ import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.NeuronSeparation;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.DialogDisplayer;
 import org.openide.WizardDescriptor;
@@ -208,25 +210,18 @@ public final class DownloadWizardAction implements ActionListener {
         List<DownloadObject> downloadItems = new ArrayList<>();
         try {
             log.debug("addObjectsToExport({},{})", path, domainObject.getName());
-            if (domainObject instanceof TreeNode) {
-                TreeNode treeNode = (TreeNode) domainObject;
+            if (domainObject instanceof Node) {
+                Node treeNode = (Node) domainObject;
                 if (treeNode.hasChildren()) {
-                    List<Reference> childRefs = treeNode.getChildren();
-                    List<DomainObject> children = DomainMgr.getDomainMgr().getModel().getDomainObjects(childRefs);
+                    // TODO: move this to a common utility class for dealing with tree nodes
+                    // Dedup objects
+                    Set<Reference> childRefs = new LinkedHashSet<>(treeNode.getChildren());
+                    List<DomainObject> children = DomainMgr.getDomainMgr().getModel().getDomainObjects(new ArrayList<>(childRefs));
                     List<String> childPath = new ArrayList<>(path);
                     childPath.add(domainObject.getName());
                     for (DomainObject child : children) {
                         downloadItems.addAll(addObjectsToExport(childPath, child));
                     }
-                }
-            }
-            else if (domainObject instanceof TreeNode) {
-                TreeNode treeNode = (TreeNode) domainObject;
-                List<DomainObject> children = DomainMgr.getDomainMgr().getModel().getDomainObjects(treeNode.getChildren());
-                List<String> childPath = new ArrayList<>(path);
-                childPath.add(domainObject.getName());
-                for (DomainObject child : children) {
-                    downloadItems.addAll(addObjectsToExport(childPath, child));
                 }
             }
             else if (domainObject instanceof Filter) {
@@ -254,8 +249,6 @@ public final class DownloadWizardAction implements ActionListener {
 
     private Multiset<FileType> getFileTypeCounts(ArtifactDescriptor artifactDescriptor, Progress progress, int startIndex, int total) throws Exception {
         
-        Multiset<FileType> countedTypeNames = LinkedHashMultiset.create();
-        
         log.info("Getting file sources for {}", artifactDescriptor);
         
         int i = 0;
@@ -268,19 +261,20 @@ public final class DownloadWizardAction implements ActionListener {
         }
         
         log.info("Getting file types for {}", artifactDescriptor);
-        
+
+        Multiset<FileType> countedTypeNames = LinkedHashMultiset.create();
         boolean only2d = false;
         for (Object source : sources) {
             log.trace("Inspecting file source: {}", source.getClass().getSimpleName());
             if (source instanceof HasFileGroups) {
                 Multiset<FileType> fileTypes = DomainUtils.getFileTypes((HasFileGroups)source, only2d);
                 log.trace("  Source has file groups: {}",fileTypes);
-                countedTypeNames.addAll(fileTypes);
+                addAll(countedTypeNames, fileTypes);
             }
             if (source instanceof HasFiles) {
                 Multiset<FileType> fileTypes = DomainUtils.getFileTypes((HasFiles) source, only2d);
                 log.trace("  Source has files: {}",fileTypes);
-                countedTypeNames.addAll(fileTypes);
+                addAll(countedTypeNames, fileTypes);
             }
             if (source instanceof PipelineResult) {
                 PipelineResult result = (PipelineResult)source;
@@ -295,7 +289,7 @@ public final class DownloadWizardAction implements ActionListener {
                         typeNames.add(FileType.NeuronAnnotatorReference);
                     }
                     log.trace("    Adding type names: {}",typeNames);
-                    countedTypeNames.addAll(typeNames);
+                    addAll(countedTypeNames, typeNames);
                 }
             }
             if (source instanceof NeuronFragment) {
@@ -313,13 +307,31 @@ public final class DownloadWizardAction implements ActionListener {
                             typeNames.add(FileType.NeuronAnnotatorReference);
                         }
                         log.trace("    Adding type names: {}",typeNames);
-                        countedTypeNames.addAll(typeNames);
+                        addAll(countedTypeNames, typeNames);
                     }
                 }
             }
         }
         
+        
         return countedTypeNames;
+    }
+    
+    private void addAll(Multiset<FileType> countedTypeNames, Collection<FileType> typeNames) {
+        for(FileType fileType : typeNames) {
+
+            // Replace individual color depth MIPs with the aggregate file type
+            // This allows users to download all the MIPs with signal and ignore the reference
+            if (fileType==FileType.ColorDepthMip1 
+                    || fileType==FileType.ColorDepthMip2 
+                    || fileType==FileType.ColorDepthMip3 
+                    || fileType==FileType.ColorDepthMip4) {
+                countedTypeNames.add(FileType.ColorDepthMips);
+            }
+            else {
+                countedTypeNames.add(fileType);
+            }
+        }
     }
     
     private void showWizard() {

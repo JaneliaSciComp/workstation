@@ -67,6 +67,7 @@ class HortaWorkspaceChildFactory extends ChildFactory {
         meshObserver.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
+                meshActors.clear();
                 NeuronTracerTopComponent hortaTracer = NeuronTracerTopComponent.getInstance();
                 meshActors.addAll(hortaTracer.getMeshActors());
                 refresh(false);

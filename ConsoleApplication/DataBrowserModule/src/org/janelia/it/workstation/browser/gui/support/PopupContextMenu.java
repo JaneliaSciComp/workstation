@@ -66,4 +66,10 @@ public abstract class PopupContextMenu extends JPopupMenu {
         actionMenuItem.addActionListener(action);
         return actionMenuItem;
     }
+
+    protected JMenuItem getDisabledItem(String title) {
+        JMenuItem titleMenuItem = new JMenuItem(title);
+        titleMenuItem.setEnabled(false);
+        return titleMenuItem;
+    }
 }

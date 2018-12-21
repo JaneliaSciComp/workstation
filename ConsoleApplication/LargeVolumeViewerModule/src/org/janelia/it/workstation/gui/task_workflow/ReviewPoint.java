@@ -12,6 +12,7 @@ public class ReviewPoint {
     private float zoomLevel;
     private boolean interpolate;
     private String note;
+    private PointDisplay display;
     
     ReviewPoint() {
         
@@ -55,6 +56,14 @@ public class ReviewPoint {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public PointDisplay getDisplay() {
+        return display;
+    }
+
+    public void setDisplay(PointDisplay display) {
+        this.display = display;
     }
 }
 

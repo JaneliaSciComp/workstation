@@ -40,9 +40,9 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
     public IconGridViewerToolbar() {
         super();
 
-        Boolean showTitles = (Boolean) FrameworkImplProvider.getModelProperty(
+        Boolean showTitles = FrameworkImplProvider.getModelProperty(
                 OptionConstants.ICON_GRID_VIEWER_SHOW_TITLES, true);
-        Boolean showAnnotations = (Boolean) FrameworkImplProvider.getModelProperty(
+        Boolean showAnnotations = FrameworkImplProvider.getModelProperty(
                 OptionConstants.ICON_GRID_VIEWER_SHOW_TAGS, true);
         
         showTitlesButton = new JToggleButton();

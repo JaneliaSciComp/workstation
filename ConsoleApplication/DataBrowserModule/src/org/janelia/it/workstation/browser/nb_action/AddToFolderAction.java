@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
+import javax.print.attribute.standard.JobMessageFromOperator;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -21,6 +22,7 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.support.TreeNodeChooser;
+import org.janelia.it.workstation.browser.model.RecentFolder;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.UserViewConfiguration;
@@ -182,15 +184,16 @@ public class AddToFolderAction extends NodePresenterAction {
         newFolderMenu.add(chooseItem);
         newFolderMenu.addSeparator();
 
-        List<String> addHistory = StateMgr.getStateMgr().getAddToFolderHistory();
+        List<RecentFolder> addHistory = StateMgr.getStateMgr().getAddToFolderHistory();
         if (addHistory!=null && !addHistory.isEmpty()) {
 
             JMenuItem item = new JMenuItem("Recent:");
             item.setEnabled(false);
             newFolderMenu.add(item);
 
-            for (String path : addHistory) {
+            for (RecentFolder recentFolder : addHistory) {
 
+                String path = recentFolder.getPath();
                 if (path.contains("#")) {
                     log.warn("Ignoring reference in add history: "+path);
                     continue;
@@ -199,27 +202,14 @@ public class AddToFolderAction extends NodePresenterAction {
                 final Long[] idPath = NodeUtils.createIdPath(path);
                 final Long folderId = idPath[idPath.length-1];
                 
-                TreeNode folder;
-                try {
-                    folder = model.getDomainObject(TreeNode.class, folderId);
-                    if (folder == null) continue;
-                }
-                catch (Exception e) {
-                    log.error("Error getting recent folder with id "+folderId,e);
-                    continue;
-                }
-
-                final TreeNode finalFolder = folder;
-
-                JMenuItem commonRootItem = new JMenuItem(folder.getName());
+                JMenuItem commonRootItem = new JMenuItem(recentFolder.getLabel());
                 commonRootItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
                         ActivityLogHelper.logUserAction("AddToFolderAction.recentFolder", folderId);
-                        addUniqueItemsToFolder(finalFolder, idPath, success);
+                        addUniqueItemsToFolder(folderId, idPath, success);
                     }
                 });
 
-                commonRootItem.setEnabled(ClientDomainUtils.hasWriteAccess(finalFolder));
                 newFolderMenu.add(commonRootItem);
             }
         }
@@ -227,6 +217,39 @@ public class AddToFolderAction extends NodePresenterAction {
         return newFolderMenu;
     }
 
+    private void addUniqueItemsToFolder(Long folderId, Long[] idPath, Consumer<Long[]> success) {
+
+        SimpleWorker worker = new SimpleWorker() {
+            
+            private TreeNode treeNode;
+            
+            @Override
+            protected void doStuff() throws Exception {
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                treeNode = model.getDomainObject(TreeNode.class, folderId);
+                
+            }
+
+            @Override
+            protected void hadSuccess() {
+                if (treeNode==null) {
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "This folder no longer exists.", "Folder no longer exists", JOptionPane.ERROR_MESSAGE);
+                }
+                else {
+                    addUniqueItemsToFolder(treeNode, idPath, success);
+                }
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+        };
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));
+        worker.execute();
+        
+    }
+    
     private void addUniqueItemsToFolder(TreeNode treeNode, Long[] idPath, Consumer<Long[]> success) {
 
         int existing = 0;
@@ -289,6 +312,6 @@ public class AddToFolderAction extends NodePresenterAction {
 
         // Update history
         String pathString = NodeUtils.createPathString(idPath);
-        StateMgr.getStateMgr().updateAddToFolderHistory(pathString);
+        StateMgr.getStateMgr().updateAddToFolderHistory(new RecentFolder(pathString, treeNode.getName()));
     }
 }

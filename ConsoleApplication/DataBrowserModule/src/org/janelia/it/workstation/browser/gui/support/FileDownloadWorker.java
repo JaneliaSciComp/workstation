@@ -226,10 +226,20 @@ public class FileDownloadWorker {
                             cleanFile(downloadItem.getTargetFile().toFile());
                             if (e instanceof CancellationException) {
                                 log.error("Download was cancelled: {}", filename);
+                                throw (CancellationException)e;
+                            }
+                            else if (e instanceof InterruptedException) {
+                                log.error("Download was cancelled: {}", filename);
                                 throw new CancellationException();
                             }
                             else {
-                                FrameworkImplProvider.handleExceptionQuietly(e);
+                                if (errors==1) {
+                                    // First exception is shown to the user
+                                    FrameworkImplProvider.handleException(e);
+                                }
+                                else {
+                                    FrameworkImplProvider.handleExceptionQuietly(e);
+                                }
                             }
                         }
                         

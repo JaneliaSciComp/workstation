@@ -147,7 +147,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         buttonPanel.add(editMode, c);
 
         c.gridx = 0;
-        c.gridy = 0;
+        c.gridy = 1;
         c.insets = new Insets(0, 0, 5, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.PAGE_START;
@@ -155,7 +155,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         buttonPanel.add(titleLabel, c);
 
         c.gridx = 0;
-        c.gridy = 1;
+        c.gridy = 2;
         c.insets = new Insets(0, 0, 10, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.PAGE_START;
@@ -167,7 +167,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         mainPanel.setOpaque(false);
 
         c.gridx = 0;
-        c.gridy = 2;
+        c.gridy = 3;
         c.insets = new Insets(0, 0, 5, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.CENTER;
@@ -281,7 +281,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
         
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
-        c.gridy = 3;
+        c.gridy = 4;
         c.fill = GridBagConstraints.BOTH;
         c.anchor = GridBagConstraints.PAGE_START;
         c.weighty = 1;

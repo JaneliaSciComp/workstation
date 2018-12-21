@@ -197,8 +197,9 @@ public abstract class DynamicTable extends JPanel {
                 int row = table.rowAtPoint(e.getPoint());
                 if (row>=0) {
                     int col = table.columnAtPoint(e.getPoint());
+                    DynamicColumn dc = getColumn(col);
                     // Don't process clicking on editable columns
-                    if (getColumns().get(col).isEditable()) {
+                    if (dc != null && dc.isEditable()) {
                         return;
                     }
                     cellClicked(row, col);
@@ -215,10 +216,14 @@ public abstract class DynamicTable extends JPanel {
                     return;
                 }
                 int col = table.columnAtPoint(e.getPoint());
+
+                DynamicColumn dc = getColumn(col);
+            
                 // Don't process clicking on editable columns
-                if (getColumns().get(col).isEditable()) {
+                if (dc != null && dc.isEditable()) {
                     return;
                 }
+            
                 int row = table.rowAtPoint(e.getPoint());
                 if (row>=0) {
                     rowDoubleClicked(row);
@@ -508,8 +513,12 @@ public abstract class DynamicTable extends JPanel {
         }
         return null;
     }
-
+    
     public DynamicColumn getColumn(int index) {
+        if (index >= columns.size()) {
+            log.warn("Column index ({}) out of bounds ({})", index, columns.size());
+            return null;
+        }
         return columns.get(index);
     }
 
@@ -692,9 +701,11 @@ public abstract class DynamicTable extends JPanel {
                 int row = e.getFirstRow();
                 int column = e.getColumn();
                 TableModel model = (TableModel) e.getSource();
-                DynamicColumn dc = getColumns().get(column);
-                Object data = model.getValueAt(row, column);
-                valueChanged(dc, row, data);
+                DynamicColumn dc = getColumn(column);
+                if (dc != null) {
+                    Object data = model.getValueAt(row, column);
+                    valueChanged(dc, row, data);
+                }
             }
         });
 

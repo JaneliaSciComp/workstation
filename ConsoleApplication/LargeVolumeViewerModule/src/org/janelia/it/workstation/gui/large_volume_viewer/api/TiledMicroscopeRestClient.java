@@ -44,6 +44,7 @@ import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.rendering.RenderedVolume;
@@ -396,6 +397,42 @@ public class TiledMicroscopeRestClient {
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(neuronIds));
         if (checkBadResponse(response, "bulkEditTags")) {
+            throw new WebApplicationException(response);
+        }
+    }
+    
+    public TmReviewTask create(TmReviewTask reviewTask) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(reviewTask);
+        Response response = getMouselightDataEndpoint("/reviewtask")
+                .request("application/json")
+                .put(Entity.json(query));
+        if (checkBadResponse(response, "create: "+reviewTask)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(TmReviewTask.class);
+    }
+    
+    public TmReviewTask update(TmReviewTask reviewTask) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(reviewTask);
+        Response response = getMouselightDataEndpoint("/reviewtask")
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response, "update: "+reviewTask)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(TmReviewTask.class);
+    }   
+    
+    public void remove(TmReviewTask reviewTask) throws Exception {
+        Response response = getMouselightDataEndpoint("/reviewtask")
+                .queryParam("taskReviewId", reviewTask.getId())
+                .request("application/json")
+                .delete();
+        if (checkBadResponse(response, "remove: " + reviewTask)) {
             throw new WebApplicationException(response);
         }
     }

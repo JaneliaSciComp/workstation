@@ -42,6 +42,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -74,6 +75,7 @@ public class BasicNeuronModel implements NeuronModel
     private String name = "(unnamed neuron)";
     private List<NeuronVertex> nodes = new ArrayList<>();
     private List<NeuronEdge> edges = new ArrayList<>();
+    private HashSet<NeuronVertex> reviewedNodes = new HashSet<>();
     private final ObservableInterface colorChangeObservable = new ComposableObservable();
     private final ObservableInterface geometryChangeObservable = new ComposableObservable();
     private final ObservableInterface visibilityChangeObservable = new ComposableObservable();
@@ -83,6 +85,7 @@ public class BasicNeuronModel implements NeuronModel
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private boolean visible = true;
     private boolean userToggleRadius = false;
+    private boolean underReview = false;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final NeuronSet parentSet;
 
@@ -242,6 +245,16 @@ public class BasicNeuronModel implements NeuronModel
     }
 
     @Override
+    public boolean getReviewMode() {
+        return underReview;
+    }
+
+    @Override
+    public void setReviewMode(boolean reviewMode) {
+        underReview = reviewMode;
+    }
+
+    @Override
     public boolean isVisible()
     {
         return visible;
@@ -261,6 +274,26 @@ public class BasicNeuronModel implements NeuronModel
     public Collection<NeuronEdge> getEdges()
     {
         return edges;
+    }
+
+    @Override
+    public Collection<NeuronVertex> getReviewedVertices() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean isReviewedVertex(NeuronVertex vertex) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void addReviewedVertices(Collection<NeuronVertex> vertexList) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void clearVertices(Collection<NeuronVertex> vertexList) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override

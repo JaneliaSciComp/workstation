@@ -41,7 +41,7 @@ public class OpenInToolAction extends AbstractAction {
 
     public static String getName(String tool, String mode) {
         if (ToolMgr.TOOL_VAA3D.equals(tool)) {
-            if (ToolMgr.MODE_3D.equals(mode)) {
+            if (ToolMgr.MODE_VAA3D_3D.equals(mode)) {
                 return "View In Vaa3D 3D View";
             }
             else {
