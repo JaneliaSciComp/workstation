@@ -14,14 +14,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
-import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
-import org.janelia.messaging.client.ConnectionManager;
-import org.janelia.messaging.client.Receiver;
-import org.janelia.messaging.broker.sharedworkspace.MessageType;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
+import org.janelia.messaging.broker.sharedworkspace.MessageType;
+import org.janelia.messaging.client.ConnectionManager;
+import org.janelia.messaging.client.Receiver;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.perf4j.StopWatch;
@@ -257,10 +258,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             } else if (action == MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
                 // complete the future outside of the swing thread, since the copyGUI thread is blocked
                 StopWatch stopWatch2 = new StopWatch();
-                TmProtobufExchanger exchanger = new TmProtobufExchanger();
-                byte[] msgBody = message.getBody();
-                exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
-                annotationModel.getNeuronManager().completeCreateNeuron(neuron);
+                handleNeuronCreate(message, neuron, n -> annotationModel.getNeuronManager().completeCreateNeuron(n));
                 stopWatch2.stop();
                 log.info("RefreshHandler: Remote own neuron creation update in {} ms", stopWatch2.getElapsedTime());
                 log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
@@ -280,35 +278,18 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                             // change relevant to this workspace and not executed on this client, so update model or process request
                             switch (action) {
                                 case NEURON_CREATE:
-                                    log.info("remote processing create neuron " + neuron.getName());
-                                    TmProtobufExchanger exchanger = new TmProtobufExchanger();
-                                    byte[] msgBody = message.getBody();
-                                    exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
-                                    annotationModel.getNeuronManager().addNeuron(neuron);
-                                    annotationModel.fireBackgroundNeuronCreated(neuron);
-                                    log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
+                                    handleNeuronCreate(message, neuron, n -> annotationModel.getNeuronManager().addNeuron(n));
                                     break;
                                 case NEURON_SAVE_NEURONDATA:
                                 case NEURON_SAVE_METADATA:
-                                    // no longer checking if the user is different because I want this to work even if
-                                    // the same user has the workstation opened on two machines
-                                    log.info("remote processing save neuron " + neuron.getName());
-                                    exchanger = new TmProtobufExchanger();
-                                    msgBody = message.getBody();
-                                    exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
-                                    annotationModel.getNeuronManager().addNeuron(neuron);
-                                    annotationModel.fireBackgroundNeuronChanged(neuron);
-                                    log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
+                                    if (!user.equals(AccessManager.getSubjectKey())) {
+                                        handleNeuronChanged(message, neuron);
+                                    }
                                     break;
                                 case NEURON_DELETE:
-                                    log.info("remote processing delete neuron" + neuron.getName());
-                                    // no longer checking if the user is different because I want this to work even if
-                                    // the same user has the workstation opened on two machines
-                                    exchanger = new TmProtobufExchanger();
-                                    msgBody = message.getBody();
-                                    exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
-                                    annotationModel.fireBackgroundNeuronDeleted(neuron);
-                                    log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
+                                    if (!user.equals(AccessManager.getSubjectKey())) {
+                                        handleNeuronDeleted(message, neuron);
+                                    }
                                     break;
                             }
                             stopWatch2.stop();
@@ -317,15 +298,55 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                             log.error("Exception thrown in main GUI thread during message processing", e);
                             logError(e.getMessage());
                         }
-
+                       log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
                     }
                 });
             }
             stopWatch.stop();
             log.info("RefreshHandler: handled message in {} ms", stopWatch.getElapsedTime());
         } catch (Exception e) {
-            e.printStackTrace();
             log.error(e.getMessage());
+        }
+    }
+
+    private void handleNeuronCreate(Delivery message, TmNeuronMetadata neuron, Consumer<TmNeuronMetadata> neuronAction) {
+       try {
+           log.info("remote processing create neuron " + neuron.getName());
+           TmProtobufExchanger exchanger = new TmProtobufExchanger();
+           byte[] msgBody = message.getBody();
+           exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+           neuronAction.accept(neuron);
+           annotationModel.fireBackgroundNeuronCreated(neuron);
+       } catch (Exception e) {  
+           logError("Error handling neuron creation: " + e.getMessage());
+           log.error("Error handling neuron creation message for {}", neuron, e);
+       }  
+    }
+
+    private void handleNeuronChanged(Delivery message, TmNeuronMetadata neuron) {
+        try {
+            log.info("remote processing change neuron " + neuron.getName());
+            TmProtobufExchanger exchanger = new TmProtobufExchanger();
+            byte[] msgBody = message.getBody();
+            exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+            annotationModel.getNeuronManager().addNeuron(neuron);
+            annotationModel.fireBackgroundNeuronChanged(neuron);
+        } catch (Exception e) {
+           logError("Error handling neuron change: " + e.getMessage());
+           log.error("Error handling neuron changed message for {}", neuron, e);
+        }
+    }
+
+    private void handleNeuronDeleted(Delivery message, TmNeuronMetadata neuron) {
+        try {
+            log.info("remote processing delete neuron" + neuron.getName());
+            TmProtobufExchanger exchanger = new TmProtobufExchanger();
+            byte[] msgBody = message.getBody();
+            exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+            annotationModel.fireBackgroundNeuronDeleted(neuron);
+        } catch (Exception e) {
+           logError("Error handling neuron change: " + e.getMessage());
+           log.error("Error handling neuron changed message for {}", neuron, e);
         }
     }
 
