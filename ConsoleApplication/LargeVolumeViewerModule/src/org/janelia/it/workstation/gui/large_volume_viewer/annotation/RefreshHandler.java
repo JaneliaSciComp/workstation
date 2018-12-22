@@ -181,7 +181,8 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             Map<String, Object> msgHeaders = message.getProperties().getHeaders();
         
             if (msgHeaders == null) {
-                log.error("Issue trying to process metadata from update");
+                logError("Issue trying to process metadata from update");
+                return;
             }
             // thead logging
             log.debug ("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
@@ -270,12 +271,8 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                         try {
                             StopWatch stopWatch2 = new StopWatch();
                             // fire notice to AnnotationModel
-                            Map<String, Object> msgHeaders = message.getProperties().getHeaders();
-                            if (msgHeaders == null) {
-                                throw new IOException("Issue trying to process metadata from update");
-                            }
-
-                            // change relevant to this workspace and not executed on this client, so update model or process request
+                            // change relevant to this workspace and not executed on this client,
+                            // update model or process request
                             switch (action) {
                                 case NEURON_CREATE:
                                     handleNeuronCreate(message, neuron, n -> annotationModel.getNeuronManager().addNeuron(n));
