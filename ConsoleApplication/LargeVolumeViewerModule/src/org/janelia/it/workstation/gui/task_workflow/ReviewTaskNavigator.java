@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 import javax.swing.JScrollPane;
@@ -33,6 +34,8 @@ public class ReviewTaskNavigator implements MouseWheelListener {
     mxGraph graph;
     mxGraphComponent graphComponent;
     Object parent;
+    List<Object> edges;
+    List<Object> cells;
     
     static final int HORIZ_OFFSET = 25;
     static final int VERT_OFFSET = 15;
@@ -48,7 +51,9 @@ public class ReviewTaskNavigator implements MouseWheelListener {
         graph.getSelectionModel().addListener(mxEvent.CHANGE, listener);
     }
     
-    public JScrollPane createGraph(NeuronTree tree, int leaves, int width, int height) {       
+    public JScrollPane createGraph(NeuronTree tree, int leaves, int width, int height) {
+        edges = new ArrayList<Object>();
+        cells = new ArrayList<Object>();
         graph = new mxGraph() { 
             @Override
             public boolean isCellEditable(Object cell){                
@@ -56,17 +61,24 @@ public class ReviewTaskNavigator implements MouseWheelListener {
             } 
             
             @Override
+            public boolean isCellSelectable(Object cell) {                 
+                if (cells.contains(cell))
+                    return true;
+                else return false;
+            } 
+            
+            @Override
             public boolean isCellMovable(Object cell){                
                 return false; 
             }     
         };
-        graph.orderCells(false);
 
         parent = graph.getDefaultParent();
         
         graph.getModel().beginUpdate();
         try {
             traceNode (0, null, tree, (int)(leaves*HORIZ_OFFSET/2),0);
+            graph.orderCells(true, edges.toArray());
         } finally {
             graph.getModel().endUpdate();
         }
@@ -122,9 +134,12 @@ public class ReviewTaskNavigator implements MouseWheelListener {
         // add current node
         mxCell nodePoint = (mxCell) graph.insertVertex(parent, null, "", currx, curry, 10,
                 10, "orthogonal=true;shape=ellipse;perimeter=ellipsePerimeter;fillColor=red");
+        cells.add(nodePoint);
         node.setGUICell(nodePoint);
-        if (prevPoint != null)
-            graph.insertEdge(parent, null, "", prevPoint, nodePoint, "style=orthogonal;strokeWidth=3;endArrow=none;strokeColor=green");
+        if (prevPoint != null) {
+            Object edge = graph.insertEdge(parent, null, "", prevPoint, nodePoint, "style=orthogonal;strokeWidth=3;endArrow=none;strokeColor=green");
+            edges.add(edge);
+        }
         List<NeuronTree> childNodes = node.getChildren();
         if (node.isLeaf())
             return;

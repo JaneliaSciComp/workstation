@@ -46,25 +46,30 @@ import javax.swing.table.TableModel;
 import groovy.swing.impl.TableLayout;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
 import java.util.Date;
-import loci.plugins.config.SpringUtilities;
+import static javax.swing.Action.ACCELERATOR_KEY;
+import static javax.swing.Action.NAME;
+import static javax.swing.Action.SELECTED_KEY;
+import static javax.swing.Action.SHORT_DESCRIPTION;
+import static javax.swing.Action.SMALL_ICON;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SimpleIcons;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Quaternion;
-import org.janelia.it.jacs.shared.geom.UnitVec3;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.gui.keybind.ShortcutTextField;
+import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.ChangeNeuronOwnerDialog;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -76,16 +81,9 @@ import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
-import org.openide.explorer.ExplorerUtils;
-import org.openide.explorer.view.OutlineView;
-import org.openide.nodes.Node;
 import org.openide.util.Exceptions;
-import org.openide.util.Lookup;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.Utilities;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +117,15 @@ import org.slf4j.LoggerFactory;
 public final class TaskWorkflowViewTopComponent extends TopComponent implements ExplorerManager.Provider, mxEventSource.mxIEventListener {
     public static final String PREFERRED_ID = "TaskWorkflowViewTopComponent";
     public static final String LABEL_TEXT = "Task Workflow";
-    private AnnotationManager annManager;   
+    private AnnotationManager annManager;  
+
+    private void clearSelection() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private void selectAll() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     enum REVIEW_CATEGORY {
         NEURON_REVIEW, POINT_REVIEW
@@ -146,6 +152,10 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     private JCheckBox reviewCheckbox;
     private JCheckBox rotationCheckbox;
     private JTextField speedSpinner;
+    JPanel taskButtonsPanel;
+    JToolBar selectActionsToolbar;
+    JToolBar regularActionsToolbar;
+    JToolBar flyThroughActionsToolbar;
     int currGroupIndex;
     int currPointIndex;
     
@@ -155,6 +165,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     HashMap<String, Integer> branchLookup;
     
     boolean firstTime = true;
+    private final ButtonGroup dendroModeGroup = new ButtonGroup();
     
     // dendrogram gui
     private JPanel viewPanel;
@@ -231,6 +242,16 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             }            
         }        
     }
+    
+    private void switchSelectMode() {
+        taskButtonsPanel.remove(flyThroughActionsToolbar);
+        taskButtonsPanel.add(selectActionsToolbar,0);
+    }
+    
+    private void switchFlyThroughMode() {
+        taskButtonsPanel.remove(selectActionsToolbar);
+        taskButtonsPanel.add(flyThroughActionsToolbar, 0);
+    }   
     
     public void selectBranch(int groupIndex) {
         if (currGroupIndex != -1) {
@@ -613,27 +634,71 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     }
     
     private void addTaskButtons() {
-        dendroContainerPanel.removeAll();        
-
-        JPanel taskButtonsPanel = new JPanel();
+        dendroContainerPanel.removeAll();    
+        taskButtonsPanel = new JPanel();            
         taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
         taskButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        
+        // top level toolbar with toggles for select or flythrough mode
+        JToolBar modeToolBar = new JToolBar();
+        modeToolBar.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        // TODO - create a shared base class for these mode buttons
+        JToggleButton flyThroughModeButton = new JToggleButton("");
+        flyThroughModeButton.setIcon(SimpleIcons.getIcon("jet_icon.png"));
+        dendroModeGroup.add(flyThroughModeButton);
+        flyThroughModeButton.addActionListener(event -> switchFlyThroughMode());
+        flyThroughModeButton.setMargin(new Insets(0, 0, 0, 0));
+        flyThroughModeButton.setHideActionText(true);
+        flyThroughModeButton.setFocusable(false);
+        modeToolBar.add(flyThroughModeButton);
+        
+        JToggleButton selectModeButton = new JToggleButton("");
+        selectModeButton.setIcon(Icons.getIcon("nib.png"));
+        dendroModeGroup.add(selectModeButton);
+        selectModeButton.addActionListener(event -> switchSelectMode());
+        selectModeButton.setMargin(new Insets(0, 0, 0, 0));
+        selectModeButton.setHideActionText(true);
+        selectModeButton.setFocusable(false);
+        modeToolBar.add(selectModeButton);
+        
+        dendroContainerPanel.add(modeToolBar);
+
+        // FLYTHRU TOOLBAR
+        flyThroughActionsToolbar = new JToolBar();
+        flyThroughActionsToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
         JButton prevBranchButton = new JButton("Prev Branch");
         prevBranchButton.addActionListener(event -> prevBranch());
-        taskButtonsPanel.add(prevBranchButton);
+        flyThroughActionsToolbar.add(prevBranchButton);
 
         JButton nextBranchButton = new JButton("Next Branch");
         nextBranchButton.addActionListener(event -> nextBranch());
-        taskButtonsPanel.add(nextBranchButton);
+        flyThroughActionsToolbar.add(nextBranchButton);
 
         JButton playButton = new JButton("Play Branch");
         playButton.addActionListener(event -> playBranch());
-        taskButtonsPanel.add(playButton);
+        flyThroughActionsToolbar.add(playButton);        
+        
+        
+        // SELECT TOOLBAR
+        selectActionsToolbar = new JToolBar();
+        selectActionsToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JButton clearSelectButton = new JButton("Clear Selection");
+        clearSelectButton.addActionListener(event -> clearSelection());
+        selectActionsToolbar.add(clearSelectButton);
+
+        JButton selectAllButton = new JButton("Select All");
+        selectAllButton.addActionListener(event -> selectAll());
+        selectActionsToolbar.add(nextBranchButton);
+        
+        
+        // REGULAR ACTIONS TOOLBAR
+        regularActionsToolbar = new JToolBar();
+        regularActionsToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JButton createTaskButton = new JButton("Create Task From Current");
         createTaskButton.addActionListener(event -> createNewTask());
-        taskButtonsPanel.add(createTaskButton);
+        regularActionsToolbar.add(createTaskButton);
 
         JPanel infoPane = new JPanel();
         infoPane.setPreferredSize(new Dimension(100, 50));
@@ -643,16 +708,17 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             reviewCheckbox.setSelected(true);
             reviewCheckbox.setEnabled(false);
         }
-        taskButtonsPanel.add(reviewCheckbox);
+        regularActionsToolbar.add(reviewCheckbox);
         
         rotationCheckbox = new JCheckBox("Auto Rotation");       
-        taskButtonsPanel.add(rotationCheckbox);
+        regularActionsToolbar.add(rotationCheckbox);
 
         speedSpinner = new JTextField(3);
         speedSpinner.setText("20");
-        taskButtonsPanel.add(speedSpinner);
+        regularActionsToolbar.add(speedSpinner);
         JLabel speedSpinnerLabel = new JLabel("Speed");
-        taskButtonsPanel.add(speedSpinnerLabel);
+        regularActionsToolbar.add(speedSpinnerLabel);
+        taskButtonsPanel.add(regularActionsToolbar);
         
         dendroContainerPanel.add(taskButtonsPanel);
         dendroContainerPanel.add(dendroPane);
@@ -1044,6 +1110,4 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             data.remove(deletedRow);
         }
     }
-   
-
 }
