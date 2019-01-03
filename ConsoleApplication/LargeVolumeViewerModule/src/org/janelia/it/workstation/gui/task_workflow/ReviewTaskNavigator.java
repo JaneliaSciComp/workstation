@@ -165,12 +165,14 @@ public class ReviewTaskNavigator implements MouseWheelListener {
             switch (status) {
                 case OPEN:
                     graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "#ff0000", cells);
+                    graph.setCellStyles(mxConstants.STYLE_SHAPE, "ellipse", cells);                    
                     break;
                 case UNDER_REVIEW:
-                    graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "#ffff00", cells);
+                    graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "#ffff00", cells);   
                     break;
                 case REVIEWED:                    
                     graph.setCellStyles(mxConstants.STYLE_FILLCOLOR, "#ffffff", cells);
+                    graph.setCellStyles(mxConstants.STYLE_SHAPE, "rectangle", cells);
                     break;
             }
         } finally {

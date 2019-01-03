@@ -18,6 +18,7 @@ public class NeuronTree implements PointDisplay {
     private int width; // number of leaves underneath this node
     private boolean visited;
     private mxCell cell;
+    private boolean reviewed;
 
     public NeuronTree(NeuronTree parentNode, Vec3 vertexLoc, Long annotation) {
         parent = parentNode;       
@@ -112,7 +113,13 @@ public class NeuronTree implements PointDisplay {
     }
     
     @Override
+    public boolean isReviewed() {
+        return reviewed;
+    }
+    
+    @Override
     public void setReviewed(boolean review) {
+        reviewed = review;
         if (review) {
             cell.setStyle("fillColor=red");
         } else {
