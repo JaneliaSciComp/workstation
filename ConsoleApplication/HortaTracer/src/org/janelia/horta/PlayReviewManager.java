@@ -26,7 +26,7 @@ import org.openide.util.Exceptions;
  */
 public class PlayReviewManager {
     private PlayState playState;
-    private boolean pausePlayback = false;
+    private boolean pausePlayback;
     private Vantage vantage;
     private SceneWindow sceneWindow;
     private FPSAnimator fpsAnimator;  
@@ -74,7 +74,9 @@ public class PlayReviewManager {
             playState = new PlayState();
             playState.setPlayList(locationList);
             playState.setCurrentStep(0);
+            playState.setCurrentNode(0);
         }
+        setPausePlayback(false);
         this.fps = speed;
         this.fpsAnimator.setFPS(speed);
         this.stepScale = stepScale;
@@ -97,7 +99,7 @@ public class PlayReviewManager {
                     acceptor.acceptLocation(sampleLocation);
                     Vantage vantage = sceneWindow.getVantage();
                     vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
-                    Thread.sleep(1000*1/fps);
+                    Thread.sleep(500);
 
                     for (int i = 1; i < locationList.size(); i++) {
                         sampleLocation = locationList.get(i);
@@ -122,13 +124,10 @@ public class PlayReviewManager {
                         if (steps < 1) {
                             steps = 1;
                         }
-                        steps = steps * stepScale;
-
-                        animateToLocationWithRotation(acceptor, q, sampleLocation, steps);
-                      
-                        if (isPausePlayback()) {
-                            setPausePlayback(false);
-                            playState.setCurrentStep(i);
+                        steps = steps * stepScale;                        
+                        boolean interrupt = animateToLocationWithRotation(acceptor, q, sampleLocation, steps, null);                                             
+                        if (interrupt) {
+                            playState.setCurrentNode(i);
                             break;
                         }
                     }
@@ -151,10 +150,12 @@ public class PlayReviewManager {
     }
 
     public void resumePlaythrough(final PlayDirection direction) {
+        setPausePlayback(false);
         SimpleWorker scrollWorker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                try {
+                try {                    
+                    int startNode = playState.getCurrentNode();  
                     sceneWindow.setControlsVisibility(true);
                     List<SampleLocation> locationList = playState.getPlayList();
                     SampleLocation sampleLocation;
@@ -163,28 +164,29 @@ public class PlayReviewManager {
                     ViewerLocationAcceptor acceptor;
                     Vantage vantage;
                     fpsAnimator.setFPS(playState.getFps());
-                    fpsAnimator.start();
+                    fpsAnimator.start();                                         
+                    animateToNextPoint(locationList.get(startNode), playState.getCurrentStep());
                     switch (direction) {
-                        case FORWARD:
-                            int startStep = playState.getCurrentStep();
-                            for (int i = startStep; i < locationList.size(); i++) {
+                        case FORWARD:                                
+                            if (startNode>locationList.size()) 
+                                startNode = locationList.size()-1;
+                            for (int i = startNode+1; i < locationList.size(); i++) {
                                 sampleLocation = locationList.get(i);
-                                animateToNextPoint(sampleLocation);
-                                if (isPausePlayback()) {
-                                    setPausePlayback(false);
-                                    playState.setCurrentStep(i);
+                                boolean interrupt = animateToNextPoint(sampleLocation, null);
+                                if (interrupt) {                                                                      
+                                    playState.setCurrentNode(i);
                                     break;
                                 }
                             }
                             break;
-                        case REVERSE:
-                            startStep = playState.getCurrentStep();
-                            for (int i = startStep; i > 0; i--) {
+                        case REVERSE:              
+                            if (startNode<1) 
+                                startNode = 1;
+                            for (int i = startNode-1; i > 0; i--) {
                                 sampleLocation = locationList.get(i);
-                                animateToNextPoint(sampleLocation);
-                                if (isPausePlayback()) {
-                                    setPausePlayback(false);
-                                    playState.setCurrentStep(i);
+                                boolean interrupt = animateToNextPoint(sampleLocation, null);
+                                if (interrupt) {
+                                    playState.setCurrentNode(i);
                                     break;
                                 }
                             }
@@ -208,7 +210,7 @@ public class PlayReviewManager {
         scrollWorker.execute();
     }
 
-    private void animateToNextPoint(SampleLocation sampleLocation) throws Exception {
+    private boolean animateToNextPoint(SampleLocation sampleLocation, Integer startStep) throws Exception {
         Quaternion q = new Quaternion();
 
         float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
@@ -232,10 +234,10 @@ public class PlayReviewManager {
         }
         steps = steps * stepScale;
 
-        animateToLocationWithRotation(acceptor, q, sampleLocation, steps);
+        return animateToLocationWithRotation(acceptor, q, sampleLocation, steps, startStep);
     }
 
-    private void animateToLocationWithRotation(ViewerLocationAcceptor acceptor, Quaternion endRotation, SampleLocation endLocation, int steps) throws Exception {
+    private boolean animateToLocationWithRotation(ViewerLocationAcceptor acceptor, Quaternion endRotation, SampleLocation endLocation, int steps, Integer startStep) throws Exception {
         Vantage vantage = sceneWindow.getVantage();
         CatmullRomSplineKernel splineKernel = new CatmullRomSplineKernel();
         Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(splineKernel);
@@ -256,7 +258,11 @@ public class PlayReviewManager {
         Vector3 endFocus = new Vector3((float) endLocation.getFocusXUm(), (float) endLocation.getFocusYUm(),
                 (float) endLocation.getFocusZUm());
         double currWay = 0;
-        for (int i = 0; i < steps; i++) {
+        int startIndex = 0;
+        if (startStep!=null) {
+            startIndex = startStep;
+        }
+        for (int i = startIndex; i < steps; i++) {
             Thread.sleep(1000*1/fps);
             SampleLocation sampleLocation = new BasicSampleLocation();
             currWay += stepSize;
@@ -268,26 +274,36 @@ public class PlayReviewManager {
             if (autoRotation)
                 vantage.setRotationInGround(new Rotation().setFromQuaternion(iRotate));
             vantage.notifyObservers();
-            //sceneWindow.redrawImmediately();
+            if (isPausePlayback()) {
+                setPausePlayback(false);
+                playState.setCurrentStep(i);
+                return true;
+            }
         }
+        return false;
     }
     
     /**
      * @return the pausePlayback
      */
     public boolean isPausePlayback() {
-        return pausePlayback;
+        return this.pausePlayback;
     }
 
     /**
      * @param pausePlayback the pausePlayback to set
      */
-    public void setPausePlayback(boolean pausePlayback) {
-        this.pausePlayback = pausePlayback;
+    public void setPausePlayback(boolean pause) {
+        this.pausePlayback = pause;
     }
 
     public void updateSpeed(boolean increase) {
-        this.fps++;
+        if (increase)
+            this.fps++;
+        else 
+            this.fps--;
+        this.fpsAnimator.stop();
         this.fpsAnimator.setFPS(this.fps);
+        this.fpsAnimator.start();
     }
 }

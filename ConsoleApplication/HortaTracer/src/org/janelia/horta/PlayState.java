@@ -12,6 +12,7 @@ import org.janelia.console.viewerapi.SampleLocation;
 
 public class PlayState {
     private List<SampleLocation> playList;
+    private int currentNode;
     private int currentStep;
     private int fps;
 
@@ -29,6 +30,21 @@ public class PlayState {
         this.playList = playList;
     }
 
+    
+    /**
+     * @return the currentNode
+     */
+    public int getCurrentNode() {
+        return currentNode;
+    }
+
+    /**
+     * @param currentNode the currentNode to set
+     */
+    public void setCurrentNode(int currentNode) {
+        this.currentNode = currentNode;
+    }
+    
     /**
      * @return the currentStep
      */
