@@ -29,8 +29,6 @@
  */
 package org.janelia.horta;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import org.janelia.console.viewerapi.BasicSampleLocation;
@@ -121,7 +119,7 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProviderAccep
     }
 
     @Override
-    public void playSampleLocations(List<SampleLocation> locationList, boolean autoRotation, int speed) {
+    public void playSampleLocations(List<SampleLocation> locationList, boolean autoRotation, int speed, int stepScale) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

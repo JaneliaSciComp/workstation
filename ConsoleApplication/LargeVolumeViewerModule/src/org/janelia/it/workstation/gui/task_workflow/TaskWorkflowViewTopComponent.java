@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.task_workflow;
 
-import Jama.Matrix;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -17,7 +16,6 @@ import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.TableCellEditor;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,35 +23,15 @@ import com.mxgraph.model.mxCell;
 import com.mxgraph.util.mxEventObject;
 import com.mxgraph.util.mxEventSource;
 import com.mxgraph.view.mxGraphSelectionModel;
-import java.awt.Color;
-import java.awt.Event;
-import java.awt.Frame;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
-import java.beans.PropertyVetoException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Set;
-import java.util.Stack;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableModel;
 
-import groovy.swing.impl.TableLayout;
+import java.awt.event.MouseEvent;
+import java.util.LinkedList;
+
+import javax.swing.table.AbstractTableModel;
+
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.util.Date;
-import static javax.swing.Action.ACCELERATOR_KEY;
-import static javax.swing.Action.NAME;
-import static javax.swing.Action.SELECTED_KEY;
-import static javax.swing.Action.SHORT_DESCRIPTION;
-import static javax.swing.Action.SMALL_ICON;
+
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SimpleIcons;
 import org.janelia.console.viewerapi.SynchronizationHelper;
@@ -66,10 +44,8 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -117,7 +93,7 @@ import org.slf4j.LoggerFactory;
 public final class TaskWorkflowViewTopComponent extends TopComponent implements ExplorerManager.Provider, mxEventSource.mxIEventListener {
     public static final String PREFERRED_ID = "TaskWorkflowViewTopComponent";
     public static final String LABEL_TEXT = "Task Workflow";
-    private AnnotationManager annManager;  
+    private AnnotationManager annManager;
 
     enum REVIEW_CATEGORY {
         NEURON_REVIEW, POINT_REVIEW
@@ -144,6 +120,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     private JCheckBox reviewCheckbox;
     private JCheckBox rotationCheckbox;
     private JTextField speedSpinner;
+    private JTextField numStepsSpinner;
     JPanel taskButtonsPanel;
     JToolBar selectActionsToolbar;
     JToolBar regularActionsToolbar;
@@ -520,7 +497,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
          Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
          for (Tiled3dSampleLocationProviderAcceptor acceptor : locationAcceptors) {
              if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
-                 acceptor.playSampleLocations(playList, rotationCheckbox.isSelected(), Integer.parseInt(speedSpinner.getText()));
+                 acceptor.playSampleLocations(playList, rotationCheckbox.isSelected(), Integer.parseInt(speedSpinner.getText()),
+                         Integer.parseInt(numStepsSpinner.getText()));
              }
          }
     }
@@ -758,10 +736,17 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 
         speedSpinner = new JTextField(3);
         speedSpinner.setText("20");
-        speedSpinner.setMaximumSize(new Dimension(100,50));
+        speedSpinner.setMaximumSize(new Dimension(100, 50));
         flyThroughActionsToolbar.add(speedSpinner);
         JLabel speedSpinnerLabel = new JLabel("Speed");
         flyThroughActionsToolbar.add(speedSpinnerLabel);
+
+        numStepsSpinner = new JTextField(3);
+        numStepsSpinner.setText("1");
+        numStepsSpinner.setMaximumSize(new Dimension(50,50));
+        flyThroughActionsToolbar.add(numStepsSpinner);
+        JLabel numStepsSpinnerLabel = new JLabel("Smoothness");
+        flyThroughActionsToolbar.add(numStepsSpinnerLabel);
         
         // SELECT TOOLBAR
         selectActionsToolbar = new JToolBar();
