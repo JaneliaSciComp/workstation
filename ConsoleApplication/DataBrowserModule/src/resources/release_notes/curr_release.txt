@@ -5,3 +5,12 @@ Data Browser
 
 Large Volume Viewer
 * "Scroll through Z" feature uses current camera view instead of recentering now
+* Added menu option for selecting annotation vertex in Task View
+
+Task Workflow View
+* Created a separate mode for selecting and reviewing individual points
+* Added clear reviewed button
+* Added smoothness parameter for more steps in neuroncam
+* Added hotkeys for increase/decrease speed of neuroncam
+* Fixed pause button issues
+* Fixed driftaway bug
