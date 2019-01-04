@@ -707,6 +707,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         // TODO - create a shared base class for these mode buttons
         JToggleButton flyThroughModeButton = new JToggleButton("");
         flyThroughModeButton.setIcon(SimpleIcons.getIcon("jet_icon.png"));
+        flyThroughModeButton.setToolTipText("Toggles the Task Mode to NeuronCam");
         dendroModeGroup.add(flyThroughModeButton);
         flyThroughModeButton.addActionListener(event -> switchFlyThroughMode());
         flyThroughModeButton.setMargin(new Insets(0, 0, 0, 0));
@@ -714,7 +715,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         flyThroughModeButton.setFocusable(false);
         modeToolBar.add(flyThroughModeButton);
         
-        JToggleButton selectModeButton = new JToggleButton("");
+        JToggleButton selectModeButton = new JToggleButton("");        
+        selectModeButton.setToolTipText("Toggles the Task Mode to Select/Review");
         selectModeButton.setIcon(Icons.getIcon("nib.png"));
         dendroModeGroup.add(selectModeButton);
         selectModeButton.addActionListener(event -> switchSelectMode());
