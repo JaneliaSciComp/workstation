@@ -522,7 +522,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         
     public void resumePlaybackReview(PlayReviewManager.PlayDirection direction) {
         playback.resumePlaythrough(direction);
-    }    
+    }
+
+    public void updatePlaybackSpeed(boolean increase) {
+        playback.updateSpeed(increase);
+    }
     
     private void setDefaultWorkspace(NeuronSet workspace) {
         activeNeuronSet = workspace;
@@ -571,13 +575,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new URI(currentSource).toURL();
     }
     
-    public void playSampleLocations(final List<SampleLocation> locationList, boolean autoRotation, int speed) {
+    public void playSampleLocations(final List<SampleLocation> locationList, boolean autoRotation, int speed, int stepScale) {
         // do a quick check to see if 
         sceneWindow.setControlsVisibility(true);
         currentSource = locationList.get(0).getSampleUrl().toString();
         defaultColorChannel = locationList.get(0).getDefaultColorChannel();
         volumeCache.setColorChannel(defaultColorChannel);        
-        playback.reviewPoints(locationList, currentSource, autoRotation, speed);        
+        playback.reviewPoints(locationList, currentSource, autoRotation, speed, stepScale);
     }
     
     public void setSampleLocation(SampleLocation sampleLocation) {
