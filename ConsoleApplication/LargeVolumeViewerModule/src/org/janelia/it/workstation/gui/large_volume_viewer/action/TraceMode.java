@@ -574,7 +574,7 @@ implements MouseMode, KeyListener
                     setNeuronGroupsAction.setEnabled(controller.editsAllowed());
                     result.add(new JMenuItem(setNeuronGroupsAction));
                     
-                    AbstractAction generateReviewPointList = new AbstractAction("Generate point review list...") {
+                    AbstractAction generateReviewPointList = new AbstractAction("Generate neuron review tree...") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().generateReviewPointList(hover.getNeuronID());
@@ -582,6 +582,16 @@ implements MouseMode, KeyListener
                     };
                     generateReviewPointList.setEnabled(controller.editsAllowed());
                     result.add(new JMenuItem(generateReviewPointList));
+                    
+                    AbstractAction selectTaskPoint = new AbstractAction("Select point in Task View ...") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            TaskWorkflowViewTopComponent.getInstance().selectPoint(hover.getGuid());
+                        }
+                    };
+                    selectTaskPoint.setEnabled(controller.editsAllowed());
+                    result.add(new JMenuItem(selectTaskPoint));
+
 
                     AbstractAction setNeuronRadiusAction = new AbstractAction("Set neuron radius...") {
                         @Override

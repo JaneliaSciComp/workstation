@@ -134,6 +134,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     List<ReviewGroup> groupList;
     HashMap<String, Integer> branchLookup;
     HashMap<String, PointDisplay> pointLookup;
+    HashMap<Long, PointDisplay> annotationLookup;
     private final ButtonGroup dendroModeGroup = new ButtonGroup();
     int currGroupIndex;
     int currPointIndex;
@@ -205,11 +206,13 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             }
             if (currGroupIndex>0) {
                 currGroupIndex--;
+                selectedPoints.clear();
                 currGroup = groupList.get(currGroupIndex);
                 if (!currGroup.isReviewed() && currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {
                     List<ReviewPoint> pointList = currGroup.getPointList();
                     Object[] cells = new Object[pointList.size()];
-                    for (int i = 0; i < pointList.size(); i++) {
+                    for (int i = 0; i < pointList.size(); i++) {                        
+                        selectedPoints.add(pointList.get(i).getDisplay());
                         cells[i] = ((NeuronTree) pointList.get(i).getDisplay()).getGUICell();
                     }
                     navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
@@ -238,12 +241,14 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             }
             if (currGroupIndex<groupList.size()-1) {
                 currGroupIndex++;
+                selectedPoints.clear();
                 currGroup = groupList.get(currGroupIndex);
                 if (!currGroup.isReviewed() && currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {
                     List<ReviewPoint> pointList = currGroup.getPointList();
 
                     Object[] cells = new Object[pointList.size()];
                     for (int i = 0; i < pointList.size(); i++) {
+                        selectedPoints.add(pointList.get(i).getDisplay());
                         cells[i] = ((NeuronTree) pointList.get(i).getDisplay()).getGUICell();
                     }
                     navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
@@ -324,10 +329,12 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         }
         currGroupIndex = groupIndex;
         ReviewGroup currGroup = groupList.get(currGroupIndex);
-        if (currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {
+        if (currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {            
+            selectedPoints.clear();
             List<ReviewPoint> pointList = currGroup.getPointList();
             Object[] cells = new Object[pointList.size()];
             for (int i = 0; i < pointList.size(); i++) {
+                selectedPoints.add(pointList.get(i).getDisplay());
                 cells[i] = ((NeuronTree) pointList.get(i).getDisplay()).getGUICell();
             }
             navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
@@ -351,6 +358,12 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             selectedPoints.add(point);
             navigator.updateCellStatus(cellArray, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
         } 
+    }
+    
+    public void selectPoint(Long annotationId) {
+        switchSelectMode();
+        PointDisplay point = annotationLookup.get(annotationId);
+        selectPoint(point);
     }
 
     private void setupUI() {
@@ -633,7 +646,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             } else {
                 Integer branch = branchLookup.get(cellId);
                 if (branch!=null) {
-                    model.clear();
+                    clearSelection();
                     selectBranch(branch);
                 }
             }
@@ -650,12 +663,14 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         // generate quick lookup table linking mxCells and branches
         branchLookup = new HashMap<String,Integer>();
         pointLookup = new HashMap<String,PointDisplay>();
+        annotationLookup = new HashMap<Long,PointDisplay>();
         for (int i=0; i<pathList.size(); i++) {
             List<PointDisplay> branch = pathList.get(i);
             for (PointDisplay point: branch) {
                 String guiCellId = ((NeuronTree)point).getGUICell().getId().toString();
                 branchLookup.put(guiCellId,i);
                 pointLookup.put(guiCellId,point);
+                annotationLookup.put(((NeuronTree)point).getAnnotationId(), point);
             }
         }
        
