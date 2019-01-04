@@ -164,33 +164,47 @@ public class PlayReviewManager {
                     ViewerLocationAcceptor acceptor;
                     Vantage vantage;
                     fpsAnimator.setFPS(playState.getFps());
-                    fpsAnimator.start();                                         
-                    animateToNextPoint(locationList.get(startNode), playState.getCurrentStep());
-                    switch (direction) {
-                        case FORWARD:                                
-                            if (startNode>locationList.size()) 
-                                startNode = locationList.size()-1;
-                            for (int i = startNode+1; i < locationList.size(); i++) {
-                                sampleLocation = locationList.get(i);
-                                boolean interrupt = animateToNextPoint(sampleLocation, null);
-                                if (interrupt) {                                                                      
-                                    playState.setCurrentNode(i);
-                                    break;
+                    fpsAnimator.start();
+                    boolean interrupt;
+                    if (direction==PlayDirection.REVERSE) {
+                        startNode--;
+                        interrupt = animateToNextPoint(locationList.get(startNode), null);
+                    } else {
+                        interrupt = animateToNextPoint(locationList.get(startNode), null);
+                    }
+                    
+                    if (interrupt) {
+                        playState.setCurrentNode(startNode);
+                    } else {
+
+                        switch (direction) {
+                            case FORWARD:
+                                if (startNode > locationList.size()) {
+                                    startNode = locationList.size() - 1;
                                 }
-                            }
-                            break;
-                        case REVERSE:              
-                            if (startNode<1) 
-                                startNode = 1;
-                            for (int i = startNode-1; i > 0; i--) {
-                                sampleLocation = locationList.get(i);
-                                boolean interrupt = animateToNextPoint(sampleLocation, null);
-                                if (interrupt) {
-                                    playState.setCurrentNode(i);
-                                    break;
+                                for (int i = startNode + 1; i < locationList.size(); i++) {
+                                    sampleLocation = locationList.get(i);
+                                    interrupt = animateToNextPoint(sampleLocation, null);
+                                    if (interrupt) {
+                                        playState.setCurrentNode(i);
+                                        break;
+                                    }
                                 }
-                            }
-                            break;
+                                break;
+                            case REVERSE:
+                                if (startNode < 1) {
+                                    startNode = 1;
+                                }
+                                for (int i = startNode - 1; i > 0; i--) {
+                                    sampleLocation = locationList.get(i);
+                                    interrupt = animateToNextPoint(sampleLocation, null);
+                                    if (interrupt) {
+                                        playState.setCurrentNode(i+1);
+                                        break;
+                                    }
+                                }
+                                break;
+                        }
                     }
                     fpsAnimator.stop();
 

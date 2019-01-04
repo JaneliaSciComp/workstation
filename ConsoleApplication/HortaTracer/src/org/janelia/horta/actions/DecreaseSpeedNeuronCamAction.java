@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "C-N")
+    @ActionReference(path = "Shortcuts", name = "COMMA")
 })
 public class DecreaseSpeedNeuronCamAction extends AbstractAction {
 
