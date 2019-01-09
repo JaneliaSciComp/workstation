@@ -681,13 +681,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         // add reference between review point and neuronTree, for updates to the GUI 
         // when point has been reviewed
         loadPointList(pathList);
-        
-        List<PointDisplay> pointList = pathList.get(0);
-        Object[] cells = new Object[pointList.size()];
-        for (int i = 0; i < pointList.size(); i++) {
-            cells[i] = ((NeuronTree) pointList.get(i)).getGUICell();
-        }
-        navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW); 
+        currGroupIndex = 0;
+        selectBranch(0);
         
         navigator.addCellListener(this);
         repaint();
@@ -820,9 +815,11 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     
     public void setSelectedAsReviewed(boolean review) {
         Object[] guiCells = new Object[selectedPoints.size()];        
+        List<Long> annotationList = new ArrayList<>();
         for (int i=0; i<selectedPoints.size(); i++) {
              NeuronTree point = (NeuronTree)selectedPoints.get(i);
-             point.setReviewed(review);
+             point.setReviewed(review);   
+             annotationList.add(point.getAnnotationId());
              guiCells[i] = point.getGUICell();
         }
         if (review) {
@@ -830,6 +827,10 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         } else {
             navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.OPEN);  
         }
+        if (annManager==null)
+            annManager = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+        annManager.setBranchReviewed(currNeuron, annotationList);
+        
         clearSelection();
     }
 

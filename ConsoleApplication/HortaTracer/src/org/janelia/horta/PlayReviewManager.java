@@ -70,12 +70,8 @@ public class PlayReviewManager {
 
     public void reviewPoints(final List<SampleLocation> locationList, final String currentSource, final boolean autoRotation,
                              final int speed, final int stepScale) {
-        if (playState == null) {
-            playState = new PlayState();
-            playState.setPlayList(locationList);
-            playState.setCurrentStep(0);
-            playState.setCurrentNode(0);
-        }
+        clearPlayState();          
+        playState.setPlayList(locationList);
         setPausePlayback(false);
         this.fps = speed;
         this.fpsAnimator.setFPS(speed);
@@ -150,6 +146,8 @@ public class PlayReviewManager {
     }
 
     public void resumePlaythrough(final PlayDirection direction) {
+        if (playState.getPlayList()==null)
+            return;
         setPausePlayback(false);
         SimpleWorker scrollWorker = new SimpleWorker() {
             @Override
@@ -319,5 +317,11 @@ public class PlayReviewManager {
         this.fpsAnimator.stop();
         this.fpsAnimator.setFPS(this.fps);
         this.fpsAnimator.start();
+    }
+    
+    public void clearPlayState() {
+        playState = new PlayState();
+        playState.setCurrentStep(0);
+        playState.setCurrentNode(0);  
     }
 }
