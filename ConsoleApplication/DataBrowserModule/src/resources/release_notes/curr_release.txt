@@ -1,7 +1,5 @@
-// 7.23
+// 7.24
+  
+Task Workflow View
+* Fixed issues with drift and reviewed branches not showing in Horta
 
-Data Browser
-* Improved right-click context menu performance
-
-Large Volume Viewer
-* "Scroll through Z" feature uses current camera view instead of recentering now
