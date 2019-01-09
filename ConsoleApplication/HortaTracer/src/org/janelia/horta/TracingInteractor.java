@@ -95,6 +95,7 @@ import org.janelia.horta.nodes.BasicSwcVertex;
 import org.janelia.horta.options.TileLoadingPanel;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.openide.awt.StatusDisplayer;
@@ -1230,7 +1231,7 @@ public class TracingInteractor extends MouseAdapter
     
      public boolean checkOwnership(NeuronModel neuron) {
         // create a future to hopefully 
-        if (neuron.getOwnerKey().equals("group:mouselight")) {
+        if (neuron.getOwnerKey().equals(ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim())) {
             CompletableFuture<Boolean> future = defaultWorkspace.changeNeuronOwnership(neuron.getNeuronId());
             if (future==null) 
                 return false;

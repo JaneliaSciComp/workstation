@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.task_workflow;
 
-import Jama.Matrix;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -17,7 +16,6 @@ import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.table.TableCellEditor;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,46 +23,29 @@ import com.mxgraph.model.mxCell;
 import com.mxgraph.util.mxEventObject;
 import com.mxgraph.util.mxEventSource;
 import com.mxgraph.view.mxGraphSelectionModel;
-import java.awt.Color;
-import java.awt.Event;
-import java.awt.Frame;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
-import java.beans.PropertyVetoException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Set;
-import java.util.Stack;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableModel;
 
-import groovy.swing.impl.TableLayout;
+import java.awt.event.MouseEvent;
+import java.util.LinkedList;
+
+import javax.swing.table.AbstractTableModel;
+
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.util.Date;
-import loci.plugins.config.SpringUtilities;
+import java.awt.Insets;
+
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SimpleIcons;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Quaternion;
-import org.janelia.it.jacs.shared.geom.UnitVec3;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.gui.keybind.ShortcutTextField;
+import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.ChangeNeuronOwnerDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -76,16 +57,9 @@ import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
-import org.openide.explorer.ExplorerUtils;
-import org.openide.explorer.view.OutlineView;
-import org.openide.nodes.Node;
 import org.openide.util.Exceptions;
-import org.openide.util.Lookup;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.Utilities;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +93,7 @@ import org.slf4j.LoggerFactory;
 public final class TaskWorkflowViewTopComponent extends TopComponent implements ExplorerManager.Provider, mxEventSource.mxIEventListener {
     public static final String PREFERRED_ID = "TaskWorkflowViewTopComponent";
     public static final String LABEL_TEXT = "Task Workflow";
-    private AnnotationManager annManager;   
+    private AnnotationManager annManager;
 
     enum REVIEW_CATEGORY {
         NEURON_REVIEW, POINT_REVIEW
@@ -146,15 +120,28 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     private JCheckBox reviewCheckbox;
     private JCheckBox rotationCheckbox;
     private JTextField speedSpinner;
-    int currGroupIndex;
-    int currPointIndex;
+    private JTextField numStepsSpinner;
+    JPanel taskButtonsPanel;
+    JToolBar selectActionsToolbar;
+    JToolBar regularActionsToolbar;
+    JToolBar flyThroughActionsToolbar;
+        
+    boolean firstTime = true;
+    boolean selectMode = false;
     
     // point management for Horta endoscopy
     List<ReviewPoint> pointList;
     List<ReviewGroup> groupList;
     HashMap<String, Integer> branchLookup;
+    HashMap<String, PointDisplay> pointLookup;
+    HashMap<Long, PointDisplay> annotationLookup;
+    private final ButtonGroup dendroModeGroup = new ButtonGroup();
+    int currGroupIndex;
+    int currPointIndex;
     
-    boolean firstTime = true;
+    // selection mode items
+    List<PointDisplay> selectedPoints = new ArrayList<>();
+    
     
     // dendrogram gui
     private JPanel viewPanel;
@@ -199,103 +186,184 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 
     private static final Logger log = LoggerFactory.getLogger(TaskWorkflowViewTopComponent.class);
 
-    public void nextBranch() {
-        if (currGroupIndex!=-1) {
-            ReviewGroup currGroup = groupList.get(currGroupIndex);
-            if (!currGroup.isReviewed() && currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
-                // clear current review markers
-                List<ReviewPoint> pointList = currGroup.getPointList();
-                Object[] cells = new Object[pointList.size()];
-                for (int i=0; i<pointList.size(); i++) {
-                    cells[i] = ((NeuronTree)pointList.get(i).getDisplay()).getGUICell();
-                }
-                navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.OPEN);
-            }
-            if (currGroupIndex<groupList.size()-1) {
-                currGroupIndex++;
-                currGroup = groupList.get(currGroupIndex);
-                if (!currGroup.isReviewed() && currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {
-                    List<ReviewPoint> pointList = currGroup.getPointList();
-
-                    Object[] cells = new Object[pointList.size()];
-                    for (int i = 0; i < pointList.size(); i++) {
-                        cells[i] = ((NeuronTree) pointList.get(i).getDisplay()).getGUICell();
-                    }
-                    navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
-                    reviewCheckbox.setSelected(false);
-                    reviewCheckbox.setEnabled(true);
-                } else {                    
-                    reviewCheckbox.setSelected(true);
-                    reviewCheckbox.setEnabled(false);
-                }
-            }            
-        }        
-    }
-    
-    public void selectBranch(int groupIndex) {
-        if (currGroupIndex != -1) {
-            ReviewGroup currGroup = groupList.get(currGroupIndex);
-            if (!currGroup.isReviewed() && currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {
-                // clear current review markers
-                List<ReviewPoint> pointList = currGroup.getPointList();
-                Object[] cells = new Object[pointList.size()];
-                for (int i = 0; i < pointList.size(); i++) {
-                    cells[i] = ((NeuronTree) pointList.get(i).getDisplay()).getGUICell();
-                }
-                navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.OPEN);
-            }
-        }
-        currGroupIndex = groupIndex;
-        ReviewGroup currGroup = groupList.get(currGroupIndex);
-        if (!currGroup.isReviewed() && currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {
-            List<ReviewPoint> pointList = currGroup.getPointList();
-            Object[] cells = new Object[pointList.size()];
-            for (int i = 0; i < pointList.size(); i++) {
-                cells[i] = ((NeuronTree) pointList.get(i).getDisplay()).getGUICell();
-            }
-            navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
-            reviewCheckbox.setSelected(false);
-            reviewCheckbox.setEnabled(true);
-        } else {
-            reviewCheckbox.setSelected(true);
-            reviewCheckbox.setEnabled(false);
-        }
-        
-        // navigate viewer to starting point
-        ReviewPoint startPoint = currGroup.getPointList().get(0);
-        gotoPoint(startPoint);
-    }
-
     public void prevBranch() {
        if (currGroupIndex!=-1) {
            ReviewGroup currGroup = groupList.get(currGroupIndex);
-            if (!currGroup.isReviewed() && currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
+            if (currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
                 // clear current review markers
                 List<ReviewPoint> pointList = currGroup.getPointList();
                 Object[] cells = new Object[pointList.size()];
                 for (int i=0; i<pointList.size(); i++) {
-                    cells[i] = ((NeuronTree)pointList.get(i).getDisplay()).getGUICell();
+                    NeuronTree point = (NeuronTree)pointList.get(i).getDisplay();                    
+                    cells[i] = point.getGUICell();
+                    if (point.isReviewed()) {
+                        navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.REVIEWED);
+                    } else {                        
+                        navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.OPEN);
+                    }
                 }
                 navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.OPEN);
             }
             if (currGroupIndex>0) {
                 currGroupIndex--;
+                selectedPoints.clear();
                 currGroup = groupList.get(currGroupIndex);
                 if (!currGroup.isReviewed() && currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {
                     List<ReviewPoint> pointList = currGroup.getPointList();
                     Object[] cells = new Object[pointList.size()];
-                    for (int i = 0; i < pointList.size(); i++) {
+                    for (int i = 0; i < pointList.size(); i++) {                        
+                        selectedPoints.add(pointList.get(i).getDisplay());
                         cells[i] = ((NeuronTree) pointList.get(i).getDisplay()).getGUICell();
                     }
                     navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
-                    reviewCheckbox.setSelected(false);
-                    reviewCheckbox.setEnabled(true);
-                } else {                    
-                    reviewCheckbox.setSelected(true);
-                    reviewCheckbox.setEnabled(false);
                 }
             }
         }  
+    }
+    
+    public void nextBranch() {
+        if (currGroupIndex!=-1) {
+            ReviewGroup currGroup = groupList.get(currGroupIndex);
+            if (currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
+                // clear current review markers
+                List<ReviewPoint> pointList = currGroup.getPointList();
+                Object[] cells = new Object[pointList.size()];
+                for (int i=0; i<pointList.size(); i++) {
+                    NeuronTree point = (NeuronTree)pointList.get(i).getDisplay();                    
+                    cells[i] = point.getGUICell();
+                    if (point.isReviewed()) {
+                        navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.REVIEWED);
+                    } else {                        
+                        navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.OPEN);
+                    }
+                }
+               
+            }
+            if (currGroupIndex<groupList.size()-1) {
+                currGroupIndex++;
+                selectedPoints.clear();
+                currGroup = groupList.get(currGroupIndex);
+                if (!currGroup.isReviewed() && currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {
+                    List<ReviewPoint> pointList = currGroup.getPointList();
+
+                    Object[] cells = new Object[pointList.size()];
+                    for (int i = 0; i < pointList.size(); i++) {
+                        selectedPoints.add(pointList.get(i).getDisplay());
+                        cells[i] = ((NeuronTree) pointList.get(i).getDisplay()).getGUICell();
+                    }
+                    navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
+                }
+            }            
+        }        
+    }
+    
+    private void switchSelectMode() {
+        taskButtonsPanel.remove(flyThroughActionsToolbar);
+        taskButtonsPanel.add(selectActionsToolbar);        
+        dendroContainerPanel.validate();
+        dendroContainerPanel.repaint();
+        selectMode = true;
+        if (groupList!=null) 
+            clearSelection();
+    }
+    
+    private void switchFlyThroughMode() {
+        // clear selections from select mode; select the current branch
+        
+        taskButtonsPanel.remove(selectActionsToolbar);
+        taskButtonsPanel.add(flyThroughActionsToolbar);
+        dendroContainerPanel.validate();
+        dendroContainerPanel.repaint();        
+        selectMode = false;
+        if (groupList!=null) {
+            clearSelection();
+            selectBranch(currGroupIndex);
+        }
+    }
+    
+    private void clearSelection() {
+        List reviewedCells = new ArrayList();
+        List normalCells = new ArrayList();
+
+        for (ReviewGroup group: groupList) {
+            List<ReviewPoint> pointList = group.getPointList();
+            for (ReviewPoint point: pointList) {
+                if (point.getDisplay().isReviewed()) 
+                    reviewedCells.add(((NeuronTree)point.getDisplay()).getGUICell());
+                else                    
+                    normalCells.add(((NeuronTree)point.getDisplay()).getGUICell());
+            }
+        }
+        selectedPoints.clear();
+        navigator.updateCellStatus(normalCells.toArray(), ReviewTaskNavigator.CELL_STATUS.OPEN);
+        navigator.updateCellStatus(reviewedCells.toArray(), ReviewTaskNavigator.CELL_STATUS.REVIEWED);
+    }
+
+    private void selectAll() {
+        Object[] cells = new Object[pointList.size()];
+        for (ReviewGroup group: groupList) {
+            List<ReviewPoint> pointList = group.getPointList();
+            for (int i=0; i<pointList.size(); i++) {
+                 cells[i] = (((NeuronTree)pointList.get(i).getDisplay()).getGUICell());                
+            }
+        }
+    }    
+    
+    public void selectBranch(int groupIndex) {
+        if (currGroupIndex != -1) {
+            ReviewGroup currGroup = groupList.get(currGroupIndex);
+            if (currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {
+                // clear current review markers
+                List<ReviewPoint> pointList = currGroup.getPointList();
+                Object[] cells = new Object[pointList.size()];
+                for (int i=0; i<pointList.size(); i++) {
+                    NeuronTree point = (NeuronTree) pointList.get(i).getDisplay();
+                    if (point.isReviewed()) {
+                        navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.REVIEWED);
+                    } else {
+                        navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.OPEN);       
+                    }
+                    cells[i] = point.getGUICell();
+                }
+            }
+        }
+        currGroupIndex = groupIndex;
+        ReviewGroup currGroup = groupList.get(currGroupIndex);
+        if (currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {            
+            selectedPoints.clear();
+            List<ReviewPoint> pointList = currGroup.getPointList();
+            Object[] cells = new Object[pointList.size()];
+            for (int i = 0; i < pointList.size(); i++) {
+                selectedPoints.add(pointList.get(i).getDisplay());
+                cells[i] = ((NeuronTree) pointList.get(i).getDisplay()).getGUICell();
+            }
+            navigator.updateCellStatus(cells, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
+        } 
+        
+        // navigate viewer to starting point
+        ReviewPoint startPoint = currGroup.getPointList().get(0);
+        gotoPoint(startPoint);
+    }
+    
+    public void selectPoint(PointDisplay point) {
+        Object[] cellArray = new Object[]{((NeuronTree)point).getGUICell()};
+        if (selectedPoints.contains(point)) {
+            selectedPoints.remove(point);
+            if (point.isReviewed()) {
+                navigator.updateCellStatus(cellArray, ReviewTaskNavigator.CELL_STATUS.REVIEWED);
+            } else {
+                navigator.updateCellStatus(cellArray, ReviewTaskNavigator.CELL_STATUS.OPEN);
+            }
+        } else {
+            selectedPoints.add(point);
+            navigator.updateCellStatus(cellArray, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
+        } 
+    }
+    
+    public void selectPoint(Long annotationId) {
+        switchSelectMode();
+        PointDisplay point = annotationLookup.get(annotationId);
+        selectPoint(point);
     }
 
     private void setupUI() {
@@ -442,7 +510,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
          Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
          for (Tiled3dSampleLocationProviderAcceptor acceptor : locationAcceptors) {
              if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
-                 acceptor.playSampleLocations(playList, rotationCheckbox.isSelected(), Integer.parseInt(speedSpinner.getText()));
+                 acceptor.playSampleLocations(playList, rotationCheckbox.isSelected(), Integer.parseInt(speedSpinner.getText()),
+                         Integer.parseInt(numStepsSpinner.getText()));
              }
          }
     }
@@ -552,7 +621,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         return pathList;
     }
     
-    // used for cell selection
+    // Cell Selection
     @Override
     public void invoke(Object o, mxEventObject eo) {
         mxGraphSelectionModel model = (mxGraphSelectionModel)o;
@@ -568,11 +637,18 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             } else {
                 cellId = selectedCell.getId();
             }
-    
-            Integer branch = branchLookup.get(cellId);
-            if (branch!=null) {
-                model.clear();
-                selectBranch (branch);
+            
+            if (selectMode) {
+                PointDisplay point = pointLookup.get(cellId);
+                if (point!=null) {
+                    selectPoint(point);
+                }
+            } else {
+                Integer branch = branchLookup.get(cellId);
+                if (branch!=null) {
+                    clearSelection();
+                    selectBranch(branch);
+                }
             }
         }
     }
@@ -586,10 +662,15 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         
         // generate quick lookup table linking mxCells and branches
         branchLookup = new HashMap<String,Integer>();
+        pointLookup = new HashMap<String,PointDisplay>();
+        annotationLookup = new HashMap<Long,PointDisplay>();
         for (int i=0; i<pathList.size(); i++) {
             List<PointDisplay> branch = pathList.get(i);
             for (PointDisplay point: branch) {
-                branchLookup.put(((NeuronTree)point).getGUICell().getId().toString(),i);
+                String guiCellId = ((NeuronTree)point).getGUICell().getId().toString();
+                branchLookup.put(guiCellId,i);
+                pointLookup.put(guiCellId,point);
+                annotationLookup.put(((NeuronTree)point).getAnnotationId(), point);
             }
         }
        
@@ -613,60 +694,143 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     }
     
     private void addTaskButtons() {
-        dendroContainerPanel.removeAll();        
-
-        JPanel taskButtonsPanel = new JPanel();
+        dendroContainerPanel.removeAll();    
+        taskButtonsPanel = new JPanel();            
         taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
         taskButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        taskButtonsPanel.setAlignmentX(LEFT_ALIGNMENT);
+        
+        // top level toolbar with toggles for select or flythrough mode
+        JToolBar modeToolBar = new JToolBar();
+        modeToolBar.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JButton prevBranchButton = new JButton("Prev Branch");
+        // TODO - create a shared base class for these mode buttons
+        JToggleButton flyThroughModeButton = new JToggleButton("");
+        flyThroughModeButton.setIcon(SimpleIcons.getIcon("jet_icon.png"));
+        flyThroughModeButton.setToolTipText("Toggles the Task Mode to NeuronCam");
+        dendroModeGroup.add(flyThroughModeButton);
+        flyThroughModeButton.addActionListener(event -> switchFlyThroughMode());
+        flyThroughModeButton.setMargin(new Insets(0, 0, 0, 0));
+        flyThroughModeButton.setHideActionText(true);
+        flyThroughModeButton.setFocusable(false);
+        modeToolBar.add(flyThroughModeButton);
+        
+        JToggleButton selectModeButton = new JToggleButton("");        
+        selectModeButton.setToolTipText("Toggles the Task Mode to Select/Review");
+        selectModeButton.setIcon(Icons.getIcon("nib.png"));
+        dendroModeGroup.add(selectModeButton);
+        selectModeButton.addActionListener(event -> switchSelectMode());
+        selectModeButton.setMargin(new Insets(0, 0, 0, 0));
+        selectModeButton.setHideActionText(true);
+        selectModeButton.setFocusable(false);
+        modeToolBar.add(selectModeButton);       
+        
+        taskButtonsPanel.add(modeToolBar);
+
+        // FLYTHRU TOOLBAR
+        flyThroughActionsToolbar = new JToolBar();
+        flyThroughActionsToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JButton prevBranchButton = new JButton("");
+        prevBranchButton.setToolTipText("Previous Neuron Branch");    
+        prevBranchButton.setIcon(SimpleIcons.getIcon("prev_node.png"));
         prevBranchButton.addActionListener(event -> prevBranch());
-        taskButtonsPanel.add(prevBranchButton);
+        flyThroughActionsToolbar.add(prevBranchButton);
 
-        JButton nextBranchButton = new JButton("Next Branch");
+        JButton nextBranchButton = new JButton(""); 
+        nextBranchButton.setToolTipText("Next Neuron Branch");        
+        nextBranchButton.setIcon(SimpleIcons.getIcon("next_node.png"));
         nextBranchButton.addActionListener(event -> nextBranch());
-        taskButtonsPanel.add(nextBranchButton);
+        flyThroughActionsToolbar.add(nextBranchButton);
 
-        JButton playButton = new JButton("Play Branch");
+        JButton playButton = new JButton("");        
+        playButton.setToolTipText("Play Branch");        
+        playButton.setIcon(SimpleIcons.getIcon("play.png"));        
         playButton.addActionListener(event -> playBranch());
-        taskButtonsPanel.add(playButton);
-
-        JButton createTaskButton = new JButton("Create Task From Current");
-        createTaskButton.addActionListener(event -> createNewTask());
-        taskButtonsPanel.add(createTaskButton);
-
-        JPanel infoPane = new JPanel();
-        infoPane.setPreferredSize(new Dimension(100, 50));
-        reviewCheckbox = new JCheckBox("Reviewed");
-        reviewCheckbox.addActionListener(evt -> setBranchReviewed());
-        if (groupList!=null && groupList.get(currGroupIndex).isReviewed()) {
-            reviewCheckbox.setSelected(true);
-            reviewCheckbox.setEnabled(false);
-        }
-        taskButtonsPanel.add(reviewCheckbox);
+        flyThroughActionsToolbar.add(playButton);                
         
         rotationCheckbox = new JCheckBox("Auto Rotation");       
-        taskButtonsPanel.add(rotationCheckbox);
+        flyThroughActionsToolbar.add(rotationCheckbox);
 
         speedSpinner = new JTextField(3);
         speedSpinner.setText("20");
-        taskButtonsPanel.add(speedSpinner);
+        speedSpinner.setMaximumSize(new Dimension(100, 50));
+        flyThroughActionsToolbar.add(speedSpinner);
         JLabel speedSpinnerLabel = new JLabel("Speed");
-        taskButtonsPanel.add(speedSpinnerLabel);
+        flyThroughActionsToolbar.add(speedSpinnerLabel);
+
+        numStepsSpinner = new JTextField(3);
+        numStepsSpinner.setText("1");
+        numStepsSpinner.setMaximumSize(new Dimension(50,50));
+        flyThroughActionsToolbar.add(numStepsSpinner);
+        JLabel numStepsSpinnerLabel = new JLabel("Smoothness");
+        flyThroughActionsToolbar.add(numStepsSpinnerLabel);
+        
+        // SELECT TOOLBAR
+        selectActionsToolbar = new JToolBar();
+        selectActionsToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JButton clearSelectButton = new JButton("");
+        clearSelectButton.setToolTipText("Clear Selection");        
+        clearSelectButton.setIcon(SimpleIcons.getIcon("clear_all.png"));
+        clearSelectButton.addActionListener(event -> clearSelection());
+        selectActionsToolbar.add(clearSelectButton);
+
+        JButton selectAllButton = new JButton("");
+        selectAllButton.addActionListener(event -> selectAll());        
+        selectAllButton.setToolTipText("Select All Nodes");        
+        selectAllButton.setIcon(SimpleIcons.getIcon("select_all.png"));
+        selectActionsToolbar.add(selectAllButton);
+        
+        // REGULAR ACTIONS TOOLBAR
+        regularActionsToolbar = new JToolBar();
+        regularActionsToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel infoPane = new JPanel();
+        infoPane.setPreferredSize(new Dimension(100, 50));
+        
+        JButton reviewButton = new JButton("");
+        reviewButton.setToolTipText("Mark selected items as reviewed");
+        reviewButton.setIcon(SimpleIcons.getIcon("review_completed.png"));
+        reviewButton.addActionListener(event -> setSelectedAsReviewed(true));
+        reviewButton.setMargin(new Insets(0, 0, 0, 0));
+        reviewButton.setHideActionText(true);
+        reviewButton.setFocusable(false);
+        regularActionsToolbar.add(reviewButton);
+        
+        JButton unreviewButton = new JButton("");
+        unreviewButton.setToolTipText("Clear selected items from being reviewed");
+        unreviewButton.setIcon(SimpleIcons.getIcon("review_cleared.png"));
+        unreviewButton.addActionListener(event -> setSelectedAsReviewed(false));
+        reviewButton.setMargin(new Insets(0, 0, 0, 0));
+        reviewButton.setHideActionText(true);
+        reviewButton.setFocusable(false);
+        regularActionsToolbar.add(unreviewButton);
+               
+        taskButtonsPanel.add(regularActionsToolbar);
         
         dendroContainerPanel.add(taskButtonsPanel);
         dendroContainerPanel.add(dendroPane);
+        
+        // set as initial mode
+        flyThroughModeButton.setSelected(true);
+        switchFlyThroughMode();
+        
         dendroContainerPanel.validate();
         dendroContainerPanel.repaint();
     }
     
-    public void setBranchReviewed() {
-        if (reviewCheckbox.isSelected() && !groupList.get(currGroupIndex).isReviewed() && currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
-            // get the current branch tmGeoAnnotations and update dendrogram
-            ReviewGroup branch = groupList.get(currGroupIndex);
-            setNeuronBranchReviewed(branch);             
-            reviewCheckbox.setEnabled(false);
-        }  
+    public void setSelectedAsReviewed(boolean review) {
+        Object[] guiCells = new Object[selectedPoints.size()];        
+        for (int i=0; i<selectedPoints.size(); i++) {
+             NeuronTree point = (NeuronTree)selectedPoints.get(i);
+             point.setReviewed(review);
+             guiCells[i] = point.getGUICell();
+        }
+        if (review) {
+            navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.REVIEWED);             
+        } else {
+            navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.OPEN);  
+        }
+        clearSelection();
     }
 
     private void setNeuronBranchReviewed(ReviewGroup group) {
@@ -1044,6 +1208,4 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             data.remove(deletedRow);
         }
     }
-   
-
 }

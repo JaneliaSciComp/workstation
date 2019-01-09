@@ -490,7 +490,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         
     public void resumePlaybackReview(PlayReviewManager.PlayDirection direction) {
         playback.resumePlaythrough(direction);
-    }    
+    }
+
+    public void updatePlaybackSpeed(boolean increase) {
+        playback.updateSpeed(increase);
+    }
     
     private void setDefaultWorkspace(NeuronSet workspace) {
         activeNeuronSet = workspace;
@@ -539,52 +543,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new URI(currentSource).toURL();
     }
 
-    public void playSampleLocations(List<SampleLocation> locationList) {
-        try {
-            for (SampleLocation sampleLocation : locationList) {
-                if (this.pausePlayback) {
-                    return;
-                }
-                Quaternion q = new Quaternion();
-                float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
-                if (quaternionRotation != null) {
-                    q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
-                }
-                ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                        currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
-                );
-
-                // figure out number of steps
-                Vantage vantage = sceneWindow.getVantage();
-                float[] startLocation = vantage.getFocus();
-                double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm() - startLocation[0], 2)
-                        + Math.pow(sampleLocation.getFocusYUm() - startLocation[1], 2)
-                        + Math.pow(sampleLocation.getFocusZUm() - startLocation[2], 2));
-                // # of steps is 1 per uM
-                int steps = (int) Math.round(distance);
-                if (steps < 1) {
-                    steps = 1;
-                }
-
-                animateToLocationWithRotation(acceptor, q, sampleLocation, steps);
-
-                activityLogger.logHortaLaunch(sampleLocation);
-                currentSource = sampleLocation.getSampleUrl().toString();
-                defaultColorChannel = sampleLocation.getDefaultColorChannel();
-                volumeCache.setColorChannel(defaultColorChannel);
-            }
-        } catch (Exception ex) {
-            Exceptions.printStackTrace(ex);
-        }
-    }
-
-    public void playSampleLocations(final List<SampleLocation> locationList, boolean autoRotation, int speed) {
-        // do a quick check to see if 
+    public void playSampleLocations(final List<SampleLocation> locationList, boolean autoRotation, int speed, int stepScale) {
+        // do a quick check to see if
         sceneWindow.setControlsVisibility(true);
         currentSource = locationList.get(0).getSampleUrl().toString();
         defaultColorChannel = locationList.get(0).getDefaultColorChannel();
         volumeCache.setColorChannel(defaultColorChannel);        
-        playback.reviewPoints(locationList, currentSource, autoRotation, speed);        
+        playback.reviewPoints(locationList, currentSource, autoRotation, speed, stepScale);
     }
 
     public void setSampleLocation(SampleLocation sampleLocation) {
@@ -616,9 +581,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // figure out number of steps
                 Vantage vantage = sceneWindow.getVantage();
                 float[] startLocation = vantage.getFocus();
-                double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm() - startLocation[0], 2)
-                        + Math.pow(sampleLocation.getFocusYUm() - startLocation[1], 2)
-                        + Math.pow(sampleLocation.getFocusZUm() - startLocation[2], 2));
+                double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm()-startLocation[0],2) +
+                        Math.pow(sampleLocation.getFocusYUm()-startLocation[1],2) +
+                        Math.pow(sampleLocation.getFocusZUm()-startLocation[2],2));
                 // # of steps is 1 per uM
                 int steps = (int) Math.round(distance);
                 if (steps < 1)
@@ -640,8 +605,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
             throw new RuntimeException(
-                    "Failed to load location " + sampleLocation.getSampleUrl().toString() + ", "
-                    + sampleLocation.getFocusXUm() + "," + sampleLocation.getFocusYUm() + "," + sampleLocation.getFocusZUm()
+                    "Failed to load location " + sampleLocation.getSampleUrl().toString() + ", " +
+                    sampleLocation.getFocusXUm() + "," + sampleLocation.getFocusYUm() + "," + sampleLocation.getFocusZUm()
             );
         }
     }
@@ -827,7 +792,6 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                 reportIntensity(msg, event);
 
-                // reportPickItem(msg, event);
                 if (msg.length() > 0) {
                     StatusDisplayer.getDefault().setStatusText(msg.toString(), 1);
                 }
@@ -879,41 +843,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         if (didMove) {
             vantage.notifyObservers();
             redrawNow();
-        }
-    }
-
-    private void animateToLocationWithRotation(ViewerLocationAcceptor acceptor, Quaternion endRotation, SampleLocation endLocation, int steps) throws Exception {
-        Vantage vantage = sceneWindow.getVantage();
-        CatmullRomSplineKernel splineKernel = new CatmullRomSplineKernel();
-        Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(splineKernel);
-        Interpolator<Quaternion> rotationInterpolator = new PrimitiveInterpolator(splineKernel);
-        double stepSize = 1.0 / (float) steps;
-
-        double zoom = endLocation.getMicrometersPerWindowHeight();
-        if (zoom > 0) {
-            vantage.setSceneUnitsPerViewportHeight((float) zoom);
-            vantage.setDefaultSceneUnitsPerViewportHeight((float) zoom);
-        }
-
-        Vector3 startFocus = new Vector3(sceneWindow.getVantage().getFocusPosition().getX(), sceneWindow.getVantage().getFocusPosition().getY(),
-                sceneWindow.getVantage().getFocusPosition().getZ());
-        sceneWindow.getVantage().getFocusPosition().copy(startFocus);
-        Quaternion startRotation = sceneWindow.getVantage().getRotationInGround().convertRotationToQuaternion();
-
-        Vector3 endFocus = new Vector3((float) endLocation.getFocusXUm(), (float) endLocation.getFocusYUm(),
-                (float) endLocation.getFocusZUm());
-        double currWay = 0;
-        for (int i = 0; i < steps; i++) {
-            SampleLocation sampleLocation = new BasicSampleLocation();
-            currWay += stepSize;
-            Vector3 iFocus = vec3Interpolator.interpolate_equidistant(currWay,
-                    startFocus, startFocus, endFocus, endFocus);
-            Quaternion iRotate = rotationInterpolator.interpolate_equidistant(currWay,
-                    startRotation, startRotation, endRotation, endRotation);
-            vantage.setFocus(iFocus.getX(), iFocus.getY(), iFocus.getZ());
-            vantage.setRotationInGround(new Rotation().setFromQuaternion(iRotate));
-            vantage.notifyObservers();
-            sceneWindow.redrawImmediately();
         }
     }
 
@@ -2064,8 +1993,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     // when the whole application closes.
     @Override
     public void componentClosed() {
-        // logger.info("Horta closed");
-        // saveStartupPreferences(); // not called at application close...
         neuronEditDispatcher.onClosed();
         // clear out SWCbuffers; exceptions should not be allowed to
         //  escape, and in the past, they have

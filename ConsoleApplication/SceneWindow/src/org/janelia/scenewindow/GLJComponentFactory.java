@@ -111,6 +111,7 @@ public class GLJComponentFactory
             playPanel = new JPanel();
             BoxLayout boxLayout = new BoxLayout(playPanel, BoxLayout.X_AXIS);
             playPanel.setLayout(boxLayout);
+            playPanel.setAlignmentX(CENTER_ALIGNMENT);
             
             playReverseButton = new JButton();
             playReverseButton.setIcon(new ImageIcon(ImageUtilities.loadImage("org/janelia/horta/images/control_rewind_blue.png")));             

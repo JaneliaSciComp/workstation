@@ -11,6 +11,7 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 
 
 public interface PointDisplay {
+    public boolean isReviewed();
     public void setReviewed(boolean review);
     public Vec3 getVertexLocation();
 }

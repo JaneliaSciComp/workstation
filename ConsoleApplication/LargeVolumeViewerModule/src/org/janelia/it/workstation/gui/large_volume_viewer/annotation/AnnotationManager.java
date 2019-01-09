@@ -93,7 +93,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
 
     private static final String COMMON_USER_KEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
-    private static final String MOUSELIGHT_GROUP_KEY = "group:mouselight";
+    private static final String MOUSELIGHT_GROUP_KEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
 
     // annotation model object
     private AnnotationModel annotationModel;

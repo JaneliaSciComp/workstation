@@ -67,7 +67,7 @@ public class LargeVolumeViewerLocationProvider implements Tiled3dSampleLocationP
     }
 
     @Override
-    public void playSampleLocations(List<SampleLocation> locationList, boolean autoRotation, int speed) {
+    public void playSampleLocations(List<SampleLocation> locationList, boolean autoRotation, int speed, int stepScale) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

@@ -44,6 +44,7 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 public interface HortaMetaWorkspace extends ObservableInterface
 {
     VantageInterface getVantage();
+
     Collection<NeuronSet> getNeuronSets();
     TmNeuronTagMap getTagMetadata();
     void setTagMetadata(TmNeuronTagMap tagMeta);
