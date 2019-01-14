@@ -104,6 +104,25 @@ public class ApplicationOptions {
             propSupport.firePropertyChange(OptionConstants.USE_RUN_AS_USER_PREFERENCES, oldVal, value); 
     }
         
+    public boolean isUseHTTPForTileAccess() {
+        Boolean value = (Boolean) FrameworkImplProvider.getModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS);
+        return value!=null && value;
+
+    }
+    
+    public void setUseHTTPForTileAccess(boolean value) {
+        boolean oldVal = isUseHTTPForTileAccess();
+        if (oldVal == value) {
+            return;
+        }
+        
+        FrameworkImplProvider.setModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, value); 
+        log.info("Set use HTTP for tile access = {}", value);
+        
+        if (null != propSupport)
+            propSupport.firePropertyChange(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, oldVal, value);         
+    }
+
     public void addPropertyChangeListener(PropertyChangeListener l) {
         if (null == propSupport)
             propSupport = new PropertyChangeSupport(this);

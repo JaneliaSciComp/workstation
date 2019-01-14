@@ -31,7 +31,7 @@ public class QuadViewApp extends JFrame {
                     app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     app.setResizable(true);
                     app.setBounds(100, 100, 994, 653);
-                    app.setContentPane(new URLBasedQuadViewUi(app, null, true, new AnnotationModel(null, null)));
+                    app.setContentPane(QuadViewUiProvider.createQuadViewUi(app, null, true, new AnnotationModel(null, null)));
                     app.setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();

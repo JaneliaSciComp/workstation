@@ -161,6 +161,7 @@ import org.janelia.horta.actions.ResetHortaRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.JadeKtxOctreeBlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
+import org.janelia.horta.blocks.KtxOctreeBlockTileSourceProvider;
 import org.janelia.horta.camera.CatmullRomSplineKernel;
 import org.janelia.horta.camera.Interpolator;
 import org.janelia.horta.camera.PrimitiveInterpolator;
@@ -2162,7 +2163,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     private KtxOctreeBlockTileSource openTileSource() {
         try {
-            return new JadeKtxOctreeBlockTileSource(new JadeServiceClient(), null).init(this.getCurrentSample());
+            return KtxOctreeBlockTileSourceProvider.createKtxOctreeBlockTileSource(this.getCurrentSample(), null);
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
             JOptionPane.showMessageDialog(

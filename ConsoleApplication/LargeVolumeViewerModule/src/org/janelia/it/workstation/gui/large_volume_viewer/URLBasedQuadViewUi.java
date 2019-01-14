@@ -22,12 +22,12 @@ import java.net.URL;
 public class URLBasedQuadViewUi extends QuadViewUi {
     private static final Logger LOG = LoggerFactory.getLogger(URLBasedQuadViewUi.class);
 
-	/**
-	 * Create the frame.
-	 */
-	URLBasedQuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel) {
+    /**
+     * Create the frame.
+     */
+    URLBasedQuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel) {
         super(parentFrame, initialObject, overrideFrameMenuBar, annotationModel);
-	}
+    }
 
     /**
      * given a string containing the canonical Linux path to the data,

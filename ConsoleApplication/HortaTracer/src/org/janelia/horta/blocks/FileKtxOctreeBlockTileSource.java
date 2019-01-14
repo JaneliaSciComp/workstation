@@ -43,7 +43,7 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
  */
 public class FileKtxOctreeBlockTileSource extends KtxOctreeBlockTileSource {
 
-    public FileKtxOctreeBlockTileSource(URL originatingSampleURL) {
+    FileKtxOctreeBlockTileSource(URL originatingSampleURL) {
         super(originatingSampleURL);
     }
 

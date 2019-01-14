@@ -19,6 +19,7 @@ public class OptionConstants {
     public static final String ANNOTATION_TABLES_HEIGHT_PROPERTY = "SessionMgr.AnnotationTablesHeightProperty";
     public static final String DUPLICATE_ANNOTATIONS_PROPERTY = "SessionMgr.AllowDuplicateAnnotationsProperty";
     public static final String USE_RUN_AS_USER_PREFERENCES = "useRunAsUserPreferences";
+    public static final String USE_HTTP_FOR_TILE_ACCESS = "useHTTPForTileAccess";
     public static final String FILE_CACHE_DISABLED_PROPERTY = "console.localCache.disabled";
     public static final String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
     public static final String NUM_CONCURRENT_DOWNLOADS_PROPERTY = "console.concurrent.downloads";

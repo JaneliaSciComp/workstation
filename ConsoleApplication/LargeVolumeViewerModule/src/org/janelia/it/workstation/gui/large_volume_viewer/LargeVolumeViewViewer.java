@@ -1,14 +1,17 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import java.awt.*;
+import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import java.awt.BorderLayout;
+import java.awt.Component;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
@@ -31,11 +34,6 @@ import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Created with IntelliJ IDEA.
@@ -333,7 +331,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 logger.info("instantiating AnnotationModel");
                 annotationModel = new AnnotationModel(sliceSample, currentWorkspace);
                 Events.getInstance().registerOnEventBus(annotationModel);
-                viewUI = new URLBasedQuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);
+                viewUI =  QuadViewUiProvider.createQuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);
             }
             
             removeAll();

@@ -40,7 +40,6 @@ public class FileMgr {
         }
         return instance;
     }
-    
 
     public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 10;
     public static final int DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY = 50;

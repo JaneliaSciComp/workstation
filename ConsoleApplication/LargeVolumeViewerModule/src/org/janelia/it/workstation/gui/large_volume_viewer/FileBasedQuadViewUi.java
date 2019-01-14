@@ -23,14 +23,14 @@ import java.util.Vector;
  */
 @SuppressWarnings("serial")
 public class FileBasedQuadViewUi extends QuadViewUi {
-	private static final Logger LOG = LoggerFactory.getLogger(FileBasedQuadViewUi.class);
-	
-	/**
-	 * Create the frame.
-	 */
-	FileBasedQuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel) {
+    private static final Logger LOG = LoggerFactory.getLogger(FileBasedQuadViewUi.class);
+
+    /**
+     * Create the frame.
+     */
+    FileBasedQuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel) {
         super(parentFrame, initialObject, overrideFrameMenuBar, annotationModel);
-	}
+    }
 
     /**
      * given a string containing the canonical Linux path to the data,

@@ -29,26 +29,8 @@
  */
 package org.janelia.horta;
 
-import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.console.viewerapi.ViewerLocationAcceptor;
-import org.janelia.geometry3d.PerspectiveCamera;
-import org.janelia.geometry3d.Vantage;
-import org.janelia.geometry3d.Vector3;
-import org.janelia.horta.blocks.JadeKtxOctreeBlockTileSource;
-import org.janelia.horta.volume.BrickInfo;
-import org.janelia.horta.volume.BrickInfoSet;
-import org.janelia.horta.volume.StaticVolumeBrickSource;
-import org.janelia.it.jacs.shared.lvv.HttpDataSource;
-import org.janelia.it.workstation.browser.api.web.JadeServiceClient;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.scenewindow.SceneWindow;
-import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.api.progress.ProgressHandleFactory;
-import org.openide.util.RequestProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,10 +38,27 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import jersey.repackaged.com.google.common.base.Objects;
-
-import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
+import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.geometry3d.PerspectiveCamera;
+import org.janelia.geometry3d.Vantage;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
+import org.janelia.horta.blocks.KtxOctreeBlockTileSourceProvider;
+import org.janelia.horta.volume.BrickInfo;
+import org.janelia.horta.volume.BrickInfoSet;
+import org.janelia.horta.volume.StaticVolumeBrickSource;
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.scenewindow.SceneWindow;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
+import org.openide.util.RequestProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SampleLocationAcceptor.class);
@@ -159,7 +158,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             if (Objects.equal(renderedOctreeUrl, previousSource.getOriginatingSampleURL()))
                 return previousSource; // Source did not change
         }
-        return new JadeKtxOctreeBlockTileSource(new JadeServiceClient(), renderedOctreeUrl).init(sample);
+        return KtxOctreeBlockTileSourceProvider.createKtxOctreeBlockTileSource(sample, renderedOctreeUrl);
     }
 
     private StaticVolumeBrickSource setSampleUrl(URL renderedOctreeUrl, ProgressHandle progress) {
@@ -192,7 +191,6 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             }
         } catch (IOException | URISyntaxException ex) {
             // Something went wrong with loading the Yaml file
-            // Exceptions.printStackTrace(ex);
             JOptionPane.showMessageDialog(nttc,
                     "Problem Loading Raw Tile Information from " + renderedOctreeUrl.getPath() +
                             "\n  Is the render folder drive mounted?"

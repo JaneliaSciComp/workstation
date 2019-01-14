@@ -30,29 +30,22 @@
 
 package org.janelia.horta.blocks;
 
-import java.io.InputStream;
+import com.google.common.base.Preconditions;
 import java.net.URL;
 import org.janelia.it.workstation.browser.api.web.JadeServiceClient;
+import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 
-public class JadeKtxOctreeBlockTileSource extends KtxOctreeBlockTileSource {
+public class KtxOctreeBlockTileSourceProvider {
 
-    private final JadeServiceClient jadeServiceClient;
+    public static KtxOctreeBlockTileSource createKtxOctreeBlockTileSource(TmSample sample, URL renderedOctreeUrl) {
+        Preconditions.checkArgument(sample.getFilepath() != null && sample.getFilepath().trim().length() > 0);
+        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
+            return new JadeKtxOctreeBlockTileSource(new JadeServiceClient(), renderedOctreeUrl).init(sample);
+        } else {
+            return new FileKtxOctreeBlockTileSource(renderedOctreeUrl);
+        }
 
-    JadeKtxOctreeBlockTileSource(JadeServiceClient jadeServiceClient, URL originatingSampleURL) {
-        super(originatingSampleURL);
-        this.jadeServiceClient = jadeServiceClient;
-    }
-
-    @Override
-    protected String getSourceServerURL(TmSample sample) {
-        return jadeServiceClient.findStorageURL(sample.getFilepath());
-    }
- 
-    @Override
-    protected InputStream streamKeyBlock(KtxOctreeBlockTileKey octreeKey) {
-        String octreeKeyBlockPath = getKeyBlockPathURI(octreeKey).toString();
-        return jadeServiceClient.streamContent(sourceServerURL, octreeKeyBlockPath);
     }
 
 }

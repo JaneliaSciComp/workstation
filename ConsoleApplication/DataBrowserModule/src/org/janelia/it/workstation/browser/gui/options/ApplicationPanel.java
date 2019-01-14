@@ -52,6 +52,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
     private JCheckBox showReleaseNotesOnStartup;
     private JCheckBox showStartPageOnStartup;
     private JCheckBox useRunAsUserPreferences;
+    private JCheckBox useHTTPForTileAccess;
     private JRadioButton fileCacheEnabledRadioButton;
     private JRadioButton fileCacheDisabledRadioButton;
     private JSpinner fileCacheSpinner;
@@ -70,22 +71,26 @@ final class ApplicationPanel extends javax.swing.JPanel {
         mainPanel.addSeparator("General");
 
         autoDownloadUpdates = new JCheckBox("Download updates automatically");
-        autoDownloadUpdates.addActionListener((e) -> { controller.changed(); });
+        autoDownloadUpdates.addActionListener((e) -> controller.changed());
         mainPanel.addItem(autoDownloadUpdates);
         
         showReleaseNotesOnStartup = new JCheckBox("Show release notes after update");
-        showReleaseNotesOnStartup.addActionListener((e) -> { controller.changed(); });
+        showReleaseNotesOnStartup.addActionListener((e) -> controller.changed());
         mainPanel.addItem(showReleaseNotesOnStartup);
 
         showStartPageOnStartup = new JCheckBox("Show start page on startup");
-        showStartPageOnStartup.addActionListener((e) -> { controller.changed(); });
+        showStartPageOnStartup.addActionListener((e) -> controller.changed());
         mainPanel.addItem(showStartPageOnStartup);
         
         useRunAsUserPreferences = new JCheckBox("Use preferences from Run As user");
-        useRunAsUserPreferences.addActionListener((e) -> { controller.changed(); });
+        useRunAsUserPreferences.addActionListener((e) -> controller.changed());
         if (AccessManager.getAccessManager().isAdmin()) {
             mainPanel.addItem(useRunAsUserPreferences);
         }
+
+        useHTTPForTileAccess = new JCheckBox("Use http for tile access");
+        useHTTPForTileAccess.addActionListener((e) -> controller.changed());
+        mainPanel.addItem(useHTTPForTileAccess);
 
         // Memory
 
@@ -303,6 +308,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
         showReleaseNotesOnStartup.setSelected(options.isShowReleaseNotes());
         showStartPageOnStartup.setSelected(options.isShowStartPageOnStartup());
         useRunAsUserPreferences.setSelected(options.isUseRunAsUserPreferences());
+        useHTTPForTileAccess.setSelected(options.isUseHTTPForTileAccess());
         try {
             memoryPanel.setMemorySetting(SystemInfo.getMemoryAllocation());
         }
@@ -318,13 +324,13 @@ final class ApplicationPanel extends javax.swing.JPanel {
         log.info("Saving application settings...");
         
         // General
-
         ApplicationOptions options = ApplicationOptions.getInstance();
         options.setAutoDownloadUpdates(autoDownloadUpdates.isSelected());
         options.setShowReleaseNotes(showReleaseNotesOnStartup.isSelected());
         options.setShowStartPageOnStartup(showStartPageOnStartup.isSelected());
         options.setUseRunAsUserPreferences(useRunAsUserPreferences.isSelected());
-        
+        options.setUseHTTPForTileAccess(useHTTPForTileAccess.isSelected());        
+
         // Memory
         String error = memoryPanel.getError();
         if (error == null) {
