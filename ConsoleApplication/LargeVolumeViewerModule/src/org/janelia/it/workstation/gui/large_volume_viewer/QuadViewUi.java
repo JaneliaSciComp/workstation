@@ -1,6 +1,14 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import java.awt.*;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_PREFERRED_ID;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -15,7 +23,34 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import javax.media.opengl.GLProfile;
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ActionMap;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.InputMap;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSeparator;
+import javax.swing.JSlider;
+import javax.swing.JSpinner;
+import javax.swing.JSplitPane;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
@@ -93,7 +128,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_PREFERRED_ID;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.task_workflow.TaskWorkflowViewLauncher;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
@@ -366,6 +400,8 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
             }
         });
 
+        quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer);
+
         setupUi(parentFrame, overrideFrameMenuBar);
         interceptModifierKeyPresses();
         interceptModeChangeGestures();
@@ -376,7 +412,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         getSkeletonActor().getModel().addAnchorUpdateListener(annotationMgr);
 
         // Nb: skeleton.anchorMovedSilentSignal intentionally does *not* connect to annotationMgr!
-        quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer);
         largeVolumeViewerTranslator.setViewStateListener(quadViewController);
         annotationPanel.setViewStateListener(quadViewController);
         annotationModel.setViewStateListener(quadViewController);
