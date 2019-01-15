@@ -43,6 +43,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.workstation.browser.api.facade.impl.ejb.LegacyFacadeImpl;
+import org.janelia.it.workstation.browser.api.facade.interfaces.LegacyFacade;
 
 /**
  * Singleton for tracking and restoring the current state of the GUI. The
@@ -72,6 +74,7 @@ public class StateMgr {
     public static final String ADD_TO_RESULTSET_HISTORY = "ADD_TO_RESULTSET_HISTORY";
     public static final int MAX_ADD_TO_ROOT_HISTORY = 5;
     
+    private final LegacyFacade legacyFacade;
     private final Map<TopComponent,NavigationHistory> navigationHistoryMap = new HashMap<>();
     private final UserColorMapping userColorMapping = new UserColorMapping();
     
@@ -83,6 +86,7 @@ public class StateMgr {
     
     private StateMgr() {     
         log.info("Initializing State Manager");
+        this.legacyFacade = new LegacyFacadeImpl();
         try {
             this.autoShareTemplate = (PermissionTemplate)FrameworkImplProvider.getModelProperty(AUTO_SHARE_TEMPLATE);
             
@@ -351,8 +355,7 @@ public class StateMgr {
     }
     
     public Task getTaskById(Long taskId) throws Exception {
-        return null;
-//!!!!!        return DomainMgr.getDomainMgr().getLegacyFacade().getTaskById(taskId);
+        return legacyFacade.getTaskById(taskId);
     }
     
     public Task submitJob(String processDefName, String displayName) throws Exception {
@@ -367,8 +370,7 @@ public class StateMgr {
     }
 
     public Task saveOrUpdateTask(Task task) throws Exception {
-        return task;
-//!!!!!!        return DomainMgr.getDomainMgr().getLegacyFacade().saveOrUpdateTask(task);
+        return legacyFacade.saveOrUpdateTask(task);
     }
     
     private Task submitJob(GenericTask genericTask) throws Exception {
@@ -378,8 +380,7 @@ public class StateMgr {
     }
 
     public void submitJob(String processDefName, Task task) throws Exception {
-
-//!!!!        DomainMgr.getDomainMgr().getLegacyFacade().submitJob(processDefName, task.getObjectId());
+        legacyFacade.submitJob(processDefName, task.getObjectId());
     }
 
     /**
@@ -392,6 +393,6 @@ public class StateMgr {
      * @throws Exception
      */
     public void dispatchJob(String processDefName, Task task) throws Exception {
-//!!!!!        DomainMgr.getDomainMgr().getLegacyFacade().dispatchJob(processDefName, task.getObjectId());
+        legacyFacade.dispatchJob(processDefName, task.getObjectId());
     }
 }

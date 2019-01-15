@@ -70,8 +70,6 @@ implements Map<String, BrainTileInfo>, Iterable<BrainTileInfo>
         // System.out.println(tilebase.getClass().getName());
         tilebasePath = (String) tilebase.get("path");
 
-        System.out.println("BrainTileInfoList - starting tilebasePath="+tilebasePath);
-
         if (!HttpDataSource.useHttp()) {
             tilebasePath = OsFilePathRemapper.remapLinuxPath(tilebasePath); // Convert to OS-specific file path
             System.out.println("BrainTileInfoList - changed tilebasePath="+tilebasePath);
@@ -84,7 +82,6 @@ implements Map<String, BrainTileInfo>, Iterable<BrainTileInfo>
         for (Map<String, Object> tile : tiles) {
             String tilePath = (String) tile.get("path");
             map.put(tilePath, new BrainTileInfo(tile, tilebasePath, false));
-            // System.out.println(tilePath);
         }
     }
     

@@ -71,6 +71,7 @@ import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.dialogs.MemoryCheckDialog;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
@@ -915,7 +916,9 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
 
         final JCheckBox useHttpCheckbox = new JCheckBox("Use Http");
         if (HttpDataSource.useHttp()) {
-            HttpDataSource.setRestServer(ConsoleProperties.getInstance().getProperty("mouselight.rest.url"));
+            HttpDataSource.setRestServer(
+                    ConsoleProperties.getInstance().getProperty("mouselight.rest.url"),
+                    AccessManager.getAccessManager().getAppAuthorization());
             useHttpCheckbox.setSelected(true);
         } else {
             useHttpCheckbox.setSelected(false);
@@ -927,7 +930,9 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
                     useHttpCheckbox.setSelected(false);
                     HttpDataSource.setUseHttp(false);
                 } else if (e.getStateChange() == ItemEvent.SELECTED) {
-                    HttpDataSource.setRestServer(ConsoleProperties.getInstance().getProperty("mouselight.rest.url"));
+                    HttpDataSource.setRestServer(
+                            ConsoleProperties.getInstance().getProperty("mouselight.rest.url"),
+                            AccessManager.getAccessManager().getAppAuthorization());
                     useHttpCheckbox.setSelected(true);
                     HttpDataSource.setUseHttp(true);
                 }
@@ -1523,9 +1528,9 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     static class LoadStatusLabel extends JLabel {
 
         private LoadStatus loadStatus = null;
-        private ImageIcon busyIcon;
-        private ImageIcon checkIcon;
-        private ImageIcon emptyIcon;
+        private final ImageIcon busyIcon;
+        private final ImageIcon checkIcon;
+        private final ImageIcon emptyIcon;
 
         LoadStatusLabel() {
             this.busyIcon = Icons.getIcon(IMAGES_SPINNER);
@@ -1534,7 +1539,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
             // Place text over icon
             setHorizontalTextPosition(JLabel.CENTER);
             setVerticalTextPosition(JLabel.CENTER);
-            //
             setLoadStatus(TileServer.LoadStatus.UNINITIALIZED);
         }
 

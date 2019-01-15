@@ -3,7 +3,6 @@ package org.janelia.it.workstation.browser.api.facade.impl.ejb;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.UserToolEvent;
@@ -14,10 +13,13 @@ import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.LegacyFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LegacyFacadeImpl implements LegacyFacade {
 
     public static final String COMM_FAILURE_MSG_TMB = "Communication failure.";
+    private static final Logger LOG = LoggerFactory.getLogger(LegacyFacadeImpl.class);
     private static final int RETRY_MAX_ATTEMPTS_RTMB = 5;
     private static final int RETRY_INTERIM_MULTIPLIER_RTMB = 500;
     
@@ -154,7 +156,7 @@ public class LegacyFacadeImpl implements LegacyFacade {
                         ute.setUserLogin("Unknown");
                         EJBFactory.getRemoteComputeBean().addEventToSessionAsync(null);
                     } catch (Exception ex) {
-                        ex.printStackTrace();
+                        LOG.warn("Error instantiating the remote bean", ex);
                     }
                 }
                 break;
@@ -163,7 +165,7 @@ public class LegacyFacadeImpl implements LegacyFacade {
                 try {
                     Thread.sleep(RETRY_INTERIM_MULTIPLIER_RTMB * (i + 1));
                 } catch (InterruptedException ie) {
-                    ie.printStackTrace();
+                    LOG.warn("Interrupt exception", ie);
                 }
             }
         };

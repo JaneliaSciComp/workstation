@@ -22,6 +22,7 @@ import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog.ErrorType;
 import org.janelia.it.workstation.browser.util.SimpleJwtParser;
 import org.janelia.model.domain.enums.SubjectRole;
+import org.janelia.model.security.AppAuthorization;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.util.SubjectUtils;
@@ -46,7 +47,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public final class AccessManager {
-    
+
     private static final Logger log = LoggerFactory.getLogger(AccessManager.class);
 
     public static String RUN_AS_USER = "RunAs";
@@ -265,19 +266,14 @@ public final class AccessManager {
     }
         
     private Subject authenticateSubject() {
-        
         // First get auth token
         renewToken();
-        
         // We're now authenticated. Get or create the Workstation user object.
-        Subject authenticatedSubject;
         try {
-            authenticatedSubject = DomainMgr.getDomainMgr().getModel().getOrCreateUser(username);
-        }
-        catch (Exception e) {
+            return DomainMgr.getDomainMgr().getModel().getOrCreateUser(username);
+        } catch (Exception e) {
             throw new ServiceException("Error getting or creating user "+username, e);
         }
-        return authenticatedSubject;
     }
     
     /**
@@ -401,7 +397,13 @@ public final class AccessManager {
             Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
         }
     }
-    
+
+    public AppAuthorization getAppAuthorization() {
+        return new AppAuthorization(getAuthenticatedSubject(),
+                getToken(),
+                getActualSubject());
+    }
+
     public static Subject getSubjectByNameOrKey(String key) {
         try {
             return DomainMgr.getDomainMgr().getModel().getSubjectByNameOrKey(key);

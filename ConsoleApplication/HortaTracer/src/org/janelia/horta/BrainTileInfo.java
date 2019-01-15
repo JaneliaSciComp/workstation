@@ -56,9 +56,7 @@ import org.slf4j.LoggerFactory;
  * Represents Mouse Brain tile information entry from tilebase.cache.yml file.
  * @author Christopher Bruns <brunsc at janelia.hhmi.org>
  */
-public class BrainTileInfo 
-implements BrickInfo
-{
+public class BrainTileInfo implements BrickInfo {
     // e.g.
     //path: /nobackup/mousebrainmicro/data/2014-04-04/Tiling
     //tiles:
@@ -88,7 +86,6 @@ implements BrickInfo
     
     public BrainTileInfo(Map<String, Object> yamlFragment, String parentPath, boolean leverageCompressedFiles) throws ParseException 
     {
-        //log.info("BrainTileInfo() parentPath="+parentPath);
         this.parentPath = parentPath;
         this.leverageCompressedFiles = leverageCompressedFiles;
         Map<String, Object> aabb = (Map<String, Object>)yamlFragment.get("aabb");
@@ -289,12 +286,7 @@ implements BrickInfo
     {
         // OS specific path should have already been translated in MouseLightYamlBrickSource
 
-        //log.info("BrainTileInfo loadBrick() parentPath="+parentPath+" localPath="+localPath);
-
         File folderPath = new File(parentPath, localPath);
-
-        //log.info("BrainTileInfo loadBrick() using folderPath=" + folderPath.getAbsolutePath());
-
         File tileFile = null;
 
         Texture3d texture = new Texture3d();

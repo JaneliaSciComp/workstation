@@ -27,7 +27,7 @@ public class HttpServiceUtils {
         AccessManager accessManager = AccessManager.getAccessManager();
         Map<String,String> headers = new HashMap<>();
 
-        // Identify ourselves 
+        // Identify ourselves
         headers.put(APPICATION_HEADER, APPICATION_VALUE);
 
         if (auth) {
