@@ -3,20 +3,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.nb_action;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
-import javax.swing.Action;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.CreateTiledMicroscopeSampleAction;
@@ -80,22 +68,22 @@ public class NewTiledMicroscopeSampleDialog extends JDialog {
 		add(mainPanel, BorderLayout.CENTER);
 
 		JButton okButton = new JButton("Add Sample");
-		okButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+		okButton.addActionListener(e -> {
+                if (nameTextField.getText().isEmpty() || pathToRenderFolderTextField.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                        "You must specify both a sample name and location!",
+                        "Missing values",
+                        JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
 			    Action action = new CreateTiledMicroscopeSampleAction(nameTextField.getText(), pathToRenderFolderTextField.getText());
 			    action.actionPerformed(e);
 				NewTiledMicroscopeSampleDialog.this.dispose();
-			}
 		});
 
 		JButton cancelButton = new JButton("Cancel");
 		cancelButton.setToolTipText("Cancel and close this dialog");
-		cancelButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				setVisible(false);
-			}
-		});
+		cancelButton.addActionListener(e -> setVisible(false));
 
 		JPanel buttonPane = new JPanel();
 		buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
