@@ -68,6 +68,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundA
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.it.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.tiledMicroscope.TmModelManipulator;
 import org.janelia.model.domain.DomainConstants;
@@ -362,6 +363,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             // register with Message Server to receive async updates
             RefreshHandler refreshHandler = RefreshHandler.getInstance();
             refreshHandler.setAnnotationModel(this);
+            TaskWorkflowViewTopComponent.getInstance().loadHistory();
         } catch (Exception error) {
             ConsoleApp.handleException(error);
         }

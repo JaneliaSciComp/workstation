@@ -33,6 +33,7 @@ import javax.swing.table.AbstractTableModel;
 
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import javax.swing.table.TableCellRenderer;
 
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SimpleIcons;
@@ -100,10 +101,9 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     enum REVIEW_CATEGORY {
         NEURON_REVIEW, POINT_REVIEW
     };
-    static final int NEURONREVIEW_WIDTH = 1300;
-    static final int COLUMN_LOADTASK = 6;
-    static final int COLUMN_DELETETASK = 7;
-    static final int COLUMN_TMREVIEWTASK = 8;
+    static final int NEURONREVIEW_WIDTH = 1300;    
+    static final int COLUMN_LOADTASK = 5;
+    static final int COLUMN_DELETETASK = 6;
     
     private final ExplorerManager reviewManager = new ExplorerManager();
     private LinkedList<Vec3> normalGroup;
@@ -164,7 +164,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     }
     
     @Override
-    public void componentOpened() {
+    public void componentOpened() {   
+        loadHistory();
     }
 
     @Override
@@ -369,46 +370,70 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         PointDisplay point = annotationLookup.get(annotationId);
         selectPoint(point);
     }
+    public void loadHistory() {        
+        annManager = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+        ((TaskReviewTableModel)taskReviewTable.getModel()).clear();
+        retrieveTasks();
+    }
 
     private void setupUI() {
         setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
 
+        loadTaskIcon = SimpleIcons.getIcon("open_action.png");
+     
+        deleteTaskIcon = SimpleIcons.getIcon("delete.png");
+        
+        // neuron review table        
+        JPanel taskPanel = new JPanel();
+        taskPanel.setLayout(new BoxLayout(taskPanel,BoxLayout.Y_AXIS));   
+        taskPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         JButton createTaskButton = new JButton("");
         createTaskButton.setIcon(SimpleIcons.getIcon("plus-button.png"));
         createTaskButton.setToolTipText("Create a New Task From Current Neuron Review");
-        add(createTaskButton);
-
-        // neuron table
+        createTaskButton.addActionListener(event -> createNewTask());
+        
+        JToolBar taskCRUDToolbar = new JToolBar();
+        taskCRUDToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        taskCRUDToolbar.add(createTaskButton);    
+        taskPanel.add(taskCRUDToolbar);
+                
         TaskReviewTableModel taskReviewTableModel = new TaskReviewTableModel();
         taskReviewTable = new JTable(taskReviewTableModel);
-        taskReviewTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        taskReviewTable.setAutoCreateRowSorter(true);
-        
-        JPanel taskPanel = new JPanel();
-        taskPanel.setLayout(new BorderLayout());
-        List<TmReviewTask> tasks = retrieveTasks();
-        JScrollPane scrollPane = new JScrollPane(taskReviewTable);
-        taskReviewTable.setFillsViewportHeight(true);
-        taskPanel.add(scrollPane, BorderLayout.CENTER); 
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.BOTH;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.weightx = 1.00;
-        c.weighty = 0.2;
-        c.anchor = GridBagConstraints.PAGE_START;
-        add(taskPanel);
+        taskReviewTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);   
+          taskReviewTable.addMouseListener(new MouseHandler() {
+            @Override
+            protected void singleLeftClicked(MouseEvent me) {
+                if (me.isConsumed()) return;
+                JTable table = (JTable) me.getSource();
+                int viewRow = table.rowAtPoint(me.getPoint());
+                if (viewRow >= 0) {                   
+                    int viewColumn = table.columnAtPoint(me.getPoint());
+                    if (viewColumn==COLUMN_DELETETASK) {
+                        TmReviewTask selectedReview = ((TaskReviewTableModel)taskReviewTable.getModel()).getReviewTaskAtRow(viewRow);                    
+                        if (selectedReview!=null) {
+                            ((TaskReviewTableModel)taskReviewTable.getModel()).deleteTask(selectedReview, viewRow);
+                        }
+                    } else if (viewColumn==COLUMN_LOADTASK) {
+                        TmReviewTask selectedReview = ((TaskReviewTableModel)taskReviewTable.getModel()).getReviewTaskAtRow(viewRow);                    
+                        if (selectedReview!=null) {
+                            loadReviewTask(selectedReview);
+                        }
+                    }
+                }
+                me.consume();
+            }
+        });              
+        JScrollPane taskTableScroll = new JScrollPane(taskReviewTable);
+        taskPanel.add(taskTableScroll);
         
         dendroContainerPanel = new JPanel();
         dendroContainerPanel.setLayout(new BoxLayout(dendroContainerPanel,BoxLayout.Y_AXIS));
-        c = new GridBagConstraints();
-        c.fill = GridBagConstraints.BOTH;
-        c.gridx = 0;
-        c.gridy = 1;
-        c.gridheight = 3;
-        c.weightx = 1.00;
-        c.weighty = 0.8;
-        add(dendroContainerPanel);
+       // JScrollPane dendroScroll = new JScrollPane(dendroContainerPanel);
+        
+        JSplitPane taskWindow = new JSplitPane(JSplitPane.VERTICAL_SPLIT, taskPanel, dendroContainerPanel);
+        taskWindow.setDividerLocation(400);
+        setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+        add(taskWindow);
 /*
         JButton loadButton = new JButton("Load point list...");
         loadButton.addActionListener(event -> onLoadButton());
@@ -596,14 +621,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         }
     }
     
-    public void createNeuronReview (TmNeuronMetadata neuron, NeuronTree tree) {   
-        // from leaf nodes of neurontree generate branches to play back
-        List<List<PointDisplay>> pathList = generatePlayList (tree);
-
-        // generate gui and mxCells for neurontree
-        dendroPane = navigator.createGraph(tree, pathList.size(), this.getWidth(), this.getHeight());
-        
-        // generate quick lookup table linking mxCells and branches
+    private void initSelection(List<List<PointDisplay>> pathList) {
+                // generate quick lookup table linking mxCells and branches
         branchLookup = new HashMap<String,Integer>();
         pointLookup = new HashMap<String,PointDisplay>();
         annotationLookup = new HashMap<Long,PointDisplay>();
@@ -616,7 +635,16 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 annotationLookup.put(((NeuronTree)point).getAnnotationId(), point);
             }
         }
-       
+    }
+    
+    public void createNeuronReview (TmNeuronMetadata neuron, NeuronTree tree) {  
+        currTask = null;
+        // from leaf nodes of neurontree generate branches to play back
+        List<List<PointDisplay>> pathList = generatePlayList (tree);
+
+        // generate gui and mxCells for neurontree
+        dendroPane = navigator.createGraph(tree, pathList.size(), this.getWidth(), this.getHeight());       
+        initSelection(pathList);
         addTaskButtons();
         currNeuron = neuron;
         currCategory = REVIEW_CATEGORY.NEURON_REVIEW;
@@ -757,6 +785,10 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     }
     
     public void setSelectedAsReviewed(boolean review) {
+        if (currGroupIndex!=-1 && !selectMode) {
+            ReviewGroup currGroup = groupList.get(currGroupIndex);
+            currGroup.setReviewed(true);
+        }
         Object[] guiCells = new Object[selectedPoints.size()];        
         List<Long> annotationList = new ArrayList<>();
         for (int i=0; i<selectedPoints.size(); i++) {
@@ -770,30 +802,22 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         } else {
             navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.OPEN);  
         }
-        if (annManager==null)
-            annManager = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         annManager.setBranchReviewed(currNeuron, annotationList);
         
-        clearSelection();
-    }
-
-    private void setNeuronBranchReviewed(ReviewGroup group) {
-        group.setReviewed(true);
-        List<ReviewPoint> pointList = group.getPointList();
-        List<Long> annotationList = new ArrayList<>();
-        Object[] guiCells = new Object[pointList.size()];
-        for (int i = 0; i < pointList.size(); i++) {
-            ReviewPoint point = pointList.get(i);
-            NeuronTree pointData = (NeuronTree) point.getDisplay();
-            pointData.setReviewed(true);
-            annotationList.add(pointData.getAnnotationId());
-            guiCells[i] = pointData.getGUICell();
+        // update persistence
+        if (currTask!=null) {
+            List<TmReviewItem> groups = currTask.getReviewItems();
+            for (TmReviewItem group : groups) {
+                if (!selectMode && currGroupIndex!=-1 && Integer.parseInt(group.getName())==currGroupIndex) {
+                    ((TaskReviewTableModel)taskReviewTable.getModel()).updateTask(currTask);
+                    this.createNewTask();
+                    break;
+                } else {
+                    // need to add logic for individual points
+                }
+            }
         }
-        navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.REVIEWED);
-        if (annManager==null)
-            annManager = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        annManager.setBranchReviewed(currNeuron, annotationList);
-
+        clearSelection();
     }
 
     /**
@@ -978,6 +1002,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
      * retrieve all review tasks 
      */
     public List<TmReviewTask> retrieveTasks () {
+        if (annManager==null)
+            this.close();
         List<TmReviewTask> reviewTasks = null;
         TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         try {
@@ -987,11 +1013,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 String ref = task.getWorkspaceRef();
                 ref = ref.replace("TmWorkspace#","");
                 // cheat since I didn't want to update the model for a patch
-                if (annManager==null) {
-                    annManager = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-                }
                 if (Long.parseLong(ref) == annManager.getCurrentWorkspace().getId()) {
-                    addTaskToReviewTable(task, tableModel);
+                    tableModel.addReviewTask(task);
                 }
             }
         } catch (Exception ex) {
@@ -1000,52 +1023,25 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         return reviewTasks;        
     }
 
-    public void addTaskToReviewTable(TmReviewTask task, TaskReviewTableModel tableModel) {
-        JButton loadTaskButton = new JButton("");
-        loadTaskButton.setIcon(SimpleIcons.getIcon("open_action.png"));
-
-        int newRowIndex = tableModel.getRowCount();
-        loadTaskButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                loadReviewTask(task);
-            }
-        });
-        JButton deleteTaskButton = new JButton("");
-        deleteTaskButton.setIcon(SimpleIcons.getIcon("delete.png"));
-        deleteTaskButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                tableModel.deleteTask(task, newRowIndex);
-            }
-        });
-        taskActionItemsToolbar = new JToolBar();
-        taskActionItemsToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
-        taskActionItemsToolbar.add(loadTaskButton);
-        taskActionItemsToolbar.add(deleteTaskButton);
-        tableModel.addReviewTask(task, taskActionItemsToolbar);
-    }
-
     /**
      * loads the review task from the review table into the dendrogram view.
      * @param reviewTask
      */
     public void loadReviewTask (TmReviewTask reviewTask) {
-        if (annManager==null)
-            annManager = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         if (dendroContainerPanel!=null) {
             dendroContainerPanel.removeAll();
         }
         List<TmReviewItem> itemList = reviewTask.getReviewItems();
-        if (itemList.size()>0 && reviewTask.getCategory().equals(REVIEW_CATEGORY.NEURON_REVIEW.toString())) {
-            TmNeuronReviewItem sample = (TmNeuronReviewItem)itemList.get(0);
+        if (itemList.size() > 0 && reviewTask.getCategory().equals(REVIEW_CATEGORY.NEURON_REVIEW.toString())) {
+            TmNeuronReviewItem sample = (TmNeuronReviewItem) itemList.get(0);
             NeuronTree root = annManager.generateNeuronTreeForReview(sample.getNeuronId());
-            List<List<PointDisplay>> pathList = generatePlayList (root);
+            List<List<PointDisplay>> pathList = generatePlayList(root);
 
-            loadPointList (pathList);
+            loadPointList(pathList);
 
             // generate gui and mxCells for neurontree
-            dendroPane = navigator.createGraph(root, pathList.size(), this.getWidth(), this.getHeight()/2);
+            dendroPane = navigator.createGraph(root, pathList.size(), this.getWidth(), this.getHeight() / 2);
+            initSelection(pathList);
             addTaskButtons();
 
             currNeuron = annManager.getAnnotationModel().getNeuronFromNeuronID(sample.getNeuronId());
@@ -1057,16 +1053,29 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                     TmNeuronReviewItem neuronItem = (TmNeuronReviewItem) item;
                     Long pathRootAnnotationId = Long.parseLong((String) neuronItem.getReviewItems().get(0));
 
-                    for (ReviewGroup group : groupList) {
+                    for (int i = 0; i < groupList.size(); i++) {
+                        ReviewGroup group = groupList.get(i);
+                        currGroupIndex = i;
                         ReviewPoint pathRoot = group.getPointList().get(0);
                         if (((NeuronTree) pathRoot.getDisplay()).getAnnotationId().longValue() == pathRootAnnotationId.longValue()
                                 && neuronItem.getReviewItems().size() == group.getPointList().size()) {
-                            this.setNeuronBranchReviewed(group);
+                            for (ReviewPoint point : group.getPointList()) {
+                                selectedPoints.add(point.getDisplay());
+                            }
+                            setSelectedAsReviewed(true);
                         }
+                        selectedPoints.clear();
                     }
                 }
             }
+            
+            currGroupIndex = 0;
+            selectBranch(0);
+
+            navigator.addCellListener(this);
+            repaint();
         }
+        currTask = reviewTask;
     }
     
     /**
@@ -1080,12 +1089,14 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         if (currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
             currTask.setTitle(currNeuron.getName());
         }
-        for (ReviewGroup branch: groupList) {                      
+        for (int i=0; i<groupList.size(); i++) {
+            ReviewGroup branch = groupList.get(i);                
              TmReviewItem reviewItem = null;
              switch (currCategory) {
                  case NEURON_REVIEW:        
                      reviewItem = new TmNeuronReviewItem();
                      ((TmNeuronReviewItem)reviewItem).setNeuronId(currNeuron.getId()); 
+                     reviewItem.setName(Integer.toString(i));
                      for (ReviewPoint point : branch.getPointList()) {
                          reviewItem.addReviewItem(((NeuronTree)point.getDisplay()).getAnnotationId());
                      }
@@ -1106,7 +1117,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         try {
             TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
             currTask = persistenceMgr.save(currTask);
-            addTaskToReviewTable(currTask,  (TaskReviewTableModel)taskReviewTable.getModel());
+            ((TaskReviewTableModel)taskReviewTable.getModel()).addReviewTask(currTask);
             ((TaskReviewTableModel)taskReviewTable.getModel()).fireTableDataChanged();
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
@@ -1142,7 +1153,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
-    }
+    }   
     
     class TaskReviewTableModel extends AbstractTableModel {
         String[] columnNames = {"Name",
@@ -1150,62 +1161,57 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                                 "Owner",
                                 "Date",
                                 "% Complete",
-                                ""};
+                                "", ""};
         List<List<Object>> data = new ArrayList<List<Object>>();
         
         public int getColumnCount() {
             return columnNames.length;
-        }
+        }        
 
         public int getRowCount() {
             return data.size();
+        }
+        
+        public void clear() {
+            data = new ArrayList<List<Object>>();
         }
 
         public String getColumnName(int col) {
             return columnNames[col];
         }
-        
+       
         // get tmReviewTask stored at end of row
         public TmReviewTask getReviewTaskAtRow (int row) {
-            return (TmReviewTask)data.get(row).get(columnNames.length-2);
+            return (TmReviewTask)data.get(row).get(7);
         }
 
         public Object getValueAt(int row, int col) {
-            if (col<6) {
-                return data.get(row).get(col);
-            } else if (col==COLUMN_LOADTASK) {
-                return loadTaskIcon;
-            } else if (col==COLUMN_DELETETASK) {
-                return deleteTaskIcon;
-            }
-            return null;
+            return data.get(row).get(col);
         }
 
         public Class getColumnClass(int c) {
             return (getValueAt(0, c)==null?String.class:getValueAt(0,c).getClass());
         }
         
-        public void addReviewTask(TmReviewTask reviewTask, JToolBar taskActions) {
+        public void addReviewTask(TmReviewTask reviewTask) {
             List row = new ArrayList<Object>();
             row.add(reviewTask.getTitle());
             row.add(reviewTask.getCategory());
-            String workspace = reviewTask.getWorkspaceRef();
-            if (workspace != null) {
-                workspace = workspace.replaceAll("TmWorkspace#", "");
-            }
-            row.add(workspace);
             row.add(reviewTask.getOwnerKey());
             row.add(reviewTask.getCreationDate());
-            int completed = 0;
+            float completed = 0;
             if (reviewTask.getReviewItems().size() > 0) {
                 for (TmReviewItem reviewItem : reviewTask.getReviewItems()) {
                     completed += reviewItem.isReviewed() ? 1 : 0;
                 }
-                row.add(completed / reviewTask.getReviewItems().size());
+                row.add(100*completed / reviewTask.getReviewItems().size());
             }
+            row.add(loadTaskIcon);
+            row.add(deleteTaskIcon);
             row.add(reviewTask);
 
             data.add(row);
+            this.fireTableDataChanged();
         }
 
         public void deleteTask(TmReviewTask task, int deletedRow) {
@@ -1214,6 +1220,25 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                  persistenceMgr.remove(task);
                  data.remove(deletedRow);
                  fireTableRowsDeleted(deletedRow, deletedRow);
+             } catch (Exception ex) {
+                 Exceptions.printStackTrace(ex);
+             }
+        }
+        
+        public void updateTask(TmReviewTask task) {
+             try {
+                 for (int i=0;i<data.size(); i++) {
+                     TmReviewTask dataTask = (TmReviewTask)data.get(i).get(7);
+                     if (dataTask.getId()==task.getId()) {
+                         TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+                         persistenceMgr.remove(task); 
+                         data.remove(i);
+                         fireTableRowsDeleted(i, i);                         
+                     }
+                 }
+                 
+                 
+                 
              } catch (Exception ex) {
                  Exceptions.printStackTrace(ex);
              }
