@@ -1,3 +1,8 @@
+// 7.24
+  
+Task Workflow View
+* Fixed issues with drift and reviewed branches not showing in Horta
+
 // 7.23.3
 
 Data Browser

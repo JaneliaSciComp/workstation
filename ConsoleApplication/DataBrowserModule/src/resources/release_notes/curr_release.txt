@@ -1,5 +1,8 @@
-// 7.24
+// 7.25
   
 Task Workflow View
-* Fixed issues with drift and reviewed branches not showing in Horta
+* Added automatic sync on created tasks
+* Added create task button on task review table
+* Added filters for tasks based off workflow
+* Fixed progress tracking 
 
