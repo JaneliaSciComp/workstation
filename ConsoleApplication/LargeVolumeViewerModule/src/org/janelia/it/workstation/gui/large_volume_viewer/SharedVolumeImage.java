@@ -111,6 +111,7 @@ public class SharedVolumeImage implements VolumeImage3d {
     public boolean loadURL(URL volumeBaseURL) {
         // Sanity check before overwriting current view                                                                                                                                                                                                                                                                     
         if (volumeBaseURL == null) {
+            LOG.warn("volumeBaseURL is null");
             return false;
         }
 
