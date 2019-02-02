@@ -80,7 +80,7 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
     public void storeSettings(WizardDescriptor wiz) {
         ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 2);
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
-        state.setSplitChannels(getComponent().isSplitChannels());
+        state.setSplitChannels(getComponent().isSplitChannels() || getComponent().getOutputExtensions().containsValue("nrrd"));
         state.setOutputExtensions(getComponent().getOutputExtensions());
         // Updated serialized state
         FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", state.getOutputExtensionString());
