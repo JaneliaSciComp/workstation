@@ -168,7 +168,6 @@ public class DownloadFileItem {
                 targetLocalPath = downloadsDir.resolve(targetRelativePath);
                 log.debug("Target path: {}", targetLocalPath.toString());
                 log.debug("Target extension: {}", this.targetExtension);
-                if (i>1000) throw new RuntimeException("Too many file duplicates");
                 i++;
             }
             // Deduplicate file names by adding _2, _3, etc

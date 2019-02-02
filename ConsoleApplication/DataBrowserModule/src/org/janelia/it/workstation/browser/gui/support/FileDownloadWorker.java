@@ -108,21 +108,15 @@ public class FileDownloadWorker {
                 String sourceFilePath = downloadItem.getSourceFile();
                 
                 log.info("Converting {} to {} (splitChannels={})",sourceFilePath,targetExtension,downloadItem.isSplitChannels());
-                
-                Task task;
-                if (downloadItem.isSplitChannels()) {
-                    HashSet<TaskParameter> taskParameters = new HashSet<>();
-                    taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
-                    taskParameters.add(new TaskParameter("output extension", targetExtension, null));
-                    task = StateMgr.getStateMgr().submitJob("ConsoleSplitChannels", "Split Channels: "+objectName, taskParameters);
-                }
-                else {
-                    HashSet<TaskParameter> taskParameters = new HashSet<>();
-                    taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
-                    taskParameters.add(new TaskParameter("output extension", targetExtension, null));
-                    task = StateMgr.getStateMgr().submitJob("ConsoleConvertFile", "Convert: "+objectName, taskParameters);
-                }
 
+                HashSet<TaskParameter> taskParameters = new HashSet<>();
+                taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
+                taskParameters.add(new TaskParameter("output extension", targetExtension, null));
+                if (downloadItem.isSplitChannels()) {
+                    taskParameters.add(new TaskParameter("split channels", "true", null));
+                }
+                Task task = StateMgr.getStateMgr().submitJob("ConsoleConvertFile", "Convert: "+objectName, taskParameters);
+                
                 TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
 
                     @Override
