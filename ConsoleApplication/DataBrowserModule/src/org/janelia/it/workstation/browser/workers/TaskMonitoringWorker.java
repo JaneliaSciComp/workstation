@@ -62,7 +62,11 @@ public class TaskMonitoringWorker extends BackgroundWorker {
 
             while (true) {
                 this.task = StateMgr.getStateMgr().getTaskById(taskId);
-                setStatus(task.getLastEvent().getDescription());
+                
+                String lastStatus = task.getLastEvent().getDescription();
+                if (lastStatus!=null) {
+                    setStatus("Task running: "+lastStatus);
+                }
 
                 if (handle==null) {
                     handle = ProgressHandleFactory.createHandle(task.getDisplayName(), new AbstractAction() {
@@ -78,8 +82,6 @@ public class TaskMonitoringWorker extends BackgroundWorker {
                     handle.start();
                     handle.switchToIndeterminate();
                 }
-
-                Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
 
                 if (task==null) {
                     handle.finish();

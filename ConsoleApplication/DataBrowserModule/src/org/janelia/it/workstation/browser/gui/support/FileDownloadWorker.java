@@ -16,10 +16,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.model.entity.json.JsonTask;
+import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.it.jacs.model.tasks.utility.GenericTask;
+import org.janelia.it.jacs.model.user_data.Node;
+import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadFileItem;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;
@@ -118,9 +123,16 @@ public class FileDownloadWorker {
                 if (downloadItem.isSplitChannels()) {
                     taskParameters.add(new TaskParameter("split channels", "true", null));
                 }
-                Task task = StateMgr.getStateMgr().submitJob("ConsoleSplitAndConvert", "Convert: "+objectName, taskParameters);
+
+                String processName = "ConsoleSplitAndConvert";
                 
-                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
+                Task task = new GenericTask(new HashSet<Node>(), AccessManager.getSubjectKey(), 
+                        new ArrayList<Event>(), taskParameters, processName, "Convert: "+objectName);
+                task.setObjectId(-1L);
+                JsonTask jsonTask = new JsonTask(task);
+                Long taskId = DomainMgr.getDomainMgr().getModel().dispatchTask(jsonTask, processName);
+                
+                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(taskId) {
 
                     @Override
                     public String getName() {
@@ -130,13 +142,11 @@ public class FileDownloadWorker {
                     @Override
                     public void doStuff() throws Exception {
     
-                        setStatus("Converting file on compute cluster");
+                        setStatus("Queueing job on compute cluster");
                         
                         super.doStuff();
                         
                         throwExceptionIfCancelled();
-    
-                        setStatus("Parsing results");
     
                         // Since there is no way to log task output vars, we use a convention where the last message
                         // will contain the output files.
@@ -179,7 +189,7 @@ public class FileDownloadWorker {
                         }
     
                         throwExceptionIfCancelled();
-                        setStatus("Done");
+                        setStatus("Download complete");
                     }
     
                     @Override
