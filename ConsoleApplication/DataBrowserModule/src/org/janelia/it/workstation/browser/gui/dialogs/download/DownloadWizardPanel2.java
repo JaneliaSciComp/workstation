@@ -8,9 +8,13 @@ import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
 
+    private static final Logger log = LoggerFactory.getLogger(DownloadWizardPanel2.class);
+    
     private final ChangeSupport changeSupport = new ChangeSupport(this);
     private WizardDescriptor wiz;
     
@@ -80,7 +84,8 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
     public void storeSettings(WizardDescriptor wiz) {
         ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 2);
         DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
-        state.setSplitChannels(getComponent().isSplitChannels() || getComponent().getOutputExtensions().containsValue("nrrd"));
+        boolean splitChannels = getComponent().isSplitChannels();
+        state.setSplitChannels(splitChannels);
         state.setOutputExtensions(getComponent().getOutputExtensions());
         // Updated serialized state
         FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", state.getOutputExtensionString());

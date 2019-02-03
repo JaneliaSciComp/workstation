@@ -22,6 +22,7 @@ import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.model.domain.interfaces.HasFilepath;
 import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.interfaces.HasImageStack;
 import org.janelia.model.domain.interfaces.IsAligned;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronFragment;
@@ -70,6 +71,7 @@ public class DownloadFileItem {
     private Path targetLocalPath;
     private String sourceExtension;
     private String targetExtension;
+    private String chanspec;
     private boolean is3d;
 
     private String folderPath;
@@ -121,6 +123,17 @@ public class DownloadFileItem {
                     sourceFilePath = getStaticPath(fragment, fileType);
                 }
             }
+        }
+
+        // Get channel spec for H5J encoding
+        if (fileProvider instanceof HasImageStack) {
+            HasImageStack stack = (HasImageStack)fileProvider;
+            this.chanspec = stack.getChannelSpec();
+        }
+        else if (fileProvider instanceof LSMImage) {
+            // TODO: make LSMImage implement HasImageStack
+            LSMImage stack = (LSMImage)fileProvider;
+            this.chanspec = stack.getChanSpec();
         }
         
         if (sourceFilePath==null) {
@@ -209,7 +222,7 @@ public class DownloadFileItem {
         
         keyValues.put(ATTR_LABEL_EXTENSION, targetExtension);
         log.debug("  {}: {}", ATTR_LABEL_EXTENSION, targetExtension);
-
+        
         if (fileProvider instanceof HasAnatomicalArea) {
             HasAnatomicalArea aaResult = (HasAnatomicalArea)fileProvider;
             keyValues.put(ATTR_LABEL_ANATOMICAL_AREA, aaResult.getAnatomicalArea());
@@ -358,7 +371,11 @@ public class DownloadFileItem {
     public boolean is3d() {
         return is3d;
     }
-    
+
+    public String getChanspec() {
+        return chanspec;
+    }
+
     public boolean hasError() {
         return errorMessage != null;
     }

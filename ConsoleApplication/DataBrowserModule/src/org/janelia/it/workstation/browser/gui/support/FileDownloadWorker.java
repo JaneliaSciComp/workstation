@@ -76,10 +76,12 @@ public class FileDownloadWorker {
                     // no conversion needed, simply transfer the file
                     convertOnServer = false;
                 } 
-                else if (Utils.EXTENSION_LSM.equals(targetExtension)) {
-                    // Just need to convert bz2 to lsm, which we can do locally
-                    convertOnServer = false;
-                }
+                // Stream decompression is very slow now. 7.24MB/s when I last tested on Mac. 
+                // We can rely on server-side decompression until this can be addressed.
+//                else if (Utils.EXTENSION_LSM.equals(targetExtension)) {
+//                    // Just need to convert bz2 to lsm, which we can do locally
+//                    convertOnServer = false;
+//                }
             }
             
             if (convertOnServer) {
@@ -112,10 +114,11 @@ public class FileDownloadWorker {
                 HashSet<TaskParameter> taskParameters = new HashSet<>();
                 taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
                 taskParameters.add(new TaskParameter("output extension", targetExtension, null));
+                taskParameters.add(new TaskParameter("chan spec", downloadItem.getChanspec(), null));
                 if (downloadItem.isSplitChannels()) {
                     taskParameters.add(new TaskParameter("split channels", "true", null));
                 }
-                Task task = StateMgr.getStateMgr().submitJob("ConsoleConvertFile", "Convert: "+objectName, taskParameters);
+                Task task = StateMgr.getStateMgr().submitJob("ConsoleSplitAndConvert", "Convert: "+objectName, taskParameters);
                 
                 TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
 
