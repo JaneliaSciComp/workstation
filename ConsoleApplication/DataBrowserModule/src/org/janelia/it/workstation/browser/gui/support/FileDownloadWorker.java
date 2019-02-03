@@ -25,6 +25,7 @@ import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadFileItem;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;
@@ -124,17 +125,11 @@ public class FileDownloadWorker {
                     taskParameters.add(new TaskParameter("split channels", "true", null));
                 }
 
-                String processName = "ConsoleSplitAndConvert";
-                
-                Task task = new GenericTask(new HashSet<Node>(), AccessManager.getSubjectKey(), 
-                        new ArrayList<Event>(), taskParameters, processName, "Convert: "+objectName);
-                task.setObjectId(-1L);
-                JsonTask jsonTask = new JsonTask(task);
-                Long taskId = DomainMgr.getDomainMgr().getModel().dispatchTask(jsonTask, processName);
+                Task task = StateMgr.getStateMgr().submitJob("ConsoleSplitAndConvert", "Convert: "+objectName, taskParameters);
                 
                 String workerName = "Converting and downloading " + downloadItem.getTargetFile().getFileName();;
                 
-                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(taskId) {
+                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
                     
                     @Override
                     public void doStuff() throws Exception {
