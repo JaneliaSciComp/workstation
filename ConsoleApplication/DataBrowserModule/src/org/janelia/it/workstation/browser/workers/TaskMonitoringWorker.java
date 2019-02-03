@@ -16,7 +16,6 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.ProgressTopComponent;
 import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.it.workstation.browser.events.workers.WorkerChangedEvent;
 import org.janelia.it.workstation.browser.events.workers.WorkerStartedEvent;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.netbeans.api.progress.ProgressHandle;
@@ -30,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TaskMonitoringWorker extends BackgroundWorker {
+public class TaskMonitoringWorker extends NamedBackgroundWorker {
 
     private static final Logger log = LoggerFactory.getLogger(TaskMonitoringWorker.class);
     
@@ -63,9 +62,13 @@ public class TaskMonitoringWorker extends BackgroundWorker {
             while (true) {
                 this.task = StateMgr.getStateMgr().getTaskById(taskId);
                 
+                if (getName()==null) {
+                    setName(task.getDisplayName());
+                }
+                
                 String lastStatus = task.getLastEvent().getDescription();
                 if (lastStatus!=null) {
-                    setStatus("Task running: "+lastStatus);
+                    setStatus(lastStatus);
                 }
 
                 if (handle==null) {
@@ -128,12 +131,6 @@ public class TaskMonitoringWorker extends BackgroundWorker {
 
     public Task getTask() {
         return task;
-    }
-    
-    @Override
-    public String getName() {
-        if (task==null) return "None";
-        return task.getDisplayName();
     }
     
     /**

@@ -132,16 +132,14 @@ public class FileDownloadWorker {
                 JsonTask jsonTask = new JsonTask(task);
                 Long taskId = DomainMgr.getDomainMgr().getModel().dispatchTask(jsonTask, processName);
                 
+                String workerName = "Converting and downloading " + downloadItem.getTargetFile().getFileName();;
+                
                 TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(taskId) {
-
-                    @Override
-                    public String getName() {
-                        return "Downloading " + downloadItem.getTargetFile().getFileName().toString();
-                    }
                     
                     @Override
                     public void doStuff() throws Exception {
     
+                        setName(workerName);
                         setStatus("Queueing job on compute cluster");
                         
                         super.doStuff();
@@ -189,7 +187,7 @@ public class FileDownloadWorker {
                         }
     
                         throwExceptionIfCancelled();
-                        setStatus("Download complete");
+                        setName(workerName.replace("Converting and downloading", "Successfully downloaded"));
                     }
     
                     @Override
@@ -215,7 +213,7 @@ public class FileDownloadWorker {
                     int success = 0;
                     int i = 0;
 
-                    setName("Download "+ toTransfer.size() +" items");
+                    setName(createName(toTransfer));
                     
                     for(DownloadFileItem downloadItem : toTransfer) {
                         String filename = downloadItem.getTargetFile().getFileName().toString();
@@ -261,7 +259,7 @@ public class FileDownloadWorker {
                         setFinalStatus("Successfully downloaded "+success+" items. Failed to download "+errors+" items.");
                     }
                     else {
-                        setFinalStatus("Successfully downloaded all items.");
+                        setName(createName(toTransfer).replace("Download", "Successfully downloaded"));
                     }
                 }
     
@@ -291,7 +289,7 @@ public class FileDownloadWorker {
     
     private String createName(List<DownloadFileItem> toTransfer) {
         if (toTransfer.size()==1) {
-            return toTransfer.get(0).getTargetFile().getFileName().toString();
+            return "Download "+toTransfer.get(0).getTargetFile().getFileName().toString();
         }
         else {
             return "Download "+ toTransfer.size() +" items";

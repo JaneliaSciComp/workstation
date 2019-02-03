@@ -708,23 +708,30 @@ public class Utils {
                 backgroundWorker = (BackgroundWorker) worker;
                 backgroundStatus = backgroundWorker.getStatus();
                 if (backgroundStatus == null) {
-                    backgroundStatus = "copying file (";
+                    backgroundStatus = "Copying file - ";
                 } else {
-                    backgroundStatus = backgroundStatus + " (";
+                    backgroundStatus = backgroundStatus + " - ";
                 }
             }
         }
+        final BackgroundWorker finalBackgroundWorker = backgroundWorker;
+        final String finalBackgroundStatus = backgroundStatus;
 
         final long startTime = System.currentTimeMillis();
         final long estimatedLength = length == null ? 1 : estimatedCompressionFactor * length;
         long totalBytesWritten = 0;
-        long totalMegabytesWritten;
         
         if (length != null) {
-            // TODO: add progress indication
             // 30 MB/s on Windows (Windows to NAS)
             CallbackByteChannel rbc = new CallbackByteChannel(Channels.newChannel(input), (long bytesWritten) -> {
                 worker.setProgress(bytesWritten, estimatedLength);
+                if (finalBackgroundWorker != null) {
+                    final long elapsedTime = System.currentTimeMillis() - startTime;
+                    TransferSpeed speed = new TransferSpeed(elapsedTime, bytesWritten);
+                    String message = String.format("Wrote %.2f %s (%.2f MB/s)", 
+                            speed.getAmountWritten(), speed.getAmountUnits(), speed.getMbps());
+                    finalBackgroundWorker.setStatus(finalBackgroundStatus + message);
+                }
             });
             output.getChannel().transferFrom(rbc, 0, length);
             totalBytesWritten = rbc.getTotalBytesRead();
@@ -766,32 +773,42 @@ public class Utils {
                             }
         
                             if (backgroundWorker != null) {
-                                totalMegabytesWritten = totalBytesWritten / ONE_MEGABYTE;
-                                backgroundWorker.setStatus(backgroundStatus + totalMegabytesWritten + " Mb written)");
+                                final long elapsedTime = System.currentTimeMillis() - startTime;
+                                TransferSpeed speed = new TransferSpeed(elapsedTime, totalBytesWritten);
+                                String message = String.format("Wrote %.2f %s (%.2f MB/s)", 
+                                        speed.getAmountWritten(), speed.getAmountUnits(), speed.getMbps());
+                                finalBackgroundWorker.setStatus(finalBackgroundStatus + message);
                             }
                         }
                     }
                 }
             }
         }
-        
-        if (worker != null) {
 
-            if (hasProgress) {
-                worker.setProgress(totalBytesWritten, totalBytesWritten);
-                if (backgroundWorker != null) {
-                    totalMegabytesWritten = totalBytesWritten / ONE_MEGABYTE;
-                    backgroundWorker.setStatus(backgroundStatus + totalMegabytesWritten + " Mb written)");
-                }
+        if (log.isInfoEnabled()) {
+            final long elapsedTime = System.currentTimeMillis() - startTime;
+            TransferSpeed speed = new TransferSpeed(elapsedTime, totalBytesWritten);
+            String message = String.format("Wrote %.2f %s in %.2f seconds (%.2f MB/s)", 
+                    speed.getAmountWritten(), speed.getAmountUnits(), speed.getElapsedSeconds(), speed.getMbps());
+            log.info(message);
+            if (backgroundWorker != null) {
+                backgroundWorker.setStatus(message);
             }
         }
 
-        final long elapsedTime = System.currentTimeMillis() - startTime;
+        return totalBytesWritten;
+    }
+    
+    private static class TransferSpeed {
+        
+        private BigDecimal mbps;
+        private BigDecimal amountWritten;
+        private String amountUnits;
+        private BigDecimal elapsedSeconds;
 
-        if (log.isInfoEnabled()) {
-            final BigDecimal elapsedSeconds = divideAndScale(elapsedTime, 1000, 1);
-            BigDecimal amountWritten;
-            String amountUnits;
+        public TransferSpeed(long elapsedTime, long totalBytesWritten) {
+
+            elapsedSeconds = divideAndScale(elapsedTime, 1000, 1);
             if (totalBytesWritten > ONE_GIGABYTE) {
                 amountWritten = divideAndScale(totalBytesWritten, ONE_GIGABYTE, 1);
                 amountUnits = "GB";
@@ -806,13 +823,26 @@ public class Utils {
             }
             
             BigDecimal mbWritten = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1);
-            BigDecimal mbs = elapsedSeconds.intValue()==0 ? mbWritten : mbWritten.divide(elapsedSeconds, 2, RoundingMode.HALF_UP);
-            log.info("Wrote {} {} in {} seconds ({} MB/s)", amountWritten, amountUnits, elapsedSeconds, mbs);
+            mbps = elapsedSeconds.intValue()==0 ? mbWritten : mbWritten.divide(elapsedSeconds, 2, RoundingMode.HALF_UP);
+        }
+        
+        public BigDecimal getElapsedSeconds() {
+            return elapsedSeconds;
         }
 
-        return totalBytesWritten;
-    }
+        public BigDecimal getAmountWritten() {
+            return amountWritten;
+        }
 
+        public String getAmountUnits() {
+            return amountUnits;
+        }
+
+        public BigDecimal getMbps() {
+            return mbps;
+        }
+    }
+    
     private static BigDecimal divideAndScale(double numerator, double denominator, int scale) {
         return new BigDecimal(numerator / denominator).setScale(scale, BigDecimal.ROUND_HALF_UP);
     }
