@@ -1,8 +1,8 @@
-// 7.25
+// 7.26
   
-Task Workflow View
-* Added automatic sync on created tasks
-* Added create task button on task review table
-* Added filters for tasks based off workflow
-* Fixed progress tracking 
-
+Data Browser
+* Fixed download issues with file format conversions to TIFF
+* Added NRRD as an output format option, and removed MP4 
+* Improved the number of concurrent file format conversions
+* Improved progress indication for downloads
+* Greatly improved performance of lsm.bz2 decompression by moving it to the cluster
