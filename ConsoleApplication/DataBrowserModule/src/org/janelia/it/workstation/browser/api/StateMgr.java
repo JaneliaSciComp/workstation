@@ -357,7 +357,11 @@ public class StateMgr {
     }
     
     public Task submitJob(String processName, String displayName, HashSet<TaskParameter> parameters) throws Exception {
-        GenericTask task = new GenericTask(new HashSet<Node>(), AccessManager.getSubjectKey(), new ArrayList<Event>(),
+        return submitJob(AccessManager.getSubjectKey(), processName, displayName, parameters);
+    }
+    
+    public Task submitJob(String owner, String processName, String displayName, HashSet<TaskParameter> parameters) throws Exception {
+        GenericTask task = new GenericTask(new HashSet<Node>(), owner, new ArrayList<Event>(),
                 parameters, processName, displayName);
         JsonTask jsonTask = new JsonTask(task);
         Long taskId = DomainMgr.getDomainMgr().getModel().dispatchTask(jsonTask, processName);
