@@ -1,6 +1,8 @@
 // 7.26
   
 Data Browser
+* Generalized picking feature to every view. Click "Pick" to begin picking and then 
+  choose an export option from the drop down list. 
 * Fixed download issues with file format conversions to TIFF
 * Added NRRD as an output format option, and removed MP4 
 * Improved the number of concurrent file format conversions
