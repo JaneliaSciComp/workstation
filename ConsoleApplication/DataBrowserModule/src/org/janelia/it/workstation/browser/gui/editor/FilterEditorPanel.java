@@ -43,6 +43,7 @@ import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.dialogs.EditCriteriaDialog;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
@@ -124,6 +125,7 @@ public class FilterEditorPanel
 
     // State
     private DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+    private DomainObjectEditSelectionModel editSelectionModel = new DomainObjectEditSelectionModel();
     private FilterNode filterNode;
     private Filter filter;    
     private boolean dirty = false;
@@ -283,7 +285,7 @@ public class FilterEditorPanel
         getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
         getActionMap().put("enterAction", mySearchAction);
         
-        this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), null, this, this) {
+        this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), getEditSelectionModel(), this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
@@ -963,8 +965,13 @@ public class FilterEditorPanel
     }
 
     @Override
-    public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+    public DomainObjectSelectionModel getSelectionModel() {
         return selectionModel;
+    }
+
+    @Override
+    public DomainObjectEditSelectionModel getEditSelectionModel() {
+        return editSelectionModel;
     }
     
     @Override

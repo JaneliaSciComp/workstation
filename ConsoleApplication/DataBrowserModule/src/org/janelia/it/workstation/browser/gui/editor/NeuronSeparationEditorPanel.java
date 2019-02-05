@@ -26,6 +26,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.browser.events.selection.ChildPickingSupport;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
@@ -66,7 +67,7 @@ import com.google.common.eventbus.Subscribe;
  */
 public class NeuronSeparationEditorPanel 
         extends JPanel 
-        implements SampleResultEditor, SearchProvider, PreferenceSupport {
+        implements SampleResultEditor, SearchProvider, PreferenceSupport, ChildPickingSupport<DomainObject, Reference> {
 
     private final static Logger log = LoggerFactory.getLogger(NeuronSeparationEditorPanel.class);
 
@@ -519,6 +520,11 @@ public class NeuronSeparationEditorPanel
         return selectionModel;
     }
 
+    @Override
+    public DomainObjectEditSelectionModel getEditSelectionModel() {
+        return editSelectionModel;
+    }
+    
     @Override
     public Long getCurrentContextId() {
         Object parentObject = getSelectionModel().getParentObject();

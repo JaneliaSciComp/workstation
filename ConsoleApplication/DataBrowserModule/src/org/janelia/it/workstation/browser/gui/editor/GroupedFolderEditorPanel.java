@@ -34,7 +34,7 @@ import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
-import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
@@ -59,8 +59,8 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.interfaces.HasFilepath;
 import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.workspace.ProxyGroup;
 import org.janelia.model.domain.workspace.GroupedFolder;
+import org.janelia.model.domain.workspace.ProxyGroup;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,6 +94,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
     
     // State
     private DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+    private DomainObjectEditSelectionModel editSelectionModel = new DomainObjectEditSelectionModel();
     private GroupedFolderNode groupedFolderNode;
     private GroupedFolder groupedFolder;
     private List<ProxyGroup> groups; // cached masks
@@ -159,7 +160,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
         groupScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         groupScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); 
         
-        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), null, this, this) {
+        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), getEditSelectionModel(), this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
@@ -674,8 +675,12 @@ public class GroupedFolderEditorPanel extends JPanel implements
     }
 
     @Override
-    public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+    public DomainObjectSelectionModel getSelectionModel() {
         return selectionModel;
+    }
+
+    public DomainObjectEditSelectionModel getEditSelectionModel() {
+        return editSelectionModel;
     }
 
     @Override

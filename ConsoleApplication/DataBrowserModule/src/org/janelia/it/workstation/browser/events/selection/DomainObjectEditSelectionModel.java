@@ -18,7 +18,6 @@ public class DomainObjectEditSelectionModel extends ChildSelectionModel<DomainOb
         Events.getInstance().postOnEventBus(new DomainObjectEditSelectionEvent(getSource(), domainObjects, select, clearAll, isUserDriven));
     }
     
-    
     @Override
     public Reference getId(DomainObject domainObject) {
         return Reference.createFor(domainObject);

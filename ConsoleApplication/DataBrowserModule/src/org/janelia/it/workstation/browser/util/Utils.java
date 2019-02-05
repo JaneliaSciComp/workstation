@@ -903,4 +903,20 @@ public class Utils {
         long diffInMillies = date2.getTime() - date1.getTime();
         return timeUnit.convert(diffInMillies, TimeUnit.MILLISECONDS);
     }
+    
+    public static File getOutputFile(String dir, String prefix, String extension) {
+        File defaultFile = new File(dir, prefix+"."+extension);
+
+        int i = 1;
+        while (defaultFile.exists() && i < 100000) {
+            defaultFile = new File(dir, prefix + "_" + i + extension);
+            i++;
+        }
+        
+        if (defaultFile.exists()) {
+            throw new RuntimeException("Could not create file, "+defaultFile+" already exists.");
+        }
+        
+        return defaultFile;
+    }
 }

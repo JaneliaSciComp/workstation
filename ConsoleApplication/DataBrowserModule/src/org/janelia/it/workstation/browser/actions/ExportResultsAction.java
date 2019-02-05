@@ -18,6 +18,7 @@ import org.janelia.it.workstation.browser.gui.listview.table.TableViewerPanel;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
+import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,13 +59,7 @@ public class ExportResultsAction<T,S> extends AbstractAction {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select File Destination");
         chooser.setFileSelectionMode(FileChooser.FILES_ONLY);
-        File defaultFile = new File(DEFAULT_EXPORT_DIR, "WorkstationSearchResults.xls");
-
-        int i = 1;
-        while (defaultFile.exists() && i < 10000) {
-            defaultFile = new File(DEFAULT_EXPORT_DIR, "WorkstationSearchResults_" + i + ".xls");
-            i++;
-        }
+        File defaultFile = Utils.getOutputFile(DEFAULT_EXPORT_DIR, "WorkstationSearchResults", "xls");
 
         chooser.setSelectedFile(defaultFile);
         chooser.setFileFilter(new FileFilter() {

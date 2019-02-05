@@ -14,7 +14,7 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
-import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
@@ -59,6 +59,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
 
     // State
     private DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+    private DomainObjectEditSelectionModel editSelectionModel = new DomainObjectEditSelectionModel();
     private TreeNodeNode treeNodeNode;
     private Node node;
     
@@ -70,7 +71,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
         
         setLayout(new BorderLayout());
         
-        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), null, this, this) {
+        resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), getEditSelectionModel(), this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
@@ -302,8 +303,13 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     }
     
     @Override
-    public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+    public DomainObjectSelectionModel getSelectionModel() {
         return selectionModel;
+    }
+
+    @Override
+    public DomainObjectEditSelectionModel getEditSelectionModel() {
+        return editSelectionModel;
     }
 
     @Override
