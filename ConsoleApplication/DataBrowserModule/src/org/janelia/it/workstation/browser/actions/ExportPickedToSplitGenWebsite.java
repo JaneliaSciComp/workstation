@@ -52,6 +52,7 @@ public class ExportPickedToSplitGenWebsite extends AbstractAction {
             JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
                     "Select some items with the checkboxes first.", 
                     "No items picked for export", JOptionPane.ERROR_MESSAGE);
+            return;
         }
         
         ActivityLogHelper.logUserAction("ExportPickedToSplitGenWebsite.doAction");
