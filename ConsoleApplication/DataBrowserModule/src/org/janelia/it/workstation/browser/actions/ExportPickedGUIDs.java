@@ -74,14 +74,14 @@ public class ExportPickedGUIDs extends AbstractAction {
     
     private void export(File destFile) throws Exception {
 
-        Set<Long> guids = new LinkedHashSet<>();
+        Set<String> guids = new LinkedHashSet<>();
         for (DomainObject domainObject : DomainMgr.getDomainMgr().getModel().getDomainObjects(refs)) {
-            guids.add(domainObject.getId());
+            guids.add(domainObject.toString());
         }
         
         try (FileWriter writer = new FileWriter(destFile)) {
             StringBuffer buf = new StringBuffer();
-            for (Long guid : guids) {
+            for (String guid : guids) {
                 buf.append(guid);
                 buf.append(NEW_LINE);
             }
