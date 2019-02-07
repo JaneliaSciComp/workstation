@@ -75,7 +75,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 
 /**
- * Action which brings up the Download wizard (or the legacy download dialog, if that preference is set). 
+ * Action which brings up the Download wizard. 
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
