@@ -1338,6 +1338,9 @@
                 <package>org.glassfish.jersey.internal.util.collection</package>
                 <package>org.glassfish.jersey.jackson</package>
                 <package>org.glassfish.jersey.jackson.internal</package>
+                <package>org.glassfish.jersey.jackson.internal.jackson</package>
+                <package>org.glassfish.jersey.jackson.internal.jackson.jaxrs</package>
+                <package>org.glassfish.jersey.jackson.internal.jackson.jaxrs.json</package>
                 <package>org.glassfish.jersey.jaxb.internal</package>
                 <package>org.glassfish.jersey.media.multipart</package>
                 <package>org.glassfish.jersey.media.multipart.file</package>
@@ -1607,11 +1610,12 @@
                 <package>org.janelia.model.domain.support</package>
                 <package>org.janelia.model.domain.tiledMicroscope</package>
                 <package>org.janelia.model.domain.workspace</package>
-                <package>org.janelia.model.rendering</package>
                 <package>org.janelia.model.sage</package>
                 <package>org.janelia.model.security</package>
                 <package>org.janelia.model.security.util</package>
                 <package>org.janelia.model.util</package>
+                <package>org.janelia.rendering</package>
+                <package>org.janelia.rendering.util</package>
                 <package>org.jaxen</package>
                 <package>org.jaxen.dom</package>
                 <package>org.jaxen.dom4j</package>
