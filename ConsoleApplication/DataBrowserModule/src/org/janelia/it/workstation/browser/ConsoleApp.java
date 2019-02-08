@@ -1,29 +1,14 @@
 package org.janelia.it.workstation.browser;
 
-import java.io.File;
-import java.security.ProtectionDomain;
-
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.FileMgr;
-import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
-import org.janelia.it.workstation.browser.api.ServiceMgr;
-import org.janelia.it.workstation.browser.api.SessionMgr;
-import org.janelia.it.workstation.browser.api.StateMgr;
-import org.janelia.it.workstation.browser.api.exceptions.FatalCommError;
+import org.janelia.it.workstation.browser.api.*;
 import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.api.lifecycle.GracefulBrick;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
-import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.ReleaseNotesDialog;
-import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog.ErrorType;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.ImageCache;
@@ -33,7 +18,9 @@ import org.openide.modules.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
+import javax.swing.*;
+import java.io.File;
+import java.security.ProtectionDomain;
 
 /**
  * This is the main class for the workstation client, invoked by the NetBeans Startup hook. 

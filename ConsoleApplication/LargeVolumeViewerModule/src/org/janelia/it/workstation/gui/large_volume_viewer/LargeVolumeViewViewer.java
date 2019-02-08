@@ -235,10 +235,10 @@ public class LargeVolumeViewViewer extends JPanel {
                             }
                         }
                         else {
-                            logger.info("Image data loading failed");
+                            logger.error("Image data loading failed");
                             JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
-                                    "Could not open sample entity for this workspace!",
-                                    "Could not open workspace",
+                                    "Could not open volume for this workspace!",
+                                    "Could not open volume",
                                     JOptionPane.ERROR_MESSAGE);
                         }
                         progress.finish();

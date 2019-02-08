@@ -51,7 +51,7 @@ public class Startup implements Runnable {
          *  300  FINEST      "trace"
          *       ALL
          */
-        System.setProperty("org.janelia.it.level", "FINE");
+        System.setProperty("org.janelia.it.level", "INFO");
         //System.setProperty("org.janelia.it.workstation.browser.gui.dialogs.download.level", "FINEST");
         
         try {
