@@ -92,8 +92,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 {
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
 
-    private static final String COMMON_USER_KEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
-    private static final String MOUSELIGHT_GROUP_KEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
+    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     // annotation model object
     private AnnotationModel annotationModel;
@@ -133,7 +132,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     //  at what seemed like a reasonable zoom level, and I experimented
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
-    private static final String SYSTEM_OWNER = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
 
     public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi,
         LargeVolumeViewerTranslator lvvTranslator, TileServer tileServer) {
@@ -302,7 +300,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     
     public boolean checkOwnership(TmNeuronMetadata neuron)  {
         if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
-            if (neuron.getOwnerKey().equals(SYSTEM_OWNER)) {
+            if (neuron.getOwnerKey().equals(TRACERS_GROUP)) {
                 try {
                     CompletableFuture<Boolean> future = annotationModel.getNeuronManager().requestOwnershipChange(neuron);
                     if (future == null) {
@@ -1414,7 +1412,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         Subject userSubject = AccessManager.getAccessManager().getActualSubject();
         String ownerKey = neuron.getOwnerKey();
-        if (ownerKey.equals(userSubject.getKey()) || ownerKey.equals(COMMON_USER_KEY) || isOwnershipAdmin()) {
+        if (ownerKey.equals(userSubject.getKey()) || ownerKey.equals(TRACERS_GROUP) || isOwnershipAdmin()) {
             SimpleWorker changer = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
@@ -1454,14 +1452,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return true;
         }
 
-        // check if user has admin role in mouselight group:
+        // check if user has admin role in tracers group:
         Subject subject = AccessManager.getAccessManager().getAuthenticatedSubject();
         if (subject==null) {
             return false;
         }
         if (subject instanceof User) {
             User user = (User)subject;
-            return user.getUserGroupRole(MOUSELIGHT_GROUP_KEY).equals(GroupRole.Admin);
+            return user.getUserGroupRole(TRACERS_GROUP).equals(GroupRole.Admin);
         }
         return false;
     }

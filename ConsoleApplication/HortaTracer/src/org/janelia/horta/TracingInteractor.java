@@ -1231,7 +1231,7 @@ public class TracingInteractor extends MouseAdapter
     
      public boolean checkOwnership(NeuronModel neuron) {
         // create a future to hopefully 
-        if (neuron.getOwnerKey().equals(ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim())) {
+        if (neuron.getOwnerKey().equals(ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim())) {
             CompletableFuture<Boolean> future = defaultWorkspace.changeNeuronOwnership(neuron.getNeuronId());
             if (future==null) 
                 return false;

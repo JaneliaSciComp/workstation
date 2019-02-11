@@ -1,70 +1,61 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.dialogs;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javax.swing.DefaultComboBoxModel;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
 
 /**
  *
  * @author schauderd
  */
 
-
 public class CommonDialogItems {
-    // these are the people we usually want to assign neuron ownership to; it's
-    //  a mix of tracers, devs, and project leaders, but it's a smaller list than
-    //  all the people in mouselight, so we hard-code it here
-     private static Set<String> mouselightOwners = new HashSet<>(Arrays.asList(
-            "ackermand",
-            "arshadic",
-            "base",
-            "blaker",
-            "chandrashekarj",
-            "dossantosb",
-            "elsayeda",
-            "ferreirat",
-            "moharr",
-            "mouselight",
-            "olbrisd",
-            "ramirezd2",
-            "rokickik",
-            "schauderd",
-            "taylora",
-            "weldonm",
-            "winnubstj",
-            "zafara"
-    ));
+    private static final String ACTIVE_TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.activetracersgroup").trim();
+    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     /**
      * given a combo model box, populate it with a list of all Subjects (people and groups) from
-     * the db, or restrict to the custom mouselight subjects listed above; used in mouselight
-     * dialogs when presenting options for ownership and other permissions
+     * the db, or restrict to the member of the tracers or active tracers group;
+     * this dialog is used in dialogs when presenting options for neuron ownership and other permissions
      */
-    public static void updateOwnerList(DefaultComboBoxModel comboBoxModel, boolean mouselightOnly) {
+    public static void updateOwnerList(DefaultComboBoxModel comboBoxModel, ChangeNeuronOwnerDialog.UserFilter filter) {
         comboBoxModel.removeAllElements();
 
         List<Subject> subjects = new ArrayList<>();
         try {
-            subjects = DomainMgr.getDomainMgr().getSubjects();
+            if (filter != ChangeNeuronOwnerDialog.UserFilter.NONE) {
+                String group = "";
+                if (filter == ChangeNeuronOwnerDialog.UserFilter.ACTIVE_TRACERS) {
+                    group = ACTIVE_TRACERS_GROUP;
+                } else if (filter == ChangeNeuronOwnerDialog.UserFilter.TRACERS) {
+                    group = TRACERS_GROUP;
+                }
+                List<User> users = DomainMgr.getDomainMgr().getUsersInGroup(group);
+                subjects = users.stream()
+                    .map(u -> (Subject) u)
+                    .collect(Collectors.toList());
+
+                // in either case, add back in the tracer group:
+                Subject tracersGroup = DomainMgr.getDomainMgr().getSubjectFacade().getSubjectByNameOrKey(TRACERS_GROUP);
+                if (tracersGroup != null) {
+                    subjects.add(tracersGroup);
+                }
+            } else {
+                // filter = NONE = all users and groups
+                subjects = DomainMgr.getDomainMgr().getSubjects();
+            }
         }
         catch (Exception e) {
+            // I feel I need to handle this error better; it should
+            //  default to nothing in the list
             e.printStackTrace();
         }
 
-        if (mouselightOnly) {
-            // note: in testing, there were occasionally resize problems when the
-            //  checkbox changed--sometimes when the list got wider, the window didn't;
-            //  currently, it's OK
-            subjects = subjects.stream()
-                .filter(subject -> mouselightOwners.contains(subject.getName()))
-                .collect(Collectors.toList());
-        }
         for (Subject subject: subjects) {
             comboBoxModel.addElement(subject);
         }

@@ -157,7 +157,7 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         subjectComboBox.setMaximumRowCount(20);
         attrPanel.add(subjectComboBox, "span 4");
         
-        CommonDialogItems.updateOwnerList((DefaultComboBoxModel)subjectComboBox.getModel(), true);
+        CommonDialogItems.updateOwnerList((DefaultComboBoxModel)subjectComboBox.getModel(), ChangeNeuronOwnerDialog.UserFilter.ACTIVE_TRACERS);
         
         ActivityLogHelper.logUserAction("EditWorkspaceNameDialog.showForSample");
         

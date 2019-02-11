@@ -33,7 +33,7 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
     private AnnotationModel annModel;
     private NeuronListProvider listProvider;
 
-    private static final String COMMON_USER_KEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
+    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     public BulkChangeNeuronOwnerAction(AnnotationManager annMgr, AnnotationModel annModel, NeuronListProvider listProvider) {
         this.annMgr = annMgr;
@@ -64,7 +64,7 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
         } else {
             String username = AccessManager.getAccessManager().getActualSubject().getName();
             for (TmNeuronMetadata neuron: neurons) {
-                if (neuron.getOwnerName().equals(username) || neuron.getOwnerKey().equals(COMMON_USER_KEY)) {
+                if (neuron.getOwnerName().equals(username) || neuron.getOwnerKey().equals(TRACERS_GROUP)) {
                     allowed = true;
                 } else {
                     // at the first not-allowed, stop

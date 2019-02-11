@@ -77,7 +77,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
     private static final int NARROW_COLUNN_WIDTH = 50;
 
-    private static final String COMMON_USER_KEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
+    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     /**
      * @param neuronSelectedListener the neuronSelectedListener to set
@@ -270,7 +270,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                         String ownerKey = selectedNeuron.getOwnerKey();
                         String username = AccessManager.getAccessManager().getActualSubject().getName();
                         if (owner.equals(username) ||
-                            ownerKey.equals(COMMON_USER_KEY) ||
+                            ownerKey.equals(TRACERS_GROUP) ||
                             // admins can change ownership on any neuron
                             annotationManager.isOwnershipAdmin()) {
 
@@ -808,7 +808,7 @@ class NeuronTableModel extends AbstractTableModel {
     public static final int COLUMN_OWNER_NAME = 5;
 
     // this is the username for neurons that don't belong to anyone
-    private static final String COMMON_USER_KEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.systemowner").trim();
+    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     private ArrayList<TmNeuronMetadata> neurons = new ArrayList<>();
     private ArrayList<TmNeuronMetadata> matchedNeurons = new ArrayList<>();
@@ -1041,7 +1041,7 @@ class NeuronTableModel extends AbstractTableModel {
                 if (ownerKey.equals(AccessManager.getAccessManager().getActualSubject().getKey())) {
                     // no icon if you're the owner
                     return null;
-                } else if (ownerKey.equals(COMMON_USER_KEY)) {
+                } else if (ownerKey.equals(TRACERS_GROUP)) {
                     return commonIcon;
                 } else {
                     // owned by someone else
