@@ -42,7 +42,6 @@ import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
-import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.dialogs.EditCriteriaDialog;
