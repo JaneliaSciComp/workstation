@@ -71,7 +71,7 @@ public class JadeServiceClient extends RESTClientBase {
         Preconditions.checkArgument(dataPath != null && dataPath.trim().length() > 0);
         WebTarget target = httpClient.target(serverURL)
                 .path("agent_storage")
-                .path("storage_path")
+                .path("storage_path/data_content")
                 .path(dataPath)
                 ;
         Response response = target.request()

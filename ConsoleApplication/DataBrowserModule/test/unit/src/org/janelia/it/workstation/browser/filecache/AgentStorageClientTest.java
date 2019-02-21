@@ -46,7 +46,7 @@ public class AgentStorageClientTest {
     @Test
     public void downloadURL() throws Exception {
         String testPath = "/p1/p2/c1/c2";
-        assertEquals(new URL(BASE_WEBDAV_URL + "/storage_path/" + testPath), testWebDavClient.getDownloadFileURL(testPath));
+        assertEquals(new URL(BASE_WEBDAV_URL + "/storage_path/data_content/" + testPath), testWebDavClient.getDownloadFileURL(testPath));
     }
 
     @Test

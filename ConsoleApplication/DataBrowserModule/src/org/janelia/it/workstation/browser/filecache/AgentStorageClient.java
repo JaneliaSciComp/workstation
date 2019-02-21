@@ -217,7 +217,7 @@ class AgentStorageClient extends AbstractStorageClient {
 
     URLProxy getDownloadFileURL(String standardPathName) {
         try {
-            return new URLProxy(new URL(baseUrl + "/storage_path/" + standardPathName), connectionErrorHandler);
+            return new URLProxy(new URL(baseUrl + "/storage_path/data_content/" + standardPathName), connectionErrorHandler);
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }
