@@ -357,7 +357,7 @@ public class StateMgr {
     
     public Task getTaskById(Long taskId) throws Exception {
         // TODO: use web service
-        return DomainMgr.getDomainMgr().getLegacyFacade().getTaskById(taskId);
+        return legacyFacade.getTaskById(taskId);
     }
     
     public Task submitJob(String processName, String displayName, HashSet<TaskParameter> parameters) throws Exception {
