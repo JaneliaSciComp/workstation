@@ -28,7 +28,7 @@ import com.google.common.cache.CacheBuilder;
  */
 public class StorageClientMgr {
 
-    private static final Logger log = LoggerFactory.getLogger(StorageClientMgr.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StorageClientMgr.class);
     
     private static final Cache<String, AgentStorageClient> STORAGE_WORKERS_CACHE = CacheBuilder.newBuilder()
             .maximumSize(100)
@@ -73,13 +73,13 @@ public class StorageClientMgr {
                     }
                 })
                 .forEach(p -> storagePathPrefixCandidates.add(0, p));
-        log.debug("storagePathPrefixCandidates={}", storagePathPrefixCandidates);
+        LOG.debug("storagePathPrefixCandidates={}", storagePathPrefixCandidates);
         AgentStorageClient storageClient;
         synchronized(STORAGE_WORKERS_CACHE) {
             for (String pathPrefix : storagePathPrefixCandidates) {
                 storageClient = STORAGE_WORKERS_CACHE.getIfPresent(pathPrefix);
                 if (storageClient != null) {
-                    log.debug("Found storage client for {} in cache", pathPrefix);
+                    LOG.debug("Found storage client for {} in cache", pathPrefix);
                     return storageClient;
                 }
             }
@@ -106,9 +106,9 @@ public class StorageClientMgr {
             );
             if (storageKey != null) {
                 STORAGE_WORKERS_CACHE.put(storageKey, storageClient);
-                log.info("Created storage client for {}", storageKey);
+                LOG.info("Created storage client for {}", storageKey);
             } else {
-                log.warn("No storage agent cached for {}", standardPathName);
+                LOG.warn("No storage agent cached for {}", standardPathName);
             }
         }
         return storageClient;

@@ -8,6 +8,7 @@ import org.janelia.it.jacs.shared.lvv.TextureData2d;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 
 /**
  * Created by murphys on 11/6/2015.
@@ -17,6 +18,8 @@ import org.janelia.it.workstation.browser.api.AccessManager;
  * Created by murphys on 10/22/2015.
  */
 public class TileStackOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter {
+    private static final int VOLUMES_CACHE_SIZE = ConsoleProperties.getInt("console.lvv.volumes.cache.size", 2);
+    private static final int TILES_CACHE_SIZE = ConsoleProperties.getInt("console.lvv.tiles.cache.size", 100);
 
     BlockTiffOctreeLoadAdapter blockTiffOctreeLoadAdapter;
 
@@ -27,7 +30,9 @@ public class TileStackOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter {
         } else if (baseURI.getScheme().startsWith("http")) {
             blockTiffOctreeLoadAdapter = new RestServiceBasedBlockTiffOctreeLoadAdapter(tileFormat, 
                     baseURI,
-                    AccessManager.getAccessManager().getAppAuthorization()
+                    AccessManager.getAccessManager().getAppAuthorization(),
+                    VOLUMES_CACHE_SIZE,
+                    TILES_CACHE_SIZE
             );
         } else {
             throw new IllegalArgumentException("Don't know how to load " + baseURI);
