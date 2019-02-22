@@ -35,6 +35,7 @@ import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.actors.TetVolumeMeshActor;
 import org.janelia.horta.ktx.KtxData;
+import org.janelia.horta.loader.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,15 +57,15 @@ public class KtxBlockLoadRunner
         FAILED,
     }
 
-    private InputStream inputStream;
+    private DataSource ktxStreamDataSource;
     private KtxOctreeBlockTileSource ktxBlockTileSource;
     private KtxOctreeBlockTileKey ktxOctreeBlockTileKey;
 
     public State state = State.INITIAL;
     public TetVolumeMeshActor blockActor;
 
-    public KtxBlockLoadRunner(InputStream stream) {
-        this.inputStream = stream;
+    public KtxBlockLoadRunner(DataSource ktxStreamDataSource) {
+        this.ktxStreamDataSource = ktxStreamDataSource;
     }
 
     public KtxBlockLoadRunner(KtxOctreeBlockTileSource source, KtxOctreeBlockTileKey key) {
@@ -74,7 +75,7 @@ public class KtxBlockLoadRunner
 
     private void loadFromBlockSource() {
         try (InputStream is = ktxBlockTileSource.streamKeyBlock(ktxOctreeBlockTileKey)) {
-            loadStream(is);
+            loadStream(ktxBlockTileSource.getOriginatingSampleURL().toString(), is);
         } catch (IOException ex) {
             LOG.warn("IOException loading tile {} from block source", ktxOctreeBlockTileKey);
             state = State.FAILED;
@@ -83,14 +84,14 @@ public class KtxBlockLoadRunner
 
     @Override
     public void run() {
-        if (inputStream == null) {
+        if (ktxStreamDataSource == null) {
             loadFromBlockSource();
         } else {
-            loadStream(inputStream);
+            loadStream(ktxStreamDataSource.getFileName(), ktxStreamDataSource.getInputStream());
         }
     }
 
-    private void loadStream(InputStream stream) {
+    private void loadStream(String sourceName, InputStream stream) {
         long start = System.nanoTime();
         state = State.LOADING;
         KtxData ktxData = new KtxData();
@@ -118,7 +119,7 @@ public class KtxBlockLoadRunner
         setChanged();
         long end = System.nanoTime();
         double elapsed = (end - start) / 1.0e9;
-        LOG.info(String.format("Ktx tile load for " + blockDescription + " took %.3f seconds", elapsed));
+        LOG.info("Loading ktx tile {} from {} took {} seconds", blockDescription, sourceName, elapsed);
         // notify listeners
         notifyObservers();
     }

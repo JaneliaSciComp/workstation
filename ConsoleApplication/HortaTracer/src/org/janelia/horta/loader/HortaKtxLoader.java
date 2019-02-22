@@ -61,9 +61,7 @@ public class HortaKtxLoader implements FileTypeLoader {
 
     @Override
     public boolean load(final DataSource source, FileHandler handler) throws IOException {
-        InputStream stream = source.getInputStream();
-
-        final KtxBlockLoadRunner loader = new KtxBlockLoadRunner(stream);
+        final KtxBlockLoadRunner loader = new KtxBlockLoadRunner(source);
         loader.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
