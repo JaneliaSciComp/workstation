@@ -12,8 +12,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
-import com.google.common.eventbus.Subscribe;
-
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -33,9 +31,7 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.interfaces.HasFileGroups;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.FileGroup;
@@ -45,6 +41,8 @@ import org.janelia.model.domain.sample.Sample;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * An editor which can display the file groups for a given sample result.
@@ -172,7 +170,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
     }
 
     @Override
-    public SelectionModel<?,?> getSelectionModel() {
+    public SelectionModel<FileGroup,String> getSelectionModel() {
         return selectionModel;
     }
 

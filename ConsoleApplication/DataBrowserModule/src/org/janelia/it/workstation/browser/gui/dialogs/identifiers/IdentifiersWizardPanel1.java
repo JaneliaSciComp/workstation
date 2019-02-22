@@ -1,33 +1,28 @@
-package org.janelia.it.workstation.browser.gui.dialogs.download;
+package org.janelia.it.workstation.browser.gui.dialogs.identifiers;
 
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
+public class IdentifiersWizardPanel1 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
 
-    private static final Logger log = LoggerFactory.getLogger(DownloadWizardPanel2.class);
-    
-    private final ChangeSupport changeSupport = new ChangeSupport(this);
+    private final ChangeSupport changeSupport = new ChangeSupport(this);    
     private WizardDescriptor wiz;
     
     /**
      * The visual component that displays this panel. If you need to access the
      * component from this class, just use getComponent().
      */
-    private DownloadVisualPanel2 component;
+    private IdentifiersVisualPanel1 component;
 
     @Override
-    public DownloadVisualPanel2 getComponent() {
+    public IdentifiersVisualPanel1 getComponent() {
         if (component == null) {
-            component = new DownloadVisualPanel2(this);
+            component = new IdentifiersVisualPanel1(this);
         }
         return component;
     }
@@ -39,12 +34,18 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
         // If you have context help:
         // return new HelpCtx("help.key.here");
     }
-
+    
     private boolean isValid = false;
-
+    
     @Override
     public void validate() throws WizardValidationException {
-        this.isValid = getComponent().isLoaded();
+        isValid = !component.getText().isEmpty();
+        if (isValid) {
+            wiz.putProperty(WizardDescriptor.PROP_ERROR_MESSAGE, null);
+        }
+        else {
+            throw new WizardValidationException(null, "Enter at least one identifier to search for", null);
+        }
     }
     
     @Override
@@ -62,12 +63,17 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
         changeSupport.removeChangeListener(l);
     }
     
+    private boolean firstException = true;
     public final void fireChangeEvent() {
         try {
             validate();
         }
         catch (WizardValidationException e) {
-            wiz.putProperty(WizardDescriptor.PROP_ERROR_MESSAGE, e.getMessage());
+            // We don't create an error message when the panel appears, because the user hasn't done anything yet.
+            if (!firstException) {
+                wiz.putProperty(WizardDescriptor.PROP_ERROR_MESSAGE, e.getMessage());
+            }
+            firstException = false;
         }
         storeSettings(wiz);
         changeSupport.fireChange();
@@ -76,20 +82,15 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
     @Override
     public void readSettings(WizardDescriptor wiz) {
         this.wiz = wiz;
-        DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
+        IdentifiersWizardState state = (IdentifiersWizardState)wiz.getProperty(IdentifiersWizardIterator.PROP_WIZARD_STATE);
         getComponent().init(state);
     }
 
     @Override
     public void storeSettings(WizardDescriptor wiz) {
-        ActivityLogHelper.logUserAction("DownloadWizard.storeSettings", 2);
-        DownloadWizardState state = (DownloadWizardState)wiz.getProperty(DownloadWizardIterator.PROP_WIZARD_STATE);
-        boolean splitChannels = getComponent().isSplitChannels();
-        state.setSplitChannels(splitChannels);
-        state.setOutputExtensions(getComponent().getOutputExtensions());
-        // Updated serialized state
-        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", state.getOutputExtensionString());
-        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "splitChannels", state.isSplitChannels());
+        ActivityLogHelper.logUserAction("IdentifiersWizard.storeSettings", 1);
+        IdentifiersWizardState state = (IdentifiersWizardState)wiz.getProperty(IdentifiersWizardIterator.PROP_WIZARD_STATE);
+        state.setText(getComponent().getText());
     }
 
 }

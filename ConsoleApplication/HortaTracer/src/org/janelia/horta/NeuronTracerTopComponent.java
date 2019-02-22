@@ -556,6 +556,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void setSampleLocation(SampleLocation sampleLocation) {
         try {
             leverageCompressedFiles = sampleLocation.isCompressed();
+            playback.clearPlayState();
             Quaternion q = new Quaternion();
             float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
             if (quaternionRotation != null)

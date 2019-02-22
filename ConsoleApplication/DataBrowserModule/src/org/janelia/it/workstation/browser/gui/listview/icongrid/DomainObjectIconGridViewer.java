@@ -3,21 +3,25 @@ package org.janelia.it.workstation.browser.gui.listview.icongrid;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.workstation.browser.actions.AnnotationContextMenu;
 import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
+import org.janelia.it.workstation.browser.actions.ExportPickedGUIDs;
+import org.janelia.it.workstation.browser.actions.ExportPickedLineNames;
+import org.janelia.it.workstation.browser.actions.ExportPickedToSplitGenWebsite;
 import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -35,6 +39,7 @@ import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.DomainObjectImageModel;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
@@ -68,8 +73,10 @@ public class DomainObjectIconGridViewer
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
 
     // UI Components
-    private ResultSelectionButton resultButton;
-    private ImageTypeSelectionButton typeButton;
+    private final ResultSelectionButton resultButton;
+    private final ImageTypeSelectionButton typeButton;
+    private final JToggleButton editModeButton;
+    private final DropDownButton editOkButton;
     private final JPanel helpPanel;
     
     // Configuration
@@ -141,10 +148,43 @@ public class DomainObjectIconGridViewer
                         .addListener(() -> refreshView(null));
             }
         };
-                
+
+        this.editModeButton = new JToggleButton("Pick");
+        editModeButton.setIcon(Icons.getIcon("cart.png"));
+        editModeButton.setFocusable(false);
+        editModeButton.setToolTipText("Select items for export and other actions");
+        editModeButton.addActionListener((e) -> {
+            toggleEditMode(editModeButton.isSelected());
+        });
+        
+        this.editOkButton = new DropDownButton();
+        editOkButton.setIcon(Icons.getIcon("cart_go.png"));
+        editOkButton.setFocusable(false);
+        editOkButton.setVisible(false);
+        editOkButton.setToolTipText("Open split generation website with selected lines");
+
+        JMenuItem exportLinesMenuItem = new JMenuItem("Export line names");
+        exportLinesMenuItem.addActionListener((e) -> {
+            new ExportPickedLineNames(getPickedItems()).actionPerformed(e);
+        });
+        editOkButton.addMenuItem(exportLinesMenuItem);
+
+        JMenuItem exportGuidsMenuItem = new JMenuItem("Export GUIDs (globally unique identifiers)");
+        exportGuidsMenuItem.addActionListener((e) -> {
+            new ExportPickedGUIDs(getPickedItems()).actionPerformed(e);
+        });
+        editOkButton.addMenuItem(exportGuidsMenuItem);
+
+        JMenuItem splitGenMenuItem = new JMenuItem("Send to split generation website");
+        splitGenMenuItem.addActionListener((e) -> {
+            new ExportPickedToSplitGenWebsite(getPickedItems()).actionPerformed(e);
+        });
+        editOkButton.addMenuItem(splitGenMenuItem);
+        
         getToolbar().addCustomComponent(resultButton);
         getToolbar().addCustomComponent(typeButton);
-
+        getToolbar().addCustomComponent(editModeButton);
+        getToolbar().addCustomComponent(editOkButton);
 
         helpPanel = new JPanel();
         helpPanel.setLayout(new GridBagLayout());
@@ -154,6 +194,10 @@ public class DomainObjectIconGridViewer
                 + HelpTextUtils.getBoldedLabel("Show only items with selected imagery")+"' setting.<br>"
                 + "</html>"));
         helpPanel.add(panel, new GridBagConstraints());
+    }
+
+    protected List<Reference> getPickedItems() {
+        return editSelectionModel.getSelectedIds();
     }
     
     @Override
@@ -254,6 +298,8 @@ public class DomainObjectIconGridViewer
         if (editSelectionModel!=null) {
             editSelectionModel.reset();
         }
+        editModeButton.setSelected(editMode);
+        editOkButton.setVisible(editMode);
     }
     
     @Override

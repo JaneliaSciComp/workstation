@@ -67,7 +67,7 @@ public abstract class BackgroundWorker extends SimpleWorker {
     public void setStatus(String status) {
         if (StringUtils.areEqual(status, this.status)) return;
         this.status = status;
-        log.trace("Worker '{}' changed status to: {}", getName(), status);
+        log.info("Worker '{}' changed status to: {}", getName(), status);
         Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
     }
 

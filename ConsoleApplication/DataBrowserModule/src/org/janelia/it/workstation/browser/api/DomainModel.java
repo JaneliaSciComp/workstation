@@ -13,6 +13,7 @@ import java.util.TreeSet;
 
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
 import org.janelia.it.jacs.shared.solr.SolrParams;
 import org.janelia.it.workstation.browser.api.facade.interfaces.DomainFacade;
@@ -994,6 +995,10 @@ public class DomainModel {
     
     public String dispatchSamples(SampleReprocessingRequest request) throws Exception {
         return sampleFacade.dispatchSamples(request);
+    }
+
+    public Long dispatchTask(JsonTask task, String processName) throws Exception {
+        return sampleFacade.dispatchTask(task, processName);
     }
 
     public ColorDepthSearch createColorDepthSearch(ColorDepthSearch search) throws Exception {

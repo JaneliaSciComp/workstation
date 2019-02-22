@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
@@ -88,7 +89,16 @@ public interface SampleFacade {
      * @throws Exception
      */
     public String dispatchSamples(SampleReprocessingRequest request) throws Exception;
-
+    
+    /**
+     * Dispatches the given task using legacy JACSv1.
+     * @param task
+     * @param processName
+     * @return
+     * @throws Exception
+     */
+    public Long dispatchTask(JsonTask task, String processName) throws Exception;
+    
     /**
      * Returns the list of data sets available for color depth search in a given alignment space.
      * @return

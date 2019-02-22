@@ -450,6 +450,11 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         return colorDepthResultPanel.getSelectionModel();
     }
 
+    @Override
+    public ChildSelectionModel<ColorDepthMatch,String> getEditSelectionModel() {
+        return colorDepthResultPanel.getEditSelectionModel();
+    }
+    
     private void executeSearch() {
 
         ActivityLogHelper.logUserAction("ColorDepthSearchEditorPanel.executeSearch", search);

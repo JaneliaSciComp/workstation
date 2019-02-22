@@ -2,6 +2,10 @@ package org.janelia.it.workstation.browser.gui.dialogs.download;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,56 +38,61 @@ public final class DownloadVisualPanel2 extends JPanel {
 
     private static final String[] FORMAT_EXTENSIONS_LSM = {
             DownloadWizardState.NATIVE_EXTENSION,
-            "tif", 
+            "lsm.bz2",
+            "lsm.gz",
+            "tif",
+            "zip", 
             "v3draw", 
-            "v3dpbd", 
-            "mp4", 
+            "v3dpbd",  
             "h5j",
-            "lsm.bz2" 
+            "nrrd"
     };
 
     private static final String[] FORMAT_EXTENSIONS_LSM_BZ2 = {
             DownloadWizardState.NATIVE_EXTENSION,
+            "lsm",
             "tif", 
+            "zip", 
             "v3draw", 
             "v3dpbd", 
-            "mp4", 
             "h5j",
-            "lsm",
+            "nrrd"
     };
     
     private static final String[] FORMAT_EXTENSIONS_RAW = {
             DownloadWizardState.NATIVE_EXTENSION,
             "tif",  
+            "zip", 
             "v3dpbd", 
-            "mp4", 
-            "h5j"
+            "h5j",
+            "nrrd" 
     };
     
     private static final String[] FORMAT_EXTENSIONS_PBD = {
             DownloadWizardState.NATIVE_EXTENSION,
             "tif", 
+            "zip", 
             "v3draw", 
-            "mp4", 
             "h5j",
-            "lsm", 
-            "lsm.bz2" 
+            "nrrd" 
     };
 
     private static final String[] FORMAT_EXTENSIONS_H5J = {
             DownloadWizardState.NATIVE_EXTENSION,
             "tif", 
+            "zip", 
             "v3draw", 
             "v3dpbd", 
-            "mp4" 
+            "nrrd"
     };
 
     private static final String[] FORMAT_EXTENSIONS_TIF = {
             DownloadWizardState.NATIVE_EXTENSION,
+            "zip", 
             "v3draw", 
-            "v3dpbd", 
-            "mp4", 
-            "h5j" 
+            "v3dpbd",
+            "h5j",
+            "nrrd"
     };
     
     private static final Map<String,String[]> formatMap = new HashMap<>();
@@ -225,6 +234,13 @@ public final class DownloadVisualPanel2 extends JPanel {
                         model.addElement(outputExtension);
                     }
 
+                    formatCombo.addItemListener(new ItemListener() {
+                        @Override
+                        public void itemStateChanged(ItemEvent e) {
+                            updateSplitChannels();
+                        }
+                    });
+                    
                     // If the user already selected something, keep it selected
                     String selectedOutputExtension = selectedOutputExtensions.get(extension);
                     if (selectedOutputExtension!=null) {
@@ -238,7 +254,14 @@ public final class DownloadVisualPanel2 extends JPanel {
                 wizardPanel.fireChangeEvent();
                 
                 splitChannelCheckbox = new JCheckBox();
-                splitChannelCheckbox.setSelected(splitChannels);
+                splitChannelCheckbox.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        // Update user's preference
+                        splitChannels = splitChannelCheckbox.isSelected();
+                    }
+                });
+                updateSplitChannels();
                 attrPanel.addItem("Split channels in 3d stacks into individual files", splitChannelCheckbox);
 
                 mainPane.removeAll();
@@ -256,6 +279,23 @@ public final class DownloadVisualPanel2 extends JPanel {
         };
 
         worker.execute();
+    }
+    
+    private void updateSplitChannels() {
+        if (splitChannelCheckbox==null) return;
+        boolean splitChannelsSelected = splitChannels;
+        boolean splitChannelsEnabled = true;
+        for (String extension : formatCombos.keySet()) {
+            JComboBox<String> formatCombo = formatCombos.get(extension);
+            DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) formatCombo.getModel();
+            String outputExtension = (String)model.getSelectedItem();
+            if ("nrrd".equals(outputExtension)) {
+                splitChannelsSelected = true;
+                splitChannelsEnabled = false;
+            }
+        }
+        splitChannelCheckbox.setSelected(splitChannelsSelected);
+        splitChannelCheckbox.setEnabled(splitChannelsEnabled);
     }
     
     public boolean isLoaded() {

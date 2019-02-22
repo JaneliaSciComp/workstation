@@ -1,3 +1,44 @@
+// 7.26
+  
+Data Browser
+* Generalized picking feature to every view. Click "Pick" to begin picking and then 
+  choose an export option from the drop down list. 
+* Fixed download issues with file format conversions to TIFF
+* Added NRRD as an output format option, and removed MP4 
+* Improved the number of concurrent file format conversions
+* Improved progress indication for downloads
+* Greatly improved performance of lsm.bz2 decompression by moving it to the cluster
+
+// 7.25
+  
+Task Workflow View
+* Added automatic sync on created tasks
+* Added create task button on task review table
+* Added filters for tasks based off workflow
+* Fixed progress tracking 
+
+// 7.24
+  
+Task Workflow View
+* Fixed issues with drift and reviewed branches not showing in Horta
+
+// 7.23.3
+
+Data Browser
+* Improved right-click context menu performance
+
+Large Volume Viewer
+* "Scroll through Z" feature uses current camera view instead of recentering now
+* Added menu option for selecting annotation vertex in Task View
+
+Task Workflow View
+* Created a separate mode for selecting and reviewing individual points
+* Added clear reviewed button
+* Added smoothness parameter for more steps in neuroncam
+* Added hotkeys for increase/decrease speed of neuroncam
+* Fixed pause button issues
+* Fixed driftaway bug
+
 // 7.22
 
 Workstation Browser

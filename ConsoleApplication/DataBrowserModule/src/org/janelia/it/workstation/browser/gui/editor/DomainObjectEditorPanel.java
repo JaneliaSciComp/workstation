@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
-import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.model.domain.DomainObject;
@@ -26,8 +25,6 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T, S> exte
     protected abstract P getDomainObject();
     
     protected abstract AbstractDomainObjectNode<P> getDomainObjectNode();
-
-    public abstract ChildSelectionModel<T,S> getSelectionModel();
     
     @Override
     public abstract void loadDomainObject(P domainObject, boolean isUserDriven, Callable<Void> success);

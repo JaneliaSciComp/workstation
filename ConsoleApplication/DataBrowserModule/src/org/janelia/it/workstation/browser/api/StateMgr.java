@@ -12,6 +12,7 @@ import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -355,44 +356,19 @@ public class StateMgr {
     }
     
     public Task getTaskById(Long taskId) throws Exception {
-        return legacyFacade.getTaskById(taskId);
+        // TODO: use web service
+        return DomainMgr.getDomainMgr().getLegacyFacade().getTaskById(taskId);
     }
     
-    public Task submitJob(String processDefName, String displayName) throws Exception {
-        HashSet<TaskParameter> taskParameters = new HashSet<>();
-        return submitJob(processDefName, displayName, taskParameters);
-    }
-
-    public Task submitJob(String processDefName, String displayName, HashSet<TaskParameter> parameters) throws Exception {
-        GenericTask task = new GenericTask(new HashSet<Node>(), AccessManager.getSubjectKey(), new ArrayList<Event>(),
-                parameters, processDefName, displayName);
-        return submitJob(task);
-    }
-
-    public Task saveOrUpdateTask(Task task) throws Exception {
-        return legacyFacade.saveOrUpdateTask(task);
+    public Task submitJob(String processName, String displayName, HashSet<TaskParameter> parameters) throws Exception {
+        return submitJob(AccessManager.getSubjectKey(), processName, displayName, parameters);
     }
     
-    private Task submitJob(GenericTask genericTask) throws Exception {
-        Task task = saveOrUpdateTask(genericTask);
-        submitJob(task.getTaskName(), task);
-        return task;
-    }
-
-    public void submitJob(String processDefName, Task task) throws Exception {
-        legacyFacade.submitJob(processDefName, task.getObjectId());
-    }
-
-    /**
-     * Like the submitJob method, but this one pushes the task to a dispatcher, for scheduled (balanced?)
-     * retrieval by waiting servers.
-     *
-     * @param processDefName name for labeling.
-     * @param task with all params
-     * @return the request created.
-     * @throws Exception
-     */
-    public void dispatchJob(String processDefName, Task task) throws Exception {
-        legacyFacade.dispatchJob(processDefName, task.getObjectId());
+    public Task submitJob(String owner, String processName, String displayName, HashSet<TaskParameter> parameters) throws Exception {
+        GenericTask task = new GenericTask(new HashSet<Node>(), owner, new ArrayList<Event>(),
+                parameters, processName, displayName);
+        JsonTask jsonTask = new JsonTask(task);
+        Long taskId = DomainMgr.getDomainMgr().getModel().dispatchTask(jsonTask, processName);
+        return getTaskById(taskId);
     }
 }

@@ -2,10 +2,8 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,22 +16,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
-import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
-import javax.ws.rs.core.UriBuilder;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.web.SageRestClient;
@@ -52,7 +45,6 @@ import org.janelia.it.workstation.browser.model.SplitTypeInfo;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.Reference;
@@ -100,8 +92,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private final PaginatedResultsPanel<ColorDepthMatch, String> resultsPanel;
     private final JLabel noRunLabel;
     private final JLabel noMatchesLabel;
-    private final JToggleButton editModeButton;
-    private final JButton editOkButton;
 
     // State
     private ColorDepthSearch search;
@@ -236,35 +226,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
                 refreshView();
             }
         };
-
-        this.editModeButton = new JToggleButton("Generate Splits");
-        editModeButton.setIcon(Icons.getIcon("cart.png"));
-        editModeButton.setFocusable(false);
-        editModeButton.setToolTipText("Select lines to send to the split generation website");
-        editModeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (editModeButton.isSelected()) {
-                    enterSplitSelection();
-                }
-                else {
-                    cancelSplitSelection();
-                }
-            }
-        });
-        
-        this.editOkButton = new JButton();
-        editOkButton.setIcon(Icons.getIcon("cart_go.png"));
-        editOkButton.setFocusable(false);
-        editOkButton.setVisible(false);
-        editOkButton.setToolTipText("Open split generation website with selected lines");
-        editOkButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                sendSplitsToWebsite();
-                cancelSplitSelection();
-            }
-        });
         
         this.topPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 8, 5));
         topPanel.add(new JLabel("History:"));
@@ -273,8 +234,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         topPanel.add(newOnlyCheckbox);
         topPanel.add(perLinePanel);
         topPanel.add(splitTypeButton);
-        topPanel.add(editModeButton);
-        topPanel.add(editOkButton);
         
         this.resultsPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, editSelectionModel, this, this, viewerTypes) {
     
@@ -687,6 +646,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         return selectionModel;
     }
 
+    public ChildSelectionModel<ColorDepthMatch, String> getEditSelectionModel() {
+        return editSelectionModel;
+    }
+
     @Override
     public Long getCurrentContextId() {
         if (search == null) return null;
@@ -708,63 +671,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     
     public void refreshView() {
         showCurrSearchResult(true);
-    }
-
-    private void enterSplitSelection() {
-        editModeButton.setSelected(true);
-        editOkButton.setVisible(true);
-        resultsPanel.getViewer().toggleEditMode(true);
-    }
-
-    private void cancelSplitSelection() {
-        editModeButton.setSelected(false);
-        editOkButton.setVisible(false);
-        resultsPanel.getViewer().toggleEditMode(false);
-    }
-
-    private void sendSplitsToWebsite() {
-
-        // Ensure that the user has selected some lines
-        List<String> selectedIds = editSelectionModel.getSelectedIds();
-        if (selectedIds.isEmpty()) {
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
-                    "Select some lines to send to the split generation website.", 
-                    "No lines selected", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        
-        // Collect the user-selected split line ids to send to the website
-        StringBuilder idStr = new StringBuilder();
-        for(String filepath : selectedIds) {
-            ColorDepthMatch match = imageModel.getImageByUniqueId(filepath);
-            if (match != null) {
-                Sample sample = imageModel.getSample(match);
-                if (sample != null) {
-                    String id = getSplitIdentifier(sample);
-                    if (id != null) {
-                        if (idStr.length()>0) idStr.append(' ');
-                        idStr.append(id);
-                    }
-                }
-            }
-        }
-        
-        if (idStr.length()==0) {
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
-                    "No split line identifiers were found", 
-                    "Identifiers missing", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        
-        // Create the URL to open 
-        URI uri = UriBuilder.fromPath(SPLITGEN_URL)
-                .path("uname").path(AccessManager.getSubjectName())
-                .path("lnames").path(idStr.toString())
-                .build();
-        
-        // Send the user to the website
-        log.info("Open splitgen website: {}", uri);
-        Utils.openUrlInBrowser(uri.toString());
     }
     
     /**

@@ -4,9 +4,13 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.GenerateNeuronsDialog;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.model.domain.enums.SubjectRole;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -33,8 +37,16 @@ public final class GenerateNeuronsAction extends AbstractAction implements Prese
     @Override
     public void actionPerformed(ActionEvent e) {
         if (isAccessible()) {
-            GenerateNeuronsDialog dialog = new GenerateNeuronsDialog();
-            dialog.showDialog();
+            AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+            if (annotationMgr != null) {
+                GenerateNeuronsDialog dialog = new GenerateNeuronsDialog();
+                dialog.showDialog();
+            } else {
+                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                    "LVV needs to be opened before this function can be used.",
+                    "LVV must be open",
+                    JOptionPane.WARNING_MESSAGE);
+            }
         }
     }
 

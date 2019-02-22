@@ -76,10 +76,12 @@ public class FileDownloadWorker {
                     // no conversion needed, simply transfer the file
                     convertOnServer = false;
                 } 
-                else if (Utils.EXTENSION_LSM.equals(targetExtension)) {
-                    // Just need to convert bz2 to lsm, which we can do locally
-                    convertOnServer = false;
-                }
+                // Stream decompression is very slow now. 7.24MB/s when I last tested on Mac. 
+                // We can rely on server-side decompression until this can be addressed.
+//                else if (Utils.EXTENSION_LSM.equals(targetExtension)) {
+//                    // Just need to convert bz2 to lsm, which we can do locally
+//                    convertOnServer = false;
+//                }
             }
             
             if (convertOnServer) {
@@ -108,38 +110,30 @@ public class FileDownloadWorker {
                 String sourceFilePath = downloadItem.getSourceFile();
                 
                 log.info("Converting {} to {} (splitChannels={})",sourceFilePath,targetExtension,downloadItem.isSplitChannels());
-                
-                Task task;
+
+                HashSet<TaskParameter> taskParameters = new HashSet<>();
+                taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
+                taskParameters.add(new TaskParameter("output extension", targetExtension, null));
+                taskParameters.add(new TaskParameter("chan spec", downloadItem.getChanspec(), null));
                 if (downloadItem.isSplitChannels()) {
-                    HashSet<TaskParameter> taskParameters = new HashSet<>();
-                    taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
-                    taskParameters.add(new TaskParameter("output extension", targetExtension, null));
-                    task = StateMgr.getStateMgr().submitJob("ConsoleSplitChannels", "Split Channels: "+objectName, taskParameters);
-                }
-                else {
-                    HashSet<TaskParameter> taskParameters = new HashSet<>();
-                    taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
-                    taskParameters.add(new TaskParameter("output extension", targetExtension, null));
-                    task = StateMgr.getStateMgr().submitJob("ConsoleConvertFile", "Convert: "+objectName, taskParameters);
+                    taskParameters.add(new TaskParameter("split channels", "true", null));
                 }
 
+                Task task = StateMgr.getStateMgr().submitJob("ConsoleSplitAndConvert", "Convert: "+objectName, taskParameters);
+                
+                String workerName = "Converting and downloading " + downloadItem.getTargetFile().getFileName();;
+                
                 TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
-
-                    @Override
-                    public String getName() {
-                        return "Downloading " + downloadItem.getTargetFile().getFileName().toString();
-                    }
                     
                     @Override
                     public void doStuff() throws Exception {
     
-                        setStatus("Converting file on compute cluster");
+                        setName(workerName);
+                        setStatus("Queueing job on compute cluster");
                         
                         super.doStuff();
                         
                         throwExceptionIfCancelled();
-    
-                        setStatus("Parsing results");
     
                         // Since there is no way to log task output vars, we use a convention where the last message
                         // will contain the output files.
@@ -182,7 +176,7 @@ public class FileDownloadWorker {
                         }
     
                         throwExceptionIfCancelled();
-                        setStatus("Done");
+                        setName(workerName.replace("Converting and downloading", "Successfully downloaded"));
                     }
     
                     @Override
@@ -208,7 +202,7 @@ public class FileDownloadWorker {
                     int success = 0;
                     int i = 0;
 
-                    setName("Download "+ toTransfer.size() +" items");
+                    setName(createName(toTransfer));
                     
                     for(DownloadFileItem downloadItem : toTransfer) {
                         String filename = downloadItem.getTargetFile().getFileName().toString();
@@ -254,7 +248,7 @@ public class FileDownloadWorker {
                         setFinalStatus("Successfully downloaded "+success+" items. Failed to download "+errors+" items.");
                     }
                     else {
-                        setFinalStatus("Successfully downloaded all items.");
+                        setName(createName(toTransfer).replace("Download", "Successfully downloaded"));
                     }
                 }
     
@@ -284,7 +278,7 @@ public class FileDownloadWorker {
     
     private String createName(List<DownloadFileItem> toTransfer) {
         if (toTransfer.size()==1) {
-            return toTransfer.get(0).getTargetFile().getFileName().toString();
+            return "Download "+toTransfer.get(0).getTargetFile().getFileName().toString();
         }
         else {
             return "Download "+ toTransfer.size() +" items";

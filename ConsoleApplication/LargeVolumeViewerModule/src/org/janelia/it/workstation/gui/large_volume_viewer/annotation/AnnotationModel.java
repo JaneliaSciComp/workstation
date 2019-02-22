@@ -59,6 +59,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVerte
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.SpatialFilter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.it.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.tiledMicroscope.TmModelManipulator;
 import org.janelia.model.domain.DomainConstants;
@@ -356,6 +357,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             loadUserPreferences();
             // register with Message Server to receive async updates
             RefreshHandler.getInstance().ifPresent(rh -> rh.setAnnotationModel(this));
+            TaskWorkflowViewTopComponent.getInstance().loadHistory();
         } catch (Exception error) {
             ConsoleApp.handleException(error);
         }
@@ -541,7 +543,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      */
     public synchronized TmNeuronMetadata createNeuron(String name) throws Exception {
         CompletableFuture<TmNeuronMetadata> future = neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
-        TmNeuronMetadata neuron = future.get(15, TimeUnit.SECONDS);
+        TmNeuronMetadata neuron = future.get(5, TimeUnit.SECONDS);
 
         // Update local workspace
         log.info("Neuron was created: "+neuron);

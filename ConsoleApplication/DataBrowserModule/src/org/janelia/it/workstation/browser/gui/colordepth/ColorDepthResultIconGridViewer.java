@@ -4,16 +4,23 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.actions.ExportPickedGUIDs;
+import org.janelia.it.workstation.browser.actions.ExportPickedLineNames;
+import org.janelia.it.workstation.browser.actions.ExportPickedToSplitGenWebsite;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.ListViewer;
@@ -28,6 +35,7 @@ import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.SplitHalfType;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
@@ -51,6 +59,8 @@ public class ColorDepthResultIconGridViewer
 
     // UI Components
     private JCheckBoxMenuItem showVtLineNamesCheckbox;
+    private final JToggleButton editModeButton;
+    private final DropDownButton editOkButton;
     
     // Configuration
     @SuppressWarnings("unused")
@@ -76,6 +86,65 @@ public class ColorDepthResultIconGridViewer
             }
         });
         configButton.addMenuItem(showVtLineNamesCheckbox);
+
+        // The following buttons are duplicated from DomainObjectIconGridViewer
+        
+        this.editModeButton = new JToggleButton("Pick");
+        editModeButton.setIcon(Icons.getIcon("cart.png"));
+        editModeButton.setFocusable(false);
+        editModeButton.setToolTipText("Select items for export and other actions");
+        editModeButton.addActionListener((e) -> {
+            toggleEditMode(editModeButton.isSelected());
+        });
+        
+        this.editOkButton = new DropDownButton();
+        editOkButton.setIcon(Icons.getIcon("cart_go.png"));
+        editOkButton.setFocusable(false);
+        editOkButton.setVisible(false);
+        editOkButton.setToolTipText("Open split generation website with selected lines");
+
+        JMenuItem exportLinesMenuItem = new JMenuItem("Export line names");
+        exportLinesMenuItem.addActionListener((e) -> {
+            new ExportPickedLineNames(getPickedItems()).actionPerformed(e);
+        });
+        editOkButton.addMenuItem(exportLinesMenuItem);
+
+        JMenuItem exportGuidsMenuItem = new JMenuItem("Export GUIDs (globally unique identifiers)");
+        exportGuidsMenuItem.addActionListener((e) -> {
+            new ExportPickedGUIDs(getPickedItems()).actionPerformed(e);
+        });
+        editOkButton.addMenuItem(exportGuidsMenuItem);
+
+        JMenuItem splitGenMenuItem = new JMenuItem("Send to split generation website");
+        splitGenMenuItem.addActionListener((e) -> {
+            new ExportPickedToSplitGenWebsite(getPickedItems()).actionPerformed(e);
+        });
+        editOkButton.addMenuItem(splitGenMenuItem);
+        
+        getToolbar().addCustomComponent(editModeButton);
+        getToolbar().addCustomComponent(editOkButton);
+    }
+
+    protected List<Reference> getPickedItems() {
+
+        // Ensure that the user has selected some lines
+        List<String> selectedIds = editSelectionModel.getSelectedIds();
+        if (selectedIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        
+        // Collect the user-selected split line ids to send to the website
+        ColorDepthResultImageModel model = (ColorDepthResultImageModel)getImageModel();
+        List<Reference> sampleRefs = new ArrayList<>();
+        for(String filepath : selectedIds) {
+            ColorDepthMatch match = model.getImageByUniqueId(filepath);
+            if (match != null) {
+                Sample sample = model.getSample(match);
+                sampleRefs.add(Reference.createFor(sample));
+            }
+        }
+        
+        return sampleRefs;
     }
     
     @Override
@@ -194,10 +263,13 @@ public class ColorDepthResultIconGridViewer
         if (editSelectionModel!=null) {
             editSelectionModel.reset();
         }
+        editModeButton.setSelected(editMode);
+        editOkButton.setVisible(editMode);
     }
 
     @Override
     public void refreshEditMode() {
+        imagesPanel.setEditMode(editMode);
         if (editSelectionModel!=null) {
             imagesPanel.setEditSelection(editSelectionModel.getSelectedIds());
         }
