@@ -80,7 +80,7 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         this.maximumResolution = createKtxResolution(rootHeader);
         Pair<ConstVector3, Vector3> volumeCorners = getVolumeCorners(sample, rootHeader);
         this.origin = volumeCorners.getLeft();
-        this.outerCorner = volumeCorners.getRight();       
+        this.outerCorner = volumeCorners.getRight();
         return this;
     }
 
