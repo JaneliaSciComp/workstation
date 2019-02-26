@@ -345,7 +345,6 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
                 worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Loading...", ""));
                 worker.execute();
-                return;
             }
         }
         else {
