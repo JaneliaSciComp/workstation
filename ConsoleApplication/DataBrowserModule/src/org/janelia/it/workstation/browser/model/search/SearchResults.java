@@ -25,8 +25,6 @@ public interface SearchResults<T,S> {
     public boolean hasMoreResults();
 
     public boolean isAllLoaded();
-
-    public void loadAllResults();
     
     public List<? extends ResultPage<T,S>> getPages();
     

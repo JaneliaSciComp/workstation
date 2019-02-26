@@ -115,10 +115,6 @@ public class ColorDepthSearchResults implements SearchResults<ColorDepthMatch, S
     public boolean isAllLoaded() {
         return getNumTotalPages()==getNumLoadedPages();
     }
-
-    @Override
-    public void loadAllResults() {
-    }
     
     private void updateNumResults(ColorDepthResultPage resultPage) {
         if (!pages.isEmpty() && numTotalResults!=resultPage.getNumTotalResults()) {

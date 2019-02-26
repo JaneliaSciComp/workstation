@@ -227,7 +227,12 @@ public final class DownloadWizardAction implements ActionListener {
                 Filter filter = (Filter) domainObject;
                 SearchConfiguration config = new SearchConfiguration(filter, 1000);
                 SolrSearchResults searchResults = config.performSearch();
-                searchResults.loadAllResults();
+                
+                // Load all results
+                for(int i=0; i<searchResults.getNumTotalPages(); i++) {
+                    searchResults.getPage(i);
+                }
+                
                 for (DomainObjectResultPage page : searchResults.getPages()) {
                     List<String> childPath = new ArrayList<>(path);
                     childPath.add(domainObject.getName());
