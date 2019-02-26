@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
@@ -113,6 +114,15 @@ class DownloadWizardState {
         return artifactDescriptors;
     }
 
+    public List<ArtifactDescriptor> getSelectedArtifactDescriptors() {
+        return artifactDescriptors
+                .stream()
+                .filter((ad) -> { 
+                    return !ad.getSelectedFileTypes().isEmpty(); 
+                })
+                .collect(Collectors.toList());
+    }
+    
     public void setArtifactDescriptors(List<ArtifactDescriptor> artifactDescriptors) {
         this.artifactDescriptors = artifactDescriptors;
     }

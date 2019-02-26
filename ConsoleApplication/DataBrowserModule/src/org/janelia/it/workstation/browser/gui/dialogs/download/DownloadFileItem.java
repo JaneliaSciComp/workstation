@@ -65,17 +65,20 @@ public class DownloadFileItem {
     
     // Derived state
     private DownloadErrorType errorType;
-   
     private String sourceFile;
-    private String targetRelativePath;
     private Path targetLocalPath;
     private String sourceExtension;
     private String targetExtension;
     private String chanspec;
     private boolean is3d;
-
     private String folderPath;
-    
+
+    // Final state
+    private String path;
+    private String prefix;
+    private Integer number;
+    private String extension;
+
     public DownloadFileItem(List<String> itemPath, DomainObject domainObject, int index) {
         this.itemPath = itemPath;
         this.domainObject = domainObject;
@@ -175,17 +178,18 @@ public class DownloadFileItem {
 
         try {
             log.debug("Constructing file name with "+filenamePattern);
-            int i = 0;
+            constructFilePath(filenamePattern);
+            this.number = -1;
             do {
-                targetRelativePath = constructFilePath(filenamePattern, i);
-                targetLocalPath = downloadsDir.resolve(targetRelativePath);
+                this.number++;
+                String targetRelativePath = toString();
+                this.targetLocalPath = downloadsDir.resolve(targetRelativePath);
                 log.debug("Target path: {}", targetLocalPath.toString());
                 log.debug("Target extension: {}", this.targetExtension);
-                i++;
             }
             // Deduplicate file names by adding _2, _3, etc
-            while (paths!=null && paths.contains(targetLocalPath) && i<100);
-
+            while (paths!=null && paths.contains(targetLocalPath) && number<100);
+            
             if (paths!=null && paths.contains(targetLocalPath)) {
                 this.errorType = DownloadErrorType.DUPLICATE_FILEPATH;
             }
@@ -207,7 +211,7 @@ public class DownloadFileItem {
         return null;
     }
     
-    private String constructFilePath(String filePattern, int i) throws Exception {
+    private String constructFilePath(String filePattern) throws Exception {
 
         log.debug("Objects used for path constructions: ");
         
@@ -315,14 +319,39 @@ public class DownloadFileItem {
             sb.append("_#");
         }
 
-        if (i>0) {
-            sb.append("_"+(i+1));
+        String relativePath = sb.toString();
+        int ls = relativePath.lastIndexOf('/');
+        if (ls>=0) {
+            this.path = relativePath.substring(0, ls);
+            this.prefix = relativePath.substring(ls+1);
+        }
+        else {
+            this.prefix = relativePath;
         }
         
-        // Append extension
-        sb.append(".").append(StringUtils.isEmpty(targetExtension) ? sourceExtension : targetExtension);
+        this.extension = StringUtils.isEmpty(targetExtension) ? sourceExtension : targetExtension;
         
-        log.debug("Final file path: {}", sb);
+        String finalPath = toString();
+        log.debug("Final file path: {}", finalPath);
+        return finalPath;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (path!=null) {
+            sb.append(path);
+            sb.append("/");
+        }
+        sb.append(prefix);
+        if (number!=null && number>0) {
+            sb.append('_');
+            sb.append(number);
+        }
+        if (extension!=null) {
+            sb.append('.');
+            sb.append(extension);
+        }
         return sb.toString();
     }
     
@@ -379,9 +408,20 @@ public class DownloadFileItem {
     public DownloadErrorType getError() {
         return errorType;
     }
+    
+    public String getPath() {
+        return path;
+    }
 
-    @Override
-    public String toString() {
-    	return targetRelativePath;
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public Integer getNumber() {
+        return number;
+    }
+
+    public String getExtension() {
+        return extension;
     }
 }
