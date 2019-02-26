@@ -284,7 +284,7 @@ public final class DownloadVisualPanel3 extends JPanel {
                                 DownloadFileItem downloadItem = new DownloadFileItem(downloadObject.getFolderPath(), domainObject, index++);
                                 downloadItem.init(artifactDescriptor, hasFiles, fileType, outputExtensions, splitChannels && fileType.is3dImage(), flattenStructure, filenamePattern, paths);
 
-                                if (!downloadItem.hasError()) {
+                                if (downloadItem.getError()==null) {
                                     if (index < MAX_LOG_ITEMS) {
                                         log.info("Download {}, descriptor={}, fileSource={}", domainObject, artifactDescriptor, hasFiles);
                                         log.info("         {} to {}", fileType, downloadItem.getTargetFile());
@@ -295,10 +295,6 @@ public final class DownloadVisualPanel3 extends JPanel {
                                     downloadFileItems.add(downloadItem);
                                     paths.add(downloadItem.getTargetFile());
                                 }
-                                else {
-                                    log.debug("Cannot download item: "+downloadItem);
-                                }
-                                
                             }
                         }
                     }

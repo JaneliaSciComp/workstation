@@ -64,7 +64,7 @@ public class DownloadFileItem {
     private int index;
     
     // Derived state
-    private String errorMessage;
+    private DownloadErrorType errorType;
    
     private String sourceFile;
     private String targetRelativePath;
@@ -92,7 +92,7 @@ public class DownloadFileItem {
         
         this.fileProvider = fileProvider;
         this.splitChannels = splitChannels;
-        this.errorMessage = null;
+        this.errorType = null;
         this.targetLocalPath = null;
         this.is3d = fileType.is3dImage();
         
@@ -137,8 +137,8 @@ public class DownloadFileItem {
         }
         
         if (sourceFilePath==null) {
-            errorMessage = "Cannot find '"+artifactDescriptor+"' with '"+fileType.getLabel()+"' file in: "+domainObject.getName();
-            log.debug(errorMessage);
+            log.trace("Cannot find '"+artifactDescriptor+"' with '"+fileType.getLabel()+"' file in: "+domainObject.getName());
+            this.errorType = DownloadErrorType.ARTIFACT_NOT_FOUND;
             return;
         }
         
@@ -184,15 +184,15 @@ public class DownloadFileItem {
                 i++;
             }
             // Deduplicate file names by adding _2, _3, etc
-            while (paths!=null && paths.contains(targetLocalPath));
+            while (paths!=null && paths.contains(targetLocalPath) && i<100);
+
+            if (paths!=null && paths.contains(targetLocalPath)) {
+                this.errorType = DownloadErrorType.DUPLICATE_FILEPATH;
+            }
         }
         catch (Exception e) {
             // TODO: this may pop up a ton of dialog boxes, need to throttle it
             ConsoleApp.handleException(e);
-        }
-
-        if (targetRelativePath == null) {
-            errorMessage = "Error getting file for "+domainObject.getName();
         }
     }
     
@@ -376,12 +376,12 @@ public class DownloadFileItem {
         return chanspec;
     }
 
-    public boolean hasError() {
-        return errorMessage != null;
+    public DownloadErrorType getError() {
+        return errorType;
     }
 
     @Override
     public String toString() {
-    	return hasError() ? errorMessage : targetRelativePath;
+    	return targetRelativePath;
     }
 }
