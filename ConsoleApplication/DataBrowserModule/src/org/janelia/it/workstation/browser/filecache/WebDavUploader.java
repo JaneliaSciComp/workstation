@@ -111,64 +111,7 @@ public class WebDavUploader {
             throws IllegalArgumentException, WebDavException {
 
         String storageURL = storageClientMgr.createStorage(storageName, storageContext, storageTags);
-
-        // need to go through the entire fileList and create the directory hierarchy
-        // and then upload the file content
-        class PathComps {
-            final Path lastSubPath;
-            final List<Path> subPaths = new ArrayList<>();
-
-            private PathComps() {
-                this(null);
-            }
-
-            private PathComps(Path lastSubPath) {
-                this.lastSubPath = lastSubPath;
-                if (lastSubPath != null) {
-                    this.subPaths.add(lastSubPath);
-                }
-            }
-
-            private PathComps append(Path pathComp) {
-                PathComps res;
-                if (lastSubPath == null || pathComp == null) {
-                    res = new PathComps(pathComp);
-                } else {
-                    res = new PathComps(lastSubPath.resolve(pathComp));
-                    res.subPaths.addAll(subPaths);
-                }
-                return res;
-            }
-
-            private PathComps append(PathComps pathComps) {
-                PathComps res = this;
-                for (Path pc : pathComps.subPaths) {
-                    res = res.append(pc);
-                }
-                return res;
-            }
-        }
         Path localRootPath = localRootDirectory.toPath();
-        Set<Path> filePathHierarchy = fileList.stream()
-                .filter(f -> f.isFile())
-                .map(f -> localRootPath.relativize(f.toPath()))
-                .flatMap(fp -> {
-                    int nPathComponents = fp.getNameCount();
-                    return IntStream.range(0, nPathComponents - 1)
-                            .mapToObj(i -> fp.getName(i))
-                            .map(p -> p.toString())
-                            .map(p -> storageClientMgr.urlEncodeComp(p))
-                            .map(pc -> Paths.get(pc))
-                            .reduce(new PathComps(),
-                                    (pathList, pc)-> pathList.append(pc),
-                                    (pl1, pl2) -> pl1.append(pl2))
-                            .subPaths.stream();
-                })
-                .map(fp -> localRootPath.resolve(fp))
-                .sorted()
-                .collect(Collectors.toSet());
-
-        filePathHierarchy.forEach(fp -> storageClientMgr.createDirectory(storageURL, localRootPath.relativize(fp).toString()));
         List<RemoteLocation> remoteFileList = fileList.stream()
                 .filter(f -> f.isFile())
                 .map(f -> {

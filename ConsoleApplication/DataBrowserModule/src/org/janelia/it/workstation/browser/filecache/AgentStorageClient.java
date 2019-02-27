@@ -77,39 +77,6 @@ class AgentStorageClient extends AbstractStorageClient {
     }
 
     /**
-     * Creates a directory on the server.
-     *
-     * @param  directoryUrl  URL (and path) for new directory.
-     *
-     * @throws WebDavException
-     *   if the directory cannot be created or it already exists.
-     */
-    RemoteLocation createDirectory(URL directoryUrl)
-            throws WebDavException {
-        PutMethod method = null;
-        Integer responseCode = null;
-        try {
-            method = new PutMethod(directoryUrl.toString());
-
-            responseCode = httpClient.executeMethod(method);
-            LOG.trace("saveFile: {} returned for PUT {}", responseCode, directoryUrl);
-
-            if (responseCode != HttpServletResponse.SC_CREATED) {
-                throw new WebDavException(responseCode + " returned for PUT " + directoryUrl, responseCode);
-            }
-            return extractRemoteLocationFromResponse(method);
-        } catch (WebDavException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new WebDavException("failed to PUT " + directoryUrl, e, responseCode);
-        } finally {
-            if (method != null) {
-                method.releaseConnection();
-            }
-        }
-    }
-
-    /**
      * Saves the specified file to the server.
      *
      * @param  url   server URL for the new file.
@@ -199,17 +166,9 @@ class AgentStorageClient extends AbstractStorageClient {
         return new RemoteLocation(virtualFilePath, realFilePath, location);
     }
 
-    URL getNewDirURL(String storageLocation) {
-        try {
-            return new URL(baseUrl + "/directory/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation));
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
     URL getUploadFileURL(String storageLocation) {
         try {
-            return new URL(baseUrl + "/file/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation));
+            return new URL(baseUrl + "/data_content/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation));
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }

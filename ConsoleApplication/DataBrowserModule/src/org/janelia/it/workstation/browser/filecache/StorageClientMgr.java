@@ -145,17 +145,6 @@ public class StorageClientMgr {
         }
     }
 
-    RemoteLocation createDirectory(String storageURL, String storageLocation) {
-        try {
-            AgentStorageClient agentStorageClient = new AgentStorageClient(storageURL, httpClient, objectMapper, NOOP_ERROR_CONN_HANDLER);
-            RemoteLocation remoteDirectory = agentStorageClient.createDirectory(agentStorageClient.getNewDirURL(storageLocation));
-            remoteDirectory.setStorageURL(storageURL);
-            return remoteDirectory;
-        } catch (Exception e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
     String urlEncodeComp(String pathComp) {
         if (StringUtils.isBlank(pathComp)) {
             return "";
