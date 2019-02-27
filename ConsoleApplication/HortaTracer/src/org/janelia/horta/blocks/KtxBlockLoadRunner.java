@@ -31,6 +31,7 @@ package org.janelia.horta.blocks;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.horta.actors.TetVolumeActor;
@@ -76,7 +77,9 @@ public class KtxBlockLoadRunner
 
     private void loadFromBlockSource() {
         try (InputStream is = ktxBlockTileSource.streamKeyBlock(ktxOctreeBlockTileKey)) {
-            loadStream(StringUtils.defaultIfBlank(ktxBlockTileSource.sourceServerURL, ktxBlockTileSource.getOriginatingSampleURL().toString()), is);
+            URI sourceURI = ktxBlockTileSource.getKeyBlockPathURI(ktxOctreeBlockTileKey);
+            loadStream(StringUtils.defaultIfBlank(ktxBlockTileSource.sourceServerURL + sourceURI.toString(),
+                    ktxBlockTileSource.getOriginatingSampleURL().toString() + sourceURI.toString()), is);
         } catch (IOException ex) {
             LOG.warn("IOException loading tile {} from block source", ktxOctreeBlockTileKey);
             state = State.FAILED;
