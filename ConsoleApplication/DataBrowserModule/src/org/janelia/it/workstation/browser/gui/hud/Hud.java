@@ -81,10 +81,10 @@ public class Hud extends ModalDialog {
     private KeyListener keyListener;
 
     // Current state
+    private boolean firstShowing = true;
     private DomainObject domainObject;
     private HasFiles fileProvider;
     private String title;
-
     private FileType imageType;
     
     public enum COLOR_CHANNEL {
@@ -107,6 +107,7 @@ public class Hud extends ModalDialog {
     private Hud() {
         
         dirtyEntityFor3D = true;
+        
         setModalityType(ModalityType.MODELESS);
         setLayout(new BorderLayout());
         setVisible(false);
@@ -467,7 +468,10 @@ public class Hud extends ModalDialog {
     @Override
     protected void packAndShow() {
         SwingUtilities.updateComponentTreeUI(this);
-        setLocationRelativeTo(null);
+        if (firstShowing) {
+            setLocationRelativeTo(getParent());
+            firstShowing = false;
+        }
         setVisible(true);
     }
     
