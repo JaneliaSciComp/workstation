@@ -24,7 +24,7 @@ ConsoleApplication/ConsoleWrapper/release/modules/ext/compute-client.jar
 ConsoleApplication/ConsoleWrapper/release/modules/ext/jacs-model.jar
 ConsoleApplication/ConsoleWrapper/release/modules/ext/jacs-shared.jar
 ConsoleApplication/ConsoleWrapper/release/config
-ConsoleApplication/DataBrowserModule/src/my.properties
+ConsoleApplication/DataBrowserModule/src/my*.properties
 ConsoleApplication/LargeVolumeViewerModule/doc/Datasources/
 ConsoleApplication/LargeVolumeViewerModule/doc/Logs/
 ConsoleApplication/LargeVolumeViewerModule/doc/Shapes/
