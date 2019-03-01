@@ -2,7 +2,6 @@ package org.janelia.it.workstation.browser.nb_action;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +22,6 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.browser.components.DomainViewerManager;
-import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.gui.dialogs.identifiers.IdentifiersWizardIterator;
 import org.janelia.it.workstation.browser.gui.dialogs.identifiers.IdentifiersWizardState;
@@ -133,7 +130,12 @@ public final class ImportIdentifiersAction extends CallableSystemAction {
             protected void doStuff() throws Exception {
                 int i=0;
                 for (String line : lines) {
-                    refs.addAll(search(line));
+                    if (line.contains("#")) {
+                        refs.add(Reference.createFor(line));
+                    }
+                    else {
+                        refs.addAll(search(line));
+                    }
                     setProgress(i++, lines.size());
                 }
             }
@@ -167,7 +169,7 @@ public final class ImportIdentifiersAction extends CallableSystemAction {
         
     }
     
-    private List<Reference> search(String line) throws Exception {
+    private List<Reference> search(String searchString) throws Exception {
 
         SolrQueryBuilder builder = new SolrQueryBuilder();
 
@@ -176,7 +178,7 @@ public final class ImportIdentifiersAction extends CallableSystemAction {
             builder.addOwnerKey(subjectKey);
         }
 
-        builder.setSearchString(line);
+        builder.setSearchString(searchString);
 
         final Map<String, Set<String>> filters = new HashMap<>();
         SearchType searchTypeAnnot = Sample.class.getAnnotation(SearchType.class);
