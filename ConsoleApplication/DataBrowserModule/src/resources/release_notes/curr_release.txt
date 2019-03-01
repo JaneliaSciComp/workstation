@@ -1,5 +1,7 @@
 // 7.27
   
 Data Browser
-* Added a new feature to search multiple identifiers at the same time. Access it in the menu under "Services"->"Batch Search".
+* Added a new feature to search multiple identifiers at the same time, available under "Services"->"Batch Search".
 * Fixed issues with conversion of lsm.bz2 files to zip format
+* Improved performance for Download Wizard
+* Improved performance of selections and "load all pages"
