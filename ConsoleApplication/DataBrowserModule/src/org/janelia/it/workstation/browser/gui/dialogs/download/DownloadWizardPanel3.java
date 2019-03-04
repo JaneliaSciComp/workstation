@@ -51,23 +51,29 @@ public class DownloadWizardPanel3 implements WizardDescriptor.ValidatingPanel<Wi
         // Check if all paths are unique
         boolean pathsUnique = true;
         Map<String, DownloadFileItem> uniquePaths = new HashMap<>();
+        int dupErrors = 0;
         for (DownloadFileItem downloadItem : component.getDownloadItems()) {
-            Path targetFile = downloadItem.getTargetFile();
-            if (targetFile!=null) {
-                String path = targetFile.toString();
-                if (uniquePaths.containsKey(path)) {
-                    DownloadFileItem otherItem = uniquePaths.get(path);
-                    log.warn("Path is not unique: "+path);
-                    log.warn("  Original item: "+otherItem.getDomainObject());
-                    log.warn("  Duplicate item: "+downloadItem.getDomainObject());
-                    
-                    pathsUnique = false;
-                    break;
+            if (downloadItem.getError()==DownloadErrorType.DUPLICATE_FILEPATH) {
+                dupErrors++;
+            }
+            else {
+                Path targetFile = downloadItem.getTargetFile();
+                if (targetFile!=null) {
+                    String path = targetFile.toString();
+                    if (uniquePaths.containsKey(path)) {
+                        DownloadFileItem otherItem = uniquePaths.get(path);
+                        log.warn("Path is not unique: "+path);
+                        log.warn("  Original item: "+otherItem.getDomainObject());
+                        log.warn("  Duplicate item: "+downloadItem.getDomainObject());
+                        
+                        pathsUnique = false;
+                        break;
+                    }
+                    uniquePaths.put(path, downloadItem);
                 }
-                uniquePaths.put(path, downloadItem);
             }
         }
-        if (!pathsUnique) {
+        if (dupErrors>0 || !pathsUnique) {
             isValid = false;
             throw new WizardValidationException(null, "Some output paths are duplicated. Try adding a unique identifier like {GUID} or {Index} to your file naming template.", null);
         }

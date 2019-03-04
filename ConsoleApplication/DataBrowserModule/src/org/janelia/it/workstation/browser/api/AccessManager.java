@@ -76,6 +76,10 @@ public final class AccessManager {
     private Subject authenticatedSubject; 
     private Subject actualSubject;
     private static String bypassSubjectKey;
+    private boolean isAdmin;
+    private Set<String> readerSet;
+    private Set<String> writerSet;
+
 
     // Singleton
     private static AccessManager accessManager;
@@ -103,6 +107,7 @@ public final class AccessManager {
         log.info("Moving to logged in state");
         this.currState = AuthState.LoggedIn;
         this.authenticatedSubject = authenticatedSubject;
+        this.isAdmin = AccessManager.authenticatedSubjectIsInGroup(SubjectRole.Admin);
         
         ActivityLogHelper.logUserInfo(authenticatedSubject);
         Events.getInstance().postOnEventBus(new LoginEvent(authenticatedSubject));
@@ -289,9 +294,16 @@ public final class AccessManager {
      * @return true if current user is admin
      */
     public boolean isAdmin() {
-        return AccessManager.authenticatedSubjectIsInGroup(SubjectRole.Admin);
+        return isAdmin;
     }
 
+    public Set<String> getActualReaderSet() {
+        return readerSet;
+    }
+    public Set<String> getActualWriterSet() {
+        return writerSet;
+    }
+    
     /**
      * Returns the current authentication token.
      * @return JWS token 
@@ -394,7 +406,13 @@ public final class AccessManager {
         // Start a new session
         this.actualSubject = subject;
         if (actualSubject!=null) {
+            this.readerSet = SubjectUtils.getReaderSet(actualSubject);
+            this.writerSet = SubjectUtils.getWriterSet(actualSubject);
             Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
+        }
+        else {
+            this.readerSet = new HashSet<>();
+            this.writerSet = new HashSet<>();
         }
     }
 
@@ -433,15 +451,13 @@ public final class AccessManager {
         }
         return false;
     }
-
+    
     public static Set<String> getReaderSet() {
-        Subject subject = getAccessManager().getActualSubject();
-        return SubjectUtils.getReaderSet(subject);
+        return getAccessManager().getActualReaderSet();
     }
     
     public static Set<String> getWriterSet() {
-        Subject subject = getAccessManager().getActualSubject();
-        return SubjectUtils.getWriterSet(subject);
+        return getAccessManager().getActualWriterSet();
     }
 
     /**

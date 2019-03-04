@@ -128,10 +128,6 @@ public class DomainObjectSearchResults implements SearchResults<DomainObject, Re
     public boolean isAllLoaded() {
         return getNumTotalPages()==getNumLoadedPages();
     }
-
-    @Override
-    public void loadAllResults() {
-    }
     
     private void updateNumResults(DomainObjectResultPage resultPage) {
         if (!pages.isEmpty() && numTotalResults!=resultPage.getNumTotalResults()) {

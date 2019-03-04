@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.gui.support;
 
 import java.io.File;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -222,7 +223,7 @@ public class FileDownloadWorker {
                                 log.error("Download was cancelled: {}", filename);
                                 throw (CancellationException)e;
                             }
-                            else if (e instanceof InterruptedException) {
+                            else if (e instanceof InterruptedException || e instanceof ClosedByInterruptException) {
                                 log.error("Download was cancelled: {}", filename);
                                 throw new CancellationException();
                             }
@@ -299,7 +300,6 @@ public class FileDownloadWorker {
         final Path localFile = downloadItem.getTargetFile();
         log.info("Transferring {} to {}",remoteFile,localFile);
         if (worker!=null) worker.throwExceptionIfCancelled();
-        // TODO: should use Paths API here if possible
         copyFile(remoteFile, localFile.toFile(), worker, hasProgress);
         if (worker!=null) worker.throwExceptionIfCancelled();
     }

@@ -141,7 +141,7 @@ public final class DownloadVisualPanel2 extends JPanel {
     public void init(DownloadWizardState state) {
 
         this.downloadObjects = state.getDownloadObjects();
-        this.artifactDescriptors = state.getArtifactDescriptors();
+        this.artifactDescriptors = state.getSelectedArtifactDescriptors();
         this.splitChannels = state.isSplitChannels();
         this.selectedOutputExtensions = state.getOutputExtensions();
         

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.janelia.model.util.MapFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,8 +16,16 @@ import org.slf4j.LoggerFactory;
 public abstract class SelectionModel<T,S> {
     
     private static final Logger log = LoggerFactory.getLogger(SelectionModel.class);
-    
-    private final List<S> selected = new ArrayList<>();
+
+    // This is used mainly to improve performance of contains() over a normal list, while also providing a sorted list and allowing access to the last item.
+    private List<T> selectedObjects = new ArrayList<>();
+    private MapFacade<S, T> selected = new MapFacade<S, T>(selectedObjects) {
+        @Override
+        public S getKey(T object) {
+            return getId(object);
+        }
+    };
+
     private Object source;
     
     /**
@@ -64,7 +73,7 @@ public abstract class SelectionModel<T,S> {
                 if (clear) {
                     selected.clear();
                 }
-                selected.add(id);
+                selected.put(id, object);
             }
             clear = false;
         }
@@ -73,7 +82,7 @@ public abstract class SelectionModel<T,S> {
     }
     
     private boolean isCorrectlySelected(S id, boolean clearAll) {
-        if (selected.contains(id)) {
+        if (selected.containsKey(id)) {
             if (clearAll) {
                 if (selected.size()==1) {
                     // Already single selected
@@ -115,7 +124,7 @@ public abstract class SelectionModel<T,S> {
         
         for(T object : objects) {
             S id = getId(object);
-            if (selected.contains(id)) {
+            if (selected.containsKey(id)) {
                 selected.remove(id);
             }
         }
@@ -152,7 +161,7 @@ public abstract class SelectionModel<T,S> {
      * @return
      */
     public final List<S> getSelectedIds() {
-        return selected;
+        return new ArrayList<>(selected.keySet());
     }
     
     /**
@@ -161,7 +170,7 @@ public abstract class SelectionModel<T,S> {
      * @return
      */
     public final boolean isSelected(S id) {
-        return selected.contains(id);
+        return selected.containsKey(id);
     }
 
     /**
@@ -170,7 +179,7 @@ public abstract class SelectionModel<T,S> {
      * @return
      */
     public final boolean isObjectSelected(T object) {
-        return selected.contains(getId(object));
+        return selected.containsValue(object);
     }
     
     /**
@@ -179,6 +188,7 @@ public abstract class SelectionModel<T,S> {
      */
     public final S getLastSelectedId() {
         if (selected.isEmpty()) return null;
-        return selected.get(selected.size()-1);
+        T object = selectedObjects.get(selectedObjects.size()-1);
+        return getId(object);
     }
 }

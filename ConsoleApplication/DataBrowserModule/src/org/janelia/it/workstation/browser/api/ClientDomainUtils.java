@@ -40,7 +40,6 @@ public class ClientDomainUtils {
      * @return T=Yes; F=No
      */
     public static boolean hasReadAccess(DomainObject domainObject) {
-        if (!AccessManager.loggedIn()) return false;
         if (domainObject==null) return false;
         if (AccessManager.getAccessManager().isAdmin()) return true;
         return DomainUtils.hasReadAccess(domainObject, AccessManager.getReaderSet());
@@ -53,7 +52,6 @@ public class ClientDomainUtils {
      * @return T=Yes; F=No
      */
     public static boolean hasWriteAccess(DomainObject domainObject) {
-        if (!AccessManager.loggedIn()) return false;
         if (domainObject==null) return false;
         if (AccessManager.getAccessManager().isAdmin()) return true;
         return DomainUtils.hasWriteAccess(domainObject, AccessManager.getWriterSet());

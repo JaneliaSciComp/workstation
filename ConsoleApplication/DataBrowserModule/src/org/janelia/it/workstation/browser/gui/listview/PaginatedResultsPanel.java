@@ -23,6 +23,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
+import javax.swing.ProgressMonitor;
 import javax.swing.UIManager;
 import javax.swing.text.Position;
 
@@ -329,7 +330,10 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        searchResults.loadAllResults();
+                        for(int i=0; i<searchResults.getNumTotalPages(); i++) {
+                            searchResults.getPage(i);
+                            setProgress(i, searchResults.getNumTotalPages());
+                        }
                     }
 
                     @Override
@@ -343,9 +347,8 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                     }
                 };
 
-                worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Loading...", ""));
+                worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Loading result pages...", "", 0, 100));
                 worker.execute();
-                return;
             }
         }
         else {

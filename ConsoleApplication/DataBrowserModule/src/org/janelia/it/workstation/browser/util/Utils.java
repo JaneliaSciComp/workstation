@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
@@ -627,7 +628,7 @@ public class Utils {
             try {
                 final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
                 if (length != null && totalBytesWritten < length) {
-                    throw new IOException("bytes written (" + totalBytesWritten + ") for " + wfile.getEffectiveURL() +
+                    throw new CancellationException("Bytes written (" + totalBytesWritten + ") for " + wfile.getEffectiveURL() +
                                           " is less than source length (" + length + ")");
                 }
             } 
@@ -680,7 +681,7 @@ public class Utils {
             
             final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
             if (totalBytesWritten < source.length()) {
-                throw new IOException("bytes written (" + totalBytesWritten + ") for " + destination +
+                throw new CancellationException("Bytes written (" + totalBytesWritten + ") for " + destination +
                                       " is less than source length (" + length + ")");
             }
         } 
