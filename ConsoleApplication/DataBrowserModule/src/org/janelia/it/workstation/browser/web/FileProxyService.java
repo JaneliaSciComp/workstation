@@ -29,13 +29,6 @@ public class FileProxyService extends AbstractHandler {
     
     private static final int BUFFER_SIZE = 1024;
     
-    // A little hack to let Aljoscha preview how lossy neuron separation will look
-    private static boolean blockLosslessNeuSep = false;
-    public static void setBlockLosslessNeuSep(boolean blockLosslessNeuSep) {
-        FileProxyService.blockLosslessNeuSep = blockLosslessNeuSep;
-        log.info("FileProxyService.blockLosslessNeuSep={}", FileProxyService.blockLosslessNeuSep);
-    }
-
     public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
 
@@ -74,16 +67,6 @@ public class FileProxyService extends AbstractHandler {
         
         WorkstationFile wfile = null;
         OutputStream output = null;
-                
-        if (blockLosslessNeuSep) {
-            if (standardPath.endsWith("ConsolidatedSignal.v3dpbd") || standardPath.endsWith("Reference.v3dpbd")) {
-                log.warn("Blocking access to "+standardPath);
-                response.setContentType("text/plain");
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().print("File not found\n");
-                return;
-            }
-        }
         
         try {
             wfile = new WorkstationFile(standardPath);
