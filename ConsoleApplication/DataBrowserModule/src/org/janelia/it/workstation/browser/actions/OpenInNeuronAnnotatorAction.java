@@ -59,7 +59,6 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
     public void actionPerformed(ActionEvent event) {
 
         ActivityLogHelper.logUserAction("OpenInNeuronAnnotatorAction.doAction", fragment==null?separation:fragment.getSeparationId());
-        FileProxyService.setBlockLosslessNeuSep(false);
 
         if (separation!=null) {
             openSeparation();
