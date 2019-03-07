@@ -910,7 +910,7 @@ public class Utils {
 
         int i = 1;
         while (defaultFile.exists() && i < 100000) {
-            defaultFile = new File(dir, prefix + "_" + i + extension);
+            defaultFile = new File(dir, prefix + "_" + i + "." + extension);
             i++;
         }
         
