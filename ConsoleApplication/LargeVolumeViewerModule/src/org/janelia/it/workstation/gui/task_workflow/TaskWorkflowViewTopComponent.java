@@ -1002,7 +1002,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
      * retrieve all review tasks 
      */
     public List<TmReviewTask> retrieveTasks () {
-        if (annManager==null)
+        if (annManager==null || annManager.getCurrentWorkspace()==null)
             this.close();
         List<TmReviewTask> reviewTasks = null;
         TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
