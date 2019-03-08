@@ -39,7 +39,8 @@ public class DecreaseSpeedNeuronCamAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
        NeuronTracerTopComponent nttc = NeuronTracerTopComponent.findThisComponent();
-       nttc.updatePlaybackSpeed(false);
+       if (nttc!=null)
+           nttc.updatePlaybackSpeed(false);
     }
     
     @Override
