@@ -6,3 +6,7 @@ Data Browser
 * Lightbox now remembers its positioning
 * Improved performance for Download Wizard
 * Improved performance of selections and "load all pages"
+
+Large Volume Viewer
+* Fixed NeuronCam exceptions for shortcuts
+* Added shortcuts for Next Branch, Mark Current Branch

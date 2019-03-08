@@ -1,4 +1,4 @@
-package org.janelia.horta.actions;
+package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 /**
  *
@@ -9,8 +9,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import org.janelia.horta.NeuronTracerTopComponent;
-import org.janelia.horta.PlayReviewManager;
+import org.janelia.it.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -20,27 +19,27 @@ import org.slf4j.LoggerFactory;
 
 @ActionID(
         category = "Horta",
-        id = "IncreaseSpeedNeuronCamAction"
+        id = "NextBranchNeuronCamAction"
 )
 @ActionRegistration(
-        displayName = "Increase Speed NeuronCam",
+        displayName = "Review Next Branch",
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "A-7")
+    @ActionReference(path = "Shortcuts", name = "A-9")
 })
-public class IncreaseSpeedNeuronCamAction extends AbstractAction {
+public class NextBranchNeuronCamAction extends AbstractAction {
 
-    private static final Logger log = LoggerFactory.getLogger(IncreaseSpeedNeuronCamAction.class);
-    public IncreaseSpeedNeuronCamAction() {
-        super("Increase Speed Of NeuronCam");
+    private static final Logger log = LoggerFactory.getLogger(NextBranchNeuronCamAction.class);
+    public NextBranchNeuronCamAction() {
+        super("Review Next Branch");
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
-       NeuronTracerTopComponent nttc = NeuronTracerTopComponent.findThisComponent();
-       if (nttc!=null)
-           nttc.updatePlaybackSpeed(true);
+        TaskWorkflowViewTopComponent taskView = TaskWorkflowViewTopComponent.getInstance();
+        if (taskView!=null)
+            taskView.nextBranch();
     }
     
     @Override
