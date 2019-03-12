@@ -40,10 +40,10 @@ public class CommonDialogItems {
                     .map(u -> (Subject) u)
                     .collect(Collectors.toList());
 
-                // in either case, add back in the tracer group:
+                // in either case, add back in the tracer group, at the top:
                 Subject tracersGroup = DomainMgr.getDomainMgr().getSubjectFacade().getSubjectByNameOrKey(TRACERS_GROUP);
                 if (tracersGroup != null) {
-                    subjects.add(tracersGroup);
+                    subjects.add(0, tracersGroup);
                 }
             } else {
                 // filter = NONE = all users and groups
