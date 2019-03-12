@@ -134,7 +134,10 @@ public class LocalFileTileCacheLoader extends CacheLoader<TileIndex, Optional<Te
     public LocalFileTileCacheLoader(BlockTiffOctreeLoadAdapter tileLoader) {
         this.currentlyLoadingTiles = new LinkedHashSet<>();
         this.tileLoader = tileLoader;
-        this.localTilesCacheDir = Paths.get(LOCAL_CACHE_ROOT, CACHE_DIRECTORY_NAME, tileLoader.getVolumeBaseURI().getPath());
+        String volumePath = tileLoader.getVolumeBaseURI().getPath();
+        this.localTilesCacheDir = Paths.get(LOCAL_CACHE_ROOT,
+                CACHE_DIRECTORY_NAME,
+                volumePath == null ? "" : volumePath.replace(':', '_'));
         this.localCache = initializeLocalCache(localTilesCacheDir);
     }
 
