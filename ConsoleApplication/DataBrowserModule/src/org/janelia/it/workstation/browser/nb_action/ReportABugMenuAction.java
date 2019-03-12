@@ -5,9 +5,9 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JFrame;
 
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.logging.NBExceptionHandler;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
@@ -29,9 +29,8 @@ public final class ReportABugMenuAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         
         JFrame parentFrame = WindowLocator.getMainFrame();
-        String email = AccessManager.getUserEmail();
-        
-        MailDialogueBox popup = MailDialogueBox.newDialog(parentFrame, email)
+
+        MailDialogueBox popup = MailDialogueBox.newDialog(parentFrame, NBExceptionHandler.REPORT_EMAIL)
                 .withTitle("Create A Ticket")
                 .withPromptText("Problem Description:")
                 .withEmailSubject("Bug Report")
