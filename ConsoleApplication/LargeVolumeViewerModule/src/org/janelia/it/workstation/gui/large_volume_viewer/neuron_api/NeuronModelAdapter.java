@@ -114,6 +114,11 @@ public class NeuronModelAdapter implements NeuronModel
         // this.workspace = workspace;
         // this.sample = sample;
     }
+    
+    public void loadNewVertices (TmNeuronMetadata neuron) {
+        vertexes.loadNewVertices(neuron.getGeoAnnotationMap());
+        updateEdges();
+    }
 
     protected boolean hasCachedVertex(Long vertexId) {
         return vertexes.hasCachedVertex(vertexId);
@@ -775,6 +780,11 @@ public class NeuronModelAdapter implements NeuronModel
         {
             this.vertices = vertices;
             this.neuronSet = neuronSet;
+        }
+        
+        public void loadNewVertices(Map<Long, TmGeoAnnotation> vertices) {
+            this.vertices = vertices;
+            clearCachedVertices();
         }
         
         public boolean hasCachedVertex(Long vertexId) {
