@@ -803,22 +803,25 @@ public class NeuronSetAdapter
         public void neuronChanged(TmNeuronMetadata neuron) {
 
             LOG.info("Neuron changed: {}", neuron);
-
-            // Remove all the existing cached vertices for this neuron
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            
+            // Remove all the existing cached vertices for this neuron
             for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
                 LOG.debug("Removing cached vertex: {}", neuronVertex);
                 spatialIndex.removeFromIndex(neuronVertex);
             }
-
             // Re-create all the vertices for the neuron, and re-add them to the spatial index
+            neuronModel.loadNewVertices(neuron);
+            // reload the vertices into the model
+            // Re-create all the vertices for the neuron from the neuron passed, not the model (which might be out of date)
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 LOG.debug("Re-adding vertex: {}", neuronVertex);
                 spatialIndex.addToIndex(neuronVertex);
             }
 
             // Recreate edges from the updated vertex list
-            neuronModel.updateEdges();
+            getMembershipChangeObservable().setChanged();
+            getMembershipChangeObservable().notifyObservers(neuronModel);
             repaintHorta(neuronModel);
         }
 

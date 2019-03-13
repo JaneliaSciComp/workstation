@@ -55,6 +55,11 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
     private static final int MAX_STACKTRACE_CACHE_SIZE = 1000; // Keep track of a max number of unique stacktraces
     private static final boolean AUTO_SEND_EXCEPTIONS = ConsoleProperties.getBoolean("console.AutoSendExceptions", false);
 
+    // email address from which automated reports to the issue tracker will originate;
+    //  this address has an account in JIRA that has right permissions to create tickets
+    public static final String REPORT_EMAIL = "jira-default@janelia.hhmi.org";
+
+
     private final HashFunction hf = Hashing.md5();
     
     private boolean notified = false;
@@ -226,12 +231,11 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             String firstLine = getSummary(stacktrace);
             log.info("Reporting exception: "+firstLine);
 
-            String email = AccessManager.getUserEmail();
             String version = ConsoleApp.getConsoleApp().getApplicationVersion();
             String titleSuffix = " from "+AccessManager.getSubjectName()+" -- "+version+" -- "+firstLine;
             String subject = (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix;
              
-            MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(ConsoleApp.getMainFrame(), email)
+            MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(ConsoleApp.getMainFrame(), REPORT_EMAIL)
                     .withTitle("Create A Ticket")
                     .withPromptText("If possible, please describe what you were doing when the error occured:")
                     .withEmailSubject(subject)

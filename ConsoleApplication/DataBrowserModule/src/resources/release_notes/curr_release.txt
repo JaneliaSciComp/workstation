@@ -1,8 +1,4 @@
-// 7.27
+// 7.28
   
-Data Browser
-* Added a new feature to search multiple identifiers at the same time, available under "Services"->"Batch Search".
-* Fixed issues with conversion of lsm.bz2 files to zip format
-* Lightbox now remembers its positioning
-* Improved performance for Download Wizard
-* Improved performance of selections and "load all pages"
+Large Volume Viewer
+* Moved active tracer group to top of list in change ownership dialog

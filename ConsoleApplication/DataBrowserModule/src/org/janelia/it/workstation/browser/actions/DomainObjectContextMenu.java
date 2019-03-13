@@ -194,7 +194,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getOpenInFinderItem());
         add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
-        add(getNeuronAnnotatorLossyItem());
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
         add(getVvdViewerItem());
@@ -866,14 +865,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (multiple) return null;
         if (domainObject instanceof NeuronFragment) {
             return getNamedActionItem(new OpenInNeuronAnnotatorAction((NeuronFragment)domainObject));
-        }
-        return null;
-    }
-
-    protected JMenuItem getNeuronAnnotatorLossyItem() {
-        if (multiple) return null;
-        if (domainObject instanceof NeuronFragment) {
-            return getNamedActionItem(new OpenInNeuronAnnotatorLossyAction((NeuronFragment)domainObject));
         }
         return null;
     }
