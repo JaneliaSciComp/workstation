@@ -73,7 +73,9 @@ public class TiledMicroscopeDomainMgr {
     public TmSample createSample(String name, String filepath) throws Exception {
         LOG.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
         Map<String,Object> constants = client.getTmSampleConstants(filepath);
-        if (constants!=null) {
+        if (constants != null) {
+            TreeNode tmSampleFolder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_SAMPLE_FOLDER, true);
+
             TmSample sample = new TmSample();
             sample.setOwnerKey(AccessManager.getSubjectKey());
             sample.setName(name);
@@ -101,8 +103,7 @@ public class TiledMicroscopeDomainMgr {
             sample = save(sample);
 
             // Server should have put the sample in the Samples root folder. Refresh the Samples folder to show it in the explorer.
-            TreeNode folder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_SAMPLE_FOLDER, true);
-            model.invalidate(folder);
+            model.invalidate(tmSampleFolder);
 
             return sample;
         } else throw new RuntimeException ("problem creating sample; no sample constants available.");
