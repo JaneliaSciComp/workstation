@@ -6,6 +6,7 @@ import javax.swing.border.EmptyBorder;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.awt.Component;
+import org.janelia.model.security.User;
 
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -61,12 +62,32 @@ public final class AdministrationTopComponent extends TopComponent {
       
         // top level buttons
         JButton listUsersButton = new JButton("List Users");
+        listUsersButton.addActionListener(event -> viewUserList());
         add(listUsersButton);        
         listUsersButton.setToolTipText("View Users visible to you");
         JButton listGroupsButton = new JButton("List Groups");
         add(listGroupsButton);        
         listGroupsButton.setToolTipText("View groups visible to you");
 
+    }
+    
+    public void viewUserList() {
+        UserManagementPanel panel = new UserManagementPanel(this);
+        removeAll();
+        add(panel);
+        revalidate();
+    }
+    
+    public void viewUserDetails(User user) {         
+        try {
+            UserDetailsPanel panel = new UserDetailsPanel(this);
+            panel.editUserDetails(user);
+            removeAll();
+            add(panel);
+            revalidate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }        
     }
     
     @Override

@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.admin;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.IntrospectionException;
@@ -7,15 +8,19 @@ import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import javax.swing.AbstractCellEditor;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
@@ -34,15 +39,18 @@ import org.slf4j.LoggerFactory;
  */
 public class UserDetailsPanel extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(UserManagementPanel.class);
+    
+    AdministrationTopComponent parent;
     JComboBox newGroupSelector;
     UserDetailsTableModel userDetailsTableModel;
     JTable userDetailsTable;
     GroupRolesModel groupRolesModel;
     JTable groupRolesTable;
-    private int COLUMN_NAME = 1;
-    private int COLUMN_VALUE = 2;
+    private int COLUMN_NAME = 0;
+    private int COLUMN_VALUE = 1;
     
-    public UserDetailsPanel() {
+    public UserDetailsPanel(AdministrationTopComponent parent) {
+        this.parent = parent;
         setupUI();
     }
     
@@ -52,19 +60,27 @@ public class UserDetailsPanel extends JPanel {
         // display table of user editable attributes
         userDetailsTableModel = new UserDetailsTableModel();
         userDetailsTable = new JTable(userDetailsTableModel);
-        add (userDetailsTable);
+        TableFieldEditor editor = new TableFieldEditor();
+        userDetailsTable.getColumn("Property").setCellEditor(editor);       
+        JScrollPane userTableScroll = new JScrollPane(userDetailsTable);
+        add(userTableScroll); 
+        
         
         // show group edit table with permissions for that group
         groupRolesModel = new GroupRolesModel();
         groupRolesTable = new JTable(groupRolesModel);
-        add (groupRolesTable);
+        TableSelectBox groupSelectBox = new TableSelectBox();
+        groupRolesTable.getColumn("Role").setCellEditor(groupSelectBox);
+        groupRolesTable.getColumn("Role").setCellRenderer(groupSelectBox);    
+        JScrollPane groupRolesScroll = new JScrollPane(groupRolesTable);
+        add(groupRolesScroll); 
         
         // add groups pulldown selection for groups this person is a member of
         newGroupSelector = new JComboBox();
         JButton newGroupButton = new JButton("Add New Group");
         newGroupButton.addActionListener(event -> addNewGroup());
         JPanel newGroupPanel = new JPanel();
-        newGroupPanel.setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
+//        newGroupPanel.setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
         newGroupPanel.add(newGroupSelector);
         newGroupPanel.add(newGroupButton);
         add(newGroupPanel);               
@@ -80,14 +96,15 @@ public class UserDetailsPanel extends JPanel {
             groupRolesModel.loadGroupRoles(user);
             
             // load up the new groups available to add to this user
-            Iterator<UserGroupRole> groupRoles = user.getUserGroupRoles().iterator();
-            List<String> rawGroups = new ArrayList<>();
+            newGroupSelector.removeAllItems();
+            Iterator<UserGroupRole> groupRoles = admin.getUserGroupRoles().iterator();
             while (groupRoles.hasNext()) {
                 UserGroupRole groupRole = groupRoles.next();
                 if (groupRole.getRole() == GroupRole.Admin
-                        || groupRole.getRole() == GroupRole.Owner) {
+                        || groupRole.getRole() == GroupRole.Owner 
+                        || AccessManager.getAccessManager().isAdmin()) {
                     if (user.getRole(groupRole.getGroupKey()) == null) {
-                        rawGroups.add(groupRole.getGroupKey());
+                        newGroupSelector.addItem(groupRole.getGroupKey());
                     }
                 }
             }            
@@ -131,20 +148,12 @@ public class UserDetailsPanel extends JPanel {
         public Object getValueAt(int row, int col) {
             if (col==COLUMN_NAME) {
                 return editProperties[row];               
-            } else {                
-                JTextField editBox = new JTextField();
-                editBox.setActionCommand(editProperties[row]);
-                editBox.addActionListener(this);
-                return editBox;
-            }            
+            } else 
+                return values[row];
         }
 
         public Class getColumnClass(int c) {
-            if (c==COLUMN_NAME) {
-                return String.class;               
-            } else {
-                return JTextField.class;
-            }
+            return String.class;               
         }
 
         @Override
@@ -165,7 +174,7 @@ public class UserDetailsPanel extends JPanel {
     
     class GroupRolesModel extends AbstractTableModel implements ActionListener {
         String[] columnNames = {"Group Name","Role"};
-        String[] roleOptions = { "Owner", "Admin", "Write", "Read"};
+        String[] roleOptions = { "Owner", "Admin", "Writer", "Reader"};
         List<UserGroupRole> data = new ArrayList<>();
         User user;
         
@@ -175,6 +184,13 @@ public class UserDetailsPanel extends JPanel {
 
         public int getRowCount() {
             return data.size();
+        }
+        
+        @Override
+        public boolean isCellEditable(int row, int col) {
+            if (col!=COLUMN_NAME)
+                return true;
+            return false;
         }
         
         public void loadGroupRoles(User user) {
@@ -216,5 +232,42 @@ public class UserDetailsPanel extends JPanel {
             groupRole.setRole(GroupRole.valueOf((String)((JComboBox)e.getSource()).getSelectedItem()));                                    
         }
         
+    }
+ 
+    private static class TableFieldEditor extends AbstractCellEditor implements TableCellEditor {
+        JTextField field;
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {             
+            field = new JTextField((String)value);
+            return field;
+        }      
+
+        @Override
+        public Object getCellEditorValue() {
+            return field.getText();
+        }
+         
+    }
+    
+    private static class TableSelectBox extends AbstractCellEditor implements TableCellEditor, TableCellRenderer {
+        JComboBox selectBox;
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {             
+            selectBox = (JComboBox)value;
+            return selectBox;
+        }      
+
+        @Override
+        public Object getCellEditorValue() {
+            return selectBox.getSelectedItem();
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            return (JComboBox) value;
+        }
+         
     }
 }

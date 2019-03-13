@@ -1,12 +1,16 @@
 package org.janelia.it.workstation.admin;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.EventObject;
 import java.util.List;
+import javax.swing.AbstractAction;
+import javax.swing.AbstractCellEditor;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -15,13 +19,17 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.event.CellEditorListener;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.model.domain.tiledMicroscope.TmReviewItem;
 import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
 import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,15 +41,21 @@ import org.slf4j.LoggerFactory;
 public class UserManagementPanel extends JPanel implements ActionListener {
     private static final Logger log = LoggerFactory.getLogger(UserManagementPanel.class);
     
+    private AdministrationTopComponent parent;
     private JLabel titleLabel;
     private JLabel workspaceNameLabel;
     private JLabel sampleNameLabel;
+    UserManagementTableModel userManagementTableModel;
     private JTable userManagementTable;   
+    private AbstractAction buttonAction;
     private int COLUMN_EDIT = 2;
     private int COLUMN_DELETE = 3;
 
-    public UserManagementPanel() {
+    public UserManagementPanel(AdministrationTopComponent parent) {
+        this.parent = parent;
         setupUI();
+        loadUsers();      
+        
     }
 
     private void setupUI() {
@@ -51,35 +65,35 @@ public class UserManagementPanel extends JPanel implements ActionListener {
         add(titleLabel);
         add(Box.createRigidArea(new Dimension(0, 10)));
     
-        UserManagementTableModel userManagementTableModel = new UserManagementTableModel();
+        userManagementTableModel = new UserManagementTableModel();
         userManagementTableModel.setParentManager(this);
         userManagementTable = new JTable(userManagementTableModel);
         userManagementTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);   
-        userManagementTable.addMouseListener(new MouseHandler() {
-            @Override
-            protected void singleLeftClicked(MouseEvent me) {
-                if (me.isConsumed()) {
-                    return;
-                }
-                JTable table = (JTable) me.getSource();
-                int viewRow = table.rowAtPoint(me.getPoint());
-                if (viewRow >= 0) {
-                    int viewColumn = table.columnAtPoint(me.getPoint());
-                    if (viewColumn == COLUMN_EDIT) {
-                        Subject user = ((UserManagementTableModel) userManagementTable.getModel()).getUserAtRow(viewRow);
-                        editUserProfile(user);
-                    } else if (viewColumn == COLUMN_DELETE) {
-                        Subject user = ((UserManagementTableModel) userManagementTable.getModel()).getUserAtRow(viewRow);
-                        deleteUser(user);
-                    }
-                }
-                me.consume();
-            }
-        });
+        AbstractCellEditor buttonRenderer = new TableButton();
+        userManagementTable.getColumn("Edit").setCellRenderer((TableCellRenderer)buttonRenderer);
+        userManagementTable.getColumn("Delete").setCellRenderer((TableCellRenderer)buttonRenderer);
+        userManagementTable.getColumn("Edit").setCellEditor((TableCellEditor)buttonRenderer);
+        userManagementTable.getColumn("Delete").setCellEditor((TableCellEditor)buttonRenderer);
+        userManagementTable.getColumn("Edit").setPreferredWidth(100);
+        userManagementTable.getColumn("Delete").setPreferredWidth(100);
+
         JScrollPane tableScroll = new JScrollPane(userManagementTable);
-        add(tableScroll);
+        add(tableScroll);   
     }
     
+    public void actionPerformed(ActionEvent e) {
+        String command = e.getActionCommand();
+        int userRow = (int)((JButton)e.getSource()).getClientProperty("row");
+        User user = userManagementTableModel.getUserAtRow(userRow);
+        if ("Edit".equals(command)) {
+            parent.viewUserDetails(user);
+        } else if ("Delete".equals(command)) {
+
+        } else if ("Add".equals(command)) {
+
+        }
+    }
+
     /*
       loads users based off your permissions.. 
     If you are a workstation admin, you see everybody
@@ -88,7 +102,13 @@ public class UserManagementPanel extends JPanel implements ActionListener {
     private void loadUsers () {
         try {
             if (AccessManager.getAccessManager().isAdmin()) {
-                List<Subject> userList = DomainMgr.getDomainMgr().getSubjects();
+                List<Subject> subjectList = DomainMgr.getDomainMgr().getSubjects();
+                List<User> userList = new ArrayList<>();
+                for (Subject subject: subjectList) {
+                    if (subject instanceof User)
+                        userList.add((User)subject);
+                }
+                userManagementTableModel.addUsers(userList);
             }
         } catch (Exception e) {
             String errorMessage = "Problem retrieving user information";
@@ -102,34 +122,24 @@ public class UserManagementPanel extends JPanel implements ActionListener {
         
     }
     
-    // hide this panel and open up the User Details Panel
-    private void editUserProfile(Subject user) {
-        
-    }
-    
     // remove the User from the  as well as the table model
     private void deleteUser(Subject user) {
         
     }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();
-        if ("Edit".equals(command)) {
-            
-        } else if ("Delete".equals(command)) {
-            
-        } else if ("Add".equals(command)) {
-            
-        }
-    }
     
     class UserManagementTableModel extends AbstractTableModel {
-        String[] columnNames = {"Username",
-                                "", ""};
+        String[] columnNames = {"Username", "Groups",
+                                "Edit", "Delete"};
         List<List<Object>> data = new ArrayList<List<Object>>();
-        List<Subject> users = new ArrayList<>();
+        List<User> users = new ArrayList<>();
         private UserManagementPanel manager;
+        
+        @Override
+        public boolean isCellEditable(int row, int col) {
+            if (col==COLUMN_EDIT || col==COLUMN_DELETE)
+                return true;
+            return false;
+        }
         
         public int getColumnCount() {
             return columnNames.length;
@@ -144,14 +154,26 @@ public class UserManagementPanel extends JPanel implements ActionListener {
             users = new ArrayList<>();
         }
         
-        public void addUsers(List<Subject> userList) {
+        public void addUsers(List<User> userList) {
             data = new ArrayList<List<Object>>();
             users = new ArrayList<>();
+            ArrayList userRow;
+            for (User user: userList) {
+               userRow = new ArrayList<>();
+               userRow.add(user.getFullName());
+               String groups = user.getReadGroups().toString();
+               groups = groups.replaceAll("group:", "");
+               userRow.add(groups);
+               data.add(userRow);
+               users.add(user); 
+            }            
+            fireTableRowsInserted(0, data.size()-1);
         }
         
-        public void addUser (Subject user) {
+        public void addUser (User user) {
             ArrayList userRow = new ArrayList<>();
             userRow.add(user.getFullName());
+            data.add(userRow);
             users.add(user);
             fireTableRowsInserted(data.size()-1, data.size()-1);
         }
@@ -165,19 +187,21 @@ public class UserManagementPanel extends JPanel implements ActionListener {
                 JButton editUser = new JButton("Edit");                
                 editUser.setActionCommand("Edit");
                 editUser.addActionListener(manager);
+                editUser.putClientProperty("row", row);
                 return editUser;
             } else if (col==COLUMN_DELETE) {
                 JButton deleteUser = new JButton("Delete");
                 deleteUser.setActionCommand("Delete");
                 deleteUser.addActionListener(manager);
+                deleteUser.putClientProperty("row", row);
                 return deleteUser;
             }
             return data.get(row).get(col);
         }
         
         // kludgy way to store the Subject at the end of the row in a hidden column
-        public Subject getUserAtRow(int row) {
-            return (Subject)data.get(row).get(1);
+        public User getUserAtRow(int row) {
+            return users.get(row);
         }
         
         public void removeUser(int row) {
@@ -194,4 +218,27 @@ public class UserManagementPanel extends JPanel implements ActionListener {
         }
         
     }
+    
+        
+    private static class TableButton extends AbstractCellEditor implements TableCellRenderer, TableCellEditor {
+        JButton button;
+         @Override 
+         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+             button = (JButton)value;             
+             return button;
+         }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+             button = (JButton)value;
+             return button;
+        }      
+
+        @Override
+        public Object getCellEditorValue() {
+            return button;
+        }
+         
+    }
+
 }
