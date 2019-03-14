@@ -10,7 +10,7 @@ import java.util.Set;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.gui.options.FilePathsOptions;
+import org.janelia.it.workstation.browser.gui.options.DownloadOptions;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.MappingType;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
@@ -311,7 +311,7 @@ public class DownloadFileItem {
         String filepath = StringUtils.replaceVariablePattern(filePattern, keyValues);
         log.debug("Interpolated filepath: {}", filepath);
         
-        if (FilePathsOptions.getInstance().getSanitizeDownloads()) {
+        if (DownloadOptions.getInstance().getSanitizeDownloads()) {
             filepath = filepath.replaceAll("(GMR|BJD)_", "");
             log.debug("Sanitized filepath: {}", filepath);
         }

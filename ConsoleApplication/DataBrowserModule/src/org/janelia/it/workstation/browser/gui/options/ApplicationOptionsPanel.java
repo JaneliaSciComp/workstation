@@ -39,9 +39,9 @@ import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class ApplicationPanel extends javax.swing.JPanel {
+final class ApplicationOptionsPanel extends javax.swing.JPanel {
 
-    private static final Logger log = LoggerFactory.getLogger(ApplicationPanel.class);
+    private static final Logger log = LoggerFactory.getLogger(ApplicationOptionsPanel.class);
     
     private final ApplicationOptionsPanelController controller;
 
@@ -59,7 +59,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
     private JButton fileCacheClearButton;
     private JLabel errorLabel;
     
-    ApplicationPanel(final ApplicationOptionsPanelController controller) {
+    ApplicationOptionsPanel(final ApplicationOptionsPanelController controller) {
         this.controller = controller;
         initComponents();
         

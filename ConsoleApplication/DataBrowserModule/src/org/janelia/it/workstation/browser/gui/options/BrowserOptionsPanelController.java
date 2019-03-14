@@ -17,7 +17,7 @@ import org.openide.util.Lookup;
 @org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_Browser=Browser", "AdvancedOption_Keywords_Browser=browser 2d"})
 public final class BrowserOptionsPanelController extends OptionsPanelController {
 
-    private BrowserPanel panel;
+    private BrowserOptionsPanel panel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private boolean changed;
 
@@ -59,9 +59,9 @@ public final class BrowserOptionsPanelController extends OptionsPanelController 
         pcs.removePropertyChangeListener(l);
     }
 
-    private BrowserPanel getPanel() {
+    private BrowserOptionsPanel getPanel() {
         if (panel == null) {
-            panel = new BrowserPanel(this);
+            panel = new BrowserOptionsPanel(this);
         }
         return panel;
     }

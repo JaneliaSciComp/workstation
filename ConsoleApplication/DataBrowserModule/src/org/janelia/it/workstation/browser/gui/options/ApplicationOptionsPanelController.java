@@ -23,7 +23,7 @@ public final class ApplicationOptionsPanelController extends OptionsPanelControl
     public static final String ID = "org.janelia.it.workstation.browser.gui.options.Application";
     public static final String PATH = "Core/"+ID;
     
-    private ApplicationPanel panel;
+    private ApplicationOptionsPanel panel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private boolean changed;
 
@@ -65,9 +65,9 @@ public final class ApplicationOptionsPanelController extends OptionsPanelControl
         pcs.removePropertyChangeListener(l);
     }
 
-    private ApplicationPanel getPanel() {
+    private ApplicationOptionsPanel getPanel() {
         if (panel == null) {
-            panel = new ApplicationPanel(this);
+            panel = new ApplicationOptionsPanel(this);
         }
         return panel;
     }

@@ -22,9 +22,9 @@ import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class BrowserPanel extends javax.swing.JPanel {
+final class BrowserOptionsPanel extends javax.swing.JPanel {
 
-    private static final Logger log = LoggerFactory.getLogger(BrowserPanel.class);
+    private static final Logger log = LoggerFactory.getLogger(BrowserOptionsPanel.class);
 
     private final BrowserOptionsPanelController controller;
     private final GroupedKeyValuePanel mainPanel;
@@ -52,7 +52,7 @@ final class BrowserPanel extends javax.swing.JPanel {
         }
     };
     
-    BrowserPanel(BrowserOptionsPanelController controller) {
+    BrowserOptionsPanel(BrowserOptionsPanelController controller) {
         this.controller = controller;
         initComponents();
         

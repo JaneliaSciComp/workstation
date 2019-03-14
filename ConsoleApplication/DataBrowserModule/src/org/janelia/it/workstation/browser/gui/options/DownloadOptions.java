@@ -16,24 +16,24 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FilePathsOptions {
+public class DownloadOptions {
 
-    private static final Logger log = LoggerFactory.getLogger(FilePathsOptions.class);
+    private static final Logger log = LoggerFactory.getLogger(DownloadOptions.class);
 
     private static final int NUM_CONCURRENT_DOWNLOADS_DEFAULT = 1;
     private static final boolean SANITIZE_FILENAMES_DEFAULT = true;
     
-    private static FilePathsOptions instance;
-    public static synchronized FilePathsOptions getInstance() {
+    private static DownloadOptions instance;
+    public static synchronized DownloadOptions getInstance() {
         if (null == instance) {
-            instance = new FilePathsOptions();
+            instance = new DownloadOptions();
         }
         return instance;
     }
 
     private PropertyChangeSupport propSupport;
     
-    private FilePathsOptions() {
+    private DownloadOptions() {
     }
 
     public String getDownloadsDir() {

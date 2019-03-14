@@ -29,11 +29,11 @@ import org.janelia.it.workstation.browser.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-final class FilePathsPanel extends javax.swing.JPanel {
+final class DownloadOptionsPanel extends javax.swing.JPanel {
 
-    private static final Logger log = LoggerFactory.getLogger(FilePathsPanel.class);
+    private static final Logger log = LoggerFactory.getLogger(DownloadOptionsPanel.class);
 
-    private final FilePathsOptionsPanelController controller;
+    private final DownloadOptionsPanelController controller;
 
     private final GroupedKeyValuePanel mainPanel;
 
@@ -58,7 +58,7 @@ final class FilePathsPanel extends javax.swing.JPanel {
         }
     };
     
-    FilePathsPanel(FilePathsOptionsPanelController controller) {
+    DownloadOptionsPanel(DownloadOptionsPanelController controller) {
         this.controller = controller;
         initComponents();
 
@@ -94,7 +94,7 @@ final class FilePathsPanel extends javax.swing.JPanel {
             }
         });
         
-        downloadsDirField.setText(FilePathsOptions.getInstance().getDownloadsDir());
+        downloadsDirField.setText(DownloadOptions.getInstance().getDownloadsDir());
 
         String chooseFileText = null;
         ImageIcon chooseFileIcon = null;
@@ -116,7 +116,7 @@ final class FilePathsPanel extends javax.swing.JPanel {
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
                 fileChooser.setCurrentDirectory(currentDir);
-                int returnVal = fileChooser.showOpenDialog(FilePathsPanel.this);
+                int returnVal = fileChooser.showOpenDialog(DownloadOptionsPanel.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     downloadsDirField.setText(fileChooser.getSelectedFile().getAbsolutePath());
                     controller.changed();
@@ -135,7 +135,7 @@ final class FilePathsPanel extends javax.swing.JPanel {
         
         this.concurrentDownloadsField = new JTextField(10);
         concurrentDownloadsField.getDocument().addDocumentListener(listener);
-        concurrentDownloadsField.setText(FilePathsOptions.getInstance().getNumConcurrentDownloads()+"");
+        concurrentDownloadsField.setText(DownloadOptions.getInstance().getNumConcurrentDownloads()+"");
         JPanel concurrentDownloadPanel = new JPanel();
         concurrentDownloadPanel.setLayout(new BoxLayout(concurrentDownloadPanel, BoxLayout.X_AXIS));
         concurrentDownloadPanel.add(concurrentDownloadsField);
@@ -150,27 +150,27 @@ final class FilePathsPanel extends javax.swing.JPanel {
         sanitizeFilenamesCheckbox.addActionListener((e) -> {
             controller.changed();
         });
-        sanitizeFilenamesCheckbox.setSelected(FilePathsOptions.getInstance().getSanitizeDownloads());
+        sanitizeFilenamesCheckbox.setSelected(DownloadOptions.getInstance().getSanitizeDownloads());
 
         mainPanel.addItem(sanitizeFilenamesCheckbox);
     }
 
     void store() {
 
-        FilePathsOptions.getInstance().setDownloadsDir(downloadsDirField.getText().trim());
+        DownloadOptions.getInstance().setDownloadsDir(downloadsDirField.getText().trim());
         
         String concurrentDownloadsStr = concurrentDownloadsField.getText();
         try {
             if (!StringUtils.isBlank(concurrentDownloadsStr)) {
                 int numConcurrentDownloads = Integer.parseInt(concurrentDownloadsStr);
-                FilePathsOptions.getInstance().setNumConcurrentDownloads(numConcurrentDownloads);
+                DownloadOptions.getInstance().setNumConcurrentDownloads(numConcurrentDownloads);
             }
         }
         catch (NumberFormatException e) {
             log.warn("Cannot parse num concurrent downloads as integer: {}", concurrentDownloadsStr, e);
         }
         
-        FilePathsOptions.getInstance().setSanitizeDownloads(sanitizeFilenamesCheckbox.isSelected());
+        DownloadOptions.getInstance().setSanitizeDownloads(sanitizeFilenamesCheckbox.isSelected());
     }
 
     boolean valid() {
