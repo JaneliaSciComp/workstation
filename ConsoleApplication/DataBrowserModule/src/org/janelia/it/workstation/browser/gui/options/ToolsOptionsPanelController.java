@@ -14,7 +14,8 @@ import org.openide.util.Lookup;
         id = ToolsOptionsPanelController.ID,
         displayName = "#AdvancedOption_DisplayName_Tools",
         keywords = "#AdvancedOption_Keywords_Tools",
-        keywordsCategory = "Core/Tools"
+        keywordsCategory = "Core/Tools",
+        position=4
 )
 @org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_Tools=Tools", "AdvancedOption_Keywords_Tools=tools vaa3d fiji"})
 public final class ToolsOptionsPanelController extends OptionsPanelController {

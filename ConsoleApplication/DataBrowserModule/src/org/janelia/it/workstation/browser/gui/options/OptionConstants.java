@@ -16,6 +16,7 @@ public class OptionConstants {
     public static final String UNLOAD_IMAGES_PROPERTY = "SessionMgr.UnloadImagesProperty";
     public static final String DISABLE_IMAGE_DRAG_PROPERTY = "SessionMgr.DisableImageDragProperty";
     public static final String SHOW_ANNOTATION_TABLES_PROPERTY = "SessionMgr.ShowAnnotationTablesProperty";
+    public static final String SANITIZE_FILENAMES_PROPERTY = "SessionMgr.SanitizeFilenames1";
     public static final String ANNOTATION_TABLES_HEIGHT_PROPERTY = "SessionMgr.AnnotationTablesHeightProperty";
     public static final String DUPLICATE_ANNOTATIONS_PROPERTY = "SessionMgr.AllowDuplicateAnnotationsProperty";
     public static final String USE_RUN_AS_USER_PREFERENCES = "useRunAsUserPreferences";
@@ -25,7 +26,5 @@ public class OptionConstants {
     public static final String FILE_DOWNLOADS_DIR = "FileDownloadsDir";
     public static final String ICON_GRID_VIEWER_SHOW_TITLES = "IconGridViewer.showTitles";
     public static final String ICON_GRID_VIEWER_SHOW_TAGS = "IconGridViewer.showTags";
-    
-    public static final Integer NUM_CONCURRENT_DOWNLOADS_DEFAULT = 1;
     
 }

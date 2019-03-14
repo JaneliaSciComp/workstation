@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.browser.gui.options;
 
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SANITIZE_FILENAMES_PROPERTY;
+
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,12 +14,17 @@ import java.io.FileNotFoundException;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
+import org.apache.commons.lang3.StringUtils;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
-import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +38,26 @@ final class FilePathsPanel extends javax.swing.JPanel {
     private final GroupedKeyValuePanel mainPanel;
 
     private JTextField downloadsDirField;
+    private JTextField concurrentDownloadsField;
+    private JCheckBox sanitizeFilenamesCheckbox;
 
+    DocumentListener listener = new DocumentListener() {
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            controller.changed();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            controller.changed();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            controller.changed();
+        }
+    };
+    
     FilePathsPanel(FilePathsOptionsPanelController controller) {
         this.controller = controller;
         initComponents();
@@ -57,6 +84,8 @@ final class FilePathsPanel extends javax.swing.JPanel {
 
         mainPanel.removeAll();
 
+        // Downloads Dir
+        
         downloadsDirField = new JTextField(40);
         downloadsDirField.addKeyListener(new KeyAdapter() {
             @Override
@@ -65,8 +94,7 @@ final class FilePathsPanel extends javax.swing.JPanel {
             }
         });
         
-        String downloadsDir = SystemInfo.getDownloadsDir().toString();
-        downloadsDirField.setText(downloadsDir);
+        downloadsDirField.setText(FilePathsOptions.getInstance().getDownloadsDir());
 
         String chooseFileText = null;
         ImageIcon chooseFileIcon = null;
@@ -103,19 +131,57 @@ final class FilePathsPanel extends javax.swing.JPanel {
 
         mainPanel.addItem("Downloads Dir", downloadDirPanel);
 
+        // Concurrent downloads
+        
+        this.concurrentDownloadsField = new JTextField(10);
+        concurrentDownloadsField.getDocument().addDocumentListener(listener);
+        concurrentDownloadsField.setText(FilePathsOptions.getInstance().getNumConcurrentDownloads()+"");
+        JPanel concurrentDownloadPanel = new JPanel();
+        concurrentDownloadPanel.setLayout(new BoxLayout(concurrentDownloadPanel, BoxLayout.X_AXIS));
+        concurrentDownloadPanel.add(concurrentDownloadsField);
+        concurrentDownloadPanel.add(new JLabel(" (requires restart)"));
+        
+        mainPanel.addItem("Concurrent downloads", concurrentDownloadPanel);
+
+        // Sanitize filenames for external use
+        
+        sanitizeFilenamesCheckbox = new JCheckBox();
+        sanitizeFilenamesCheckbox.setText("Sanitize filenames for external use");
+        sanitizeFilenamesCheckbox.addActionListener((e) -> {
+            controller.changed();
+        });
+        sanitizeFilenamesCheckbox.setSelected(FilePathsOptions.getInstance().getSanitizeDownloads());
+
+        mainPanel.addItem(sanitizeFilenamesCheckbox);
     }
 
     void store() {
 
-        String downloadsDir = downloadsDirField.getText().trim();
-        if (!downloadsDir.equals(SystemInfo.getDownloadsDir().toString())) {
-            log.info("Saving downloads dir: "+downloadsDir);
-            SystemInfo.setDownloadsDir(downloadsDir);
+        FilePathsOptions.getInstance().setDownloadsDir(downloadsDirField.getText().trim());
+        
+        String concurrentDownloadsStr = concurrentDownloadsField.getText();
+        try {
+            if (!StringUtils.isBlank(concurrentDownloadsStr)) {
+                int numConcurrentDownloads = Integer.parseInt(concurrentDownloadsStr);
+                FilePathsOptions.getInstance().setNumConcurrentDownloads(numConcurrentDownloads);
+            }
         }
+        catch (NumberFormatException e) {
+            log.warn("Cannot parse num concurrent downloads as integer: {}", concurrentDownloadsStr, e);
+        }
+        
+        FilePathsOptions.getInstance().setSanitizeDownloads(sanitizeFilenamesCheckbox.isSelected());
     }
 
     boolean valid() {
-        // TODO check whether form is consistent and complete
+        try {
+            if (!StringUtils.isBlank(concurrentDownloadsField.getText())) {
+                Integer.parseInt(concurrentDownloadsField.getText());
+            }
+        }
+        catch (NumberFormatException e) {
+            return false;
+        }
         return true;
     }
 

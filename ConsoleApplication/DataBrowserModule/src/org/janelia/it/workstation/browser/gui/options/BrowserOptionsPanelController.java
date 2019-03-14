@@ -11,7 +11,8 @@ import org.openide.util.Lookup;
         location = "Core",
         displayName = "#AdvancedOption_DisplayName_Browser",
         keywords = "#AdvancedOption_Keywords_Browser",
-        keywordsCategory = "Core/Browser"
+        keywordsCategory = "Core/Browser",
+        position=2
 )
 @org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_Browser=Browser", "AdvancedOption_Keywords_Browser=browser 2d"})
 public final class BrowserOptionsPanelController extends OptionsPanelController {

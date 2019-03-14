@@ -3,7 +3,6 @@ package org.janelia.it.workstation.browser.gui.options;
 import static org.janelia.it.workstation.browser.gui.options.OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY;
 import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY;
 import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.NUM_CONCURRENT_DOWNLOADS_DEFAULT;
 import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY;
 import static org.janelia.it.workstation.browser.gui.options.OptionConstants.UNLOAD_IMAGES_PROPERTY;
 
@@ -12,16 +11,11 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JSlider;
-import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImagesPanel;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
@@ -40,7 +34,6 @@ final class BrowserPanel extends javax.swing.JPanel {
     private JCheckBox allowDuplicateAnnotations;
     private JCheckBox showAnnotationTables;
     private JSlider annotationTableHeight;
-    private JTextField concurrentDownloadsField;
 
     DocumentListener listener = new DocumentListener() {
         @Override
@@ -165,18 +158,6 @@ final class BrowserPanel extends javax.swing.JPanel {
         annotationTableHeight.setValue((Integer) FrameworkImplProvider.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));
 
         mainPanel.addItem("Annotation table height", annotationTableHeight);
-        
-        // Concurrent downloads
-        
-        this.concurrentDownloadsField = new JTextField(10);
-        concurrentDownloadsField.getDocument().addDocumentListener(listener);
-        concurrentDownloadsField.setText(BrowserOptions.getInstance().getNumConcurrentDownloads()+"");
-        JPanel concurrentDownloadPanel = new JPanel();
-        concurrentDownloadPanel.setLayout(new BoxLayout(concurrentDownloadPanel, BoxLayout.X_AXIS));
-        concurrentDownloadPanel.add(concurrentDownloadsField);
-        concurrentDownloadPanel.add(new JLabel(" (requires restart)"));
-        
-        mainPanel.addItem("Concurrent downloads", concurrentDownloadPanel);
     }
 
     void store() {
@@ -205,30 +186,9 @@ final class BrowserPanel extends javax.swing.JPanel {
             log.info("Saving annotation table height: {}", annotationTableHeight.getValue());
             FrameworkImplProvider.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, annotationTableHeight.getValue());
         }
-        
-        Integer numConcurrentDownloads = NUM_CONCURRENT_DOWNLOADS_DEFAULT;
-        try {
-            String concurrentDownloadsStr = concurrentDownloadsField.getText();
-            if (!StringUtils.isBlank(concurrentDownloadsStr)) {
-                numConcurrentDownloads = new Integer(concurrentDownloadsStr);
-            }
-        }
-        catch (NumberFormatException e) {
-            log.warn("Cannot parse num concurrent downloads input as integer", e);
-        }
-
-        BrowserOptions.getInstance().setNumConcurrentDownloads(numConcurrentDownloads);
     }
 
     boolean valid() {
-        try {
-            if (!StringUtils.isBlank(concurrentDownloadsField.getText())) {
-                Integer.parseInt(concurrentDownloadsField.getText());
-            }
-        }
-        catch (NumberFormatException e) {
-            return false;
-        }
         return true;
     }
 

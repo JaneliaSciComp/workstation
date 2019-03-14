@@ -14,7 +14,8 @@ import org.openide.util.Lookup;
         id = ApplicationOptionsPanelController.ID,
         displayName = "#AdvancedOption_DisplayName_Application",
         keywords = "#AdvancedOption_Keywords_Application",
-        keywordsCategory = "Core/Application"
+        keywordsCategory = "Core/Application",
+        position=1
 )
 @org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_Application=Application", "AdvancedOption_Keywords_Application=application memory cache"})
 public final class ApplicationOptionsPanelController extends OptionsPanelController {

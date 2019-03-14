@@ -11,9 +11,10 @@ import org.openide.util.Lookup;
         location = "Core",
         displayName = "#AdvancedOption_DisplayName_FilePaths",
         keywords = "#AdvancedOption_Keywords_FilePaths",
-        keywordsCategory = "Core/FilePaths"
+        keywordsCategory = "Core/FilePaths",
+        position=3
 )
-@org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_FilePaths=File Paths", "AdvancedOption_Keywords_FilePaths=dirs directories file paths"})
+@org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_FilePaths=Downloads", "AdvancedOption_Keywords_FilePaths=download directories file paths"})
 public final class FilePathsOptionsPanelController extends OptionsPanelController {
 
     private FilePathsPanel panel;
