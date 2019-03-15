@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.admin;
 
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.IntrospectionException;
@@ -9,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.AbstractCellEditor;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -18,12 +21,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
+import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
@@ -37,7 +42,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author schauderd
  */
-public class UserDetailsPanel extends JPanel {
+public class UserDetailsPanel extends JPanel implements ActionListener {
     private static final Logger log = LoggerFactory.getLogger(UserManagementPanel.class);
     
     AdministrationTopComponent parent;
@@ -46,6 +51,7 @@ public class UserDetailsPanel extends JPanel {
     JTable userDetailsTable;
     GroupRolesModel groupRolesModel;
     JTable groupRolesTable;
+    User currentUser;
     private int COLUMN_NAME = 0;
     private int COLUMN_VALUE = 1;
     
@@ -57,36 +63,61 @@ public class UserDetailsPanel extends JPanel {
     public void setupUI() {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         
+        JPanel titlePanel = new JPanel();
+        JButton returnHome = new JButton(Icons.getIcon("returnhome.png"));
+        returnHome.setActionCommand("ReturnHome");
+        returnHome.addActionListener(this);
+        titlePanel.add(returnHome);
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
+        JLabel titleLabel = new JLabel("Edit User", JLabel.LEADING);  
+        titleLabel.setFont(new Font("Serif", Font.PLAIN, 20));
+        titlePanel.add(titleLabel);
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        
         // display table of user editable attributes
+        titleLabel.setFont(new Font("Serif", Font.PLAIN, 20));
+        titlePanel.add(titleLabel);
         userDetailsTableModel = new UserDetailsTableModel();
         userDetailsTable = new JTable(userDetailsTableModel);
         TableFieldEditor editor = new TableFieldEditor();
-        userDetailsTable.getColumn("Property").setCellEditor(editor);       
+        userDetailsTable.getColumn("Property").setCellEditor(editor);   
+        userDetailsTable.setRowHeight(25);
         JScrollPane userTableScroll = new JScrollPane(userDetailsTable);
         add(userTableScroll); 
         
         
         // show group edit table with permissions for that group
+        JLabel groupRolesLabel = new JLabel("Roles", SwingConstants.LEFT);
+        add(groupRolesLabel);        
         groupRolesModel = new GroupRolesModel();
         groupRolesTable = new JTable(groupRolesModel);
         TableSelectBox groupSelectBox = new TableSelectBox();
         groupRolesTable.getColumn("Role").setCellEditor(groupSelectBox);
-        groupRolesTable.getColumn("Role").setCellRenderer(groupSelectBox);    
+        groupRolesTable.getColumn("Role").setCellRenderer(groupSelectBox);  
+        groupRolesTable.setRowHeight(25);
         JScrollPane groupRolesScroll = new JScrollPane(groupRolesTable);
         add(groupRolesScroll); 
         
         // add groups pulldown selection for groups this person is a member of
-        newGroupSelector = new JComboBox();
+        newGroupSelector = new JComboBox();   
         JButton newGroupButton = new JButton("Add New Group");
         newGroupButton.addActionListener(event -> addNewGroup());
-        JPanel newGroupPanel = new JPanel();
+        JButton saveUserButton = new JButton("Save User");
+        saveUserButton.addActionListener(event -> saveUser());
+        JPanel actionPanel = new JPanel();
 //        newGroupPanel.setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
-        newGroupPanel.add(newGroupSelector);
-        newGroupPanel.add(newGroupButton);
-        add(newGroupPanel);               
+        actionPanel.add(newGroupSelector);
+        actionPanel.add(newGroupButton);
+        actionPanel.add(saveUserButton);
+        add(actionPanel);               
+    }
+    
+    public void saveUser () {
+        
     }
     
     public void editUserDetails(User user) throws Exception {
+        currentUser = user;
         Subject rawAdmin = AccessManager.getAccessManager().getActualSubject();
         if (rawAdmin instanceof User) {                
             User admin = (User) rawAdmin;
@@ -117,12 +148,30 @@ public class UserDetailsPanel extends JPanel {
         String groupKey = (String)newGroupSelector.getSelectedItem();
         groupRolesModel.addNewGroup(groupKey);        
     }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        String action = e.getActionCommand();
+        if (action.equals("ReturnHome")) {
+            parent.viewUserList();
+        } else if (action.equals("AddUser")) {
+           
+        }           
+    }
     
     class UserDetailsTableModel extends AbstractTableModel implements ActionListener {
         String[] columnNames = {"Property","Value"};
         User user;
-        String[] editProperties = {"Name", "Email"};
+        String password;
+        String[] editProperties = {"Name", "Email", "Password"};
         String[] values = new String[editProperties.length];
+                
+        @Override
+        public boolean isCellEditable(int row, int col) {
+            if (col!=COLUMN_NAME)
+                return true;
+            return false;
+        }
         
         public int getColumnCount() {
             return 2;
@@ -135,20 +184,28 @@ public class UserDetailsPanel extends JPanel {
         public void loadUser(User user) throws Exception {
             this.user = user;
             for (int i=0; i<editProperties.length; i++) {
-               String value = (String)new PropertyDescriptor(editProperties[i], User.class).getReadMethod().invoke(user);
+                String value;
+                if (editProperties[i].equals("Password")) {
+                    value = "**********";
+                } else {
+                    value = (String) new PropertyDescriptor(editProperties[i], User.class).getReadMethod().invoke(user);
+                }
                values[i] = value;                        
             }
             fireTableRowsInserted(0, getRowCount()-1);
         }
 
-        public String getColumnName(int col) {
-            return columnNames[col];
+        public String getColumnName(int col) {            
+            return columnNames[col];            
         }
 
         public Object getValueAt(int row, int col) {
             if (col==COLUMN_NAME) {
                 return editProperties[row];               
             } else 
+                if (editProperties[row].equals("Password")) {
+                    return "*********";
+                }
                 return values[row];
         }
 
@@ -161,7 +218,11 @@ public class UserDetailsPanel extends JPanel {
             String newValue = ((JTextField)e.getSource()).getText();
             if (newValue!=null) {
                 try {
-                    new PropertyDescriptor(e.getActionCommand(), User.class).getWriteMethod().invoke(user, newValue);
+                    if (e.getActionCommand().equals("Password")) {
+                        password = newValue;
+                    } else { 
+                        new PropertyDescriptor(e.getActionCommand(), User.class).getWriteMethod().invoke(user, newValue);
+                    }
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     String errorMessage = "Problem updating user information using reflection";
@@ -246,27 +307,6 @@ public class UserDetailsPanel extends JPanel {
         @Override
         public Object getCellEditorValue() {
             return field.getText();
-        }
-         
-    }
-    
-    private static class TableSelectBox extends AbstractCellEditor implements TableCellEditor, TableCellRenderer {
-        JComboBox selectBox;
-
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {             
-            selectBox = (JComboBox)value;
-            return selectBox;
-        }      
-
-        @Override
-        public Object getCellEditorValue() {
-            return selectBox.getSelectedItem();
-        }
-
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            return (JComboBox) value;
         }
          
     }

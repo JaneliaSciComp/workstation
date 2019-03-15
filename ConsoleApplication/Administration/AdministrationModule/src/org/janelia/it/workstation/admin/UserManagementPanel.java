@@ -2,6 +2,7 @@ package org.janelia.it.workstation.admin;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -25,6 +26,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.model.domain.tiledMicroscope.TmReviewItem;
 import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
@@ -61,8 +63,21 @@ public class UserManagementPanel extends JPanel implements ActionListener {
     private void setupUI() {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
     
-        titleLabel = new JLabel("User Management", JLabel.LEADING);       
-        add(titleLabel);
+        JPanel titlePanel = new JPanel();
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
+        JButton returnHome = new JButton(Icons.getIcon("returnhome.png"));
+        returnHome.setActionCommand("ReturnHome");
+        returnHome.addActionListener(this);
+        titlePanel.add(returnHome);
+        JLabel titleLabel = new JLabel("User List", JLabel.LEADING);  
+        titleLabel.setFont(new Font("Serif", Font.PLAIN, 20));
+        titlePanel.add(titleLabel);
+        JButton addUserButton = new JButton(Icons.getIcon("add.png"));
+        addUserButton.setActionCommand("AddUser");
+        addUserButton.addActionListener(this);
+        titlePanel.add(addUserButton);
+        
+        add(titlePanel);
         add(Box.createRigidArea(new Dimension(0, 10)));
     
         userManagementTableModel = new UserManagementTableModel();
@@ -82,15 +97,22 @@ public class UserManagementPanel extends JPanel implements ActionListener {
     }
     
     public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();
-        int userRow = (int)((JButton)e.getSource()).getClientProperty("row");
-        User user = userManagementTableModel.getUserAtRow(userRow);
+        String command = e.getActionCommand();       
         if ("Edit".equals(command)) {
+            int userRow = (int)((JButton)e.getSource()).getClientProperty("row");
+            User user = userManagementTableModel.getUserAtRow(userRow);
             parent.viewUserDetails(user);
         } else if ("Delete".equals(command)) {
 
-        } else if ("Add".equals(command)) {
-
+        } else if ("AddUser".equals(command)) {
+            try {
+                User newUser = new User();
+                parent.viewUserDetails(newUser);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } else if ("ReturnHome".equals(command)) {
+            parent.viewTopMenu();
         }
     }
 

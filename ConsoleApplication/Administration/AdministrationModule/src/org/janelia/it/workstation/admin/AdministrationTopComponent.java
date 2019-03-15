@@ -6,6 +6,10 @@ import javax.swing.border.EmptyBorder;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.awt.Component;
+import java.awt.Font;
+import java.util.List;
+import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.model.security.User;
 
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -45,6 +49,8 @@ import org.openide.windows.WindowManager;
 public final class AdministrationTopComponent extends TopComponent {
     public static final String PREFERRED_ID = "AdministrationTopComponent";
     public static final String LABEL_TEXT = "Administration Tool";
+    
+    private JPanel topMenu;
 
     public AdministrationTopComponent() {
         setupGUI();
@@ -59,16 +65,35 @@ public final class AdministrationTopComponent extends TopComponent {
     
     private void setupGUI() {
         setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+        topMenu = new JPanel();
+        topMenu.setLayout(new BoxLayout(topMenu,BoxLayout.X_AXIS));
       
         // top level buttons
-        JButton listUsersButton = new JButton("List Users");
-        listUsersButton.addActionListener(event -> viewUserList());
-        add(listUsersButton);        
+        JPanel userPanel = new JPanel();
+        userPanel.setLayout(new BoxLayout(userPanel,BoxLayout.Y_AXIS));
+        JButton listUsersButton = new JButton(Icons.getIcon("AdminUser.png"));
         listUsersButton.setToolTipText("View Users visible to you");
-        JButton listGroupsButton = new JButton("List Groups");
-        add(listGroupsButton);        
-        listGroupsButton.setToolTipText("View groups visible to you");
+        listUsersButton.addActionListener(event -> viewUserList());
+        userPanel.add(listUsersButton);                
+        JLabel userLabel = new JLabel("View Users", SwingConstants.CENTER);  
+        userLabel.setFont(new Font("Serif", Font.PLAIN, 14));
+        userPanel.add(userLabel);
+        topMenu.add(userPanel);
+      
 
+        
+        JPanel groupPanel = new JPanel();
+        groupPanel.setLayout(new BoxLayout(groupPanel,BoxLayout.Y_AXIS));
+        JButton listGroupsButton = new JButton(Icons.getIcon("AdminGroup.png"));
+        groupPanel.add(listGroupsButton);        
+        listGroupsButton.addActionListener(event -> viewGroupList());
+        listGroupsButton.setToolTipText("View groups visible to you");
+        JLabel groupLabel = new JLabel("View Groups", SwingConstants.CENTER);  
+        groupLabel.setFont(new Font("Serif", Font.PLAIN, 14));
+        groupPanel.add(groupLabel);
+        topMenu.add(groupPanel);
+        add(topMenu);
+        revalidate();
     }
     
     public void viewUserList() {
@@ -76,12 +101,40 @@ public final class AdministrationTopComponent extends TopComponent {
         removeAll();
         add(panel);
         revalidate();
+        repaint();
+    }
+    
+    public void viewTopMenu() {
+        removeAll();
+        add(topMenu);
+        revalidate();
+        repaint();
     }
     
     public void viewUserDetails(User user) {         
         try {
             UserDetailsPanel panel = new UserDetailsPanel(this);
             panel.editUserDetails(user);
+            removeAll();
+            add(panel);
+            revalidate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }        
+    }
+        
+    public void viewGroupList() {
+        GroupManagementPanel panel = new GroupManagementPanel(this);
+        removeAll();
+        add(panel);
+        revalidate();
+    }
+    
+    public void viewGroupDetails(String groupKey) {         
+        try {
+            GroupDetailsPanel panel = new GroupDetailsPanel(this, groupKey);
+            List<User> users = DomainMgr.getDomainMgr().getUsersInGroup(groupKey);
+            panel.editGroupDetails(groupKey,users);
             removeAll();
             add(panel);
             revalidate();
