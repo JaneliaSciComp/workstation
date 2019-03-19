@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author schauderd
  */
-public class UserManagementPanel extends JPanel implements ActionListener {
+public class UserManagementPanel extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(UserManagementPanel.class);
     
     private AdministrationTopComponent parent;
@@ -65,17 +65,14 @@ public class UserManagementPanel extends JPanel implements ActionListener {
     
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
-        JButton returnHome = new JButton(Icons.getIcon("returnhome.png"));
+        JButton returnHome = new JButton("return to top");
         returnHome.setActionCommand("ReturnHome");
-        returnHome.addActionListener(this);
+        returnHome.addActionListener(event -> returnHome());
+        returnHome.setBorderPainted(false);
+        returnHome.setOpaque(false);
         titlePanel.add(returnHome);
-        JLabel titleLabel = new JLabel("User List", JLabel.LEADING);  
-        titleLabel.setFont(new Font("Serif", Font.PLAIN, 20));
+        JLabel titleLabel = new JLabel("User List", JLabel.LEADING);
         titlePanel.add(titleLabel);
-        JButton addUserButton = new JButton(Icons.getIcon("add.png"));
-        addUserButton.setActionCommand("AddUser");
-        addUserButton.addActionListener(this);
-        titlePanel.add(addUserButton);
         
         add(titlePanel);
         add(Box.createRigidArea(new Dimension(0, 10)));
@@ -83,37 +80,34 @@ public class UserManagementPanel extends JPanel implements ActionListener {
         userManagementTableModel = new UserManagementTableModel();
         userManagementTableModel.setParentManager(this);
         userManagementTable = new JTable(userManagementTableModel);
-        userManagementTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);   
-        AbstractCellEditor buttonRenderer = new TableButton();
-        userManagementTable.getColumn("Edit").setCellRenderer((TableCellRenderer)buttonRenderer);
-        userManagementTable.getColumn("Delete").setCellRenderer((TableCellRenderer)buttonRenderer);
-        userManagementTable.getColumn("Edit").setCellEditor((TableCellEditor)buttonRenderer);
-        userManagementTable.getColumn("Delete").setCellEditor((TableCellEditor)buttonRenderer);
-        userManagementTable.getColumn("Edit").setPreferredWidth(100);
-        userManagementTable.getColumn("Delete").setPreferredWidth(100);
+        userManagementTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JScrollPane tableScroll = new JScrollPane(userManagementTable);
-        add(tableScroll);   
+        add(tableScroll);
+
+        // add groups pulldown selection for groups this person is a member of
+        JButton editUserButton = new JButton("Edit User");
+        editUserButton.addActionListener(event -> editUser());
+        JButton newUserButton = new JButton("New User");
+        newUserButton.addActionListener(event -> newUser());
+        JPanel actionPanel = new JPanel();
+        actionPanel.add(editUserButton);
+        actionPanel.add(newUserButton);
+        add(actionPanel);
+    }
+
+    public void editUser() {
+        User user = userManagementTableModel.getUserAtRow(userManagementTable.getSelectedRow());
+        parent.viewUserDetails(user);
+    }
+
+    public void newUser() {
+        User newUser = new User();
+        parent.viewUserDetails(newUser);
     }
     
-    public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();       
-        if ("Edit".equals(command)) {
-            int userRow = (int)((JButton)e.getSource()).getClientProperty("row");
-            User user = userManagementTableModel.getUserAtRow(userRow);
-            parent.viewUserDetails(user);
-        } else if ("Delete".equals(command)) {
-
-        } else if ("AddUser".equals(command)) {
-            try {
-                User newUser = new User();
-                parent.viewUserDetails(newUser);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        } else if ("ReturnHome".equals(command)) {
-            parent.viewTopMenu();
-        }
+    public void returnHome() {
+        parent.viewTopMenu();
     }
 
     /*
@@ -150,18 +144,10 @@ public class UserManagementPanel extends JPanel implements ActionListener {
     }
     
     class UserManagementTableModel extends AbstractTableModel {
-        String[] columnNames = {"Username", "Groups",
-                                "Edit", "Delete"};
+        String[] columnNames = {"Username", "Groups"};
         List<List<Object>> data = new ArrayList<List<Object>>();
         List<User> users = new ArrayList<>();
         private UserManagementPanel manager;
-        
-        @Override
-        public boolean isCellEditable(int row, int col) {
-            if (col==COLUMN_EDIT || col==COLUMN_DELETE)
-                return true;
-            return false;
-        }
         
         public int getColumnCount() {
             return columnNames.length;
@@ -205,19 +191,6 @@ public class UserManagementPanel extends JPanel implements ActionListener {
         }
 
         public Object getValueAt(int row, int col) {
-            if (col==COLUMN_EDIT) {
-                JButton editUser = new JButton("Edit");                
-                editUser.setActionCommand("Edit");
-                editUser.addActionListener(manager);
-                editUser.putClientProperty("row", row);
-                return editUser;
-            } else if (col==COLUMN_DELETE) {
-                JButton deleteUser = new JButton("Delete");
-                deleteUser.setActionCommand("Delete");
-                deleteUser.addActionListener(manager);
-                deleteUser.putClientProperty("row", row);
-                return deleteUser;
-            }
             return data.get(row).get(col);
         }
         
@@ -239,28 +212,6 @@ public class UserManagementPanel extends JPanel implements ActionListener {
            manager = parentManager;
         }
         
-    }
-    
-        
-    private static class TableButton extends AbstractCellEditor implements TableCellRenderer, TableCellEditor {
-        JButton button;
-         @Override 
-         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-             button = (JButton)value;             
-             return button;
-         }
-
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-             button = (JButton)value;
-             return button;
-        }      
-
-        @Override
-        public Object getCellEditorValue() {
-            return button;
-        }
-         
     }
 
 }

@@ -79,8 +79,6 @@ public final class AdministrationTopComponent extends TopComponent {
         userLabel.setFont(new Font("Serif", Font.PLAIN, 14));
         userPanel.add(userLabel);
         topMenu.add(userPanel);
-      
-
         
         JPanel groupPanel = new JPanel();
         groupPanel.setLayout(new BoxLayout(groupPanel,BoxLayout.Y_AXIS));
