@@ -1,10 +1,13 @@
 package org.janelia.it.workstation.browser.api.facade.interfaces;
 
 import java.util.List;
+import java.util.Set;
 
 import org.janelia.model.domain.Preference;
+import org.janelia.model.security.Group;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
+import org.janelia.model.security.UserGroupRole;
 
 /**
  * Implementations provide access to subjects and their preferences. 
@@ -43,5 +46,25 @@ public interface SubjectFacade {
      * @param preference
      */
     public Preference savePreference(Preference preference) throws Exception;
+    
+     /**
+     * updates user properties
+     * @param id user id
+     * @param property name of the property
+     * @param value new value of the property
+     */
+    public void updateUser(User user) throws Exception;
+    
+     /**
+     * Saves the given preferences.
+     * @param preference
+     */
+    public void updateUserRoles(Long userId, Set<UserGroupRole> userRoles) throws Exception;
+    
+     /**
+     * Saves the given preferences.
+     * @param preference
+     */
+    public Group createGroup(Group group) throws Exception;
     
 }

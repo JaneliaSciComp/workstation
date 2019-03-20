@@ -9,8 +9,10 @@ import java.awt.Component;
 import java.awt.Font;
 import java.util.List;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.model.security.User;
+import org.janelia.model.security.Group;
 
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -120,6 +122,18 @@ public final class AdministrationTopComponent extends TopComponent {
             e.printStackTrace();
         }        
     }
+    
+    public void createNewGroup() {         
+        try {
+            NewGroupPanel panel = new NewGroupPanel(this);
+            panel.initNewGroup();
+            removeAll();
+            add(panel);
+            revalidate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }        
+    }
         
     public void viewGroupList() {
         GroupManagementPanel panel = new GroupManagementPanel(this);
@@ -139,6 +153,41 @@ public final class AdministrationTopComponent extends TopComponent {
         } catch (Exception e) {
             e.printStackTrace();
         }        
+    }
+    
+    /**
+     * Persistence section bubbling up from all the panels
+     */
+    public void saveUserRoles(User user) {
+        try {
+            SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
+            subjectFacade.updateUserRoles(user.getId(), user.getUserGroupRoles());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void saveUser(User user) {
+        try {
+            SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
+            if (user.getId() == null) {
+                User newUser = subjectFacade.getOrCreateUser(user.getName());
+                user.setId(newUser.getId());
+            }
+            subjectFacade.updateUser(user);
+            saveUserRoles(user);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void createGroup(Group group) {
+        try {
+            SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();            
+            subjectFacade.createGroup(group);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     @Override

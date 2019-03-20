@@ -30,6 +30,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
+import org.janelia.model.security.Group;
 import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
@@ -42,8 +43,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author schauderd
  */
-public class UserDetailsPanel extends JPanel implements ActionListener {
-    private static final Logger log = LoggerFactory.getLogger(UserManagementPanel.class);
+public class UserDetailsPanel extends JPanel {
+    private static final Logger log = LoggerFactory.getLogger(UserDetailsPanel.class);
     
     AdministrationTopComponent parent;
     JComboBox newGroupSelector;
@@ -64,19 +65,22 @@ public class UserDetailsPanel extends JPanel implements ActionListener {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         
         JPanel titlePanel = new JPanel();
-        JButton returnHome = new JButton(Icons.getIcon("returnhome.png"));
+        JButton returnHome = new JButton("return to user list");
         returnHome.setActionCommand("ReturnHome");
-        returnHome.addActionListener(this);
+        returnHome.addActionListener(event -> returnHome());
+        returnHome.setBorderPainted(false);
+        returnHome.setOpaque(false);
         titlePanel.add(returnHome);
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
-        JLabel titleLabel = new JLabel("Edit User", JLabel.LEADING);  
-        titleLabel.setFont(new Font("Serif", Font.PLAIN, 20));
+        JLabel titleLabel = new JLabel("User Details");  
         titlePanel.add(titleLabel);
         add(Box.createRigidArea(new Dimension(0, 10)));
         
         // display table of user editable attributes
         titleLabel.setFont(new Font("Serif", Font.PLAIN, 20));
         titlePanel.add(titleLabel);
+        add(titlePanel);
+        
         userDetailsTableModel = new UserDetailsTableModel();
         userDetailsTable = new JTable(userDetailsTableModel);
         TableFieldEditor editor = new TableFieldEditor();
@@ -113,7 +117,7 @@ public class UserDetailsPanel extends JPanel implements ActionListener {
     }
     
     public void saveUser () {
-        
+        parent.saveUser(currentUser);
     }
     
     public void editUserDetails(User user) throws Exception {
@@ -149,17 +153,11 @@ public class UserDetailsPanel extends JPanel implements ActionListener {
         groupRolesModel.addNewGroup(groupKey);        
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        String action = e.getActionCommand();
-        if (action.equals("ReturnHome")) {
-            parent.viewUserList();
-        } else if (action.equals("AddUser")) {
-           
-        }           
+    public void returnHome() {
+        parent.viewUserList();         
     }
     
-    class UserDetailsTableModel extends AbstractTableModel implements ActionListener {
+    class UserDetailsTableModel extends AbstractTableModel {
         String[] columnNames = {"Property","Value"};
         User user;
         String password;
@@ -212,25 +210,23 @@ public class UserDetailsPanel extends JPanel implements ActionListener {
         public Class getColumnClass(int c) {
             return String.class;               
         }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String newValue = ((JTextField)e.getSource()).getText();
-            if (newValue!=null) {
-                try {
-                    if (e.getActionCommand().equals("Password")) {
-                        password = newValue;
-                    } else { 
-                        new PropertyDescriptor(e.getActionCommand(), User.class).getWriteMethod().invoke(user, newValue);
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    String errorMessage = "Problem updating user information using reflection";
-                    log.error(errorMessage);
+        
+         @Override
+        public void setValueAt(Object value, int row, int col) {
+            try {
+                if (editProperties[row].equals("Password")) {
+                    password = (String)value;
+                } else { 
+                    new PropertyDescriptor(editProperties[row], User.class).getWriteMethod().invoke(user, (String)value);
                 }
+                values[row] = (String)value; 
+                this.fireTableCellUpdated(row, col);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                String errorMessage = "Problem updating user information using reflection";
+                log.error(errorMessage);
             }
         }
-        
     }
     
     class GroupRolesModel extends AbstractTableModel implements ActionListener {

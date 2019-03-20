@@ -72,9 +72,9 @@ public class UserManagementPanel extends JPanel {
         returnHome.setOpaque(false);
         titlePanel.add(returnHome);
         JLabel titleLabel = new JLabel("User List", JLabel.LEADING);
-        titlePanel.add(titleLabel);
-        
+        titlePanel.add(titleLabel);       
         add(titlePanel);
+        
         add(Box.createRigidArea(new Dimension(0, 10)));
     
         userManagementTableModel = new UserManagementTableModel();

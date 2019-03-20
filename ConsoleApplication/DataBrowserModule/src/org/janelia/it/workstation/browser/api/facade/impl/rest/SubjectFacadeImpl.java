@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.api.facade.impl.rest;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
@@ -15,8 +16,10 @@ import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
 import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.model.domain.Preference;
+import org.janelia.model.security.Group;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
+import org.janelia.model.security.UserGroupRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,5 +104,39 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
             throw new WebApplicationException(response);
         }
         return response.readEntity(Preference.class);
+    }
+
+    @Override
+    public void updateUser(User user) throws Exception {
+       Response response = service.path("data/user")
+                .path("property")    
+                .request("application/json")            
+                .post(Entity.json(user));
+        if (checkBadResponse(response.getStatus(), "problem making request updateUserProperty to server")) {
+            throw new WebApplicationException(response);
+        }        
+    }
+
+    @Override
+    public void updateUserRoles(Long id, Set<UserGroupRole> userRoles) throws Exception {
+        Response response = service.path("data/user")
+                .path("roles")
+                .queryParam("userId", id)
+                .request("application/json")
+                .post(Entity.json(userRoles));
+        if (checkBadResponse(response.getStatus(), "problem making request updateUserRoles to server")) {
+            throw new WebApplicationException(response);
+        }    
+    }
+
+    @Override
+    public Group createGroup(Group group) throws Exception {
+        Response response = service.path("data/group")
+                .request("application/json")
+                .put(Entity.json(group));
+        if (checkBadResponse(response.getStatus(), "problem making request updateUserProperty to server")) {
+            throw new WebApplicationException(response);
+        }    
+        return response.readEntity(Group.class);
     }
 }

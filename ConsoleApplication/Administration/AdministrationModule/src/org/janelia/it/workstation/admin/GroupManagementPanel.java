@@ -18,10 +18,12 @@ import javax.swing.AbstractCellEditor;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
@@ -41,7 +43,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author schauderd
  */
-public class GroupManagementPanel extends JPanel implements ActionListener { 
+public class GroupManagementPanel extends JPanel { 
     private static final Logger log = LoggerFactory.getLogger(GroupManagementPanel.class);
 
     private AdministrationTopComponent parent;
@@ -50,6 +52,7 @@ public class GroupManagementPanel extends JPanel implements ActionListener {
     private int COLUMN_EDIT = 2;
     private int COLUMN_DELETE = 3;
     private JLabel titleLabel;
+    private JButton editGroupButton;
 
     public GroupManagementPanel(AdministrationTopComponent parent) {
         this.parent = parent;
@@ -64,42 +67,56 @@ public class GroupManagementPanel extends JPanel implements ActionListener {
         titleLabel = new JLabel("Groups Management", JLabel.LEADING);  
         titleLabel.setFont(new Font("Serif", Font.PLAIN, 14));
         titlePanel.add(titleLabel);
-        JButton returnHome = new JButton(Icons.getIcon("returnhome.png"));
+        JButton returnHome = new JButton("return to top");
         returnHome.setActionCommand("ReturnHome");
-        returnHome.addActionListener(this);
+        returnHome.addActionListener(event -> returnHome());
         titlePanel.add(returnHome);
         add(titlePanel);
         add(Box.createRigidArea(new Dimension(0, 10)));
     
         groupManagementTableModel = new GroupManagementTableModel();
-        groupManagementTableModel.setParentManager(this);
         groupManagementTable = new JTable(groupManagementTableModel);
         groupManagementTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        AbstractCellEditor buttonRenderer = new TableButton();
-        groupManagementTable.getColumn("Edit").setCellRenderer((TableCellRenderer)buttonRenderer);
-        groupManagementTable.getColumn("Delete").setCellRenderer((TableCellRenderer)buttonRenderer);
-        groupManagementTable.getColumn("Edit").setCellEditor((TableCellEditor)buttonRenderer);
-        groupManagementTable.getColumn("Delete").setCellEditor((TableCellEditor)buttonRenderer);
-        groupManagementTable.getColumn("Edit").setPreferredWidth(100);
-        groupManagementTable.getColumn("Delete").setPreferredWidth(100);
+        groupManagementTable.addMouseListener(new MouseHandler() {
+            @Override
+            protected void singleLeftClicked(MouseEvent me) {
+                if (me.isConsumed()) return;
+                JTable table = (JTable) me.getSource();
+                int viewRow = table.rowAtPoint(me.getPoint());
+                if (viewRow >= 0) {                   
+                    editGroupButton.setEnabled(true);
+                }
+                me.consume();
+            }
+        });              
         JScrollPane tableScroll = new JScrollPane(groupManagementTable);
         add(tableScroll);
+        
+        // add groups pulldown selection for groups this person is a member of 
+        editGroupButton = new JButton("Edit Group");
+        editGroupButton.addActionListener(event -> editGroup());
+        editGroupButton.setEnabled(false);
+        JButton newGroupButton = new JButton("New Group");
+        newGroupButton.addActionListener(event -> newGroup());
+        JPanel actionPanel = new JPanel();
+//        newGroupPanel.setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));   
+        actionPanel.add(newGroupButton);
+        actionPanel.add(editGroupButton);
+        add(actionPanel);
     }
 
-    public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();
-        
-        if ("Edit".equals(command)) {
-            int groupRow = (int)((JButton)e.getSource()).getClientProperty("row");
-            Group group = groupManagementTableModel.getGroupAtRow(groupRow);
-            parent.viewGroupDetails(group.getKey());
-        } else if ("Delete".equals(command)) {
-
-        } else if ("Add".equals(command)) {
-
-        } else if ("ReturnHome".equals(command)) {
-            parent.viewTopMenu();
-        }
+    public void editGroup() {
+        int groupRow = groupManagementTable.getSelectedRow();
+        Group group = groupManagementTableModel.getGroupAtRow(groupRow);
+        parent.viewGroupDetails(group.getKey());
+    }
+    
+    public void newGroup() {
+        parent.createNewGroup();        
+    }
+    
+    public void returnHome() {
+       parent.viewTopMenu();
     }
     
     private void loadGroups () {
@@ -134,20 +151,12 @@ public class GroupManagementPanel extends JPanel implements ActionListener {
         
     // add a group
     private void addGroup() {
-        
-    }
-    
-    // remove the Group from the persistence as well
-    private void deleteGroup(Subject group) {
-        
     }
     
     class GroupManagementTableModel extends AbstractTableModel {
-        String[] columnNames = {"Name","Number of Users",
-                                "Edit", "Delete"};
+        String[] columnNames = {"Name","Number of Users"};
         List<List<Object>> data = new ArrayList<List<Object>>();
         List<Subject> groups = new ArrayList<>();
-        private GroupManagementPanel manager;
         
         public int getColumnCount() {
             return columnNames.length;
@@ -160,13 +169,6 @@ public class GroupManagementPanel extends JPanel implements ActionListener {
         public void clear() {
             data = new ArrayList<List<Object>>();
             groups = new ArrayList<>();
-        }
-        
-        @Override
-        public boolean isCellEditable(int row, int col) {
-            if (col==COLUMN_EDIT || col==COLUMN_DELETE)
-                return true;
-            return false;
         }
         
         public void loadGroups(List<Group> groupList, Map<String,Integer> groupTotals) {
@@ -195,19 +197,6 @@ public class GroupManagementPanel extends JPanel implements ActionListener {
         }
 
         public Object getValueAt(int row, int col) {
-            if (col==COLUMN_EDIT) {
-                JButton editGroup = new JButton("Edit");                
-                editGroup.setActionCommand("Edit");
-                editGroup.addActionListener(manager);
-                editGroup.putClientProperty("row", row);
-                return editGroup;
-            } else if (col==COLUMN_DELETE) {
-                JButton deleteGroup = new JButton("Delete");
-                deleteGroup.setActionCommand("Delete");
-                deleteGroup.addActionListener(manager);
-                deleteGroup.putClientProperty("row", row);
-                return deleteGroup;
-            }
             return data.get(row).get(col);
         }
         
@@ -224,11 +213,6 @@ public class GroupManagementPanel extends JPanel implements ActionListener {
 
         public Class getColumnClass(int c) {
             return (getValueAt(0, c)==null?String.class:getValueAt(0,c).getClass());
-        }
-
-        private void setParentManager(GroupManagementPanel parentManager) {
-           manager = parentManager;
-        }
-        
+        }  
     }
 }

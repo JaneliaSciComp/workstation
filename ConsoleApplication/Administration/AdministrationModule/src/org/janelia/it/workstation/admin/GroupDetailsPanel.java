@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -31,6 +32,7 @@ import org.janelia.model.security.Group;
 import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
+import org.janelia.model.security.UserGroupRole;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * @author schauderd
  */
 public class GroupDetailsPanel extends JPanel implements ActionListener {
-    private static final Logger log = LoggerFactory.getLogger(GroupManagementPanel.class);
+    private static final Logger log = LoggerFactory.getLogger(GroupDetailsPanel.class);
 
     AdministrationTopComponent parent;
     String groupKey;
@@ -73,7 +75,7 @@ public class GroupDetailsPanel extends JPanel implements ActionListener {
         add(Box.createRigidArea(new Dimension(0, 10)));
 
         // show group edit table with permissions for that group
-        groupRolesModel = new GroupRolesModel();
+        groupRolesModel = new GroupRolesModel(this);
         groupRolesTable = new JTable(groupRolesModel);
         TableSelectBox groupSelectBox = new TableSelectBox();
         groupRolesTable.getColumn("Role").setCellEditor(groupSelectBox);
@@ -85,9 +87,13 @@ public class GroupDetailsPanel extends JPanel implements ActionListener {
         addUserBox = new JComboBox();
         JButton newUserButton = new JButton("Add User To Group");
         newUserButton.addActionListener(event -> addUser());
+        JButton removeUserButton = new JButton("Remove User From Group");
+        removeUserButton.addActionListener(event -> removeUser());    
         JPanel newGroupPanel = new JPanel();
+        
         newGroupPanel.add(addUserBox);
-        newGroupPanel.add(newUserButton);
+        newGroupPanel.add(newUserButton);        
+        newGroupPanel.add(removeUserButton);
         add(newGroupPanel);     
     }
 
@@ -111,8 +117,22 @@ public class GroupDetailsPanel extends JPanel implements ActionListener {
         User newUser = lookupUser.get(name);
         if (newUser!=null) {
             newUser.setUserGroupRole(groupKey, GroupRole.Reader);
+            parent.saveUserRoles(newUser);
             groupRolesModel.addUser(newUser);
         }
+    }
+    
+    public void removeUser() {
+        int row = groupRolesTable.getSelectedRow();
+        User user = groupRolesModel.getUserAtRow(row);
+        groupRolesModel.removeUser(row);
+        parent.saveUserRoles(user);
+    }
+        
+    public void updateUser() {
+        int row = groupRolesTable.getSelectedRow();
+        User user = groupRolesModel.getUserAtRow(row);
+        parent.saveUserRoles(user);
     }
 
     @Override
@@ -127,8 +147,10 @@ public class GroupDetailsPanel extends JPanel implements ActionListener {
         String[] roleOptions = { "Owner", "Admin", "Writer", "Reader"};
         List<User> data = new ArrayList<>();
         String group;
+        GroupDetailsPanel manager;
         
-        public GroupRolesModel() {
+        public GroupRolesModel(GroupDetailsPanel manager) {
+            this.manager = manager;
         }
 
         public int getColumnCount() {
@@ -157,6 +179,16 @@ public class GroupDetailsPanel extends JPanel implements ActionListener {
             data.add(user);
             fireTableRowsInserted(getRowCount()-1, getRowCount()-1);
         }
+        
+        public void removeUser (int row) {
+            User user = data.get(row);
+            UserGroupRole roleToRemove = user.getRole(group);
+            Set<UserGroupRole> roles = user.getUserGroupRoles();
+            roles.remove(roleToRemove);
+            user.setUserGroupRoles(roles);
+            data.remove(row);
+            fireTableRowsDeleted(getRowCount()-1, getRowCount()-1);       
+        }
 
         public String getColumnName(int col) {
             return columnNames[col];
@@ -168,9 +200,9 @@ public class GroupDetailsPanel extends JPanel implements ActionListener {
                 return user.getFullName();
             } else {               
                 JComboBox roleSelection = new JComboBox(roleOptions);
-                roleSelection.addActionListener(this);
+                roleSelection.addActionListener(event -> manager.updateUser());
                 roleSelection.putClientProperty("row", row);
-                roleSelection.setSelectedItem(user.getRole(group).toString());
+                roleSelection.setSelectedItem(user.getUserGroupRole(group).getLabel());
                 return roleSelection;
             }
         }
