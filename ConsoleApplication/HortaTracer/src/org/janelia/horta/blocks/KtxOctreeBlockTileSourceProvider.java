@@ -43,7 +43,7 @@ public class KtxOctreeBlockTileSourceProvider {
         if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
             return new JadeKtxOctreeBlockTileSource(new JadeServiceClient(), renderedOctreeUrl).init(sample);
         } else {
-            return new FileKtxOctreeBlockTileSource(renderedOctreeUrl);
+            return new FileKtxOctreeBlockTileSource(renderedOctreeUrl).init(sample);
         }
 
     }
