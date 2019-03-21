@@ -28,7 +28,9 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,9 +70,15 @@ public class Snapshot3DLauncher {
         this.subvolumeProvider = subvolumeProvider;
         this.sharedImageColorModel = imageColorModel;
         this.activityLog = ActivityLogHelper.getInstance();
-        this.basePath = basePath;
         this.dataUrl = dataUrl;
         this.camera = camera;
+        try {
+            this.basePath = dataUrl.getProtocol().equalsIgnoreCase("file")
+                    ? Paths.get(dataUrl.toURI()).toString()
+                    : null;
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
     
     /**
