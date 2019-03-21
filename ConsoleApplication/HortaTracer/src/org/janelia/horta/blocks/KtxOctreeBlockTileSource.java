@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
 public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockTileKey> {
     private static final Logger LOG = LoggerFactory.getLogger(KtxOctreeBlockTileSource.class);
 
-    private final URL originatingSampleURL;
+    protected final URL originatingSampleURL;
     protected String sampleKtxTilesBaseDir;
     protected String sourceServerURL;
     protected KtxOctreeBlockTileKey rootKey;
@@ -84,11 +84,15 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         return this;
     }
 
+    protected String getKtxSubDir() {
+        return "ktx/";
+    }
+    
     private String getKtxBaseDir(String sampleDir) {
         if (sampleDir.endsWith("/")) {
-            return sampleDir + "ktx/";
+            return sampleDir + getKtxSubDir();
         } else {
-            return sampleDir + "/ktx/";
+            return sampleDir + "/" + getKtxSubDir();
         }
     }
 

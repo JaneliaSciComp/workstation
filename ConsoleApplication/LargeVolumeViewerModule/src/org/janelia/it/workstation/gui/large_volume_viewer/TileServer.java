@@ -375,8 +375,6 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         int futureTileMax = (int) (futureFraction * maxHeapBytes / tileBytes);
         getTextureCache().getHistoryCache().setMaxEntries(historyTileMax);
         getTextureCache().getFutureCache().setMaxEntries(futureTileMax);
-        // log.info("History cache size = "+historyTileMax);
-        // log.info("Future cache size = "+futureTileMax);
     }
 
     public void setCachedSizesSmall() {
