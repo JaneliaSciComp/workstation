@@ -11,12 +11,13 @@ import org.openide.util.Lookup;
         location = "Core",
         displayName = "#AdvancedOption_DisplayName_FilePaths",
         keywords = "#AdvancedOption_Keywords_FilePaths",
-        keywordsCategory = "Core/FilePaths"
+        keywordsCategory = "Core/FilePaths",
+        position=3
 )
-@org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_FilePaths=File Paths", "AdvancedOption_Keywords_FilePaths=dirs directories file paths"})
-public final class FilePathsOptionsPanelController extends OptionsPanelController {
+@org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_FilePaths=Downloads", "AdvancedOption_Keywords_FilePaths=download directories file paths"})
+public final class DownloadOptionsPanelController extends OptionsPanelController {
 
-    private FilePathsPanel panel;
+    private DownloadOptionsPanel panel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private boolean changed;
 
@@ -58,9 +59,9 @@ public final class FilePathsOptionsPanelController extends OptionsPanelControlle
         pcs.removePropertyChangeListener(l);
     }
 
-    private FilePathsPanel getPanel() {
+    private DownloadOptionsPanel getPanel() {
         if (panel == null) {
-            panel = new FilePathsPanel(this);
+            panel = new DownloadOptionsPanel(this);
         }
         return panel;
     }

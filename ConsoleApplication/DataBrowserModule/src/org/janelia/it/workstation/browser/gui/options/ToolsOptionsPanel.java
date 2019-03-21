@@ -39,9 +39,9 @@ import org.slf4j.LoggerFactory;
  * @author Todd Safford
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-final class ToolsPanel extends javax.swing.JPanel {
+final class ToolsOptionsPanel extends javax.swing.JPanel {
 
-    private static final Logger log = LoggerFactory.getLogger(ToolsPanel.class);
+    private static final Logger log = LoggerFactory.getLogger(ToolsOptionsPanel.class);
 
     private final ToolsOptionsPanelController controller;
     private final GroupedKeyValuePanel mainPanel;
@@ -50,7 +50,7 @@ final class ToolsPanel extends javax.swing.JPanel {
     private DefaultTableModel model;
     private int selectedRow;
 
-    ToolsPanel(ToolsOptionsPanelController controller) {
+    ToolsOptionsPanel(ToolsOptionsPanelController controller) {
         this.controller = controller;
         
         initComponents();
@@ -128,7 +128,7 @@ final class ToolsPanel extends javax.swing.JPanel {
     }
     
     private void addTool() throws Exception {
-        int returnVal = toolFileChooser.showOpenDialog(ToolsPanel.this);
+        int returnVal = toolFileChooser.showOpenDialog(ToolsOptionsPanel.this);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File file = toolFileChooser.getSelectedFile();
             log.info("Opening: " + file.getName() + ".");
@@ -148,7 +148,7 @@ final class ToolsPanel extends javax.swing.JPanel {
                     controller.changed();
             }
             else {
-                JOptionPane.showMessageDialog(ToolsPanel.this, "The tool has already been added.", "ToolInfo Already Added", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(ToolsOptionsPanel.this, "The tool has already been added.", "ToolInfo Already Added", JOptionPane.WARNING_MESSAGE);
             }
         }
     }
@@ -294,7 +294,7 @@ final class ToolsPanel extends javax.swing.JPanel {
                         EditDialog.this.setVisible(false);
                     }
                     else{
-                        JOptionPane.showMessageDialog(ToolsPanel.this, "Name and/or Path cannot be empty", "Edit Exception", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(ToolsOptionsPanel.this, "Name and/or Path cannot be empty", "Edit Exception", JOptionPane.WARNING_MESSAGE);
                         EditDialog.this.setVisible(false);
                     }
                 }

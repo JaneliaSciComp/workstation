@@ -14,7 +14,8 @@ import org.openide.util.Lookup;
         id = ToolsOptionsPanelController.ID,
         displayName = "#AdvancedOption_DisplayName_Tools",
         keywords = "#AdvancedOption_Keywords_Tools",
-        keywordsCategory = "Core/Tools"
+        keywordsCategory = "Core/Tools",
+        position=4
 )
 @org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_Tools=Tools", "AdvancedOption_Keywords_Tools=tools vaa3d fiji"})
 public final class ToolsOptionsPanelController extends OptionsPanelController {
@@ -22,7 +23,7 @@ public final class ToolsOptionsPanelController extends OptionsPanelController {
     public static final String ID = "org.janelia.it.workstation.browser.gui.options.Tools";
     public static final String PATH = "Core/"+ID;
     
-    private ToolsPanel panel;
+    private ToolsOptionsPanel panel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private boolean changed;
 
@@ -75,9 +76,9 @@ public final class ToolsOptionsPanelController extends OptionsPanelController {
         pcs.removePropertyChangeListener(l);
     }
 
-    private ToolsPanel getPanel() {
+    private ToolsOptionsPanel getPanel() {
         if (panel == null) {
-            panel = new ToolsPanel(this);
+            panel = new ToolsOptionsPanel(this);
         }
         return panel;
     }

@@ -1223,7 +1223,7 @@ public class SampleEditorPanel
                 values.put("Plugin Name", container.getName());
                 values.put("Plugin Description", container.getDescription());
                 values.put("Plugin Version", container.getVersion());
-                values.put("Plugin Harness", container.getClass());
+                values.put("Plugin Harness", container.getHarnessClass());
             }
         }
         

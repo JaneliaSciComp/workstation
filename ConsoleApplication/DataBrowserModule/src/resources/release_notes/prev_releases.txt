@@ -6,6 +6,7 @@ Data Browser
 * Lightbox now remembers its positioning
 * Improved performance for Download Wizard
 * Improved performance of selections and "load all pages"
+* Removed "Open In Neuron Annotator (Lossy)" right-click option
 
 // 7.26
   
