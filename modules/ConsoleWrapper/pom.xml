@@ -2,1016 +2,656 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.janelia</groupId>
+        <artifactId>workstation</artifactId>
+        <version>7.19</version>
+        <relativePath>..</relativePath>
+    </parent>
 
-    <name>Janelia Workstation</name>
-    <groupId>org.janelia</groupId>
+    <name>ConsoleWrapper</name>
+    <groupId>org.janelia.it</groupId>
     <artifactId>workstation</artifactId>
     <version>7.19</version>
-    <packaging>pom</packaging>
-
-    <!-- Project Metadata -->
-    <url>http://workstation.janelia.org</url>
-    <description>Janelia Workstation - Discovery Platform for Neuroscience</description>
-    <organization>
-        <name>Howard Hughes Medical Institute</name>
-        <url>https://www.hhmi.org</url>
-    </organization>
-    <inceptionYear>2011</inceptionYear>
-    
-    <!-- Licenses -->
-    <licenses>
-        <license>
-            <name>Janelia Open Source License 1.0</name>
-            <url>https://www.janelia.org/open-science/software-licensing</url>
-        </license>
-    </licenses>
-
-    <!-- Developers -->
-    <developers>
-        <developer>
-            <id>rokickik</id>
-            <name>Konrad Rokicki</name>
-            <email>rokickik@hhmi.org</email>
-        </developer>
-        <developer>
-            <id>schauderd</id>
-            <name>David Schauder</name>
-            <email>schauderd@hhmi.org</email>
-        </developer>
-        <developer>
-            <id>goinac</id>
-            <name>Cristian Goina</name>
-            <email>goinac@hhmi.org</email>
-        </developer>
-        <developer>
-            <id>olbrisd</id>
-            <name>Don Olbris</name>
-            <email>olbrisd@hhmi.org</email>
-        </developer>
-    </developers>
-
-    <!-- Properties -->
-    <properties>
-
-        <!-- NBM Plugin settings -->
-        <project.name.capitalized>Janelia Workstation</project.name.capitalized>
-        <brandingToken>janeliaws</brandingToken>
-        <clusterName>JaneliaWorkstation</clusterName>
-        <all.clusters>${project.build.directory}/${clusterName}</all.clusters>
-        <janeliaws.app.title>${project.name.capitalized} ${project.version}</janeliaws.app.title>
-
-        <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
-        <janeliaws.build.timestamp>${maven.build.timestamp}</janeliaws.build.timestamp>
-        
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <janeliaws.maven.requiredVersion>3.2.2</janeliaws.maven.requiredVersion>
-        <netbeans.run.params.ide/>
-        <netbeans.run.params>${netbeans.run.params.ide}</netbeans.run.params>
-        
-        <!-- Netbeans Platfrom version -->
-        <netbeans.version>RELEASE82</netbeans.version>
-
-        <!-- Localization ZIP version, from 'http://netbeans.org/project_downloads/nblocalization' -->
-        <janeliaws.platform.localization.version>1.1-NB80</janeliaws.platform.localization.version>
-        
-        <!-- Modules specification version, overrides project version -->
-        <janeliaws.modules.specification.version>2.60</janeliaws.modules.specification.version>
-
-        <!-- Java compilation settings -->
-        <janeliaws.javac.source>1.8</janeliaws.javac.source>
-        <janeliaws.javac.target>1.8</janeliaws.javac.target>
-        <!-- Xlint path is intentionally disabled to avoid "bad path element" errors from jars which insist on specifying classpaths in their MANIFEST.MF -->
-        <janeliaws.javac.xlint>-Xlint:-path</janeliaws.javac.xlint>
-        <janeliaws.javac.doclint>-Xdoclint:none</janeliaws.javac.doclint>
-        <janeliaws.javac.debug>true</janeliaws.javac.debug>
-        <janeliaws.javac.optimize>true</janeliaws.javac.optimize>
-        <janeliaws.javac.showDeprecation>true</janeliaws.javac.showDeprecation>
-        <janeliaws.javac.showWarnings>true</janeliaws.javac.showWarnings>
-        <janeliaws.javac.fork>true</janeliaws.javac.fork>
-
-        <!-- Testing settings -->
-        <testFailureIgnore>false</testFailureIgnore>
-        <janeliaws.testng.version>6.11</janeliaws.testng.version>
-        <janeliaws.test.maxMemory>768M</janeliaws.test.maxMemory>
-        <janeliaws.test.reportsDirectory>${project.build.directory}/surefire-reports/plain</janeliaws.test.reportsDirectory>
-        <janeliaws.test.failureIgnore>${testFailureIgnore}</janeliaws.test.failureIgnore>
-
-        <!-- Update centers URLs -->
-        <janeliaws.update.center.official.url>https://raw.githubusercontent.com/janeliaws/janeliaws/gh-pages/${project.version}/netbeans_site/updates.xml</janeliaws.update.center.official.url>
-        <janeliaws.update.center.thirdparty.url>https://raw.githubusercontent.com/janeliaws/janeliaws-plugins/gh-pages/plugins/${project.version}/updates.xml</janeliaws.update.center.thirdparty.url>
-
-        <!-- Mac OS X bundle settings -->
-        <janeliaws.appbundle.name>Janelia Workstation</janeliaws.appbundle.name>
-
-        <!--
-        <janeliaws.bundle.jre.url>https://download.oracle.com/otn-pub/java/jdk/8u191-b12/2787e4a523244c269598db4e85c51e0c</janeliaws.bundle.jre.url>
-        <janeliaws.bundle.jre.version>jre-8u191-macosx-x64</janeliaws.bundle.jre.version>
-        -->
-
-        <!-- Mac OS X signing identity - must match with a verified Apple developer certificate in the keychain -->
-        <janeliaws.codesign.identity>Developer ID Application</janeliaws.codesign.identity>
-    
-        <!--==== Dependency Versions ==================================================================================-->
-        
-        <janeliaws.slf4j.version>1.7.25</janeliaws.slf4j.version>
-
-        <janeliaws.jackson.version>2.5.4</janeliaws.jackson.version>
-
-        <janeliaws.jetty.version>8.1.8.v20121106</janeliaws.jetty.version>
-        
-        <!--==== Plugin Versions ==================================================================================-->
-
-        <janeliaws.maven-antrun-plugin.version>1.8</janeliaws.maven-antrun-plugin.version>
-
-        <janeliaws.maven-assembly-plugin.version>3.1.0</janeliaws.maven-assembly-plugin.version>
-
-        <janeliaws.maven-clean-plugin.version>3.0.0</janeliaws.maven-clean-plugin.version>
-
-        <janeliaws.maven-compiler-plugin.version>3.7.0</janeliaws.maven-compiler-plugin.version>
-
-        <janeliaws.maven-dependency-plugin.version>3.0.2</janeliaws.maven-dependency-plugin.version>
-
-        <janeliaws.maven-deploy-plugin.version>2.8.2</janeliaws.maven-deploy-plugin.version>
-
-        <janeliaws.maven-gpg-plugin.version>1.6</janeliaws.maven-gpg-plugin.version>
-
-        <janeliaws.maven-install-plugin.version>2.5.2</janeliaws.maven-install-plugin.version>
-
-        <janeliaws.maven-jar-plugin.version>3.0.2</janeliaws.maven-jar-plugin.version>
-
-        <janeliaws.maven-jarsigner-plugin.version>1.4</janeliaws.maven-jarsigner-plugin.version>
-
-        <janeliaws.maven-javadoc-plugin.version>2.10.4</janeliaws.maven-javadoc-plugin.version> 
-
-        <janeliaws.maven-release-plugin.version>2.5.3</janeliaws.maven-release-plugin.version>
-
-        <janeliaws.maven-resources-plugin.version>3.0.2</janeliaws.maven-resources-plugin.version>
-
-        <janeliaws.buildnumber-plugin.version>1.4</janeliaws.buildnumber-plugin.version>
-
-        <janeliaws.maven-site-plugin.version>3.6</janeliaws.maven-site-plugin.version>
-
-        <janeliaws.maven-source-plugin.version>3.0.1</janeliaws.maven-source-plugin.version>
-
-        <janeliaws.maven-surefire-plugin.version>2.20.1</janeliaws.maven-surefire-plugin.version>
-
-        <janeliaws.build-helper-maven-plugin.version>3.0.0</janeliaws.build-helper-maven-plugin.version>
-
-        <janeliaws.nbm-maven-plugin.version>4.1</janeliaws.nbm-maven-plugin.version>
-        
-        <janeliaws.wagon-maven-plugin.version>1.0</janeliaws.wagon-maven-plugin.version>  
-        
-        <janeliaws.nexus-staging-maven-plugin.version>1.6.8</janeliaws.nexus-staging-maven-plugin.version>
-
-        <janeliaws.site-maven-plugin.version>0.12</janeliaws.site-maven-plugin.version>
-        
-        <janeliaws.versions-maven-plugin.version>2.5</janeliaws.versions-maven-plugin.version>
-
-<!--
-unused:
-
-        <janeliaws.maven-enforcer-plugin.version>1.4.1</janeliaws.maven-enforcer-plugin.version>
-        <janeliaws.maven-license-plugin.version>1.9.0</janeliaws.maven-license-plugin.version>
--->
-
-    </properties>
-
-    <repositories>
-        <!-- For NetBeans modules -->
-        <repository>
-            <id>netbeans</id>
-            <name>NetBeans</name>
-            <url>http://bits.netbeans.org/nexus/content/groups/netbeans/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <!-- For javax.activation, which is required by saaj -->
-        <repository>
-            <id>redhat</id>
-            <name>Redhat GA Repository</name>
-            <url>https://maven.repository.redhat.com/ga/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <!-- for BioFormats -->
-        <repository>
-            <id>imagej-repository</id>
-            <url>http://maven.imagej.net/content/repositories/ome-releases/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <!-- Workstation repo for libraries not found in any public Maven repository -->
-        <repository>
-            <id>janelia-repo</id>
-            <url>https://raw.githubusercontent.com/JaneliaSciComp/mvn-repo/master/repository/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
-
-    <!-- List all dependencies with versions so it can be used in child POMs without explicit versions -->
-    <dependencyManagement>
-        <!-- Dependencies -->
-        <dependencies>
-
-            <!-- branding --> 
-            <dependency>
-                <groupId>org.janelia.workstation</groupId>
-                <artifactId>branding</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- DarculaLAF --> 
-            <dependency>
-                <groupId>org.janelia.it.workstation</groupId>
-                <artifactId>darcula</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            
-            <!-- IntegrationAPIs --> 
-            <dependency>
-                <groupId>org.janelia.it.jacs</groupId>
-                <artifactId>integration</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-           
-            <!-- ConsoleWrapper --> 
-            <dependency>
-                <groupId>org.janelia.it</groupId>
-                <artifactId>workstation</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            
-            <!-- DataBrowser --> 
-            <dependency>
-                <groupId>org.janelia.it.workstation.gui</groupId>
-                <artifactId>browser</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-         
-            <!-- Large Volume Viewer -->
-            <dependency>
-                <groupId>org.janelia.it.workstation.gui</groupId>
-                <artifactId>large_volume_viewer</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- Horta -->
-            <dependency>
-                <groupId>org.janelia</groupId>
-                <artifactId>horta</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            
-            <!-- Viewer 3D -->
-            <dependency>
-                <groupId>org.janelia.it.workstation.gui</groupId>
-                <artifactId>viewer3d</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- GL Viewer --> 
-            <dependency>
-                <groupId>org.janelia</groupId>
-                <artifactId>gltools</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- Scene Graph -->
-            <dependency>
-                <groupId>org.janelia</groupId>
-                <artifactId>scenegraph</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- Geometry 3D -->
-            <dependency>
-                <groupId>org.janelia</groupId>
-                <artifactId>geometry3d</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- Viewer API -->
-            <dependency>
-                <groupId>org.janelia.console</groupId>
-                <artifactId>viewerapi</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- Jars from Workstation Maven Repo -->
-            <dependency>
-                <groupId>org.janelia.legacy</groupId>
-                <artifactId>model</artifactId>
-                <version>1.0</version>
-            </dependency>   
-            <dependency>
-                <groupId>org.janelia.legacy</groupId>
-                <artifactId>shared</artifactId>
-                <version>1.0</version>
-            </dependency>
-
-            <!-- Maven Central dependencies -->
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${janeliaws.slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-jdk14</artifactId>
-                <version>${janeliaws.slf4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-util</artifactId>
-                <version>${janeliaws.jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-server</artifactId>
-                <version>${janeliaws.jetty.version}</version>
-            </dependency>
-            
-            <!-- NetBeans Modules --> 
-            <dependency>
-                <groupId>org.netbeans.cluster</groupId>
-                <artifactId>platform</artifactId>
-                <version>${netbeans.version}</version>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-dialogs</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-filesystems</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-filesystems-compat8</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-filesystems-nb</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-util</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-util-ui</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-util-lookup</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-windows</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-modules</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-netbeans-api-progress</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-netbeans-api-progress-nb</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-nodes</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-awt</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-netbeans-modules-settings</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-netbeans-swing-outline</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-explorer</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-netbeans-api-annotations-common</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-netbeans-swing-tabcontrol</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-io</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.modules</groupId>
-                <artifactId>org-netbeans-core-output2</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.modules</groupId>
-                <artifactId>org-netbeans-modules-masterfs</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-netbeans-modules-options-api</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-netbeans-modules-autoupdate-services</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-openide-actions</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-netbeans-spi-quicksearch</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-netbeans-swing-plaf</artifactId>
-                <version>${netbeans.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-netbeans-modules-nbjunit</artifactId>
-                <version>${netbeans.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.netbeans.api</groupId>
-                <artifactId>org-netbeans-libs-junit4</artifactId>
-                <version>${netbeans.version}</version>
-                <scope>test</scope>
-            </dependency>
-            
-        </dependencies>
-    </dependencyManagement>
+    <packaging>nbm</packaging>
 
     <dependencies>
-        <!-- TestNG dependency -->
+
+        <!-- Jars from Workstation Maven Repo -->
         <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>${janeliaws.testng.version}</version>
-            <scope>test</scope>
+            <groupId>org.janelia.legacy</groupId>
+            <artifactId>model</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.janelia.legacy</groupId>
+            <artifactId>shared</artifactId>
+        </dependency>
+        <!-- TODO: This is a legacy dependency needs to be purged from the code base -->
+        <dependency>
+            <groupId>org.janelia.thirdparty</groupId>
+            <artifactId>gwt-serializable</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.media</groupId>
+            <artifactId>jai-core</artifactId>
+            <version>1.1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.media</groupId>
+            <artifactId>jai-codec</artifactId>
+            <version>1.1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.xuggle</groupId>
+            <artifactId>xuggle-xuggler</artifactId>
+            <version>5.4</version>
+        </dependency>
+        
+        <!-- Maven Central dependencies --> 
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>13.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${janeliaws.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${janeliaws.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${janeliaws.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+            <version>${janeliaws.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
+            <version>${janeliaws.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-base</artifactId>
+            <version>${janeliaws.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jaxb-annotations</artifactId>
+            <version>${janeliaws.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.9.9-RC1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.3.2</version>
+        </dependency>
+        <!-- TODO: We should move everything to lang3 to eliminate this dependency -->
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.javassist</groupId>
+            <artifactId>javassist</artifactId>
+            <version>3.16.1-GA</version>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.11</version>
+        </dependency>
+        <dependency>
+            <groupId>org.swinglabs.swingx</groupId>
+            <artifactId>swingx-all</artifactId>
+            <version>1.6.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.miglayout</groupId>
+            <artifactId>miglayout-swing</artifactId>
+            <version>4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <version>2.21</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>2.21</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+            <version>2.21</version>
+        </dependency>
+
+        <!-- 
+            TODO: this is required at runtime by some classes in legacy-shared. 
+            It should be removed when we refactor that code to use Slf4j. -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+
     </dependencies>
 
     <build>
-
-        <!-- Plugins installed with versions -->
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>versions-maven-plugin</artifactId>
-                    <version>${janeliaws.versions-maven-plugin.version}</version>
-                    <configuration>
-                        <rulesUri>file:///${session.executionRootDirectory}/maven-version-rules.xml</rulesUri>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>nbm-maven-plugin</artifactId>
-                    <version>${janeliaws.nbm-maven-plugin.version}</version>
-                    <extensions>true</extensions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>${janeliaws.maven-compiler-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-clean-plugin</artifactId>
-                    <version>${janeliaws.maven-clean-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>${janeliaws.maven-jar-plugin.version}</version>
-                    <configuration>
-                        <archive>
-                            <!-- required since nbm-maven-plugin 3.0-->
-                            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-                        </archive>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-antrun-plugin</artifactId>
-                    <version>${janeliaws.maven-antrun-plugin.version}</version>
-                </plugin>
-                <!--
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <version>${janeliaws.maven-deploy-plugin.version}</version>
-                </plugin>
-                -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>${janeliaws.maven-release-plugin.version}</version>
-                </plugin>
-                <!--
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-gpg-plugin</artifactId>
-                    <version>${janeliaws.maven-gpg-plugin.version}</version>
-                </plugin>
-                -->
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>${janeliaws.build-helper-maven-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>${janeliaws.maven-surefire-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jarsigner-plugin</artifactId>
-                    <version>${janeliaws.maven-jarsigner-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>${janeliaws.maven-source-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>${janeliaws.maven-resources-plugin.version}</version>
-                </plugin>
-               <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-dependency-plugin</artifactId>
-                    <version>${janeliaws.maven-dependency-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-install-plugin</artifactId>
-                    <version>${janeliaws.maven-install-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>wagon-maven-plugin</artifactId>
-                    <version>${janeliaws.wagon-maven-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>${janeliaws.maven-javadoc-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>${janeliaws.maven-assembly-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-site-plugin</artifactId>
-                    <version>${janeliaws.maven-site-plugin.version}</version>
-                </plugin>
-                <!--
-                <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>${janeliaws.nexus-staging-maven-plugin.version}</version>
-                </plugin>
-                -->
-
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>buildnumber-maven-plugin</artifactId>
-                    <version>${janeliaws.buildnumber-plugin.version}</version>
-                </plugin>
-
-                <plugin>
-                    <groupId>com.github.github</groupId>
-                    <artifactId>site-maven-plugin</artifactId>
-                    <version>${janeliaws.site-maven-plugin.version}</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-
-        <!-- Plugins configuration ===============================================================-->
-
         <plugins>
 
-            <!-- Compiler -->
             <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <debug>${janeliaws.javac.debug}</debug>
-                    <optimize>${janeliaws.javac.optimize}</optimize>
-                    <source>${janeliaws.javac.source}</source>
-                    <target>${janeliaws.javac.target}</target>
-                    <showDeprecation>${janeliaws.javac.showDeprecation}</showDeprecation>
-                    <showWarnings>${janeliaws.javac.showWarnings}</showWarnings>
-                    <fork>${janeliaws.javac.fork}</fork>
-                    <compilerArgs>
-                        <arg>${janeliaws.javac.xlint}</arg>
-                        <arg>${janeliaws.javac.doclint}</arg>
-                    </compilerArgs>
-                </configuration>
-            </plugin>
- 
-            <!-- Skip unit tests in non-deployment or release mode -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <skipTests>true</skipTests>
-                    <trimStackTrace>false</trimStackTrace>                                                              
-                </configuration>
-            </plugin>
-             
-            <!-- Copy and apply filtering on manifest.mf file -->
-            <plugin> 
-                <artifactId>maven-resources-plugin</artifactId> 
-                <executions> 
-                    <execution> 
-                        <id>generate-modules-xml</id> 
-                        <phase>generate-resources</phase> 
-                        <goals> 
-                            <goal>copy-resources</goal> 
-                        </goals> 
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-app-config-file</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
                         <configuration>
-                            <outputDirectory>${basedir}/target/</outputDirectory> 
-                            <resources> 
-                                <resource> 
-                                    <directory>src/main/nbm</directory> 
-                                    <includes> 
-                                        <include>manifest.mf</include>
-                                    </includes> 
-                                    <filtering>true</filtering> 
-                                </resource> 
-                            </resources> 
-                        </configuration> 
-                    </execution> 
-                </executions> 
+                            <outputDirectory>${basedir}/target/nbm/netbeans/${clusterName}/config</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>../application/src/main/resources</directory>
+                                    <includes>
+                                        <include>${brandingToken}.conf</include>
+                                    </includes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                            <escapeString>\</escapeString>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
-            
-            <!-- NBM options -->
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
-                <extensions>true</extensions>
                 <configuration>
-                    <sourceManifestFile>${project.build.directory}/manifest.mf</sourceManifestFile>
-                    <brandingToken>${brandingToken}</brandingToken>
-                    <cluster>${clusterName}</cluster>
-                    
-                    <!-- Keystore location. Run Maven with '-Dkeystorepassword=' to specify the passphrase -->
-                    <keystore>private/keystore</keystore>
-                    <keystorealias>janeliaws</keystorealias>
-                    
-                    <!-- NBM settings -->
-                    <requiresRestart>true</requiresRestart>
-                    <licenseName>Janelia Open Source License</licenseName>
-                    <licenseFile>license.txt</licenseFile>
-                    
-                    <!-- Installer settings -->
-                    <installDirName>${clusterName}</installDirName>
-                    <installerOsSolaris>false</installerOsSolaris>
-                    <installerOsMacosx>true</installerOsMacosx>
-                    <installerOsLinux>true</installerOsLinux>
-                    <installerOsWindows>true</installerOsWindows>
-
-                    <!-- Tolerate warnings, because otherwise it complains about 
-                         classes in rt.jar not being on the classpath-->
-                    <verifyRuntime>warn</verifyRuntime>
+                    <publicPackages>
+                        <publicPackage>com.fasterxml.jackson.annotation</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.core</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.core.base</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.core.format</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.core.io</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.core.json</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.core.sym</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.core.type</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.core.util</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.annotation</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.cfg</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.deser</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.deser.impl</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.deser.std</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.exc</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.ext</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.introspect</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.jsonFormatVisitors</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.jsonschema</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.jsontype</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.jsontype.impl</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.module</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.node</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.ser</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.ser.impl</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.ser.std</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.type</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.databind.util</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.dataformat.xml</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.dataformat.xml.annotation</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.dataformat.xml.deser</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.dataformat.xml.jaxb</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.dataformat.xml.ser</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.dataformat.xml.util</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.jaxrs.annotation</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.jaxrs.base</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.jaxrs.cfg</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.jaxrs.json</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.jaxrs.json.annotation</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.jaxrs.util</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.module.jaxb</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.module.jaxb.deser</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.module.jaxb.ser</publicPackage>
+                        <publicPackage>com.google.gson</publicPackage>
+                        <publicPackage>com.google.gson.annotations</publicPackage>
+                        <publicPackage>com.google.gson.internal</publicPackage>
+                        <publicPackage>com.google.gson.internal.bind</publicPackage>
+                        <publicPackage>com.google.gson.reflect</publicPackage>
+                        <publicPackage>com.google.gson.stream</publicPackage>
+                        <publicPackage>com.google.common.annotations</publicPackage>
+                        <publicPackage>com.google.common.base</publicPackage>
+                        <publicPackage>com.google.common.base.internal</publicPackage>
+                        <publicPackage>com.google.common.cache</publicPackage>
+                        <publicPackage>com.google.common.collect</publicPackage>
+                        <publicPackage>com.google.common.eventbus</publicPackage>
+                        <publicPackage>com.google.common.hash</publicPackage>
+                        <publicPackage>com.google.common.io</publicPackage>
+                        <publicPackage>com.google.common.math</publicPackage>
+                        <publicPackage>com.google.common.net</publicPackage>
+                        <publicPackage>com.google.common.primitives</publicPackage>
+                        <publicPackage>com.google.common.reflect</publicPackage>
+                        <publicPackage>com.google.common.util.concurrent</publicPackage>
+                        <publicPackage>com.google.gwt.user.client.rpc</publicPackage>
+                        <publicPackage>com.sun.media.jai.codec</publicPackage>
+                        <publicPackage>com.xuggle.*</publicPackage>
+                        <publicPackage>javax.media.jai</publicPackage>
+                        <publicPackage>javax.media.jai.iterator</publicPackage>
+                        <publicPackage>javax.media.jai.operator</publicPackage>
+                        <publicPackage>javax.media.jai.registry</publicPackage>
+                        <publicPackage>javax.media.jai.remote</publicPackage>
+                        <publicPackage>javax.media.jai.tilecodec</publicPackage>
+                        <publicPackage>javax.media.jai.util</publicPackage>
+                        <publicPackage>javax.media.jai.widget</publicPackage>
+                        <publicPackage>javax.servlet</publicPackage>
+                        <publicPackage>javax.servlet.annotation</publicPackage>
+                        <publicPackage>javax.servlet.descriptor</publicPackage>
+                        <publicPackage>javax.servlet.http</publicPackage>
+                        <publicPackage>javax.ws.rs</publicPackage>
+                        <publicPackage>javax.ws.rs.client</publicPackage>
+                        <publicPackage>javax.ws.rs.container</publicPackage>
+                        <publicPackage>javax.ws.rs.core</publicPackage>
+                        <publicPackage>javax.ws.rs.ext</publicPackage>
+                        <publicPackage>javax.xml.bind</publicPackage>
+                        <publicPackage>javax.xml.bind.annotation</publicPackage>
+                        <publicPackage>javax.xml.bind.annotation.adapters</publicPackage>
+                        <publicPackage>javax.xml.bind.attachment</publicPackage>
+                        <publicPackage>javax.xml.bind.helpers</publicPackage>
+                        <publicPackage>javax.xml.bind.util</publicPackage>
+                        <publicPackage>javax.xml.namespace</publicPackage>
+                        <publicPackage>javax.xml.soap</publicPackage>
+                        <publicPackage>javax.xml.stream</publicPackage>
+                        <publicPackage>javax.xml.stream.events</publicPackage>
+                        <publicPackage>javax.xml.stream.util</publicPackage>
+                        <publicPackage>javax.xml.transform</publicPackage>
+                        <publicPackage>javax.xml.transform.*</publicPackage>
+                        <publicPackage>javax.xml.ws</publicPackage>
+                        <publicPackage>javax.xml.ws.handler</publicPackage>
+                        <publicPackage>javax.xml.ws.handler.soap</publicPackage>
+                        <publicPackage>javax.xml.ws.http</publicPackage>
+                        <publicPackage>javax.xml.ws.soap</publicPackage>
+                        <publicPackage>javax.xml.ws.spi</publicPackage>
+                        <publicPackage>javax.xml.ws.wsaddressing</publicPackage>
+                        <publicPackage>javassist</publicPackage>
+                        <publicPackage>javassist.bytecode</publicPackage>
+                        <publicPackage>javassist.bytecode.analysis</publicPackage>
+                        <publicPackage>javassist.bytecode.annotation</publicPackage>
+                        <publicPackage>javassist.bytecode.stackmap</publicPackage>
+                        <publicPackage>javassist.compiler</publicPackage>
+                        <publicPackage>javassist.compiler.ast</publicPackage>
+                        <publicPackage>javassist.convert</publicPackage>
+                        <publicPackage>javassist.expr</publicPackage>
+                        <publicPackage>javassist.runtime</publicPackage>
+                        <publicPackage>javassist.scopedpool</publicPackage>
+                        <publicPackage>javassist.tools</publicPackage>
+                        <publicPackage>javassist.tools.reflect</publicPackage>
+                        <publicPackage>javassist.tools.rmi</publicPackage>
+                        <publicPackage>javassist.tools.web</publicPackage>
+                        <publicPackage>javassist.util</publicPackage>
+                        <publicPackage>javassist.util.proxy</publicPackage>
+                        <publicPackage>jersey.repackaged.com.google.common.base</publicPackage>
+                        <publicPackage>jersey.repackaged.com.google.common.cache</publicPackage>
+                        <publicPackage>jersey.repackaged.com.google.common.collect</publicPackage>
+                        <publicPackage>jersey.repackaged.com.google.common.hash</publicPackage>
+                        <publicPackage>jersey.repackaged.com.google.common.io</publicPackage>
+                        <publicPackage>jersey.repackaged.com.google.common.math</publicPackage>
+                        <publicPackage>jersey.repackaged.com.google.common.net</publicPackage>
+                        <publicPackage>jersey.repackaged.com.google.common.primitives</publicPackage>
+                        <publicPackage>jersey.repackaged.com.google.common.util.concurrent</publicPackage>
+                        <publicPackage>jersey.repackaged.org.objectweb.asm</publicPackage>
+                        <publicPackage>net.miginfocom.*</publicPackage>
+                        <publicPackage>org.apache.commons.io</publicPackage>
+                        <publicPackage>org.apache.commons.io.comparator</publicPackage>
+                        <publicPackage>org.apache.commons.io.filefilter</publicPackage>
+                        <publicPackage>org.apache.commons.io.input</publicPackage>
+                        <publicPackage>org.apache.commons.io.monitor</publicPackage>
+                        <publicPackage>org.apache.commons.io.output</publicPackage>
+                        <publicPackage>org.apache.commons.codec</publicPackage>
+                        <publicPackage>org.apache.commons.codec.binary</publicPackage>
+                        <publicPackage>org.apache.commons.codec.digest</publicPackage>
+                        <publicPackage>org.apache.commons.codec.language</publicPackage>
+                        <publicPackage>org.apache.commons.codec.net</publicPackage>
+                        <publicPackage>org.apache.commons.compress.archivers</publicPackage>
+                        <publicPackage>org.apache.commons.compress.archivers.ar</publicPackage>
+                        <publicPackage>org.apache.commons.compress.archivers.arj</publicPackage>
+                        <publicPackage>org.apache.commons.compress.archivers.cpio</publicPackage>
+                        <publicPackage>org.apache.commons.compress.archivers.dump</publicPackage>
+                        <publicPackage>org.apache.commons.compress.archivers.jar</publicPackage>
+                        <publicPackage>org.apache.commons.compress.archivers.sevenz</publicPackage>
+                        <publicPackage>org.apache.commons.compress.archivers.tar</publicPackage>
+                        <publicPackage>org.apache.commons.compress.archivers.zip</publicPackage>
+                        <publicPackage>org.apache.commons.compress.changes</publicPackage>
+                        <publicPackage>org.apache.commons.compress.compressors</publicPackage>
+                        <publicPackage>org.apache.commons.compress.compressors.bzip2</publicPackage>
+                        <publicPackage>org.apache.commons.compress.compressors.gzip</publicPackage>
+                        <publicPackage>org.apache.commons.compress.compressors.lzma</publicPackage>
+                        <publicPackage>org.apache.commons.compress.compressors.pack200</publicPackage>
+                        <publicPackage>org.apache.commons.compress.compressors.snappy</publicPackage>
+                        <publicPackage>org.apache.commons.compress.compressors.xz</publicPackage>
+                        <publicPackage>org.apache.commons.compress.compressors.z</publicPackage>
+                        <publicPackage>org.apache.commons.compress.compressors.z._internal_</publicPackage>
+                        <publicPackage>org.apache.commons.compress.utils</publicPackage>
+                        <publicPackage>org.apache.commons.fileupload</publicPackage>
+                        <publicPackage>org.apache.commons.fileupload.disk</publicPackage>
+                        <publicPackage>org.apache.commons.fileupload.portlet</publicPackage>
+                        <publicPackage>org.apache.commons.fileupload.servlet</publicPackage>
+                        <publicPackage>org.apache.commons.fileupload.util</publicPackage>
+                        <publicPackage>org.apache.commons.httpclient</publicPackage>
+                        <publicPackage>org.apache.commons.httpclient.auth</publicPackage>
+                        <publicPackage>org.apache.commons.httpclient.cookie</publicPackage>
+                        <publicPackage>org.apache.commons.httpclient.methods</publicPackage>
+                        <publicPackage>org.apache.commons.httpclient.methods.multipart</publicPackage>
+                        <publicPackage>org.apache.commons.httpclient.params</publicPackage>
+                        <publicPackage>org.apache.commons.httpclient.protocol</publicPackage>
+                        <publicPackage>org.apache.commons.httpclient.util</publicPackage>
+                        <publicPackage>org.apache.commons.lang</publicPackage>
+                        <publicPackage>org.apache.commons.lang.builder</publicPackage>
+                        <publicPackage>org.apache.commons.lang.enums</publicPackage>
+                        <publicPackage>org.apache.commons.lang.exception</publicPackage>
+                        <publicPackage>org.apache.commons.lang.math</publicPackage>
+                        <publicPackage>org.apache.commons.lang.mutable</publicPackage>
+                        <publicPackage>org.apache.commons.lang.text</publicPackage>
+                        <publicPackage>org.apache.commons.lang.time</publicPackage>
+                        <publicPackage>org.apache.commons.lang3</publicPackage>
+                        <publicPackage>org.apache.commons.lang3.builder</publicPackage>
+                        <publicPackage>org.apache.commons.lang3.concurrent</publicPackage>
+                        <publicPackage>org.apache.commons.lang3.event</publicPackage>
+                        <publicPackage>org.apache.commons.lang3.exception</publicPackage>
+                        <publicPackage>org.apache.commons.lang3.math</publicPackage>
+                        <publicPackage>org.apache.commons.lang3.mutable</publicPackage>
+                        <publicPackage>org.apache.commons.lang3.reflect</publicPackage>
+                        <publicPackage>org.apache.commons.lang3.text</publicPackage>
+                        <publicPackage>org.apache.commons.lang3.text.translate</publicPackage>
+                        <publicPackage>org.apache.commons.lang3.time</publicPackage>
+                        <publicPackage>org.apache.commons.lang3.tuple</publicPackage>
+                        <publicPackage>org.apache.commons.logging</publicPackage>
+                        <publicPackage>org.apache.log4j</publicPackage>
+                        <publicPackage>org.apache.log4j.spi</publicPackage>
+                        <publicPackage>org.apache.log4j.helpers</publicPackage>
+                        <publicPackage>org.glassfish.hk2.api</publicPackage>
+                        <publicPackage>org.glassfish.hk2.api.messaging</publicPackage>
+                        <publicPackage>org.glassfish.hk2.extension</publicPackage>
+                        <publicPackage>org.glassfish.hk2.internal</publicPackage>
+                        <publicPackage>org.glassfish.hk2.utilities</publicPackage>
+                        <publicPackage>org.glassfish.hk2.utilities.binding</publicPackage>
+                        <publicPackage>org.glassfish.hk2.utilities.cache</publicPackage>
+                        <publicPackage>org.glassfish.hk2.utilities.cache.internal</publicPackage>
+                        <publicPackage>org.glassfish.hk2.utilities.general</publicPackage>
+                        <publicPackage>org.glassfish.hk2.utilities.reflection</publicPackage>
+                        <publicPackage>org.glassfish.hk2.utilities.reflection.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey</publicPackage>
+                        <publicPackage>org.glassfish.jersey.client</publicPackage>
+                        <publicPackage>org.glassfish.jersey.client.authentication</publicPackage>
+                        <publicPackage>org.glassfish.jersey.client.filter</publicPackage>
+                        <publicPackage>org.glassfish.jersey.client.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.client.spi</publicPackage>
+                        <publicPackage>org.glassfish.jersey.filter</publicPackage>
+                        <publicPackage>org.glassfish.jersey.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.internal.inject</publicPackage>
+                        <publicPackage>org.glassfish.jersey.internal.l10n</publicPackage>
+                        <publicPackage>org.glassfish.jersey.internal.spi</publicPackage>
+                        <publicPackage>org.glassfish.jersey.internal.util</publicPackage>
+                        <publicPackage>org.glassfish.jersey.internal.util.collection</publicPackage>
+                        <publicPackage>org.glassfish.jersey.jackson</publicPackage>
+                        <publicPackage>org.glassfish.jersey.jackson.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.jaxb.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.media.multipart</publicPackage>
+                        <publicPackage>org.glassfish.jersey.media.multipart.file</publicPackage>
+                        <publicPackage>org.glassfish.jersey.media.multipart.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.message</publicPackage>
+                        <publicPackage>org.glassfish.jersey.message.filtering</publicPackage>
+                        <publicPackage>org.glassfish.jersey.message.filtering.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.message.filtering.spi</publicPackage>
+                        <publicPackage>org.glassfish.jersey.message.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.model</publicPackage>
+                        <publicPackage>org.glassfish.jersey.model.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.process</publicPackage>
+                        <publicPackage>org.glassfish.jersey.process.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.filter</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.filter.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.internal.inject</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.internal.monitoring</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.internal.monitoring.jmx</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.internal.process</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.internal.routing</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.internal.scanning</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.model</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.model.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.monitoring</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.spi</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.spi.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.wadl</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.wadl.config</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.wadl.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.wadl.internal.generators</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.wadl.internal.generators.resourcedoc</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.model</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.wadl.internal.generators.resourcedoc.xhtml</publicPackage>
+                        <publicPackage>org.glassfish.jersey.server.wadl.processor</publicPackage>
+                        <publicPackage>org.glassfish.jersey.servlet</publicPackage>
+                        <publicPackage>org.glassfish.jersey.servlet.async</publicPackage>
+                        <publicPackage>org.glassfish.jersey.servlet.init</publicPackage>
+                        <publicPackage>org.glassfish.jersey.servlet.init.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.servlet.internal</publicPackage>
+                        <publicPackage>org.glassfish.jersey.servlet.internal.spi</publicPackage>
+                        <publicPackage>org.glassfish.jersey.servlet.spi</publicPackage>
+                        <publicPackage>org.glassfish.jersey.spi</publicPackage>
+                        <publicPackage>org.glassfish.jersey.uri</publicPackage>
+                        <publicPackage>org.glassfish.jersey.uri.internal</publicPackage>
+                        <publicPackage>org.janelia.model.access.domain</publicPackage>
+                        <publicPackage>org.janelia.model.access.tiledMicroscope</publicPackage>
+                        <publicPackage>org.janelia.model.domain</publicPackage>
+                        <publicPackage>org.janelia.model.domain.compartments</publicPackage>
+                        <publicPackage>org.janelia.model.domain.compute</publicPackage>
+                        <publicPackage>org.janelia.model.domain.dto</publicPackage>
+                        <publicPackage>org.janelia.model.domain.enums</publicPackage>
+                        <publicPackage>org.janelia.model.domain.enums.algorithms</publicPackage>
+                        <publicPackage>org.janelia.model.domain.gui.alignment_board</publicPackage>
+                        <publicPackage>org.janelia.model.domain.gui.colordepth</publicPackage>
+                        <publicPackage>org.janelia.model.domain.gui.search</publicPackage>
+                        <publicPackage>org.janelia.model.domain.gui.search.criteria</publicPackage>
+                        <publicPackage>org.janelia.model.domain.interfaces</publicPackage>
+                        <publicPackage>org.janelia.model.domain.ontology</publicPackage>
+                        <publicPackage>org.janelia.model.domain.orders</publicPackage>
+                        <publicPackage>org.janelia.model.domain.report</publicPackage>
+                        <publicPackage>org.janelia.model.domain.sample</publicPackage>
+                        <publicPackage>org.janelia.model.domain.screen</publicPackage>
+                        <publicPackage>org.janelia.model.domain.support</publicPackage>
+                        <publicPackage>org.janelia.model.domain.tiledMicroscope</publicPackage>
+                        <publicPackage>org.janelia.model.domain.workspace</publicPackage>
+                        <publicPackage>org.janelia.model.sage</publicPackage>
+                        <publicPackage>org.janelia.model.security</publicPackage>
+                        <publicPackage>org.janelia.model.security.util</publicPackage>
+                        <publicPackage>org.janelia.model.util</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.compute.access</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.compute.api</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.compute.api.support</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.compute.engine.launcher</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.compute.engine.service</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.collections</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.common</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.entity</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.entity.json</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.genomics</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.jobs</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.ontology</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.ontology.types</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.pipelines</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.search</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.status</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.annotation</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.blast</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.colorSeparator</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.export</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.fileDiscovery</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.fly</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.geometricSearch</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.lineageClassifier</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.maskSearch</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.mip</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.neuron</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.neuronSeparator</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.search</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.tic</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.tiledMicroscope</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.utility</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.tasks.validation</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.blast</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.colorSeparator</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.entity</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.export</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.geometricSearch</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.maskSearch</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.mip</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.neuron</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.neuronSeparator</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.prefs</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.search</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.tic</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.tiledMicroscope</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.tools</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.user_data.validation</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.util</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.model.vo</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.annotation</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.annotation.metrics_logging</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.blast</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.blast.blastxmlparser</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.blast.blastxmlparser.jaxb</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.exception</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.export</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.fasta</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.ffmpeg</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.file_chooser</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.genomics</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.geom</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.geometric_search</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.hibernate</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.image.stream</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.img_3d_loader</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.lvv</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.mesh_loader</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.mesh_loader.wavefront_obj</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.node</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.octree</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.perf</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.sample_discovery</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.screen</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.solr</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.swc</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.tasks</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.units</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.utils</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.utils.domain</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.utils.entity</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.utils.genbank</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.utils.zeiss</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.shared.viewer3d</publicPackage>
+                        <publicPackage>org.jdesktop.swingx.*</publicPackage>
+                        <publicPackage>org.reflections</publicPackage>
+                        <publicPackage>org.reflections.adapters</publicPackage>
+                        <publicPackage>org.reflections.scanners</publicPackage>
+                        <publicPackage>org.reflections.serializers</publicPackage>
+                        <publicPackage>org.reflections.util</publicPackage>
+                        <publicPackage>org.reflections.vfs</publicPackage>
+                        <publicPackage>org.slf4j</publicPackage>
+                        <publicPackage>org.slf4j.event</publicPackage>
+                        <publicPackage>org.slf4j.helpers</publicPackage>
+                        <publicPackage>org.slf4j.impl</publicPackage>
+                        <publicPackage>org.slf4j.spi</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.composer</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.constructor</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.emitter</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.error</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.events</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.extensions.compactnotation</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.external.biz.base64Coder</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.external.com.google.gdata.util.common.base</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.introspector</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.nodes</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.parser</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.reader</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.representer</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.resolver</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.scanner</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.serializer</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.tokens</publicPackage>
+                        <publicPackage>org.yaml.snakeyaml.util</publicPackage>
+                    </publicPackages>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>create-timestamp</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <doCheck>false</doCheck>
-                    <doUpdate>false</doUpdate>
-                    <timestampFormat>yyMMdd</timestampFormat>
-                    <timestampPropertyName>buildNumber</timestampPropertyName>
-                    <revisionOnScmFailure>unknownbuild</revisionOnScmFailure>
-                </configuration>
-            </plugin>
-
-            <!-- Override default-site -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default-site</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>site</goal>
-                        </goals>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
-
-
-    <!-- Profiles -->
-    <profiles>
-        <profile>
-            <id>enableTests</id>
-
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skipTests>false</skipTests>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <!-- Profile for nighly builds and releases -->
-        <profile>
-            <id>deployment</id>
-
-            <!-- Override compile properties to be less verbose -->
-            <properties>
-                <janeliaws.javac.showDeprecation>false</janeliaws.javac.showDeprecation>
-                <janeliaws.javac.showWarnings>false</janeliaws.javac.showWarnings>
-                <janeliaws.javac.xlint>-Xlint:none</janeliaws.javac.xlint>
-            </properties>
-
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skipTests>false</skipTests>
-                        </configuration>
-                    </plugin>
-
-                    <!-- Nexus staging, https://oss.sonatype.org/
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                            The create-modules profile overrides this 
-                            <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
-                        </configuration>
-                    </plugin>
-                    -->
- 
-                    <!-- GPG Signed Components 
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    -->
-                </plugins>
-            </build>
-        </profile>
-
-        <!-- Profile to create Javadoc -->
-        <profile>
-            <id>create-javadoc</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <configuration>
-                            <doctitle>${project.name.capitalized} ${project.version} API Index</doctitle>
-                            <show>public</show>
-                            <nohelp>true</nohelp>
-                            <detectLinks>false</detectLinks>
-                            <detectOfflineLinks>true</detectOfflineLinks>
-                            <quiet>false</quiet>
-                            <additionalparam></additionalparam>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>aggregate</id>
-                                <phase>site</phase>
-                                <inherited>false</inherited>
-                                <goals>
-                                    <goal>aggregate</goal>
-                                </goals>
-                                <configuration>
-                                    <show>public</show>
-                                    <doctitle>Workstation ${project.version} API Index</doctitle>
-                                    <subpackages>org.janelia.it.jacs:org.janelia.it.workstation</subpackages>
-                                    <nohelp>true</nohelp>
-                                    <detectLinks>false</detectLinks>
-                                    <detectOfflineLinks>true</detectOfflineLinks>
-                                    <sourcepath>DataBrowser/src/main/java;IntegrationAPIs/src/main/java</sourcepath>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <!-- Profile activated to create modules' artifacts (jar, nbm)
-        <profile>
-            <id>create-modules</id>
-            <build>
-                <plugins>
-                    Enable artifact deploy
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <configuration>
-                            <skipNexusStagingDeployMojo>false</skipNexusStagingDeployMojo>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        -->
-
-        <!-- Profile activated to create sources artifact -->
-        <profile>
-            <id>create-sources</id>
-            <build>
-                <plugins>
-                    <!-- Sources plugin -->
-                    <plugin>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <!-- Assembler to produce final sources artifact -->
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>source-assembly</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                                <configuration>
-                                    <tarLongFileMode>gnu</tarLongFileMode>
-                                    <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
-                                    <finalName>${project.name}-${project.version}</finalName>
-                                    <descriptors>
-                                        <descriptor>src/assemble/sources.xml</descriptor>
-                                    </descriptors>
-                                    <attach>false</attach>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        
-        <!-- Properties for release -->
-        <profile>
-            <id>release</id>
-            <properties>
-            </properties>
-        </profile>
-
-        <!-- Profile activated for windows/macos release only. Should be called alone so it only creates the windows installer/compressed dmg
-        <profile>
-            <id>release-extra</id>
-            <build>
-                <plugins>
-
-                    Skip Javadoc creation
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <phase>none</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    Skip sources attach
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <phase>none</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        -->
-
-    </profiles>
-    
-    <modules>
-        <module>application</module>
-        <module>branding</module>
-        <module>ConsoleWrapper</module>
-        <module>IntegrationAPIs</module>
-        <module>DarculaLAF</module>
-        <module>DataBrowserModule</module>
-        <module>HortaTracer</module>
-        <module>LargeVolumeViewerModule</module>
-        <module>Viewer3D</module>
-        <module>ViewerAPI</module>
-        <module>GLViewerTools</module>
-        <module>Geometry3d</module>
-        <module>SceneWindow</module>
-    </modules>
 
 </project>
