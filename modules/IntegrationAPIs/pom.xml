@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.janelia</groupId>
+        <artifactId>workstation</artifactId>
+        <version>7.19</version>
+        <relativePath>..</relativePath>
+    </parent>
+
+    <name>IntegrationAPIs</name>
+    <groupId>org.janelia.it.jacs</groupId>
+    <artifactId>integration</artifactId>
+    <version>7.19</version>
+    <packaging>nbm</packaging>
+
+    <dependencies>
+        
+        <!-- ConsoleWrapper -->
+        <dependency>
+            <groupId>org.janelia.it</groupId>
+            <artifactId>workstation</artifactId>
+        </dependency>
+        
+        <!-- NetBeans Modules --> 
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-nodes</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util-lookup</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util-ui</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <configuration>
+                    <publicPackages>
+                        <publicPackage>org.janelia.it.jacs.integration</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.integration.framework.compression</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.integration.framework.domain</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.integration.framework.exceptions</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.integration.framework.nodes</publicPackage>
+                        <publicPackage>org.janelia.it.jacs.integration.framework.system</publicPackage>
+                    </publicPackages>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
