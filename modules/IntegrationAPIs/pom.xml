@@ -6,7 +6,7 @@
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
         <version>7.19</version>
-        <relativePath>..</relativePath>
+        <relativePath>../..</relativePath>
     </parent>
 
     <name>IntegrationAPIs</name>
