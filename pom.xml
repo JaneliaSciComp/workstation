@@ -103,11 +103,6 @@
         <!-- Mac OS X bundle settings -->
         <janeliaws.appbundle.name>Janelia Workstation</janeliaws.appbundle.name>
 
-        <!--
-        <janeliaws.bundle.jre.url>https://download.oracle.com/otn-pub/java/jdk/8u191-b12/2787e4a523244c269598db4e85c51e0c</janeliaws.bundle.jre.url>
-        <janeliaws.bundle.jre.version>jre-8u191-macosx-x64</janeliaws.bundle.jre.version>
-        -->
-
         <!-- Mac OS X signing identity - must match with a verified Apple developer certificate in the keychain -->
         <janeliaws.codesign.identity>Developer ID Application</janeliaws.codesign.identity>
     
@@ -167,13 +162,6 @@
         
         <janeliaws.versions-maven-plugin.version>2.5</janeliaws.versions-maven-plugin.version>
 
-<!--
-unused:
-
-        <janeliaws.maven-enforcer-plugin.version>1.4.1</janeliaws.maven-enforcer-plugin.version>
-        <janeliaws.maven-license-plugin.version>1.9.0</janeliaws.maven-license-plugin.version>
--->
-
     </properties>
 
     <repositories>
@@ -228,77 +216,77 @@ unused:
 
             <!-- DarculaLAF --> 
             <dependency>
-                <groupId>org.janelia.it.workstation</groupId>
+                <groupId>org.janelia.workstation</groupId>
                 <artifactId>darcula</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
             <!-- IntegrationAPIs --> 
             <dependency>
-                <groupId>org.janelia.it.jacs</groupId>
+                <groupId>org.janelia.workstation</groupId>
                 <artifactId>integration</artifactId>
                 <version>${project.version}</version>
             </dependency>
            
             <!-- ConsoleWrapper --> 
             <dependency>
-                <groupId>org.janelia.it</groupId>
-                <artifactId>workstation</artifactId>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>libraries</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
             <!-- DataBrowser --> 
             <dependency>
-                <groupId>org.janelia.it.workstation.gui</groupId>
+                <groupId>org.janelia.workstation</groupId>
                 <artifactId>browser</artifactId>
                 <version>${project.version}</version>
             </dependency>
          
             <!-- Large Volume Viewer -->
             <dependency>
-                <groupId>org.janelia.it.workstation.gui</groupId>
+                <groupId>org.janelia.workstation</groupId>
                 <artifactId>large_volume_viewer</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <!-- Horta -->
             <dependency>
-                <groupId>org.janelia</groupId>
+                <groupId>org.janelia.workstation</groupId>
                 <artifactId>horta</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
             <!-- Viewer 3D -->
             <dependency>
-                <groupId>org.janelia.it.workstation.gui</groupId>
+                <groupId>org.janelia.workstation</groupId>
                 <artifactId>viewer3d</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <!-- GL Viewer --> 
             <dependency>
-                <groupId>org.janelia</groupId>
+                <groupId>org.janelia.workstation</groupId>
                 <artifactId>gltools</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <!-- Scene Graph -->
             <dependency>
-                <groupId>org.janelia</groupId>
+                <groupId>org.janelia.workstation</groupId>
                 <artifactId>scenegraph</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <!-- Geometry 3D -->
             <dependency>
-                <groupId>org.janelia</groupId>
+                <groupId>org.janelia.workstation</groupId>
                 <artifactId>geometry3d</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <!-- Viewer API -->
             <dependency>
-                <groupId>org.janelia.console</groupId>
+                <groupId>org.janelia.workstation</groupId>
                 <artifactId>viewerapi</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -576,25 +564,11 @@ unused:
                     <artifactId>maven-antrun-plugin</artifactId>
                     <version>${janeliaws.maven-antrun-plugin.version}</version>
                 </plugin>
-                <!--
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <version>${janeliaws.maven-deploy-plugin.version}</version>
-                </plugin>
-                -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-release-plugin</artifactId>
                     <version>${janeliaws.maven-release-plugin.version}</version>
                 </plugin>
-                <!--
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-gpg-plugin</artifactId>
-                    <version>${janeliaws.maven-gpg-plugin.version}</version>
-                </plugin>
-                -->
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
@@ -650,20 +624,11 @@ unused:
                     <artifactId>maven-site-plugin</artifactId>
                     <version>${janeliaws.maven-site-plugin.version}</version>
                 </plugin>
-                <!--
-                <plugin>
-                    <groupId>org.sonatype.plugins</groupId>
-                    <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>${janeliaws.nexus-staging-maven-plugin.version}</version>
-                </plugin>
-                -->
-
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>buildnumber-maven-plugin</artifactId>
                     <version>${janeliaws.buildnumber-plugin.version}</version>
                 </plugin>
-
                 <plugin>
                     <groupId>com.github.github</groupId>
                     <artifactId>site-maven-plugin</artifactId>
@@ -841,37 +806,6 @@ unused:
                             <skipTests>false</skipTests>
                         </configuration>
                     </plugin>
-
-                    <!-- Nexus staging, https://oss.sonatype.org/
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                            The create-modules profile overrides this 
-                            <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
-                        </configuration>
-                    </plugin>
-                    -->
- 
-                    <!-- GPG Signed Components 
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    -->
                 </plugins>
             </build>
         </profile>
@@ -924,24 +858,6 @@ unused:
             </build>
         </profile>
 
-        <!-- Profile activated to create modules' artifacts (jar, nbm)
-        <profile>
-            <id>create-modules</id>
-            <build>
-                <plugins>
-                    Enable artifact deploy
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <configuration>
-                            <skipNexusStagingDeployMojo>false</skipNexusStagingDeployMojo>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        -->
-
         <!-- Profile activated to create sources artifact -->
         <profile>
             <id>create-sources</id>
@@ -992,40 +908,6 @@ unused:
             <properties>
             </properties>
         </profile>
-
-        <!-- Profile activated for windows/macos release only. Should be called alone so it only creates the windows installer/compressed dmg
-        <profile>
-            <id>release-extra</id>
-            <build>
-                <plugins>
-
-                    Skip Javadoc creation
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <phase>none</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    Skip sources attach
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <phase>none</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        -->
 
     </profiles>
     

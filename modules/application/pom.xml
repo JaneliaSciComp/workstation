@@ -30,25 +30,25 @@
         
         <!-- Darcula Look and Feel --> 
         <dependency>
-            <groupId>org.janelia.it.workstation</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>darcula</artifactId>
         </dependency>
         
         <!-- Data Browser --> 
         <dependency>
-            <groupId>org.janelia.it.workstation.gui</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>browser</artifactId>
         </dependency>
 
         <!-- Large Volume Viewer --> 
         <dependency>
-            <groupId>org.janelia.it.workstation.gui</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>large_volume_viewer</artifactId>
         </dependency>
  
         <!-- Horta --> 
         <dependency>
-            <groupId>org.janelia</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>horta</artifactId>
         </dependency>       
 

@@ -10,7 +10,7 @@
     </parent>
 
     <name>Geometry3d</name>
-    <groupId>org.janelia</groupId>
+    <groupId>org.janelia.workstation</groupId>
     <artifactId>geometry3d</artifactId>
     <version>7.19</version>
     <packaging>nbm</packaging>
@@ -19,13 +19,13 @@
         
         <!-- ConsoleWrapper -->
         <dependency>
-            <groupId>org.janelia.it</groupId>
-            <artifactId>workstation</artifactId>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>libraries</artifactId>
         </dependency>
         
         <!-- Viewer API --> 
         <dependency>
-            <groupId>org.janelia.console</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>viewerapi</artifactId>
         </dependency>
        

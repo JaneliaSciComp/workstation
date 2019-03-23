@@ -10,7 +10,7 @@
     </parent>
 
     <name>IntegrationAPIs</name>
-    <groupId>org.janelia.it.jacs</groupId>
+    <groupId>org.janelia.workstation</groupId>
     <artifactId>integration</artifactId>
     <version>7.19</version>
     <packaging>nbm</packaging>
@@ -19,8 +19,8 @@
         
         <!-- ConsoleWrapper -->
         <dependency>
-            <groupId>org.janelia.it</groupId>
-            <artifactId>workstation</artifactId>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>libraries</artifactId>
         </dependency>
         
         <!-- NetBeans Modules --> 

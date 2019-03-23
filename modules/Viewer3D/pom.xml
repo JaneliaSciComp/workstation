@@ -10,7 +10,7 @@
     </parent>
 
     <name>Viewer3D</name>
-    <groupId>org.janelia.it.workstation.gui</groupId>
+    <groupId>org.janelia.workstation</groupId>
     <artifactId>viewer3d</artifactId>
     <version>7.19</version>
     <packaging>nbm</packaging>
@@ -19,13 +19,13 @@
         
         <!-- ConsoleWrapper --> 
         <dependency>
-            <groupId>org.janelia.it</groupId>
-            <artifactId>workstation</artifactId>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>libraries</artifactId>
         </dependency>
         
         <!-- Integration APIs --> 
         <dependency>
-            <groupId>org.janelia.it.jacs</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>integration</artifactId>
         </dependency>
         

@@ -10,7 +10,7 @@
     </parent>
 
     <name>ViewerAPI</name>
-    <groupId>org.janelia.console</groupId>
+    <groupId>org.janelia.workstation</groupId>
     <artifactId>viewerapi</artifactId>
     <version>7.19</version>
     <packaging>nbm</packaging>
@@ -19,13 +19,13 @@
         
         <!-- ConsoleWrapper -->
         <dependency>
-            <groupId>org.janelia.it</groupId>
-            <artifactId>workstation</artifactId>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>libraries</artifactId>
         </dependency>
 
         <!-- Integration APIs --> 
         <dependency>
-            <groupId>org.janelia.it.jacs</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>integration</artifactId>
         </dependency>
         

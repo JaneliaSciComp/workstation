@@ -10,7 +10,7 @@
     </parent>
 
     <name>HortaTracer</name>
-    <groupId>org.janelia</groupId>
+    <groupId>org.janelia.workstation</groupId>
     <artifactId>horta</artifactId>
     <version>7.19</version>
     <packaging>nbm</packaging>
@@ -19,44 +19,44 @@
         
         <!-- ConsoleWrapper --> 
         <dependency>
-            <groupId>org.janelia.it</groupId>
-            <artifactId>workstation</artifactId>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>libraries</artifactId>
         </dependency>
         
         <!-- Integration APIs --> 
         <dependency>
-            <groupId>org.janelia.it.jacs</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>integration</artifactId>
         </dependency>
         
         <!-- Viewer API --> 
         <dependency>
-            <groupId>org.janelia.console</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>viewerapi</artifactId>
         </dependency>
 
         <!-- GL Viewer --> 
         <dependency>
-            <groupId>org.janelia</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>gltools</artifactId>
         </dependency>
 
         <!-- Geometry 3D --> 
         <dependency>
-            <groupId>org.janelia</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>geometry3d</artifactId>
         </dependency>
 
         <!-- Workstation Browser --> 
         <dependency>
-            <groupId>org.janelia.it.workstation.gui</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>browser</artifactId>
             <version>7.19</version>
         </dependency>
         
         <!-- Scene Graph --> 
         <dependency>
-            <groupId>org.janelia</groupId>
+            <groupId>org.janelia.workstation</groupId>
             <artifactId>scenegraph</artifactId>
         </dependency>
 
