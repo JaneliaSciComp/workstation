@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><module codename="net.java.html.boot">
-    <module_version install_time="1475191068256" last="true" origin="installer" specification_version="1.3.0">
-        <file crc="3318383650" name="config/Modules/net-java-html-boot.xml"/>
-        <file crc="2044564420" name="modules/net-java-html-boot.jar"/>
-    </module_version>
-</module>

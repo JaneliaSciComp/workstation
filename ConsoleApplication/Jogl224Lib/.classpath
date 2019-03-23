@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/gluegen-2.2.4.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/jogl-all-2.2.4.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="output" path="build_eclipse"/>
-</classpath>

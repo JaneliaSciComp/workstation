@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?><module codename="net.java.html.json">
-    <module_version install_time="1475191068477" last="true" origin="installer" specification_version="1.3.0">
-        <file crc="365691927" name="config/Modules/net-java-html-json.xml"/>
-        <file crc="2100339461" name="modules/net-java-html-json.jar"/>
-    </module_version>
-</module>
