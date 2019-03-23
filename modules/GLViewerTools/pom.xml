@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.janelia</groupId>
+        <artifactId>workstation</artifactId>
+        <version>7.19</version>
+        <relativePath>..</relativePath>
+    </parent>
+
+    <name>GLViewerTools</name>
+    <groupId>org.janelia</groupId>
+    <artifactId>gltools</artifactId>
+    <version>7.19</version>
+    <packaging>nbm</packaging>
+
+    <dependencies>
+        
+        <!-- ConsoleWrapper --> 
+        <dependency>
+            <groupId>org.janelia.it</groupId>
+            <artifactId>workstation</artifactId>
+        </dependency>
+        
+        <!-- Integration APIs --> 
+        <dependency>
+            <groupId>org.janelia.it.jacs</groupId>
+            <artifactId>integration</artifactId>
+        </dependency>
+        
+        <!-- Geometry 3D --> 
+        <dependency>
+            <groupId>org.janelia</groupId>
+            <artifactId>geometry3d</artifactId>
+        </dependency>
+
+        <!-- Viewer API --> 
+        <dependency>
+            <groupId>org.janelia.console</groupId>
+            <artifactId>viewerapi</artifactId>
+        </dependency>
+        
+        <!-- NetBeans Modules -->
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util-ui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util-lookup</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-settings</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-awt</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-windows</artifactId>
+        </dependency>
+        
+        <!-- Maven Central dependencies --> 
+        <dependency>
+            <groupId>org.jogamp.jogl</groupId>
+            <artifactId>jogl-all-main</artifactId>
+            <version>2.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jogamp.gluegen</groupId>
+            <artifactId>gluegen-rt-main</artifactId>
+            <version>2.2.4</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <configuration>
+                    <publicPackages>
+                        <publicPackage>org.janelia.gltools</publicPackage>
+                        <publicPackage>org.janelia.gltools.material</publicPackage>
+                        <publicPackage>org.janelia.gltools.material.lightprobe</publicPackage>
+                        <publicPackage>org.janelia.gltools.material.shader</publicPackage>
+                        <publicPackage>org.janelia.gltools.texture</publicPackage>
+                        <publicPackage>renderpipeline</publicPackage>
+                    </publicPackages>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
