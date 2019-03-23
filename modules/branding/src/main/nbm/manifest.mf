@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+AutoUpdate-Essential-Module: true
+AutoUpdate-Show-In-Client: false
+OpenIDE-Module-Specification-Version: ${janeliaws.modules.specification.version}
+OpenIDE-Module-Implementation-Version: ${buildNumber}
