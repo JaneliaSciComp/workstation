@@ -1,8 +1,7 @@
 Manifest-Version: 1.0
 AutoUpdate-Show-In-Client: true
-OpenIDE-Module: org.janelia.it.workstation.darcula/1
-OpenIDE-Module-Layer: com/revivius/nb/darcula/layer.xml
 OpenIDE-Module-Localizing-Bundle: com/revivius/nb/darcula/Bundle.properties
+OpenIDE-Module-Layer: com/revivius/nb/darcula/layer.xml
 OpenIDE-Module-Install: com/revivius/nb/darcula/Installer.class
 OpenIDE-Module-Specification-Version: 1.69
-
+OpenIDE-Module-Implementation-Version: ${buildNumber}
