@@ -1,6 +1,7 @@
 Manifest-Version: 1.0
-OpenIDE-Module: org.janelia.it.workstation.gui.browser/1
+AutoUpdate-Essential-Module: true
 OpenIDE-Module-Layer: org/janelia/it/workstation/gui/browser/layer.xml
 OpenIDE-Module-Localizing-Bundle: org/janelia/it/workstation/gui/browser/Bundle.properties
 OpenIDE-Module-Requires: org.openide.windows.WindowManager
-OpenIDE-Module-Specification-Version: 2.51
+OpenIDE-Module-Specification-Version: ${janeliaws.modules.specification.version}
+OpenIDE-Module-Implementation-Version: ${buildNumber}
