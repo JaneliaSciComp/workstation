@@ -74,11 +74,12 @@ public class SystemInfo {
     public static final String nativeFileManagerName = isMac ? "Finder" : isGnome ? "Nautilus" : isKDE ? "Konqueror" : "Explorer";
 
     public static final String optionsMenuName = isMac ? "Preferences" : "Tools->Options";
-    
-    public static final String appVersion = ConsoleApp.getConsoleApp().getApplicationVersion();
+
+    public static final String appName = ConsoleProperties.getString("console.Title");
+    public static final String appVersion = ConsoleProperties.getString("console.versionNumber");
+
     public static final boolean isDev = "DEV".equals(appVersion);
     public static final boolean isTest = "TEST".equals(appVersion);
-    
     
     /**
      * Whether IDEA is running under MacOS X version 10.4 or later.

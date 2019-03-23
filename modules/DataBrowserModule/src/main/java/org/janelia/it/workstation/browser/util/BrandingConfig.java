@@ -55,7 +55,7 @@ public class BrandingConfig {
         return instance;
     }
 
-    public static final String appnameToken = "JaneliaWorkstation";  // TODO: Get this from NetBeans framework somehow
+    public static final String appnameToken = "janeliaws";  // TODO: Get this from NetBeans framework somehow
     
     private static final String NETBEANS_IDE_SETTING_NAME_PREFIX = "netbeans_";
     private static final String MEMORY_SETTING_PREFIX = "-J-Xmx";
@@ -91,9 +91,8 @@ public class BrandingConfig {
      */
     private final void loadSystemConfig() {
         try {
-            // Find the current bona-fide production config, which is copied from harness/etc/app.conf 
-            // to ConsoleWrapper/release/config by build-runner.xml
-            final String configFile = "config/app.conf";
+            // Find the current bona-fide production config
+            final String configFile = "config/janeliaws.conf";
             File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, "org.janelia.it.workstation", false);
             log.debug("Trying system config at {}", sysWideConfig);
             

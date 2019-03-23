@@ -45,8 +45,6 @@ public class ConsoleApp {
         return instance;
     }
 
-    private final String appName;
-    private final String appVersion;
     private final String remoteHostname;
     private final String remoteRestUrl;
     private final ImageCache imageCache;
@@ -57,16 +55,13 @@ public class ConsoleApp {
     public ConsoleApp() {
 
         log.info("Initializing Console Application");
-        
-        this.appName = ConsoleProperties.getString("console.Title");
-        this.appVersion = ConsoleProperties.getString("console.versionNumber");
 
         log.debug("Java version: " + System.getProperty("java.version"));
         ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
         log.debug("Code Source: "+pd.getCodeSource().getLocation());
                 
         // Put the app name in the Mac OS X menu bar
-        System.setProperty("com.apple.mrj.application.apple.menu.about.name", appName);
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", getApplicationName());
         
         // Stretch NetBeans tabs across entire width of window. This allows us to show more of the long window titles.
         System.setProperty("winsys.stretching_view_tabs", "true"); 
@@ -215,11 +210,11 @@ public class ConsoleApp {
     }
     
     public String getApplicationName() {
-        return appName;
+        return SystemInfo.appName;
     }
 
     public String getApplicationVersion() {
-        return appVersion;
+        return SystemInfo.appVersion;
     }
 
     public static void handleException(Throwable throwable) {
