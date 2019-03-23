@@ -19,8 +19,8 @@
 
         <!-- Jars from Workstation Maven Repo -->
         <dependency>
-            <groupId>org.janelia.legacy</groupId>
-            <artifactId>model</artifactId>
+            <groupId>org.janelia.jacs-model</groupId>
+            <artifactId>jacs-model-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.janelia.legacy</groupId>
@@ -60,7 +60,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>13.0.1</version>
+            <version>26.0-jre</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

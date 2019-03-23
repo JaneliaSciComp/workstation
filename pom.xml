@@ -305,13 +305,38 @@ unused:
 
             <!-- Jars from Workstation Maven Repo -->
             <dependency>
+                <groupId>org.janelia.jacs-model</groupId>
+                <artifactId>jacs-model-core</artifactId>
+                <version>2.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.janelia.jacs-model</groupId>
+                <artifactId>jacs-model-rendering</artifactId>
+                <version>2.0.0</version>
+            </dependency>
+            <dependency>
                 <groupId>org.janelia.legacy</groupId>
-                <artifactId>model</artifactId>
+                <artifactId>jacs-messaging</artifactId>
+                <version>1.1.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.janelia.legacy</groupId>
+                <artifactId>compute-client</artifactId>
                 <version>1.0</version>
-            </dependency>   
+            </dependency>
             <dependency>
                 <groupId>org.janelia.legacy</groupId>
                 <artifactId>shared</artifactId>
+                <version>1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.janelia.legacy</groupId>
+                <artifactId>model</artifactId>
+                <version>1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>edu.wlu</groupId>
+                <artifactId>kdtree</artifactId>
                 <version>1.0</version>
             </dependency>
 
@@ -486,7 +511,13 @@ unused:
                 <version>${netbeans.version}</version>
                 <scope>test</scope>
             </dependency>
-            
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.12</version>
+                <scope>test</scope>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -999,19 +1030,19 @@ unused:
     </profiles>
     
     <modules>
-        <module>application</module>
-        <module>branding</module>
-        <module>ConsoleWrapper</module>
-        <module>IntegrationAPIs</module>
-        <module>DarculaLAF</module>
-        <module>DataBrowserModule</module>
-        <module>HortaTracer</module>
-        <module>LargeVolumeViewerModule</module>
-        <module>Viewer3D</module>
-        <module>ViewerAPI</module>
-        <module>GLViewerTools</module>
-        <module>Geometry3d</module>
-        <module>SceneWindow</module>
+        <module>modules/application</module>
+        <module>modules/branding</module>
+        <module>modules/ConsoleWrapper</module>
+        <module>modules/IntegrationAPIs</module>
+        <module>modules/DarculaLAF</module>
+        <module>modules/DataBrowserModule</module>
+        <module>modules/HortaTracer</module>
+        <module>modules/LargeVolumeViewerModule</module>
+        <module>modules/Viewer3D</module>
+        <module>modules/ViewerAPI</module>
+        <module>modules/GLViewerTools</module>
+        <module>modules/Geometry3d</module>
+        <module>modules/SceneWindow</module>
     </modules>
 
 </project>

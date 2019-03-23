@@ -91,8 +91,7 @@ public class BulkNeuronTagAction extends AbstractAction {
         SimpleWorker adder = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                Stopwatch stopwatch = new Stopwatch();
-                stopwatch.start();
+                Stopwatch stopwatch = Stopwatch.createStarted();
                 annModel.addNeuronTag(tag, neuronList);
                 System.out.println("added tag to " + neuronList.size() + " neurons in " + stopwatch);
                 stopwatch.stop();
@@ -132,8 +131,7 @@ public class BulkNeuronTagAction extends AbstractAction {
         SimpleWorker remover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                Stopwatch stopwatch = new Stopwatch();
-                stopwatch.start();
+                Stopwatch stopwatch = Stopwatch.createStarted();
                 annModel.removeNeuronTag(tag, neuronList);
                 System.out.println("removed tag from " + neuronList.size() + " neurons in " + stopwatch);
                 stopwatch.stop();

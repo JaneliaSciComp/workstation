@@ -933,8 +933,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         // start transaction to prevent screen refresh until ownership change, etc. happens
         beginTransaction();
-        Stopwatch stopwatch = new Stopwatch();
-        stopwatch.start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
 
         final TmNeuronMetadata targetNeuron = getNeuronFromNeuronID(targetNeuronID);
         final TmGeoAnnotation targetAnnotation = targetNeuron.getGeoAnnotationMap().get(targetAnnotationID);
@@ -1005,7 +1004,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             public void run() {
                 try {
                     
-                log.info("MERGE A: {}",stopwatch.elapsedMillis());
+                log.info("MERGE A: {}",stopwatch.elapsed().toMillis());
                     // temporary fix to set index properly
                     final List<TmNeuronMetadata> neuronList = new ArrayList<>();
                     neuronList.add(targetNeuron);
@@ -1024,12 +1023,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     }
                     fireNeuronChanged(targetNeuron);
                     
-                log.info("MERGE B: {}",stopwatch.elapsedMillis());
+                log.info("MERGE B: {}",stopwatch.elapsed().toMillis());
                 }
                 finally {
                     endTransaction();                
                 }
-                log.info("TOTAL MERGE: {}",stopwatch.elapsedMillis());
+                log.info("TOTAL MERGE: {}",stopwatch.elapsed().toMillis());
                 stopwatch.stop();
                 activityLog.logEndOfOperation(getWsId(), targetAnnotation);
             }

@@ -12,6 +12,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+
+import com.google.common.util.concurrent.MoreExecutors;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
@@ -156,7 +158,7 @@ public class LargeVolumeViewViewer extends JPanel {
                             logger.error("Error loading empty workspace after failed workspace load",e);
                         }
                     }
-                });
+                }, MoreExecutors.directExecutor());
             }
 
             @Override

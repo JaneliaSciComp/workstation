@@ -64,7 +64,6 @@
         <dependency>
             <groupId>edu.wlu</groupId>
             <artifactId>kdtree</artifactId>
-            <version>1.0</version>
         </dependency>
         
         <!-- NetBeans Modules --> 

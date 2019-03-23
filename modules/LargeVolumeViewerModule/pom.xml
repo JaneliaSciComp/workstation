@@ -49,14 +49,16 @@
 
         <!-- Jars from Workstation Maven Repo -->
         <dependency>
+            <groupId>org.janelia.jacs-model</groupId>
+            <artifactId>jacs-model-rendering</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.janelia.legacy</groupId>
             <artifactId>jacs-messaging</artifactId>
-            <version>1.0</version>
         </dependency>
         <dependency>
             <groupId>edu.wlu</groupId>
             <artifactId>kdtree</artifactId>
-            <version>1.0</version>
         </dependency>
         <dependency>
             <groupId>com.github.vlsi.mxgraph</groupId>

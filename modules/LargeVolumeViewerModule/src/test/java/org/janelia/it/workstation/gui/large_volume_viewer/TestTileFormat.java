@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 import static org.junit.Assert.*;
 
 
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -33,7 +34,7 @@ public class TestTileFormat {
 		double epsilon = 1e-6; // roundoff error tolerance
 		assertTrue(xyz.getX() >= corners[0].getX() - epsilon);
 		assertTrue(xyz.getX() <= corners[1].getX() + epsilon);
-		// 
+		//
 		assertTrue(xyz.getY() >= corners[0].getY() - epsilon);
 		assertTrue(xyz.getY() <= corners[3].getY() + epsilon);
 		// From Les Foster test 8/19/2013
@@ -44,7 +45,7 @@ public class TestTileFormat {
 		// Consider another tile to the lower right of ix
 		TileIndex ixDiag = new TileIndex(
 				ix.getX()+1, ix.getY()-1, ix.getZ(),
-				ix.getZoom(), ix.getMaxZoom(), 
+				ix.getZoom(), ix.getMaxZoom(),
 				ix.getIndexStyle(),
 				ix.getSliceAxis());
 		Vec3 cornersDiag[] = cornersForTileIndex(ixDiag, format);
@@ -52,12 +53,12 @@ public class TestTileFormat {
 		assertEquals(corners[3].getY(), cornersDiag[0].getY(), epsilon);
 		assertEquals(corners[3].getZ(), cornersDiag[0].getZ(), epsilon);
 	}
-	
+
 	@Test
     @Category(TestCategories.FastTests.class)
     public void testTileIndexForXyz() {
 		TileFormat tileFormat = createAavFormat();
-		sanityTest(tileFormat);		
+		sanityTest(tileFormat);
 	}
 
 	@Test
@@ -83,7 +84,7 @@ public class TestTileFormat {
         final int[] ixComparison1 = new int[] {-195, 200, -19000};
         final int[] ixComparison2 = new int[] {-136, 103, -6565};
 
-		sanityTest(tileFormat, ixComparison1, ixComparison2, vecComparison);		
+		sanityTest(tileFormat, ixComparison1, ixComparison2, vecComparison);
 	}
 
 	@Test
@@ -117,7 +118,7 @@ public class TestTileFormat {
         TileFormat.VoxelXyz startingValue = new TileFormat.VoxelXyz( 2000, 1500, 500 );
         TileFormat.MicrometerXyz firstConv = tileFormat.micrometerXyzForVoxelXyz(startingValue, CoordinateAxis.Z);
         TileFormat.MicrometerXyz secondConv = tileFormat.micrometerXyzForVoxelXyzMatrix(startingValue, CoordinateAxis.Z);
-        
+
         assertEquals("X not equal", firstConv.getX(), secondConv.getX(), 0.00001);
         assertEquals("Y not equal", firstConv.getY(), secondConv.getY(), 0.00001);
         assertEquals("Z not equal", firstConv.getZ(), secondConv.getZ(), 0.00001);
@@ -195,25 +196,25 @@ public class TestTileFormat {
         assertEquals(ixComparison1[0], ix1.getX());
         assertEquals(ixComparison1[1], ix1.getY());
         assertEquals(ixComparison1[2], ix1.getZ());
-        
+
         // Test general tile
         Vec3 xyz2 = new Vec3(29952.0, 24869.6, 1243.5);
         TileIndex ix2 = tileFormat.tileIndexForXyz(xyz2, 0, CoordinateAxis.Z);
         assertEquals(ixComparison2[0], ix2.getX());
         assertEquals(ixComparison2[1], ix2.getY());
         assertEquals(ixComparison2[2], ix2.getZ());
-        
+
         sanityCheckXyz(cornerComparison[0], tileFormat, 0);
         sanityCheckXyz(cornerComparison[1], tileFormat, 0);
         sanityCheckXyz(cornerComparison[2], tileFormat, 0);
         sanityCheckXyz(cornerComparison[3], tileFormat, 0);
-        
+
         // Non-zero zoom
         sanityCheckXyz(cornerComparison[0], tileFormat, 3);
         sanityCheckXyz(cornerComparison[1], tileFormat, 3);
         sanityCheckXyz(cornerComparison[2], tileFormat, 3);
         sanityCheckXyz(cornerComparison[3], tileFormat, 3);
-        
+
         // TODO - non-Z slices
     }
 
