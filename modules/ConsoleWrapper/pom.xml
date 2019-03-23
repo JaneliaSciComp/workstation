@@ -1,0 +1,1017 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <name>Janelia Workstation</name>
+    <groupId>org.janelia</groupId>
+    <artifactId>workstation</artifactId>
+    <version>7.19</version>
+    <packaging>pom</packaging>
+
+    <!-- Project Metadata -->
+    <url>http://workstation.janelia.org</url>
+    <description>Janelia Workstation - Discovery Platform for Neuroscience</description>
+    <organization>
+        <name>Howard Hughes Medical Institute</name>
+        <url>https://www.hhmi.org</url>
+    </organization>
+    <inceptionYear>2011</inceptionYear>
+    
+    <!-- Licenses -->
+    <licenses>
+        <license>
+            <name>Janelia Open Source License 1.0</name>
+            <url>https://www.janelia.org/open-science/software-licensing</url>
+        </license>
+    </licenses>
+
+    <!-- Developers -->
+    <developers>
+        <developer>
+            <id>rokickik</id>
+            <name>Konrad Rokicki</name>
+            <email>rokickik@hhmi.org</email>
+        </developer>
+        <developer>
+            <id>schauderd</id>
+            <name>David Schauder</name>
+            <email>schauderd@hhmi.org</email>
+        </developer>
+        <developer>
+            <id>goinac</id>
+            <name>Cristian Goina</name>
+            <email>goinac@hhmi.org</email>
+        </developer>
+        <developer>
+            <id>olbrisd</id>
+            <name>Don Olbris</name>
+            <email>olbrisd@hhmi.org</email>
+        </developer>
+    </developers>
+
+    <!-- Properties -->
+    <properties>
+
+        <!-- NBM Plugin settings -->
+        <project.name.capitalized>Janelia Workstation</project.name.capitalized>
+        <brandingToken>janeliaws</brandingToken>
+        <clusterName>JaneliaWorkstation</clusterName>
+        <all.clusters>${project.build.directory}/${clusterName}</all.clusters>
+        <janeliaws.app.title>${project.name.capitalized} ${project.version}</janeliaws.app.title>
+
+        <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
+        <janeliaws.build.timestamp>${maven.build.timestamp}</janeliaws.build.timestamp>
+        
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <janeliaws.maven.requiredVersion>3.2.2</janeliaws.maven.requiredVersion>
+        <netbeans.run.params.ide/>
+        <netbeans.run.params>${netbeans.run.params.ide}</netbeans.run.params>
+        
+        <!-- Netbeans Platfrom version -->
+        <netbeans.version>RELEASE82</netbeans.version>
+
+        <!-- Localization ZIP version, from 'http://netbeans.org/project_downloads/nblocalization' -->
+        <janeliaws.platform.localization.version>1.1-NB80</janeliaws.platform.localization.version>
+        
+        <!-- Modules specification version, overrides project version -->
+        <janeliaws.modules.specification.version>2.60</janeliaws.modules.specification.version>
+
+        <!-- Java compilation settings -->
+        <janeliaws.javac.source>1.8</janeliaws.javac.source>
+        <janeliaws.javac.target>1.8</janeliaws.javac.target>
+        <!-- Xlint path is intentionally disabled to avoid "bad path element" errors from jars which insist on specifying classpaths in their MANIFEST.MF -->
+        <janeliaws.javac.xlint>-Xlint:-path</janeliaws.javac.xlint>
+        <janeliaws.javac.doclint>-Xdoclint:none</janeliaws.javac.doclint>
+        <janeliaws.javac.debug>true</janeliaws.javac.debug>
+        <janeliaws.javac.optimize>true</janeliaws.javac.optimize>
+        <janeliaws.javac.showDeprecation>true</janeliaws.javac.showDeprecation>
+        <janeliaws.javac.showWarnings>true</janeliaws.javac.showWarnings>
+        <janeliaws.javac.fork>true</janeliaws.javac.fork>
+
+        <!-- Testing settings -->
+        <testFailureIgnore>false</testFailureIgnore>
+        <janeliaws.testng.version>6.11</janeliaws.testng.version>
+        <janeliaws.test.maxMemory>768M</janeliaws.test.maxMemory>
+        <janeliaws.test.reportsDirectory>${project.build.directory}/surefire-reports/plain</janeliaws.test.reportsDirectory>
+        <janeliaws.test.failureIgnore>${testFailureIgnore}</janeliaws.test.failureIgnore>
+
+        <!-- Update centers URLs -->
+        <janeliaws.update.center.official.url>https://raw.githubusercontent.com/janeliaws/janeliaws/gh-pages/${project.version}/netbeans_site/updates.xml</janeliaws.update.center.official.url>
+        <janeliaws.update.center.thirdparty.url>https://raw.githubusercontent.com/janeliaws/janeliaws-plugins/gh-pages/plugins/${project.version}/updates.xml</janeliaws.update.center.thirdparty.url>
+
+        <!-- Mac OS X bundle settings -->
+        <janeliaws.appbundle.name>Janelia Workstation</janeliaws.appbundle.name>
+
+        <!--
+        <janeliaws.bundle.jre.url>https://download.oracle.com/otn-pub/java/jdk/8u191-b12/2787e4a523244c269598db4e85c51e0c</janeliaws.bundle.jre.url>
+        <janeliaws.bundle.jre.version>jre-8u191-macosx-x64</janeliaws.bundle.jre.version>
+        -->
+
+        <!-- Mac OS X signing identity - must match with a verified Apple developer certificate in the keychain -->
+        <janeliaws.codesign.identity>Developer ID Application</janeliaws.codesign.identity>
+    
+        <!--==== Dependency Versions ==================================================================================-->
+        
+        <janeliaws.slf4j.version>1.7.25</janeliaws.slf4j.version>
+
+        <janeliaws.jackson.version>2.5.4</janeliaws.jackson.version>
+
+        <janeliaws.jetty.version>8.1.8.v20121106</janeliaws.jetty.version>
+        
+        <!--==== Plugin Versions ==================================================================================-->
+
+        <janeliaws.maven-antrun-plugin.version>1.8</janeliaws.maven-antrun-plugin.version>
+
+        <janeliaws.maven-assembly-plugin.version>3.1.0</janeliaws.maven-assembly-plugin.version>
+
+        <janeliaws.maven-clean-plugin.version>3.0.0</janeliaws.maven-clean-plugin.version>
+
+        <janeliaws.maven-compiler-plugin.version>3.7.0</janeliaws.maven-compiler-plugin.version>
+
+        <janeliaws.maven-dependency-plugin.version>3.0.2</janeliaws.maven-dependency-plugin.version>
+
+        <janeliaws.maven-deploy-plugin.version>2.8.2</janeliaws.maven-deploy-plugin.version>
+
+        <janeliaws.maven-gpg-plugin.version>1.6</janeliaws.maven-gpg-plugin.version>
+
+        <janeliaws.maven-install-plugin.version>2.5.2</janeliaws.maven-install-plugin.version>
+
+        <janeliaws.maven-jar-plugin.version>3.0.2</janeliaws.maven-jar-plugin.version>
+
+        <janeliaws.maven-jarsigner-plugin.version>1.4</janeliaws.maven-jarsigner-plugin.version>
+
+        <janeliaws.maven-javadoc-plugin.version>2.10.4</janeliaws.maven-javadoc-plugin.version> 
+
+        <janeliaws.maven-release-plugin.version>2.5.3</janeliaws.maven-release-plugin.version>
+
+        <janeliaws.maven-resources-plugin.version>3.0.2</janeliaws.maven-resources-plugin.version>
+
+        <janeliaws.buildnumber-plugin.version>1.4</janeliaws.buildnumber-plugin.version>
+
+        <janeliaws.maven-site-plugin.version>3.6</janeliaws.maven-site-plugin.version>
+
+        <janeliaws.maven-source-plugin.version>3.0.1</janeliaws.maven-source-plugin.version>
+
+        <janeliaws.maven-surefire-plugin.version>2.20.1</janeliaws.maven-surefire-plugin.version>
+
+        <janeliaws.build-helper-maven-plugin.version>3.0.0</janeliaws.build-helper-maven-plugin.version>
+
+        <janeliaws.nbm-maven-plugin.version>4.1</janeliaws.nbm-maven-plugin.version>
+        
+        <janeliaws.wagon-maven-plugin.version>1.0</janeliaws.wagon-maven-plugin.version>  
+        
+        <janeliaws.nexus-staging-maven-plugin.version>1.6.8</janeliaws.nexus-staging-maven-plugin.version>
+
+        <janeliaws.site-maven-plugin.version>0.12</janeliaws.site-maven-plugin.version>
+        
+        <janeliaws.versions-maven-plugin.version>2.5</janeliaws.versions-maven-plugin.version>
+
+<!--
+unused:
+
+        <janeliaws.maven-enforcer-plugin.version>1.4.1</janeliaws.maven-enforcer-plugin.version>
+        <janeliaws.maven-license-plugin.version>1.9.0</janeliaws.maven-license-plugin.version>
+-->
+
+    </properties>
+
+    <repositories>
+        <!-- For NetBeans modules -->
+        <repository>
+            <id>netbeans</id>
+            <name>NetBeans</name>
+            <url>http://bits.netbeans.org/nexus/content/groups/netbeans/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <!-- For javax.activation, which is required by saaj -->
+        <repository>
+            <id>redhat</id>
+            <name>Redhat GA Repository</name>
+            <url>https://maven.repository.redhat.com/ga/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <!-- for BioFormats -->
+        <repository>
+            <id>imagej-repository</id>
+            <url>http://maven.imagej.net/content/repositories/ome-releases/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <!-- Workstation repo for libraries not found in any public Maven repository -->
+        <repository>
+            <id>janelia-repo</id>
+            <url>https://raw.githubusercontent.com/JaneliaSciComp/mvn-repo/master/repository/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+
+    <!-- List all dependencies with versions so it can be used in child POMs without explicit versions -->
+    <dependencyManagement>
+        <!-- Dependencies -->
+        <dependencies>
+
+            <!-- branding --> 
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>branding</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- DarculaLAF --> 
+            <dependency>
+                <groupId>org.janelia.it.workstation</groupId>
+                <artifactId>darcula</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
+            <!-- IntegrationAPIs --> 
+            <dependency>
+                <groupId>org.janelia.it.jacs</groupId>
+                <artifactId>integration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+           
+            <!-- ConsoleWrapper --> 
+            <dependency>
+                <groupId>org.janelia.it</groupId>
+                <artifactId>workstation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
+            <!-- DataBrowser --> 
+            <dependency>
+                <groupId>org.janelia.it.workstation.gui</groupId>
+                <artifactId>browser</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+         
+            <!-- Large Volume Viewer -->
+            <dependency>
+                <groupId>org.janelia.it.workstation.gui</groupId>
+                <artifactId>large_volume_viewer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Horta -->
+            <dependency>
+                <groupId>org.janelia</groupId>
+                <artifactId>horta</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
+            <!-- Viewer 3D -->
+            <dependency>
+                <groupId>org.janelia.it.workstation.gui</groupId>
+                <artifactId>viewer3d</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- GL Viewer --> 
+            <dependency>
+                <groupId>org.janelia</groupId>
+                <artifactId>gltools</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Scene Graph -->
+            <dependency>
+                <groupId>org.janelia</groupId>
+                <artifactId>scenegraph</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Geometry 3D -->
+            <dependency>
+                <groupId>org.janelia</groupId>
+                <artifactId>geometry3d</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Viewer API -->
+            <dependency>
+                <groupId>org.janelia.console</groupId>
+                <artifactId>viewerapi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Jars from Workstation Maven Repo -->
+            <dependency>
+                <groupId>org.janelia.legacy</groupId>
+                <artifactId>model</artifactId>
+                <version>1.0</version>
+            </dependency>   
+            <dependency>
+                <groupId>org.janelia.legacy</groupId>
+                <artifactId>shared</artifactId>
+                <version>1.0</version>
+            </dependency>
+
+            <!-- Maven Central dependencies -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${janeliaws.slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-jdk14</artifactId>
+                <version>${janeliaws.slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-util</artifactId>
+                <version>${janeliaws.jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-server</artifactId>
+                <version>${janeliaws.jetty.version}</version>
+            </dependency>
+            
+            <!-- NetBeans Modules --> 
+            <dependency>
+                <groupId>org.netbeans.cluster</groupId>
+                <artifactId>platform</artifactId>
+                <version>${netbeans.version}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-dialogs</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-filesystems</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-filesystems-compat8</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-filesystems-nb</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-util</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-util-ui</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-util-lookup</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-windows</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-modules</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-api-progress</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-api-progress-nb</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-nodes</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-awt</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-settings</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-swing-outline</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-explorer</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-api-annotations-common</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-swing-tabcontrol</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-io</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-core-output2</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.modules</groupId>
+                <artifactId>org-netbeans-modules-masterfs</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-options-api</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-autoupdate-services</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-openide-actions</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-spi-quicksearch</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-swing-plaf</artifactId>
+                <version>${netbeans.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-modules-nbjunit</artifactId>
+                <version>${netbeans.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.netbeans.api</groupId>
+                <artifactId>org-netbeans-libs-junit4</artifactId>
+                <version>${netbeans.version}</version>
+                <scope>test</scope>
+            </dependency>
+            
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- TestNG dependency -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${janeliaws.testng.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+
+        <!-- Plugins installed with versions -->
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>${janeliaws.versions-maven-plugin.version}</version>
+                    <configuration>
+                        <rulesUri>file:///${session.executionRootDirectory}/maven-version-rules.xml</rulesUri>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>nbm-maven-plugin</artifactId>
+                    <version>${janeliaws.nbm-maven-plugin.version}</version>
+                    <extensions>true</extensions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${janeliaws.maven-compiler-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>${janeliaws.maven-clean-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${janeliaws.maven-jar-plugin.version}</version>
+                    <configuration>
+                        <archive>
+                            <!-- required since nbm-maven-plugin 3.0-->
+                            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                        </archive>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>${janeliaws.maven-antrun-plugin.version}</version>
+                </plugin>
+                <!--
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>${janeliaws.maven-deploy-plugin.version}</version>
+                </plugin>
+                -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>${janeliaws.maven-release-plugin.version}</version>
+                </plugin>
+                <!--
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${janeliaws.maven-gpg-plugin.version}</version>
+                </plugin>
+                -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>${janeliaws.build-helper-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${janeliaws.maven-surefire-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jarsigner-plugin</artifactId>
+                    <version>${janeliaws.maven-jarsigner-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${janeliaws.maven-source-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${janeliaws.maven-resources-plugin.version}</version>
+                </plugin>
+               <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>${janeliaws.maven-dependency-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>${janeliaws.maven-install-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>wagon-maven-plugin</artifactId>
+                    <version>${janeliaws.wagon-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${janeliaws.maven-javadoc-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${janeliaws.maven-assembly-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>${janeliaws.maven-site-plugin.version}</version>
+                </plugin>
+                <!--
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>${janeliaws.nexus-staging-maven-plugin.version}</version>
+                </plugin>
+                -->
+
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>buildnumber-maven-plugin</artifactId>
+                    <version>${janeliaws.buildnumber-plugin.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>com.github.github</groupId>
+                    <artifactId>site-maven-plugin</artifactId>
+                    <version>${janeliaws.site-maven-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <!-- Plugins configuration ===============================================================-->
+
+        <plugins>
+
+            <!-- Compiler -->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <debug>${janeliaws.javac.debug}</debug>
+                    <optimize>${janeliaws.javac.optimize}</optimize>
+                    <source>${janeliaws.javac.source}</source>
+                    <target>${janeliaws.javac.target}</target>
+                    <showDeprecation>${janeliaws.javac.showDeprecation}</showDeprecation>
+                    <showWarnings>${janeliaws.javac.showWarnings}</showWarnings>
+                    <fork>${janeliaws.javac.fork}</fork>
+                    <compilerArgs>
+                        <arg>${janeliaws.javac.xlint}</arg>
+                        <arg>${janeliaws.javac.doclint}</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+ 
+            <!-- Skip unit tests in non-deployment or release mode -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skipTests>true</skipTests>
+                    <trimStackTrace>false</trimStackTrace>                                                              
+                </configuration>
+            </plugin>
+             
+            <!-- Copy and apply filtering on manifest.mf file -->
+            <plugin> 
+                <artifactId>maven-resources-plugin</artifactId> 
+                <executions> 
+                    <execution> 
+                        <id>generate-modules-xml</id> 
+                        <phase>generate-resources</phase> 
+                        <goals> 
+                            <goal>copy-resources</goal> 
+                        </goals> 
+                        <configuration>
+                            <outputDirectory>${basedir}/target/</outputDirectory> 
+                            <resources> 
+                                <resource> 
+                                    <directory>src/main/nbm</directory> 
+                                    <includes> 
+                                        <include>manifest.mf</include>
+                                    </includes> 
+                                    <filtering>true</filtering> 
+                                </resource> 
+                            </resources> 
+                        </configuration> 
+                    </execution> 
+                </executions> 
+            </plugin>
+            
+            <!-- NBM options -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <sourceManifestFile>${project.build.directory}/manifest.mf</sourceManifestFile>
+                    <brandingToken>${brandingToken}</brandingToken>
+                    <cluster>${clusterName}</cluster>
+                    
+                    <!-- Keystore location. Run Maven with '-Dkeystorepassword=' to specify the passphrase -->
+                    <keystore>private/keystore</keystore>
+                    <keystorealias>janeliaws</keystorealias>
+                    
+                    <!-- NBM settings -->
+                    <requiresRestart>true</requiresRestart>
+                    <licenseName>Janelia Open Source License</licenseName>
+                    <licenseFile>license.txt</licenseFile>
+                    
+                    <!-- Installer settings -->
+                    <installDirName>${clusterName}</installDirName>
+                    <installerOsSolaris>false</installerOsSolaris>
+                    <installerOsMacosx>true</installerOsMacosx>
+                    <installerOsLinux>true</installerOsLinux>
+                    <installerOsWindows>true</installerOsWindows>
+
+                    <!-- Tolerate warnings, because otherwise it complains about 
+                         classes in rt.jar not being on the classpath-->
+                    <verifyRuntime>warn</verifyRuntime>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>create-timestamp</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <doCheck>false</doCheck>
+                    <doUpdate>false</doUpdate>
+                    <timestampFormat>yyMMdd</timestampFormat>
+                    <timestampPropertyName>buildNumber</timestampPropertyName>
+                    <revisionOnScmFailure>unknownbuild</revisionOnScmFailure>
+                </configuration>
+            </plugin>
+
+            <!-- Override default-site -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-site</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>site</goal>
+                        </goals>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+    <!-- Profiles -->
+    <profiles>
+        <profile>
+            <id>enableTests</id>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skipTests>false</skipTests>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profile for nighly builds and releases -->
+        <profile>
+            <id>deployment</id>
+
+            <!-- Override compile properties to be less verbose -->
+            <properties>
+                <janeliaws.javac.showDeprecation>false</janeliaws.javac.showDeprecation>
+                <janeliaws.javac.showWarnings>false</janeliaws.javac.showWarnings>
+                <janeliaws.javac.xlint>-Xlint:none</janeliaws.javac.xlint>
+            </properties>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skipTests>false</skipTests>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Nexus staging, https://oss.sonatype.org/
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                            The create-modules profile overrides this 
+                            <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+                        </configuration>
+                    </plugin>
+                    -->
+ 
+                    <!-- GPG Signed Components 
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    -->
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profile to create Javadoc -->
+        <profile>
+            <id>create-javadoc</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <doctitle>${project.name.capitalized} ${project.version} API Index</doctitle>
+                            <show>public</show>
+                            <nohelp>true</nohelp>
+                            <detectLinks>false</detectLinks>
+                            <detectOfflineLinks>true</detectOfflineLinks>
+                            <quiet>false</quiet>
+                            <additionalparam></additionalparam>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>aggregate</id>
+                                <phase>site</phase>
+                                <inherited>false</inherited>
+                                <goals>
+                                    <goal>aggregate</goal>
+                                </goals>
+                                <configuration>
+                                    <show>public</show>
+                                    <doctitle>Workstation ${project.version} API Index</doctitle>
+                                    <subpackages>org.janelia.it.jacs:org.janelia.it.workstation</subpackages>
+                                    <nohelp>true</nohelp>
+                                    <detectLinks>false</detectLinks>
+                                    <detectOfflineLinks>true</detectOfflineLinks>
+                                    <sourcepath>DataBrowser/src/main/java;IntegrationAPIs/src/main/java</sourcepath>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profile activated to create modules' artifacts (jar, nbm)
+        <profile>
+            <id>create-modules</id>
+            <build>
+                <plugins>
+                    Enable artifact deploy
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <configuration>
+                            <skipNexusStagingDeployMojo>false</skipNexusStagingDeployMojo>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        -->
+
+        <!-- Profile activated to create sources artifact -->
+        <profile>
+            <id>create-sources</id>
+            <build>
+                <plugins>
+                    <!-- Sources plugin -->
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Assembler to produce final sources artifact -->
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>source-assembly</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <tarLongFileMode>gnu</tarLongFileMode>
+                                    <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                                    <finalName>${project.name}-${project.version}</finalName>
+                                    <descriptors>
+                                        <descriptor>src/assemble/sources.xml</descriptor>
+                                    </descriptors>
+                                    <attach>false</attach>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+        <!-- Properties for release -->
+        <profile>
+            <id>release</id>
+            <properties>
+            </properties>
+        </profile>
+
+        <!-- Profile activated for windows/macos release only. Should be called alone so it only creates the windows installer/compressed dmg
+        <profile>
+            <id>release-extra</id>
+            <build>
+                <plugins>
+
+                    Skip Javadoc creation
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <phase>none</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    Skip sources attach
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <phase>none</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        -->
+
+    </profiles>
+    
+    <modules>
+        <module>application</module>
+        <module>branding</module>
+        <module>ConsoleWrapper</module>
+        <module>IntegrationAPIs</module>
+        <module>DarculaLAF</module>
+        <module>DataBrowserModule</module>
+        <module>HortaTracer</module>
+        <module>LargeVolumeViewerModule</module>
+        <module>Viewer3D</module>
+        <module>ViewerAPI</module>
+        <module>GLViewerTools</module>
+        <module>Geometry3d</module>
+        <module>SceneWindow</module>
+    </modules>
+
+</project>
