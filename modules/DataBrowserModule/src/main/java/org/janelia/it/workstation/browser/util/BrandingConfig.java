@@ -73,7 +73,7 @@ public class BrandingConfig {
     private boolean needsRestart = false;
     
     private BrandingConfig() {
-        this.devMode = Places.getUserDirectory().toString().contains("testuserdir");
+        this.devMode = Places.getUserDirectory().toString().contains("target/userdir");
         if (devMode) {
             // TODO: It would be nice to get this working in development, but NetBeans does things very differently in dev mode, 
             // and it's not clear if it's even possible to have a branding config. Maybe someday we'll investigate this further. 

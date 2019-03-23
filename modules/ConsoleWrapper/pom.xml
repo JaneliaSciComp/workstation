@@ -505,6 +505,7 @@
                         <publicPackage>org.glassfish.jersey.spi</publicPackage>
                         <publicPackage>org.glassfish.jersey.uri</publicPackage>
                         <publicPackage>org.glassfish.jersey.uri.internal</publicPackage>
+                        <publicPackage>org.janelia.configutils</publicPackage>
                         <publicPackage>org.janelia.model.access.domain</publicPackage>
                         <publicPackage>org.janelia.model.access.tiledMicroscope</publicPackage>
                         <publicPackage>org.janelia.model.domain</publicPackage>
