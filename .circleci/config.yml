@@ -20,7 +20,7 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-c1-
 
-      - run: mvn dependency:go-offline
+      - run: mvn --batch-mode -Djava.awt.headless=true dependency:go-offline
 
       - save_cache:
           paths:
