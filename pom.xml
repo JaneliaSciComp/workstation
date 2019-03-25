@@ -91,7 +91,7 @@
 
         <!-- Testing settings -->
         <testFailureIgnore>false</testFailureIgnore>
-        <janeliaws.testng.version>6.11</janeliaws.testng.version>
+        <janeliaws.testng.version>6.14.3</janeliaws.testng.version>
         <janeliaws.test.maxMemory>768M</janeliaws.test.maxMemory>
         <janeliaws.test.reportsDirectory>${project.build.directory}/surefire-reports/plain</janeliaws.test.reportsDirectory>
         <janeliaws.test.failureIgnore>${testFailureIgnore}</janeliaws.test.failureIgnore>
@@ -108,23 +108,23 @@
     
         <!--==== Dependency Versions ==================================================================================-->
         
-        <janeliaws.slf4j.version>1.7.25</janeliaws.slf4j.version>
+        <janeliaws.slf4j.version>1.7.26</janeliaws.slf4j.version>
 
         <janeliaws.jackson.version>2.5.4</janeliaws.jackson.version>
 
-        <janeliaws.jetty.version>8.1.8.v20121106</janeliaws.jetty.version>
+        <janeliaws.jetty.version>9.4.15.v20190215</janeliaws.jetty.version>
         
         <!--==== Plugin Versions ==================================================================================-->
 
         <janeliaws.maven-antrun-plugin.version>1.8</janeliaws.maven-antrun-plugin.version>
 
-        <janeliaws.maven-assembly-plugin.version>3.1.0</janeliaws.maven-assembly-plugin.version>
+        <janeliaws.maven-assembly-plugin.version>3.1.1</janeliaws.maven-assembly-plugin.version>
 
-        <janeliaws.maven-clean-plugin.version>3.0.0</janeliaws.maven-clean-plugin.version>
+        <janeliaws.maven-clean-plugin.version>3.1.0</janeliaws.maven-clean-plugin.version>
 
-        <janeliaws.maven-compiler-plugin.version>3.7.0</janeliaws.maven-compiler-plugin.version>
+        <janeliaws.maven-compiler-plugin.version>3.8.0</janeliaws.maven-compiler-plugin.version>
 
-        <janeliaws.maven-dependency-plugin.version>3.0.2</janeliaws.maven-dependency-plugin.version>
+        <janeliaws.maven-dependency-plugin.version>3.1.1</janeliaws.maven-dependency-plugin.version>
 
         <janeliaws.maven-deploy-plugin.version>2.8.2</janeliaws.maven-deploy-plugin.version>
 
@@ -132,35 +132,37 @@
 
         <janeliaws.maven-install-plugin.version>2.5.2</janeliaws.maven-install-plugin.version>
 
-        <janeliaws.maven-jar-plugin.version>3.0.2</janeliaws.maven-jar-plugin.version>
+        <janeliaws.maven-jar-plugin.version>3.1.1</janeliaws.maven-jar-plugin.version>
 
-        <janeliaws.maven-jarsigner-plugin.version>1.4</janeliaws.maven-jarsigner-plugin.version>
+        <janeliaws.maven-jarsigner-plugin.version>3.0.0</janeliaws.maven-jarsigner-plugin.version>
 
-        <janeliaws.maven-javadoc-plugin.version>2.10.4</janeliaws.maven-javadoc-plugin.version> 
+        <janeliaws.maven-javadoc-plugin.version>3.1.0</janeliaws.maven-javadoc-plugin.version>
 
         <janeliaws.maven-release-plugin.version>2.5.3</janeliaws.maven-release-plugin.version>
 
-        <janeliaws.maven-resources-plugin.version>3.0.2</janeliaws.maven-resources-plugin.version>
+        <janeliaws.maven-resources-plugin.version>3.1.0</janeliaws.maven-resources-plugin.version>
 
         <janeliaws.buildnumber-plugin.version>1.4</janeliaws.buildnumber-plugin.version>
 
-        <janeliaws.maven-site-plugin.version>3.6</janeliaws.maven-site-plugin.version>
+        <janeliaws.maven-site-plugin.version>3.7.1</janeliaws.maven-site-plugin.version>
 
         <janeliaws.maven-source-plugin.version>3.0.1</janeliaws.maven-source-plugin.version>
 
-        <janeliaws.maven-surefire-plugin.version>2.20.1</janeliaws.maven-surefire-plugin.version>
+        <janeliaws.maven-surefire-plugin.version>2.22.1</janeliaws.maven-surefire-plugin.version>
 
         <janeliaws.build-helper-maven-plugin.version>3.0.0</janeliaws.build-helper-maven-plugin.version>
 
         <janeliaws.nbm-maven-plugin.version>4.1</janeliaws.nbm-maven-plugin.version>
         
-        <janeliaws.wagon-maven-plugin.version>1.0</janeliaws.wagon-maven-plugin.version>  
+        <janeliaws.wagon-maven-plugin.version>2.0.0</janeliaws.wagon-maven-plugin.version>
         
         <janeliaws.nexus-staging-maven-plugin.version>1.6.8</janeliaws.nexus-staging-maven-plugin.version>
 
         <janeliaws.site-maven-plugin.version>0.12</janeliaws.site-maven-plugin.version>
         
-        <janeliaws.versions-maven-plugin.version>2.5</janeliaws.versions-maven-plugin.version>
+        <janeliaws.versions-maven-plugin.version>2.7</janeliaws.versions-maven-plugin.version>
+
+        <janeliaws.maven-enforcer-plugin.version>3.0.0-M2</janeliaws.maven-enforcer-plugin.version>
 
     </properties>
 
@@ -634,6 +636,11 @@
                     <artifactId>site-maven-plugin</artifactId>
                     <version>${janeliaws.site-maven-plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>${janeliaws.maven-enforcer-plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -764,6 +771,27 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-maven</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.2</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
