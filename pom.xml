@@ -71,9 +71,6 @@
         <!-- Netbeans Platfrom version -->
         <netbeans.version>RELEASE82</netbeans.version>
 
-        <!-- Localization ZIP version, from 'http://netbeans.org/project_downloads/nblocalization' -->
-        <janeliaws.platform.localization.version>1.1-NB80</janeliaws.platform.localization.version>
-        
         <!-- Modules specification version, overrides project version -->
         <janeliaws.modules.specification.version>2.60</janeliaws.modules.specification.version>
 
@@ -172,15 +169,6 @@
             <id>netbeans</id>
             <name>NetBeans</name>
             <url>http://bits.netbeans.org/nexus/content/groups/netbeans/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <!-- For javax.activation, which is required by saaj -->
-        <repository>
-            <id>redhat</id>
-            <name>Redhat GA Repository</name>
-            <url>https://maven.repository.redhat.com/ga/</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>

@@ -131,7 +131,7 @@
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
-            <version>5.0.0</version>
+            <version>5.4.0</version>
         </dependency>
         <dependency>
             <groupId>org.jogamp.jogl</groupId>
@@ -158,14 +158,8 @@
             <artifactId>jama</artifactId>
             <version>1.0.3</version>
         </dependency>
-        <!-- TODO: it's not clear why this is needed
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.0.1</version>
-        </dependency>
-        -->
-        <!-- TODO: This is pulled in just because of org.eclipse.jetty.util.ConcurrentHashSet. We should eliminate this dependency in the future. -->
+        <!-- TODO: This is pulled in just because of org.eclipse.jetty.util.ConcurrentHashSet.
+             We should eliminate this dependency in the future. -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-util</artifactId>
