@@ -1,5 +1,9 @@
 # Janelia Workstation
 
+[![CircleCI](https://circleci.com/gh/JaneliaSciComp/workstation.svg?style=svg)](https://circleci.com/gh/JaneliaSciComp/workstation)
+
+A neuroscience discovery platform that supporting processing, analysis, and annotation of large-scale 3d microscopy data.
+
 ## Build instructions
 
 Create a keystore:

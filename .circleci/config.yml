@@ -1,0 +1,39 @@
+version: 2
+jobs:
+  build:
+
+    working_directory: ~/workstation
+
+    environment:
+      - DNAME: C=US, ST=VA, L=Ashburn, O=Janelia, CN=localhost
+      - PW: dev
+
+    docker:
+      - image: circleci/openjdk:8u171-jdk
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1-dependencies-c1-{{ checksum "pom.xml" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-c1-
+
+      - run: mvn dependency:go-offline
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-c1-{{ checksum "pom.xml" }}
+
+      - run: >
+            mkdir private && 
+            keytool -noprompt  -genkey -validity 360 -storepass $PW -keypass $PW 
+                -alias janeliaws -keystore private/keystore -dname "$DNAME"
+      
+      - run: mvn --batch-mode -Djava.awt.headless=true -Dkeystorepass=$PW clean install
+
+      - run: cd modules/application && mvn --batch-mode -Djava.awt.headless=true -Dkeystorepass=$PW package -P deployment
+
+
