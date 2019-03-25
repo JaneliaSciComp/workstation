@@ -933,9 +933,9 @@
         <module>modules/ConsoleWrapper</module>
         <module>modules/IntegrationAPIs</module>
         <module>modules/DarculaLAF</module>
-        <module>modules/DataBrowserModule</module>
+        <module>modules/DataBrowser</module>
         <module>modules/HortaTracer</module>
-        <module>modules/LargeVolumeViewerModule</module>
+        <module>modules/LargeVolumeViewer</module>
         <module>modules/Viewer3D</module>
         <module>modules/ViewerAPI</module>
         <module>modules/GLViewerTools</module>
