@@ -20,12 +20,8 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-c1-
 
-      - run: mvn --batch-mode -Djava.awt.headless=true dependency:go-offline
-
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: v1-dependencies-c1-{{ checksum "pom.xml" }}
+      # this doesn't work because of internal dependencies in the multimodule project
+      #- run: mvn --batch-mode -Djava.awt.headless=true dependency:go-offline
 
       - run: >
             mkdir private && 
@@ -34,6 +30,11 @@ jobs:
       
       - run: mvn --batch-mode -Djava.awt.headless=true -Dkeystorepass=$PW clean install
 
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-c1-{{ checksum "pom.xml" }}
+      
       - run: cd modules/application && mvn --batch-mode -Djava.awt.headless=true -Dkeystorepass=$PW package -P deployment
 
 
