@@ -6,7 +6,7 @@
     <name>Janelia Workstation</name>
     <groupId>org.janelia</groupId>
     <artifactId>workstation</artifactId>
-    <version>7.19</version>
+    <version>8.0</version>
     <packaging>pom</packaging>
 
     <!-- Project Metadata -->

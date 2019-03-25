@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>7.19</version>
+        <version>8.0</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>HortaTracer</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>horta</artifactId>
-    <version>7.19</version>
+    <version>8.0</version>
     <packaging>nbm</packaging>
 
     <dependencies>
@@ -51,7 +51,7 @@
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>browser</artifactId>
-            <version>7.19</version>
+            <version>8.0</version>
         </dependency>
         
         <!-- Scene Graph --> 

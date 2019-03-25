@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>7.19</version>
+        <version>8.0</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>LargeVolumeViewer</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>large_volume_viewer</artifactId>
-    <version>7.19</version>
+    <version>8.0</version>
     <packaging>nbm</packaging>
 
     <dependencies>
