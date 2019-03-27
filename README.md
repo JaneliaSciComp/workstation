@@ -8,7 +8,9 @@ A neuroscience discovery platform that supporting processing, analysis, and anno
 
 Create a keystore:
 ```
-keytool -genkey -validity 360 -storepass <password> -alias janeliaws -keystore private/keystore -dname "C=US, ST=VA, L=Ashburn, O=Janelia, CN=localhost"
+mkdir private
+keytool -v -noprompt -genkey -validity 360 -storepass <password> -keypass <password> -alias janeliaws \
+    -keystore private/keystore -dname "C=US, ST=VA, L=Ashburn, O=Janelia, CN=localhost"
 ```
 
 Build all modules:
