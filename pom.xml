@@ -626,7 +626,7 @@
                 <plugin>
                     <groupId>org.sonatype.plugins</groupId>
                     <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>${gephi.nexus-staging-maven-plugin.version}</version>
+                    <version>${janeliaws.nexus-staging-maven-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>com.github.github</groupId>
