@@ -25,6 +25,7 @@
 # "Portions Copyrighted [year] [name of copyright owner]"
 #
 # Contributor(s):
+#   Konrad Rokicki (customized to disable caching of splash image)
 #
 # The Original Software is NetBeans. The Initial Developer of the Original
 # Software is Sun Microsystems, Inc. Portions Copyright 1997-2011 Sun
@@ -235,7 +236,7 @@ if [ -z "$cachedirspecified" ]; then
    cachedir="${userdir}/var/cache"
 fi
 
-# Using the cached splash.png is causing big headaches on Linux.  Google-searching splash.png shows this a pain point for some time.
+# KR: Using the cached splash.png is causing big headaches on Linux.  Google-searching splash.png shows this a pain point for some time.
 #if [ `uname` != Darwin -a -z "$nosplash" -a -f "${cachedir}/splash.png" -a ! -f "${userdir}/lock" ]; then
 #   jargs="$jargs -splash:\"${cachedir}/splash.png\""
 #fi

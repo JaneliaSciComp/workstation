@@ -36,6 +36,7 @@
  * made subject to such option by the copyright holder.
  *
  * Contributor(s):
+ *  Konrad Rokicki (customized default executable)
  */
 package org.mycompany;
 
