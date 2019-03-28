@@ -110,7 +110,9 @@
         <janeliaws.jackson.version>2.5.4</janeliaws.jackson.version>
 
         <janeliaws.jetty.version>9.4.15.v20190215</janeliaws.jetty.version>
-        
+
+        <janeliaws.jacs-model.version>2.0.1</janeliaws.jacs-model.version>
+
         <!--==== Plugin Versions ==================================================================================-->
 
         <janeliaws.maven-antrun-plugin.version>1.8</janeliaws.maven-antrun-plugin.version>
@@ -285,12 +287,12 @@
             <dependency>
                 <groupId>org.janelia.jacs-model</groupId>
                 <artifactId>jacs-model-core</artifactId>
-                <version>2.0.1</version>
+                <version>${janeliaws.jacs-model.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.janelia.jacs-model</groupId>
                 <artifactId>jacs-model-rendering</artifactId>
-                <version>2.0.1</version>
+                <version>${janeliaws.jacs-model.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.janelia.legacy</groupId>
