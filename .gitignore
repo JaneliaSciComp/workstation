@@ -14,5 +14,4 @@ build
 groovy/.settings
 dist
 private
-modules/DataBrowserModule/src/main/resources/my*.properties
-
+modules/DataBrowser/src/main/resources/my*.properties

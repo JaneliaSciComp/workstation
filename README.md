@@ -9,7 +9,7 @@ A neuroscience discovery platform that supporting processing, analysis, and anno
 Create a keystore:
 ```
 mkdir private
-keytool -v -noprompt -genkey -validity 360 -storepass <password> -keypass <password> -alias janeliaws \
+keytool -genkey -v -noprompt -validity 360 -storepass <password> -keypass <password> -alias janeliaws \
     -keystore private/keystore -dname "C=US, ST=VA, L=Ashburn, O=Janelia, CN=localhost"
 ```
 
@@ -23,10 +23,13 @@ Run application:
 cd modules/application
 nbm:cluster-app nbm:run-platform
 ```
+or from the base directory you can run:
+```
+mvn -f modules/application/pom.xml nbm:cluster-app nbm:run-platform
+```
 
 Build installers and update center:
 ```
 cd modules/application
 mvn --batch-mode -T 8 -Djava.awt.headless=true -Dkeystorepass=<password> package -P deployment
 ```
-
