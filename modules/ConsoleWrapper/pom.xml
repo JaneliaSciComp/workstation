@@ -30,6 +30,10 @@
             <groupId>org.janelia.legacy</groupId>
             <artifactId>shared</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.janelia.legacy</groupId>
+            <artifactId>model</artifactId>
+        </dependency>
         <!-- TODO: This is a legacy dependency needs to be purged from the code base -->
         <dependency>
             <groupId>org.janelia.thirdparty</groupId>
