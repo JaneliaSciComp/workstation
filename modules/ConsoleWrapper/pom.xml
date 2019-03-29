@@ -21,6 +21,22 @@
         <dependency>
             <groupId>org.janelia.jacs-model</groupId>
             <artifactId>jacs-model-core</artifactId>
+            <exclusions>
+                <!-- already provided by ConsoleWrapper -->
+                <exclusion>
+                    <groupId>ome</groupId>
+                    <artifactId>jai_imageio</artifactId>
+                </exclusion>
+                <!-- Workstation does not use logback -->
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.janelia.jacs-model</groupId>
@@ -476,7 +492,7 @@
                         <publicPackage>org.apache.log4j</publicPackage>
                         <publicPackage>org.apache.log4j.spi</publicPackage>
                         <publicPackage>org.apache.log4j.helpers</publicPackage>
-                        <publicPackage>org.eclipse.jetty.util</publicPackage>
+                        <publicPackage>org.eclipse.jetty.util.*</publicPackage>
                         <publicPackage>org.glassfish.hk2.api</publicPackage>
                         <publicPackage>org.glassfish.hk2.api.messaging</publicPackage>
                         <publicPackage>org.glassfish.hk2.extension</publicPackage>
