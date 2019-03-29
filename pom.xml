@@ -228,7 +228,21 @@
                 <artifactId>libraries</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
+
+            <!-- JOGL213 -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>jogl213lib</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- JOGL224 -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>jogl224lib</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- DataBrowser --> 
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
@@ -999,6 +1013,8 @@
         <module>modules/GLViewerTools</module>
         <module>modules/Geometry3d</module>
         <module>modules/SceneWindow</module>
+        <module>modules/Jogl213Lib</module>
+        <module>modules/Jogl224Lib</module>
     </modules>
 
 </project>

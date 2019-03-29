@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Localizing-Bundle: org/janelia/jogl213lib/Bundle.properties
+OpenIDE-Module-Specification-Version: ${janeliaws.modules.specification.version}
+OpenIDE-Module-Implementation-Version: ${buildNumber}
