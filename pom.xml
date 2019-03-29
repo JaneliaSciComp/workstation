@@ -217,8 +217,8 @@
 
             <!-- Administration GUI -->
             <dependency>
-                <groupId>org.janelia.workstation.it</groupId>
-                <artifactId>admin</artifactId>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>adminstration</artifactId>
                 <version>${project.version}</version>
             </dependency>
             

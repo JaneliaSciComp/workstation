@@ -33,7 +33,13 @@
             <groupId>org.janelia.workstation</groupId>
             <artifactId>darcula</artifactId>
         </dependency>
-        
+
+        <!-- Administration GUI -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>adminstration</artifactId>
+        </dependency>
+
         <!-- Data Browser --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>

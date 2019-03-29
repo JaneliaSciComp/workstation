@@ -11,7 +11,7 @@
 
     <name>AdministrationGUI</name>
     <groupId>org.janelia.workstation</groupId>
-    <artifactId>adminstration_gui</artifactId>
+    <artifactId>adminstration</artifactId>
     <version>8.0</version>
     <packaging>nbm</packaging>
 
