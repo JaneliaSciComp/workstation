@@ -64,12 +64,6 @@
             <groupId>org.janelia.workstation</groupId>
             <artifactId>scenegraph</artifactId>
         </dependency>
-
-        <!-- Jars from Workstation Maven Repo -->
-        <dependency>
-            <groupId>edu.wlu</groupId>
-            <artifactId>kdtree</artifactId>
-        </dependency>
         
         <!-- NetBeans Modules --> 
         <dependency>
@@ -140,23 +134,6 @@
         </dependency>
         
         <!-- Maven Central dependencies -->
-        <dependency>
-            <groupId>net.jpountz.lz4</groupId>
-            <artifactId>lz4</artifactId>
-            <version>1.3.0</version>
-        </dependency>
-        <dependency>
-            <groupId>gov.nist.math</groupId>
-            <artifactId>jama</artifactId>
-            <version>1.0.3</version>
-        </dependency>
-        <!-- TODO: this is pulled in just because of org.eclipse.jetty.util.ConcurrentHashSet.
-            It should be replaced with something lighter, e.g. https://stackoverflow.com/questions/3629359/thread-safe-hashset-with-guava-collections
-        -->
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-        </dependency>
         <!-- TODO: this is pulled in for org.python.google.common.base.Joiner. It should be replaced with something lighter -->
         <dependency>
             <groupId>org.python</groupId>
