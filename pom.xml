@@ -93,10 +93,6 @@
         <janeliaws.test.reportsDirectory>${project.build.directory}/surefire-reports/plain</janeliaws.test.reportsDirectory>
         <janeliaws.test.failureIgnore>${testFailureIgnore}</janeliaws.test.failureIgnore>
 
-        <!-- Update centers URLs -->
-        <janeliaws.update.center.official.url>https://raw.githubusercontent.com/janeliaws/janeliaws/gh-pages/${project.version}/netbeans_site/updates.xml</janeliaws.update.center.official.url>
-        <janeliaws.update.center.thirdparty.url>https://raw.githubusercontent.com/janeliaws/janeliaws-plugins/gh-pages/plugins/${project.version}/updates.xml</janeliaws.update.center.thirdparty.url>
-
         <!-- Mac OS X bundle settings -->
         <janeliaws.appbundle.name>Janelia Workstation</janeliaws.appbundle.name>
 
@@ -111,7 +107,7 @@
 
         <janeliaws.jetty.version>9.4.15.v20190215</janeliaws.jetty.version>
 
-        <janeliaws.jacs-model.version>2.0.1</janeliaws.jacs-model.version>
+        <janeliaws.jacs-model.version>2.0.2</janeliaws.jacs-model.version>
 
         <!--==== Plugin Versions ==================================================================================-->
 
@@ -193,6 +189,12 @@
         </repository>
     </repositories>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>janelia-nexus</id>
+            <url>https://nexus.janelia.org/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
 
     <!-- List all dependencies with versions so it can be used in child POMs without explicit versions -->
     <dependencyManagement>
@@ -226,7 +228,21 @@
                 <artifactId>libraries</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
+
+            <!-- JOGL213 -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>jogl213lib</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- JOGL224 -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>jogl224lib</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- DataBrowser --> 
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
@@ -622,6 +638,11 @@
                     <version>${janeliaws.buildnumber-plugin.version}</version>
                 </plugin>
                 <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>${janeliaws.nexus-staging-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
                     <groupId>com.github.github</groupId>
                     <artifactId>site-maven-plugin</artifactId>
                     <version>${janeliaws.site-maven-plugin.version}</version>
@@ -631,6 +652,12 @@
                     <artifactId>maven-enforcer-plugin</artifactId>
                     <version>${janeliaws.maven-enforcer-plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>${janeliaws.maven-deploy-plugin.version}</version>
+                </plugin>
+
             </plugins>
         </pluginManagement>
 
@@ -782,6 +809,20 @@
                 </executions>
             </plugin>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
@@ -823,6 +864,35 @@
                         <configuration>
                             <skipTests>false</skipTests>
                         </configuration>
+                    </plugin>
+
+                    <!-- Nexus staging, https://oss.sonatype.org/ -->
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>janelia-nexus</serverId>
+                            <nexusUrl>https://nexus.janelia.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                            <!-- The create-modules profile overrides this -->
+                            <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+                        </configuration>
+                    </plugin>
+
+                    <!-- GPG Signed Components -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
@@ -943,6 +1013,8 @@
         <module>modules/GLViewerTools</module>
         <module>modules/Geometry3d</module>
         <module>modules/SceneWindow</module>
+        <module>modules/Jogl213Lib</module>
+        <module>modules/Jogl224Lib</module>
     </modules>
 
 </project>

@@ -198,6 +198,14 @@
             <version>1.0.3</version>
         </dependency>
 
+        <!-- runtime dependency for MailHelper in the legacy shared library -->
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+            <version>1.4</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- 
             TODO: this is required at runtime by some classes in legacy-shared. 
             It should be removed when we refactor that code to use Slf4j. -->

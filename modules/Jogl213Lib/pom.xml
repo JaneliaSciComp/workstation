@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.janelia</groupId>
+        <artifactId>workstation</artifactId>
+        <version>8.0</version>
+        <relativePath>../..</relativePath>
+    </parent>
+
+    <name>Jogl213Lib</name>
+    <groupId>org.janelia.workstation</groupId>
+    <artifactId>jogl213lib</artifactId>
+    <version>8.0</version>
+    <packaging>nbm</packaging>
+
+    <dependencies>
+
+        <!-- Maven Central dependencies --> 
+        <dependency>
+            <groupId>org.jogamp.jogl</groupId>
+            <artifactId>jogl-all-main</artifactId>
+            <version>2.1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jogamp.gluegen</groupId>
+            <artifactId>gluegen-rt-main</artifactId>
+            <version>2.1.3</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <configuration>
+                    <publicPackages>
+						<publicPackage>com.jogamp.common</publicPackage>
+						<publicPackage>com.jogamp.common.nio</publicPackage>
+						<publicPackage>com.jogamp.common.type</publicPackage>
+						<publicPackage>com.jogamp.common.util</publicPackage>
+						<publicPackage>com.jogamp.nativewindow.awt</publicPackage>
+						<publicPackage>com.jogamp.newt.event</publicPackage>
+						<publicPackage>com.jogamp.opengl</publicPackage>
+						<publicPackage>com.jogamp.opengl.util</publicPackage>
+						<publicPackage>com.jogamp.opengl.util.awt</publicPackage>
+						<publicPackage>com.jogamp.opengl.util.gl2</publicPackage>
+						<publicPackage>com.jogamp.opengl.util.glsl</publicPackage>
+						<publicPackage>com.jogamp.opengl.util.glsl.fixedfunc</publicPackage>
+						<publicPackage>com.jogamp.opengl.util.texture</publicPackage>
+						<publicPackage>com.jogamp.opengl.util.texture.awt</publicPackage>
+						<publicPackage>javax.media.nativewindow</publicPackage>
+						<publicPackage>javax.media.nativewindow.util</publicPackage>
+						<publicPackage>javax.media.opengl</publicPackage>
+						<publicPackage>javax.media.opengl.awt</publicPackage>
+						<publicPackage>javax.media.opengl.fixedfunc</publicPackage>
+						<publicPackage>javax.media.opengl.glu</publicPackage>
+						<publicPackage>jogamp.opengl</publicPackage>
+                    </publicPackages>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

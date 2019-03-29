@@ -28,7 +28,13 @@
             <groupId>org.janelia.workstation</groupId>
             <artifactId>integration</artifactId>
         </dependency>
-        
+
+        <!-- JOGL224 -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>jogl224lib</artifactId>
+        </dependency>
+
         <!-- Viewer API --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>
@@ -51,7 +57,6 @@
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>browser</artifactId>
-            <version>8.0</version>
         </dependency>
         
         <!-- Scene Graph --> 
@@ -135,16 +140,6 @@
         </dependency>
         
         <!-- Maven Central dependencies -->
-        <dependency>
-            <groupId>org.jogamp.jogl</groupId>
-            <artifactId>jogl-all-main</artifactId>
-            <version>2.2.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jogamp.gluegen</groupId>
-            <artifactId>gluegen-rt-main</artifactId>
-            <version>2.2.4</version>
-        </dependency>
         <dependency>
             <groupId>net.jpountz.lz4</groupId>
             <artifactId>lz4</artifactId>

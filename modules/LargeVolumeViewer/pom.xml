@@ -28,7 +28,13 @@
             <groupId>org.janelia.workstation</groupId>
             <artifactId>integration</artifactId>
         </dependency>
-        
+
+        <!-- JOGL213 -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>jogl213lib</artifactId>
+        </dependency>
+
         <!-- Viewer API --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>
