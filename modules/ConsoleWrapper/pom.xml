@@ -23,6 +23,10 @@
             <artifactId>jacs-model-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.janelia.jacs-model</groupId>
+            <artifactId>jacs-model-rendering</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.janelia.legacy</groupId>
             <artifactId>shared</artifactId>
         </dependency>
@@ -188,6 +192,11 @@
             <artifactId>jersey-media-json-jackson</artifactId>
             <version>2.21</version>
         </dependency>
+        <dependency>
+            <groupId>gov.nist.math</groupId>
+            <artifactId>jama</artifactId>
+            <version>1.0.3</version>
+        </dependency>
 
         <!-- 
             TODO: this is required at runtime by some classes in legacy-shared. 
@@ -234,6 +243,7 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <configuration>
                     <publicPackages>
+                        <publicPackage>Jama</publicPackage>
                         <publicPackage>com.fasterxml.jackson.annotation</publicPackage>
                         <publicPackage>com.fasterxml.jackson.core</publicPackage>
                         <publicPackage>com.fasterxml.jackson.core.base</publicPackage>
@@ -618,6 +628,7 @@
                         <publicPackage>org.janelia.it.jacs.shared.utils.genbank</publicPackage>
                         <publicPackage>org.janelia.it.jacs.shared.utils.zeiss</publicPackage>
                         <publicPackage>org.janelia.it.jacs.shared.viewer3d</publicPackage>
+                        <publicPackage>org.janelia.rendering</publicPackage>
                         <publicPackage>org.jdesktop.swingx.*</publicPackage>
                         <publicPackage>org.reflections</publicPackage>
                         <publicPackage>org.reflections.adapters</publicPackage>
