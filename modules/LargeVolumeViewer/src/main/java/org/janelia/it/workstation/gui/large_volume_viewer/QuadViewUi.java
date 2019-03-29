@@ -157,7 +157,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     private static final String IMAGES_MOUSE_SCROLL = "mouse_scroll.png";
     private static final String IMAGES_MOUSE_LEFT = "mouse_left.png";
 
-    private static final int MINIMUM_MEMORY_REQUIRED_GB = 8;
+    private static final int MINIMUM_MEMORY_REQUIRED_GB = 7;
 
     public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
