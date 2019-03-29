@@ -214,6 +214,13 @@
                 <artifactId>darcula</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <!-- Administration GUI -->
+            <dependency>
+                <groupId>org.janelia.workstation.it</groupId>
+                <artifactId>admin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             
             <!-- IntegrationAPIs --> 
             <dependency>
@@ -1000,6 +1007,7 @@
     </profiles>
     
     <modules>
+        <module>modules/AdministrationGUI</module>
         <module>modules/application</module>
         <module>modules/branding</module>
         <module>modules/ConsoleWrapper</module>
