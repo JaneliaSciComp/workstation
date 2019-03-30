@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -118,6 +119,7 @@ public class DomainObjectIconGridViewer
         
         @Override
         public List<Annotation> getAnnotations(DomainObject domainObject) {
+            if (domainObjectList==null) return Collections.emptyList();
             return domainObjectList.getAnnotations(Reference.createFor(domainObject));
         }
     };
@@ -539,7 +541,7 @@ public class DomainObjectIconGridViewer
     @Override
     protected void customizeTitlesPressed() {
         try {
-            if (domainObjectList.getObjects().isEmpty()) return;
+            if (domainObjectList==null || domainObjectList.getObjects().isEmpty()) return;
 
             DomainObject firstObject;
             List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
