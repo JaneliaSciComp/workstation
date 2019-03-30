@@ -63,7 +63,7 @@ public class ColorDepthResultTableViewer
     private TableViewerConfiguration config;
     private final DomainObjectAttribute ATTR_SCORE = new DomainObjectAttribute("score","Score (Pixels)",null,null,true,null,null);
     private final DomainObjectAttribute ATTR_SCORE_PCT = new DomainObjectAttribute("score_pct","Score (Percent)",null,null,true,null,null);
-    private final DomainObjectAttribute ATTR_CHANNEL = new DomainObjectAttribute("match_channel","Match Number",null,null,true,null,null);
+    private final DomainObjectAttribute ATTR_CHANNEL = new DomainObjectAttribute("match_channel","Match Channel",null,null,true,null,null);
     private final DomainObjectAttribute ATTR_FILENAME = new DomainObjectAttribute("filename","Filename",null,null,true,null,null);
     
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
@@ -296,8 +296,6 @@ public class ColorDepthResultTableViewer
     public void deactivate() {
     }
 
-
-    // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
     public void toggleEditMode(boolean editMode) {
 
@@ -305,22 +303,19 @@ public class ColorDepthResultTableViewer
 
     @Override
     public void refreshEditMode() {
-
     }
 
     @Override
     public void setEditSelectionModel(ChildSelectionModel<ColorDepthMatch, String> editSelectionModel) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
     public ChildSelectionModel<ColorDepthMatch, String> getEditSelectionModel() {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override
     public void selectEditObjects(List<ColorDepthMatch> objects, boolean select) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

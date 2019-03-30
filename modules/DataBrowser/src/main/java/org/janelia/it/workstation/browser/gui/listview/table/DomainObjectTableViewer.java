@@ -330,7 +330,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
 
-    // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
     public void toggleEditMode(boolean editMode) {
 
@@ -341,19 +340,16 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     }
 
-    // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
     public void setEditSelectionModel(ChildSelectionModel<DomainObject, Reference> editSelectionModel) {
 
     }
 
-    // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
     public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
         return null;
     }
 
-    // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
     public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
 
