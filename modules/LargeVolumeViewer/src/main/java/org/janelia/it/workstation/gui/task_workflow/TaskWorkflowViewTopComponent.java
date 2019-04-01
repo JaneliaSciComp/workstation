@@ -489,6 +489,11 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             }
         }
     }
+
+   public void markCurrentGroupAsReviewed() {
+       selectBranch(currGroupIndex);
+       setSelectedAsReviewed(true);
+   }
     
      private void reviewGroup(int groupIndex) {
          ReviewGroup group = groupList.get(groupIndex);
