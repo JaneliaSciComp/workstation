@@ -6,6 +6,8 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,6 +106,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         
         @Override
         public List<Annotation> getAnnotations(DomainObject domainObject) {
+            if (domainObjectList==null) return Collections.emptyList();
             return domainObjectList.getAnnotations(Reference.createFor(domainObject));
         }
     };
@@ -177,6 +180,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
 
         this.domainObjectList = domainObjectList;
+        
         log.debug("showDomainObjects(domainObjectList={})",DomainUtils.abbr(domainObjectList.getObjects()));
 
         attributeMap.clear();
@@ -197,7 +201,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public void refresh(DomainObject domainObject) {        
+    public void refresh(DomainObject domainObject) {
+        if (domainObjectList==null) {
+            log.warn("Refreshing object {} when object list is null", domainObject);
+            return;
+        }
         domainObjectList.updateObject(domainObject);
         show(domainObjectList, null);
     }
@@ -330,7 +338,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
 
-    // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
     public void toggleEditMode(boolean editMode) {
 
@@ -341,19 +348,16 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     }
 
-    // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
     public void setEditSelectionModel(ChildSelectionModel<DomainObject, Reference> editSelectionModel) {
 
     }
 
-    // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
     public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
         return null;
     }
 
-    // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
     public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
 
@@ -395,6 +399,10 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     public Object getValue(AnnotatedObjectList<DomainObject, Reference> domainObjectList, DomainObject object, String columnName) {
+        if (domainObjectList==null) {
+            log.warn("Requested value for object {} when object list is null", object);
+            return null;
+        }
         if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
             StringBuilder builder = new StringBuilder();
             for(Annotation annotation : domainObjectList.getAnnotations(Reference.createFor(object))) {

@@ -18,7 +18,10 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
+import javax.swing.table.TableModel;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -41,7 +44,6 @@ import org.janelia.model.access.domain.DomainObjectAttribute;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.sample.Sample;
@@ -63,7 +65,7 @@ public class ColorDepthResultTableViewer
     private TableViewerConfiguration config;
     private final DomainObjectAttribute ATTR_SCORE = new DomainObjectAttribute("score","Score (Pixels)",null,null,true,null,null);
     private final DomainObjectAttribute ATTR_SCORE_PCT = new DomainObjectAttribute("score_pct","Score (Percent)",null,null,true,null,null);
-    private final DomainObjectAttribute ATTR_CHANNEL = new DomainObjectAttribute("match_channel","Match Number",null,null,true,null,null);
+    private final DomainObjectAttribute ATTR_CHANNEL = new DomainObjectAttribute("match_channel","Match Channel",null,null,true,null,null);
     private final DomainObjectAttribute ATTR_FILENAME = new DomainObjectAttribute("filename","Filename",null,null,true,null,null);
     
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
@@ -71,8 +73,6 @@ public class ColorDepthResultTableViewer
     // State
     private PreferenceSupport preferenceSupport;
     private AnnotatedObjectList<ColorDepthMatch, String> matchList;
-    private Map<Reference, Sample> sampleMap = new HashMap<>();
-    private Map<String, ColorDepthMatch> matchMap = new HashMap<>();
     private ChildSelectionModel<ColorDepthMatch, String> selectionModel;
     private SearchProvider searchProvider;
     private List<DomainObjectAttribute> attrs;
@@ -153,8 +153,6 @@ public class ColorDepthResultTableViewer
         this.matchList = matchList;
         log.debug("show(matchList={})",DomainUtils.abbr(matchList.getObjects()));
 
-        sampleMap.clear();
-        matchMap.clear();
         attributeMap.clear();
 
         List<ColorDepthMatch> matchObjects = matchList.getObjects();
@@ -172,11 +170,13 @@ public class ColorDepthResultTableViewer
         for(DomainObjectAttribute attr : attrs) {
             attributeMap.put(attr.getName(), attr);
             boolean visible = config.isColumnVisible(attr.getName());
+            // TODO: we can implement sorting, but first there needs to be a way to return to the default sort
             boolean sortable = false;
             getDynamicTable().addColumn(attr.getName(), attr.getLabel(), visible, false, true, sortable);
         }
 
         showObjects(matchObjects, success);
+        setSortCriteria(searchProvider.getSortField());
     }
 
     @Override
@@ -187,7 +187,6 @@ public class ColorDepthResultTableViewer
     @Override
     public void refresh(ColorDepthMatch object) {
         throw new UnsupportedOperationException();
-        
     }
     
     @Override
@@ -296,8 +295,6 @@ public class ColorDepthResultTableViewer
     public void deactivate() {
     }
 
-
-    // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
     public void toggleEditMode(boolean editMode) {
 
@@ -305,22 +302,19 @@ public class ColorDepthResultTableViewer
 
     @Override
     public void refreshEditMode() {
-
     }
 
     @Override
     public void setEditSelectionModel(ChildSelectionModel<ColorDepthMatch, String> editSelectionModel) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
     public ChildSelectionModel<ColorDepthMatch, String> getEditSelectionModel() {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     @Override
     public void selectEditObjects(List<ColorDepthMatch> objects, boolean select) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -383,7 +377,8 @@ public class ColorDepthResultTableViewer
                 return null;
             }
             else {
-                Sample sample = sampleMap.get(match.getSample());
+                ColorDepthResultImageModel model = (ColorDepthResultImageModel)getImageModel();
+                Sample sample = model.getSample(match);
                 if (sample == null) return null;
                 DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(sample);
                 return proxy.get(attr.getLabel());
@@ -391,6 +386,12 @@ public class ColorDepthResultTableViewer
         }
     }
 
+    @Override
+    protected void updateTableModel() {
+        super.updateTableModel();
+        getTable().setRowSorter(new DomainObjectRowSorter());
+    }
+    
     @Override
     protected void updateHud(boolean toggle) {
 
@@ -440,6 +441,119 @@ public class ColorDepthResultTableViewer
         }
     }
 
+    private void setSortCriteria(String sortCriteria) {
+        if (org.apache.commons.lang3.StringUtils.isEmpty(sortCriteria)) {
+            setSortColumn(null, true);
+        }
+        else {
+            this.sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
+            this.ascending = !sortCriteria.startsWith("-");
+            log.info("Setting sort column: {}",sortCriteria);
+            setSortColumn(sortField, ascending);
+        }
+    }
+
+    protected class DomainObjectRowSorter extends RowSorter<TableModel> {
+
+        private List<SortKey> sortKeys = new ArrayList<>();
+
+        public DomainObjectRowSorter() {
+            List<DynamicColumn> columns = getDynamicTable().getDisplayedColumns();
+            for (int i = 0; i < columns.size(); i++) {
+                if (columns.get(i).getName().equals(sortField)) {
+                    sortKeys.add(new SortKey(i, ascending ? SortOrder.ASCENDING : SortOrder.DESCENDING));
+                    break;
+                }
+            }
+        }
+
+        @Override
+        public void toggleSortOrder(int columnNum) {
+            List<DynamicColumn> columns = getDynamicTable().getDisplayedColumns();
+            DynamicColumn column = columns.get(columnNum);
+            if (!column.isVisible() || !column.isSortable()) {
+                return;
+            }
+            SortOrder newOrder = SortOrder.ASCENDING;
+            if (!sortKeys.isEmpty()) {
+                SortKey currentSortKey = sortKeys.get(0);
+                if (currentSortKey.getColumn() == columnNum) {
+                    // Reverse the sort
+                    if (currentSortKey.getSortOrder() == SortOrder.ASCENDING) {
+                        newOrder = SortOrder.DESCENDING;
+                    }
+                }
+                sortKeys.clear();
+            }
+
+            sortKeys.add(new SortKey(columnNum, newOrder));
+            sortField = column.getName();
+            ascending = (newOrder != SortOrder.DESCENDING);
+            String prefix = ascending ? "+":"-";
+            getSearchProvider().setSortField(prefix + sortField);
+            getSearchProvider().search();
+        }
+
+        @Override
+        public void setSortKeys(List<? extends SortKey> sortKeys) {
+            this.sortKeys = new ArrayList<>(sortKeys);
+        }
+
+        @Override
+        public void rowsUpdated(int firstRow, int endRow, int column) {
+        }
+
+        @Override
+        public void rowsUpdated(int firstRow, int endRow) {
+        }
+
+        @Override
+        public void rowsInserted(int firstRow, int endRow) {
+        }
+
+        @Override
+        public void rowsDeleted(int firstRow, int endRow) {
+        }
+
+        @Override
+        public void modelStructureChanged() {
+        }
+
+        @Override
+        public int getViewRowCount() {
+            return getTable().getModel().getRowCount();
+        }
+
+        @Override
+        public List<? extends SortKey> getSortKeys() {
+            return sortKeys;
+        }
+
+        @Override
+        public int getModelRowCount() {
+            return getTable().getModel().getRowCount();
+        }
+
+        @Override
+        public TableModel getModel() {
+            return getDynamicTable().getTableModel();
+        }
+
+        @Override
+        public int convertRowIndexToView(int index) {
+            return index;
+        }
+
+        @Override
+        public int convertRowIndexToModel(int index) {
+            return index;
+        }
+
+        @Override
+        public void allRowsChanged() {
+        }
+    };
+    
     @Override
     public void setSearchProvider(SearchProvider searchProvider) {
         this.searchProvider = searchProvider;

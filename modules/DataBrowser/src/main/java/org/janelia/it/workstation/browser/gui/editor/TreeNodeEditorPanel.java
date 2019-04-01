@@ -281,6 +281,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     }
 
     private void savePreferences() {
+        if (node==null || node.getId()==null) return;
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
             FrameworkImplProvider.setRemotePreferenceValue(

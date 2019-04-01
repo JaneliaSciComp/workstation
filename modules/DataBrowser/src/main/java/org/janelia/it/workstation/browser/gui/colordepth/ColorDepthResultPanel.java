@@ -24,6 +24,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -47,6 +48,7 @@ import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.SampleUtils;
+import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.SplitHalfType;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
@@ -281,6 +283,8 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             
             @Override
             protected void doStuff() throws Exception {
+
+                loadPreferences();
                 
                 newResultPreference = getPreference(PREFERENCE_CATEGORY_CDS_NEW_RESULTS);
                 log.debug("Got new result preference: "+newResultPreference);
@@ -626,10 +630,40 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     @Override
     public void setSortField(final String sortCriteria) {
         this.sortCriteria = sortCriteria;
+        savePreferences();
     }
     
     @Override
     public void search() {
+    }
+
+    private void loadPreferences() {
+        if (search==null || search.getId()==null) return;
+        if (mask==null || mask.getId()==null) return;
+        try {
+            String key = search.getId() + "~" + mask.getId();
+            sortCriteria = (String)FrameworkImplProvider.getRemotePreferenceValue(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, key, null);
+            log.debug("Loaded sort criteria preference: {}",sortCriteria);
+        }
+        catch (Exception e) {
+            log.error("Could not load sort criteria",e);
+        }
+    }
+
+    private void savePreferences() {
+        if (search==null || search.getId()==null) return;
+        if (mask==null || mask.getId()==null) return;
+        if (StringUtils.isEmpty(sortCriteria)) return;
+        try {
+            String key = search.getId() + "~" + mask.getId();
+            FrameworkImplProvider.setRemotePreferenceValue(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, key, sortCriteria);
+            log.debug("Saved sort criteria preference: {}",sortCriteria);
+        }
+        catch (Exception e) {
+            log.error("Could not save sort criteria",e);
+        }
     }
     
     @Override

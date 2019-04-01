@@ -9,9 +9,9 @@
         <relativePath>../..</relativePath>
     </parent>
 
-    <name>HortaTracer</name>
+    <name>AdministrationGUI</name>
     <groupId>org.janelia.workstation</groupId>
-    <artifactId>horta</artifactId>
+    <artifactId>adminstration</artifactId>
     <version>8.0</version>
     <packaging>nbm</packaging>
 
@@ -29,42 +29,12 @@
             <artifactId>integration</artifactId>
         </dependency>
 
-        <!-- JOGL224 -->
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>jogl224lib</artifactId>
-        </dependency>
-
-        <!-- Viewer API --> 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewerapi</artifactId>
-        </dependency>
-
-        <!-- GL Viewer --> 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>gltools</artifactId>
-        </dependency>
-
-        <!-- Geometry 3D --> 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>geometry3d</artifactId>
-        </dependency>
-
         <!-- Workstation Browser --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>browser</artifactId>
         </dependency>
-        
-        <!-- Scene Graph --> 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>scenegraph</artifactId>
-        </dependency>
-        
+
         <!-- NetBeans Modules --> 
         <dependency>
             <groupId>org.netbeans.api</groupId>
@@ -84,23 +54,11 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
-            <artifactId>org-openide-actions</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-awt</artifactId>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
-            <artifactId>org-openide-dialogs</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-explorer</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.netbeans.api</groupId>
-            <artifactId>org-openide-modules</artifactId>
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
@@ -133,14 +91,5 @@
             <scope>test</scope>
         </dependency>
         
-        <!-- Maven Central dependencies -->
-        <!-- TODO: this is pulled in for org.python.google.common.base.Joiner. It should be replaced with something lighter -->
-        <dependency>
-            <groupId>org.python</groupId>
-            <artifactId>jython</artifactId>
-            <version>2.5.3</version>
-        </dependency>
-
     </dependencies>
-
 </project>

@@ -1,6 +1,9 @@
 package org.janelia.it.workstation.browser.api.facade.impl.rest;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
@@ -15,8 +18,11 @@ import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
 import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.model.domain.Preference;
+import org.janelia.model.security.Group;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
+import org.janelia.model.security.UserGroupRole;
+import org.janelia.model.security.dto.AuthenticationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +46,8 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
     
     @Override
     public List<Subject> getSubjects() throws Exception {
-        Response response = service.path("data/user/subjects")
+        Response response = service.path("data/user")
+                .path("subjects")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getSubjects to server")) {
@@ -51,7 +58,8 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
     @Override
     public Subject getSubjectByNameOrKey(String key) throws Exception {
-        Response response = service.path("data/user/subject")
+        Response response = service.path("data/user")
+                .path("subject")
                 .queryParam("subjectKey", key)
                 .request("application/json")
                 .get();
@@ -75,7 +83,8 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
     @Override
     public List<Preference> getPreferences() throws Exception {
-        Response response = service.path("data/user/preferences")
+        Response response = service.path("data/user")
+                .path("preferences")
                 .queryParam("subjectKey", DomainMgr.getPreferenceSubject())
                 .request("application/json")
                 .get();
@@ -90,12 +99,65 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(DomainMgr.getPreferenceSubject());
         query.setPreference(preference);
-        Response response = service.path("data/user/preferences")
+        Response response = service.path("data/user")
+                .path("preferences")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request savePreferences to server: " + preference)) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(Preference.class);
+    }
+
+
+
+    @Override
+    public User updateUser(User user) throws Exception {
+        Map<String,Object> paramMap = new HashMap<>();
+        paramMap.put("fullname", user.getFullName());
+        paramMap.put("name", user.getName());
+        paramMap.put("email", user.getEmail());
+        Response response = service.path("data/user")
+                .path("property")
+                .request("application/json")
+                .post(Entity.json(paramMap));
+        if (checkBadResponse(response.getStatus(), "problem making request updateUserProperty to server")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(User.class);
+    }
+
+    @Override
+    public void updateUserRoles(String userKey, Set<UserGroupRole> userRoles) throws Exception {
+        Response response = service.path("data/user")
+                .path("roles")
+                .queryParam("userKey", userKey)
+                .request("application/json")
+                .post(Entity.json(userRoles));
+        if (checkBadResponse(response.getStatus(), "problem making request updateUserRoles to server")) {
+            throw new WebApplicationException(response);
+        }    
+    }
+
+    @Override
+    public Group createGroup(Group group) throws Exception {
+        Response response = service.path("data/group")
+                .request("application/json")
+                .put(Entity.json(group));
+        if (checkBadResponse(response.getStatus(), "problem making request updateUserProperty to server")) {
+            throw new WebApplicationException(response);
+        }    
+        return response.readEntity(Group.class);
+    }
+
+    @Override
+    public void changeUserPassword (AuthenticationRequest message) throws Exception {
+        Response response = service.path("data/user")
+                .path("password")
+                .request("application/json")
+                .post(Entity.json(message));
+        if (checkBadResponse(response.getStatus(), "problem making request to change user password to server")) {
+            throw new WebApplicationException(response);
+        }
     }
 }
