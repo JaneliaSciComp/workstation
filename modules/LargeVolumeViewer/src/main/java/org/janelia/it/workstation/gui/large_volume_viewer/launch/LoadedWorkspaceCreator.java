@@ -18,8 +18,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;

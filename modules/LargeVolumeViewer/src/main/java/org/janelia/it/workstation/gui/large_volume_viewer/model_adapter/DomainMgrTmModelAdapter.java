@@ -1,37 +1,29 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.model_adapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
-import org.janelia.model.access.tiledMicroscope.TmModelAdapter;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
-import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.api.progress.ProgressHandleFactory;
-import org.openide.util.RequestProcessor;
-import org.perf4j.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
-import com.rabbitmq.client.Channel;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
 import org.janelia.messaging.broker.sharedworkspace.MessageType;
 import org.janelia.messaging.client.ConnectionManager;
 import org.janelia.messaging.client.Sender;
-import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.model.access.tiledMicroscope.TmModelAdapter;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.perf4j.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Implementation of the model adapter, which pulls/pushes data through
@@ -55,7 +47,6 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
     private static final String MESSAGESERVER_UPDATESEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.updates").trim();
     private static final String MESSAGESERVER_ROUTINGKEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.routingkey.updates").trim();
     
-    private RequestProcessor loadProcessor = new RequestProcessor("Tm-Save-Queue", 1, true);
     private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
     private Sender messageSender;
 
