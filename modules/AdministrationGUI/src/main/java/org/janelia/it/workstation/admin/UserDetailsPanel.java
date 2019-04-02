@@ -121,8 +121,14 @@ public class UserDetailsPanel extends JPanel {
     }
     
     public void saveUser () {
+        if (currentUser.getId()==null) {
+            User newUser = parent.createUser(currentUser);
+            currentUser.setId(newUser.getId());
+            currentUser.setKey(newUser.getKey());
+        }
         parent.saveUser(currentUser, passwordChanged);
-        passwordChanged = false;
+        parent.saveUserRoles(currentUser);
+        parent.viewUserList();
     }
     
     public void editUserDetails(User user) throws Exception {
@@ -277,7 +283,8 @@ public class UserDetailsPanel extends JPanel {
             UserGroupRole newRole = new UserGroupRole(groupKey, GroupRole.Reader);
             roles.add(newRole);
             user.setUserGroupRoles(roles);
-            data.add(user.getRole(groupKey));            
+            data.add(user.getRole(groupKey));
+            validateUserChanges();
             fireTableRowsInserted(getRowCount()-1, getRowCount()-1);
         }
 
@@ -304,7 +311,15 @@ public class UserDetailsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             UserGroupRole groupRole = user.getRole(e.getActionCommand());
-            groupRole.setRole(GroupRole.valueOf((String)((JComboBox)e.getSource()).getSelectedItem()));                                    
+            groupRole.setRole(GroupRole.valueOf((String)((JComboBox)e.getSource()).getSelectedItem()));
+            validateUserChanges();
+        }
+
+        private void validateUserChanges() {
+            if (user.getPassword()!=null && user.getName()!=null)
+                saveUserButton.setEnabled(true);
+            else
+                saveUserButton.setEnabled(false);
         }
         
     }

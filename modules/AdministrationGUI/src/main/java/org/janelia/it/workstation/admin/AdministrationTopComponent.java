@@ -167,19 +167,40 @@ public final class AdministrationTopComponent extends TopComponent {
             e.printStackTrace();
         }
     }
+
+    public User createUser(User user) {
+        try {
+            SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
+            AuthenticationRequest message = new AuthenticationRequest();
+            message.setUsername(user.getName());
+            message.setPassword(user.getPassword());
+
+            User newUser = subjectFacade.updateUser(user);
+
+            // make sure to change password
+            subjectFacade.changeUserPassword(message);
+            return newUser;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     
     public void saveUser(User user, boolean passwordChange) {
         try {
             SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
             if (user.getId()==null) {
-                user = subjectFacade.updateUser(user);
-                // make sure to change password
                 AuthenticationRequest message = new AuthenticationRequest();
                 message.setUsername(user.getName());
                 message.setPassword(user.getPassword());
+
+                user = subjectFacade.updateUser(user);
+
+                // make sure to change password
                 subjectFacade.changeUserPassword(message);
             } else {
-                user = subjectFacade.updateUser(user);
+                subjectFacade.updateUser(user);
                 if (passwordChange) {
                     AuthenticationRequest message = new AuthenticationRequest();
                     message.setUsername(user.getName());
@@ -187,7 +208,6 @@ public final class AdministrationTopComponent extends TopComponent {
                     subjectFacade.changeUserPassword(message);
                 }
             }
-            saveUserRoles(user);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -589,6 +589,7 @@
                         <publicPackage>org.janelia.model.domain.workspace</publicPackage>
                         <publicPackage>org.janelia.model.sage</publicPackage>
                         <publicPackage>org.janelia.model.security</publicPackage>
+                        <publicPackage>org.janelia.model.security.dto</publicPackage>
                         <publicPackage>org.janelia.model.security.util</publicPackage>
                         <publicPackage>org.janelia.model.util</publicPackage>
                         <publicPackage>org.janelia.it.jacs.compute.access</publicPackage>

@@ -50,6 +50,7 @@ public class NewGroupPanel extends JPanel {
     NewGroupTableModel newGroupTableModel;
     JTable newGroupTable;
     Group currentGroup;
+    JButton saveUserButton;
     private int COLUMN_NAME = 0;
     private int COLUMN_VALUE = 1;
     
@@ -84,15 +85,18 @@ public class NewGroupPanel extends JPanel {
         
        
         // add groups pulldown selection for groups this person is a member of
-        JButton saveUserButton = new JButton("Create New Group");
+        saveUserButton = new JButton("Create New Group");
         saveUserButton.addActionListener(event -> createGroup());
+        saveUserButton.setEnabled(false);
         JPanel actionPanel = new JPanel();
-//        newGroupPanel.setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
         actionPanel.add(saveUserButton);
         add(actionPanel);               
     }
     
     public void createGroup () {
+        // create key from name
+        currentGroup.setKey("group:"+currentGroup.getName());
+        log.info(currentGroup.toString());
         parent.createGroup(currentGroup);
         returnHome();
     }
@@ -115,8 +119,7 @@ public class NewGroupPanel extends JPanel {
     class NewGroupTableModel extends AbstractTableModel {
         String[] columnNames = {"Property","Value"};
         Group group;
-        String password;
-        String[] editProperties = {"LdapGroupName", "Key", "FullName"};
+        String[] editProperties = {"LdapGroupName", "Name", "FullName"};
         String[] values = new String[editProperties.length];
                 
         @Override
@@ -144,6 +147,13 @@ public class NewGroupPanel extends JPanel {
             fireTableRowsInserted(0, getRowCount()-1);
         }
 
+        private void validateGroupChanges() {
+            if (group.getFullName()!=null && group.getName()!=null)
+                saveUserButton.setEnabled(true);
+            else
+                saveUserButton.setEnabled(false);
+        }
+
         public String getColumnName(int col) {            
             return columnNames[col];            
         }
@@ -159,11 +169,10 @@ public class NewGroupPanel extends JPanel {
         public void setValueAt(Object value, int row, int col) {
             try {
                 String finalVal = (String)value;
-                if (editProperties[row].equals("Key") && !finalVal.startsWith("group")) {
-                    finalVal = "group:" + value;
-                }
+
                 new PropertyDescriptor(editProperties[row], Group.class).getWriteMethod().invoke(group, finalVal);
                 values[row] = (String)finalVal;
+                validateGroupChanges();
                 this.fireTableCellUpdated(row, col);
             } catch (Exception ex) {
                 ex.printStackTrace();

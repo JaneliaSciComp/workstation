@@ -67,7 +67,7 @@ public class GroupDetailsPanel extends JPanel implements ActionListener {
         JLabel titleLabel = new JLabel("Edit Group", JLabel.LEADING);  
         titleLabel.setFont(new Font("Serif", Font.PLAIN, 14));
         titlePanel.add(titleLabel);
-        JButton returnHome = new JButton(Icons.getIcon("returnhome.png"));
+        JButton returnHome = new JButton("group list");
         returnHome.setActionCommand("ReturnHome");
         returnHome.addActionListener(this);
         titlePanel.add(returnHome);
