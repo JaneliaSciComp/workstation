@@ -318,7 +318,7 @@
                 <version>${janeliaws.jacs-model.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.janelia.legacy</groupId>
+                <groupId>org.janelia.jacs-messaging</groupId>
                 <artifactId>jacs-messaging</artifactId>
                 <version>1.1.0</version>
             </dependency>
