@@ -4,7 +4,15 @@
 
 A neuroscience discovery platform that supporting processing, analysis, and annotation of large-scale 3d microscopy data.
 
-## Build instructions
+## System Installation
+
+The Workstation Client (this repository) is supported by a suite of back-end services. Deploying these services is accomplished through the use of Docker containers. Complete documentation about building and deploying the entire system is available in the [jacs-cm](https://github.com/JaneliaSciComp/jacs-cm) repository.
+
+### MouseLight Deployment
+
+The canonical two-server deployment of the MouseLight neuron tracing tools is described [here](https://github.com/JaneliaSciComp/jacs-cm/blob/master/docs/MouseLightDeployment.md). 
+
+## Workstation Client Build 
 
 Create a keystore:
 ```
@@ -20,11 +28,6 @@ mvn --batch-mode -T 8 -Djava.awt.headless=true -Dkeystorepass=<password> clean i
 
 Run application:
 ```
-cd modules/application
-nbm:cluster-app nbm:run-platform
-```
-or from the base directory you can run:
-```
 mvn -f modules/application/pom.xml nbm:cluster-app nbm:run-platform
 ```
 
@@ -34,10 +37,4 @@ cd modules/application
 mvn --batch-mode -T 8 -Djava.awt.headless=true -Dkeystorepass=<password> package -P deployment
 ```
 
-## System Installation
 
-The Workstation client (this repository) is supported by a suite of back-end services. Deploying these services is accomplished through the use of Docker containers. Complete documentation about deploying the entire system is available in the [jacs-cm](https://github.com/JaneliaSciComp/jacs-cm) repository.
-
-### MouseLight Deployment
-
-The canonical two-server deployment of the MouseLight neuron tracing tools is described [here](https://github.com/JaneliaSciComp/jacs-cm/blob/master/docs/MouseLightDeployment.md). 
