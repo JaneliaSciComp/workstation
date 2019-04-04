@@ -180,9 +180,9 @@ public class LargeVolumeViewViewer extends JPanel {
                             // this is a request to clear the workspace
                             annotationModel.clear();
                         } else if (initialObject instanceof TmSample) {
-                            annotationModel.loadSample((TmSample)initialObject);
+                            annotationModel.loadSample((TmSample) initialObject);
                         } else if (initialObject instanceof TmWorkspace) {
-                            annotationModel.loadWorkspace((TmWorkspace)initialObject);
+                            annotationModel.loadWorkspace((TmWorkspace) initialObject);
                         }
                     }
 
@@ -290,22 +290,22 @@ public class LargeVolumeViewViewer extends JPanel {
         removeAll();
 
         if (viewUI != null) {
-            
+
             final QuadViewUi oldQuadView = viewUI;
             viewUI = null;
-            
+
             SimpleWorker worker = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
                     logger.info("Clearing cache...");
                     oldQuadView.clearCache();
                 }
-    
+
                 @Override
                 protected void hadSuccess() {
                     logger.info("Cache cleared");
                 }
-    
+
                 @Override
                 protected void hadError(Throwable error) {
                     ConsoleApp.handleException(error);

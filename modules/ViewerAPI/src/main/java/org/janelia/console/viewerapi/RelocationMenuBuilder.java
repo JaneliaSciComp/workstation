@@ -33,13 +33,14 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Logger;
 
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
 import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Builds menus suitable for relocating a viewer to synchronize with another.
@@ -47,7 +48,7 @@ import org.openide.util.Exceptions;
  */
 public class RelocationMenuBuilder {
     // NOTE: This may be switched to Slf4j or Log4j at CB's discretion.
-    private Logger logger = Logger.getLogger(RelocationMenuBuilder.class.getSimpleName());
+    private Logger logger = LoggerFactory.getLogger(RelocationMenuBuilder.class);
             
     /**
      * Helper to build up a menu of other-side targets for sychronization.
@@ -59,24 +60,7 @@ public class RelocationMenuBuilder {
     public List<JMenuItem> buildSyncMenu(Collection<Tiled3dSampleLocationProviderAcceptor> locationProviderAcceptors, Tiled3dSampleLocationProviderAcceptor originator, ViewerLocationAcceptor viewerLocationAcceptor) {
         List<JMenuItem> rtnVal = new ArrayList<>();
         for (final Tiled3dSampleLocationProviderAcceptor providerAcceptor : locationProviderAcceptors) {
-//            if (logger.isLoggable(Level.INFO))
-//                logger.info("Adding menu item for " + providerAcceptor.getProviderUniqueName());
             final String description = providerAcceptor.getProviderDescription();
-            /*
-            JMenu synchronizeMenu = new JMenu("Synchronize with " + description);
-            rtnVal.add(synchronizeMenu);
-            if (providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.both)  ||
-                providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.provider)) {
-                synchronizeMenu.add(new AcceptSampleLocationAction(description, providerAcceptor, viewerLocationAcceptor));
-            }
-            /*
-            synchronizeMenu.add(new AbstractAction("Synchronize with " + description + " always") {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-            });
-             */
             // kludge to get around syncing issues
             if (description.equals("Horta - Focus On Location")) {
                 continue;
@@ -86,25 +70,8 @@ public class RelocationMenuBuilder {
             if (providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.both)  ||
                 providerAcceptor.getParticipantType().equals(Tiled3dSampleLocationProviderAcceptor.ParticipantType.acceptor)) {
                 rtnVal.add(new JMenuItem(new PushSampleLocationAction(description, providerAcceptor, originator)));
-                
-                // Tantalize user with future option to continuously synchronize
-                /*
-                JCheckBoxMenuItem synchronizeMenu = new JCheckBoxMenuItem("Continuously Track Location in "+description, false);
-                synchronizeMenu.setEnabled(false); // grayed out for now
-                rtnVal.add(synchronizeMenu);
-                */
             }
         }
-        
-        /*
-        rtnVal.add(new JMenuItem(new AbstractAction("Desynchronize") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-               
-        })); */
-        
         return rtnVal;
     }
 
@@ -165,7 +132,7 @@ public class RelocationMenuBuilder {
            try {
                 acceptor.acceptLocation(sampleLocation);
             } catch (Exception ioe) {
-                logger.severe(ioe.getMessage());
+                logger.error(ioe.getMessage());
                 Exceptions.printStackTrace(ioe);
                 JOptionPane.showMessageDialog(
                         null,
@@ -177,7 +144,7 @@ public class RelocationMenuBuilder {
     
     private class DefaultViewerLocationAcceptor implements ViewerLocationAcceptor {
         private Tiled3dSampleLocationProviderAcceptor provider;
-        public DefaultViewerLocationAcceptor(Tiled3dSampleLocationProviderAcceptor provider) {
+        DefaultViewerLocationAcceptor(Tiled3dSampleLocationProviderAcceptor provider) {
             this.provider = provider;
         }
 
