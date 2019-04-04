@@ -722,8 +722,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         setBorder(new EmptyBorder(5, 5, 5, 5));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        // glassPane.setVisible(true);
-        setupMenu(parentFrame, overrideFrameMenuBar);
         JPanel toolBarPanel = setupToolBar();
 
         // JSplitPane splitPane = new JSplitPane();
@@ -1221,18 +1219,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return true;
     }
 
-    private void setupMenu(JFrame parentFrame, boolean overrideFrameMenuBar) {
-        if (overrideFrameMenuBar) {
-            parentFrame.setJMenuBar(menuBar);
-            addFileMenuItem();
-            addEditMenuItem();
-            addViewMenuItem();
-            addHelpMenuItem();
-        } else {
-            toolBarPanel.add(addViewMenuItem());
-        }
-    }
-
     private JMenuItem addViewMenuItem() {
         JMenu mnView = new JMenu("View");
         menuBar.add(mnView);
@@ -1309,7 +1295,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return mnView;
     }
 
-    public JMenuItem addFileMenuItem() {
+    private JMenuItem addFileMenuItem() {
         JMenu mnFile = new JMenu("File");
         menuBar.add(mnFile);
 
@@ -1326,14 +1312,14 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return mnFile;
     }
 
-    public JMenuItem addCopyMicronLocMenuItem() {
+    private JMenuItem addCopyMicronLocMenuItem() {
         JMenuItem mnCopyMicron = new JMenuItem(
                 new MicronsToClipboardAction(statusLabel)
         );
         return mnCopyMicron;
     }
 
-    public JMenuItem addCopyOctreePathMenuItem() {
+    private JMenuItem addCopyOctreePathMenuItem() {
         JMenuItem menuItem = new JMenuItem(
                 new OctreeFilePathToClipboardAction(
                         statusLabel, tileServer.getSharedVolumeImage().getVolumeBaseURL(), tileFormat, camera, CoordinateAxis.Z
@@ -1342,7 +1328,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return menuItem;
     }
 
-    public JMenuItem addCopyTileLocMenuItem() {
+    private JMenuItem addCopyTileLocMenuItem() {
         JMenuItem mnCopyTileInx = new JMenuItem(
                 new TileLocToClipboardAction(
                         statusLabel, tileFormat, camera, CoordinateAxis.Z
@@ -1351,32 +1337,13 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return mnCopyTileInx;
     }
 
-    public JMenuItem addCopyTileFileLocMenuItem() {
+    private JMenuItem addCopyTileFileLocMenuItem() {
         JMenuItem mnCopyTileFileLoc = new JMenuItem(
                 new RawFileLocToClipboardAction(
                         statusLabel, tileFormat, volumeImage, camera, CoordinateAxis.Z
                 )
         );
         return mnCopyTileFileLoc;
-    }
-
-    public JMenuItem addEditMenuItem() {
-        JMenu mnEdit = new JMenu("Edit");
-        menuBar.add(mnEdit);
-        return mnEdit;
-    }
-
-    public JMenuItem addHelpMenuItem() {
-        JMenu mnHelp = new JMenu("Help");
-        menuBar.add(mnHelp);
-        return mnHelp;
-    }
-
-    public JPopupMenu getButtonPopupMenu() {
-        JPopupMenu popupMenu = new JPopupMenu();
-        popupMenu.add(addFileMenuItem());
-        popupMenu.add(addViewMenuItem());
-        return popupMenu;
     }
 
     /**
@@ -1403,7 +1370,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return rtnVal;
     }
 
-    public boolean loadDataFromURL(URL url) {
+    boolean loadDataFromURL(URL url) {
         LOG.info("loadDataFromURL: {}", url);
         boolean rtnVal = volumeImage.loadURL(url);
         loadedUrl = url;
@@ -1458,7 +1425,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         this.wsCloseListener = wsCloseListener;
     }
 
-    public SampleLocation getSampleLocation() {
+    SampleLocation getSampleLocation() {
         BasicSampleLocation result = new BasicSampleLocation();
         result.setSampleUrl(loadedUrl);
 
@@ -1492,7 +1459,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return result;
     }
 
-    public void setSampleLocation(SampleLocation sampleLocation) {
+    void setSampleLocation(SampleLocation sampleLocation) {
         Vec3 focus = new Vec3(
                 sampleLocation.getFocusXUm(),
                 sampleLocation.getFocusYUm(),
@@ -1562,5 +1529,4 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return annotationMgr;
     }
 
-;
 }
