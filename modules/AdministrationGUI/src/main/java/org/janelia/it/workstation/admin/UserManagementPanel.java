@@ -10,6 +10,7 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.List;
+import java.util.Set;
 import javax.swing.AbstractAction;
 import javax.swing.AbstractCellEditor;
 import javax.swing.Box;
@@ -30,8 +31,10 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.model.domain.tiledMicroscope.TmReviewItem;
 import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
+import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
+import org.janelia.model.security.UserGroupRole;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,6 +106,11 @@ public class UserManagementPanel extends JPanel {
 
     public void newUser() {
         User newUser = new User();
+        // add the workstation role by default
+        Set<UserGroupRole> roles = newUser.getUserGroupRoles();
+        UserGroupRole newRole = new UserGroupRole("group:workstation_users", GroupRole.Reader);
+        roles.add(newRole);
+        newUser.setUserGroupRoles(roles);
         parent.viewUserDetails(newUser);
     }
     

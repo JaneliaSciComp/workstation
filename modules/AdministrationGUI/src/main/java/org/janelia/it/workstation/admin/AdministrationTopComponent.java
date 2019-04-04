@@ -1,19 +1,16 @@
 package org.janelia.it.workstation.admin;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.awt.Component;
 import java.awt.Font;
 import java.util.List;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
+import org.janelia.it.workstation.browser.api.facade.interfaces.WorkspaceFacade;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.model.security.User;
 import org.janelia.model.security.Group;
 import org.janelia.model.security.dto.AuthenticationRequest;
+import org.janelia.model.domain.workspace.Workspace;
 
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -179,6 +176,11 @@ public final class AdministrationTopComponent extends TopComponent {
 
             // make sure to change password
             subjectFacade.changeUserPassword(message);
+
+            // set up a user default directory
+
+            // if mail set up, register the user's email address
+
             return newUser;
 
         } catch (Exception e) {
