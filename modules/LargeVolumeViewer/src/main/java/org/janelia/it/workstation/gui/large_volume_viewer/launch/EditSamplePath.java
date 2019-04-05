@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.launch;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -28,7 +29,7 @@ public class EditSamplePath implements ObjectOpenAcceptor  {
         final TmSample sample = (TmSample)obj;
         
         final String editedPath = (String) JOptionPane.showInputDialog(
-                ConsoleApp.getMainFrame(),
+                FrameworkImplProvider.getMainFrame(),
                 "New Linux path to sample:",
                 "Edit sample path",
                 JOptionPane.PLAIN_MESSAGE,

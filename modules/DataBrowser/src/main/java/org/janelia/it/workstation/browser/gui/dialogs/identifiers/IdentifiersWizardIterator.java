@@ -10,7 +10,7 @@ import javax.swing.JComponent;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.openide.WizardDescriptor;
 import org.openide.util.ChangeSupport;
 
@@ -47,7 +47,7 @@ public final class IdentifiersWizardIterator implements WizardDescriptor.Iterato
             currPanels.add(panel1);
             String[] steps = new String[currPanels.size()];
 
-            Component mainFrame = ConsoleApp.getMainFrame();
+            Component mainFrame = FrameworkImplProvider.getMainFrame();
             
             for (int i = 0; i < currPanels.size(); i++) {
                 Component c = currPanels.get(i).getComponent();

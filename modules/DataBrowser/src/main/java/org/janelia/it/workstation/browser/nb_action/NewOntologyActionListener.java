@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -26,7 +27,7 @@ public final class NewOntologyActionListener implements ActionListener {
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
-        final String name = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Ontology Name:\n",
+        final String name = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Ontology Name:\n",
                 "Create new ontology", JOptionPane.PLAIN_MESSAGE, null, null, null);
         if (StringUtils.isEmpty(name)) {
             return;

@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -43,12 +44,12 @@ public final class NewFolderActionListener implements ActionListener {
         }
         
         if (parentNode==null) {
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                     "Folders have not been loaded. Try refreshing the Explorer view.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        final String name = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Folder Name:\n",
+        final String name = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Folder Name:\n",
                 "Create new folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
         if (StringUtils.isEmpty(name)) {
             return;

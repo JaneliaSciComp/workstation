@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.gui.ontology;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -65,7 +66,7 @@ public class AnnotationEditor {
                     currValue = annotation.getValue();
                 }
 
-                value = JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Value:\n", currValue);
+                value = JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Value:\n", currValue);
 
                 Interval interval = (Interval) keyTerm;
                 if (StringUtils.isEmpty(value)) return null;
@@ -76,7 +77,7 @@ public class AnnotationEditor {
                     }
                 }
                 catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                             "Input out of range [" + interval.getLowerBound() + "," + interval.getUpperBound() + "]");
                     return null;
                 }
@@ -102,7 +103,7 @@ public class AnnotationEditor {
                     }
                 }
 
-                OntologyTerm enumTerm = (OntologyTerm) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(),
+                OntologyTerm enumTerm = (OntologyTerm) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(),
                         "Value:\n", keyTerm.getName(), JOptionPane.PLAIN_MESSAGE, null, valueEnum.getTerms().toArray(), currValue);
                 if (enumTerm != null) {
                     value = enumTerm.getName();
@@ -127,7 +128,7 @@ public class AnnotationEditor {
                     currValue = annotation.getValue();
                 }
 
-                value = JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Value:\n", currValue);
+                value = JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Value:\n", currValue);
             }
 
             return value;

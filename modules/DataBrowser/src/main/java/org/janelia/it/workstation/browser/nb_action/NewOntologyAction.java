@@ -2,7 +2,7 @@ package org.janelia.it.workstation.browser.nb_action;
 
 import java.awt.Component;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
@@ -26,7 +26,7 @@ import org.openide.util.actions.CallableSystemAction;
 @Messages("CTL_NewOntologyAction=Ontology")
 public class NewOntologyAction extends CallableSystemAction {
 
-    protected final Component mainFrame = ConsoleApp.getMainFrame();
+    protected final Component mainFrame = FrameworkImplProvider.getMainFrame();
 
     public NewOntologyAction() {
     }

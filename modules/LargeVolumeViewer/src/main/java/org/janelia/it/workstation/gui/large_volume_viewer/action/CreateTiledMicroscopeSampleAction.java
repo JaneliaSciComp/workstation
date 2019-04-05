@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -29,7 +30,7 @@ public class CreateTiledMicroscopeSampleAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent event) {
         
-        final Component mainFrame = ConsoleApp.getMainFrame();
+        final Component mainFrame = FrameworkImplProvider.getMainFrame();
 
         SimpleWorker worker = new SimpleWorker() {
             

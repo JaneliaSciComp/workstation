@@ -14,6 +14,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OntologyElementAction;
@@ -294,7 +295,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                 msg = "Are you sure you want to delete the item '"+getOntologyTerm().getName()+"' and all of its descendants?";   
             }
             
-            int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(),
+            int result = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(),
                     msg, title, JOptionPane.OK_CANCEL_OPTION);
 
             if (result != 0) return;

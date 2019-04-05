@@ -50,7 +50,7 @@ public class CreateMaskFromImageAction extends AbstractAction {
         log.debug("imagePath: "+imagePath);
         
         if (imagePath==null) {
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                     "No image selected", 
                     "No image", JOptionPane.ERROR_MESSAGE);
             return;

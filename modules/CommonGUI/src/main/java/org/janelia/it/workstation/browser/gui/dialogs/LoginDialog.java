@@ -25,6 +25,7 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
 import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.model.ErrorType;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,14 +40,7 @@ import net.miginfocom.swing.MigLayout;
 public class LoginDialog extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(LoginDialog.class);
-    
-    public enum ErrorType {
-        NetworkError,
-        AuthError,
-        TokenExpiredError,
-        OtherError
-    }
-    
+
     private static final String OK_BUTTON_TEXT = "Login";
     
     private final JPanel mainPanel;

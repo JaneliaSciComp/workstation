@@ -1624,7 +1624,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 ConsoleApp.handleException(error);
             }
         };
-        creator.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Creating new workspace...", ""));
+        creator.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Creating new workspace...", ""));
         creator.execute();
     }
 
@@ -1661,7 +1661,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         };
 
-        creator.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Copying workspace...", ""));
+        creator.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Copying workspace...", ""));
         creator.execute();
     }
 
@@ -1825,7 +1825,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 ConsoleApp.handleException(error);
             }
         };
-        updater.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), visibility?"Showing neurons...":"Hiding neurons...", ""));
+        updater.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), visibility?"Showing neurons...":"Hiding neurons...", ""));
         return updater.executeWithFuture();
     }
 
@@ -1847,7 +1847,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 ConsoleApp.handleException(error);
             }
         };
-        updater.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Hiding neurons...", ""));
+        updater.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Hiding neurons...", ""));
         updater.execute();
     }
     

@@ -14,6 +14,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -79,7 +80,7 @@ public class OntologyImportAction extends NodePresenterAction   {
         fc.addChoosableFileFilter(ff);
         fc.setFileFilter(ff);
 
-        int returnVal = fc.showOpenDialog(ConsoleApp.getMainFrame());
+        int returnVal = fc.showOpenDialog(FrameworkImplProvider.getMainFrame());
         if (returnVal != JFileChooser.APPROVE_OPTION) {
             return;
         }
@@ -106,7 +107,7 @@ public class OntologyImportAction extends NodePresenterAction   {
                 @Override
                 protected void hadError(Throwable error) {
                     log.error("Error creating ontology terms", error);
-                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Error creating ontology term", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Error creating ontology term", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             };
 

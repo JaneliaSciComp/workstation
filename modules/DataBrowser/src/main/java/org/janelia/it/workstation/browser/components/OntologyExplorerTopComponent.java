@@ -32,6 +32,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.Action;
 import org.janelia.it.workstation.browser.actions.OntologyElementAction;
@@ -626,7 +627,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     
     private JToolBar getBottomToolbar() {
 
-        final Component mainFrame = ConsoleApp.getMainFrame();
+        final Component mainFrame = FrameworkImplProvider.getMainFrame();
     
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);

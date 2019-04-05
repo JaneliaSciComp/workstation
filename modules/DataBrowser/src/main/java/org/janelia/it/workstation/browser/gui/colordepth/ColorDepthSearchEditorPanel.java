@@ -122,12 +122,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             public void actionPerformed(ActionEvent e) {
                 
                 if (search.getMasks().isEmpty()) {
-                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "You need to select some masks to search on.");
+                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "You need to select some masks to search on.");
                     return;
                 }
                 
                 if (search.getDataSets().isEmpty()) {
-                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "You need to select some data sets to search against.");
+                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "You need to select some data sets to search against.");
                     return;
                 }
                 

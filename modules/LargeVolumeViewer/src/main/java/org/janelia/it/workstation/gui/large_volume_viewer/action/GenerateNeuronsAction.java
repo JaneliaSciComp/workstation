@@ -6,7 +6,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.GenerateNeuronsDialog;
@@ -42,7 +42,7 @@ public final class GenerateNeuronsAction extends AbstractAction implements Prese
                 GenerateNeuronsDialog dialog = new GenerateNeuronsDialog();
                 dialog.showDialog();
             } else {
-                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                     "LVV needs to be opened before this function can be used.",
                     "LVV must be open",
                     JOptionPane.WARNING_MESSAGE);

@@ -13,6 +13,7 @@ import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -109,7 +110,7 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
                 List<String> sharedWith = allReaders.stream().map(SubjectUtils::getSubjectName).collect(Collectors.toList());    
                 String sharedWithList = StringUtils.join(sharedWith, ", ");
                 
-                int deleteConfirmation = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(),
+                int deleteConfirmation = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(),
                         "There are " + listToDelete.size() + " items in your remove list that will be deleted permanently. These items are shared with: "+sharedWithList+". Delete anyway?",
                         "Are you sure?", JOptionPane.YES_NO_OPTION);
                 if (deleteConfirmation != 0) {
@@ -117,7 +118,7 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
                 }
             }
             else {
-                int deleteConfirmation = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(),
+                int deleteConfirmation = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(),
                         "There are " + listToDelete.size() + " items in your remove list that will be deleted permanently.",
                         "Are you sure?", JOptionPane.YES_NO_OPTION);
                 if (deleteConfirmation != 0) {
@@ -165,7 +166,7 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
             }
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Removing items", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Removing items", "", 0, 100));
         worker.execute();
     }
 }

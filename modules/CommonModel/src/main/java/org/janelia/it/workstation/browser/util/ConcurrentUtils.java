@@ -1,8 +1,8 @@
 package org.janelia.it.workstation.browser.util;
 
-import java.util.concurrent.Callable;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import java.util.concurrent.Callable;
 
 /**
  * Utilities for dealing with the Java concurrent library.
@@ -17,7 +17,7 @@ public class ConcurrentUtils {
                 callback.call();
             }
             catch (Exception e) {
-                ConsoleApp.handleException(e);
+                FrameworkImplProvider.handleException(e);
             }
         }
     }

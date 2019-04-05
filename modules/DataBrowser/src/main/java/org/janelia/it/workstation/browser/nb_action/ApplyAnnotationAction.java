@@ -166,7 +166,7 @@ public class ApplyAnnotationAction extends NodeAction {
 
             };
 
-            worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Adding annotations", "", 0, 100));
+            worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Adding annotations", "", 0, 100));
             return worker.executeWithFuture();
     }
 

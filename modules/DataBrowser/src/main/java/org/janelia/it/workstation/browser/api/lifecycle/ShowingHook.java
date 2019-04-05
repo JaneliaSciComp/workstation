@@ -5,10 +5,10 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Toolkit;
 
-import javax.swing.Action;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
+import javax.swing.*;
 
+import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
+import org.janelia.it.workstation.browser.gui.dialogs.ReleaseNotesDialog;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -16,8 +16,11 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.logging.EDTExceptionInterceptor;
 import org.janelia.it.workstation.browser.nb_action.StartPageMenuAction;
+import org.janelia.it.workstation.browser.nb_action.NavigateBack;
+import org.janelia.it.workstation.browser.nb_action.NavigateForward;
 import org.janelia.it.workstation.browser.util.BrandingConfig;
 import org.openide.filesystems.FileUtil;
+import org.openide.util.actions.CallableSystemAction;
 import org.openide.windows.OnShowing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +36,10 @@ import org.slf4j.LoggerFactory;
 public class ShowingHook implements Runnable {
     
     private static final Logger log = LoggerFactory.getLogger(ShowingHook.class);
-    
+
+    // Lazily initialized
+    private static ReleaseNotesDialog releaseNotesDialog;
+
     public void run() {
         
         JFrame frame = WindowLocator.getMainFrame();
@@ -62,7 +68,20 @@ public class ShowingHook implements Runnable {
 //        //sources.add(loggingEventListener);
 //        //discriminators.add(ReportRunner.BUTTON_EVENT_DISCRIMINATOR);
 //        new ReportRunner(sources, discriminators); // This starts a thread
-        
+
+        // Disable the navigation actions until there is some history to navigate
+        CallableSystemAction.get(NavigateBack.class).setEnabled(false);
+        CallableSystemAction.get(NavigateForward.class).setEnabled(false);
+
+        // Things that can be lazily initialized
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                releaseNotesDialog = new ReleaseNotesDialog();
+                releaseNotesDialog.showIfFirstRunSinceUpdate();
+            }
+        });
+
         log.info("Showing main window");
         frame.setVisible(true);
         
@@ -121,8 +140,12 @@ public class ShowingHook implements Runnable {
         }
 
         // If there were any issues with auto-login before, resolve them now by showing the login dialog
-        AccessManager.getAccessManager().resolveLoginIssue();
-        
+        if (AccessManager.getAccessManager().hadLoginIssue()) {
+            SwingUtilities.invokeLater(() -> {
+                LoginDialog.getInstance().showDialog(AccessManager.getAccessManager().getLoginIssue());
+            });
+        }
+
 //        if (SystemInfo.getJavaInfo().contains("1.7")) {
 //
 //            String html = "<html><body width='420'>" +
@@ -195,5 +218,8 @@ public class ShowingHook implements Runnable {
         Action action = FileUtil.getConfigObject("Actions/Window/org-netbeans-core-windows-actions-ResetWindowsAction.instance", Action.class);
         action.actionPerformed(null);
     }
-    
+
+    public static ReleaseNotesDialog getReleaseNotesDialog() {
+        return releaseNotesDialog;
+    }
 }

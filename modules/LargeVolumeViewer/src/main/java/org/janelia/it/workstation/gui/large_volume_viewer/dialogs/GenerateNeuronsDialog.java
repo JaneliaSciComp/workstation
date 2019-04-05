@@ -27,7 +27,6 @@ import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileFormat.MicrometerXyz;
 import org.janelia.it.jacs.shared.lvv.TileFormat.VoxelXyz;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.StateMgr;
@@ -73,7 +72,7 @@ public class GenerateNeuronsDialog extends ModalDialog {
     private TileFormat tileFormat;
        
     public GenerateNeuronsDialog() {
-    	super(ConsoleApp.getMainFrame());
+    	super(FrameworkImplProvider.getMainFrame());
     	
     	if (annotationMgr==null) {
     	    throw new IllegalStateException("LVV needs to be opened before this dialog is opened");

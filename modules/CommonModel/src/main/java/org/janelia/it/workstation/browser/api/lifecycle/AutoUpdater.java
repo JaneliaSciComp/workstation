@@ -1,35 +1,22 @@
 package org.janelia.it.workstation.browser.api.lifecycle;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-
-import javax.swing.JOptionPane;
-
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.netbeans.api.autoupdate.InstallSupport;
+import org.netbeans.api.autoupdate.*;
 import org.netbeans.api.autoupdate.InstallSupport.Installer;
 import org.netbeans.api.autoupdate.InstallSupport.Validator;
-import org.netbeans.api.autoupdate.OperationContainer;
 import org.netbeans.api.autoupdate.OperationContainer.OperationInfo;
-import org.netbeans.api.autoupdate.OperationException;
 import org.netbeans.api.autoupdate.OperationSupport.Restarter;
-import org.netbeans.api.autoupdate.UpdateElement;
-import org.netbeans.api.autoupdate.UpdateManager;
-import org.netbeans.api.autoupdate.UpdateUnit;
-import org.netbeans.api.autoupdate.UpdateUnitProvider;
-import org.netbeans.api.autoupdate.UpdateUnitProviderFactory;
 import org.netbeans.api.progress.ProgressHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
 
 /**
  * Download updates automatically on startup and ask the user to restart, or install the next time 
@@ -184,7 +171,7 @@ public class AutoUpdater extends SimpleWorker {
                     + "</body></html>";
 
             String[] buttons = { "Restart and Update", "Later" };
-            int selectedOption = JOptionPane.showOptionDialog(WindowLocator.getMainFrame(), html, 
+            int selectedOption = JOptionPane.showOptionDialog(FrameworkImplProvider.getMainFrame(), html,
                     "Updates Ready", JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, buttons[0]);
 
             if (selectedOption == 0) {

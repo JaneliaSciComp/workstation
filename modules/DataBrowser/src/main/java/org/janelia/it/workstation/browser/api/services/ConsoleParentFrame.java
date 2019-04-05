@@ -4,6 +4,7 @@ import javax.swing.JFrame;
 
 import org.janelia.it.jacs.integration.framework.system.ParentFrame;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -14,9 +15,19 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = ParentFrame.class, path=ParentFrame.LOOKUP_PATH)
 public class ConsoleParentFrame implements ParentFrame {
 
+    private static JFrame mainFrame;
+
     @Override
     public JFrame getMainFrame() {
-        return ConsoleApp.getMainFrame();
+        if (mainFrame == null) {
+            try {
+                mainFrame = WindowLocator.getMainFrame();
+            }
+            catch (Exception ex) {
+                ConsoleApp.handleException(ex);
+            }
+        }
+        return mainFrame;
     }
     
 }

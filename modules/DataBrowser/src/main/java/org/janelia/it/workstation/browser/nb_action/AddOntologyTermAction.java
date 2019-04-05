@@ -9,6 +9,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -42,7 +43,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
 
     private final static Logger log = LoggerFactory.getLogger(AddOntologyTermAction.class);
     
-    protected final Component mainFrame = ConsoleApp.getMainFrame();
+    protected final Component mainFrame = FrameworkImplProvider.getMainFrame();
 
     private final static AddOntologyTermAction singleton = new AddOntologyTermAction();
     public static AddOntologyTermAction get() {
@@ -116,7 +117,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
         final OntologyTerm ontologyTerm = createTypeByName(termClass);
         ActivityLogHelper.logUserAction("AddOntologyTermAction.createTerm", ontologyTerm.getTypeName());
 
-        final String termName = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Ontology Term:\n", 
+        final String termName = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Ontology Term:\n",
                 "Adding to " + parentNode.getDisplayName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 
         if ((termName == null) || (termName.length() <= 0)) {
@@ -127,9 +128,9 @@ public class AddOntologyTermAction extends NodePresenterAction {
 
         if (ontologyTerm instanceof Interval) {
 
-            String lowerBoundStr = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Lower bound:\n", 
+            String lowerBoundStr = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Lower bound:\n",
                     "Adding an interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
-            String upperBoundStr = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Upper bound:\n", 
+            String upperBoundStr = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Upper bound:\n",
                     "Adding an interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
 
             try {
@@ -157,7 +158,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
             OntologyTerm chosenTerm = chosenEnumNode.getOntologyTerm();
             
             if (!(chosenTerm instanceof org.janelia.model.domain.ontology.Enum)) {
-                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "You must choosen an enumeration", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "You must choosen an enumeration", "Error", JOptionPane.ERROR_MESSAGE);
             }
 
             try {

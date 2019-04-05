@@ -15,6 +15,7 @@ import javax.swing.JPanel;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -333,7 +334,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 logger.info("instantiating AnnotationModel");
                 annotationModel = new AnnotationModel(sliceSample, currentWorkspace);
                 Events.getInstance().registerOnEventBus(annotationModel);
-                viewUI =  QuadViewUiProvider.createQuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);
+                viewUI =  QuadViewUiProvider.createQuadViewUi(FrameworkImplProvider.getMainFrame(), initialObject, false, annotationModel);
             }
             
             removeAll();

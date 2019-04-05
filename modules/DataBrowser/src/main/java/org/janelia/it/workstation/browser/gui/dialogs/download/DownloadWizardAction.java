@@ -124,7 +124,7 @@ public final class DownloadWizardAction implements ActionListener {
 
     private void findDownloadObjects() {
         
-        UIUtils.setWaitingCursor(ConsoleApp.getMainFrame());
+        UIUtils.setWaitingCursor(FrameworkImplProvider.getMainFrame());
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -185,7 +185,7 @@ public final class DownloadWizardAction implements ActionListener {
 
             @Override
             protected void hadSuccess() {
-                UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
+                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
                 if (!isCancelled()) {
                     showWizard();
                 }
@@ -193,12 +193,12 @@ public final class DownloadWizardAction implements ActionListener {
 
             @Override
             protected void hadError(Throwable error) {
-                UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
+                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
                 ConsoleApp.handleException(error);
             }
         };
 
-        ProgressMonitor monitor = new ProgressMonitor(ConsoleApp.getMainFrame(), "Finding files for download...", "", 0, 100);
+        ProgressMonitor monitor = new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Finding files for download...", "", 0, 100);
         monitor.setMillisToDecideToPopup(0);
         monitor.setMillisToPopup(0);
         worker.setProgressMonitor(monitor);
@@ -510,7 +510,7 @@ public final class DownloadWizardAction implements ActionListener {
                         
                     }
                     else {
-                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "There are no downloads to start.", "Nothing to do", JOptionPane.PLAIN_MESSAGE);
+                        JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "There are no downloads to start.", "Nothing to do", JOptionPane.PLAIN_MESSAGE);
                     }
                 }
             }
@@ -522,7 +522,7 @@ public final class DownloadWizardAction implements ActionListener {
             
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Verifying files", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Verifying files", "", 0, 100));
         worker.execute();
         
     }
@@ -579,7 +579,7 @@ public final class DownloadWizardAction implements ActionListener {
             
             String[] options = { "Open Folder", "Run Download", "Ignore" };
             chosenOptionIndex = JOptionPane.showOptionDialog(
-                    ConsoleApp.getMainFrame(),
+                    FrameworkImplProvider.getMainFrame(),
                     questionPanel,
                     "File Previously Downloaded",
                     JOptionPane.YES_NO_OPTION,
@@ -602,7 +602,7 @@ public final class DownloadWizardAction implements ActionListener {
         if (chosenOptionIndex == 0) {
             if (numBrowseFileAttempts == MAX_BROWSE_FILES) {
                 log.info("Reached max number of file browses for this download context: {}", numBrowseFileAttempts);
-                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                         "Maximum number of folders have been opened. Further folders will not be opened for this file set.", "Open Folder", JOptionPane.WARNING_MESSAGE);
             }
             else if (numBrowseFileAttempts < MAX_BROWSE_FILES) {

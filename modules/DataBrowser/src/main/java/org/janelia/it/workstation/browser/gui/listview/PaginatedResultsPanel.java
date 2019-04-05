@@ -27,6 +27,7 @@ import javax.swing.ProgressMonitor;
 import javax.swing.UIManager;
 import javax.swing.text.Position;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.events.Events;
@@ -322,7 +323,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     private void loadAndSelectAll() {
         
         if (!searchResults.isAllLoaded()) {
-            int rv = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), 
+            int rv = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(),
                     "Load all "+searchResults.getNumTotalResults()+" results?",
                     "Load all?", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
             if (rv == JOptionPane.YES_OPTION) {
@@ -346,14 +347,14 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                     }
                 };
 
-                worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Loading result pages...", "", 0, 100));
+                worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Loading result pages...", "", 0, 100));
                 worker.execute();
             }
         }
         else {
-            UIUtils.setWaitingCursor(ConsoleApp.getMainFrame());
+            UIUtils.setWaitingCursor(FrameworkImplProvider.getMainFrame());
             selectAll();
-            UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
+            UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
         }
     }
     
@@ -628,7 +629,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
         params.put("bias", bias);
         params.put("skipStartingNode", skipStartingNode);
 
-        UIUtils.setWaitingCursor(ConsoleApp.getMainFrame());
+        UIUtils.setWaitingCursor(FrameworkImplProvider.getMainFrame());
         if (!matchDebouncer.queueWithParameters(success, params)) {
             return;
         }
@@ -694,7 +695,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
             @Override
             protected void hadSuccess() {
-                UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
+                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
                 if (match != null) {
                     log.info("Found match for '{}': {}", text, match);
                     if (matchPage!=null && matchPage!=currPage) {
@@ -723,7 +724,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
             @Override
             protected void hadError(Throwable error) {
-                UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
+                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
                 matchDebouncer.failure();
                 ConsoleApp.handleException(error);
             }

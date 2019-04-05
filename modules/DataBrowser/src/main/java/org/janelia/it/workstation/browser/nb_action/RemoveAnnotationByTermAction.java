@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.swing.ProgressMonitor;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -120,7 +121,7 @@ public class RemoveAnnotationByTermAction extends NodeAction {
         };
         
 
-        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Deleting Annotations", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Deleting Annotations", "", 0, 100));
         worker.execute();
     }
 }

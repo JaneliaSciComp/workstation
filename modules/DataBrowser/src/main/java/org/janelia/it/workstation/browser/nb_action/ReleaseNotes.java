@@ -1,15 +1,14 @@
 package org.janelia.it.workstation.browser.nb_action;
 
-import java.awt.event.ActionEvent;
-
-import javax.swing.AbstractAction;
-
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.lifecycle.ShowingHook;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
 
 @ActionID(
         category = "Help",
@@ -26,7 +25,7 @@ public final class ReleaseNotes extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        ConsoleApp.getConsoleApp().getReleaseNotesDialog().showCurrentReleaseNotes();
+        ShowingHook.getReleaseNotesDialog().showCurrentReleaseNotes();
     }
 
 }

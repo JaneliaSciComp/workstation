@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.web.EmbeddedWebServer;
@@ -136,7 +137,7 @@ public class ServiceMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg);
+                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), msg);
                 }
             });
         }

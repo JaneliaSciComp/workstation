@@ -302,10 +302,10 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     @Override
                     protected void hadSuccess() {
                         if (sample==null) {
-                            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "This neuron fragment is orphaned and its sample cannot be loaded.", "Sample data missing", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "This neuron fragment is orphaned and its sample cannot be loaded.", "Sample data missing", JOptionPane.ERROR_MESSAGE);
                         }
                         else if (result==null) {
-                            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
                         }
                         else {
                             viewer.requestActive();
@@ -526,7 +526,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                 ActivityLogHelper.logUserAction("DomainObjectContentMenu.purgeAndBlock", domainObject);
 
-                int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(),
+                int result = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(),
                         "Are you sure you want to purge " + samples.size() + " sample(s) " +
                                 "by deleting all large files associated with them, and block all future processing?",
                         "Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);

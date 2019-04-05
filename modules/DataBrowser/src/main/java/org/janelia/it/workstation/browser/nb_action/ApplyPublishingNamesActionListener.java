@@ -77,7 +77,7 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
     public void actionPerformed(ActionEvent e) {
 
         if (samples==null || samples.isEmpty()) {
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                     "In order to annotate the published line name, first select some Samples.");
             return;
         }

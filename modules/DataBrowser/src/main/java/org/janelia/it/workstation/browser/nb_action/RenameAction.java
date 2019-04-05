@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -72,7 +73,7 @@ public final class RenameAction extends NodeAction {
     protected void performAction (Node[] activatedNodes) {
         DomainObjectNode<DomainObject> domainObjectNode = toRename.get(0);
         DomainObject domainObject = domainObjectNode.getDomainObject();
-        String newName = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Name:\n", "Rename "
+        String newName = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Name:\n", "Rename "
                 + domainObject.getName(), JOptionPane.PLAIN_MESSAGE, null, null, domainObject.getName());
         if ((newName == null) || (newName.length() <= 0)) {
             return;

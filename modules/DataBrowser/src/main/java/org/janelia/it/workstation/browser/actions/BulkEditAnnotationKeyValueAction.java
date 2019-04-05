@@ -6,6 +6,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.ProgressMonitor;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -99,7 +100,7 @@ public class BulkEditAnnotationKeyValueAction extends AbstractAction {
             }
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Editing Annotations", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Editing Annotations", "", 0, 100));
         worker.execute();
     }
 }

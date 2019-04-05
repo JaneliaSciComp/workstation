@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -125,7 +126,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
     }
 
     private void showSelectionMessage() {
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                     "Select some items to bulk-edit permissions", "Error", JOptionPane.ERROR_MESSAGE);
     }
     public void showForSelectedDomainObjects() {
@@ -173,7 +174,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
 
     private void saveAndClose() {
         
-        UIUtils.setWaitingCursor(ConsoleApp.getMainFrame());
+        UIUtils.setWaitingCursor(FrameworkImplProvider.getMainFrame());
 
         final Subject subject = (Subject) subjectCombobox.getSelectedItem();
         boolean read = readCheckbox.isSelected();
@@ -201,18 +202,18 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
-                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
+                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                         "Modified permissions for "+numAnnotationsModified+" annotations on "+selected.size()+" items", "Shared", JOptionPane.INFORMATION_MESSAGE);
             }
 
             @Override
             protected void hadError(Throwable error) {
                 ConsoleApp.handleException(error);
-                UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
+                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
             }
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Changing permissions...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Changing permissions...", ""));
         worker.execute();
 
         setVisible(false);

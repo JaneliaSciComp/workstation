@@ -21,6 +21,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -184,7 +185,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
                     }
                 };
 
-                worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Adding annotations", "", 0, 100));
+                worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Adding annotations", "", 0, 100));
                 worker.execute();
             }
         });

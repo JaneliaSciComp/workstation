@@ -67,7 +67,7 @@ public final class SetPublishingNameActionListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
 
         if (samples==null || samples.isEmpty()) {
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                     "In order to annotate the published line name, first select some Samples.");
             return;
         }
@@ -81,7 +81,7 @@ public final class SetPublishingNameActionListener implements ActionListener {
                     consensusLine = sample.getLine();
                 }
                 else if (!consensusLine.equals(sample.getLine())) {
-                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                             "In order to annotate the published line name for multiple Samples, "
                             + "they must all share the same line name.");
                     return;
@@ -90,7 +90,7 @@ public final class SetPublishingNameActionListener implements ActionListener {
             
 
             if (consensusLine==null) {
-                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                         "Selected samples have no associated line information", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }

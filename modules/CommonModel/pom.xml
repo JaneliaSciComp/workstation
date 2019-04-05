@@ -29,6 +29,53 @@
             <artifactId>integration</artifactId>
         </dependency>
 
+        <!-- Jars from Workstation Maven Repo -->
+        <dependency>
+            <groupId>org.janelia.legacy</groupId>
+            <artifactId>compute-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.janelia.legacy</groupId>
+            <artifactId>model</artifactId>
+        </dependency>
+
+        <!-- NetBeans Modules -->
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-autoupdate-services</artifactId>
+        </dependency>
+
+        <!-- Maven Central dependencies -->
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-webdav</artifactId>
+            <version>2.5.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.axis2</groupId>
+            <artifactId>axis2</artifactId>
+            <version>1.5.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ws.commons.axiom</groupId>
+            <artifactId>axiom-api</artifactId>
+            <version>1.2.11</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ws.commons.axiom</groupId>
+            <artifactId>axiom-impl</artifactId>
+            <version>1.2.11</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -38,7 +85,39 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <configuration>
                     <publicPackages>
+                        <publicPackage>org.janelia.it.workstation.browser</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.activity_logging</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.exceptions</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.facade.impl.ejb</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.facade.impl.rest</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.facade.interfaces</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.http</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.lifecycle</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.services</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.state</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.web</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.events</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.events.lifecycle</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.events.model</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.events.prefs</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.events.selection</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.events.workers</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.filecache</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.lifecycle</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.logging</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.model</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.model.descriptors</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.model.keybind</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.model.search</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.tools</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.tools.preferences</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.util</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.util.compression</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.web</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.workers</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.ws</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.gui.framework.console</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

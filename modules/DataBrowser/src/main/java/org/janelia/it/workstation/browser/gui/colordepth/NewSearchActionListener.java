@@ -9,7 +9,6 @@ import javax.swing.JOptionPane;
 
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -66,7 +65,7 @@ public final class NewSearchActionListener implements ActionListener {
 
                 String defaultName = ClientDomainUtils.getNextNumberedName(searches, alignmentSpace+" Search", true);
                 
-                String name = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Search Name:\n", 
+                String name = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Search Name:\n",
                         "", JOptionPane.PLAIN_MESSAGE, null, null, defaultName);
                 if (StringUtils.isEmpty(name)) return;
                         
@@ -93,7 +92,7 @@ public final class NewSearchActionListener implements ActionListener {
                     }
                 };
 
-                worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Creating search", ""));
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Creating search", ""));
                 worker.execute();
             }
 
@@ -103,7 +102,7 @@ public final class NewSearchActionListener implements ActionListener {
             }
         };
 
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Fetching alignment spaces", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Fetching alignment spaces", ""));
         worker.execute();
     }
 }

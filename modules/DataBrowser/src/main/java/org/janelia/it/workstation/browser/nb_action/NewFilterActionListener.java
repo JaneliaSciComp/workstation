@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -64,7 +65,7 @@ public final class NewFilterActionListener implements ActionListener {
         }
 
         // Since we're putting the filter under a parent, we need the name up front
-        final String name = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(),
+        final String name = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(),
                 "Filter Name:\n", "Create new filter", JOptionPane.PLAIN_MESSAGE, null, null, null);
         if (StringUtils.isEmpty(name)) {
             return;

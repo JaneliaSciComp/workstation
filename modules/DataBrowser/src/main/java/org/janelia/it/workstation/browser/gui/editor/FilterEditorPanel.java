@@ -187,7 +187,7 @@ public class FilterEditorPanel
                 String name = filter.getName().equals(DEFAULT_FILTER_NAME)?null:filter.getName();
                 String newName = null;
                 while (StringUtils.isEmpty(newName)) {
-                    newName = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(),
+                    newName = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(),
                             "Search Name:\n", "Save Search", JOptionPane.PLAIN_MESSAGE, null, null, name);
                     log.info("newName:" + newName);
                     if (newName == null) {
@@ -195,7 +195,7 @@ public class FilterEditorPanel
                         return;
                     }
                     if (StringUtils.isBlank(newName)) {
-                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Filter name cannot be blank");
+                        JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Filter name cannot be blank");
                         return;
                     }
                 }
@@ -959,7 +959,7 @@ public class FilterEditorPanel
             }
         };
 
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Loading...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Loading...", ""));
         worker.execute();
     }
 

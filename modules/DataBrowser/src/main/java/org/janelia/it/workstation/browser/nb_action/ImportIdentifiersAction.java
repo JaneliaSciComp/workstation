@@ -13,6 +13,7 @@ import javax.swing.UIManager;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrDocument;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
 import org.janelia.it.jacs.shared.solr.SolrParams;
 import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
@@ -163,7 +164,7 @@ public final class ImportIdentifiersAction extends CallableSystemAction {
             }
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Searching for identifiers...", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Searching for identifiers...", "", 0, 100));
         worker.execute();
         
         

@@ -6,8 +6,8 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.hibernate.exception.ExceptionUtils;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.system.ErrorHandler;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.browser.logging.CustomLoggingLevel;
 import org.openide.util.lookup.ServiceProvider;
@@ -37,7 +37,7 @@ public class ConsoleErrorHandler implements ErrorHandler {
             
             handleExceptionQuietly(message, t);
             SwingUtilities.invokeLater(() -> {
-                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                         "<html>The server is currently unreachable. There may be a <br>"
                         + "network issue, or the system may be down for maintenance.</html>", 
                         "Network error", JOptionPane.ERROR_MESSAGE);

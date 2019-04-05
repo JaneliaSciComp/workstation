@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.gui.dialogs;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -231,7 +232,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
         loadReleases();
 
-        Component mainFrame = ConsoleApp.getMainFrame();
+        Component mainFrame = FrameworkImplProvider.getMainFrame();
         setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.4)));
 
         ActivityLogHelper.logUserAction("LineReleaseListDialog.showDialog");

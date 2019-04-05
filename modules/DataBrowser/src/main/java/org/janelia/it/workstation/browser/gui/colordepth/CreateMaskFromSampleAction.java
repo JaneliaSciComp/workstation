@@ -2,7 +2,6 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
-import java.net.URL;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -62,7 +61,7 @@ public class CreateMaskFromSampleAction extends AbstractAction {
         
         if (!(fileProvider instanceof SampleAlignmentResult)) {
             
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                     "Must select an aligned image", 
                     "Image not aligned", JOptionPane.ERROR_MESSAGE);
             
@@ -74,7 +73,7 @@ public class CreateMaskFromSampleAction extends AbstractAction {
         log.debug("imagePath: "+imagePath);
         
         if (imagePath==null) {
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                     "No image selected", 
                     "No image", JOptionPane.ERROR_MESSAGE);
             return;

@@ -1,12 +1,5 @@
 package org.janelia.it.workstation.browser.api;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.locks.ReentrantLock;
-
-import javax.swing.SwingUtilities;
-
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -18,8 +11,7 @@ import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.LoginEvent;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionEndEvent;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
-import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
-import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog.ErrorType;
+import org.janelia.it.workstation.browser.model.ErrorType;
 import org.janelia.it.workstation.browser.util.SimpleJwtParser;
 import org.janelia.model.domain.enums.SubjectRole;
 import org.janelia.model.security.AppAuthorization;
@@ -28,6 +20,11 @@ import org.janelia.model.security.User;
 import org.janelia.model.security.util.SubjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Manages the access credentials and current privileges. Takes care of logging in users during start-up, and 
@@ -185,18 +182,13 @@ public final class AccessManager {
             }
         }
     }
-    
-    /**
-     * Should be called when the application is first displayed. If there were login
-     * issues at startup, this will attempt to resolve them by showing the login 
-     * dialog with an appropriate error message. 
-     */
-    public void resolveLoginIssue() {
-        if (hadLoginIssue) {
-            SwingUtilities.invokeLater(() -> {
-                LoginDialog.getInstance().showDialog(loginIssue);
-            });
-        }
+
+    public boolean hadLoginIssue() {
+        return hadLoginIssue;
+    }
+
+    public ErrorType getLoginIssue() {
+        return loginIssue;
     }
 
     /**
@@ -242,16 +234,7 @@ public final class AccessManager {
             return false;
         }
     }
-    
-    /**
-     * This method can be called when the user requests a login dialog to be shown.
-     */
-    public void userRequestedLoginDialog() {
-        SwingUtilities.invokeLater(() -> {
-            LoginDialog.getInstance().showDialog();
-        });
-    }
-    
+
     public boolean loginUser(String username, String password) {
 
         // Keep these in memory for token refreshes, because user may not want to persist the password

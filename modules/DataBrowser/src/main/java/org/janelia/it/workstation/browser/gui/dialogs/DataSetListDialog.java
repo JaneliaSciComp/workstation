@@ -281,7 +281,7 @@ public class DataSetListDialog extends ModalDialog {
     public void showDialog() {
         loadDataSets();
 
-        Component mainFrame = ConsoleApp.getMainFrame();
+        Component mainFrame = FrameworkImplProvider.getMainFrame();
         setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.5), (int) (mainFrame.getHeight() * 0.4)));
 
         ActivityLogHelper.logUserAction("DataSetListDialog.showDialog");

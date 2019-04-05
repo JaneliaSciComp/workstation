@@ -289,7 +289,7 @@ public class ToolMgr extends PreferenceManager {
     public boolean removeTool(ToolInfo targetTool) throws Exception {
         String tmpName = targetTool.getName();
         if(isSystemTool(tmpName)) {
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                     "Cannot remove a system tool", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -318,7 +318,7 @@ public class ToolMgr extends PreferenceManager {
 
         if (tool==null || null == tool.getPath() || "".equals(tool.getPath())) {
             log.error("Cannot find tool "+toolName+" in map: "+toolTreeMap.keySet());
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                     "'"+toolName+"' is not configured. Please set a path for this tool in "+SystemInfo.optionsMenuName+".", "Error", JOptionPane.ERROR_MESSAGE);
             OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
             return null;
@@ -342,7 +342,7 @@ public class ToolMgr extends PreferenceManager {
         catch (Exception e1) {
             log.error("Could launch tool: "+toolName,e1);
             JOptionPane.showMessageDialog(
-                    ConsoleApp.getMainFrame(),
+                    FrameworkImplProvider.getMainFrame(),
                     "Could not launch this tool. "
                     + "Please choose the appropriate file path from the Tools->Configure Tools area",
                     "ToolInfo Launch ERROR",
@@ -395,13 +395,13 @@ public class ToolMgr extends PreferenceManager {
             if (!exeFile.exists()) {
                 String msg = "Tool " + toolName + " (" + exeFile.getAbsolutePath() + ") does not exist.";
                 log.error(msg);
-                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             } 
             else if (!exeFile.canExecute()) {
                 String msg = "Tool " + toolName + " (" + exeFile.getAbsolutePath() + ") cannot be executed.";
                 log.error(msg);
-                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
@@ -459,7 +459,7 @@ public class ToolMgr extends PreferenceManager {
             if (p.waitFor(100, TimeUnit.MILLISECONDS)) {
                 // Process terminated immediately, check the exit code
                 if (p.exitValue()!=0) {
-                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                         "'"+toolName+"' could not start. Please check your configuration.", "Error", JOptionPane.ERROR_MESSAGE);
                     OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
                 }
@@ -479,7 +479,7 @@ public class ToolMgr extends PreferenceManager {
                 
                 if (file==null) {
                     log.error("Could not open file path "+standardFilepath);
-                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                             "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }

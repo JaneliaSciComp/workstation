@@ -10,6 +10,7 @@ import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 import javax.swing.filechooser.FileFilter;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -74,7 +75,7 @@ public class ExportResultsAction<T,S> extends AbstractAction {
             }
         });
 
-        if (chooser.showDialog(ConsoleApp.getMainFrame(), "OK") == FileChooser.CANCEL_OPTION) {
+        if (chooser.showDialog(FrameworkImplProvider.getMainFrame(), "OK") == FileChooser.CANCEL_OPTION) {
             return;
         }
 
@@ -92,7 +93,7 @@ public class ExportResultsAction<T,S> extends AbstractAction {
 
             @Override
             protected void hadSuccess() {
-                int rv = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), "Data was successfully exported to " + destFile + ". Open file in default viewer?",
+                int rv = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(), "Data was successfully exported to " + destFile + ". Open file in default viewer?",
                         "Export successful", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
                 if (rv == JOptionPane.YES_OPTION) {
                     OpenWithDefaultAppAction openAction = new OpenWithDefaultAppAction(destFile);
@@ -106,7 +107,7 @@ public class ExportResultsAction<T,S> extends AbstractAction {
             }
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Exporting data", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Exporting data", "", 0, 100));
         worker.execute();
     }
     

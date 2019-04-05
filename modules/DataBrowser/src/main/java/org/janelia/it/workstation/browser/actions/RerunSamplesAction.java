@@ -18,8 +18,8 @@ import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.ProgressMonitor;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
@@ -107,7 +107,7 @@ public class RerunSamplesAction extends AbstractAction {
     public void actionPerformed(ActionEvent event) {
         
         if (samples.size() > MAX_SAMPLE_RERUN_COUNT && !AccessManager.authenticatedSubjectIsInGroup(SubjectRole.Admin)) {
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                     "You cannot submit more than "+MAX_SAMPLE_RERUN_COUNT+" samples for reprocessing at a time.",
                     "Too many samples selected", 
                     JOptionPane.ERROR_MESSAGE);
@@ -134,7 +134,7 @@ public class RerunSamplesAction extends AbstractAction {
         if (!dialog.showDialog()) return;
         
         if (numBlocked>0) {
-            int result2 = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), "You have selected "+numBlocked+" blocked samples for reprocessing. Continue with unblocking and reprocessing?",
+            int result2 = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(), "You have selected "+numBlocked+" blocked samples for reprocessing. Continue with unblocking and reprocessing?",
                     "Blocked Samples Selected", JOptionPane.OK_CANCEL_OPTION);
             if (result2 != 0) return;
         }
@@ -175,7 +175,7 @@ public class RerunSamplesAction extends AbstractAction {
             }
             
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Marking samples for reprocessing", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Marking samples for reprocessing", ""));
         worker.execute();
     }
     

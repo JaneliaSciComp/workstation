@@ -8,8 +8,6 @@ import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.api.lifecycle.GracefulBrick;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
-import org.janelia.it.workstation.browser.gui.dialogs.ReleaseNotesDialog;
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.ImageCache;
 import org.janelia.it.workstation.browser.util.SystemInfo;
@@ -18,7 +16,6 @@ import org.openide.modules.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.io.File;
 import java.security.ProtectionDomain;
 
@@ -48,9 +45,7 @@ public class ConsoleApp {
     private final String remoteHostname;
     private final String remoteRestUrl;
     private final ImageCache imageCache;
-    
-    // Lazily initialized
-    private ReleaseNotesDialog releaseNotesDialog;
+
     
     public ConsoleApp() {
 
@@ -124,15 +119,6 @@ public class ConsoleApp {
             catch (Exception e) {
                 FrameworkImplProvider.handleException(e);
             }
-            
-            // Things that can be lazily initialized 
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    releaseNotesDialog = new ReleaseNotesDialog();
-                    releaseNotesDialog.showIfFirstRunSinceUpdate();
-                }
-            });
         }
         catch (Throwable e) {
             ConsoleApp.handleException(e);
@@ -196,19 +182,6 @@ public class ConsoleApp {
         }
     }
 
-    private static JFrame mainFrame;
-    public static JFrame getMainFrame() {
-        if (mainFrame == null) {
-            try {
-                mainFrame = WindowLocator.getMainFrame();
-            }
-            catch (Exception ex) {
-                ConsoleApp.handleException(ex);
-            }
-        }
-        return mainFrame;
-    }
-    
     public String getApplicationName() {
         return SystemInfo.appName;
     }
@@ -231,10 +204,6 @@ public class ConsoleApp {
     
     public ImageCache getImageCache() {
         return imageCache;
-    }
-    
-    public ReleaseNotesDialog getReleaseNotesDialog() {
-        return releaseNotesDialog;
     }
     
     @Subscribe

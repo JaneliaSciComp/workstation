@@ -6,6 +6,7 @@ import java.io.File;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
@@ -47,12 +48,12 @@ public class OpenWithDefaultAppAction extends AbstractAction {
                 @Override
                 public void call(File file) throws Exception {
                     if (file == null) {
-                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                        JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                                 "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                     else {
                         if (!DesktopApi.open(file)) {
-                            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                                     "Error opening file path", "Error", JOptionPane.ERROR_MESSAGE);
                         }
                     }

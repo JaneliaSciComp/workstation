@@ -88,7 +88,7 @@ public final class NewMaskActionListener implements ActionListener {
                 }
             };
 
-            worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Uploading mask", ""));
+            worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Uploading mask", ""));
             worker.execute();
         }
     }

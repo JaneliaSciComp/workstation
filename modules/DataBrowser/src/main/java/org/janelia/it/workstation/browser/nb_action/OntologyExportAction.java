@@ -14,6 +14,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.filechooser.FileFilter;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.support.YamlFileFilter;
@@ -75,7 +76,7 @@ public class OntologyExportAction extends NodePresenterAction   {
         fc.setFileFilter(ff);
         fc.setSelectedFile(new File(defaultSaveFilename));
         
-        int returnVal = fc.showSaveDialog(ConsoleApp.getMainFrame());
+        int returnVal = fc.showSaveDialog(FrameworkImplProvider.getMainFrame());
         if (returnVal != JFileChooser.APPROVE_OPTION) {
             return;
         }

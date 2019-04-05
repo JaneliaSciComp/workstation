@@ -8,10 +8,10 @@ package org.janelia.it.workstation.gui.passive_3d;
 
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
@@ -247,7 +247,7 @@ public class Snapshot3DLauncher {
     private void makeAndLaunch(final String frameTitle, MonitoredVolumeSource collector, final String labelText) {
         Snapshot3d snapshotViewer = Snapshot3d.getInstance();
         IndeterminateNoteProgressMonitor monitor =
-                new IndeterminateNoteProgressMonitor(ConsoleApp.getMainFrame(), frameTitle, collector.getInfo());
+                new IndeterminateNoteProgressMonitor(FrameworkImplProvider.getMainFrame(), frameTitle, collector.getInfo());
         snapshotViewer.setLoadProgressMonitor( monitor );
         establishColorControls( snapshotViewer );
         snapshotViewer.setLabelText( labelText );

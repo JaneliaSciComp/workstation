@@ -11,6 +11,7 @@ import java.util.TreeMap;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.Events;
@@ -95,7 +96,7 @@ public class LocalPreferenceMgr {
     private void readSettingsFile() {
         try {
             if (!settingsFile.canRead()) {
-                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Settings file cannot be opened.  " + "Settings were not read and recovered.", "ERROR!", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Settings file cannot be opened.  " + "Settings were not read and recovered.", "ERROR!", JOptionPane.ERROR_MESSAGE);
                 boolean success = settingsFile.renameTo(new File(prefsFile + ".old"));
                 if (success) {
                     log.info("Moved the unreadable settings file to "+settingsFile.getAbsolutePath());
@@ -109,7 +110,7 @@ public class LocalPreferenceMgr {
                     }
                     catch (Exception ex) {
                         log.info("Error reading settings ",ex);
-                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Settings were not recovered into the session.", "ERROR!", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Settings were not recovered into the session.", "ERROR!", JOptionPane.ERROR_MESSAGE);
                         File oldFile = new File(prefsFile + ".old");
                         boolean deleteSuccess = oldFile.delete();
                         if (!deleteSuccess) {

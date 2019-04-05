@@ -11,8 +11,6 @@ import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationOpening;
 import org.janelia.it.workstation.browser.logging.LogFormatter;
 import org.janelia.it.workstation.browser.logging.NBExceptionHandler;
-import org.janelia.it.workstation.browser.nb_action.NavigateBack;
-import org.janelia.it.workstation.browser.nb_action.NavigateForward;
 import org.janelia.it.workstation.browser.util.BrandingConfig;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.openide.modules.OnStart;
@@ -120,10 +118,6 @@ public class Startup implements Runnable {
         };
 
         worker.execute();
-
-        // Disable the navigation actions until there is some history to navigate
-        CallableSystemAction.get(NavigateBack.class).setEnabled(false);
-        CallableSystemAction.get(NavigateForward.class).setEnabled(false);
 
         // Notify listeners that the application is opening
         Events.getInstance().postOnEventBus(new ApplicationOpening());

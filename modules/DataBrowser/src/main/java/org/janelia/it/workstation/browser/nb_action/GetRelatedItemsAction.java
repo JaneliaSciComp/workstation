@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -18,7 +17,6 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
@@ -56,7 +54,7 @@ public class GetRelatedItemsAction extends NodePresenterAction {
 
     private final static String LATEST = "Latest";
     
-    protected final Component mainFrame = ConsoleApp.getMainFrame();
+    protected final Component mainFrame = FrameworkImplProvider.getMainFrame();
 
     private final static GetRelatedItemsAction singleton = new GetRelatedItemsAction();
     public static GetRelatedItemsAction get() {
@@ -253,7 +251,7 @@ public class GetRelatedItemsAction extends NodePresenterAction {
             @Override
             protected void hadSuccess() {
                 if (treeNode==null) {
-                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "This folder no longer exists.", "Folder no longer exists", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "This folder no longer exists.", "Folder no longer exists", JOptionPane.ERROR_MESSAGE);
                 }
                 else {
                     addUniqueItemsToFolder(treeNode, idPath, targetType);
@@ -308,7 +306,7 @@ public class GetRelatedItemsAction extends NodePresenterAction {
                         message = existing + " items are already in the target folder. "+(domainObjects.size()-existing)+" item(s) will be added.";
                     }
 
-                    int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), 
+                    int result = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(),
                             message, "Items already present", JOptionPane.OK_CANCEL_OPTION);
                     if (result != 0) {
                         return;
