@@ -1,8 +1,8 @@
-// 7.28
+// 8.0
   
-Data Browser
-* Names of downloaded files no longer contain "BJD" or "GMR" prefixes
-* Fixed error reporting to work with new JIRA system
+In this release, the Workstation has been refactored to allow for open source distribution. The source code is
+now available on GitHub at https://github.com/JaneliaSciComp/workstation
 
-Large Volume Viewer
-* Moved active tracer group to top of list in change ownership dialog
+MouseLight Tools
+* Both Horta and LVV were modified to pull data primarily from the Jade storage service, eliminating the previous
+  dependency on internal Samba drive mounts.

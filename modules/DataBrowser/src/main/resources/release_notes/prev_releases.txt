@@ -1,3 +1,12 @@
+// 7.28
+
+Data Browser
+* Names of downloaded files no longer contain "BJD" or "GMR" prefixes
+* Fixed error reporting to work with new JIRA system
+
+Large Volume Viewer
+* Moved active tracer group to top of list in change ownership dialog
+
 // 7.27
   
 Data Browser
