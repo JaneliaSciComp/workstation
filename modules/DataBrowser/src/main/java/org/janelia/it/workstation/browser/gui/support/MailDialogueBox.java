@@ -10,10 +10,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import org.janelia.it.jacs.shared.utils.MailHelper;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.util.MailHelper;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.openide.modules.Places;
 import org.slf4j.Logger;
@@ -125,5 +126,9 @@ public class MailDialogueBox {
         
         MailHelper helper = new MailHelper();
         helper.sendEmail(fromEmail, toEmail, subject, body.toString(), logfile, filename);
+
+        JOptionPane.showMessageDialog(
+                FrameworkImplProvider.getMainFrame(), "Bug was reported successfully", "Success",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 }

@@ -57,8 +57,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
 
     // email address from which automated reports to the issue tracker will originate;
     //  this address has an account in JIRA that has right permissions to create tickets
-    public static final String REPORT_EMAIL = "jira-default@janelia.hhmi.org";
-
+    public static final String REPORT_EMAIL = ConsoleProperties.getString("console.FromEmail");
 
     private final HashFunction hf = Hashing.md5();
     
