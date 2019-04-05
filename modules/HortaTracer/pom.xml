@@ -53,6 +53,18 @@
             <artifactId>geometry3d</artifactId>
         </dependency>
 
+        <!-- CommonGUI -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>common-gui</artifactId>
+        </dependency>
+
+        <!-- CommonModel -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>common-model</artifactId>
+        </dependency>
+
         <!-- Workstation Browser --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>

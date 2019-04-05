@@ -29,7 +29,6 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -37,7 +36,6 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
@@ -45,7 +43,7 @@ import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.support.ComboMembershipListPanel;
 import org.janelia.it.workstation.browser.gui.support.DataSetComboBoxRenderer;
 import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
-import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.model.access.domain.DomainUtils;
@@ -242,7 +240,7 @@ public class LineReleaseDialog extends ModalDialog {
 
         attrPanel.add(bottomPanel, "span 2");
 
-        Utils.setWaitingCursor(LineReleaseDialog.this);
+        UIUtils.setWaitingCursor(LineReleaseDialog.this);
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -338,13 +336,13 @@ public class LineReleaseDialog extends ModalDialog {
                     lagTimeInput.setText("");
                 }
 
-                Utils.setDefaultCursor(LineReleaseDialog.this);
+                UIUtils.setDefaultCursor(LineReleaseDialog.this);
                 pack();
             }
 
             @Override
             protected void hadError(Throwable error) {
-                Utils.setDefaultCursor(LineReleaseDialog.this);
+                UIUtils.setDefaultCursor(LineReleaseDialog.this);
                 ConsoleApp.handleException(error);
             }
         };
@@ -369,7 +367,7 @@ public class LineReleaseDialog extends ModalDialog {
     
     private void saveSyncAndClose(final boolean forceSync) {
 
-        Utils.setWaitingCursor(LineReleaseDialog.this);
+        UIUtils.setWaitingCursor(LineReleaseDialog.this);
         
         final boolean autoRelease = autoReleaseCheckbox.isSelected();
         
@@ -449,14 +447,14 @@ public class LineReleaseDialog extends ModalDialog {
             @Override
             protected void hadSuccess() {
                 parentDialog.refresh();
-                Utils.setDefaultCursor(LineReleaseDialog.this);
+                UIUtils.setDefaultCursor(LineReleaseDialog.this);
                 setVisible(false);
             }
 
             @Override
             protected void hadError(Throwable error) {
                 ConsoleApp.handleException(error);
-                Utils.setDefaultCursor(LineReleaseDialog.this);
+                UIUtils.setDefaultCursor(LineReleaseDialog.this);
                 setVisible(false);
             }
         };

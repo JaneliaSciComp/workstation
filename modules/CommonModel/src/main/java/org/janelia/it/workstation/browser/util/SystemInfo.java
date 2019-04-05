@@ -1,17 +1,10 @@
 package org.janelia.it.workstation.browser.util;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.openide.modules.InstalledFileLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
 
 /**
  * Adapted from IDEA code base.
@@ -21,11 +14,6 @@ import org.slf4j.LoggerFactory;
 public class SystemInfo {
 
     private static final Logger log = LoggerFactory.getLogger(SystemInfo.class);
-
-//    private static final String NETBEANS_IDE_SETTING_NAME_PREFIX = "netbeans_";
-//    public static final String MEMORY_SETTING_PREFIX = "-J-Xmx";
-//    public static final String DEFAULT_OPTIONS_PROP = "default_options";
-//    public static final String ETC_SUBPATH = "etc";
 
     public static final String OS_NAME = System.getProperty("os.name");
     public static final String OS_VERSION = System.getProperty("os.version");
@@ -147,37 +135,6 @@ public class SystemInfo {
         // Windows and Linux
         return cp.substring(0,cp.indexOf("JaneliaWorkstation")+"JaneliaWorkstation".length());
     }
-    
-    public static void setDownloadsDir(String downloadsDir) {
-        FrameworkImplProvider.setModelProperty(OptionConstants.FILE_DOWNLOADS_DIR, downloadsDir);
-    }
-
-    public static Path getDownloadsDir() {
-        
-        String fileDownloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.FILE_DOWNLOADS_DIR);
-        
-        Path fileDownloadsPath;
-        // Check for existence and clear out references to tmp
-        if (fileDownloadsDir==null || fileDownloadsDir.startsWith("/tmp")) {
-            Path downloadDir = Paths.get(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_DIR);
-            fileDownloadsPath = downloadDir.resolve(WORKSTATION_FILES_DIR);
-        }
-        else {
-            fileDownloadsPath = Paths.get(fileDownloadsDir);
-        }
-        
-        try {
-            if (!Files.exists(fileDownloadsPath)) {
-                Files.createDirectories(fileDownloadsPath);
-                log.debug("Created download dir: "+fileDownloadsPath.toString());
-            }
-        }
-        catch (Exception e) {
-            log.error("Error trying to test and create a download directory", e);
-        }
-        
-        return fileDownloadsPath;
-    }
 
     private static com.sun.management.OperatingSystemMXBean getOSMXBean() {
         java.lang.management.OperatingSystemMXBean mxbean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
@@ -203,23 +160,6 @@ public class SystemInfo {
             log.error("Could not retrieve total system memory",e);
             return null;
         }
-    }
-
-    /**
-     * Gets the -Xmx setting in current use.
-     *  
-     * @return gigs being requested at launch.
-     */
-    public static Integer getMemoryAllocation() throws IOException {
-        return BrandingConfig.getBrandingConfig().getMemoryAllocationGB();
-    }
-
-    /**
-     * Sets the ultimate -Xmx allocation setting.
-     * @param memoryInGb how many gigs to use.
-     */
-    public static void setMemoryAllocation(Integer memoryInGb) throws IOException {
-        BrandingConfig.getBrandingConfig().setMemoryAllocationGB(memoryInGb);
     }
 
     public static String getOSInfo() {

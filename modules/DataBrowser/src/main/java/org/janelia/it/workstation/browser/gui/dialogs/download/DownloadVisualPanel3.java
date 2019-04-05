@@ -32,7 +32,6 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
-import javax.swing.ProgressMonitor;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.Progress;
@@ -40,8 +39,8 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
-import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.ChanSpecUtils;
@@ -155,13 +154,13 @@ public final class DownloadVisualPanel3 extends JPanel {
         downloadItemCountLabel = new JLabel();
         attrPanel.addItem("File count", downloadItemCountLabel);
         
-        Path workstationImagesDir = SystemInfo.getDownloadsDir();
+        Path workstationImagesDir = Utils.getDownloadsDir();
         JLabel downloadDirLabel = new JLabel(workstationImagesDir.toString());
         
         String chooseFileText = null;
         ImageIcon chooseFileIcon = null;
         try {
-            chooseFileIcon = Utils.getClasspathImage("magnifier.png");
+            chooseFileIcon = UIUtils.getClasspathImage("magnifier.png");
         } 
         catch (FileNotFoundException e) {
             log.warn("Failed to load button icon", e);
@@ -172,7 +171,7 @@ public final class DownloadVisualPanel3 extends JPanel {
         chooseFileButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Path downloadsDir = SystemInfo.getDownloadsDir();
+                Path downloadsDir = Utils.getDownloadsDir();
                 if (!Files.exists(downloadsDir)) {
                     downloadsDir = null;
                 }
@@ -190,7 +189,7 @@ public final class DownloadVisualPanel3 extends JPanel {
                 int returnVal = fileChooser.showOpenDialog(DownloadVisualPanel3.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String downloadDirPath = fileChooser.getSelectedFile().getAbsolutePath();
-                    SystemInfo.setDownloadsDir(downloadDirPath);
+                    Utils.setDownloadsDir(downloadDirPath);
                     downloadDirLabel.setText(downloadDirPath);
                     // Recalculate download paths
                     populateDownloadItemList();

@@ -25,6 +25,7 @@ import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -320,7 +321,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
     private void setPreference(final String name, final String value) {
 
-        Utils.setMainFrameCursorWaitStatus(true);
+        UIUtils.setMainFrameCursorWaitStatus(true);
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -334,13 +335,13 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
             @Override
             protected void hadSuccess() {
-                Utils.setMainFrameCursorWaitStatus(false);
+                UIUtils.setMainFrameCursorWaitStatus(false);
                 search();
             }
 
             @Override
             protected void hadError(Throwable error) {
-                Utils.setMainFrameCursorWaitStatus(false);
+                UIUtils.setMainFrameCursorWaitStatus(false);
                 ConsoleApp.handleException(error);
             }
         };

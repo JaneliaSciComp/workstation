@@ -11,8 +11,8 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 
 /**
  * Base class for dialogs holds common functionality for dialog boxes.
@@ -22,28 +22,28 @@ import org.janelia.it.workstation.browser.util.Utils;
 public class ModalDialog extends JDialog {
 
     public ModalDialog() {
-        super(ConsoleApp.getMainFrame());
+        super(FrameworkImplProvider.getMainFrame());
         init();
     }
     
     public ModalDialog(Dialog parent) {
-        super(parent == null ? ConsoleApp.getMainFrame() : parent);
+        super(parent == null ? FrameworkImplProvider.getMainFrame() : parent);
         init();
     }
     
     public ModalDialog(Window parent) {
-        super(parent == null ? ConsoleApp.getMainFrame() : parent);
+        super(parent == null ? FrameworkImplProvider.getMainFrame() : parent);
         init();
     }
     
     public ModalDialog(Frame parent) {
-        super(parent == null ? ConsoleApp.getMainFrame() : parent);
+        super(parent == null ? FrameworkImplProvider.getMainFrame() : parent);
         init();
     }
 
     public ModalDialog(JPanel panel) {
         // TODO: this only works with JPanels within a Dialog
-        super(Utils.getAncestorWithType(panel, Dialog.class));
+        super(UIUtils.getAncestorWithType(panel, Dialog.class));
         init();
     }
     

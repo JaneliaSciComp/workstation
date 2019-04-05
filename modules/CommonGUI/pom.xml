@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.janelia</groupId>
+        <artifactId>workstation</artifactId>
+        <version>8.0</version>
+        <relativePath>../..</relativePath>
+    </parent>
+
+    <name>CommonGUI</name>
+    <groupId>org.janelia.workstation</groupId>
+    <artifactId>common-gui</artifactId>
+    <version>8.0</version>
+    <packaging>nbm</packaging>
+
+    <dependencies>
+
+        <!-- ConsoleWrapper -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>libraries</artifactId>
+        </dependency>
+
+        <!-- Integration APIs -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>integration</artifactId>
+        </dependency>
+
+        <!-- CommonModel -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>common-model</artifactId>
+        </dependency>
+
+        <!-- NetBeans Modules -->
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-windows</artifactId>
+        </dependency>
+
+        <!-- Maven Central dependencies -->
+        <dependency>
+            <groupId>com.fifesoft</groupId>
+            <artifactId>autocomplete</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <configuration>
+                    <publicPackages>
+                        <publicPackage>org.janelia.it.workstation.browser.gui.dialogs</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.gui.progress</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.gui.support</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.gui.support.buttons</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.gui.support.panels</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.gui.table</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.gui.util</publicPackage>
+                    </publicPackages>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

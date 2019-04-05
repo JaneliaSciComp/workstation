@@ -7,7 +7,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.it.workstation.browser.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,12 +37,12 @@ public class DownloadOptions {
     }
 
     public String getDownloadsDir() {
-        return SystemInfo.getDownloadsDir().toString();
+        return Utils.getDownloadsDir().toString();
     }
     
     public void setDownloadsDir(String newValue) {
-        if (!newValue.equals(SystemInfo.getDownloadsDir().toString())) {
-            SystemInfo.setDownloadsDir(newValue);
+        if (!newValue.equals(Utils.getDownloadsDir().toString())) {
+            Utils.setDownloadsDir(newValue);
             log.info("Saved downloads dir: {}", newValue);
         }
     }

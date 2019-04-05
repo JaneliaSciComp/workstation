@@ -26,8 +26,8 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.model.DomainObjectPermission;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
@@ -163,7 +163,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
     private void saveAndClose() {
 
-        Utils.setWaitingCursor(parent);
+        UIUtils.setWaitingCursor(parent);
 
         final Subject subject = (Subject) subjectCombobox.getSelectedItem();
         final Set<String> granteeSet = SubjectUtils.getReaderSet(subject);
@@ -224,13 +224,13 @@ public class DomainObjectPermissionDialog extends ModalDialog {
                             + "or ask them to share the data on your behalf.</html>", unwriteable+" items could not be shared", JOptionPane.WARNING_MESSAGE); 
                 }
                 
-                Utils.setDefaultCursor(parent);
+                UIUtils.setDefaultCursor(parent);
             }
 
             @Override
             protected void hadError(Throwable error) {
                 ConsoleApp.handleException(error);
-                Utils.setDefaultCursor(parent);
+                UIUtils.setDefaultCursor(parent);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(parent, "Granting permissions...", ""));

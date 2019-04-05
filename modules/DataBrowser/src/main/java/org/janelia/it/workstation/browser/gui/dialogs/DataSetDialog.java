@@ -35,7 +35,7 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.sample.DataSet;
@@ -277,7 +277,7 @@ public class DataSetDialog extends ModalDialog {
         final String sageConfigPath = sageConfigPathInput.getText();
         final String sageGrammarPath = sageGrammarPathInput.getText();
 
-        Utils.setWaitingCursor(DataSetDialog.this);
+        UIUtils.setWaitingCursor(DataSetDialog.this);
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -304,14 +304,14 @@ public class DataSetDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(DataSetDialog.this);
+                UIUtils.setDefaultCursor(DataSetDialog.this);
                 setVisible(false);
             }
 
             @Override
             protected void hadError(Throwable error) {
                 ConsoleApp.handleException(error);
-                Utils.setDefaultCursor(DataSetDialog.this);
+                UIUtils.setDefaultCursor(DataSetDialog.this);
                 setVisible(false);
             }
         };

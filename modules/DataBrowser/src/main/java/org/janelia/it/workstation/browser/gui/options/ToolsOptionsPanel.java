@@ -27,9 +27,9 @@ import javax.swing.table.TableModel;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.tools.ToolInfo;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -269,7 +269,7 @@ final class ToolsOptionsPanel extends javax.swing.JPanel {
 
             JButton filePathButton = null;
             try {
-                filePathButton = new JButton(Utils.getClasspathImage("magnifier.png"));
+                filePathButton = new JButton(UIUtils.getClasspathImage("magnifier.png"));
             }
             catch (FileNotFoundException e) {
                 log.error("Could not find icon magnifier.png",e);

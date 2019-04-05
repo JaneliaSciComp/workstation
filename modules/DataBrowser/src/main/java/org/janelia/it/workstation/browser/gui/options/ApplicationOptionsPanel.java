@@ -34,7 +34,7 @@ import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.panels.MemorySettingPanel;
-import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -310,7 +310,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         useRunAsUserPreferences.setSelected(options.isUseRunAsUserPreferences());
         useHTTPForTileAccess.setSelected(options.isUseHTTPForTileAccess());
         try {
-            memoryPanel.setMemorySetting(SystemInfo.getMemoryAllocation());
+            memoryPanel.setMemorySetting(Utils.getMemoryAllocation());
         }
         catch (IOException e) {
             FrameworkImplProvider.handleException(e);
@@ -335,7 +335,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         String error = memoryPanel.getError();
         if (error == null) {
             try {
-                SystemInfo.setMemoryAllocation(memoryPanel.getMemorySetting());
+                Utils.setMemoryAllocation(memoryPanel.getMemorySetting());
             }
             catch (IOException e) {
                 FrameworkImplProvider.handleException(e);

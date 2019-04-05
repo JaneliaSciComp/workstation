@@ -228,11 +228,25 @@
                 <artifactId>integration</artifactId>
                 <version>${project.version}</version>
             </dependency>
-           
+
             <!-- ConsoleWrapper --> 
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
                 <artifactId>libraries</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- CommonGUI -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>common-gui</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- CommonModel -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>common-model</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -303,6 +317,13 @@
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
                 <artifactId>viewerapi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Janelia Site Customizations -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>sitejrc</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -1012,6 +1033,8 @@
         <module>modules/branding</module>
         <module>modules/ConsoleWrapper</module>
         <module>modules/IntegrationAPIs</module>
+        <module>modules/CommonModel</module>
+        <module>modules/CommonGUI</module>
         <module>modules/DarculaLAF</module>
         <module>modules/DataBrowser</module>
         <module>modules/HortaTracer</module>
@@ -1023,6 +1046,7 @@
         <module>modules/SceneWindow</module>
         <module>modules/Jogl213Lib</module>
         <module>modules/Jogl224Lib</module>
+        <module>modules/SiteJRC</module>
     </modules>
 
 </project>

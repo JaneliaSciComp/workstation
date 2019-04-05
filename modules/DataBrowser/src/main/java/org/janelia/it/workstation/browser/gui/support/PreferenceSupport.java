@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.gui.support;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleListenableFuture;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -65,7 +66,7 @@ public interface PreferenceSupport {
      */
     default SimpleListenableFuture<Void> setPreferenceAsync(final String category, final String key, final Object value) {
 
-        Utils.setMainFrameCursorWaitStatus(true);
+        UIUtils.setMainFrameCursorWaitStatus(true);
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -76,12 +77,12 @@ public interface PreferenceSupport {
 
             @Override
             protected void hadSuccess() {
-                Utils.setMainFrameCursorWaitStatus(false);
+                UIUtils.setMainFrameCursorWaitStatus(false);
             }
 
             @Override
             protected void hadError(Throwable error) {
-                Utils.setMainFrameCursorWaitStatus(false);
+                UIUtils.setMainFrameCursorWaitStatus(false);
                 ConsoleApp.handleException(error);
             }
         };

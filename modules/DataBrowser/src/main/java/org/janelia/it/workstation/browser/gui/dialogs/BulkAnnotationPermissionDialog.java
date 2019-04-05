@@ -29,7 +29,7 @@ import org.janelia.it.workstation.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
-import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.Reference;
@@ -173,7 +173,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
 
     private void saveAndClose() {
         
-        Utils.setWaitingCursor(ConsoleApp.getMainFrame());
+        UIUtils.setWaitingCursor(ConsoleApp.getMainFrame());
 
         final Subject subject = (Subject) subjectCombobox.getSelectedItem();
         boolean read = readCheckbox.isSelected();
@@ -201,7 +201,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(ConsoleApp.getMainFrame());
+                UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
                     JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                         "Modified permissions for "+numAnnotationsModified+" annotations on "+selected.size()+" items", "Shared", JOptionPane.INFORMATION_MESSAGE);
             }
@@ -209,7 +209,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
             @Override
             protected void hadError(Throwable error) {
                 ConsoleApp.handleException(error);
-                Utils.setDefaultCursor(ConsoleApp.getMainFrame());
+                UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Changing permissions...", ""));

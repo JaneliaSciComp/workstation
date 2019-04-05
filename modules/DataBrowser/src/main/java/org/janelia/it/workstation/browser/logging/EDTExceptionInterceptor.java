@@ -12,7 +12,7 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.options.ApplicationOptionsPanelController;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
-import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.it.workstation.browser.util.Utils;
 import org.netbeans.api.options.OptionsDisplayer;
 
 /**
@@ -49,7 +49,7 @@ public class EDTExceptionInterceptor extends EventQueue {
 
                 Integer maxMem = null;
                 try {
-                    maxMem = SystemInfo.getMemoryAllocation();
+                    maxMem = Utils.getMemoryAllocation();
                 }
                 catch (Exception e1) {
                     logger.log(CustomLoggingLevel.SEVERE, "Error getting memory allocation", e1);

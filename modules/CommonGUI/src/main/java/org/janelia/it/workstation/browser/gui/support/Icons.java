@@ -10,7 +10,7 @@ import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
-import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +78,7 @@ public class Icons {
     public static ImageIcon getIcon(String filename) {
     	if (cache.containsKey(filename)) return cache.get(filename);
     	try {
-	    	ImageIcon icon = Utils.getClasspathImage(filename);
+	    	ImageIcon icon = UIUtils.getClasspathImage(filename);
 	    	cache.put(filename, icon);
 	    	return icon;
     	} 

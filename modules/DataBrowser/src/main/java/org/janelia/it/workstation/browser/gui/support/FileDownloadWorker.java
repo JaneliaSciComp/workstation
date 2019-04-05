@@ -22,7 +22,6 @@ import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadFileItem;
-import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.NamedBackgroundWorker;
@@ -45,7 +44,7 @@ public class FileDownloadWorker {
 
     private static final Logger log = LoggerFactory.getLogger(FileDownloadWorker.class);
     
-    private final Path downloadsDir = SystemInfo.getDownloadsDir();
+    private final Path downloadsDir = Utils.getDownloadsDir();
     private final Collection<DownloadFileItem> downloadItems;
     private final Semaphore copySemaphore;
     private Multiset<String> parentDirs = HashMultiset.create();

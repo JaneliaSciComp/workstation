@@ -1,17 +1,6 @@
 package org.janelia.it.workstation.browser.util;
 
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Desktop;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.HeadlessException;
-import java.awt.Image;
-import java.awt.RenderingHints;
-import java.awt.Transparency;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.PixelGrabber;
@@ -25,7 +14,6 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URI;
-import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -41,24 +29,21 @@ import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.FileMgr;
-import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
 import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.janelia.it.workstation.browser.filecache.URLProxy;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.openide.windows.WindowManager;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -80,15 +65,14 @@ import loci.formats.in.TiffReader;
  */
 public class Utils {
 
+    private static final Logger log = LoggerFactory.getLogger(Utils.class);
+    private static final boolean TIMER = log.isTraceEnabled();
+
     // Semi, poor-man's feature toggle.
     public static final boolean SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI = true;
     public static final String EXTENSION_LSM = "lsm";
     public static final String EXTENSION_BZ2 = "bz2";
     public static final String EXTENSION_LSM_BZ2 = EXTENSION_LSM + '.' + EXTENSION_BZ2;
-
-    private static final Logger log = LoggerFactory.getLogger(Utils.class);
-
-    private static final boolean TIMER = log.isTraceEnabled();
 
     private static final int ONE_KILOBYTE = 1024;
     private static final int ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
@@ -97,45 +81,16 @@ public class Utils {
 
     private static final int DEFAULT_BUFFER_SIZE = 8 * ONE_KILOBYTE;
 
-    public static ImageIcon grabOpenedIcon;
-    public static ImageIcon grabClosedIcon;
-
-    static {
-        try {
-            grabOpenedIcon = Utils.getClasspathImage("grab_opened.png");
-            grabClosedIcon = Utils.getClasspathImage("grab_closed.png");
-        }
-        catch (FileNotFoundException e) {
-            log.error("Could not find icons in classpath",e);
-        }
-    }
-
-    public static boolean areSame(Object obj1, Object obj2) {
-        return (obj1 == obj2) || (obj1 != null && obj2 != null && obj1.equals(obj2));
-    }
-
-    /**
-     * Load an image that is found in the /images directory within the classpath.
-     */
-    public static ImageIcon getClasspathImage(String filename) throws FileNotFoundException {
-        try {
-            URL picURL = Utils.class.getResource("/images/" + filename);
-            return new ImageIcon(picURL);
-        }
-        catch (Exception e) {
-            throw new FileNotFoundException("/images/" + filename);
-        }
-    }
-
     /**
      * Read an image using the ImageIO API. Currently supports TIFFs, PNGs and JPEGs.
      */
     public static BufferedImage readImage(String path) throws Exception {
         try {
-            String selectedRenderer = (String) LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D);
-            RendererType2D renderer = selectedRenderer == null ? RendererType2D.LOCI : RendererType2D.valueOf(selectedRenderer);
+            String selectedRenderer = FrameworkImplProvider.getModelProperty(
+                    OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.LOCI.toString());
+            RendererType2D renderer = RendererType2D.valueOf(selectedRenderer);
             String format = FilenameUtils.getExtension(path);
-            BufferedImage image = null;
+            BufferedImage image;
             
             if (renderer == RendererType2D.IMAGE_IO) {
                 InputStream stream = null;
@@ -409,63 +364,6 @@ public class Utils {
         return bimage;
     }
 
-    public static void setWaitingCursor(Component component) {
-        JFrame mainFrame = (JFrame)WindowManager.getDefault().getMainWindow(); 
-        if (component==mainFrame) {
-            setMainFrameCursorWaitStatus(true);
-            return;
-        }
-        component.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-    }
-
-    public static void setDefaultCursor(Component component) {
-        JFrame mainFrame = (JFrame) WindowManager.getDefault().getMainWindow();
-        if (component == mainFrame) {
-            setMainFrameCursorWaitStatus(false);
-            return;
-        }
-        component.setCursor(Cursor.getDefaultCursor());
-    }
-
-    /**
-     * Adapted from http://netbeans-org.1045718.n5.nabble.com/Setting-wait-cursor-td3026613.html
-     */
-    public static void setMainFrameCursorWaitStatus(final boolean isWaiting) {
-        try {
-            JFrame mainFrame = (JFrame) WindowManager.getDefault().getMainWindow();
-            Component glassPane = mainFrame.getGlassPane();
-            if (isWaiting) {
-                glassPane.setVisible(true);
-                glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            }
-            else {
-                glassPane.setVisible(false);
-                glassPane.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-            }
-        }
-        catch (Exception e) {
-            log.error("Error changing main frame cursor wait status",e);
-        }
-    }
-    
-    public static void queueWaitingCursor(final Component component) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                setWaitingCursor(component);
-            }
-        });
-    }
-
-    public static void queueDefaultCursor(final Component component) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                setDefaultCursor(component);
-            }
-        });
-    }
-
     /**
      * Copy the input stream to the output stream, using a buffer of the given size. This method uses the old-style
      * java.io calls.
@@ -542,10 +440,10 @@ public class Utils {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Retrieving file...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Retrieving file...", ""));
         worker.execute();
     }
 
@@ -561,7 +459,7 @@ public class Utils {
                 callback.call(file);
             }
             catch (Exception e) {
-                ConsoleApp.handleException(e);
+                FrameworkImplProvider.handleException(e);
             }
         }
         else {
@@ -569,7 +467,7 @@ public class Utils {
                 @Override
                 public void call(File file) throws Exception {
                     if (file == null) {
-                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                        JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
                                 "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                     else {
@@ -799,7 +697,7 @@ public class Utils {
 
         return totalBytesWritten;
     }
-    
+
     private static class TransferSpeed {
         
         private BigDecimal mbps;
@@ -848,33 +746,6 @@ public class Utils {
         return new BigDecimal(numerator / denominator).setScale(scale, BigDecimal.ROUND_HALF_UP);
     }
 
-    public static boolean hasAncestorWithType(Component component, Class<?> clazz) {
-        if (clazz==null) return false;
-        Component c = component;
-        while (c!=null) {
-            log.trace("check if {} is assignable from {}",clazz.getName(),c.getClass().getName());
-            if (clazz.isAssignableFrom(c.getClass())) {
-                return true;
-            }
-            c = c.getParent();
-        }
-        return false;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <T> T getAncestorWithType(Component component, Class<T> clazz) {
-        if (clazz==null) return null;
-        Component c = component;
-        while (c!=null) {
-            log.trace("check if {} is assignable from {}",clazz.getName(),c.getClass().getName());
-            if (clazz.isAssignableFrom(c.getClass())) {
-                return (T)c;
-            }
-            c = c.getParent();
-        }
-        return null;
-    }
-    
     public static void openUrlInBrowser(String url) {
         Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
         if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
@@ -920,4 +791,53 @@ public class Utils {
         
         return defaultFile;
     }
+
+    public static void setDownloadsDir(String downloadsDir) {
+        FrameworkImplProvider.setModelProperty(OptionConstants.FILE_DOWNLOADS_DIR, downloadsDir);
+    }
+
+    public static Path getDownloadsDir() {
+
+        String fileDownloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.FILE_DOWNLOADS_DIR);
+
+        Path fileDownloadsPath;
+        // Check for existence and clear out references to tmp
+        if (fileDownloadsDir==null || fileDownloadsDir.startsWith("/tmp")) {
+            Path downloadDir = Paths.get(System.getProperty(SystemInfo.USERHOME_SYSPROP_NAME), SystemInfo.DOWNLOADS_DIR);
+            fileDownloadsPath = downloadDir.resolve(SystemInfo.WORKSTATION_FILES_DIR);
+        }
+        else {
+            fileDownloadsPath = Paths.get(fileDownloadsDir);
+        }
+
+        try {
+            if (!Files.exists(fileDownloadsPath)) {
+                Files.createDirectories(fileDownloadsPath);
+                log.debug("Created download dir: "+fileDownloadsPath.toString());
+            }
+        }
+        catch (Exception e) {
+            log.error("Error trying to test and create a download directory", e);
+        }
+
+        return fileDownloadsPath;
+    }
+
+    /**
+     * Gets the -Xmx setting in current use.
+     *
+     * @return gigs being requested at launch.
+     */
+    public static Integer getMemoryAllocation() throws IOException {
+        return BrandingConfig.getBrandingConfig().getMemoryAllocationGB();
+    }
+
+    /**
+     * Sets the ultimate -Xmx allocation setting.
+     * @param memoryInGb how many gigs to use.
+     */
+    public static void setMemoryAllocation(Integer memoryInGb) throws IOException {
+        BrandingConfig.getBrandingConfig().setMemoryAllocationGB(memoryInGb);
+    }
+
 }

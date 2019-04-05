@@ -40,8 +40,8 @@ import org.janelia.it.jacs.shared.utils.Constants;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.model.domain.sample.ObjectiveSample;
@@ -145,7 +145,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
 
     private void completeOperation() {
 
-        Utils.setWaitingCursor(SecondaryDataRemovalDialog.this);
+        UIUtils.setWaitingCursor(SecondaryDataRemovalDialog.this);
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -160,14 +160,14 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
             @Override
             protected void hadSuccess() {
                 //SecondaryDataRemovalDialog.this.refresh();
-                Utils.setDefaultCursor(SecondaryDataRemovalDialog.this);
+                UIUtils.setDefaultCursor(SecondaryDataRemovalDialog.this);
                 setVisible(false);
             }
 
             @Override
             protected void hadError(Throwable error) {
                 ConsoleApp.handleException(error);
-                Utils.setDefaultCursor(SecondaryDataRemovalDialog.this);
+                UIUtils.setDefaultCursor(SecondaryDataRemovalDialog.this);
                 setVisible(false);
             }
         };

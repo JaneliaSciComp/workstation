@@ -9,6 +9,7 @@ import javax.swing.JPanel;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.util.Utils;
 
 /**
@@ -42,8 +43,8 @@ public class SelectablePanel extends JPanel {
         }
 
         try {
-            normalBorderImage = Utils.toBufferedImage(Utils.getClasspathImage(normalBorder).getImage());
-            selectedBorderImage = Utils.toBufferedImage(Utils.getClasspathImage(selectedBorder).getImage());
+            normalBorderImage = Utils.toBufferedImage(UIUtils.getClasspathImage(normalBorder).getImage());
+            selectedBorderImage = Utils.toBufferedImage(UIUtils.getClasspathImage(selectedBorder).getImage());
         }
         catch (FileNotFoundException e) {
             ConsoleApp.handleException(e);

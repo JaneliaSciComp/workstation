@@ -1,8 +1,5 @@
 package org.janelia.it.workstation.browser.gui.options;
 
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SANITIZE_FILENAMES_PROPERTY;
-
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -23,9 +20,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
-import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,7 +95,7 @@ final class DownloadOptionsPanel extends javax.swing.JPanel {
         String chooseFileText = null;
         ImageIcon chooseFileIcon = null;
         try {
-            chooseFileIcon = Utils.getClasspathImage("magnifier.png");
+            chooseFileIcon = UIUtils.getClasspathImage("magnifier.png");
         } catch (FileNotFoundException e) {
             log.warn("Failed to load button icon", e);
             chooseFileText = "...";

@@ -41,13 +41,12 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.model.search.ResultIterator;
 import org.janelia.it.workstation.browser.model.search.ResultIteratorFind;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
-import org.janelia.it.workstation.browser.util.Utils;
-import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
@@ -352,9 +351,9 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             }
         }
         else {
-            Utils.setWaitingCursor(ConsoleApp.getMainFrame());
+            UIUtils.setWaitingCursor(ConsoleApp.getMainFrame());
             selectAll();
-            Utils.setDefaultCursor(ConsoleApp.getMainFrame());
+            UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
         }
     }
     
@@ -534,7 +533,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                     @Override
                     public Void call() throws Exception {
 
-                        TopComponent topComponent = Utils.getAncestorWithType(PaginatedResultsPanel.this, TopComponent.class);
+                        TopComponent topComponent = UIUtils.getAncestorWithType(PaginatedResultsPanel.this, TopComponent.class);
                         boolean notifyModel = topComponent==null || topComponent.isVisible();
                     
                         log.info("updateResultsView complete, restoring selection");
@@ -629,7 +628,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
         params.put("bias", bias);
         params.put("skipStartingNode", skipStartingNode);
 
-        Utils.setWaitingCursor(ConsoleApp.getMainFrame());
+        UIUtils.setWaitingCursor(ConsoleApp.getMainFrame());
         if (!matchDebouncer.queueWithParameters(success, params)) {
             return;
         }
@@ -695,7 +694,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(ConsoleApp.getMainFrame());
+                UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
                 if (match != null) {
                     log.info("Found match for '{}': {}", text, match);
                     if (matchPage!=null && matchPage!=currPage) {
@@ -724,7 +723,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
             @Override
             protected void hadError(Throwable error) {
-                Utils.setDefaultCursor(ConsoleApp.getMainFrame());
+                UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
                 matchDebouncer.failure();
                 ConsoleApp.handleException(error);
             }

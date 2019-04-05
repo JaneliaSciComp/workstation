@@ -36,8 +36,8 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.browser.gui.table.DynamicTable;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.model.DomainModelViewConstants;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.sample.DataSet;
 import org.slf4j.Logger;
@@ -152,7 +152,7 @@ public class DataSetListDialog extends ModalDialog {
                                 return;
                             }
 
-                            Utils.setWaitingCursor(DataSetListDialog.this);
+                            UIUtils.setWaitingCursor(DataSetListDialog.this);
 
                             SimpleWorker worker = new SimpleWorker() {
 
@@ -164,14 +164,14 @@ public class DataSetListDialog extends ModalDialog {
 
                                 @Override
                                 protected void hadSuccess() {
-                                    Utils.setDefaultCursor(DataSetListDialog.this);
+                                    UIUtils.setDefaultCursor(DataSetListDialog.this);
                                     loadDataSets();
                                 }
 
                                 @Override
                                 protected void hadError(Throwable error) {
                                     ConsoleApp.handleException(error);
-                                    Utils.setDefaultCursor(DataSetListDialog.this);
+                                    UIUtils.setDefaultCursor(DataSetListDialog.this);
                                     loadDataSets();
                                 }
                             };

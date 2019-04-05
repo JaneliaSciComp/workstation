@@ -42,8 +42,8 @@ import org.janelia.it.workstation.browser.gui.support.AnnotationView;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.gui.table.DynamicTable;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.model.DomainObjectPermission;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainObjectAttribute;
@@ -247,19 +247,19 @@ public class DomainInspectorPanel extends JPanel {
 
                                     @Override
                                     protected void hadSuccess() {
-                                        Utils.setDefaultCursor(DomainInspectorPanel.this);
+                                        UIUtils.setDefaultCursor(DomainInspectorPanel.this);
                                         refresh();
                                     }
 
                                     @Override
                                     protected void hadError(Throwable error) {
                                         ConsoleApp.handleException(error);
-                                        Utils.setDefaultCursor(DomainInspectorPanel.this);
+                                        UIUtils.setDefaultCursor(DomainInspectorPanel.this);
                                         refresh();
                                     }
                                 };
 
-                                Utils.setWaitingCursor(DomainInspectorPanel.this);
+                                UIUtils.setWaitingCursor(DomainInspectorPanel.this);
                                 worker.setProgressMonitor(new IndeterminateProgressMonitor(DomainInspectorPanel.this, "Revoking permissions...", ""));
                                 worker.execute();
                             }

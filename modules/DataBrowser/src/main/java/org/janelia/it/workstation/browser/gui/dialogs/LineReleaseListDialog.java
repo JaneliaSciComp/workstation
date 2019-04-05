@@ -33,7 +33,7 @@ import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.browser.gui.table.DynamicTable;
-import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.sample.LineRelease;
 
@@ -134,7 +134,7 @@ public class LineReleaseListDialog extends ModalDialog {
                                 return;
                             }
 
-                            Utils.setWaitingCursor(LineReleaseListDialog.this);
+                            UIUtils.setWaitingCursor(LineReleaseListDialog.this);
 
                             SimpleWorker worker = new SimpleWorker() {
 
@@ -145,14 +145,14 @@ public class LineReleaseListDialog extends ModalDialog {
 
                                 @Override
                                 protected void hadSuccess() {
-                                    Utils.setDefaultCursor(LineReleaseListDialog.this);
+                                    UIUtils.setDefaultCursor(LineReleaseListDialog.this);
                                     loadReleases();
                                 }
 
                                 @Override
                                 protected void hadError(Throwable error) {
                                     ConsoleApp.handleException(error);
-                                    Utils.setDefaultCursor(LineReleaseListDialog.this);
+                                    UIUtils.setDefaultCursor(LineReleaseListDialog.this);
                                     loadReleases();
                                 }
                             };

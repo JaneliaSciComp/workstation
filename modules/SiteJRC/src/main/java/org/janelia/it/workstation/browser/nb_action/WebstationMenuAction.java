@@ -1,16 +1,14 @@
 package org.janelia.it.workstation.browser.nb_action;
 
-import java.awt.event.ActionEvent;
-
-import javax.swing.AbstractAction;
-
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
 
 @ActionID(
         category = "Help",
@@ -28,7 +26,6 @@ public final class WebstationMenuAction extends AbstractAction {
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        ActivityLogHelper.logUserAction("WebstationMenuAction.actionPerformed");
         Utils.openUrlInBrowser(WEBSTATION_URL);
     }
 }

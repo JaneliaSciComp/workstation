@@ -40,6 +40,18 @@
             <artifactId>adminstration</artifactId>
         </dependency>
 
+        <!-- CommonGUI -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>common-gui</artifactId>
+        </dependency>
+
+        <!-- CommonModel -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>common-model</artifactId>
+        </dependency>
+
         <!-- Data Browser --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>
@@ -56,7 +68,13 @@
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>horta</artifactId>
-        </dependency>       
+        </dependency>
+
+        <!-- Janelia Site Customizations -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>sitejrc</artifactId>
+        </dependency>
 
         <!-- NetBeans Platform --> 
         <dependency>

@@ -31,9 +31,9 @@ import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.filecache.RemoteLocation;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.model.domain.DomainObject;
@@ -105,7 +105,7 @@ public class ImportImageFilesDialog extends ModalDialog {
         String chooseFileText = null;
         ImageIcon chooseFileIcon = null;
         try {
-            chooseFileIcon = Utils.getClasspathImage("magnifier.png");
+            chooseFileIcon = UIUtils.getClasspathImage("magnifier.png");
         } 
         catch (FileNotFoundException e) {
             log.warn("failed to load button icon", e);

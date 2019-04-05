@@ -74,7 +74,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private static final String PREFERENCE_CATEGORY_CDS_SPLITHALFTYPES = "CDSSplitHalfTypes";
     private static final int DEFAULT_RESULTS_PER_LINE = 2;
     private static final List<SplitHalfType> ALL_SPLIT_TYPES = Arrays.asList(SplitHalfType.AD, SplitHalfType.DBD);
-    private static final String SPLITGEN_URL = ConsoleProperties.getInstance().getProperty("splitgen.url"); 
 
     private static final String NO_RUN_TEXT = "<html>"
             + "This mask does not have results in the selected search run.<br>"

@@ -39,12 +39,12 @@ import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSel
 import org.janelia.it.workstation.browser.gui.options.DownloadOptions;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.gui.support.FileDownloadWorker;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.search.DomainObjectResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.browser.model.search.SolrSearchResults;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
@@ -124,7 +124,7 @@ public final class DownloadWizardAction implements ActionListener {
 
     private void findDownloadObjects() {
         
-        Utils.setWaitingCursor(ConsoleApp.getMainFrame());
+        UIUtils.setWaitingCursor(ConsoleApp.getMainFrame());
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -185,7 +185,7 @@ public final class DownloadWizardAction implements ActionListener {
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(ConsoleApp.getMainFrame());
+                UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
                 if (!isCancelled()) {
                     showWizard();
                 }
@@ -193,7 +193,7 @@ public final class DownloadWizardAction implements ActionListener {
 
             @Override
             protected void hadError(Throwable error) {
-                Utils.setDefaultCursor(ConsoleApp.getMainFrame());
+                UIUtils.setDefaultCursor(ConsoleApp.getMainFrame());
                 ConsoleApp.handleException(error);
             }
         };

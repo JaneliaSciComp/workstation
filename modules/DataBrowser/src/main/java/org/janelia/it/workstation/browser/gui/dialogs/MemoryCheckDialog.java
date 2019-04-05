@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.gui.dialogs;
 
-import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.it.workstation.browser.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ public class MemoryCheckDialog {
         boolean sufficient = true;
         // Must warn about memory use.
         try {
-            Integer userSetMemoryGigs = SystemInfo.getMemoryAllocation();
+            Integer userSetMemoryGigs = Utils.getMemoryAllocation();
             Long memoryGigs = null;
             // Prefer the user setting over all else.  If not found,
             // as in development, look at maximum of all other possibilities.

@@ -29,7 +29,7 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.browser.gui.support.TemplateEditorTextbox;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
-import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainObjectAttribute;
 import org.janelia.model.access.domain.DomainUtils;
@@ -198,7 +198,7 @@ public class IconGridViewerConfigDialog extends ModalDialog {
 
     private void saveAndClose() {
 
-        Utils.setWaitingCursor(IconGridViewerConfigDialog.this);
+        UIUtils.setWaitingCursor(IconGridViewerConfigDialog.this);
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -210,7 +210,7 @@ public class IconGridViewerConfigDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(IconGridViewerConfigDialog.this);
+                UIUtils.setDefaultCursor(IconGridViewerConfigDialog.this);
                 returnValue = CHOOSE_OPTION;
                 setVisible(false);
             }
@@ -218,7 +218,7 @@ public class IconGridViewerConfigDialog extends ModalDialog {
             @Override
             protected void hadError(Throwable error) {
                 ConsoleApp.handleException(error);
-                Utils.setDefaultCursor(IconGridViewerConfigDialog.this);
+                UIUtils.setDefaultCursor(IconGridViewerConfigDialog.this);
                 returnValue = ERROR_OPTION;
                 setVisible(false);
             }

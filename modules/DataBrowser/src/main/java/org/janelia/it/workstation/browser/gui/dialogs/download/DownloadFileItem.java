@@ -15,7 +15,7 @@ import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.MappingType;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.util.PathUtil;
-import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
@@ -57,7 +57,7 @@ public class DownloadFileItem {
     public static final String ATTR_LABEL_INDEX = "Index";
     public static final String ATTR_LABEL_FOLDERS = "Folders";
     
-    private final Path downloadsDir = SystemInfo.getDownloadsDir();
+    private final Path downloadsDir = Utils.getDownloadsDir();
     private final List<String> itemPath;
     private final DomainObject domainObject;
     private HasFiles fileProvider;

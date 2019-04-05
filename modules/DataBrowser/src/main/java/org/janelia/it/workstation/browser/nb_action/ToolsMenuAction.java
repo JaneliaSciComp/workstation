@@ -10,12 +10,10 @@ import java.util.Set;
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.tools.ToolInfo;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
@@ -73,7 +71,7 @@ public final class ToolsMenuAction extends AbstractAction implements Presenter.M
             ToolInfo tmpTool = ToolMgr.getToolMgr().getTool(o);
             try {
                 JMenuItem tmpMenuItem = new JMenuItem(tmpTool.getName(),
-                        Utils.getClasspathImage(tmpTool.getIconPath()));
+                        UIUtils.getClasspathImage(tmpTool.getIconPath()));
                 newItems.add(tmpMenuItem);
                 tmpMenuItem.addActionListener(new ActionListener() {
                     @Override

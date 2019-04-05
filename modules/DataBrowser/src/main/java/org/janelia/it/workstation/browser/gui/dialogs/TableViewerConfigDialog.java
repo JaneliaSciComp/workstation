@@ -32,7 +32,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.table.TableViewerConfiguration;
 import org.janelia.it.workstation.browser.gui.support.panels.ScrollablePanel;
-import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainObjectAttribute;
 
@@ -179,7 +179,7 @@ public class TableViewerConfigDialog extends ModalDialog {
 
     private void saveAndClose() {
 
-        Utils.setWaitingCursor(TableViewerConfigDialog.this);
+        UIUtils.setWaitingCursor(TableViewerConfigDialog.this);
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -190,7 +190,7 @@ public class TableViewerConfigDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(TableViewerConfigDialog.this);
+                UIUtils.setDefaultCursor(TableViewerConfigDialog.this);
                 returnValue = CHOOSE_OPTION;
                 setVisible(false);
             }
@@ -198,7 +198,7 @@ public class TableViewerConfigDialog extends ModalDialog {
             @Override
             protected void hadError(Throwable error) {
                 ConsoleApp.handleException(error);
-                Utils.setDefaultCursor(TableViewerConfigDialog.this);
+                UIUtils.setDefaultCursor(TableViewerConfigDialog.this);
                 returnValue = ERROR_OPTION;
                 setVisible(false);
             }
