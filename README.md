@@ -4,7 +4,9 @@
 
 A neuroscience discovery platform that supporting processing, analysis, and annotation of large-scale 3d microscopy data. The aim of the Workstation project is to create a common framework for interaction among scientists working in different labs, and studying different organisms with diverse modalities and computational methods.
 
-The Workstation currently supports two team projects at Janelia Research Campus: FlyLight and MouseLight. The MouseLight tools have been fully open sourced and published here. These  tools enable neuron tracing and connectomics on terabyte-scale Mouse brain volumes. The FlyLight tools have been partially open sourced, and not yet officially supported.
+The Janelia Workstation currently supports two large-scale team projects at Janelia Research Campus: **FlyLight** and **MouseLight**:
+* The **MouseLight** tools have been fully open sourced and made available here with complete documentation. These tools enable neuron tracing and connectomics on terabyte-scale Mouse brain volumes. 
+* The **FlyLight** tools have been partially open sourced, and not yet officially supported. At Janelia, these tools will support search, browsing, and annotation of millions of confocal-imaged Fly nervous systems. In the future they will be fully released here.
 
 ## For Users
 
@@ -15,7 +17,7 @@ to find out more about the Workstation's capabilities and how to use them.
 
 ### System Installation
 
-The Workstation Client (this repository) is supported by a suite of back-end services. Deploying these services is accomplished through the use of Docker containers. Complete documentation about building and deploying the entire system is available in the [jacs-cm](https://github.com/JaneliaSciComp/jacs-cm) repository.
+The Workstation Client (this repository) is supported by a suite of back-end services. Deploying all of these services is accomplished through the use of Docker containers. Complete documentation about building and deploying the entire system is available in the [jacs-cm](https://github.com/JaneliaSciComp/jacs-cm) repository.
 
 ### MouseLight Deployment
 
