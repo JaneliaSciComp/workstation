@@ -5,6 +5,7 @@ import java.beans.PropertyChangeSupport;
 import java.util.prefs.Preferences;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.openide.util.NbPreferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,9 @@ import org.slf4j.LoggerFactory;
 public class ApplicationOptions {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationOptions.class);
-    
+
+    private static final String SHOW_START_PAGE_DEFAULT = "console.startPage.showOnStartup";
+
     private static ApplicationOptions instance;
 
     public static synchronized ApplicationOptions getInstance() {
@@ -48,7 +51,8 @@ public class ApplicationOptions {
     }
 
     public boolean isShowStartPageOnStartup() {
-        return prefs().getBoolean(OptionConstants.SHOW_START_PAGE_ON_STARTUP, true);
+        return prefs().getBoolean(OptionConstants.SHOW_START_PAGE_ON_STARTUP,
+                ConsoleProperties.getBoolean(SHOW_START_PAGE_DEFAULT, true));
     }
 
     public void setAutoDownloadUpdates(boolean autoDownload) {
