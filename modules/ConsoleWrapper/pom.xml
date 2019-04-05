@@ -243,7 +243,6 @@
             <groupId>javax.mail</groupId>
             <artifactId>mail</artifactId>
             <version>1.4</version>
-            <scope>runtime</scope>
         </dependency>
         <!-- 
             TODO: this is required at runtime by some classes in legacy-shared. 
@@ -358,6 +357,8 @@
                         <publicPackage>com.sun.media.jai.codec</publicPackage>
                         <publicPackage>com.xuggle.*</publicPackage>
                         <publicPackage>edu.wlu.cs.levy.CG</publicPackage>
+                        <publicPackage>javax.mail</publicPackage>
+                        <publicPackage>javax.mail.*</publicPackage>
                         <publicPackage>javax.media.jai</publicPackage>
                         <publicPackage>javax.media.jai.iterator</publicPackage>
                         <publicPackage>javax.media.jai.operator</publicPackage>
