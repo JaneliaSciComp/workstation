@@ -69,6 +69,7 @@ public class ShowingHook implements Runnable {
         // Open the start page, if necessary
         try {
             if (ApplicationOptions.getInstance().isShowStartPageOnStartup()) {
+                log.info("Ensuring that start page is open");
                 StartPageMenuAction action = new StartPageMenuAction();
                 action.actionPerformed(null);
             }
