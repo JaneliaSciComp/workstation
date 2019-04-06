@@ -2,7 +2,7 @@ package org.janelia.it.workstation.browser.gui.editor;
 
 import java.util.concurrent.Callable;
 
-import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.model.domain.DomainObject;
 
 /**
@@ -38,7 +38,7 @@ public interface DomainObjectNodeEditor<P extends DomainObject, T, S> extends Ed
      * @param isUserDriven
      * @param success
      */
-    public void loadDomainObjectNode(AbstractDomainObjectNode<P> domainObjectNode, final boolean isUserDriven, final Callable<Void> success);
+    public void loadDomainObjectNode(DomainObjectNode<P> domainObjectNode, final boolean isUserDriven, final Callable<Void> success);
 
     /**
      * Load the given domain object into the editor. This bypasses the need for a AbstractDomainObjectNode, 

@@ -9,17 +9,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Singleton for tracking navigation state.
+ * Singleton for tracking the state of various data browser UI components.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class NavigationMgr {
+public class DataBrowserMgr {
 
     // Singleton
-    private static NavigationMgr instance;
-    public static synchronized NavigationMgr getNavigationMgr() {
+    private static DataBrowserMgr instance;
+    public static synchronized DataBrowserMgr getDataBrowserMgr() {
         if (instance==null) {
-            instance = new NavigationMgr();
+            instance = new DataBrowserMgr();
             Events.getInstance().registerOnEventBus(instance);
         }
         return instance;

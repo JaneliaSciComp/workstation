@@ -14,7 +14,7 @@ import javax.swing.SwingConstants;
 
 import org.janelia.it.workstation.browser.gui.listview.icongrid.DecoratedImage;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.LoadImageWorker;
-import org.janelia.it.workstation.browser.model.ImageDecorator;
+import org.janelia.it.workstation.browser.gui.model.ImageDecorator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

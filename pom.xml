@@ -565,6 +565,10 @@
                     <artifactId>versions-maven-plugin</artifactId>
                     <version>${janeliaws.versions-maven-plugin.version}</version>
                     <configuration>
+                        <!--
+                            The session.executionRootDirectory variable is flagged as an error in IntelliJ.
+                            To hide the false error, just add it as a Maven property in Preference->Maven->Runner
+                        -->
                         <rulesUri>file:///${session.executionRootDirectory}/maven-version-rules.xml</rulesUri>
                     </configuration>
                 </plugin>
@@ -941,7 +945,6 @@
                             <detectLinks>false</detectLinks>
                             <detectOfflineLinks>true</detectOfflineLinks>
                             <quiet>false</quiet>
-                            <additionalparam></additionalparam>
                         </configuration>
                         <executions>
                             <execution>

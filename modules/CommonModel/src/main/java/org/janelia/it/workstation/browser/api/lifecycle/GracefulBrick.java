@@ -8,8 +8,8 @@ import java.util.ResourceBundle;
 import javax.swing.JOptionPane;
 
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.http.HttpClientManager;
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.openide.LifecycleManager;
@@ -80,8 +80,8 @@ public class GracefulBrick {
         "</body></html>";
       
         String[] buttons = { "Continue" };
-        JOptionPane.showOptionDialog(WindowLocator.getMainFrame(), html,
-              "Manual Update Required", JOptionPane.WARNING_MESSAGE, 0, null, buttons, buttons[0]);
+        JOptionPane.showOptionDialog(FrameworkImplProvider.getMainFrame(), html,
+              "Manual Update Required", JOptionPane.YES_NO_OPTION, 0, null, buttons, buttons[0]);
         
         // Delete any logs to ensure that the install directory is properly cleaned up
         if (uninstaller!=null) {
@@ -163,9 +163,7 @@ public class GracefulBrick {
             ResourceBundle rb = ResourceBundle.getBundle(bundleKey);
             if (rb!=null) {
                 String updateCenterUrl = rb.getString("org_janelia_it_workstation_nb_action_update_center");
-                if (updateCenterUrl!=null) {
-                    brickUrl = updateCenterUrl.replace("updates.xml", "brick.xml");
-                }
+                brickUrl = updateCenterUrl.replace("updates.xml", "brick.xml");
             }
         }
         catch (MissingResourceException e) {
@@ -191,7 +189,7 @@ public class GracefulBrick {
             log.error("Error checking brick status", e);
         }
         finally {
-            if (method!=null) method.releaseConnection();
+            method.releaseConnection();
         }
         
         return false;

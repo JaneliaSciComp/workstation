@@ -28,11 +28,11 @@ public class InternalNode<T extends HasIdentifier> extends IdentifiableNode<T> {
     private final ChildFactory<?> parentChildFactory;
     private final InstanceContent lookupContents;
     
-    public InternalNode(ChildFactory<?> parentChildFactory, Children children, T object) {
+    InternalNode(ChildFactory<?> parentChildFactory, Children children, T object) {
         this(new InstanceContent(), parentChildFactory, children, object);
     }
 
-    public InternalNode(InstanceContent lookupContents, ChildFactory<?> parentChildFactory, Children children, T object) {
+    private InternalNode(InstanceContent lookupContents, ChildFactory<?> parentChildFactory, Children children, T object) {
         super(children, new AbstractLookup(lookupContents));
         this.parentChildFactory = parentChildFactory;
         this.lookupContents = lookupContents;
@@ -52,7 +52,8 @@ public class InternalNode<T extends HasIdentifier> extends IdentifiableNode<T> {
     public ChildFactory<?> getParentChildFactory() {
         return parentChildFactory;
     }
-    
+
+    @Override
     @SuppressWarnings("unchecked")
     public T getObject() {
         return (T)getLookup().lookup(Object.class);

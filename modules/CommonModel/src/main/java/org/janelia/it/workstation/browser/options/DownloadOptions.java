@@ -1,7 +1,4 @@
-package org.janelia.it.workstation.browser.gui.options;
-
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.NUM_CONCURRENT_DOWNLOADS_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SANITIZE_FILENAMES_PROPERTY;
+package org.janelia.it.workstation.browser.options;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -49,30 +46,30 @@ public class DownloadOptions {
     
     public int getNumConcurrentDownloads() {
         return FrameworkImplProvider.getModelProperty(
-                NUM_CONCURRENT_DOWNLOADS_PROPERTY, NUM_CONCURRENT_DOWNLOADS_DEFAULT);
+                OptionConstants.NUM_CONCURRENT_DOWNLOADS_PROPERTY, NUM_CONCURRENT_DOWNLOADS_DEFAULT);
     }
     
     public void setNumConcurrentDownloads(int newValue) {
         int currValue = getNumConcurrentDownloads();
         if (newValue == currValue) return;
 
-        FrameworkImplProvider.setModelProperty(NUM_CONCURRENT_DOWNLOADS_PROPERTY, newValue);
+        FrameworkImplProvider.setModelProperty(OptionConstants.NUM_CONCURRENT_DOWNLOADS_PROPERTY, newValue);
         log.info("Saved num concurrent downloads: {}", newValue);
 
         if (null != propSupport)
-            propSupport.firePropertyChange(NUM_CONCURRENT_DOWNLOADS_PROPERTY, currValue, newValue);
+            propSupport.firePropertyChange(OptionConstants.NUM_CONCURRENT_DOWNLOADS_PROPERTY, currValue, newValue);
     }
     
     public boolean getSanitizeDownloads() {
         return FrameworkImplProvider.getModelProperty(
-                SANITIZE_FILENAMES_PROPERTY, SANITIZE_FILENAMES_DEFAULT);
+                OptionConstants.SANITIZE_FILENAMES_PROPERTY, SANITIZE_FILENAMES_DEFAULT);
     }
     
     public void setSanitizeDownloads(boolean newValue) {
         boolean currValue = getSanitizeDownloads();
         if (newValue == currValue) return;
         
-        FrameworkImplProvider.setModelProperty(SANITIZE_FILENAMES_PROPERTY, newValue);
+        FrameworkImplProvider.setModelProperty(OptionConstants.SANITIZE_FILENAMES_PROPERTY, newValue);
         log.info("Saved show sanitize downloads: {}", newValue);
     }
     

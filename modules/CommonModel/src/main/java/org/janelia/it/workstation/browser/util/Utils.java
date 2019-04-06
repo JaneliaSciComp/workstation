@@ -39,7 +39,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.janelia.it.workstation.browser.filecache.URLProxy;
-import org.janelia.it.workstation.browser.gui.options.OptionConstants;
+import org.janelia.it.workstation.browser.options.OptionConstants;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;

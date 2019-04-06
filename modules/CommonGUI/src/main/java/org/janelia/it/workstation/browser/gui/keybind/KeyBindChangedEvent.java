@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.events.prefs;
+package org.janelia.it.workstation.browser.gui.keybind;
 
 import org.janelia.it.workstation.browser.actions.Action;
 import org.janelia.it.workstation.browser.gui.keybind.KeyboardShortcut;

@@ -107,6 +107,11 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
     }
     
     @Override
+    public T getObject() {
+        return getDomainObject();
+    }
+
+    @Override
     public String getName() {
         return getDomainObject().getName();
     }

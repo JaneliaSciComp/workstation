@@ -60,7 +60,7 @@ import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
-import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.FilterNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
@@ -314,7 +314,7 @@ public class FilterEditorPanel
     }
 
     @Override
-    public void loadDomainObjectNode(AbstractDomainObjectNode<Filtering> filterNode, boolean isUserDriven, Callable<Void> success) {
+    public void loadDomainObjectNode(DomainObjectNode<Filtering> filterNode, boolean isUserDriven, Callable<Void> success) {
         this.filterNode = (FilterNode)filterNode;
         loadDomainObject(filterNode.getDomainObject(), isUserDriven, success);
     }
@@ -850,7 +850,7 @@ public class FilterEditorPanel
     }
 
     @Override
-    protected AbstractDomainObjectNode<Filtering> getDomainObjectNode() {
+    protected DomainObjectNode<Filtering> getDomainObjectNode() {
         return filterNode;
     }
     

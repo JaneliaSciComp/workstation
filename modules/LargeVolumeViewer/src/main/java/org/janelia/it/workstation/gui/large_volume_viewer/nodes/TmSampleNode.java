@@ -17,7 +17,7 @@ public class TmSampleNode extends AbstractDomainObjectNode<TmSample> {
 
     private final TmSampleChildFactory childFactory;
     
-    public TmSampleNode(ChildFactory<?> parentChildFactory, TmSample sample) throws Exception {
+    public TmSampleNode(ChildFactory<?> parentChildFactory, TmSample sample) {
         this(parentChildFactory, new TmSampleChildFactory(sample), sample);
     }
 

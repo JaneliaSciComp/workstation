@@ -36,7 +36,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
-import org.janelia.it.workstation.browser.gui.options.DownloadOptions;
+import org.janelia.it.workstation.browser.options.DownloadOptions;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.gui.support.FileDownloadWorker;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;

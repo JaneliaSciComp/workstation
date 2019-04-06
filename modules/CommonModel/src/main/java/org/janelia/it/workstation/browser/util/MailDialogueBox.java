@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.gui.support;
+package org.janelia.it.workstation.browser.util;
 
 import java.awt.BorderLayout;
 import java.io.File;
@@ -13,9 +13,6 @@ import javax.swing.JTextArea;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.MailHelper;
-import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.openide.modules.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

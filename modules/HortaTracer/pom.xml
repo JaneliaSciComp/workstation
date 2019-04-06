@@ -65,12 +65,6 @@
             <artifactId>common-model</artifactId>
         </dependency>
 
-        <!-- Workstation Browser --> 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>browser</artifactId>
-        </dependency>
-        
         <!-- Scene Graph --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>

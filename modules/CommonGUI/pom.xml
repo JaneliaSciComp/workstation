@@ -41,13 +41,6 @@
             <artifactId>org-openide-windows</artifactId>
         </dependency>
 
-        <!-- Maven Central dependencies -->
-        <dependency>
-            <groupId>com.fifesoft</groupId>
-            <artifactId>autocomplete</artifactId>
-            <version>2.6.0</version>
-        </dependency>
-
     </dependencies>
 
     <build>
@@ -57,13 +50,19 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <configuration>
                     <publicPackages>
+                        <publicPackage>org.janelia.it.workstation.browser.actions</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.dialogs</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.gui.editor</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.gui.keybind</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.gui.listview</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.gui.model</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.progress</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.support</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.support.buttons</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.support.panels</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.table</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.util</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.nodes</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

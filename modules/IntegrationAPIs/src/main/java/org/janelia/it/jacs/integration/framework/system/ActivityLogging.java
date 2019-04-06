@@ -31,8 +31,6 @@ public interface ActivityLogging {
 
     /**
      * Log a tool event, always.  No criteria will be checked.
-     *
-     * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long)
      */
     void logToolEvent(ToolString toolName, CategoryString category, ActionString action);
 

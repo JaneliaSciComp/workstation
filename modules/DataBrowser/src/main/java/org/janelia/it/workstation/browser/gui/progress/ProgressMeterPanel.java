@@ -5,37 +5,19 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
+import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.it.workstation.browser.events.workers.WorkerChangedEvent;
-import org.janelia.it.workstation.browser.events.workers.WorkerEndedEvent;
-import org.janelia.it.workstation.browser.events.workers.WorkerStartedEvent;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
-
-import net.miginfocom.swing.MigLayout;
 
 /**
  * A progress meter for all background worker tasks.
@@ -47,16 +29,14 @@ public class ProgressMeterPanel extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(ProgressMeterPanel.class);
 
     private static final Font STATUS_FONT = new Font("Sans Serif", Font.PLAIN, 10);
-    
-    private static ProgressMeterPanel instance;
-    
+
     private final JPanel mainPanel;
     private final JButton clearButton;
     private final JButton clearSuccessButton;
 
     private final Component glue = Box.createVerticalGlue();
     
-    private ProgressMeterPanel() {
+    public ProgressMeterPanel() {
 
         setLayout(new BorderLayout());
         
@@ -114,41 +94,37 @@ public class ProgressMeterPanel extends JPanel {
         mainPanel.add(glue, "growy 100, growprioy 100");
     }
 
-    public static ProgressMeterPanel getSingletonInstance() {
-        if (instance == null) {
-            instance = new ProgressMeterPanel();
-            Events.getInstance().registerOnEventBus(instance);
-        }
-        return instance;
-    }    
-    
-    public List<BackgroundWorker> getWorkersInProgress() {
-        List<BackgroundWorker> workers = new ArrayList<>();
-        for(Component child : mainPanel.getComponents()) {
-            if (child instanceof MonitoredWorkerPanel) {
-                MonitoredWorkerPanel workerPanel = (MonitoredWorkerPanel)child;
-                BackgroundWorker worker = workerPanel.getWorker();
-                if (!worker.isDone()) {
-                    workers.add(worker);
-                }
-            }
-        }
-        return workers;
-    }
-    
-    public boolean hasWorkersInProgress() {
-        for(Component child : mainPanel.getComponents()) {
-            if (child instanceof MonitoredWorkerPanel) {
-                MonitoredWorkerPanel workerPanel = (MonitoredWorkerPanel)child;
-                if (!workerPanel.getWorker().isDone()) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    public void workerStarted(BackgroundWorker worker) {
+        log.info("Worker started: {}",worker.getName());
+        addWorker(worker);
     }
 
-    public boolean hasWorkersCompleted() {
+    public void workerChanged(BackgroundWorker worker) {
+        MonitoredWorkerPanel workerPanel = getWorkerPanel(worker);
+        if (workerPanel!=null) {
+            log.debug("Worker changed: {}, Status:{}",worker.getName(),worker.getStatus());
+            workerPanel.update();
+        }
+    }
+
+    public void workerEnded(BackgroundWorker worker) {
+        MonitoredWorkerPanel workerPanel = getWorkerPanel(worker);
+        if (workerPanel!=null) {
+            log.debug("Worker ended: {}",worker.getName());
+            workerPanel.update();
+            Throwable error = worker.getError();
+            if (error!=null) {
+                if (error instanceof CancellationException) {
+                    log.info("Worker was cancelled: {}, Status:{}",worker.getName(),worker.getStatus());
+                }
+                else {
+                    log.error("Error occurred while running task", error);
+                }
+            }
+        }
+    }
+
+    private boolean hasWorkersCompleted() {
         for(Component child : mainPanel.getComponents()) {
             if (child instanceof MonitoredWorkerPanel) {
                 MonitoredWorkerPanel workerPanel = (MonitoredWorkerPanel)child;
@@ -159,8 +135,8 @@ public class ProgressMeterPanel extends JPanel {
         }
         return false;
     }
-    
-    public void addWorker(BackgroundWorker worker) {
+
+    private void addWorker(BackgroundWorker worker) {
         mainPanel.add(new MonitoredWorkerPanel(worker), "growy 0, growprioy 0");
         reglueMainPanel();
         refresh();
@@ -195,48 +171,12 @@ public class ProgressMeterPanel extends JPanel {
     }
     
     private void refresh() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                clearButton.setEnabled(hasWorkersCompleted());
-                clearSuccessButton.setEnabled(hasWorkersCompleted());
-                mainPanel.revalidate();
-                mainPanel.repaint();
-            }
+        SwingUtilities.invokeLater(() -> {
+            clearButton.setEnabled(hasWorkersCompleted());
+            clearSuccessButton.setEnabled(hasWorkersCompleted());
+            mainPanel.revalidate();
+            mainPanel.repaint();
         });
-    }
-        
-    @Subscribe
-    public void processEvent(WorkerStartedEvent e) {
-        log.info("Worker started: {}",e.getWorker().getName());
-        addWorker(e.getWorker());
-    }
-
-    @Subscribe
-    public void processEvent(WorkerChangedEvent e) {
-        MonitoredWorkerPanel workerPanel = getWorkerPanel(e.getWorker());
-        if (workerPanel!=null) {
-            log.debug("Worker changed: {}, Status:{}",e.getWorker().getName(),e.getWorker().getStatus());
-            workerPanel.update();
-        }
-    }
-
-    @Subscribe
-    public void processEvent(WorkerEndedEvent e) {
-        MonitoredWorkerPanel workerPanel = getWorkerPanel(e.getWorker());
-        if (workerPanel!=null) {
-            log.debug("Worker ended: {}",e.getWorker().getName());
-            workerPanel.update();
-            Throwable error = e.getWorker().getError();
-            if (error!=null) {
-                if (error instanceof CancellationException) {
-                    log.info("Worker was cancelled: {}, Status:{}",e.getWorker().getName(),e.getWorker().getStatus());
-                }
-                else {
-                    log.error("Error occurred while running task", error);
-                }
-            }
-        }
     }
 
     private MonitoredWorkerPanel getWorkerPanel(BackgroundWorker worker) {

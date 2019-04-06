@@ -22,6 +22,8 @@ public abstract class IdentifiableNode<T> extends AbstractNode implements HasIde
 
     public abstract Long getId();
 
+    public abstract T getObject();
+
     public abstract void update(T refreshed);
     
 }

@@ -7,16 +7,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
@@ -29,12 +20,14 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.UIManager;
 
+import com.google.common.collect.Lists;
+import com.google.common.eventbus.Subscribe;
+import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
@@ -59,8 +52,9 @@ import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.browser.model.ImageDecorator;
+import org.janelia.it.workstation.browser.gui.model.ImageDecorator;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
@@ -93,11 +87,6 @@ import org.janelia.model.domain.sample.SampleProcessingResult;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-import com.google.common.eventbus.Subscribe;
-
-import net.miginfocom.swing.MigLayout;
 
 /**
  * Specialized component for viewing information about Samples, including their LSMs and processing results.  
@@ -923,7 +912,7 @@ public class SampleEditorPanel
                 
                 String refMip = DomainUtils.getFilepath(files, FileType.ReferenceMip);
                 
-                List<ImageDecorator> decorators = ClientDomainUtils.getDecorators(result);
+                List<ImageDecorator> decorators = UIUtils.getDecorators(result);
                 if (signalMip!=null || refMip!=null) {
                     imagePanel.add(getImagePanel(signalMip, decorators));
                     imagePanel.add(getImagePanel(refMip, decorators));

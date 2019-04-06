@@ -22,6 +22,7 @@ import javax.swing.event.DocumentListener;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;
+import org.janelia.it.workstation.browser.options.DownloadOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

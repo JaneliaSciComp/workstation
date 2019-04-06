@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
@@ -16,7 +15,7 @@ import javax.swing.event.ChangeListener;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.ViewerToolbar;
-import org.janelia.it.workstation.browser.gui.options.OptionConstants;
+import org.janelia.it.workstation.browser.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;

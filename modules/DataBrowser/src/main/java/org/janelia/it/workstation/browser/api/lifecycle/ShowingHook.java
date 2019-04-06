@@ -9,10 +9,11 @@ import javax.swing.*;
 
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.ReleaseNotesDialog;
-import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
+import org.janelia.it.workstation.browser.options.ApplicationOptions;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.gui.progress.ProgressMeterMgr;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.logging.EDTExceptionInterceptor;
 import org.janelia.it.workstation.browser.nb_action.StartPageMenuAction;
@@ -51,23 +52,6 @@ public class ShowingHook implements Runnable {
         
         // Inject special exception handling for uncaught exceptions on the EDT so that they are shown to the user 
         Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EDTExceptionInterceptor());
-                
-        // Log events. 
-        // KR: After consulting with Les, I'm disabling this for now as it creates a lot of information we don't really have a use for. 
-//        final InterceptingEventQueue interceptingEventQueue = new InterceptingEventQueue();
-//        Toolkit.getDefaultToolkit().getSystemEventQueue().push(
-//                interceptingEventQueue);
-//        final LoggingEventListener loggingEventListener = new LoggingEventListener();
-//        Toolkit.getDefaultToolkit().addAWTEventListener(
-//                loggingEventListener, AWTEvent.MOUSE_EVENT_MASK);
-//        
-//        List<String> discriminators = new ArrayList<>();
-//        List<MessageSource> sources = new ArrayList<>();
-//        sources.add(interceptingEventQueue);
-//        discriminators.add(ReportRunner.MOUSE_EVENT_DISCRIMINATOR);
-//        //sources.add(loggingEventListener);
-//        //discriminators.add(ReportRunner.BUTTON_EVENT_DISCRIMINATOR);
-//        new ReportRunner(sources, discriminators); // This starts a thread
 
         // Disable the navigation actions until there is some history to navigate
         CallableSystemAction.get(NavigateBack.class).setEnabled(false);
@@ -84,7 +68,10 @@ public class ShowingHook implements Runnable {
 
         log.info("Showing main window");
         frame.setVisible(true);
-        
+
+        // Instantiate singletons so that they register on the event bus
+        ProgressMeterMgr.getProgressMeterMgr();
+
         // Open the start page, if necessary
         try {
             if (ApplicationOptions.getInstance().isShowStartPageOnStartup()) {

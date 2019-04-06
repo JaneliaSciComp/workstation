@@ -2,9 +2,9 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 
 import java.util.Collection;
 
-import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
+import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorStateImpl;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
-import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ColorDepthSearchEditorState 
-        extends DomainObjectEditorState<ColorDepthSearch, ColorDepthMatch, String> {
+        extends DomainObjectEditorStateImpl<ColorDepthSearch, ColorDepthMatch, String> {
 
     private Reference selectedMask;
     private Integer searchResultIndex;
@@ -36,9 +36,9 @@ public class ColorDepthSearchEditorState
         this.searchResultIndex = searchResultIndex;
     }
 
-    public ColorDepthSearchEditorState(AbstractDomainObjectNode<ColorDepthSearch> domainObjectNode, 
-            Reference selectedMask, Integer searchResultIndex, Integer page, 
-            ListViewerState listViewerState, Collection<String> selectedIds) {
+    public ColorDepthSearchEditorState(DomainObjectNode<ColorDepthSearch> domainObjectNode,
+                                       Reference selectedMask, Integer searchResultIndex, Integer page,
+                                       ListViewerState listViewerState, Collection<String> selectedIds) {
         super(domainObjectNode, page, listViewerState, selectedIds);
         this.selectedMask = selectedMask;
         this.searchResultIndex = searchResultIndex;

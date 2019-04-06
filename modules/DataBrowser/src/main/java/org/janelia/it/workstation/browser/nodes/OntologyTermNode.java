@@ -21,7 +21,7 @@ import org.janelia.it.workstation.browser.actions.OntologyElementAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.api.KeyBindings;
+import org.janelia.it.workstation.browser.gui.keybind.KeyBindings;
 import org.janelia.it.workstation.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.browser.flavors.OntologyTermFlavor;
 import org.janelia.it.workstation.browser.flavors.OntologyTermNodeFlavor;

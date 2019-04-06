@@ -41,12 +41,6 @@
             <artifactId>common-model</artifactId>
         </dependency>
 
-        <!-- Workstation Browser --> 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>browser</artifactId>
-        </dependency>
-
         <!-- NetBeans Modules --> 
         <dependency>
             <groupId>org.netbeans.api</groupId>

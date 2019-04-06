@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.gui.dialogs;
 
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.LAST_SHOWN_RELEASE_NOTES;
+import static org.janelia.it.workstation.browser.options.OptionConstants.LAST_SHOWN_RELEASE_NOTES;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -27,7 +27,7 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
+import org.janelia.it.workstation.browser.options.ApplicationOptions;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

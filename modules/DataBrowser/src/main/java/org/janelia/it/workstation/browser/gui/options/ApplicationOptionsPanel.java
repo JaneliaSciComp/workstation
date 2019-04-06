@@ -34,6 +34,8 @@ import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.panels.MemorySettingPanel;
+import org.janelia.it.workstation.browser.options.ApplicationOptions;
+import org.janelia.it.workstation.browser.options.OptionConstants;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;

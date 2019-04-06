@@ -25,7 +25,7 @@ import org.janelia.it.workstation.browser.api.state.UserColorMapping;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
 import org.janelia.it.workstation.browser.events.selection.OntologySelectionEvent;
-import org.janelia.it.workstation.browser.gui.options.OptionConstants;
+import org.janelia.it.workstation.browser.options.OptionConstants;
 import org.janelia.it.workstation.browser.model.RecentFolder;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBind;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBindings;

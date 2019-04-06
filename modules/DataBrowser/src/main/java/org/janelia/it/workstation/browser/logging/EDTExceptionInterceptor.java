@@ -63,7 +63,7 @@ public class EDTExceptionInterceptor extends EventQueue {
 
                 String[] buttons = { "Open Preferences", "Cancel" };
                 int selectedOption = JOptionPane.showOptionDialog(FrameworkImplProvider.getMainFrame(), html,
-                        "Out of Memory", JOptionPane.ERROR_MESSAGE, 0, null, buttons, buttons[0]);
+                        "Out of Memory", JOptionPane.YES_NO_OPTION, 0, null, buttons, buttons[0]);
 
                 if (selectedOption == 0) {
                     OptionsDisplayer.getDefault().open(ApplicationOptionsPanelController.PATH);

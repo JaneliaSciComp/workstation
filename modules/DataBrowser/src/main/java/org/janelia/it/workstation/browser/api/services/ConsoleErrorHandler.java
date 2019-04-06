@@ -10,6 +10,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.system.ErrorHandler;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.browser.logging.CustomLoggingLevel;
+import org.janelia.it.workstation.browser.model.ErrorType;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -49,7 +50,7 @@ public class ConsoleErrorHandler implements ErrorHandler {
             handleExceptionQuietly(message, t);
             // Show the login dialog and allow the user to re-authenticate.
             SwingUtilities.invokeLater(() -> {
-                LoginDialog.getInstance().showDialog(LoginDialog.ErrorType.TokenExpiredError);
+                LoginDialog.getInstance().showDialog(ErrorType.TokenExpiredError);
             });
         }
         else {

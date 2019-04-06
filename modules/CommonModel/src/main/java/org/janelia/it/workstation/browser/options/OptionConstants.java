@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.gui.options;
+package org.janelia.it.workstation.browser.options;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>

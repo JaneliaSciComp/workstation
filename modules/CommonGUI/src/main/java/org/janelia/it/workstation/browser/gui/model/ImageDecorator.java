@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.model;
+package org.janelia.it.workstation.browser.gui.model;
 
 import javax.swing.ImageIcon;
 

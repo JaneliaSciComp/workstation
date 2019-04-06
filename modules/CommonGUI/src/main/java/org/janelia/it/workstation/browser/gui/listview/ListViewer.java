@@ -6,7 +6,7 @@ import java.util.concurrent.Callable;
 import javax.swing.JPanel;
 
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
-import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
+import org.janelia.it.workstation.browser.gui.model.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
@@ -81,13 +81,12 @@ public interface ListViewer<T,S> {
     
     /**
      * Refresh the given domain object.
-     * @param domainObject updated domain object
+     * @param object updated domain object
      */
     public void refresh(T object);
     
     /**
      * Tell the viewer that the selection should change.
-     * @param domainObjects list of domain objects for which to change selection
      * @param select select if true, deselect if false
      * @param clearAll clear the existing selection before selecting?
      * @param isUserDriven is this action driven directly by the user?
@@ -98,7 +97,6 @@ public interface ListViewer<T,S> {
     /**
      * Check if the displayed text for the given object contains the given string.
      * @param resultPage page containing domainObject
-     * @param domainObject a domain object currently being displayed by the viewer
      * @param text search string
      * @return true if the object contains the given text
      */

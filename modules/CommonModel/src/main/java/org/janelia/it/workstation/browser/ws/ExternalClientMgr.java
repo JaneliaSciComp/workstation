@@ -5,11 +5,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.browser.events.selection.OntologySelectionEvent;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.ontology.Ontology;
@@ -17,8 +18,6 @@ import org.janelia.model.domain.sample.NeuronSeparation;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * Keeps track of external clients to the Workstation. 
@@ -116,19 +115,10 @@ public class ExternalClientMgr {
     }
     
     @Subscribe
-    public void ontologySelected(DomainObjectSelectionEvent event) {
-
-        // We only care about single selections
-        DomainObject domainObject = event.getObjectIfSingle();
-        if (domainObject==null) {
-            return;
-        }
-        
-        if (domainObject instanceof Ontology) {
-            Map<String, Object> parameters = new LinkedHashMap<>();
-            parameters.put("rootId", domainObject.getId());
-            ExternalClientMgr.getInstance().sendMessageToExternalClients("ontologySelected", parameters);   
-        }
+    public void ontologySelected(OntologySelectionEvent event) {
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("rootId", event.getOntologyId());
+        ExternalClientMgr.getInstance().sendMessageToExternalClients("ontologySelected", parameters);
     }
 
     @Subscribe

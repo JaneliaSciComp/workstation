@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.nodes;
 
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SHOW_RECENTLY_OPENED_ITEMS;
+import static org.janelia.it.workstation.browser.options.OptionConstants.SHOW_RECENTLY_OPENED_ITEMS;
 
 import java.util.Arrays;
 import java.util.Collections;

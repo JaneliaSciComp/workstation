@@ -27,6 +27,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.SwingConstants;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -45,14 +48,14 @@ import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
 import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
-import org.janelia.it.workstation.browser.gui.progress.ProgressMeterPanel;
+import org.janelia.it.workstation.browser.gui.progress.ProgressMeterMgr;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
-import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.browser.util.HelpTextUtils;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
@@ -68,10 +71,6 @@ import org.janelia.model.domain.sample.Sample;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.eventbus.Subscribe;
 
 /**
  * Specialized component for executing color depth searches on the cluster and viewing their results.
@@ -285,7 +284,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     }
 
     @Override
-    public void loadDomainObjectNode(AbstractDomainObjectNode<ColorDepthSearch> domainObjectNode, boolean isUserDriven, Callable<Void> success) {
+    public void loadDomainObjectNode(DomainObjectNode<ColorDepthSearch> domainObjectNode, boolean isUserDriven, Callable<Void> success) {
         this.searchNode = (ColorDepthSearchNode) domainObjectNode;
         loadDomainObject(domainObjectNode.getDomainObject(), isUserDriven, success);
     }
@@ -340,7 +339,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 debouncer.success();
                 
                 // Update processing status
-                for(BackgroundWorker worker : ProgressMeterPanel.getSingletonInstance().getWorkersInProgress()) {
+                for(BackgroundWorker worker : ProgressMeterMgr.getProgressMeterMgr().getActiveWorkers()) {
                     if (worker instanceof SearchMonitoringWorker) {
                         SearchMonitoringWorker searchWorker = (SearchMonitoringWorker)worker;
                         if (searchWorker.getSearch().getId().equals(search.getId())) {

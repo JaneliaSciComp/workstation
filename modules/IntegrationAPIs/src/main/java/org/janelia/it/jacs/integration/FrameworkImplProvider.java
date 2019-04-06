@@ -12,6 +12,7 @@ import org.janelia.it.jacs.integration.framework.system.ErrorHandler;
 import org.janelia.it.jacs.integration.framework.system.FileAccess;
 import org.janelia.it.jacs.integration.framework.system.InspectionHandler;
 import org.janelia.it.jacs.integration.framework.system.ParentFrame;
+import org.janelia.it.jacs.integration.framework.system.ProgressHandler;
 import org.janelia.it.jacs.integration.framework.system.SettingsModel;
 import org.openide.util.NbPreferences;
 import org.openide.util.lookup.Lookups;
@@ -58,6 +59,10 @@ public class FrameworkImplProvider {
     
     public static InspectionHandler getInspectionHandler() {
         return getProvider(InspectionHandler.LOOKUP_PATH, InspectionHandler.class);
+    }
+
+    public static ProgressHandler getProgressHandler() {
+        return getProvider(ProgressHandler.LOOKUP_PATH, ProgressHandler.class);
     }
 
     private static <T> T getProvider(String path, Class<T> clazz) {

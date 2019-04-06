@@ -11,12 +11,12 @@ import org.openide.nodes.Children;
 
 public class TmWorkspaceNode extends AbstractDomainObjectNode<TmWorkspace> {
 
-    public TmWorkspaceNode(ChildFactory<?> parentChildFactory, TmWorkspace workspace) throws Exception {
+    public TmWorkspaceNode(ChildFactory<?> parentChildFactory, TmWorkspace workspace) {
         super(parentChildFactory, Children.LEAF, workspace);
     }
     
     public TmWorkspace getWorkspace() {
-        return (TmWorkspace)getDomainObject();
+        return getDomainObject();
     }
     
     @Override

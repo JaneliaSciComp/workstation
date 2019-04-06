@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.components.ProgressTopComponent;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.workers.WorkerChangedEvent;
 import org.janelia.it.workstation.browser.events.workers.WorkerEndedEvent;
@@ -107,7 +106,6 @@ public abstract class BackgroundWorker extends SimpleWorker {
      * Same as execute(), except throws events on the EventBus.
      */
     public void executeWithEvents() {
-        ProgressTopComponent.ensureActive();
         Events.getInstance().postOnEventBus(new WorkerStartedEvent(this));
         execute();
     }

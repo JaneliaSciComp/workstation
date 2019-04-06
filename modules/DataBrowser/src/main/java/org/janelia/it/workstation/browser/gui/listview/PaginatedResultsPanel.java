@@ -35,7 +35,7 @@ import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextRegistration;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
-import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
+import org.janelia.it.workstation.browser.gui.model.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;

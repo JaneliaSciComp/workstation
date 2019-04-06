@@ -6,7 +6,7 @@ import java.util.concurrent.Callable;
 import javax.swing.JPanel;
 
 import org.janelia.it.workstation.browser.gui.listview.PaginatedResultsPanel;
-import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.model.domain.DomainObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,13 +24,13 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T, S> exte
     
     protected abstract P getDomainObject();
     
-    protected abstract AbstractDomainObjectNode<P> getDomainObjectNode();
+    protected abstract DomainObjectNode<P> getDomainObjectNode();
     
     @Override
     public abstract void loadDomainObject(P domainObject, boolean isUserDriven, Callable<Void> success);
 
     @Override
-    public abstract void loadDomainObjectNode(AbstractDomainObjectNode<P> domainObjectNode, boolean isUserDriven, Callable<Void> success);
+    public abstract void loadDomainObjectNode(DomainObjectNode<P> domainObjectNode, boolean isUserDriven, Callable<Void> success);
 
     @Override
     public DomainObjectEditorState<P,T,S> saveState() {
@@ -39,7 +39,7 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T, S> exte
                 log.warn("No object is loaded, so state cannot be saved");
                 return null;
             }
-            return new DomainObjectEditorState<P,T,S>(
+            return new DomainObjectEditorStateImpl<>(
                     getDomainObject(),
                     getResultsPanel().getCurrPage(),
                     getResultsPanel().getViewer().saveState(),
@@ -50,7 +50,7 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T, S> exte
                 log.warn("No object is loaded, so state cannot be saved");
                 return null;
             }
-            return new DomainObjectEditorState<P,T,S>(
+            return new DomainObjectEditorStateImpl<>(
                     getDomainObjectNode(),
                     getResultsPanel().getCurrPage(),
                     getResultsPanel().getViewer().saveState(),

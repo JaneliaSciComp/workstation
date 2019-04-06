@@ -11,16 +11,14 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.AbstractAction;
 
 import org.janelia.it.jacs.compute.engine.service.ServiceException;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.workstation.browser.api.StateMgr;
-import org.janelia.it.workstation.browser.components.ProgressTopComponent;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.workers.WorkerStartedEvent;
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
-import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,11 +73,7 @@ public class TaskMonitoringWorker extends NamedBackgroundWorker {
                     handle = ProgressHandleFactory.createHandle(task.getDisplayName(), new AbstractAction() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            TopComponent tc = WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
-                            if (tc!=null) {
-                                tc.open();
-                                tc.requestVisible();
-                            }
+                            FrameworkImplProvider.getProgressHandler().showProgressPanel();
                         }
                     });
                     handle.start();
@@ -161,7 +155,6 @@ public class TaskMonitoringWorker extends NamedBackgroundWorker {
 
     @Override
     public void executeWithEvents() {
-        ProgressTopComponent.ensureActive();
         Events.getInstance().postOnEventBus(new WorkerStartedEvent(this));
         getWorkersExecutorService().execute(this);
     }

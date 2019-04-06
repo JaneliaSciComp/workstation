@@ -1,10 +1,10 @@
 package org.janelia.it.workstation.browser.gui.options;
 
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.UNLOAD_IMAGES_PROPERTY;
+import static org.janelia.it.workstation.browser.options.OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY;
+import static org.janelia.it.workstation.browser.options.OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY;
+import static org.janelia.it.workstation.browser.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
+import static org.janelia.it.workstation.browser.options.OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY;
+import static org.janelia.it.workstation.browser.options.OptionConstants.UNLOAD_IMAGES_PROPERTY;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;

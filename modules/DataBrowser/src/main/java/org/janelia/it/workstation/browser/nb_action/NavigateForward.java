@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.browser.nb_action;
 
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.it.workstation.browser.api.state.DataBrowserMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -48,6 +48,6 @@ public final class NavigateForward extends CallableSystemAction {
     @Override
     public void performAction() {
         ActivityLogHelper.logUserAction("NavigateForward.performAction");
-        StateMgr.getStateMgr().getNavigationHistory().goForward();
+        DataBrowserMgr.getDataBrowserMgr().getNavigationHistory().goForward();
     }
 }

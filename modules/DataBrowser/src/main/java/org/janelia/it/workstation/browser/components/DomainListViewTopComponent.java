@@ -6,23 +6,24 @@ import java.util.concurrent.Callable;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.StateMgr;
-import org.janelia.it.workstation.browser.api.state.NavigationMgr;
+import org.janelia.it.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
+import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorStateImpl;
 import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -34,8 +35,6 @@ import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * Top component which displays lists of domain objects.
@@ -130,7 +129,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
         // Take control of the history navigation buttons
-        NavigationMgr.getNavigationMgr().updateNavigationButtons(this);
+        DataBrowserMgr.getDataBrowserMgr().updateNavigationButtons(this);
         // Make our ancestor editor the current find context
         if (findContext!=null) {
             FindContextManager.getInstance().activateContext(findContext);
@@ -155,7 +154,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (p==null || editor==null) return;
         try {
             DomainObjectEditorState<?,?,?> state = editor.saveState();
-            String serializedState = DomainObjectEditorState.serialize(state);
+            String serializedState = DomainObjectEditorStateImpl.serialize(state);
             log.info("Writing state: {}",serializedState);
             p.setProperty("version", TC_VERSION);
             p.setProperty("editorState", serializedState);
@@ -218,7 +217,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
             @Override
             protected void doStuff() throws Exception {
-                state = DomainObjectEditorState.deserialize(stateToLoad);
+                state = DomainObjectEditorStateImpl.deserialize(stateToLoad);
                 if (state!=null && state.getDomainObject()!=null && state.getDomainObject().getId()!=null) {
                     // Refresh the object, if it's coming from the database
                     domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(state.getDomainObject());
@@ -300,7 +299,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     }
 
     @SuppressWarnings({ "unchecked" })
-    public void loadDomainObjectNode(AbstractDomainObjectNode<? extends DomainObject> domainObjectNode, boolean isUserDriven) {
+    public void loadDomainObjectNode(DomainObjectNode<? extends DomainObject> domainObjectNode, boolean isUserDriven) {
         
         log.trace("loadDomainObjectNode({}, isUserDriven={})", domainObjectNode.getDomainObject().getName(), isUserDriven);
         
@@ -336,7 +335,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             DomainObjectEditorState<?,?,?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
-                NavigationMgr.getNavigationMgr().getNavigationHistory(DomainListViewTopComponent.this).pushHistory(state);
+                DataBrowserMgr.getDataBrowserMgr().getNavigationHistory(DomainListViewTopComponent.this).pushHistory(state);
             }
             else {
                 log.warn("Editor did not provide current state");
@@ -367,7 +366,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             DomainObjectEditorState<?,?,?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
-                NavigationMgr.getNavigationMgr().getNavigationHistory(DomainListViewTopComponent.this).updateCurrentState(state);
+                DataBrowserMgr.getDataBrowserMgr().getNavigationHistory(DomainListViewTopComponent.this).updateCurrentState(state);
             }
             else {
                 log.warn("Editor did not provide current state");

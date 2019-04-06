@@ -42,7 +42,7 @@ import org.janelia.it.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
-import org.janelia.it.workstation.browser.model.DomainObjectImageModel;
+import org.janelia.it.workstation.browser.gui.model.DomainObjectImageModel;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;

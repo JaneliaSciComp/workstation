@@ -41,7 +41,7 @@
             <artifactId>common-model</artifactId>
         </dependency>
 
-        <!-- Workstation Browser -->
+        <!-- Browser -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>browser</artifactId>

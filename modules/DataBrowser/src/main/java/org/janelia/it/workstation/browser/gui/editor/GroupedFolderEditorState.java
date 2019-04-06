@@ -3,7 +3,7 @@ package org.janelia.it.workstation.browser.gui.editor;
 import java.util.Collection;
 
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
-import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.workspace.GroupedFolder;
@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class GroupedFolderEditorState 
-        extends DomainObjectEditorState<GroupedFolder, DomainObject, Reference> {
+        extends DomainObjectEditorStateImpl<GroupedFolder, DomainObject, Reference> {
 
     private Reference selectedGroup;
     
@@ -33,7 +33,7 @@ public class GroupedFolderEditorState
     }
 
     public GroupedFolderEditorState(
-            AbstractDomainObjectNode<GroupedFolder> domainObjectNode, 
+            DomainObjectNode<GroupedFolder> domainObjectNode,
             Reference selectedGroup, 
             Integer page, 
             ListViewerState listViewerState, 

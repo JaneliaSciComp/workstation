@@ -31,7 +31,7 @@ import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.ListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
-import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
+import org.janelia.it.workstation.browser.gui.model.ImageModel;
 import org.janelia.it.workstation.browser.gui.listview.table.TableViewerConfiguration;
 import org.janelia.it.workstation.browser.gui.listview.table.TableViewerPanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;

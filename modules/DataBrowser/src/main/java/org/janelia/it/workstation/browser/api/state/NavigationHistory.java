@@ -122,7 +122,7 @@ public class NavigationHistory {
 
     private void loadState(DomainObjectEditorState<?,?,?> state) {
 
-        DomainListViewTopComponent tc = state.getTopComponent();
+        DomainListViewTopComponent tc = (DomainListViewTopComponent)state.getTopComponent();
         if (!tc.isOpened()) {
             tc.open();
         }
@@ -132,7 +132,7 @@ public class NavigationHistory {
 
         if (state.getDomainObjectNode()!=null) {
             // Only select the node after loading the state to editor above, so that it doesn't trigger a normal load
-            DomainExplorerTopComponent.getInstance().selectNode(state.getDomainObjectNode());
+            DomainExplorerTopComponent.getInstance().selectNode((org.openide.nodes.Node)state.getDomainObjectNode());
         }
     }
 

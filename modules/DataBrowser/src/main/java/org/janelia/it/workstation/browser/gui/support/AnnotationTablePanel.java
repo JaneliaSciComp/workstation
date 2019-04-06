@@ -29,7 +29,7 @@ import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImagesPanel;
-import org.janelia.it.workstation.browser.gui.options.OptionConstants;
+import org.janelia.it.workstation.browser.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;

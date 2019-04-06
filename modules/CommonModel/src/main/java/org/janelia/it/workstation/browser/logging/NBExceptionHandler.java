@@ -18,7 +18,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
-import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
+import org.janelia.it.workstation.browser.util.MailDialogueBox;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.slf4j.Logger;
@@ -237,7 +237,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
              
             MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(FrameworkImplProvider.getMainFrame(), REPORT_EMAIL)
                     .withTitle("Create A Ticket")
-                    .withPromptText("If possible, please describe what you were doing when the error occured:")
+                    .withPromptText("If possible, please describe what you were doing when the error occurred:")
                     .withEmailSubject(subject)
                     .appendStandardPrefix();
             

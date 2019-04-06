@@ -1,9 +1,8 @@
-package org.janelia.it.workstation.browser.gui.listview.icongrid;
+package org.janelia.it.workstation.browser.gui.model;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.model.domain.ontology.Annotation;
 
 /**

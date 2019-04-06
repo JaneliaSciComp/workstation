@@ -11,15 +11,13 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.AbstractAction;
 
 import org.janelia.it.jacs.compute.engine.service.ServiceException;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
-import org.janelia.it.workstation.browser.components.ProgressTopComponent;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.workers.WorkerChangedEvent;
 import org.janelia.it.workstation.browser.events.workers.WorkerStartedEvent;
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
-import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,11 +67,7 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
                     handle = ProgressHandleFactory.createHandle(getName(), new AbstractAction() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            TopComponent tc = WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
-                            if (tc!=null) {
-                                tc.open();
-                                tc.requestVisible();
-                            }
+                            FrameworkImplProvider.getProgressHandler().showProgressPanel();
                         }
                     });
                     handle.start();
@@ -147,13 +141,8 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
 
     @Override
     public void executeWithEvents() {
-        if (isOpenProgressMonitor()) ProgressTopComponent.ensureActive();
         Events.getInstance().postOnEventBus(new WorkerStartedEvent(this));
         getWorkersExecutorService().execute(this);
-    }
-    
-    protected boolean isOpenProgressMonitor() {
-        return true;
     }
 
     protected void setServiceId(Long serviceId) {

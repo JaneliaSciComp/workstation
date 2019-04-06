@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.model;
+package org.janelia.it.workstation.browser.gui.model;
 
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -7,10 +7,9 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.model.access.domain.DomainUtils;
@@ -79,7 +78,7 @@ public abstract class DomainObjectImageModel implements ImageModel<DomainObject,
     
     @Override
     public List<ImageDecorator> getDecorators(DomainObject imageObject) {
-        return ClientDomainUtils.getDecorators(imageObject);
+        return UIUtils.getDecorators(imageObject);
     }
     
     protected abstract ArtifactDescriptor getArtifactDescriptor();

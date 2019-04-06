@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.nb_action;
 
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
+import static org.janelia.it.workstation.browser.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
 
 import java.util.ArrayList;
 import java.util.Collection;

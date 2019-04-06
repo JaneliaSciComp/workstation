@@ -25,7 +25,7 @@ import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
-import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
@@ -86,7 +86,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     }
 
     @Override
-    public void loadDomainObjectNode(AbstractDomainObjectNode<Node> treeNodeNode, boolean isUserDriven, Callable<Void> success) {
+    public void loadDomainObjectNode(DomainObjectNode<Node> treeNodeNode, boolean isUserDriven, Callable<Void> success) {
         this.treeNodeNode = (TreeNodeNode)treeNodeNode;
         loadDomainObject(treeNodeNode.getDomainObject(), isUserDriven, success);
     }
@@ -216,7 +216,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     }
 
     @Override
-    protected AbstractDomainObjectNode<Node> getDomainObjectNode() {
+    protected DomainObjectNode<Node> getDomainObjectNode() {
         return treeNodeNode;
     }
     

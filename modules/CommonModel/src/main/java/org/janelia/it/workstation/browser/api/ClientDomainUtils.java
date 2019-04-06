@@ -1,17 +1,12 @@
 package org.janelia.it.workstation.browser.api;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.janelia.it.workstation.browser.model.ImageDecorator;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasName;
-import org.janelia.model.domain.sample.LSMImage;
-import org.janelia.model.domain.sample.PipelineResult;
-import org.janelia.model.domain.sample.Sample;
 
 
 /**
@@ -82,44 +77,5 @@ public class ClientDomainUtils {
         }
         
         return prefix+" #"+(max+1);
-    }
-    
-    /**
-     * Return a list of image decorators for the given domain object.
-     * @param imageObject
-     * @return
-     */
-    public static List<ImageDecorator> getDecorators(DomainObject imageObject) {
-        List<ImageDecorator> decorators = new ArrayList<>();
-        if (imageObject instanceof Sample) {
-            Sample sample = (Sample)imageObject;
-            if (sample.isSamplePurged()) {
-                decorators.add(ImageDecorator.PURGED);
-            }
-            if (!sample.isSampleSageSynced()) {
-                decorators.add(ImageDecorator.DESYNC);
-            }   
-        }
-        else if (imageObject instanceof LSMImage) {
-            LSMImage lsm = (LSMImage)imageObject;
-            if (!lsm.isLSMSageSynced()) {
-                decorators.add(ImageDecorator.DESYNC);
-            }   
-        }
-        
-        return decorators;
-    }
-    
-    /**
-     * Return a list of image decorators for the given pipeline result.
-     * @param result
-     * @return
-     */
-    public static List<ImageDecorator> getDecorators(PipelineResult result) {
-        List<ImageDecorator> decorators = new ArrayList<>();
-        if (result.getPurged()!=null && result.getPurged()) {
-            decorators.add(ImageDecorator.PURGED);
-        }
-        return decorators;
     }
 }

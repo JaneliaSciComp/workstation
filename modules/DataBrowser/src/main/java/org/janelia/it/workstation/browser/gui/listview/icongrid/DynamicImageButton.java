@@ -10,9 +10,10 @@ import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
-import org.janelia.it.workstation.browser.gui.options.OptionConstants;
+import org.janelia.it.workstation.browser.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.model.ImageDecorator;
+import org.janelia.it.workstation.browser.gui.model.ImageDecorator;
+import org.janelia.it.workstation.browser.gui.model.ImageModel;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

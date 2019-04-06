@@ -42,51 +42,15 @@
         <!-- NetBeans Modules -->
         <dependency>
             <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-nodes</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-modules-autoupdate-services</artifactId>
         </dependency>
 
         <!-- Maven Central dependencies -->
-        <dependency>
-            <groupId>ome</groupId>
-            <artifactId>formats-bsd</artifactId>
-            <version>5.0.0</version>
-            <exclusions>
-                <!-- already provided by ConsoleWrapper -->
-                <exclusion>
-                    <groupId>ome</groupId>
-                    <artifactId>jai_imageio</artifactId>
-                </exclusion>
-                <!-- this dependency generates errors during the build, and we don't need it -->
-                <exclusion>
-                    <groupId>org.scijava</groupId>
-                    <artifactId>native-lib-loader</artifactId>
-                </exclusion>
-                <!-- Workstation does not use logback -->
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-solrj</artifactId>
-            <version>3.5.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-webdav</artifactId>
-            <version>2.5.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>4.0</version>
-        </dependency>
+        <!-- These dependencies are used for the External Client API -->
         <dependency>
             <groupId>org.apache.axis2</groupId>
             <artifactId>axis2</artifactId>
@@ -106,15 +70,6 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
         </dependency>
-        <!--
-            TODO: This dependency should be fairly simple to eliminate.
-            It mostly supports the legacy code using the Entity model which we no longer use.
-        -->
-        <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>3.3.0.GA</version>
-        </dependency>
 
     </dependencies>
 
@@ -126,11 +81,10 @@
                 <configuration>
                     <publicPackages>
                         <publicPackage>org.janelia.it.workstation.browser</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.actions</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.activity_logging</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.api</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.api.exceptions</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.api.facade.impl.ejb</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.api.facade.impl.rest</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.api.facade.interfaces</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.api.http</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.api.lifecycle</publicPackage>
@@ -144,20 +98,18 @@
                         <publicPackage>org.janelia.it.workstation.browser.events.selection</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.events.workers</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.filecache</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.lifecycle</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.logging</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.model</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.model.descriptors</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.model.keybind</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.model.search</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.tools</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.tools.preferences</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.nodes</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.options</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.util</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.util.compression</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.web</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.workers</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.ws</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.gui.framework.console</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

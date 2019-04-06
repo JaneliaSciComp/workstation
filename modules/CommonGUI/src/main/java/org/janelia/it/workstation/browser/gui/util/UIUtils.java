@@ -1,13 +1,24 @@
 package org.janelia.it.workstation.browser.gui.util;
 
+import java.awt.Component;
+import java.awt.Cursor;
+import java.io.FileNotFoundException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
+import org.janelia.it.workstation.browser.gui.model.ImageDecorator;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.sample.LSMImage;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.model.domain.sample.Sample;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.io.FileNotFoundException;
-import java.net.URL;
 
 /**
  * Utility methods for generically dealing with Swing and NetBeans UI.
@@ -113,5 +124,44 @@ public class UIUtils {
                 setDefaultCursor(component);
             }
         });
+    }
+
+    /**
+     * Return a list of image decorators for the given domain object.
+     * @param imageObject
+     * @return
+     */
+    public static List<ImageDecorator> getDecorators(DomainObject imageObject) {
+        List<ImageDecorator> decorators = new ArrayList<>();
+        if (imageObject instanceof Sample) {
+            Sample sample = (Sample)imageObject;
+            if (sample.isSamplePurged()) {
+                decorators.add(ImageDecorator.PURGED);
+            }
+            if (!sample.isSampleSageSynced()) {
+                decorators.add(ImageDecorator.DESYNC);
+            }
+        }
+        else if (imageObject instanceof LSMImage) {
+            LSMImage lsm = (LSMImage)imageObject;
+            if (!lsm.isLSMSageSynced()) {
+                decorators.add(ImageDecorator.DESYNC);
+            }
+        }
+
+        return decorators;
+    }
+
+    /**
+     * Return a list of image decorators for the given pipeline result.
+     * @param result
+     * @return
+     */
+    public static List<ImageDecorator> getDecorators(PipelineResult result) {
+        List<ImageDecorator> decorators = new ArrayList<>();
+        if (result.getPurged()!=null && result.getPurged()) {
+            decorators.add(ImageDecorator.PURGED);
+        }
+        return decorators;
     }
 }

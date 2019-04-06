@@ -3,42 +3,40 @@ package org.janelia.it.workstation.browser.gui.editor;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
-import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
-import org.janelia.model.domain.DomainObject;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
+import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
+import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.model.domain.DomainObject;
+import org.openide.windows.TopComponent;
 
 /**
- * Snapshot of the state of a list viewer for navigation purposes.
- *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "class")
-public class DomainObjectEditorState<P extends DomainObject, T, S> {
+public class DomainObjectEditorStateImpl<P extends DomainObject, T, S> implements DomainObjectEditorState<P, T, S> {
 
     @JsonIgnore
     private DomainListViewTopComponent topComponent;
-    
+
     @JsonIgnore
-    private AbstractDomainObjectNode<P> domainObjectNode;
-    
+    private DomainObjectNode<P> domainObjectNode;
+
     private P domainObject;
     private Integer page;
     private ListViewerState listViewerState;
     private Collection<S> selectedIds;
 
     @JsonCreator
-    public DomainObjectEditorState(
-            @JsonProperty("domainObject") P domainObject, 
-            @JsonProperty("page") Integer page, 
-            @JsonProperty("listViewerState") ListViewerState listViewerState, 
+    public DomainObjectEditorStateImpl(
+            @JsonProperty("domainObject") P domainObject,
+            @JsonProperty("page") Integer page,
+            @JsonProperty("listViewerState") ListViewerState listViewerState,
             @JsonProperty("selectedIds") Collection<S> selectedIds) {
         this.domainObjectNode = null;
         this.domainObject = domainObject;
@@ -46,8 +44,8 @@ public class DomainObjectEditorState<P extends DomainObject, T, S> {
         this.listViewerState = listViewerState;
         this.selectedIds = new ArrayList<>(selectedIds);
     }
-    
-    public DomainObjectEditorState(AbstractDomainObjectNode<P> domainObjectNode, Integer page, ListViewerState listViewerState, Collection<S> selectedIds) {
+
+    public DomainObjectEditorStateImpl(DomainObjectNode<P> domainObjectNode, Integer page, ListViewerState listViewerState, Collection<S> selectedIds) {
         this.domainObjectNode = domainObjectNode;
         this.domainObject = domainObjectNode.getDomainObject();
         this.page = page;
@@ -55,18 +53,18 @@ public class DomainObjectEditorState<P extends DomainObject, T, S> {
         this.selectedIds = new ArrayList<>(selectedIds);
     }
 
-    public DomainListViewTopComponent getTopComponent() {
-        return topComponent;
+    public <C extends TopComponent> C getTopComponent() {
+        return (C)topComponent;
     }
 
-    public void setTopComponent(DomainListViewTopComponent topComponent) {
-        this.topComponent = topComponent;
+    public <C extends TopComponent> void setTopComponent(C topComponent) {
+        this.topComponent = (DomainListViewTopComponent)topComponent;
     }
 
     public P getDomainObject() {
         return domainObject;
     }
-    
+
     public void setDomainObject(DomainObject domainObject) {
         this.domainObject = (P)domainObject;
     }
@@ -83,7 +81,7 @@ public class DomainObjectEditorState<P extends DomainObject, T, S> {
         return selectedIds;
     }
 
-    public AbstractDomainObjectNode<P> getDomainObjectNode() {
+    public DomainObjectNode<P> getDomainObjectNode() {
         return domainObjectNode;
     }
 
@@ -119,7 +117,6 @@ public class DomainObjectEditorState<P extends DomainObject, T, S> {
     }
 
     private static final ObjectMapper mapper = new ObjectMapper();
-    
     public static String serialize(DomainObjectEditorState<?,?,?> state) throws Exception {
         return mapper.writeValueAsString(state);
     }
@@ -127,5 +124,8 @@ public class DomainObjectEditorState<P extends DomainObject, T, S> {
     public static DomainObjectEditorState<?,?,?> deserialize(String serializedState) throws Exception {
         return mapper.readValue(DomainModelViewUtils.convertModelPackages(serializedState), DomainObjectEditorState.class);
     }
+
+
+
 
 }

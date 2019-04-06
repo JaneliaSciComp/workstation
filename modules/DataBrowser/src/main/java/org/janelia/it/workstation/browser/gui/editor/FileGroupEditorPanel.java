@@ -20,13 +20,13 @@ import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationE
 import org.janelia.it.workstation.browser.events.selection.FileGroupSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
-import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
+import org.janelia.it.workstation.browser.gui.model.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;
-import org.janelia.it.workstation.browser.model.ImageDecorator;
+import org.janelia.it.workstation.browser.gui.model.ImageDecorator;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;

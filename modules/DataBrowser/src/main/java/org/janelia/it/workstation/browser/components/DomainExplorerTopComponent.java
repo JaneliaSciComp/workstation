@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.browser.components;
 
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.NAVIGATE_ON_CLICK;
-import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SHOW_RECENTLY_OPENED_ITEMS;
+import static org.janelia.it.workstation.browser.options.OptionConstants.NAVIGATE_ON_CLICK;
+import static org.janelia.it.workstation.browser.options.OptionConstants.SHOW_RECENTLY_OPENED_ITEMS;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -35,7 +35,7 @@ import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationE
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.events.prefs.LocalPreferenceChanged;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
-import org.janelia.it.workstation.browser.events.selection.IdentifiableNodeSelectionModel;
+import org.janelia.it.workstation.browser.nodes.IdentifiableNodeSelectionModel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;

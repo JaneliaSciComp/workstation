@@ -12,7 +12,7 @@ import org.janelia.it.workstation.browser.filecache.LocalFileCache;
 import org.janelia.it.workstation.browser.filecache.URLProxy;
 import org.janelia.it.workstation.browser.filecache.StorageClientMgr;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
-import org.janelia.it.workstation.browser.gui.options.OptionConstants;
+import org.janelia.it.workstation.browser.options.OptionConstants;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

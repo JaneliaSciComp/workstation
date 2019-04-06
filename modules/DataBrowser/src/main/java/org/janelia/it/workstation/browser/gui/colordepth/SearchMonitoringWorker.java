@@ -29,9 +29,4 @@ public class SearchMonitoringWorker extends AsyncServiceMonitoringWorker {
            DomainMgr.getDomainMgr().getModel().invalidate(search); 
         });
     }
-    
-    @Override
-    protected boolean isOpenProgressMonitor() {
-        return false;
-    }
 }

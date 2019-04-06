@@ -19,7 +19,7 @@ import javax.swing.KeyStroke;
 
 import org.janelia.it.workstation.browser.actions.Action;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.KeyBindings;
+import org.janelia.it.workstation.browser.gui.keybind.KeyBindings;
 import org.janelia.it.workstation.browser.gui.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.browser.gui.keybind.ShortcutTextField;
 import org.slf4j.Logger;

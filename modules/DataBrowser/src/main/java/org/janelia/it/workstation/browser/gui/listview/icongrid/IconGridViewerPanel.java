@@ -23,15 +23,16 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.KeyBindings;
+import org.janelia.it.workstation.browser.gui.keybind.KeyBindings;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionEvent;
 import org.janelia.it.workstation.browser.events.prefs.LocalPreferenceChanged;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.gui.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
-import org.janelia.it.workstation.browser.gui.options.OptionConstants;
+import org.janelia.it.workstation.browser.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
+import org.janelia.it.workstation.browser.gui.model.ImageModel;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.model.domain.ontology.Annotation;

@@ -2,9 +2,11 @@ package org.janelia.it.workstation.browser.components;
 
 import java.awt.BorderLayout;
 import java.util.Properties;
+import java.util.concurrent.CancellationException;
 
 import org.janelia.it.workstation.browser.gui.progress.ProgressMeterPanel;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -46,14 +48,29 @@ public final class ProgressTopComponent extends TopComponent {
     private static final Logger log = LoggerFactory.getLogger(ProgressTopComponent.class);
     
     public static final String PREFERRED_ID = "ProgressTopComponent";
-    
+
+    private ProgressMeterPanel progressMeterPanel;
+
     public ProgressTopComponent() {
         initComponents();
         setName(Bundle.CTL_ProgressTopComponent());
         setToolTipText(Bundle.HINT_ProgressTopComponentTopComponent());
-        add(ProgressMeterPanel.getSingletonInstance(), BorderLayout.CENTER);
+        this.progressMeterPanel = new ProgressMeterPanel();
+        add(progressMeterPanel, BorderLayout.CENTER);
     }
-    
+
+    public void workerStarted(BackgroundWorker worker) {
+        progressMeterPanel.workerStarted(worker);
+    }
+
+    public void workerChanged(BackgroundWorker worker) {
+        progressMeterPanel.workerChanged(worker);
+    }
+
+    public void workerEnded(BackgroundWorker worker) {
+        progressMeterPanel.workerEnded(worker);
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -88,8 +105,8 @@ public final class ProgressTopComponent extends TopComponent {
         // TODO read your settings according to their version
     }
     
-    public static void ensureActive() {
-        TopComponent tc = WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
+    public static ProgressTopComponent ensureActive() {
+        ProgressTopComponent tc = (ProgressTopComponent)WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
         if (tc==null) {
             log.debug("Progress panel not found, creating...");
             String modeName = "rightSlidingSide";
@@ -114,5 +131,6 @@ public final class ProgressTopComponent extends TopComponent {
             }
         }
         tc.requestActive();
+        return tc;
     }
 }

@@ -8,7 +8,7 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.gui.editor.StartPage;
-import org.janelia.it.workstation.browser.gui.options.ApplicationOptions;
+import org.janelia.it.workstation.browser.options.ApplicationOptions;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;

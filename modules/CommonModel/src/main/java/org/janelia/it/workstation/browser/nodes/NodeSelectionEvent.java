@@ -1,10 +1,12 @@
-package org.janelia.it.workstation.browser.events.selection;
+package org.janelia.it.workstation.browser.nodes;
 
 import org.janelia.it.workstation.browser.nodes.IdentifiableNode;
 
 /**
  * Event indicating that a node's selection has changed.
- * 
+ *
+ * TODO: rename this to IdentifiableNodeSelectionEvent to reduce confusion
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class NodeSelectionEvent {

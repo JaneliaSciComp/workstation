@@ -50,7 +50,7 @@ import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
 import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
-import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.GroupedFolderNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
@@ -246,7 +246,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
     }
 
     @Override
-    public void loadDomainObjectNode(AbstractDomainObjectNode<GroupedFolder> domainObjectNode, boolean isUserDriven, Callable<Void> success) {
+    public void loadDomainObjectNode(DomainObjectNode<GroupedFolder> domainObjectNode, boolean isUserDriven, Callable<Void> success) {
         this.groupedFolderNode = (GroupedFolderNode) domainObjectNode;
         loadDomainObject(domainObjectNode.getDomainObject(), isUserDriven, success);
     }
