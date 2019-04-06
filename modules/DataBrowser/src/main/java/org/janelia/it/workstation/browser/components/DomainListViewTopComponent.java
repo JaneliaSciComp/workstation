@@ -13,6 +13,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.it.workstation.browser.api.state.NavigationMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
@@ -129,7 +130,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
         // Take control of the history navigation buttons
-        StateMgr.getStateMgr().updateNavigationButtons(this);
+        NavigationMgr.getNavigationMgr().updateNavigationButtons(this);
         // Make our ancestor editor the current find context
         if (findContext!=null) {
             FindContextManager.getInstance().activateContext(findContext);
@@ -335,7 +336,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             DomainObjectEditorState<?,?,?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
-                StateMgr.getStateMgr().getNavigationHistory(DomainListViewTopComponent.this).pushHistory(state);
+                NavigationMgr.getNavigationMgr().getNavigationHistory(DomainListViewTopComponent.this).pushHistory(state);
             }
             else {
                 log.warn("Editor did not provide current state");
@@ -366,7 +367,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             DomainObjectEditorState<?,?,?> state = editor.saveState();
             if (state!=null) {
                 state.setTopComponent(DomainListViewTopComponent.this);
-                StateMgr.getStateMgr().getNavigationHistory(DomainListViewTopComponent.this).updateCurrentState(state);
+                NavigationMgr.getNavigationMgr().getNavigationHistory(DomainListViewTopComponent.this).updateCurrentState(state);
             }
             else {
                 log.warn("Editor did not provide current state");

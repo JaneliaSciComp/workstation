@@ -2,15 +2,14 @@ package org.janelia.it.workstation.browser.api;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.it.jacs.model.tasks.Event;
@@ -20,10 +19,9 @@ import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.state.NavigationHistory;
+import org.janelia.it.workstation.browser.api.facade.impl.ejb.LegacyFacadeImpl;
+import org.janelia.it.workstation.browser.api.facade.interfaces.LegacyFacade;
 import org.janelia.it.workstation.browser.api.state.UserColorMapping;
-import org.janelia.it.workstation.browser.components.DomainListViewManager;
-import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
 import org.janelia.it.workstation.browser.events.selection.OntologySelectionEvent;
@@ -39,13 +37,8 @@ import org.janelia.model.domain.ontology.Category;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.security.util.PermissionTemplate;
-import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
-import org.janelia.it.workstation.browser.api.facade.impl.ejb.LegacyFacadeImpl;
-import org.janelia.it.workstation.browser.api.facade.interfaces.LegacyFacade;
 
 /**
  * Singleton for tracking and restoring the current state of the GUI. The
@@ -76,7 +69,6 @@ public class StateMgr {
     public static final int MAX_ADD_TO_ROOT_HISTORY = 5;
     
     private final LegacyFacade legacyFacade;
-    private final Map<TopComponent,NavigationHistory> navigationHistoryMap = new HashMap<>();
     private final UserColorMapping userColorMapping = new UserColorMapping();
     
     private Annotation currentSelectedOntologyAnnotation;
@@ -135,27 +127,6 @@ public class StateMgr {
     public void cleanup(ApplicationClosing e) {
         log.info("Saving auto-share template");
         FrameworkImplProvider.setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
-    }
-
-    public NavigationHistory getNavigationHistory(DomainListViewTopComponent topComponent) {
-        if (topComponent==null) return null;
-        NavigationHistory navigationHistory = navigationHistoryMap.get(topComponent);
-        if (navigationHistory==null) {
-            navigationHistory = new NavigationHistory();
-            navigationHistoryMap.put(topComponent, navigationHistory);
-        }
-        return navigationHistory;
-    }
-    
-    public NavigationHistory getNavigationHistory() {
-        return getNavigationHistory(DomainListViewManager.getInstance().getActiveViewer());
-    }
-
-    public void updateNavigationButtons(DomainListViewTopComponent topComponent) {
-        NavigationHistory navigationHistory = getNavigationHistory(topComponent);
-        if (navigationHistory!=null) {
-            navigationHistory.updateButtons();
-        }
     }
     
     public UserColorMapping getUserColorMapping() {

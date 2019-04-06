@@ -19,12 +19,9 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBindings;
-import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
-import org.janelia.model.domain.ontology.OntologyTerm;
-import org.janelia.model.domain.ontology.OntologyTermReference;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,22 +75,22 @@ public class ConsoleDataServiceImpl {
     }
 
     public Entity createAnnotation(OntologyAnnotation annotation) throws Exception {
-        log.info("Create annotation {}", annotation.getKeyString());
-
-        // Only support annotations for neuron fragments
-        NeuronFragment domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(NeuronFragment.class, annotation.getTargetEntityId());
-        
-        if (domainObject!=null) {
-            final ApplyAnnotationAction action = ApplyAnnotationAction.get();
-            Long ontologyId = StateMgr.getStateMgr().getCurrentOntologyId();
-            Long ontologyTermId = annotation.getKeyEntityId();
-            OntologyTermReference ref = new OntologyTermReference(ontologyId, ontologyTermId);
-            OntologyTerm term = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(ref);
-            String value = annotation.getValueString();
-            Annotation savedAnnotation = action.addAnnotation(domainObject, term, value);
-            return translator.getAnotationEntity(savedAnnotation);
-        }
-        
+        log.warn("Creating annotations via the ConsoleDataService is not longer supported");
+//        log.info("Create annotation {}", annotation.getKeyString());
+//        // Only support annotations for neuron fragments
+//        NeuronFragment domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(NeuronFragment.class, annotation.getTargetEntityId());
+//
+//        if (domainObject!=null) {
+//            final ApplyAnnotationAction action = ApplyAnnotationAction.get();
+//            Long ontologyId = StateMgr.getStateMgr().getCurrentOntologyId();
+//            Long ontologyTermId = annotation.getKeyEntityId();
+//            OntologyTermReference ref = new OntologyTermReference(ontologyId, ontologyTermId);
+//            OntologyTerm term = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(ref);
+//            String value = annotation.getValueString();
+//            Annotation savedAnnotation = action.addAnnotation(domainObject, term, value);
+//            return translator.getAnotationEntity(savedAnnotation);
+//        }
+//
         return null;
     }
 
