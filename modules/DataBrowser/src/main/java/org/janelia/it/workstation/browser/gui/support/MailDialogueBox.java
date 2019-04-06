@@ -127,8 +127,9 @@ public class MailDialogueBox {
         MailHelper helper = new MailHelper();
         helper.sendEmail(fromEmail, toEmail, subject, body.toString(), logfile, filename);
 
-        JOptionPane.showMessageDialog(
-                FrameworkImplProvider.getMainFrame(), "Bug was reported successfully", "Success",
-                JOptionPane.INFORMATION_MESSAGE);
+        // TODO: this should only be shown when the user manually reports a bug
+//        JOptionPane.showMessageDialog(
+//                FrameworkImplProvider.getMainFrame(), "Bug was reported successfully", "Success",
+//                JOptionPane.INFORMATION_MESSAGE);
     }
 }
