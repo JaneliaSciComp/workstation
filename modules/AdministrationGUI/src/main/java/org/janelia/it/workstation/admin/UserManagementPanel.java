@@ -1,12 +1,7 @@
 package org.janelia.it.workstation.admin;
 
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.List;
@@ -47,14 +42,9 @@ public class UserManagementPanel extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(UserManagementPanel.class);
     
     private AdministrationTopComponent parent;
-    private JLabel titleLabel;
-    private JLabel workspaceNameLabel;
-    private JLabel sampleNameLabel;
     UserManagementTableModel userManagementTableModel;
-    private JTable userManagementTable;   
-    private AbstractAction buttonAction;
-    private int COLUMN_EDIT = 2;
-    private int COLUMN_DELETE = 3;
+    private JTable userManagementTable;
+    private JButton editUserButton;
 
     public UserManagementPanel(AdministrationTopComponent parent) {
         this.parent = parent;
@@ -84,13 +74,25 @@ public class UserManagementPanel extends JPanel {
         userManagementTableModel.setParentManager(this);
         userManagementTable = new JTable(userManagementTableModel);
         userManagementTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        userManagementTable.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent mouseEvent) {
+                JTable table =(JTable) mouseEvent.getSource();
+                if (mouseEvent.getClickCount() == 2 && table.getSelectedRow() != -1) {
+                    editUser();
+                } else {
+                    if (table.getSelectedRow() !=-1)
+                        editUserButton.setEnabled(true);
+                }
+            }
+        });
 
         JScrollPane tableScroll = new JScrollPane(userManagementTable);
         add(tableScroll);
 
         // add groups pulldown selection for groups this person is a member of
-        JButton editUserButton = new JButton("Edit User");
+        editUserButton = new JButton("Edit User");
         editUserButton.addActionListener(event -> editUser());
+        editUserButton.setEnabled(false);
         JButton newUserButton = new JButton("New User");
         newUserButton.addActionListener(event -> newUser());
         JPanel actionPanel = new JPanel();
@@ -140,17 +142,7 @@ public class UserManagementPanel extends JPanel {
             e.printStackTrace();
         }
     }
-        
-    // loads the User Details page in add mode
-    private void addUser() {
-        
-    }
-    
-    // remove the User from the  as well as the table model
-    private void deleteUser(Subject user) {
-        
-    }
-    
+
     class UserManagementTableModel extends AbstractTableModel {
         String[] columnNames = {"Username", "Groups"};
         List<List<Object>> data = new ArrayList<List<Object>>();
