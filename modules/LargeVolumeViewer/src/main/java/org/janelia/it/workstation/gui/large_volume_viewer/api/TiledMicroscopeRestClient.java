@@ -144,6 +144,7 @@ public class TiledMicroscopeRestClient {
                 .request("application/json")
                 .get();
         if (checkBadResponse(response, "getTmSampleConstants")) {
+            LOG.error("Error getting sample constants from {}", samplePath);
             throw new WebApplicationException(response);
         }
         return response.readEntity(new GenericType<Map<String,Object>>() {});
@@ -157,6 +158,7 @@ public class TiledMicroscopeRestClient {
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response, "create: "+tmSample)) {
+            LOG.error("Error creating sample {}", tmSample);
             throw new WebApplicationException(response);
         }
         return response.readEntity(TmSample.class);
@@ -170,6 +172,7 @@ public class TiledMicroscopeRestClient {
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response, "update: " + tmSample)) {
+            LOG.error("Error updating sample {}", tmSample);
             throw new WebApplicationException(response);
         }
         return response.readEntity(TmSample.class);
