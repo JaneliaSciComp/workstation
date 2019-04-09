@@ -66,11 +66,16 @@ public class GroupDetailsPanel extends JPanel implements ActionListener {
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
         JLabel titleLabel = new JLabel("Edit Group", JLabel.LEADING);  
         titleLabel.setFont(new Font("Serif", Font.PLAIN, 14));
-        titlePanel.add(titleLabel);
-        JButton returnHome = new JButton("group list");
+        JButton returnHome = new JButton("return to grouplist");
         returnHome.setActionCommand("ReturnHome");
         returnHome.addActionListener(this);
-        titlePanel.add(returnHome);
+        Box horizontalBox = Box.createHorizontalBox();
+        horizontalBox.add(returnHome);
+        horizontalBox.add(Box.createGlue());
+        horizontalBox.add(titleLabel);
+        horizontalBox.add(Box.createGlue());
+        horizontalBox.add(Box.createGlue());
+        titlePanel.add(horizontalBox);
         add(titlePanel);
         add(Box.createRigidArea(new Dimension(0, 10)));
 

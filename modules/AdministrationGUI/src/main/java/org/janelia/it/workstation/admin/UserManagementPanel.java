@@ -63,9 +63,14 @@ public class UserManagementPanel extends JPanel {
         returnHome.addActionListener(event -> returnHome());
         returnHome.setBorderPainted(false);
         returnHome.setOpaque(false);
-        titlePanel.add(returnHome);
         JLabel titleLabel = new JLabel("User List", JLabel.LEADING);
-        titlePanel.add(titleLabel);       
+        Box horizontalBox = Box.createHorizontalBox();
+        horizontalBox.add(returnHome);
+        horizontalBox.add(Box.createGlue());
+        horizontalBox.add(titleLabel);
+        horizontalBox.add(Box.createGlue());
+        horizontalBox.add(Box.createGlue());
+        titlePanel.add(horizontalBox);
         add(titlePanel);
         
         add(Box.createRigidArea(new Dimension(0, 10)));
