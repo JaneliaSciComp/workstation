@@ -7,11 +7,11 @@ package org.janelia.it.workstation.browser.gui.editor;
  */
 public interface Editor {
 
-    public String getName();
+    String getName();
     
-    public Object getEventBusListener();
+    Object getEventBusListener();
 
-    public void activate();
+    void activate();
     
-    public void deactivate();
+    void deactivate();
 }

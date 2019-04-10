@@ -11,6 +11,6 @@ import org.janelia.model.domain.DomainObject;
  */
 public interface DomainObjectEditor<T extends DomainObject> extends Editor {
     
-    public void loadDomainObject(T domainObject, final boolean isUserDriven, final Callable<Void> success);
+    void loadDomainObject(T domainObject, final boolean isUserDriven, final Callable<Void> success);
     
 }

@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.browser.events.prefs;
 
 /**
- * A preference has changed.
+ * Event indicating that a local preference has changed.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

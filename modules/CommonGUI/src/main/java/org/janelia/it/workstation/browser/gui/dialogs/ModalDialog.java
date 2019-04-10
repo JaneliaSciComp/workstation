@@ -47,7 +47,7 @@ public class ModalDialog extends JDialog {
         init();
     }
     
-    private final void init() {
+    private void init() {
         
         setModalityType(ModalityType.APPLICATION_MODAL);
         getContentPane().setLayout(new BorderLayout());

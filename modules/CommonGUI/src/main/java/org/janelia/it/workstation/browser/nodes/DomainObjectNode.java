@@ -4,14 +4,17 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 
 /**
- * Interface for NetBeans Nodes which wrap domain objects.  
+ * Interface for NetBeans Nodes which wrap domain objects.
+ *
+ * It's expected that any class which extends this interface also extends org.openide.nodes.Node. Unfortunately, that's
+ * not an interface, so it can't be extended here.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public interface DomainObjectNode<T extends DomainObject> extends HasIdentifier {
     
-    public T getDomainObject();
+    T getDomainObject();
 
-    public void update(T domainObject);
+    void update(T domainObject);
     
 }

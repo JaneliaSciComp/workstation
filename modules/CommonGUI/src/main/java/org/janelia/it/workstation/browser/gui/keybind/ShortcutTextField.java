@@ -15,12 +15,10 @@
  */
 package org.janelia.it.workstation.browser.gui.keybind;
 
-import javax.swing.*;
-
-import org.janelia.it.workstation.browser.gui.keybind.KeyboardShortcut;
-import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
-
 import java.awt.event.KeyEvent;
+
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 
 /**
  * Adapted from IDEA code base.

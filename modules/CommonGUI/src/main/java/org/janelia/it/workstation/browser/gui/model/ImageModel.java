@@ -13,20 +13,20 @@ import org.janelia.model.domain.ontology.Annotation;
  */
 public interface ImageModel<T,S> {
 
-    public T getImageByUniqueId(S id);
+    T getImageByUniqueId(S id);
     
-    public S getImageUniqueId(T imageObject);
+    S getImageUniqueId(T imageObject);
     
-    public String getImageFilepath(T imageObject);
+    String getImageFilepath(T imageObject);
     
-    public String getImageTitle(T imageObject);
+    String getImageTitle(T imageObject);
 
-    public String getImageSubtitle(T imageObject);
+    String getImageSubtitle(T imageObject);
 
-    public BufferedImage getStaticIcon(T imageObject);
+    BufferedImage getStaticIcon(T imageObject);
     
-    public List<Annotation> getAnnotations(T imageObject);
+    List<Annotation> getAnnotations(T imageObject);
     
-    public List<ImageDecorator> getDecorators(T imageObject);
+    List<ImageDecorator> getDecorators(T imageObject);
 
 }

@@ -15,21 +15,21 @@ public interface DomainObjectNodeEditor<P extends DomainObject, T, S> extends Ed
     /**
      * Reset the viewer state. This is usually done in preparation of loading a novel domain object.
      */
-    public void resetState();
+    void resetState();
 
     /**
      * Save and return a snap shot of the current editor state.
      * 
      * @return Editor state
      */
-    public DomainObjectEditorState<P,T,S> saveState();
+    DomainObjectEditorState<P,T,S> saveState();
 
     /**
      * Restore the given snap shot of the editor state.
      * 
      * @param state Saved editor state 
      */
-    public void restoreState(DomainObjectEditorState<P,T,S> state);
+    void restoreState(DomainObjectEditorState<P,T,S> state);
     
     /**
      * Load the given domain object node into the editor. 
@@ -38,7 +38,7 @@ public interface DomainObjectNodeEditor<P extends DomainObject, T, S> extends Ed
      * @param isUserDriven
      * @param success
      */
-    public void loadDomainObjectNode(DomainObjectNode<P> domainObjectNode, final boolean isUserDriven, final Callable<Void> success);
+    void loadDomainObjectNode(DomainObjectNode<P> domainObjectNode, final boolean isUserDriven, final Callable<Void> success);
 
     /**
      * Load the given domain object into the editor. This bypasses the need for a AbstractDomainObjectNode, 
@@ -48,6 +48,6 @@ public interface DomainObjectNodeEditor<P extends DomainObject, T, S> extends Ed
      * @param isUserDriven
      * @param success
      */
-    public void loadDomainObject(P domainObject, final boolean isUserDriven, final Callable<Void> success);
+    void loadDomainObject(P domainObject, final boolean isUserDriven, final Callable<Void> success);
 
 }

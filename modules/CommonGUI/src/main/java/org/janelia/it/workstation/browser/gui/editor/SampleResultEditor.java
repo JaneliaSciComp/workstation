@@ -12,7 +12,7 @@ import org.janelia.model.domain.sample.PipelineResult;
  */
 public interface SampleResultEditor extends Editor {
     
-    public void loadSampleResult(PipelineResult pipelineResult, boolean isUserDriven, Callable<Void> success);
+    void loadSampleResult(PipelineResult pipelineResult, boolean isUserDriven, Callable<Void> success);
 
-    public SelectionModel<?,?> getSelectionModel();
+    SelectionModel<?,?> getSelectionModel();
 }

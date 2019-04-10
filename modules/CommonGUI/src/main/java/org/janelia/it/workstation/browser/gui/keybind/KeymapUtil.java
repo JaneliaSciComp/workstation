@@ -33,12 +33,6 @@ public class KeymapUtil {
     private static final String GET_KEY_MODIFIERS_TEXT_METHOD = "getKeyModifiersText";
     private static final String CANCEL_KEY_TEXT = "Cancel";
     private static final String BREAK_KEY_TEXT = "Break";
-//    private static final String SHIFT = "shift";
-//    private static final String CONTROL = "control";
-//    private static final String CTRL = "ctrl";
-//    private static final String META = "meta";
-//    private static final String ALT = "alt";
-//    private static final String ALT_GRAPH = "altGraph";
 
     private KeymapUtil() {
     }
