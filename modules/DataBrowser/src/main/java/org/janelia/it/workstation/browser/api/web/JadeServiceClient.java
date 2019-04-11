@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.browser.api.web;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -25,12 +27,22 @@ public class JadeServiceClient extends RESTClientBase {
     private static final Logger LOG = LoggerFactory.getLogger(JadeServiceClient.class);
     private static final String JADE_BASE_URL = ConsoleProperties.getString("jadestorage.rest.url");
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     private static class JadeResults<T> {
         @JsonProperty
         @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
         private List<T> resultList;
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     private static class JadeStorageVolume {
         @JsonProperty
         private String storageServiceURL;
@@ -42,7 +54,10 @@ public class JadeServiceClient extends RESTClientBase {
     public JadeServiceClient() {
         super(LOG);
         Preconditions.checkArgument(JADE_BASE_URL != null && JADE_BASE_URL.trim().length() > 0);
-        objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false)
+                ;
         httpClient = createHttpClient(objectMapper);
     }
     
@@ -59,7 +74,7 @@ public class JadeServiceClient extends RESTClientBase {
             LOG.error("Request to {} returned with status {}", target, responseStatus);
             throw new IllegalStateException("Request to " + target.getUri() + " returned with status " + responseStatus);
         }
-        JadeResults<JadeStorageVolume> storageContentResults = response.readEntity(new GenericType<JadeResults<JadeStorageVolume>>(){});
+                                                   JadeResults<JadeStorageVolume> storageContentResults = response.readEntity(new GenericType<JadeResults<JadeStorageVolume>>(){});
         if (storageContentResults.resultList.size() < 0) {
             throw new IllegalArgumentException("No storage volume found for " + storagePath + " from querying " + target.getUri());
         }
