@@ -74,20 +74,22 @@ public class UserDetailsPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
         JPanel titlePanel = new JPanel();
-        JButton returnHome = new JButton("return to user list");
+        JButton returnHome = new JButton("return to userlist");
         returnHome.setActionCommand("ReturnHome");
         returnHome.addActionListener(event -> returnHome());
         returnHome.setBorderPainted(false);
         returnHome.setOpaque(false);
-        titlePanel.add(returnHome);
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
         JLabel titleLabel = new JLabel("User Details");
-        titlePanel.add(titleLabel);
+        Box horizontalBox = Box.createHorizontalBox();
+        horizontalBox.add(returnHome);
+        horizontalBox.add(Box.createGlue());
+        horizontalBox.add(titleLabel);
+        horizontalBox.add(Box.createGlue());
+        horizontalBox.add(Box.createGlue());
+        titlePanel.add(horizontalBox);
         add(Box.createRigidArea(new Dimension(0, 10)));
 
-        // display table of user editable attributes
-        titleLabel.setFont(new Font("Serif", Font.PLAIN, 20));
-        titlePanel.add(titleLabel);
         add(titlePanel);
 
         userDetailsTableModel = new UserDetailsTableModel();
@@ -153,14 +155,14 @@ public class UserDetailsPanel extends JPanel {
     public void editUserDetails(User user) throws Exception {
         currentUser = user;
         Subject rawAdmin = AccessManager.getAccessManager().getActualSubject();
-        if (rawAdmin instanceof User) {                
-             admin = (User) rawAdmin;
-            
-            // load user details
-            userDetailsTableModel.loadUser(user);           
-            groupRolesModel.loadGroupRoles(user);
-            refreshUserGroupsToAdd();
+        if (rawAdmin instanceof User && AccessManager.getAccessManager().isAdmin()) {
+            admin = (User) rawAdmin;
         }
+            
+        // load user details
+        userDetailsTableModel.loadUser(user);
+        groupRolesModel.loadGroupRoles(user);
+        refreshUserGroupsToAdd();
     }
 
     void refreshUserGroupsToAdd() {
@@ -217,6 +219,9 @@ public class UserDetailsPanel extends JPanel {
                 
         @Override
         public boolean isCellEditable(int row, int col) {
+            // if not admin return false
+            if (admin==null)
+                return false;
             // can't change username if user already exists
             if (user.getKey()!=null && row==0)
                 return false;
@@ -267,7 +272,7 @@ public class UserDetailsPanel extends JPanel {
         }
 
         private void validateUserChanges() {
-            if (user.getPassword()!=null && user.getName()!=null)
+            if (user.getName()!=null && dirtyFlag)
                 saveUserButton.setEnabled(true);
             else
                 saveUserButton.setEnabled(false);
@@ -283,6 +288,10 @@ public class UserDetailsPanel extends JPanel {
                 } else {
                     new PropertyDescriptor(editProperties[row], User.class).getWriteMethod().invoke(user, (String)value);
                 }
+
+                if (values[row]==null ||
+                        !values[row].equals((String)value))
+                    dirtyFlag = true;
                 values[row] = (String)value;
                 validateUserChanges();
                 this.fireTableCellUpdated(row, col);
@@ -310,6 +319,9 @@ public class UserDetailsPanel extends JPanel {
         
         @Override
         public boolean isCellEditable(int row, int col) {
+            // if not admin return false
+            if (admin==null)
+                return false;
             if (col!=COLUMN_NAME)
                 return true;
             return false;
@@ -366,12 +378,16 @@ public class UserDetailsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             UserGroupRole groupRole = user.getRole(e.getActionCommand());
-            groupRole.setRole(GroupRole.valueOf((String)((JComboBox)e.getSource()).getSelectedItem()));
+            GroupRole newRole = GroupRole.valueOf((String)((JComboBox)e.getSource()).getSelectedItem());
+            if (groupRole.getRole()!=newRole) {
+                dirtyFlag = true;
+            }
+            groupRole.setRole(newRole);
             validateUserChanges();
         }
 
         private void validateUserChanges() {
-            if (user.getPassword()!=null && user.getName()!=null)
+            if (user.getName()!=null && dirtyFlag)
                 saveUserButton.setEnabled(true);
             else
                 saveUserButton.setEnabled(false);
