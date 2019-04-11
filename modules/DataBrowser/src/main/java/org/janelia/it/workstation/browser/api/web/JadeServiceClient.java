@@ -73,7 +73,7 @@ public class JadeServiceClient extends RESTClientBase {
             LOG.error("Request to {} returned with status {}", target, responseStatus);
             throw new IllegalStateException("Request to " + target.getUri() + " returned with status " + responseStatus);
         }
-                                                   JadeResults<JadeStorageVolume> storageContentResults = response.readEntity(new GenericType<JadeResults<JadeStorageVolume>>(){});
+        JadeResults<JadeStorageVolume> storageContentResults = response.readEntity(new GenericType<JadeResults<JadeStorageVolume>>(){});
         if (storageContentResults.resultList.size() < 0) {
             throw new IllegalArgumentException("No storage volume found for " + storagePath + " from querying " + target.getUri());
         }
