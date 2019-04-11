@@ -31,6 +31,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
@@ -70,7 +73,13 @@ public class TiledMicroscopeRestClient {
     public TiledMicroscopeRestClient() {
         LOG.info("Using server URL: {}",REMOTE_API_URL);
 
-        this.client = ClientBuilder.newClient();
+        ClientConfig clientConfig =
+                new ClientConfig()
+                        .connectorProvider(new ApacheConnectorProvider())
+                        .property(ClientProperties.FOLLOW_REDIRECTS, true)
+                        ;
+
+        this.client = ClientBuilder.newClient(clientConfig);
         
         JacksonJsonProvider provider = new JacksonJaxbJsonProvider();
         ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);

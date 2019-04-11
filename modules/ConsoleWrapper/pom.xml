@@ -15,6 +15,9 @@
     <version>8.0</version>
     <packaging>nbm</packaging>
 
+    <properties>
+        <jaxrs.jersey.version>2.27</jaxrs.jersey.version>
+    </properties>
     <dependencies>
 
         <!-- Jars from Workstation Maven Repo -->
@@ -133,7 +136,7 @@
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
-            <version>2.0.1</version>
+            <version>2.1</version>
         </dependency>
         <dependency>
             <groupId>org.reflections</groupId>
@@ -202,19 +205,29 @@
             <version>3.0.1</version>
         </dependency>
         <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
-            <version>2.21</version>
+            <version>${jaxrs.jersey.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.connectors</groupId>
+            <artifactId>jersey-apache-connector</artifactId>
+            <version>${jaxrs.jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-multipart</artifactId>
-            <version>2.21</version>
+            <version>${jaxrs.jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>
-            <version>2.21</version>
+            <version>${jaxrs.jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>gov.nist.math</groupId>
@@ -357,6 +370,7 @@
                         <publicPackage>com.sun.media.jai.codec</publicPackage>
                         <publicPackage>com.xuggle.*</publicPackage>
                         <publicPackage>edu.wlu.cs.levy.CG</publicPackage>
+                        <publicPackage>javax.inject</publicPackage>
                         <publicPackage>javax.mail</publicPackage>
                         <publicPackage>javax.mail.*</publicPackage>
                         <publicPackage>javax.media.jai</publicPackage>
@@ -413,16 +427,6 @@
                         <publicPackage>javassist.tools.web</publicPackage>
                         <publicPackage>javassist.util</publicPackage>
                         <publicPackage>javassist.util.proxy</publicPackage>
-                        <publicPackage>jersey.repackaged.com.google.common.base</publicPackage>
-                        <publicPackage>jersey.repackaged.com.google.common.cache</publicPackage>
-                        <publicPackage>jersey.repackaged.com.google.common.collect</publicPackage>
-                        <publicPackage>jersey.repackaged.com.google.common.hash</publicPackage>
-                        <publicPackage>jersey.repackaged.com.google.common.io</publicPackage>
-                        <publicPackage>jersey.repackaged.com.google.common.math</publicPackage>
-                        <publicPackage>jersey.repackaged.com.google.common.net</publicPackage>
-                        <publicPackage>jersey.repackaged.com.google.common.primitives</publicPackage>
-                        <publicPackage>jersey.repackaged.com.google.common.util.concurrent</publicPackage>
-                        <publicPackage>jersey.repackaged.org.objectweb.asm</publicPackage>
                         <publicPackage>net.miginfocom.*</publicPackage>
                         <publicPackage>net.jpountz.lz4</publicPackage>
                         <publicPackage>org.apache.commons.io</publicPackage>
@@ -506,6 +510,7 @@
                         <publicPackage>org.glassfish.hk2.utilities.reflection</publicPackage>
                         <publicPackage>org.glassfish.hk2.utilities.reflection.internal</publicPackage>
                         <publicPackage>org.glassfish.jersey</publicPackage>
+                        <publicPackage>org.glassfish.jersey.apache.connector</publicPackage>
                         <publicPackage>org.glassfish.jersey.client</publicPackage>
                         <publicPackage>org.glassfish.jersey.client.authentication</publicPackage>
                         <publicPackage>org.glassfish.jersey.client.filter</publicPackage>
