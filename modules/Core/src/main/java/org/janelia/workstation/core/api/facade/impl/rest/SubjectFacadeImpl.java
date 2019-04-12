@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
-    private static final Logger log = LoggerFactory.getLogger(SubjectFacadeImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SubjectFacadeImpl.class);
 
     private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
 
@@ -39,15 +39,14 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
     }
 
     public SubjectFacadeImpl(String serverUrl) {
-        super(log);
-        log.debug("Using server URL: {}",serverUrl);
+        super(LOG);
+        LOG.debug("Using server URL: {}",serverUrl);
         this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
     }
     
     @Override
     public List<Subject> getSubjects() throws Exception {
-        Response response = service.path("data/user")
-                .path("subjects")
+        Response response = service.path("data/user/subjects")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getSubjects to server")) {
@@ -58,12 +57,12 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
     @Override
     public Subject getSubjectByNameOrKey(String key) throws Exception {
-        Response response = service.path("data/user")
-                .path("subject")
+        Response response = service.path("data/user/subject")
                 .queryParam("subjectKey", key)
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getSubjectByNameOrKey to server")) {
+            LOG.error("Error getting a subject for {}", key);
             throw new WebApplicationException(response);
         }
         return response.readEntity(Subject.class);
@@ -76,6 +75,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making getOrCreateUser request against the server")) {
+            LOG.error("Error getting or creating a user subject for {}", username);
             throw new WebApplicationException(response);
         }
         return response.readEntity(User.class);
@@ -83,8 +83,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
     @Override
     public List<Preference> getPreferences() throws Exception {
-        Response response = service.path("data/user")
-                .path("preferences")
+        Response response = service.path("data/user/preferences")
                 .queryParam("subjectKey", DomainMgr.getPreferenceSubject())
                 .request("application/json")
                 .get();
@@ -99,8 +98,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(DomainMgr.getPreferenceSubject());
         query.setPreference(preference);
-        Response response = service.path("data/user")
-                .path("preferences")
+        Response response = service.path("data/user/preferences")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request savePreferences to server: " + preference)) {
@@ -117,8 +115,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
         paramMap.put("fullname", user.getFullName());
         paramMap.put("name", user.getName());
         paramMap.put("email", user.getEmail());
-        Response response = service.path("data/user")
-                .path("property")
+        Response response = service.path("data/user/property")
                 .request("application/json")
                 .post(Entity.json(paramMap));
         if (checkBadResponse(response.getStatus(), "problem making request updateUserProperty to server")) {
@@ -129,8 +126,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
     @Override
     public void updateUserRoles(String userKey, Set<UserGroupRole> userRoles) throws Exception {
-        Response response = service.path("data/user")
-                .path("roles")
+        Response response = service.path("data/user/roles")
                 .queryParam("userKey", userKey)
                 .request("application/json")
                 .post(Entity.json(userRoles));
@@ -152,8 +148,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
     @Override
     public void changeUserPassword (AuthenticationRequest message) throws Exception {
-        Response response = service.path("data/user")
-                .path("password")
+        Response response = service.path("data/user/password")
                 .request("application/json")
                 .post(Entity.json(message));
         if (checkBadResponse(response.getStatus(), "problem making request to change user password to server")) {

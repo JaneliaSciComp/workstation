@@ -3,5 +3,5 @@ AutoUpdate-Show-In-Client: true
 OpenIDE-Module-Localizing-Bundle: com/revivius/nb/darcula/Bundle.properties
 OpenIDE-Module-Layer: com/revivius/nb/darcula/layer.xml
 OpenIDE-Module-Install: com/revivius/nb/darcula/Installer.class
-OpenIDE-Module-Specification-Version: 1.69
+OpenIDE-Module-Specification-Version: 3.0
 OpenIDE-Module-Implementation-Version: ${buildNumber}

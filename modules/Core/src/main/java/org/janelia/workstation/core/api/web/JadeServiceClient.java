@@ -1,21 +1,23 @@
 package org.janelia.workstation.core.api.web;
 
-import com.google.common.base.Preconditions;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.InputStream;
 
+import com.google.common.base.Preconditions;
 import org.janelia.workstation.core.api.http.RESTClientBase;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
-
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -26,12 +28,22 @@ public class JadeServiceClient extends RESTClientBase {
     private static final Logger LOG = LoggerFactory.getLogger(JadeServiceClient.class);
     private static final String JADE_BASE_URL = ConsoleProperties.getString("jadestorage.rest.url");
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     private static class JadeResults<T> {
         @JsonProperty
         @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
         private List<T> resultList;
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonAutoDetect(
+            fieldVisibility = JsonAutoDetect.Visibility.ANY,
+            setterVisibility = JsonAutoDetect.Visibility.NONE
+    )
     private static class JadeStorageVolume {
         @JsonProperty
         private String storageServiceURL;
@@ -43,7 +55,10 @@ public class JadeServiceClient extends RESTClientBase {
     public JadeServiceClient() {
         super(LOG);
         Preconditions.checkArgument(JADE_BASE_URL != null && JADE_BASE_URL.trim().length() > 0);
-        objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false)
+                ;
         httpClient = createHttpClient(objectMapper);
     }
     

@@ -153,18 +153,17 @@ public class TiledMicroscopeDomainMgr {
         if (sample==null) {
             throw new IllegalArgumentException("TM sample does not exist: "+sampleId);
         }
-        
-        Reference sampleRef = Reference.createFor(TmSample.class, sampleId);
-        
+
+        TreeNode defaultWorkspaceFolder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);
+
         TmWorkspace workspace = new TmWorkspace();
         workspace.setOwnerKey(AccessManager.getSubjectKey());
         workspace.setName(name);
-        workspace.setSampleRef(sampleRef);
+        workspace.setSampleRef(Reference.createFor(TmSample.class, sampleId));
         workspace = save(workspace);
         
         // Server should have put the workspace in the Workspaces root folder. Refresh the Workspaces folder to show it in the explorer.
-        TreeNode folder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);
-        model.invalidate(folder);
+        model.invalidate(defaultWorkspaceFolder);
         
         // Also invalidate the sample, so that the Explorer tree can be updated 
         model.invalidate(sample);
@@ -174,19 +173,19 @@ public class TiledMicroscopeDomainMgr {
 
     public TmWorkspace copyWorkspace(TmWorkspace workspace, String name, String assignOwner) throws Exception {
         LOG.debug("copyWorkspace(workspace={}, name={}, neuronOwner={})", workspace, name, assignOwner);
-        
-        TmWorkspace workspaceCopy = client.copy(workspace, name, assignOwner);
-        
-        // Server should have put the new workspace in the Workspaces root folder. Refresh the Workspaces folder to show it in the explorer.
-        TreeNode folder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);
-        model.invalidate(folder);
-        
-        // Also invalidate the sample, so that the Explorer tree can be updated 
         TmSample sample = getSample(workspace.getSampleId());
         if (sample==null) {
             throw new IllegalArgumentException("TM sample does not exist: "+workspace.getSampleId());
         }
+
+        TreeNode defaultWorkspaceFolder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);
+
+        TmWorkspace workspaceCopy = client.copy(workspace, name, assignOwner);
+
+        // Server should have put the new workspace in the Workspaces root folder. Refresh the Workspaces folder to show it in the explorer.
+        model.invalidate(defaultWorkspaceFolder);
         
+        // Also invalidate the sample, so that the Explorer tree can be updated 
         model.invalidate(sample);
         
         return workspaceCopy;

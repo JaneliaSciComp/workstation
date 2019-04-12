@@ -65,9 +65,9 @@ public class AnnotationPanel extends JPanel
     private final Action createWorkspaceAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-                annotationMgr.createWorkspace();
-            }
-        };
+            annotationMgr.createWorkspace();
+        }
+    };
 
     // ----- Actions
     private final Action centerAnnotationAction = new AbstractAction() {

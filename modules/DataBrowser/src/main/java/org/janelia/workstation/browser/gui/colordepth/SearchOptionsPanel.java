@@ -21,6 +21,7 @@ import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 
+import com.google.common.collect.ImmutableSet;
 import org.janelia.workstation.browser.gui.editor.ConfigPanel;
 import org.janelia.workstation.browser.gui.editor.SelectionButton;
 import org.janelia.workstation.browser.gui.editor.SingleSelectionButton;
@@ -33,8 +34,6 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.sample.DataSet;
 
 import com.google.common.collect.ImmutableList;
-
-import jersey.repackaged.com.google.common.collect.ImmutableSet;
 
 /**
  * User options panel for a color depth search. Reused between the color depth search editor and the mask dialog. 

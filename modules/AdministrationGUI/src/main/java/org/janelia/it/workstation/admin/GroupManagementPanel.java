@@ -5,8 +5,10 @@
  */
 package org.janelia.it.workstation.admin;
 
-import java.awt.Dimension;
-import java.awt.Font;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,32 +59,38 @@ public class GroupManagementPanel extends JPanel {
     private void setupUI() {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         JPanel titlePanel = new JPanel();
-        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
+
+        titlePanel.setLayout(new BorderLayout());
         titleLabel = new JLabel("Groups Management", JLabel.LEADING);  
         titleLabel.setFont(new Font("Serif", Font.PLAIN, 14));
-        titlePanel.add(titleLabel);
         JButton returnHome = new JButton("return to top");
         returnHome.setActionCommand("ReturnHome");
         returnHome.addActionListener(event -> returnHome());
-        titlePanel.add(returnHome);
+
+        Box horizontalBox = Box.createHorizontalBox();
+        horizontalBox.add(returnHome);
+        horizontalBox.add(Box.createGlue());
+        horizontalBox.add(titleLabel);
+        horizontalBox.add(Box.createGlue());
+        horizontalBox.add(Box.createHorizontalStrut(returnHome.getWidth()));
+        titlePanel.add(horizontalBox);
         add(titlePanel);
         add(Box.createRigidArea(new Dimension(0, 10)));
     
         groupManagementTableModel = new GroupManagementTableModel();
         groupManagementTable = new JTable(groupManagementTableModel);
         groupManagementTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        groupManagementTable.addMouseListener(new MouseHandler() {
-            @Override
-            protected void singleLeftClicked(MouseEvent me) {
-                if (me.isConsumed()) return;
-                JTable table = (JTable) me.getSource();
-                int viewRow = table.rowAtPoint(me.getPoint());
-                if (viewRow >= 0) {                   
-                    editGroupButton.setEnabled(true);
+        groupManagementTable.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent mouseEvent) {
+                JTable table =(JTable) mouseEvent.getSource();
+                if (mouseEvent.getClickCount() == 2 && table.getSelectedRow() != -1) {
+                    editGroup();
+                } else {
+                    if (table.getSelectedRow() !=-1)
+                        editGroupButton.setEnabled(true);
                 }
-                me.consume();
             }
-        });              
+        });
         JScrollPane tableScroll = new JScrollPane(groupManagementTable);
         add(tableScroll);
         

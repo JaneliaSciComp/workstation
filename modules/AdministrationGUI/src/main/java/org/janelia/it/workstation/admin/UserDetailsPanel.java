@@ -5,6 +5,9 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -42,12 +45,16 @@ public class UserDetailsPanel extends JPanel {
     AdministrationTopComponent parent;
     JComboBox newGroupSelector;
     JButton saveUserButton;
+    JButton removeGroupButton;
+    JButton newGroupButton;
     UserDetailsTableModel userDetailsTableModel;
     JTable userDetailsTable;
     GroupRolesModel groupRolesModel;
     JTable groupRolesTable;
     User currentUser;
+    User admin;
     boolean passwordChanged = false;
+    boolean dirtyFlag = false;
     private int COLUMN_NAME = 0;
     private int COLUMN_VALUE = 1;
     
@@ -58,49 +65,63 @@ public class UserDetailsPanel extends JPanel {
     
     public void setupUI() {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-        
+
         JPanel titlePanel = new JPanel();
-        JButton returnHome = new JButton("return to user list");
+        JButton returnHome = new JButton("return to userlist");
         returnHome.setActionCommand("ReturnHome");
         returnHome.addActionListener(event -> returnHome());
         returnHome.setBorderPainted(false);
         returnHome.setOpaque(false);
-        titlePanel.add(returnHome);
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
-        JLabel titleLabel = new JLabel("User Details");  
-        titlePanel.add(titleLabel);
+        JLabel titleLabel = new JLabel("User Details");
+        Box horizontalBox = Box.createHorizontalBox();
+        horizontalBox.add(returnHome);
+        horizontalBox.add(Box.createGlue());
+        horizontalBox.add(titleLabel);
+        horizontalBox.add(Box.createGlue());
+        horizontalBox.add(Box.createGlue());
+        titlePanel.add(horizontalBox);
         add(Box.createRigidArea(new Dimension(0, 10)));
-        
-        // display table of user editable attributes
-        titleLabel.setFont(new Font("Serif", Font.PLAIN, 20));
-        titlePanel.add(titleLabel);
+
         add(titlePanel);
-        
+
         userDetailsTableModel = new UserDetailsTableModel();
         userDetailsTable = new JTable(userDetailsTableModel);
         TableFieldEditor editor = new TableFieldEditor();
-        userDetailsTable.getColumn("Property").setCellEditor(editor);   
+        userDetailsTable.getColumn("Property").setCellEditor(editor);
         userDetailsTable.setRowHeight(25);
         JScrollPane userTableScroll = new JScrollPane(userDetailsTable);
-        add(userTableScroll); 
-        
-        
+        add(userTableScroll);
+
+
         // show group edit table with permissions for that group
         JLabel groupRolesLabel = new JLabel("Roles", SwingConstants.LEFT);
-        add(groupRolesLabel);        
+        add(groupRolesLabel);
         groupRolesModel = new GroupRolesModel();
         groupRolesTable = new JTable(groupRolesModel);
         TableSelectBox groupSelectBox = new TableSelectBox();
         groupRolesTable.getColumn("Role").setCellEditor(groupSelectBox);
-        groupRolesTable.getColumn("Role").setCellRenderer(groupSelectBox);  
+        groupRolesTable.getColumn("Role").setCellRenderer(groupSelectBox);
         groupRolesTable.setRowHeight(25);
+        groupRolesTable.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent mouseEvent) {
+                JTable table =(JTable) mouseEvent.getSource();
+                    if (table.getSelectedRow() !=-1)
+                        removeGroupButton.setEnabled(true);
+            }
+        });
         JScrollPane groupRolesScroll = new JScrollPane(groupRolesTable);
-        add(groupRolesScroll); 
-        
+        add(groupRolesScroll);
+
         // add groups pulldown selection for groups this person is a member of
-        newGroupSelector = new JComboBox();   
-        JButton newGroupButton = new JButton("Add Group");
+        newGroupSelector = new JComboBox();
+        newGroupButton = new JButton("Add Group");
         newGroupButton.addActionListener(event -> addNewGroup());
+
+        removeGroupButton = new JButton("Remove Group");
+        removeGroupButton.setEnabled(false);
+        removeGroupButton.addActionListener(event -> removeGroup());
+
         saveUserButton = new JButton("Save User");
         saveUserButton.addActionListener(event -> saveUser());
         saveUserButton.setEnabled(false);
@@ -108,8 +129,9 @@ public class UserDetailsPanel extends JPanel {
 
         actionPanel.add(newGroupSelector);
         actionPanel.add(newGroupButton);
+        actionPanel.add(removeGroupButton);
         actionPanel.add(saveUserButton);
-        add(actionPanel);               
+        add(actionPanel);
     }
     
     public void saveUser () {
@@ -126,27 +148,37 @@ public class UserDetailsPanel extends JPanel {
     public void editUserDetails(User user) throws Exception {
         currentUser = user;
         Subject rawAdmin = AccessManager.getAccessManager().getActualSubject();
-        if (rawAdmin instanceof User) {                
-            User admin = (User) rawAdmin;
-            
-            // load user details
-            userDetailsTableModel.loadUser(user);           
-            groupRolesModel.loadGroupRoles(user);
-            
-            // load up the new groups available to add to this user
-            newGroupSelector.removeAllItems();
-            Iterator<UserGroupRole> groupRoles = admin.getUserGroupRoles().iterator();
-            while (groupRoles.hasNext()) {
-                UserGroupRole groupRole = groupRoles.next();
-                if (groupRole.getRole() == GroupRole.Admin
-                        || groupRole.getRole() == GroupRole.Owner 
-                        || AccessManager.getAccessManager().isAdmin()) {
-                    if (user.getRole(groupRole.getGroupKey()) == null) {
-                        newGroupSelector.addItem(groupRole.getGroupKey());
-                    }
-                }
-            }            
+        if (rawAdmin instanceof User && AccessManager.getAccessManager().isAdmin()) {
+            admin = (User) rawAdmin;
         }
+            
+        // load user details
+        userDetailsTableModel.loadUser(user);
+        groupRolesModel.loadGroupRoles(user);
+        refreshUserGroupsToAdd();
+    }
+
+    void refreshUserGroupsToAdd() {
+        if (admin==null)
+            return;
+        // load up the new groups available to add to this user
+        newGroupSelector.removeAllItems();
+        Iterator<UserGroupRole> groupRoles = admin.getUserGroupRoles().iterator();
+        while (groupRoles.hasNext()) {
+            UserGroupRole groupRole = groupRoles.next();
+            if (groupRole.getRole() == GroupRole.Admin
+                    || groupRole.getRole() == GroupRole.Owner
+                    || AccessManager.getAccessManager().isAdmin()) {
+                if (currentUser.getRole(groupRole.getGroupKey()) == null) {
+                    newGroupSelector.addItem(groupRole.getGroupKey());
+                }
+            }
+        }
+        // no groups to add
+        if (newGroupSelector.getItemCount()==0) {
+             newGroupButton.setEnabled(false);
+        } else
+            newGroupButton.setEnabled(true);
     }
                 
     
@@ -154,6 +186,17 @@ public class UserDetailsPanel extends JPanel {
     private void addNewGroup() {
         String groupKey = (String)newGroupSelector.getSelectedItem();
         groupRolesModel.addNewGroup(groupKey);        
+    }
+
+    // removes the user from a group
+    private void removeGroup() {
+        int row = groupRolesTable.getSelectedRow();
+        if (row!=-1) {
+            groupRolesModel.removeGroup(row);
+            removeGroupButton.setEnabled(false);
+            saveUserButton.setEnabled(true);
+            refreshUserGroupsToAdd();
+        }
     }
 
     public void returnHome() {
@@ -169,8 +212,15 @@ public class UserDetailsPanel extends JPanel {
                 
         @Override
         public boolean isCellEditable(int row, int col) {
+            // if not admin return false
+            if (admin==null)
+                return false;
+            // can't change username if user already exists
+            if (user.getKey()!=null && row==0)
+                return false;
             if (col!=COLUMN_NAME)
                 return true;
+
             return false;
         }
         
@@ -215,7 +265,7 @@ public class UserDetailsPanel extends JPanel {
         }
 
         private void validateUserChanges() {
-            if (user.getPassword()!=null && user.getName()!=null)
+            if (user.getName()!=null && dirtyFlag)
                 saveUserButton.setEnabled(true);
             else
                 saveUserButton.setEnabled(false);
@@ -231,6 +281,10 @@ public class UserDetailsPanel extends JPanel {
                 } else {
                     new PropertyDescriptor(editProperties[row], User.class).getWriteMethod().invoke(user, (String)value);
                 }
+
+                if (values[row]==null ||
+                        !values[row].equals((String)value))
+                    dirtyFlag = true;
                 values[row] = (String)value;
                 validateUserChanges();
                 this.fireTableCellUpdated(row, col);
@@ -258,6 +312,9 @@ public class UserDetailsPanel extends JPanel {
         
         @Override
         public boolean isCellEditable(int row, int col) {
+            // if not admin return false
+            if (admin==null)
+                return false;
             if (col!=COLUMN_NAME)
                 return true;
             return false;
@@ -278,6 +335,17 @@ public class UserDetailsPanel extends JPanel {
             data.add(user.getRole(groupKey));
             validateUserChanges();
             fireTableRowsInserted(getRowCount()-1, getRowCount()-1);
+        }
+
+        public void removeGroup(int row) {
+            String groupKey = data.get(row).getGroupKey();
+            UserGroupRole deleteRole = user.getRole(groupKey);
+            Set<UserGroupRole> roles = user.getUserGroupRoles();
+            roles.remove(deleteRole);
+            user.setUserGroupRoles(roles);
+            data.remove(row);
+            validateUserChanges();
+            fireTableRowsDeleted(row, row);
         }
 
         public String getColumnName(int col) {
@@ -303,12 +371,16 @@ public class UserDetailsPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             UserGroupRole groupRole = user.getRole(e.getActionCommand());
-            groupRole.setRole(GroupRole.valueOf((String)((JComboBox)e.getSource()).getSelectedItem()));
+            GroupRole newRole = GroupRole.valueOf((String)((JComboBox)e.getSource()).getSelectedItem());
+            if (groupRole.getRole()!=newRole) {
+                dirtyFlag = true;
+            }
+            groupRole.setRole(newRole);
             validateUserChanges();
         }
 
         private void validateUserChanges() {
-            if (user.getPassword()!=null && user.getName()!=null)
+            if (user.getName()!=null && dirtyFlag)
                 saveUserButton.setEnabled(true);
             else
                 saveUserButton.setEnabled(false);

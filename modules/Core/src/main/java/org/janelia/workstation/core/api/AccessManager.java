@@ -44,7 +44,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public final class AccessManager {
 
-    private static final Logger log = LoggerFactory.getLogger(AccessManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AccessManager.class);
 
     public static String RUN_AS_USER = "RunAs";
     public static String USER_NAME = "console.serverLogin";
@@ -87,12 +87,12 @@ public final class AccessManager {
     }
     
     private AccessManager() {
-        log.info("Initializing Access Manager");
+        LOG.info("Initializing Access Manager");
         moveToStartingState();
     }
     
     private void moveToStartingState() {
-        log.info("Moving to starting state");
+        LOG.info("Moving to starting state");
         this.currState = AuthState.Starting;
         this.token = null;
         this.authenticatedSubject = null;
@@ -100,7 +100,7 @@ public final class AccessManager {
     }
     
     private void moveToLoggedInState(Subject authenticatedSubject) {
-        log.info("Moving to logged in state");
+        LOG.info("Moving to logged in state");
         this.currState = AuthState.LoggedIn;
         this.authenticatedSubject = authenticatedSubject;
         this.isAdmin = AccessManager.authenticatedSubjectIsInGroup(SubjectRole.Admin);
@@ -132,7 +132,7 @@ public final class AccessManager {
     }
     
     private void moveToLoggedOutState() {
-        log.info("Moving to logged out state");
+        LOG.info("Moving to logged out state");
         this.currState = AuthState.LoggedOut;
         this.token = null;
         this.authenticatedSubject = null;
@@ -145,7 +145,6 @@ public final class AccessManager {
      * is showing, by calling resolveLoginIssue. 
      */
     public void loginUsingSavedCredentials() {
-
         // Assume we'll have a login issue unless proven otherwise
         hadLoginIssue = true;
         loginIssue = null;
@@ -159,22 +158,18 @@ public final class AccessManager {
             try {
                 if (loginUser(username, password)) {
                     hadLoginIssue = false;
-                }
-                else {
+                } else {
                     moveToLoggedOutState();
                 }
-            }
-            catch (AuthenticationException e) {
-                log.warn("Authentication problem during auto-login", e);
+            } catch (AuthenticationException e) {
+                LOG.warn("Authentication problem during auto-login", e);
                 moveToLoggedOutState();
                 loginIssue = ErrorType.AuthError;
-            }
-            catch (ServiceException e) {
+            } catch (ServiceException e) {
                 FrameworkImplProvider.handleExceptionQuietly("Problem encountered during auto-login", e);
                 moveToLoggedOutState();
                 loginIssue = ErrorType.NetworkError;
-            }
-            catch (Throwable t) {
+            } catch (Throwable t) {
                 FrameworkImplProvider.handleExceptionQuietly("Problem encountered during auto-login", t);
                 moveToLoggedOutState();
                 loginIssue = ErrorType.OtherError;
@@ -196,35 +191,22 @@ public final class AccessManager {
      * @return true if the user was successfully made actual
      */
     public boolean setRunAsUser(String runAsUser) {
-        
         if (!isAdmin() && !StringUtils.isEmpty(runAsUser)) {
-            log.error("Non-admin user cannot run as another user");
+            LOG.error("Non-admin user cannot run as another user");
             setActualSubject(authenticatedSubject);
             return false;
         }
-        
         try {
             if (!StringUtils.isEmpty(runAsUser)) {
-                String fullUserKey = runAsUser;
-                if (!runAsUser.startsWith("user:") && !runAsUser.startsWith("group:")) {
-                    fullUserKey = "user:" + fullUserKey;
-                }
-                Subject runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByNameOrKey(fullUserKey);
-                if (runAsSubject==null) {
-                    // try group before failing
-                    fullUserKey = "group:" + runAsUser;
-                    runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByNameOrKey(fullUserKey);
-                    if (runAsSubject==null) {
-                        return false;
-                    }
+                Subject runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByNameOrKey(runAsUser);
+                if (runAsSubject == null) {
+                    return false;
                 }
                 setActualSubject(runAsSubject);
-            }
-            else {
+            } else {
                 setActualSubject(authenticatedSubject);
             }
-
-            log.info("Running as {}", getActualSubject().getKey());
+            LOG.info("Running as {}", getActualSubject().getKey());
             return true;
         }
         catch (Exception e) {
@@ -292,65 +274,53 @@ public final class AccessManager {
      */
     public String getToken() {
         renewTokenIfNeeded();
-        log.trace("Returning token: {}", token);
+        LOG.trace("Returning token: {}", token);
         return token;
     }
 
     private void renewToken() {
-
         tokenRefreshLock.lock();
-        
         try {
-            log.debug("Attempting to obtain new auth token for {}", username);
+            LOG.debug("Attempting to obtain new auth token for {}", username);
             this.token = DomainMgr.getDomainMgr().getAuthClient().obtainToken(username, password);
             this.tokenCreationDate = new Date();
-            
+
             try {
                 this.tokenExpirationDate = null;
                 SimpleJwtParser parser = new SimpleJwtParser(token);
                 this.tokenExpirationDate = new Date(Long.parseLong(parser.getExp()) * 1000);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 FrameworkImplProvider.handleException(e);
             }
-            
-            log.info("Now using token {}", token);
-            log.info("Token will expire {}", tokenExpirationDate);
-            
-        } 
-        finally {
+
+            LOG.info("Now using token {} with expiration date: {}", token, tokenExpirationDate);
+        } finally {
             tokenRefreshLock.unlock();
         }
     }
 
     private boolean renewTokenIfNeeded() {
-
         tokenRefreshLock.lock();
-        
         try {
             if (tokenMustBeRenewed()) {
                 renewToken();
                 return true;
-            }
-            else {
+            } else {
                 return false;
             }
-        } 
-        finally {
+        } finally {
             tokenRefreshLock.unlock();
         }
-        
     }
 
     private boolean tokenMustBeRenewed() {
-        
-        log.trace("Checking if token must be renewed");
+        LOG.trace("Checking if token must be renewed");
         if (token==null || tokenCreationDate==null) return true;
         Date now = new Date();
         
         if (tokenExpirationDate != null && now.after(tokenExpirationDate)) {
             // Token has already expired
-            log.trace("Token is expired");
+            LOG.trace("Token is expired");
             return true;
         }
         
@@ -387,12 +357,11 @@ public final class AccessManager {
         
         // Start a new session
         this.actualSubject = subject;
-        if (actualSubject!=null) {
+        if (actualSubject != null) {
             this.readerSet = SubjectUtils.getReaderSet(actualSubject);
             this.writerSet = SubjectUtils.getWriterSet(actualSubject);
             Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
-        }
-        else {
+        } else {
             this.readerSet = new HashSet<>();
             this.writerSet = new HashSet<>();
         }
@@ -407,9 +376,8 @@ public final class AccessManager {
     public static Subject getSubjectByNameOrKey(String key) {
         try {
             return DomainMgr.getDomainMgr().getModel().getSubjectByNameOrKey(key);
-        } 
-        catch (Exception e) {
-            log.error("Error getting subject with key: " + key, e);
+        } catch (Exception e) {
+            LOG.error("Error getting subject with key: " + key, e);
         }
         return null;
     }

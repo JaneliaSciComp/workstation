@@ -109,9 +109,8 @@ public class ApplicationOptions {
     }
         
     public boolean isUseHTTPForTileAccess() {
-        Boolean value = (Boolean) FrameworkImplProvider.getModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS);
+        Boolean value = FrameworkImplProvider.getModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, true);
         return value!=null && value;
-
     }
     
     public void setUseHTTPForTileAccess(boolean value) {

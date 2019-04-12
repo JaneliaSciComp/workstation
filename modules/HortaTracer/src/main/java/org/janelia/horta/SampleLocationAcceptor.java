@@ -40,7 +40,8 @@ import java.net.URL;
 import java.text.ParseException;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import jersey.repackaged.com.google.common.base.Objects;
+
+import com.google.common.base.Objects;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;

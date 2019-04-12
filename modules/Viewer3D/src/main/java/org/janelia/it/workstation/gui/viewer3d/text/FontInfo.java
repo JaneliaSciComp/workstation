@@ -20,7 +20,7 @@ import java.util.Properties;
 public class FontInfo {
     public enum FontComponentExtension { properties, png }
     public enum FontStyle { Plain, Bold, Italic }
-    public static final String FONT_RESOURCE_LOC = "/resources/font/";
+    public static final String FONT_RESOURCE_LOC = "/font/";
 
     public static final String NAME_PART_SEP = "_";
     private String[] allWidths = null;
