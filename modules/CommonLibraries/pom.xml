@@ -259,11 +259,6 @@
             <artifactId>jackrabbit-webdav</artifactId>
             <version>2.5.2</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>4.0</version>
-        </dependency>
         <!-- TODO: this is pulled in just because of org.eclipse.jetty.util.ConcurrentHashSet.
             It should be replaced with something lighter, e.g. https://stackoverflow.com/questions/3629359/thread-safe-hashset-with-guava-collections
         -->
