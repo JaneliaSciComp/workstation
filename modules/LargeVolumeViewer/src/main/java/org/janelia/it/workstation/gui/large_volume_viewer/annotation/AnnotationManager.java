@@ -30,7 +30,6 @@ import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
@@ -312,7 +311,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     String errorMessage = "Problems handling roundtrip request for ownership of System-owned neuron";
                     log.error(errorMessage);
                     e.printStackTrace();
-                    ConsoleApp.handleException(e);
+                    FrameworkImplProvider.handleException(e);
                 }
                 return false;
             }
@@ -535,7 +534,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         adder.execute();
@@ -592,7 +591,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         deleter.execute();
@@ -640,7 +639,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         deleter.execute();
@@ -672,7 +671,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         mover.execute();
@@ -757,7 +756,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         merger.execute();
@@ -836,7 +835,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         merger.execute();
@@ -1281,7 +1280,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         setter.execute();
@@ -1621,7 +1620,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         creator.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Creating new workspace...", ""));
@@ -1657,7 +1656,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 
@@ -1822,7 +1821,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         updater.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), visibility?"Showing neurons...":"Hiding neurons...", ""));
@@ -1844,7 +1843,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         updater.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Hiding neurons...", ""));
@@ -1948,7 +1947,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         setter.execute();
@@ -1968,7 +1967,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
     
@@ -1986,7 +1985,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 
@@ -1997,7 +1996,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             saveCurrentWorkspace();
         }
         catch(Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 
@@ -2008,7 +2007,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             saveCurrentWorkspace();
         }
         catch(Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 

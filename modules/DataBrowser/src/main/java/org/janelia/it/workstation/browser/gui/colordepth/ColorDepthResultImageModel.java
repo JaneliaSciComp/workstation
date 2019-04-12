@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.gui.model.ImageDecorator;
 import org.janelia.it.workstation.browser.gui.model.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.gui.model.ImageDecorator;
 import org.janelia.it.workstation.browser.model.SplitTypeInfo;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.SampleUtils;

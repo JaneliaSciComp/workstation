@@ -13,12 +13,11 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.shared.utils.DomainQuery;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.DomainFacade;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;
@@ -31,7 +30,7 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
 
     private static final Logger log = LoggerFactory.getLogger(DomainFacadeImpl.class);
     
-    private static final String REMOTE_API_URL = ConsoleApp.getConsoleApp().getRemoteRestUrl();
+    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
     private static final String REMOTE_STORAGE_URL = ConsoleProperties.getInstance().getProperty("jadestorage.rest.url");
 
     private WebTarget service;

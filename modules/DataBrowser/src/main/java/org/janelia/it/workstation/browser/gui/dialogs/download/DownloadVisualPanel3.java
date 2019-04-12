@@ -35,12 +35,11 @@ import javax.swing.ListSelectionModel;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.Progress;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;
-import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.ChanSpecUtils;
@@ -278,7 +277,7 @@ public final class DownloadVisualPanel3 extends JPanel {
             @Override
             protected void hadError(Throwable error) {
                 debouncer.failure();
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 

@@ -4,7 +4,6 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.dialogs.AnnotationBuilderDialog;
@@ -42,7 +41,7 @@ public class AnnotationEditor {
                 keyTerm = model.getOntologyTermByReference(annotation.getKeyTerm());
             }
             catch (Exception e) {
-                ConsoleApp.handleException(e);
+                FrameworkImplProvider.handleException(e);
             }
         }
     }
@@ -90,7 +89,7 @@ public class AnnotationEditor {
 
                 if (valueEnum == null) {
                     Exception error = new Exception(keyTerm.getName() + " has no supporting enumeration.");
-                    ConsoleApp.handleException(error);
+                    FrameworkImplProvider.handleException(error);
                     return null;
                 }
 
@@ -134,7 +133,7 @@ public class AnnotationEditor {
             return value;
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
             return null;
         }
     }

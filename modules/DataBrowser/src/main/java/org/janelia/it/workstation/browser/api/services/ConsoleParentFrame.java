@@ -2,8 +2,8 @@ package org.janelia.it.workstation.browser.api.services;
 
 import javax.swing.JFrame;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.system.ParentFrame;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -24,7 +24,7 @@ public class ConsoleParentFrame implements ParentFrame {
                 mainFrame = WindowLocator.getMainFrame();
             }
             catch (Exception ex) {
-                ConsoleApp.handleException(ex);
+                FrameworkImplProvider.handleException(ex);
             }
         }
         return mainFrame;

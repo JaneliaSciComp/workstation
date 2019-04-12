@@ -2,7 +2,7 @@ package org.janelia.it.workstation.browser.gui.listview.icongrid;
 
 import java.util.Map;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.model.domain.DomainConstants;
 import org.slf4j.Logger;
@@ -35,7 +35,7 @@ public class IconGridViewerConfiguration {
             return config;
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
             return null;
         }
     }

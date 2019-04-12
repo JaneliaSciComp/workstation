@@ -13,19 +13,18 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
-import org.janelia.it.workstation.browser.gui.support.TreeNodeChooser;
 import org.janelia.it.workstation.browser.model.RecentFolder;
 import org.janelia.it.workstation.browser.nb_action.NodePresenterAction;
 import org.janelia.it.workstation.browser.nodes.GroupedFolderNode;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.UserViewConfiguration;
 import org.janelia.it.workstation.browser.nodes.UserViewRootNode;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.gui.support.TreeNodeChooser;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
@@ -124,7 +123,7 @@ public class AddToResultsAction extends NodePresenterAction {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
                 
@@ -143,7 +142,7 @@ public class AddToResultsAction extends NodePresenterAction {
                 ActivityLogHelper.logUserAction("AddToResultsAction.chooseResultSet");
 
                 TreeNodeChooser nodeChooser = new TreeNodeChooser(new UserViewRootNode(
-                        UserViewConfiguration.create(TreeNode.class, GroupedFolder.class)), 
+                        UserViewConfiguration.create(TreeNode.class, GroupedFolder.class)),
                         "Choose result set to add to", true) {
                     @Override
                     protected boolean allowChoose(Node selectedNode) {
@@ -228,7 +227,7 @@ public class AddToResultsAction extends NodePresenterAction {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));
@@ -307,7 +306,7 @@ public class AddToResultsAction extends NodePresenterAction {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
                 worker.execute();
@@ -315,7 +314,7 @@ public class AddToResultsAction extends NodePresenterAction {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         worker.execute();

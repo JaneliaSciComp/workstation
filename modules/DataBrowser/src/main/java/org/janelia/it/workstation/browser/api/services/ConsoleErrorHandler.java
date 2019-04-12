@@ -8,9 +8,9 @@ import javax.swing.SwingUtilities;
 import org.hibernate.exception.ExceptionUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.system.ErrorHandler;
+import org.janelia.it.workstation.browser.model.ErrorType;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.browser.logging.CustomLoggingLevel;
-import org.janelia.it.workstation.browser.model.ErrorType;
 import org.openide.util.lookup.ServiceProvider;
 
 /**

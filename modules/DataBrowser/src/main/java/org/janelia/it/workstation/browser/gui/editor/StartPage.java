@@ -29,17 +29,17 @@ import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.gui.listview.ViewerToolbar;
 import org.janelia.it.workstation.browser.options.ApplicationOptions;
 import org.janelia.it.workstation.browser.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.browser.nb_action.NewFilterActionListener;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.HelpTextUtils;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -67,7 +67,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
     private static final Logger log = LoggerFactory.getLogger(StartPage.class);
 
-    private static final String MANUAL_URL = ConsoleProperties.getInstance().getProperty("manual.color.depth.url"); 
+    private static final String MANUAL_URL = ConsoleProperties.getInstance().getProperty("manual.color.depth.url");
     private static final ImageIcon DISK_USAGE_ICON = Icons.getIcon("database_400.png");
     private static final ImageIcon SAMPLE_ICON = Icons.getIcon("microscope_400.png");
     private static final ImageIcon COLOR_DEPTH_ICON = Icons.getIcon("color_depth_brain.png");
@@ -342,7 +342,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
             @Override
             protected void hadError(Throwable e) {
-                ConsoleApp.handleException(e);
+                FrameworkImplProvider.handleException(e);
                 diskUsageSummary = null;
                 populateDiskView(diskUsageSummary);
             }
@@ -367,7 +367,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
             @Override
             protected void hadError(Throwable e) {
-                ConsoleApp.handleException(e);
+                FrameworkImplProvider.handleException(e);
                 dataSummary = null;
                 populateDataView(dataSummary);
             }

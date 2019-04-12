@@ -11,7 +11,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.support.StringMemberListPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.LargeVolumeSampleDiscoveryAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
@@ -74,7 +74,7 @@ final class SampleRootPathsPanel extends javax.swing.JPanel {
             pathPanel.initItemsInList(paths);
         } 
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 
@@ -85,7 +85,7 @@ final class SampleRootPathsPanel extends javax.swing.JPanel {
             TiledMicroscopeDomainMgr.getDomainMgr().setSamplePaths(paths);
         } 
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 

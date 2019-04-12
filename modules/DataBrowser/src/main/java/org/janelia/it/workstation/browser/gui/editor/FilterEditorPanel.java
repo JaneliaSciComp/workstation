@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 import javax.swing.AbstractAction;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButtonMenuItem;
@@ -32,19 +31,22 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
+import org.janelia.it.workstation.browser.gui.dialogs.EditCriteriaDialog;
+import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
+import org.janelia.it.workstation.browser.model.search.ResultPage;
+import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
+import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
-import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
-import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
-import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
-import org.janelia.it.workstation.browser.gui.dialogs.EditCriteriaDialog;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
@@ -56,10 +58,6 @@ import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SmartSearchBox;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
-import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
-import org.janelia.it.workstation.browser.model.search.ResultPage;
-import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
-import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.FilterNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
@@ -171,7 +169,7 @@ public class FilterEditorPanel
 
                     @Override
                     protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
                 worker.execute();
@@ -234,7 +232,7 @@ public class FilterEditorPanel
 
                     @Override
                     protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
 
@@ -268,7 +266,7 @@ public class FilterEditorPanel
                     }
                 }
                 catch (Exception ex) {
-                    ConsoleApp.handleException(ex);
+                    FrameworkImplProvider.handleException(ex);
                 }
             }
         });
@@ -281,7 +279,7 @@ public class FilterEditorPanel
             }
         };
         
-        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
+        getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
         getActionMap().put("enterAction", mySearchAction);
         
         this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), getEditSelectionModel(), this, this) {
@@ -366,7 +364,7 @@ public class FilterEditorPanel
             });
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
 
         ActivityLogHelper.logElapsed("FilterEditorPanel.loadDomainObject", filter, w);
@@ -446,7 +444,7 @@ public class FilterEditorPanel
             protected void hadError(Throwable error) {
                 showNothing();
                 ConcurrentUtils.invokeAndHandleExceptions(failure);
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 
@@ -789,7 +787,7 @@ public class FilterEditorPanel
             }
         } 
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 
@@ -955,7 +953,7 @@ public class FilterEditorPanel
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 

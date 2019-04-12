@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.browser.gui.dialogs;
 
-import static org.janelia.it.workstation.browser.options.OptionConstants.LAST_SHOWN_RELEASE_NOTES;
-
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -13,24 +11,17 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.options.ApplicationOptions;
+import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.janelia.it.workstation.browser.options.OptionConstants.LAST_SHOWN_RELEASE_NOTES;
 
 /**
  * A dialog for viewing Release Notes for the system.
@@ -124,7 +115,7 @@ public class ReleaseNotesDialog extends ModalDialog {
     
     public void showIfFirstRunSinceUpdate() {
         if (!ApplicationOptions.getInstance().isShowReleaseNotes()) return;
-        String appVersion = ConsoleApp.getConsoleApp().getApplicationVersion();
+        String appVersion = SystemInfo.appVersion;
         if ("DEV".equals(appVersion)) return; // Never show release notes in normal development
         if (!appVersion.equals(getLastShownReleaseNotes())) {
             setLastShownReleaseNotes(appVersion);
@@ -163,7 +154,7 @@ public class ReleaseNotesDialog extends ModalDialog {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    ConsoleApp.handleException(error);
+                    FrameworkImplProvider.handleException(error);
                 }
 
             };

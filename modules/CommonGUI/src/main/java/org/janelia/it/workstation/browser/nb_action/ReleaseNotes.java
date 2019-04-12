@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.nb_action;
 
-import org.janelia.it.workstation.browser.api.lifecycle.ShowingHook;
+import org.janelia.it.workstation.browser.gui.lifecycle.ShowingHook;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;

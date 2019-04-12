@@ -10,7 +10,6 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.tiledMicroscope.LargeVolumeDiscoveryTask;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 
@@ -52,7 +51,7 @@ public class LargeVolumeSampleDiscoveryAction extends AbstractAction {
 	            tmw.executeWithEvents();
         	}
         	catch (Exception e) {
-                ConsoleApp.handleException(e);
+                FrameworkImplProvider.handleException(e);
         	}
         }
 	}

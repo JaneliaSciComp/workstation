@@ -21,7 +21,6 @@ import javax.swing.JRadioButton;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -333,7 +332,7 @@ public class CompressionDialog extends ModalDialog {
                     }
                 }
                 catch (Exception e) {
-                    ConsoleApp.handleException(e);
+                    FrameworkImplProvider.handleException(e);
                     return;
                 }
             }
@@ -372,7 +371,7 @@ public class CompressionDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 
@@ -437,7 +436,7 @@ public class CompressionDialog extends ModalDialog {
                     }
                 }
                 catch (Exception e) {
-                    ConsoleApp.handleException(e);
+                    FrameworkImplProvider.handleException(e);
                     return;
                 }
             }
@@ -485,7 +484,7 @@ public class CompressionDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 

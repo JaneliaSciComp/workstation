@@ -1,10 +1,10 @@
 package org.janelia.it.workstation.browser.components;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;
+import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.NodeSelectionEvent;
 import org.janelia.model.domain.DomainObject;

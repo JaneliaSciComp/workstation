@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.facade.impl.rest.DomainFacadeImpl;
 import org.janelia.it.workstation.browser.api.facade.impl.rest.OntologyFacadeImpl;
 import org.janelia.it.workstation.browser.api.facade.impl.rest.SampleFacadeImpl;

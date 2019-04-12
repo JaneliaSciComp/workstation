@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.gui.options;
+package org.janelia.it.workstation.browser.gui.appoptions;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;

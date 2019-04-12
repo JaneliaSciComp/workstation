@@ -1,8 +1,9 @@
 package org.janelia.it.workstation.browser.api.state;
 
+import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.util.ImageCache;
 import org.janelia.it.workstation.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.browser.events.Events;
 import org.openide.windows.TopComponent;
 
 import java.util.HashMap;
@@ -26,6 +27,12 @@ public class DataBrowserMgr {
     }
 
     private final Map<TopComponent,NavigationHistory> navigationHistoryMap = new HashMap<>();
+
+    private final ImageCache imageCache = new ImageCache();
+
+    public ImageCache getImageCache() {
+        return imageCache;
+    }
 
     public NavigationHistory getNavigationHistory(DomainListViewTopComponent topComponent) {
         if (topComponent==null) return null;

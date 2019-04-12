@@ -6,9 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
@@ -147,7 +147,7 @@ public class RecentOpenedItemsNode extends AbstractNode implements HasIdentifier
                 list.addAll(temp);
             } 
             catch (Exception ex) {
-                ConsoleApp.handleException(ex);
+                FrameworkImplProvider.handleException(ex);
             }
             return true;
         }

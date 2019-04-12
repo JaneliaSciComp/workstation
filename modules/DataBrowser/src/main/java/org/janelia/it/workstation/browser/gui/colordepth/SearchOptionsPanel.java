@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.browser.gui.colordepth;
 
-import static org.janelia.it.workstation.browser.api.DomainMgr.getDomainMgr;
-
 import java.awt.BorderLayout;
 import java.awt.event.MouseEvent;
 import java.text.DecimalFormat;
@@ -24,12 +22,13 @@ import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.gui.editor.ConfigPanel;
 import org.janelia.it.workstation.browser.gui.editor.SelectionButton;
 import org.janelia.it.workstation.browser.gui.editor.SingleSelectionButton;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.sample.DataSet;
 
@@ -228,7 +227,7 @@ public class SearchOptionsPanel extends ConfigPanel {
         }
         
         search.getParameters().setDataThreshold(thresholdSlider.getValue());
-        DomainModel model = getDomainMgr().getModel();
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
         
         if (search.getId() == null) {
             // new search

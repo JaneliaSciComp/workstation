@@ -5,17 +5,14 @@ import java.util.logging.LogManager;
 
 import javax.imageio.ImageIO;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.ServiceMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationOpening;
+import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.it.workstation.browser.api.ConsoleApp;
 import org.janelia.it.workstation.browser.logging.LogFormatter;
 import org.janelia.it.workstation.browser.logging.NBExceptionHandler;
-import org.janelia.it.workstation.browser.util.BrandingConfig;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.openide.modules.OnStart;
 import org.openide.util.NbPreferences;
-import org.openide.util.actions.CallableSystemAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +26,7 @@ import org.slf4j.LoggerFactory;
 public class Startup implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(Startup.class);
-    
-    private static boolean brandingValidationException = false;
-    
+
     @Override
     public void run() {
 
@@ -72,6 +67,18 @@ public class Startup implements Runnable {
             handler.setFormatter(formatter);
         }
 
+        // Put the app name in the Mac OS X menu bar
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", SystemInfo.appName);
+
+        // Stretch NetBeans tabs across entire width of window. This allows us to show more of the long window titles.
+        System.setProperty("winsys.stretching_view_tabs", "true");
+
+        // Nicer to shutdown by closing all windows individually instead of just sending a System.exit(0) to the application
+        System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
+
+        // Work-around for NetBeans/OSXSierra bug which causes display issues if a resources cache file is loaded
+        System.setProperty("org.netbeans.core.update.all.resources", "never");
+
         // Override the NetBeans default of "system-wide proxy", because it causes performance problems with VPN clients
         int proxyPref = NbPreferences.root().node("org/netbeans/core").getInt("proxyType", -1);
         if (proxyPref==-1) {
@@ -79,51 +86,13 @@ public class Startup implements Runnable {
             NbPreferences.root().node("org/netbeans/core").putInt("proxyType", 0);
         }
 
+        // disable ImageIO file caching for improved performance
         ImageIO.setUseCache(false);
-        
-        // Create the main console app frame
-        ConsoleApp app = ConsoleApp.getConsoleApp();
-        
-        // Load the branding config so that the user settings are available for logging 
-        // in the next step (init user session)
-        try {
-            BrandingConfig.getBrandingConfig().validateBrandingConfig();
-        }
-        catch (Throwable t) {
-            LOG.error("Error validating branding config", t);
-            // Save this error state so that it can be shown to the user later, once the MainWindow is visible.
-            brandingValidationException = true;
-        }
-        
-        // Begin the user's session
-        app.initSession();
-                
-        // Do some things in the background
-        SimpleWorker worker = new SimpleWorker() {
-                
-            @Override
-            protected void doStuff() throws Exception {
-                // Initialize the services
-                ServiceMgr.getServiceMgr().initServices();
-            }
 
-            @Override
-            protected void hadSuccess() {
-            }
-
-            @Override
-            protected void hadError(Throwable e) {
-                ConsoleApp.handleException(e);
-            }
-        };
-
-        worker.execute();
+        // Initialize the application
+        ConsoleApp.getConsoleApp();
 
         // Notify listeners that the application is opening
         Events.getInstance().postOnEventBus(new ApplicationOpening());
-    }
-
-    public static boolean isBrandingValidationException() {
-        return brandingValidationException;
     }
 }

@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.nb_action;
+package org.janelia.workstation.sitejrc.nb_action;
 
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;

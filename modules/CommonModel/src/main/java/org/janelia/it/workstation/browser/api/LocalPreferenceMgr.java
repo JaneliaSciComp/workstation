@@ -13,7 +13,6 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
 import org.janelia.it.workstation.browser.events.prefs.LocalPreferenceChanged;
@@ -153,7 +152,7 @@ public class LocalPreferenceMgr {
             log.debug("Saving user settings to " + settingsFile.getAbsolutePath());
         }
         catch (IOException ioEx) {
-            ConsoleApp.handleException(ioEx);
+            FrameworkImplProvider.handleException(ioEx);
         }
     }
 

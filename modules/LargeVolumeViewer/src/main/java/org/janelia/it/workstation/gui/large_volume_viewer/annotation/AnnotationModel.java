@@ -35,7 +35,6 @@ import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.swc.SWCNode;
 import org.janelia.it.jacs.shared.utils.Progress;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionSupport;
@@ -359,7 +358,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             RefreshHandler.getInstance().ifPresent(rh -> rh.setAnnotationModel(this));
             TaskWorkflowViewTopComponent.getInstance().loadHistory();
         } catch (Exception error) {
-            ConsoleApp.handleException(error);
+            FrameworkImplProvider.handleException(error);
         }
         SwingUtilities.invokeLater(() -> fireNeuronSelected(null));
         if (workspace!=null) {
@@ -1880,7 +1879,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             parameters.put("neuron", updatedNeuron);
             finishBulkSWCData(parameters);
         } catch (Exception error) {
-            ConsoleApp.handleException(error);
+            FrameworkImplProvider.handleException(error);
         }
 
     }
@@ -2194,7 +2193,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         try {
             saveUserTags();
         } catch (Exception error) {
-            ConsoleApp.handleException(error);
+            FrameworkImplProvider.handleException(error);
         }
     }
     
@@ -2203,7 +2202,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         try {
             saveUserTags();
         } catch (Exception error) {
-            ConsoleApp.handleException(error);
+            FrameworkImplProvider.handleException(error);
         }
     }
     

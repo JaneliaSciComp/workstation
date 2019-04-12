@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.nb_action;
+package org.janelia.workstation.sitejrc.nb_action;
 
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.Utils;
@@ -22,7 +22,7 @@ import java.awt.event.ActionEvent;
 @Messages("CTL_WebstationMenuAction=Webstation")
 public final class WebstationMenuAction extends AbstractAction {
 
-    private static final String WEBSTATION_URL = ConsoleProperties.getInstance().getProperty("webstation.url"); 
+    private static final String WEBSTATION_URL = ConsoleProperties.getInstance().getProperty("webstation.url");
     
     @Override
     public void actionPerformed(ActionEvent e) {

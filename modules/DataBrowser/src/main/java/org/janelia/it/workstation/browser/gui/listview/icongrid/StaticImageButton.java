@@ -4,10 +4,10 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
-import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.model.ImageDecorator;
 import org.janelia.it.workstation.browser.gui.model.ImageModel;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.util.Utils;
 
 /**
@@ -43,7 +43,7 @@ public class StaticImageButton<T,S> extends AnnotatedImageButton<T,S> {
         if (maxSizeImage!=null) {
             // Only scale icons down, never higher than their max resolution
             if (maxSizeImage.getWidth()>width) {
-                infoPanel.setImage(Utils.getScaledImageByWidth(maxSizeImage, width));    
+                infoPanel.setImage(Utils.getScaledImageByWidth(maxSizeImage, width));
             }   
         }
 

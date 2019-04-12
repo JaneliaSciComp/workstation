@@ -2,8 +2,6 @@ package org.janelia.it.workstation.browser.api;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
 import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
 import org.janelia.it.workstation.browser.api.exceptions.SystemError;
@@ -13,6 +11,7 @@ import org.janelia.it.workstation.browser.events.lifecycle.SessionEndEvent;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.model.ErrorType;
 import org.janelia.it.workstation.browser.util.SimpleJwtParser;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.model.domain.enums.SubjectRole;
 import org.janelia.model.security.AppAuthorization;
 import org.janelia.model.security.Subject;
@@ -122,7 +121,7 @@ public final class AccessManager {
             }
             catch (Exception e) {
                 prefs.setModelProperty(AccessManager.RUN_AS_USER, "");
-                ConsoleApp.handleException(e);
+                FrameworkImplProvider.handleException(e);
             }
         }
         
@@ -229,7 +228,7 @@ public final class AccessManager {
             return true;
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
             setActualSubject(authenticatedSubject);
             return false;
         }

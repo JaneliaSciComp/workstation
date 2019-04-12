@@ -15,16 +15,15 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OntologyElementAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.gui.keybind.KeyBindings;
 import org.janelia.it.workstation.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.browser.flavors.OntologyTermFlavor;
 import org.janelia.it.workstation.browser.flavors.OntologyTermNodeFlavor;
+import org.janelia.it.workstation.browser.gui.keybind.KeyBindings;
 import org.janelia.it.workstation.browser.gui.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.browser.gui.support.Icons;
@@ -106,7 +105,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                         }
                         @Override
                         protected void hadError(Throwable error) {
-                            ConsoleApp.handleException(error);
+                            FrameworkImplProvider.handleException(error);
                         }
                     };
                     NodeUtils.executeNodeOperation(worker);
@@ -312,7 +311,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                 }
             }
             catch (Exception ex) {
-                ConsoleApp.handleException(ex);
+                FrameworkImplProvider.handleException(ex);
             }
         }
     }

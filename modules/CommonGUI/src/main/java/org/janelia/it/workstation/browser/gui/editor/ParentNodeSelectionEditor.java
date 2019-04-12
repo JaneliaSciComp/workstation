@@ -10,7 +10,7 @@ import org.janelia.model.domain.DomainObject;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public interface ParentNodeSelectionEditor<P extends DomainObject, T, S> 
-    extends DomainObjectNodeEditor<P,T,S>, 
-            ChildSelectionSupport<T,S>,
-            ChildPickingSupport<T,S> {
+    extends DomainObjectNodeEditor<P,T,S>,
+        ChildSelectionSupport<T,S>,
+        ChildPickingSupport<T,S> {
 }

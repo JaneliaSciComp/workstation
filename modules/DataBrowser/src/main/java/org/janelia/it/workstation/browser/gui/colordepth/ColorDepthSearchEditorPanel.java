@@ -32,8 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
@@ -42,7 +40,6 @@ import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.workers.WorkerEndedEvent;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
@@ -51,13 +48,15 @@ import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.progress.ProgressMeterMgr;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanel;
-import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
 import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.browser.util.HelpTextUtils;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
+import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
@@ -154,7 +153,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
                     @Override
                     protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
 
@@ -211,7 +210,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         helpPanel.setLayout(new GridBagLayout());
         JPanel panel = new JPanel();
         panel.add(new JLabel("<html>You need to add some masks to this search.<br>"
-                + "To do so, right-click any Color Depth Projection and click "+HelpTextUtils.getBoldedLabel("Create Mask for Color Depth Search")+",<br>"
+                + "To do so, right-click any Color Depth Projection and click "+ HelpTextUtils.getBoldedLabel("Create Mask for Color Depth Search")+",<br>"
                 + "or upload a custom mask using the "+HelpTextUtils.getMenuItemLabel("File","Upload","Color Depth Mask")+"  menu option.</html>"));
         helpPanel.add(panel, new GridBagConstraints());
         
@@ -258,7 +257,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
     
@@ -355,7 +354,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             protected void hadError(Throwable error) {
                 showNothing();
                 debouncer.failure();
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         worker.execute();
@@ -659,7 +658,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
         }  
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 
@@ -688,7 +687,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
         }  
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
     

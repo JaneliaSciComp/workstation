@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.nb_action;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -49,7 +49,7 @@ public final class LaunchVvdAction extends CallableSystemAction {
             ToolMgr.runToolSafely(ToolMgr.TOOL_VVD);
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 }

@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.browser.gui.options;
+package org.janelia.it.workstation.browser.gui.appoptions;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -28,7 +28,6 @@ import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.text.DefaultFormatter;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.FileMgr;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
@@ -277,7 +276,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
                 
                 @Override
                 protected void hadError(Throwable error) {
-                    ConsoleApp.handleException(error);
+                    FrameworkImplProvider.handleException(error);
                 }
             };
             worker.execute();

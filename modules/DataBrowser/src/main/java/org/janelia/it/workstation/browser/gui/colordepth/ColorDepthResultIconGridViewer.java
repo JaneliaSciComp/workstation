@@ -16,23 +16,23 @@ import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.actions.ExportPickedGUIDs;
 import org.janelia.it.workstation.browser.actions.ExportPickedLineNames;
 import org.janelia.it.workstation.browser.actions.ExportPickedToSplitGenWebsite;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
+import org.janelia.it.workstation.browser.gui.model.ImageModel;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
+import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
+import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.gui.listview.ListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
-import org.janelia.it.workstation.browser.gui.model.ImageModel;
-import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
-import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
-import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
-import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.SplitHalfType;
@@ -401,7 +401,7 @@ public class ColorDepthResultIconGridViewer
             hud.setFilepathAndToggleDialog(filepath, title, toggle, false);
         } 
         catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
     }
 
@@ -454,7 +454,7 @@ public class ColorDepthResultIconGridViewer
             return selected;
         }  
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
             return null;
         }
     }

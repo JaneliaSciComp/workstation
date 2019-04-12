@@ -17,7 +17,6 @@ import javax.swing.Action;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.ColorButtonPanel;
@@ -239,7 +238,7 @@ public class Snapshot3d extends JPanel {
 
         @Override
         protected void hadError(Throwable error) {
-            ConsoleApp.handleException(error);
+            FrameworkImplProvider.handleException(error);
         }
     }
 }

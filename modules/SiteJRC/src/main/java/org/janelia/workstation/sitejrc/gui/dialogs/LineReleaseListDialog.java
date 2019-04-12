@@ -1,15 +1,15 @@
-package org.janelia.it.workstation.browser.gui.dialogs;
+package org.janelia.workstation.sitejrc.gui.dialogs;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.sample.LineRelease;
 
@@ -138,7 +138,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
                                 @Override
                                 protected void hadError(Throwable error) {
-                                    ConsoleApp.handleException(error);
+                                    FrameworkImplProvider.handleException(error);
                                     UIUtils.setDefaultCursor(LineReleaseListDialog.this);
                                     loadReleases();
                                 }
@@ -187,7 +187,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
                         @Override
                         protected void hadError(Throwable error) {
-                            ConsoleApp.handleException(error);
+                            FrameworkImplProvider.handleException(error);
                         }
                     };
                     worker.execute();
@@ -274,7 +274,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
                 mainPanel.removeAll();
                 mainPanel.add(dynamicTable, BorderLayout.CENTER);
                 mainPanel.revalidate();

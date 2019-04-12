@@ -27,7 +27,6 @@ import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.gui.support.Icons;
@@ -152,7 +151,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
                                 @Override
                                 protected void hadError(Throwable error) {
-                                    ConsoleApp.handleException(error);
+                                    FrameworkImplProvider.handleException(error);
                                     UIUtils.setDefaultCursor(LineReleaseListDialog.this);
                                     loadReleases();
                                 }
@@ -201,7 +200,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
                         @Override
                         protected void hadError(Throwable error) {
-                            ConsoleApp.handleException(error);
+                            FrameworkImplProvider.handleException(error);
                         }
                     };
                     worker.execute();
@@ -288,7 +287,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
                 mainPanel.removeAll();
                 mainPanel.add(dynamicTable, BorderLayout.CENTER);
                 mainPanel.revalidate();

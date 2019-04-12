@@ -16,7 +16,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.ServiceAcceptorActionHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -26,12 +26,12 @@ import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.browser.nb_action.RenameAction;
+import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasFiles;
@@ -105,7 +105,7 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
     public T getDomainObject() {
         return (T) getLookup().lookup(DomainObject.class);
     }
-    
+
     @Override
     public T getObject() {
         return getDomainObject();
@@ -261,7 +261,7 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
             }
         }
         catch (IntrospectionException ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
 
         sheet.put(set);

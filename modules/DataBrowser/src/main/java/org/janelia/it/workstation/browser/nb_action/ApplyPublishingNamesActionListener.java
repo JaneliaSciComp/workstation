@@ -25,13 +25,12 @@ import javax.swing.JPanel;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.ontology.Annotation;
@@ -104,7 +103,7 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
 
                 @Override
                 protected void hadError(Throwable error) {
-                    ConsoleApp.handleException(error);
+                    FrameworkImplProvider.handleException(error);
                 }
             };
 
@@ -137,7 +136,7 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
             }
             catch (Exception e) {
                 // Handle exceptions here so that one error with the SAGE responder doesn't prevent other images from being annotated
-                ConsoleApp.handleException(e);
+                FrameworkImplProvider.handleException(e);
             }
         }
     }
@@ -169,7 +168,7 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 
@@ -309,7 +308,7 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
                 @Override
                 protected void hadError(Throwable error) {
                     setVisible(false);
-                    ConsoleApp.handleException(error);
+                    FrameworkImplProvider.handleException(error);
                 }
             };
 

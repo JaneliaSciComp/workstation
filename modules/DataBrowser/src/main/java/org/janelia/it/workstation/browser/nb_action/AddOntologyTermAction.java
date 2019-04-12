@@ -10,12 +10,11 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.components.OntologyExplorerTopComponent;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.support.NodeChooser;
 import org.janelia.it.workstation.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.browser.nodes.OntologyTermNode;
@@ -100,7 +99,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
                     addMenuPopup.add(smi);
                 }
                 catch (Exception ex) {
-                    ConsoleApp.handleException(ex);
+                    FrameworkImplProvider.handleException(ex);
                 }
             }
         }
@@ -139,7 +138,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
                 ((Interval) ontologyTerm).init(lowerBound, upperBound);
             }
             catch (NumberFormatException ex) {
-                ConsoleApp.handleException(ex);
+                FrameworkImplProvider.handleException(ex);
                 return;
             }
         }
@@ -165,7 +164,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
                 ((EnumText) ontologyTerm).init(chosenTerm.getId());
             }
             catch (Exception ex) {
-                ConsoleApp.handleException(ex);
+                FrameworkImplProvider.handleException(ex);
             }
         }
         
@@ -187,7 +186,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
             
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         

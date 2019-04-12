@@ -24,7 +24,7 @@ import javax.swing.JRadioButtonMenuItem;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import org.fife.ui.autocomplete.ShorthandCompletion;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.browser.gui.support.TemplateEditorTextbox;
@@ -217,7 +217,7 @@ public class IconGridViewerConfigDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
                 UIUtils.setDefaultCursor(IconGridViewerConfigDialog.this);
                 returnValue = ERROR_OPTION;
                 setVisible(false);

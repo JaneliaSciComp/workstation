@@ -80,6 +80,7 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <configuration>
                     <publicPackages>
+                        <publicPackage>org.janelia.it.FlyWorkstation.ws</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.actions</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.activity_logging</publicPackage>
@@ -110,6 +111,8 @@
                         <publicPackage>org.janelia.it.workstation.browser.web</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.workers</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.ws</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.gui.framework.console</publicPackage>
+                        <publicPackage>org.janelia.workstation.commonmodel</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

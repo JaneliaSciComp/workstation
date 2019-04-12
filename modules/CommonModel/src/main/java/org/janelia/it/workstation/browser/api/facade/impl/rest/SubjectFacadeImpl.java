@@ -12,11 +12,11 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.shared.utils.DomainQuery;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
 import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.security.Group;
 import org.janelia.model.security.Subject;
@@ -30,7 +30,7 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
     private static final Logger log = LoggerFactory.getLogger(SubjectFacadeImpl.class);
 
-    private static final String REMOTE_API_URL = ConsoleApp.getConsoleApp().getRemoteRestUrl();
+    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
 
     private WebTarget service;
     

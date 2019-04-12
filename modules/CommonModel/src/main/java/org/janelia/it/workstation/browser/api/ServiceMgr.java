@@ -7,7 +7,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.web.EmbeddedWebServer;
 import org.janelia.it.workstation.browser.ws.EmbeddedAxisServer;
@@ -39,15 +38,12 @@ public class ServiceMgr {
     private EmbeddedAxisServer axisServer;
     private EmbeddedWebServer webServer;
 
-    private int axisServerPort;
-    private int webServerPort;
-    
     private AtomicBoolean userWasNotified = new AtomicBoolean(false);
     
     private ServiceMgr() {
     }
     
-    public int startAxisServer(int startingPort) {
+    private int startAxisServer(int startingPort) {
         int port = startingPort;
         try {
             if (axisServer == null) {
@@ -85,12 +81,12 @@ public class ServiceMgr {
             return -1;
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
             return -1;
         }
     }
 
-    public int startWebServer(int startingPort) {
+    private int startWebServer(int startingPort) {
         int port = startingPort;
         try {
             if (webServer == null) {
@@ -127,7 +123,7 @@ public class ServiceMgr {
             return -1;
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
             return -1;
         }
     }
@@ -145,8 +141,8 @@ public class ServiceMgr {
     
     public void initServices() {
         log.info("Initializing Services");
-        this.axisServerPort = startAxisServer(ConsoleProperties.getInt("console.WebService.startingPort"));
-        this.webServerPort = startWebServer(ConsoleProperties.getInt("console.WebServer.startingPort"));
+        startAxisServer(ConsoleProperties.getInt("console.WebService.startingPort"));
+        startWebServer(ConsoleProperties.getInt("console.WebServer.startingPort"));
     }
 
     public int getAxisServerPort() {

@@ -30,10 +30,10 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -343,7 +343,7 @@ public class LineReleaseDialog extends ModalDialog {
             @Override
             protected void hadError(Throwable error) {
                 UIUtils.setDefaultCursor(LineReleaseDialog.this);
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 
@@ -453,7 +453,7 @@ public class LineReleaseDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
                 UIUtils.setDefaultCursor(LineReleaseDialog.this);
                 setVisible(false);
             }
@@ -471,7 +471,7 @@ public class LineReleaseDialog extends ModalDialog {
             task = StateMgr.getStateMgr().submitJob("ConsoleSyncReleaseFolders", "Sync Release Folders", taskParameters);
         } 
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
             return;
         }
 

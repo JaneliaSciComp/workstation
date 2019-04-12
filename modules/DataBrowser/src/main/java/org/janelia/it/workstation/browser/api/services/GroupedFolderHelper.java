@@ -4,9 +4,9 @@ import java.util.Arrays;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.editor.GroupedFolderEditorPanel;
 import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
+import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.nodes.GroupedFolderNode;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.workspace.ProxyGroup;

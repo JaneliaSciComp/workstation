@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.browser.actions;
 
-import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -31,8 +29,6 @@ import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.shared.utils.Constants;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.utils.domain.DataReporter;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -46,10 +42,6 @@ import org.janelia.it.workstation.browser.components.SampleResultViewerTopCompon
 import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
-import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthSearchDialog;
-import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromImageAction;
-import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
 import org.janelia.it.workstation.browser.gui.dialogs.CompressionDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.DataSetDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
@@ -57,8 +49,6 @@ import org.janelia.it.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog
 import org.janelia.it.workstation.browser.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadWizardAction;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
-import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
-import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.model.SampleImage;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
@@ -69,12 +59,20 @@ import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.browser.nb_action.ApplyPublishingNamesAction;
 import org.janelia.it.workstation.browser.nb_action.GetRelatedItemsAction;
 import org.janelia.it.workstation.browser.nb_action.SetPublishingNameAction;
-import org.janelia.it.workstation.browser.tools.ToolMgr;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthSearchDialog;
+import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromImageAction;
+import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
+import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory;
+import org.janelia.it.workstation.browser.tools.ToolMgr;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleListenableFuture;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainObject;
@@ -109,7 +107,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     private static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
     private static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
     private static final String NEURON_SEP_REMOVAL_MSG = "Remove/preclude Neuron Separation(s)";
-    private static final String WEBSTATION_URL = ConsoleProperties.getInstance().getProperty("webstation.url"); 
+    private static final String WEBSTATION_URL = ConsoleProperties.getInstance().getProperty("webstation.url");
     private static final String HELP_EMAIL = ConsoleProperties.getString("console.HelpEmail");
     
     // Current selection
@@ -293,7 +291,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                     @Override
                     protected void doStuff() throws Exception {
-                        sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
+                        sample = (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
                         if (sample!=null) {
                             result = SampleUtils.getResultContainingNeuronSeparation(sample, neuronFragment);
                         }
@@ -321,7 +319,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
                 worker.execute();
@@ -416,7 +414,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                                 }
                             }
                             catch (Exception ex) {
-                                ConsoleApp.handleException(ex);
+                                FrameworkImplProvider.handleException(ex);
                             }
                         });
                     }
@@ -492,7 +490,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    ConsoleApp.handleException(error);
+                    FrameworkImplProvider.handleException(error);
                 }
             };
 
@@ -546,7 +544,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     task = StateMgr.getStateMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
                 }
                 catch (Exception e) {
-                    ConsoleApp.handleException(e);
+                    FrameworkImplProvider.handleException(e);
                     return;
                 }
 
@@ -718,7 +716,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         }
         
         /* Removing this feature until such time as this level of flexibility has user demand. */
-        if (SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI) {
+        if (Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI) {
             itm = getNeuronSeparationDeletionItem();
             if (itm != null) {
                 secondaryDeletionMenu.add(itm);
@@ -1027,7 +1025,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                                         @Override
                                         protected void hadError(Throwable error) {
-                                            ConsoleApp.handleException(error);
+                                            FrameworkImplProvider.handleException(error);
                                         }
                                     };
 
@@ -1044,7 +1042,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             mergeItem.setEnabled(multiple);
             return mergeItem;
         } catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
             return null;
         }
     }

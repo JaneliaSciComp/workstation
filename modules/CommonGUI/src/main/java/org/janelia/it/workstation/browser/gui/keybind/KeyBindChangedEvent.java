@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.browser.gui.keybind;
 
 import org.janelia.it.workstation.browser.actions.Action;
-import org.janelia.it.workstation.browser.gui.keybind.KeyboardShortcut;
 
 /**
  * A key bind has changed and should be saved to the database.

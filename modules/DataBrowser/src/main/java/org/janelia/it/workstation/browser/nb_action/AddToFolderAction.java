@@ -14,14 +14,13 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
-import org.janelia.it.workstation.browser.gui.support.TreeNodeChooser;
 import org.janelia.it.workstation.browser.model.RecentFolder;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.gui.support.TreeNodeChooser;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.UserViewConfiguration;
@@ -149,7 +148,7 @@ public class AddToFolderAction extends NodePresenterAction {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
                 
@@ -241,7 +240,7 @@ public class AddToFolderAction extends NodePresenterAction {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));
@@ -289,14 +288,14 @@ public class AddToFolderAction extends NodePresenterAction {
                         success.accept(idPath);
                     }
                     catch (Exception e) {
-                        ConsoleApp.handleException(e);
+                        FrameworkImplProvider.handleException(e);
                     }
                 }
             }
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));

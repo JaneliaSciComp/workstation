@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
-import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptorList;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptorList;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.enums.FileType;
 

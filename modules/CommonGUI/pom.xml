@@ -40,6 +40,10 @@
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-windows</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-options-api</artifactId>
+        </dependency>
 
     </dependencies>
 
@@ -56,13 +60,17 @@
                         <publicPackage>org.janelia.it.workstation.browser.gui.keybind</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.listview</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.model</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.gui.options</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.progress</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.support</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.support.buttons</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.support.panels</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.table</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.gui.util</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.nb_action</publicPackage>
                         <publicPackage>org.janelia.it.workstation.browser.nodes</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.gui.browser</publicPackage>
+                        <publicPackage>org.janelia.workstation.commongui</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

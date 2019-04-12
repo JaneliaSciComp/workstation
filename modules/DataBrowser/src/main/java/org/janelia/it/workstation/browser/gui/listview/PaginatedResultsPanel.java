@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.browser.gui.listview;
 
-import static org.janelia.it.workstation.browser.model.search.SearchResults.PAGE_SIZE;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -28,8 +26,6 @@ import javax.swing.UIManager;
 import javax.swing.text.Position;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
@@ -39,8 +35,6 @@ import org.janelia.it.workstation.browser.gui.model.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
-import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.model.search.ResultIterator;
@@ -48,6 +42,9 @@ import org.janelia.it.workstation.browser.model.search.ResultIteratorFind;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
+import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
@@ -343,7 +340,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
                     @Override
                     protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
 
@@ -566,7 +563,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         
@@ -582,7 +579,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                     objects.add(object);
                 }
             }  catch (Exception e) {
-                ConsoleApp.handleException(e);
+                FrameworkImplProvider.handleException(e);
             }
         }
         
@@ -680,7 +677,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                 }
                 
                 log.debug("currPage={}",currPage);
-                int globalStartIndex = currPage*PAGE_SIZE + foundIndex;
+                int globalStartIndex = currPage* SearchResults.PAGE_SIZE + foundIndex;
                 log.debug("globalStartIndex={}",globalStartIndex);
                 ResultIterator<T,S> resultIterator = new ResultIterator<T,S>(searchResults, globalStartIndex, bias, skipStartingNode);
                 searcher = new ResultIteratorFind<T,S>(resultIterator) {
@@ -726,7 +723,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             protected void hadError(Throwable error) {
                 UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
                 matchDebouncer.failure();
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
     }

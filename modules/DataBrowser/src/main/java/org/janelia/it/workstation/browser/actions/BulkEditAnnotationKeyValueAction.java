@@ -7,10 +7,9 @@ import javax.swing.AbstractAction;
 import javax.swing.ProgressMonitor;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.ontology.AnnotationEditor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
@@ -76,7 +75,7 @@ public class BulkEditAnnotationKeyValueAction extends AbstractAction {
                     }
                 }
                 catch (Exception e1) {
-                    ConsoleApp.handleException(e1);
+                    FrameworkImplProvider.handleException(e1);
                 }
             }
 
@@ -96,7 +95,7 @@ public class BulkEditAnnotationKeyValueAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 

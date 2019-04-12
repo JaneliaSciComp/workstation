@@ -1,9 +1,7 @@
 package org.janelia.it.workstation.browser.gui.support;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleListenableFuture;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -83,7 +81,7 @@ public interface PreferenceSupport {
             @Override
             protected void hadError(Throwable error) {
                 UIUtils.setMainFrameCursorWaitStatus(false);
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 

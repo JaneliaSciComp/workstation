@@ -3,8 +3,8 @@ package org.janelia.it.workstation.browser.gui.editor;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 
-import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 
 /**
  * Right-click context menu for labels.

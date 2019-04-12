@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.browser.nodes;
 
-import org.janelia.it.workstation.browser.nodes.IdentifiableNode;
-
 /**
  * Event indicating that a node's selection has changed.
  *

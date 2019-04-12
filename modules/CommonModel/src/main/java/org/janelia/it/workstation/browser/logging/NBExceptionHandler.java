@@ -15,11 +15,10 @@ import javax.swing.SwingUtilities;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
-import org.janelia.it.workstation.browser.util.MailDialogueBox;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.util.MailDialogueBox;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +78,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             if (record.getLevel().intValue() < Level.SEVERE.intValue()) return;
             
             // JW-25430: Only attempt to auto-send exceptions once the user has logged in
-            if (!AccessManager.loggedIn()) return; 
+            if (!AccessManager.loggedIn()) return;
             
             try {
                 autoSendNovelExceptions();
@@ -231,7 +230,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             String firstLine = getSummary(stacktrace);
             log.info("Reporting exception: "+firstLine);
 
-            String version = ConsoleApp.getConsoleApp().getApplicationVersion();
+            String version = SystemInfo.appVersion;
             String titleSuffix = " from "+AccessManager.getSubjectName()+" -- "+version+" -- "+firstLine;
             String subject = (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix;
              

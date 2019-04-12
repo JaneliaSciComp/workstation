@@ -7,13 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.options.DownloadOptions;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.MappingType;
-import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.util.PathUtil;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.model.access.domain.DomainUtils;
@@ -197,7 +197,7 @@ public class DownloadFileItem {
         }
         catch (Exception e) {
             // TODO: this may pop up a ton of dialog boxes, need to throttle it
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
     

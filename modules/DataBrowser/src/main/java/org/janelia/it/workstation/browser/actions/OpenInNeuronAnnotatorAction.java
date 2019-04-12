@@ -8,13 +8,12 @@ import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.tools.ToolMgr;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.ws.ExternalClient;
 import org.janelia.it.workstation.browser.ws.ExternalClientMgr;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.tools.ToolMgr;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.enums.FileType;
@@ -99,7 +98,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 
@@ -119,7 +118,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
             ExternalClientMgr.getInstance().sendNeuronSeparationRequested(separation);
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 
@@ -141,7 +140,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
             }
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
     

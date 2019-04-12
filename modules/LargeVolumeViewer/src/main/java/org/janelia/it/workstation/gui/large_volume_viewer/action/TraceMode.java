@@ -19,13 +19,12 @@ import java.util.Set;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.MenuItemGenerator;
@@ -787,7 +786,7 @@ implements MouseMode, KeyListener
                                 }
                             } catch (Exception error) {
 
-                                ConsoleApp.handleException(error);
+                                FrameworkImplProvider.handleException(error);
                             }
                         }
                         

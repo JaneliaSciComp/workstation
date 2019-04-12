@@ -8,22 +8,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.exceptions.SystemError;
 import org.janelia.it.workstation.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.OntologyFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SampleFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
 import org.janelia.it.workstation.browser.api.facade.interfaces.WorkspaceFacade;
-import org.janelia.it.workstation.browser.api.web.AuthServiceClient;
-import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.events.model.PreferenceChangeEvent;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.api.web.AuthServiceClient;
+import org.janelia.it.workstation.browser.api.web.SageRestClient;
 import org.janelia.it.workstation.browser.options.ApplicationOptions;
 import org.janelia.it.workstation.browser.options.OptionConstants;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.security.Subject;
@@ -83,7 +83,7 @@ public class DomainMgr {
             sageClient = new SageRestClient();
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
         
         ApplicationOptions.getInstance().addPropertyChangeListener(new PropertyChangeListener() {

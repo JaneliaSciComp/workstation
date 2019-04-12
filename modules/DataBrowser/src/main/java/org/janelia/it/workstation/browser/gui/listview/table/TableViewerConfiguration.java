@@ -6,11 +6,7 @@ import java.util.Set;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.Preference;
 
 /**
  * UI configuration for a TableViewerPanel. 
@@ -75,7 +71,7 @@ public class TableViewerConfiguration {
             return config;
         }  
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
             return null;
         }
     }

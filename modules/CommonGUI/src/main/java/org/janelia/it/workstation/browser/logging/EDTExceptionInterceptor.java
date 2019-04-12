@@ -10,7 +10,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.gui.options.ApplicationOptionsPanelController;
+import org.janelia.it.workstation.browser.gui.appoptions.ApplicationOptionsPanelController;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.netbeans.api.options.OptionsDisplayer;
 

@@ -18,15 +18,18 @@ import javax.swing.JPanel;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.browser.events.selection.ChildPickingSupport;
+import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
+import org.janelia.it.workstation.browser.model.search.ResultPage;
+import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
-import org.janelia.it.workstation.browser.events.selection.ChildPickingSupport;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
@@ -38,10 +41,6 @@ import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
-import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.browser.model.search.DomainObjectSearchResults;
-import org.janelia.it.workstation.browser.model.search.ResultPage;
-import org.janelia.it.workstation.browser.model.search.SearchResults;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
@@ -320,7 +319,7 @@ public class NeuronSeparationEditorPanel
             protected void hadError(Throwable error) {
                 showNothing();
                 debouncer.failure();
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 
@@ -410,7 +409,7 @@ public class NeuronSeparationEditorPanel
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 
@@ -597,7 +596,7 @@ public class NeuronSeparationEditorPanel
                 }
             }
         }  catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 }

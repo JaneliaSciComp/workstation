@@ -5,12 +5,10 @@ import java.awt.Font;
 import java.util.List;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
-import org.janelia.it.workstation.browser.api.facade.interfaces.WorkspaceFacade;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.model.security.User;
 import org.janelia.model.security.Group;
 import org.janelia.model.security.dto.AuthenticationRequest;
-import org.janelia.model.domain.workspace.Workspace;
 
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;

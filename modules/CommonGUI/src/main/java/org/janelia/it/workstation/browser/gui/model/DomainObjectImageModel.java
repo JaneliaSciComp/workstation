@@ -9,9 +9,9 @@ import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
+import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
@@ -46,7 +46,7 @@ public abstract class DomainObjectImageModel implements ImageModel<DomainObject,
         if (provider!=null) {
             filename = provider.getLargeIcon(imageObject);
         }
-        return filename==null?null:Icons.getImage(filename);
+        return filename==null?null: Icons.getImage(filename);
     }
 
     @Override

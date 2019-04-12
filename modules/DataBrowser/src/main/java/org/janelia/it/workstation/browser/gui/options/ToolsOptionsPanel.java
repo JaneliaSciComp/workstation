@@ -25,7 +25,7 @@ import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.tools.ToolInfo;
@@ -87,7 +87,7 @@ final class ToolsOptionsPanel extends javax.swing.JPanel {
                     addTool();
                 }
                 catch (Exception ex) {
-                    ConsoleApp.handleException(ex);
+                    FrameworkImplProvider.handleException(ex);
                 }
             }
         });
@@ -99,7 +99,7 @@ final class ToolsOptionsPanel extends javax.swing.JPanel {
                     editTool();
                 }
                 catch (Exception ex) {
-                    ConsoleApp.handleException(ex);
+                    FrameworkImplProvider.handleException(ex);
                 }
             }
         });
@@ -111,7 +111,7 @@ final class ToolsOptionsPanel extends javax.swing.JPanel {
                     removeTool();
                 }
                 catch (Exception ex) {
-                    ConsoleApp.handleException(ex);
+                    FrameworkImplProvider.handleException(ex);
                 }
             }
         });

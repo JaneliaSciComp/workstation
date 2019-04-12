@@ -13,9 +13,9 @@ import javax.ws.rs.core.Response;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
 import org.janelia.it.jacs.shared.solr.SolrParams;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.interfaces.WorkspaceFacade;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.http.RESTClientBase;
 import org.janelia.it.workstation.browser.api.http.RestJsonClientManager;
 import org.janelia.model.domain.DomainObject;
@@ -31,7 +31,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
 
     private static final Logger log = LoggerFactory.getLogger(WorkspaceFacadeImpl.class);
 
-    private static final String REMOTE_API_URL = ConsoleApp.getConsoleApp().getRemoteRestUrl();
+    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
 
     private WebTarget service;
     

@@ -7,7 +7,7 @@ import java.io.FileNotFoundException;
 
 import javax.swing.JPanel;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.util.Utils;
@@ -47,7 +47,7 @@ public class SelectablePanel extends JPanel {
             selectedBorderImage = Utils.toBufferedImage(UIUtils.getClasspathImage(selectedBorder).getImage());
         }
         catch (FileNotFoundException e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
     

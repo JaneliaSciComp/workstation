@@ -7,8 +7,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.ClientConfig;
-import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.exceptions.RemoteServiceException;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.slf4j.Logger;
 
 public class RESTClientBase {

@@ -3,10 +3,10 @@ package org.janelia.it.workstation.browser.gui.editor;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.browser.actions.OpenWithDefaultAppAction;
-import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.model.domain.sample.SamplePipelineRun;
 
 /**

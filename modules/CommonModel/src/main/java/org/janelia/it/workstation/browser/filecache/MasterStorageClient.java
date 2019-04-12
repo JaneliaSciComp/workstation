@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.browser.filecache;
 
 import java.io.FileNotFoundException;
-import java.util.function.Supplier;
 
 import javax.servlet.http.HttpServletResponse;
 

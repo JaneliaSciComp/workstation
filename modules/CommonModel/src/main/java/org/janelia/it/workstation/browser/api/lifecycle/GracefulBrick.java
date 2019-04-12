@@ -3,15 +3,14 @@ package org.janelia.it.workstation.browser.api.lifecycle;
 import java.io.File;
 import java.net.HttpURLConnection;
 import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 import javax.swing.JOptionPane;
 
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.api.http.HttpClientManager;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.api.http.HttpClientManager;
 import org.openide.LifecycleManager;
 import org.openide.modules.InstalledFileLocator;
 import org.openide.modules.Places;
@@ -157,18 +156,14 @@ public class GracefulBrick {
         }
         
         String brickUrl = null;
-        String bundleKey = "org.janelia.it.workstation.gui.browser.Bundle";
-        
+
         try {
-            ResourceBundle rb = ResourceBundle.getBundle(bundleKey);
-            if (rb!=null) {
-                String updateCenterUrl = rb.getString("org_janelia_it_workstation_nb_action_update_center");
-                brickUrl = updateCenterUrl.replace("updates.xml", "brick.xml");
-            }
+            String updateCenterUrl = AutoUpdater.getUpdateCenterURL();
+            brickUrl = updateCenterUrl.replace("updates.xml", "brick.xml");
         }
         catch (MissingResourceException e) {
             // Ignore this. It's probably just development.
-            log.trace("Error finding bundle "+bundleKey, e);
+            log.trace("Error finding update center URL", e);
         }
         
         if (brickUrl==null) return false;

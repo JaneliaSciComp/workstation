@@ -6,8 +6,8 @@ import java.util.Set;
 import javax.swing.AbstractAction;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.components.StartPageTopComponent;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;

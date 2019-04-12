@@ -1,11 +1,7 @@
 package org.janelia.it.workstation.gui.task_workflow;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -31,9 +27,7 @@ import java.util.LinkedList;
 
 import javax.swing.table.AbstractTableModel;
 
-import java.awt.GridBagLayout;
 import java.awt.Insets;
-import javax.swing.table.TableCellRenderer;
 
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SimpleIcons;
@@ -42,7 +36,6 @@ import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Quaternion;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
@@ -559,7 +552,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 }
             }
         } catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
     

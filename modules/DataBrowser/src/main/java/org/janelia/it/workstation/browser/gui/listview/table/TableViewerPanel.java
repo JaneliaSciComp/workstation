@@ -25,12 +25,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.gui.keybind.KeyBindings;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionEvent;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.browser.gui.keybind.KeyBindings;
 import org.janelia.it.workstation.browser.gui.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.browser.gui.model.ImageModel;
@@ -128,7 +128,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
                     }
                     updateHud(false);
                 } catch (Exception ex) {
-                    ConsoleApp.handleException(ex);
+                    FrameworkImplProvider.handleException(ex);
                 }
             }
         });

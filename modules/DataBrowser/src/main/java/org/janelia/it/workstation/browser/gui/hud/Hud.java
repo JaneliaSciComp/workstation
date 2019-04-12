@@ -28,16 +28,17 @@ import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.FileMgr;
-import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
-import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
-import org.janelia.it.workstation.browser.gui.support.MissingIcon;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.util.ImageCache;
 import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.api.FileMgr;
+import org.janelia.it.workstation.browser.api.state.DataBrowserMgr;
+import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
+import org.janelia.it.workstation.browser.gui.support.ImageTypeSelectionButton;
+import org.janelia.it.workstation.browser.gui.support.MissingIcon;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.model.access.domain.DomainUtils;
@@ -320,7 +321,7 @@ public class Hud extends ModalDialog {
                 @Override
                 protected void doStuff() throws Exception {
                     
-                    ImageCache ic = ConsoleApp.getConsoleApp().getImageCache();
+                    ImageCache ic = DataBrowserMgr.getDataBrowserMgr().getImageCache();
                     if (ic != null) {
                         image = ic.get(filepath);
                     }
@@ -373,7 +374,7 @@ public class Hud extends ModalDialog {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    ConsoleApp.handleException(error);
+                    FrameworkImplProvider.handleException(error);
                 }
             };
                     

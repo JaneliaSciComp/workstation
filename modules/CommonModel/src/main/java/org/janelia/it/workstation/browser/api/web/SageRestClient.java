@@ -104,7 +104,7 @@ public class SageRestClient extends RESTClientBase {
         }
     }
 
-    public Map<String,SplitTypeInfo> getSplitTypeInfo(Collection<String> frags) throws Exception {
+    public Map<String, SplitTypeInfo> getSplitTypeInfo(Collection<String> frags) throws Exception {
         return getSplitTypeInfo(frags, true);
     }
     

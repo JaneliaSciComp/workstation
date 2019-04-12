@@ -49,7 +49,7 @@ public class DomainObjectSearchResults implements SearchResults<DomainObject, Re
             pageObjects.add(domainObject);
             List<Annotation> annots = annotationsByTarget.get(Reference.createFor(domainObject));
             pageAnnotations.addAll(annots);
-            if (pageObjects.size() >= SearchResults.PAGE_SIZE) {
+            if (pageObjects.size() >= PAGE_SIZE) {
                 addPage(createResultPage(pageObjects, new ArrayList<>(pageAnnotations), domainObjects.size()));
                 pageObjects.clear();
                 pageAnnotations.clear();

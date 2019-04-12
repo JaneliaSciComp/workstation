@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.browser.nb_action;
 
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.state.DataBrowserMgr;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;

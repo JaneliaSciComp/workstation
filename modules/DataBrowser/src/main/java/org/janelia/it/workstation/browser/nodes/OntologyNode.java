@@ -8,19 +8,19 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.nb_action.AddOntologyTermAction;
 import org.janelia.it.workstation.browser.nb_action.OntologyExportAction;
 import org.janelia.it.workstation.browser.nb_action.OntologyImportAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RenameAction;
+import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.ontology.Ontology;
 import org.slf4j.Logger;
@@ -60,7 +60,7 @@ public class OntologyNode extends OntologyTermNode implements DomainObjectNode<O
 
     @Override
     public Image getIcon(int type) {
-        return Icons.getIcon("folder.png").getImage();    
+        return Icons.getIcon("folder.png").getImage();
     }
     
     @Override
@@ -112,7 +112,7 @@ public class OntologyNode extends OntologyTermNode implements DomainObjectNode<O
             }
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         worker.execute();

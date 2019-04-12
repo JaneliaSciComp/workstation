@@ -22,7 +22,6 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
@@ -74,7 +73,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
         try {
             this.ontology = DomainMgr.getDomainMgr().getModel().getDomainObject(Ontology.class, ontologyId);
         }  catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
 
         iterateAndAddRows(ontology.getTerms(), 0);
@@ -181,7 +180,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
 
@@ -260,7 +259,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
 
                     if (valueEnum==null) {
                         Exception error = new Exception(element.getName()+" has no supporting enumeration.");
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                         return;
                     }
 
@@ -286,7 +285,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
                 comboBox = new JComboBox<>();
             }
         }  catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 

@@ -2,12 +2,8 @@ package org.janelia.it.workstation.browser.filecache;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import com.google.common.base.Splitter;
 import org.janelia.it.jacs.shared.utils.StringUtils;

@@ -18,18 +18,17 @@ import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.facade.impl.ejb.LegacyFacadeImpl;
 import org.janelia.it.workstation.browser.api.facade.interfaces.LegacyFacade;
 import org.janelia.it.workstation.browser.api.state.UserColorMapping;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
 import org.janelia.it.workstation.browser.events.selection.OntologySelectionEvent;
-import org.janelia.it.workstation.browser.options.OptionConstants;
 import org.janelia.it.workstation.browser.model.RecentFolder;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBind;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBindings;
 import org.janelia.it.workstation.browser.util.RendererType2D;
+import org.janelia.it.workstation.browser.options.OptionConstants;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.ontology.Annotation;
@@ -95,7 +94,7 @@ public class StateMgr {
         }
         catch (Throwable e) {
             // Catch all exceptions, because anything failing to init here cannot be allowed to prevent the Workstation from starting
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 
@@ -183,7 +182,7 @@ public class StateMgr {
                     }
                 }
             } catch (Exception ex) {
-                ConsoleApp.handleException(ex);
+                FrameworkImplProvider.handleException(ex);
             }
             
         }

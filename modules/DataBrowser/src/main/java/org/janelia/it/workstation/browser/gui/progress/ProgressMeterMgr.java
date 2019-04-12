@@ -4,11 +4,11 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.workstation.browser.components.ProgressTopComponent;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.workers.WorkerChangedEvent;
 import org.janelia.it.workstation.browser.events.workers.WorkerEndedEvent;
 import org.janelia.it.workstation.browser.events.workers.WorkerStartedEvent;
+import org.janelia.it.workstation.browser.components.ProgressTopComponent;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

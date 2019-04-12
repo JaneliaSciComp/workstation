@@ -23,23 +23,23 @@ import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableModel;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
-import org.janelia.it.workstation.browser.gui.listview.ListViewer;
-import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
-import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.model.ImageModel;
-import org.janelia.it.workstation.browser.gui.listview.table.TableViewerConfiguration;
-import org.janelia.it.workstation.browser.gui.listview.table.TableViewerPanel;
 import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
-import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
+import org.janelia.it.workstation.browser.gui.listview.ListViewer;
+import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
+import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
+import org.janelia.it.workstation.browser.gui.listview.table.TableViewerConfiguration;
+import org.janelia.it.workstation.browser.gui.listview.table.TableViewerPanel;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
+import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.model.access.domain.DomainObjectAttribute;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
@@ -147,7 +147,7 @@ public class ColorDepthResultTableViewer
         try {
             this.config = TableViewerConfiguration.loadConfig();
         } catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
 
         this.matchList = matchList;
@@ -226,7 +226,7 @@ public class ColorDepthResultTableViewer
             return popupMenu;
         } 
         catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
             return null;
         }
     }
@@ -246,7 +246,7 @@ public class ColorDepthResultTableViewer
                     updateTableModel();
                 }
                 catch (Exception ex) {
-                    ConsoleApp.handleException(ex);
+                    FrameworkImplProvider.handleException(ex);
                 }
             }
         });
@@ -259,7 +259,7 @@ public class ColorDepthResultTableViewer
         try {
             getContextualPopupMenu().runDefaultAction();
         } catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
     }
 
@@ -416,7 +416,7 @@ public class ColorDepthResultTableViewer
             hud.setFilepathAndToggleDialog(filepath, title, toggle, false);
         } 
         catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
     }
 
@@ -436,7 +436,7 @@ public class ColorDepthResultTableViewer
             return selected;
         }  
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
             return null;
         }
     }

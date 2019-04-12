@@ -3,13 +3,12 @@ package org.janelia.it.workstation.browser.nb_action;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.workspace.Node;
-import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
 

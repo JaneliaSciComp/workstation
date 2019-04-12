@@ -7,10 +7,10 @@ import javax.swing.JPanel;
 
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.model.ImageModel;
-import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
-import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
+import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 
 /**
  * An interface for the a viewer of a list of objects.

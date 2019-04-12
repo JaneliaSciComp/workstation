@@ -32,18 +32,18 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainObjectPermissionDialog;
-import org.janelia.it.workstation.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.browser.gui.support.AnnotationView;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.model.DomainObjectPermission;
+import org.janelia.it.workstation.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainObjectAttribute;
@@ -253,7 +253,7 @@ public class DomainInspectorPanel extends JPanel {
 
                                     @Override
                                     protected void hadError(Throwable error) {
-                                        ConsoleApp.handleException(error);
+                                        FrameworkImplProvider.handleException(error);
                                         UIUtils.setDefaultCursor(DomainInspectorPanel.this);
                                         refresh();
                                     }
@@ -453,7 +453,7 @@ public class DomainInspectorPanel extends JPanel {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         worker.execute();
@@ -552,7 +552,7 @@ public class DomainInspectorPanel extends JPanel {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
                 annotationsPanel.removeAll();
                 annotationsPanel.add((JPanel) annotationsView, BorderLayout.CENTER);
                 annotationsPanel.updateUI();
@@ -617,7 +617,7 @@ public class DomainInspectorPanel extends JPanel {
             }
         } 
         catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
     }
 }

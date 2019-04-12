@@ -1,19 +1,18 @@
 package org.janelia.it.workstation.browser.gui.listview;
 
-import static org.janelia.it.workstation.browser.api.DomainMgr.getDomainMgr;
-
 import java.util.List;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
-import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
-import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
+import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
+import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
@@ -70,7 +69,7 @@ public abstract class PaginatedDomainResultsPanel extends PaginatedResultsPanel<
 
                     @Override
                     protected void doStuff() throws Exception {
-                        DomainModel model = getDomainMgr().getModel();
+                        DomainModel model = DomainMgr.getDomainMgr().getModel();
                         page.updateAnnotations(ref, model.getAnnotations(Reference.createFor(pageObject)));
                     }
 
@@ -81,7 +80,7 @@ public abstract class PaginatedDomainResultsPanel extends PaginatedResultsPanel<
 
                     @Override
                     protected void hadError(Throwable error) {
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
 
@@ -93,7 +92,7 @@ public abstract class PaginatedDomainResultsPanel extends PaginatedResultsPanel<
 
     @Override
     protected abstract ResultPage<DomainObject, Reference> getPage(
-            SearchResults<DomainObject, Reference> searchResults, 
+            SearchResults<DomainObject, Reference> searchResults,
             int page) throws Exception;
     
 }

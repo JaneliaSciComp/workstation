@@ -5,9 +5,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.nodes.NodeGenerator;
 import org.janelia.it.jacs.integration.framework.nodes.NodeProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.model.domain.workspace.Workspace;
 import org.openide.nodes.ChildFactory;
@@ -62,7 +62,7 @@ public class ExplorerRootNodeChildFactory extends ChildFactory<NodeGenerator> {
             }
         } 
         catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
         return true;
     }
@@ -73,7 +73,7 @@ public class ExplorerRootNodeChildFactory extends ChildFactory<NodeGenerator> {
             return key.createNode();
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
         return null;
     }

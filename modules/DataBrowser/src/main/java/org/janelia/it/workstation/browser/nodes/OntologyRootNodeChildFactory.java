@@ -2,7 +2,7 @@ package org.janelia.it.workstation.browser.nodes;
 
 import java.util.List;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.model.domain.ontology.Ontology;
@@ -37,7 +37,7 @@ public class OntologyRootNodeChildFactory extends ChildFactory<Ontology> {
             return true;
         } 
         catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
         return true;
     }
@@ -48,7 +48,7 @@ public class OntologyRootNodeChildFactory extends ChildFactory<Ontology> {
             return new OntologyNode(key);
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
         return null;
     }

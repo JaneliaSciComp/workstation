@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.browser.filecache;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.httpclient.HttpClient;
 import org.janelia.it.workstation.browser.api.http.HttpClientProxy;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;

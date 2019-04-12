@@ -33,14 +33,9 @@ import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.actions.Action;
-import org.janelia.it.workstation.browser.actions.OntologyElementAction;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.gui.keybind.KeyBindings;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
@@ -48,7 +43,6 @@ import org.janelia.it.workstation.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
-import org.janelia.it.workstation.browser.gui.keybind.KeyBindChangedEvent;
 import org.janelia.it.workstation.browser.events.selection.OntologySelectionEvent;
 import org.janelia.it.workstation.browser.gui.dialogs.AutoAnnotationPermissionDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.BulkAnnotationPermissionDialog;
@@ -56,6 +50,8 @@ import org.janelia.it.workstation.browser.gui.dialogs.KeyBindDialog;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
+import org.janelia.it.workstation.browser.gui.keybind.KeyBindChangedEvent;
+import org.janelia.it.workstation.browser.gui.keybind.KeyBindings;
 import org.janelia.it.workstation.browser.gui.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
@@ -68,6 +64,10 @@ import org.janelia.it.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBind;
 import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBindings;
+import org.janelia.it.workstation.browser.util.ConcurrentUtils;
+import org.janelia.it.workstation.browser.actions.Action;
+import org.janelia.it.workstation.browser.actions.OntologyElementAction;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.browser.nb_action.NewOntologyActionListener;
 import org.janelia.it.workstation.browser.nodes.IdentifiableNode;
@@ -76,7 +76,6 @@ import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.browser.nodes.OntologyRootNode;
 import org.janelia.it.workstation.browser.nodes.OntologyTermNode;
-import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
@@ -133,7 +132,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public static final String TC_VERSION = "1.0";
     
     public static OntologyExplorerTopComponent getInstance() {
-        return (OntologyExplorerTopComponent)WindowLocator.getByName(OntologyExplorerTopComponent.TC_NAME);
+        return (OntologyExplorerTopComponent) WindowLocator.getByName(OntologyExplorerTopComponent.TC_NAME);
     }
 
     // UI Elements
@@ -559,7 +558,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 @Override
                 protected void hadError(Throwable error) {
                     debouncer.failure();
-                    ConsoleApp.handleException(error);
+                    FrameworkImplProvider.handleException(error);
                 }
             };
             
@@ -888,7 +887,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         }
         catch (Exception e) {
             log.error("Could not load user's key binding preferences", e);
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 
@@ -917,7 +916,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         }
         catch (Exception e) {
             log.error("Could not save user's key binding preferences", e);
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 }

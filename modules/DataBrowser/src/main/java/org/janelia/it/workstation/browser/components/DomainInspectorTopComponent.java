@@ -4,9 +4,9 @@ import java.awt.BorderLayout;
 import java.util.Map;
 
 import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.model.domain.DomainObject;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -53,7 +53,7 @@ public final class DomainInspectorTopComponent extends TopComponent {
     public static final String TC_VERSION = "1.0";
 
     public static DomainInspectorTopComponent getInstance() {
-        return (DomainInspectorTopComponent)WindowLocator.getByName(DomainInspectorTopComponent.TC_NAME);
+        return (DomainInspectorTopComponent) WindowLocator.getByName(DomainInspectorTopComponent.TC_NAME);
     }
     
     private final DomainInspectorPanel detailsPanel;

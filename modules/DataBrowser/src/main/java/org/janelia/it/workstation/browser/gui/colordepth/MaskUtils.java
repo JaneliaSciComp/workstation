@@ -4,9 +4,9 @@ import java.io.File;
 
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.FileMgr;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.filecache.RemoteLocation;
 import org.janelia.it.workstation.browser.filecache.WebDavUploader;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.util.TimebasedIdentifierGenerator;
 import org.slf4j.Logger;

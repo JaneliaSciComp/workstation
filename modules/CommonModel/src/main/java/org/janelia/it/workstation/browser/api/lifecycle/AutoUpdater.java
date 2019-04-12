@@ -30,17 +30,21 @@ public class AutoUpdater extends SimpleWorker {
 
     private static final Logger log = LoggerFactory.getLogger(AutoUpdater.class);
     
-    private static final ResourceBundle rb = ResourceBundle.getBundle("org.janelia.it.workstation.gui.browser.Bundle");
-    private static final String UPDATE_CENTER_KEY = "org_janelia_it_workstation_nb_action_update_center";
+    private static final ResourceBundle rb = ResourceBundle.getBundle("org.janelia.workstation.commonmodel.Bundle");
+    private static final String UPDATE_CENTER_KEY = "org_janelia_workstation_update_center";
+
+    static String getUpdateCenterURL() {
+        return rb.getString(AutoUpdater.UPDATE_CENTER_KEY);
+    }
+
     private String updateCenterLabel;
     private String updateCenterUrl;
     
     private OperationContainer<InstallSupport> containerForUpdate;
     private Restarter restarter;
     private boolean restarting = false;
-    private ProgressHandle handle;
 
-    public AutoUpdater() {
+    protected AutoUpdater() {
         
         try {
             updateCenterLabel = rb.getString("Services/AutoupdateType/"+UPDATE_CENTER_KEY+".instance");
@@ -51,7 +55,7 @@ public class AutoUpdater extends SimpleWorker {
         }
         
         try {
-            updateCenterUrl = rb.getString(UPDATE_CENTER_KEY);
+            updateCenterUrl = getUpdateCenterURL();
             log.info("Update center URL: {}", updateCenterUrl);
         }
         catch (MissingResourceException e) {
@@ -66,8 +70,8 @@ public class AutoUpdater extends SimpleWorker {
             log.info("Skipping updates on non-production build");
             return;
         }
-        
-        handle = ProgressHandle.createHandle("Checking for updates...");
+
+        ProgressHandle handle = ProgressHandle.createHandle("Checking for updates...");
         
         try {
             handle.start();
@@ -172,7 +176,7 @@ public class AutoUpdater extends SimpleWorker {
 
             String[] buttons = { "Restart and Update", "Later" };
             int selectedOption = JOptionPane.showOptionDialog(FrameworkImplProvider.getMainFrame(), html,
-                    "Updates Ready", JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, buttons[0]);
+                    "Updates Ready", JOptionPane.YES_NO_OPTION, 0, null, buttons, buttons[0]);
 
             if (selectedOption == 0) {
                 log.info("Restarting now to complete installation.");

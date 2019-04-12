@@ -17,25 +17,24 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.JOptionPane;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.LocalPreferenceMgr;
 import org.janelia.it.workstation.browser.api.ServiceMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
 import org.janelia.it.workstation.browser.events.prefs.LocalPreferenceChanged;
 import org.janelia.it.workstation.browser.gui.options.ToolsOptionsPanelController;
 import org.janelia.it.workstation.browser.tools.preferences.InfoObject;
-import org.janelia.it.workstation.browser.tools.preferences.PrefMgrListener;
-import org.janelia.it.workstation.browser.tools.preferences.PreferenceManager;
 import org.janelia.it.workstation.browser.util.FileCallable;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.tools.preferences.PrefMgrListener;
+import org.janelia.it.workstation.browser.tools.preferences.PreferenceManager;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.netbeans.api.options.OptionsDisplayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * Created with IntelliJ IDEA.
@@ -116,7 +115,7 @@ public class ToolMgr extends PreferenceManager {
         setGroupPreferenceDirectory(groupDir);
 
         // Establish the initial "default" user file.
-        this.userDirectory = ConsoleApp.getConsoleApp().getApplicationOutputDirectory();
+        this.userDirectory = LocalPreferenceMgr.getInstance().getApplicationOutputDirectory();
         this.userFilename = userDirectory + "User_Tools.properties";
     }
 
@@ -450,7 +449,7 @@ public class ToolMgr extends PreferenceManager {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    ConsoleApp.handleException(error);
+                    FrameworkImplProvider.handleException(error);
                 }
             };
 

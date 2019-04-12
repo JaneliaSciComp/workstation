@@ -11,7 +11,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.openide.modules.Places;
 import org.slf4j.Logger;
@@ -74,7 +73,7 @@ public class MailDialogueBox {
     
     public MailDialogueBox appendStandardPrefix() {
         append("\nSubject Key: ").append(AccessManager.getSubjectKey());
-        append("\nApplication: ").append(ConsoleApp.getConsoleApp().getApplicationName()).append(" v").append(ConsoleApp.getConsoleApp().getApplicationVersion());
+        append("\nApplication: ").append(SystemInfo.appName).append(" v").append(SystemInfo.appVersion);
         append("\nOperating System: ").append(SystemInfo.getOSInfo());
         append("\nJava: ").append(SystemInfo.getJavaInfo());
         append("\nRuntime: ").append(SystemInfo.getRuntimeJavaInfo());

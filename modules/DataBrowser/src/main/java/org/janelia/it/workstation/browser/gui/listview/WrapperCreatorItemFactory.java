@@ -9,10 +9,10 @@ import java.util.List;
 
 import javax.swing.JMenuItem;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectAppender;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectCreator;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.PipelineResult;
@@ -132,7 +132,7 @@ public class WrapperCreatorItemFactory {
                     wrapperCreator.useDomainObject(domainObject);
                 }
             } catch (Exception ex) {
-                ConsoleApp.handleException(ex);
+                FrameworkImplProvider.handleException(ex);
             }
 
         }
@@ -156,7 +156,7 @@ public class WrapperCreatorItemFactory {
 					appender.useDomainObjects(domainObjects);
 				}
 			} catch (Exception ex) {
-				ConsoleApp.handleException(ex);
+				FrameworkImplProvider.handleException(ex);
 			}
 		}
 	}

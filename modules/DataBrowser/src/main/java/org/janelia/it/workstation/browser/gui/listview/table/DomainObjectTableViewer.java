@@ -24,8 +24,8 @@ import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableModel;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
@@ -33,17 +33,17 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
+import org.janelia.it.workstation.browser.gui.model.DomainObjectImageModel;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
+import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.gui.listview.ListViewer;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerActionListener;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
-import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
 import org.janelia.it.workstation.browser.gui.support.SearchProvider;
-import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
-import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
-import org.janelia.it.workstation.browser.gui.model.DomainObjectImageModel;
-import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
-import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.model.access.domain.DomainObjectAttribute;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
@@ -175,7 +175,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         try {
             this.config = TableViewerConfiguration.loadConfig();
         } catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
 
         this.domainObjectList = domainObjectList;
@@ -254,7 +254,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             return popupMenu;
         } 
         catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
             return null;
         }
     }
@@ -274,7 +274,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                     updateTableModel();
                 }
                 catch (Exception ex) {
-                    ConsoleApp.handleException(ex);
+                    FrameworkImplProvider.handleException(ex);
                 }
             }
         });
@@ -289,7 +289,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             if (popupMenu!=null) popupMenu.runDefaultAction();
         } 
         catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
     }
 
@@ -319,7 +319,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 }
             }
         } catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
     }
 
@@ -446,7 +446,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             hud.setObjectAndToggleDialog(domainObject, null, null, toggle, true);
         } 
         catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
     }
     

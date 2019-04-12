@@ -26,7 +26,7 @@ public class SearchMonitoringWorker extends AsyncServiceMonitoringWorker {
     protected void completed() {
         // Ensure that search object get refreshed with results once the search is complete
         SimpleWorker.runInBackground(() -> {
-           DomainMgr.getDomainMgr().getModel().invalidate(search); 
+           DomainMgr.getDomainMgr().getModel().invalidate(search);
         });
     }
 }

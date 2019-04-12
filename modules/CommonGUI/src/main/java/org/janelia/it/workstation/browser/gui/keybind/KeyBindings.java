@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.janelia.it.workstation.browser.actions.Action;
 import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.actions.Action;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

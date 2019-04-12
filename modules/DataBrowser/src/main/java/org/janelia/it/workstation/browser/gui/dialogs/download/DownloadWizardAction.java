@@ -32,7 +32,11 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
+import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
+import org.janelia.it.workstation.browser.model.search.DomainObjectResultPage;
+import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
+import org.janelia.it.workstation.browser.model.search.SolrSearchResults;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
@@ -40,11 +44,6 @@ import org.janelia.it.workstation.browser.options.DownloadOptions;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.gui.support.FileDownloadWorker;
 import org.janelia.it.workstation.browser.gui.util.UIUtils;
-import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
-import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
-import org.janelia.it.workstation.browser.model.search.DomainObjectResultPage;
-import org.janelia.it.workstation.browser.model.search.SearchConfiguration;
-import org.janelia.it.workstation.browser.model.search.SolrSearchResults;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
@@ -194,7 +193,7 @@ public final class DownloadWizardAction implements ActionListener {
             @Override
             protected void hadError(Throwable error) {
                 UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 
@@ -246,7 +245,7 @@ public final class DownloadWizardAction implements ActionListener {
             }
         }
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
         return downloadItems;
     }

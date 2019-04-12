@@ -13,12 +13,11 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.selection.FileGroupSelectionModel;
-import org.janelia.it.workstation.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
 import org.janelia.it.workstation.browser.gui.model.ImageModel;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
@@ -146,7 +145,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             resultsPanel.showObjects(sortedGroups, success);
             showResults(isUserDriven);
         }  catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
     
@@ -225,7 +224,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             }
         }  
         catch (Exception e) {
-            ConsoleApp.handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
     }
 
@@ -342,7 +341,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             @Override
             protected void hadError(Throwable error) {
                 UIUtils.setMainFrameCursorWaitStatus(false);
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
 

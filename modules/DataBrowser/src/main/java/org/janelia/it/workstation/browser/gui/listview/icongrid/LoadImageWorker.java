@@ -9,12 +9,12 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
-import org.janelia.it.workstation.browser.filecache.URLProxy;
+import org.janelia.it.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.ImageCache;
 import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.it.workstation.browser.filecache.URLProxy;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +67,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
     @Override
     protected void doStuff() throws Exception {
 
-        ImageCache imageCache = ConsoleApp.getConsoleApp().getImageCache();
+        ImageCache imageCache = DataBrowserMgr.getDataBrowserMgr().getImageCache();
         if (imageCache != null) {
             this.maxSizeImage = imageCache.get(imageFilename);
             if (maxSizeImage != null) {

@@ -1,6 +1,6 @@
-package org.janelia.it.workstation.browser.nb_action;
+package org.janelia.workstation.sitejrc.nb_action;
 
-import org.janelia.it.workstation.browser.gui.dialogs.LineReleaseListDialog;
+import org.janelia.workstation.sitejrc.gui.dialogs.LineReleaseListDialog;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;

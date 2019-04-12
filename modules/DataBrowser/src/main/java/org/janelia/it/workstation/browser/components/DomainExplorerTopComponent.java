@@ -23,8 +23,6 @@ import javax.swing.text.Position;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
@@ -34,8 +32,6 @@ import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.events.prefs.LocalPreferenceChanged;
-import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
-import org.janelia.it.workstation.browser.nodes.IdentifiableNodeSelectionModel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
@@ -46,6 +42,10 @@ import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeView;
+import org.janelia.it.workstation.browser.util.ConcurrentUtils;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.nodes.IdentifiableNodeSelectionModel;
 import org.janelia.it.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.ExplorerRootNode;
 import org.janelia.it.workstation.browser.nodes.IdentifiableNode;
@@ -53,7 +53,6 @@ import org.janelia.it.workstation.browser.nodes.NodeTracker;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.RecentOpenedItemsNode;
 import org.janelia.it.workstation.browser.nodes.WorkspaceNode;
-import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -109,7 +108,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     public static final String TC_VERSION = "1.0";
     
     public static DomainExplorerTopComponent getInstance() {
-        return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
+        return (DomainExplorerTopComponent) WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
     }
 
     // UI Elements
@@ -355,7 +354,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         
@@ -525,7 +524,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             protected void hadError(Throwable error) {
                 debouncer.failure();
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         

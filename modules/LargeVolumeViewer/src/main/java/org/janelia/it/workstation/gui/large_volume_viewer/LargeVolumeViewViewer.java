@@ -18,7 +18,6 @@ import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.gui.support.Icons;
@@ -164,7 +163,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
             @Override
             protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
 
             private SimpleListenableFuture<Void> loadWorkspace() {
@@ -197,7 +196,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     protected void hadError(Throwable error) {
                         logger.error("workspace loader failed", error);
                         progress2.finish();
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
                 return workspaceLoader.executeWithFuture();
@@ -250,7 +249,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     @Override
                     protected void hadError(Throwable error) {
                         progress.finish();
-                        ConsoleApp.handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
                 return volumeLoader.executeWithFuture();
@@ -309,7 +308,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    ConsoleApp.handleException(error);
+                    FrameworkImplProvider.handleException(error);
                 }
             };
             worker.execute();
