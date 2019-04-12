@@ -6,7 +6,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 
 import com.jogamp.newt.event.KeyEvent;

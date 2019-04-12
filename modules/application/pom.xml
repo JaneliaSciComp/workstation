@@ -49,7 +49,7 @@
         <!-- CommonModel -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
-            <artifactId>common-model</artifactId>
+            <artifactId>core</artifactId>
         </dependency>
 
         <!-- Data Browser --> 

@@ -3,8 +3,8 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 import javax.swing.Action;
 import javax.swing.JMenuItem;
 
-import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
-import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.model.SplitHalf;
 import org.janelia.it.workstation.browser.model.SplitTypeInfo;
 import org.janelia.model.domain.enums.SplitHalfType;

@@ -22,7 +22,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.Position;
 
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 
 import net.miginfocom.swing.MigLayout;
 

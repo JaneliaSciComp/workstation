@@ -6,6 +6,7 @@ import java.util.List;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.janelia.it.workstation.browser.gui.tree.CustomTreeView;
+import org.janelia.workstation.common.gui.support.AbstractChooser;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.view.BeanTreeView;
 import org.openide.nodes.Node;

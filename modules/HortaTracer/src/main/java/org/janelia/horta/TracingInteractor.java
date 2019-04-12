@@ -94,7 +94,7 @@ import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
 import org.janelia.horta.options.TileLoadingPanel;
 import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
+import org.janelia.workstation.common.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;

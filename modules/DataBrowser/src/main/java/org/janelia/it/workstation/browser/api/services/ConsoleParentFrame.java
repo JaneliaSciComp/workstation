@@ -4,7 +4,7 @@ import javax.swing.JFrame;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.system.ParentFrame;
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.workstation.common.gui.support.WindowLocator;
 import org.openide.util.lookup.ServiceProvider;
 
 /**

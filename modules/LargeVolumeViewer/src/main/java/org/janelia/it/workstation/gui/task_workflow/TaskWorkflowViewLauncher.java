@@ -14,7 +14,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenuItem;
 
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.workstation.common.gui.support.WindowLocator;
 
 
 public class TaskWorkflowViewLauncher {

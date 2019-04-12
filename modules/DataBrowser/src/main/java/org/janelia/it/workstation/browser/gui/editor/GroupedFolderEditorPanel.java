@@ -43,13 +43,16 @@ import org.janelia.it.workstation.browser.events.selection.DomainObjectSelection
 import org.janelia.it.workstation.browser.gui.hud.Hud;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
-import org.janelia.it.workstation.browser.gui.support.Debouncer;
+import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
+import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
+import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
+import org.janelia.workstation.common.gui.support.Debouncer;
 import org.janelia.it.workstation.browser.gui.support.LoadedImagePanel;
-import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
-import org.janelia.it.workstation.browser.gui.support.SearchProvider;
+import org.janelia.workstation.common.gui.support.MouseForwarder;
+import org.janelia.workstation.common.gui.support.PreferenceSupport;
+import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.gui.support.SelectablePanelListPanel;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.workstation.common.nodes.DomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.GroupedFolderNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
@@ -71,8 +74,8 @@ import com.google.common.eventbus.Subscribe;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class GroupedFolderEditorPanel extends JPanel implements 
-        DomainObjectEditor<GroupedFolder>, 
+public class GroupedFolderEditorPanel extends JPanel implements
+        DomainObjectEditor<GroupedFolder>,
         ParentNodeSelectionEditor<GroupedFolder, DomainObject, Reference>,
         SearchProvider,
         PreferenceSupport {

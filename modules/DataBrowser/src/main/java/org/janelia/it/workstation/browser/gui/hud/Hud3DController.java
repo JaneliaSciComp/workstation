@@ -9,7 +9,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

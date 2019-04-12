@@ -19,7 +19,7 @@ import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.MenuItemGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.MouseModalWidget;

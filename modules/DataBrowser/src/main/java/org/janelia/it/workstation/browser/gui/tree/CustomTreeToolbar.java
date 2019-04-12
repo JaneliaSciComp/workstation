@@ -8,7 +8,7 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.openide.nodes.Node;
 
 /**

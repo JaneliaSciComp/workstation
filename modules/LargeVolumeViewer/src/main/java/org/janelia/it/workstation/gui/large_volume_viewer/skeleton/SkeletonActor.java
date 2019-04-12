@@ -17,7 +17,7 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.swing.ImageIcon;
 
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;

@@ -25,7 +25,7 @@ import javax.swing.table.AbstractTableModel;
 
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.gui.support.MouseHandler;
+import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;

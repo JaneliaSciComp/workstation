@@ -31,7 +31,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.gui.support.DesktopApi;
+import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;

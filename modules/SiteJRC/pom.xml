@@ -32,10 +32,10 @@
         <!-- CommonGUI -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
-            <artifactId>common-gui</artifactId>
+            <artifactId>core</artifactId>
         </dependency>
 
-        <!-- CommonModel -->
+        <!-- Core -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>common-model</artifactId>

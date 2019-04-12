@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.gui.colordepth;
 
-import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
+import org.janelia.workstation.common.gui.listview.ListViewerState;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -8,7 +8,7 @@ import java.awt.image.RGBImageFilter;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 
 // Non-interactive icon for tool bar; e.g. mouse and wheel mode header icons
 public class ToolBarIcon extends JLabel 

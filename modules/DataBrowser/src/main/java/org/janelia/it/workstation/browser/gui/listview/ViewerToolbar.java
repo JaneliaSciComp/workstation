@@ -10,9 +10,9 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
-import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.browser.gui.support.WrapLayout;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.MouseForwarder;
+import org.janelia.workstation.common.gui.support.WrapLayout;
 
 
 /**

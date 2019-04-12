@@ -11,7 +11,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
-import org.janelia.it.workstation.browser.gui.util.UIUtils;
+import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.tools.ToolInfo;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
 import org.openide.awt.ActionID;

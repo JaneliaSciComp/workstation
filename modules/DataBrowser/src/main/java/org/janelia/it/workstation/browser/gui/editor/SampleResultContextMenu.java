@@ -10,11 +10,11 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadWizardAction;
-import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.model.SampleImage;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
-import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.browser.actions.OpenInToolAction;

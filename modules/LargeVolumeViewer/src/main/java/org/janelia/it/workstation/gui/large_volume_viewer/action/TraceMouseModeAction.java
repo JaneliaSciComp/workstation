@@ -4,7 +4,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 
 public class TraceMouseModeAction extends AbstractAction {

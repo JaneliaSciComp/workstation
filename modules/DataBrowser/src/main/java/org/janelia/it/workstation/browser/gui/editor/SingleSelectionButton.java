@@ -8,7 +8,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 
 /**
  * A button which allows the user to select a single value from a drop-down list. 

@@ -21,6 +21,7 @@ import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.model.domain.DomainObject;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 
 /**
  * A dialog for viewing details about an entity.

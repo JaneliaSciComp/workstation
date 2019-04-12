@@ -9,7 +9,7 @@ import javax.swing.JPanel;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.StateMgr;
-import org.janelia.it.workstation.browser.gui.util.UIUtils;
+import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.util.Utils;
 
 /**

@@ -3,7 +3,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 import java.awt.Graphics2D;
 import java.awt.Image;
 
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 

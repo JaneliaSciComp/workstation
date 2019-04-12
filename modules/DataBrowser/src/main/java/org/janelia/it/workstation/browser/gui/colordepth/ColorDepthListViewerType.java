@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.browser.gui.colordepth;
 
-import org.janelia.it.workstation.browser.gui.listview.ListViewer;
-import org.janelia.it.workstation.browser.gui.listview.ListViewerClassProvider;
+import org.janelia.workstation.common.gui.listview.ListViewer;
+import org.janelia.workstation.common.gui.listview.ListViewerClassProvider;
 
 /**
  * Enumeration of list viewer classes. 

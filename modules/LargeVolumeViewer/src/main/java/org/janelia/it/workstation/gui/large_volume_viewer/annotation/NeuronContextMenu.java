@@ -3,8 +3,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import javax.swing.Action;
 import javax.swing.JMenuItem;
 
-import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
-import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronChooseColorAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronDeleteAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronExportCurrentAction;

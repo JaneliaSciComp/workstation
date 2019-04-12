@@ -11,7 +11,7 @@ import javax.swing.KeyStroke;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.browser.actions.OpenWithDefaultAppAction;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -21,7 +21,7 @@ import org.janelia.it.workstation.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
 import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
-import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;

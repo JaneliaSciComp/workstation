@@ -9,7 +9,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.workstation.common.nodes.DomainObjectNode;
 import org.janelia.model.domain.DomainObject;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;

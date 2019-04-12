@@ -24,7 +24,8 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
-import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.util.PermissionTemplate;
 

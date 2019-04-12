@@ -49,7 +49,8 @@ import org.janelia.it.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog
 import org.janelia.it.workstation.browser.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.download.DownloadWizardAction;
 import org.janelia.it.workstation.browser.gui.hud.Hud;
-import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.model.SampleImage;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;

@@ -8,7 +8,7 @@ import com.google.common.io.Files;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.gui.editor.ParentNodeSelectionEditor;
+import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;

@@ -20,8 +20,8 @@ import javax.swing.JComponent;
 import javax.swing.ProgressMonitor;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.gui.support.StateDrivenIconToggleButton;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.StateDrivenIconToggleButton;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.ColorButtonPanel;

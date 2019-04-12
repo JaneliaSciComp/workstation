@@ -31,6 +31,7 @@ import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

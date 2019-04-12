@@ -18,7 +18,7 @@ import javax.swing.event.DocumentListener;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImagesPanel;
-import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
+import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

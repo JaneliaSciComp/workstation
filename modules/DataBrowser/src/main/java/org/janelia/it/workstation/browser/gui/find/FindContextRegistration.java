@@ -4,7 +4,7 @@ import java.awt.Component;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 
-import org.janelia.it.workstation.browser.gui.util.UIUtils;
+import org.janelia.workstation.common.gui.util.UIUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

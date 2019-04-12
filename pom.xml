@@ -243,10 +243,10 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- CommonModel -->
+            <!-- Core -->
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
-                <artifactId>common-model</artifactId>
+                <artifactId>core</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -1036,7 +1036,7 @@
         <module>modules/branding</module>
         <module>modules/ConsoleWrapper</module>
         <module>modules/IntegrationAPIs</module>
-        <module>modules/CommonModel</module>
+        <module>modules/Core</module>
         <module>modules/CommonGUI</module>
         <module>modules/DarculaLAF</module>
         <module>modules/DataBrowser</module>

@@ -22,7 +22,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 
-import org.janelia.it.workstation.browser.gui.model.ImageDecorator;
+import org.janelia.workstation.common.gui.model.ImageDecorator;
 
 /**
  * An image with some decorators overlaid on top of it.

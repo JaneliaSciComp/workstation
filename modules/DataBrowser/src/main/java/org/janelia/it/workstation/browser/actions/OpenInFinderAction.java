@@ -7,7 +7,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.gui.support.DesktopApi;
+import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.util.FileCallable;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;

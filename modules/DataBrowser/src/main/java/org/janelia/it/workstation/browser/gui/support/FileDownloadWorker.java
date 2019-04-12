@@ -26,6 +26,7 @@ import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.NamedBackgroundWorker;
+import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

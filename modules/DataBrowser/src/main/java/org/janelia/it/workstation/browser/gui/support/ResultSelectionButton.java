@@ -15,7 +15,8 @@ import javax.swing.JRadioButtonMenuItem;
 
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.it.workstation.browser.model.ResultCategory;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;

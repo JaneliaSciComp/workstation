@@ -19,9 +19,9 @@ import javax.swing.JScrollPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
-import org.janelia.it.workstation.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Debouncer;
+import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.enums.FileType;

@@ -20,11 +20,11 @@ import org.janelia.it.workstation.browser.events.selection.DomainObjectEditSelec
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
-import org.janelia.it.workstation.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.browser.gui.support.PreferenceSupport;
-import org.janelia.it.workstation.browser.gui.support.SearchProvider;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
+import org.janelia.workstation.common.gui.support.Debouncer;
+import org.janelia.workstation.common.gui.support.MouseForwarder;
+import org.janelia.workstation.common.gui.support.PreferenceSupport;
+import org.janelia.workstation.common.gui.support.SearchProvider;
+import org.janelia.workstation.common.nodes.DomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;

@@ -5,8 +5,8 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 
-import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.ViewerToolbar;
 

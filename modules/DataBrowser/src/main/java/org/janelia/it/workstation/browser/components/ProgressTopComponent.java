@@ -3,7 +3,7 @@ package org.janelia.it.workstation.browser.components;
 import java.awt.BorderLayout;
 import java.util.Properties;
 
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.workstation.common.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.gui.progress.ProgressMeterPanel;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.netbeans.api.settings.ConvertAsProperties;

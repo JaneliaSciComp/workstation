@@ -25,11 +25,11 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 import net.miginfocom.swing.MigLayout;
-import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
+import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
 import org.janelia.model.security.Subject;
 
 /**

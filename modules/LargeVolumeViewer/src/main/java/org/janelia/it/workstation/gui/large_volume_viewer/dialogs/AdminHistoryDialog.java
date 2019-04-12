@@ -17,7 +17,7 @@ import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;

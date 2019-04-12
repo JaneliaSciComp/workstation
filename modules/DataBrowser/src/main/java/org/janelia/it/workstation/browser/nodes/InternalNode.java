@@ -6,7 +6,7 @@ import java.awt.datatransfer.Transferable;
 import java.io.IOException;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;

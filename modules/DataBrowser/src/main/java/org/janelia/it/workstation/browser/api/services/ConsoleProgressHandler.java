@@ -2,7 +2,7 @@ package org.janelia.it.workstation.browser.api.services;
 
 import org.janelia.it.jacs.integration.framework.system.ProgressHandler;
 import org.janelia.it.workstation.browser.components.ProgressTopComponent;
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.workstation.common.gui.support.WindowLocator;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
 

@@ -2,6 +2,8 @@ package org.janelia.it.workstation.browser.gui.listview;
 
 import org.janelia.it.workstation.browser.gui.listview.icongrid.DomainObjectIconGridViewer;
 import org.janelia.it.workstation.browser.gui.listview.table.DomainObjectTableViewer;
+import org.janelia.workstation.common.gui.listview.ListViewer;
+import org.janelia.workstation.common.gui.listview.ListViewerClassProvider;
 
 /**
  * Enumeration of list viewer classes. 

@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.gui.listview.table;
 
-import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
+import org.janelia.workstation.common.gui.listview.ListViewerState;
 import org.janelia.it.workstation.browser.gui.listview.ListViewerType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

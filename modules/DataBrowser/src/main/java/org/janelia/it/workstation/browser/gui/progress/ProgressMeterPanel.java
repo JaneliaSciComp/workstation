@@ -14,7 +14,7 @@ import javax.swing.plaf.basic.BasicProgressBarUI;
 
 import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

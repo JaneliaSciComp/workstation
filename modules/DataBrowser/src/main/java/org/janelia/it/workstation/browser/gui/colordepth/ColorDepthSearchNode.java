@@ -10,11 +10,11 @@ import java.util.stream.Collectors;
 
 import javax.swing.Action;
 
-import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.flavors.DomainObjectNodeFlavor;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RemoveAction;

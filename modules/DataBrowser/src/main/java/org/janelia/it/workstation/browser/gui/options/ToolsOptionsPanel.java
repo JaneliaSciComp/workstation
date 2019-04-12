@@ -26,8 +26,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
-import org.janelia.it.workstation.browser.gui.util.UIUtils;
+import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
+import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.tools.ToolInfo;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
 import org.slf4j.Logger;

@@ -31,8 +31,8 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
-import org.janelia.it.workstation.browser.gui.model.ImageModel;
-import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.browser.gui.support.AnnotationTagCloudPanel;
 import org.janelia.model.domain.ontology.Annotation;

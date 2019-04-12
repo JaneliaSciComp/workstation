@@ -3,8 +3,8 @@ package org.janelia.it.workstation.browser.gui.colordepth;
 import java.util.Collection;
 
 import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorStateImpl;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
-import org.janelia.it.workstation.browser.gui.listview.ListViewerState;
+import org.janelia.workstation.common.nodes.DomainObjectNode;
+import org.janelia.workstation.common.gui.listview.ListViewerState;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;

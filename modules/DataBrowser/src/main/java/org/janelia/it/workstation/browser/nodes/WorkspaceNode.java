@@ -6,9 +6,9 @@ import java.util.List;
 
 import javax.swing.Action;
 
-import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.SearchHereAction;

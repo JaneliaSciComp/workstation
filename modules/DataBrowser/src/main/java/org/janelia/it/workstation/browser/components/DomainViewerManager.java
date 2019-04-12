@@ -5,7 +5,7 @@ import java.awt.Component;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.it.workstation.browser.gui.util.UIUtils;
+import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthMatchSelectionEvent;
 import org.janelia.it.workstation.browser.gui.colordepth.ColorDepthSearchEditorPanel;

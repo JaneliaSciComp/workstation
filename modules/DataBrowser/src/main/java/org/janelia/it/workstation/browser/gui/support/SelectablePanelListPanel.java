@@ -12,7 +12,9 @@ import java.util.List;
 import javax.swing.BoxLayout;
 
 import org.janelia.it.workstation.browser.gui.hud.Hud;
-import org.janelia.it.workstation.browser.gui.keybind.KeymapUtil;
+import org.janelia.workstation.common.gui.keybind.KeymapUtil;
+import org.janelia.workstation.common.gui.support.MouseHandler;
+import org.janelia.workstation.common.gui.support.ScrollablePanel;
 
 /**
  * A vertical list of SelectablePanels which can be added to a scroll pane.

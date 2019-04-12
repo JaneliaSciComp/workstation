@@ -4,7 +4,7 @@ import java.awt.BorderLayout;
 import java.util.Map;
 
 import org.janelia.it.workstation.browser.events.Events;
-import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.workstation.common.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.model.domain.DomainObject;

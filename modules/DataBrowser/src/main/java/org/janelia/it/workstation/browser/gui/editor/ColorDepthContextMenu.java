@@ -5,11 +5,11 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JMenuItem;
 
-import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
+import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.model.descriptors.ArtifactDescriptor;
 import org.janelia.it.workstation.browser.model.descriptors.DescriptorUtils;
 import org.janelia.it.workstation.browser.model.descriptors.ResultArtifactDescriptor;
-import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
 import org.janelia.it.workstation.browser.gui.hud.Hud;

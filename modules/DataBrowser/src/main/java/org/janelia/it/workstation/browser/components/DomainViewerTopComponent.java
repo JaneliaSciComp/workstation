@@ -10,7 +10,7 @@ import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.SessionStartEvent;
-import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditor;
+import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.browser.gui.editor.SampleEditorPanel;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;

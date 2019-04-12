@@ -47,10 +47,10 @@
             <artifactId>common-gui</artifactId>
         </dependency>
 
-        <!-- CommonModel -->
+        <!-- Core -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
-            <artifactId>common-model</artifactId>
+            <artifactId>core</artifactId>
         </dependency>
 
         <!-- Browser -->

@@ -10,7 +10,7 @@ import javax.swing.ImageIcon;
 
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 
 public class NumeralShader extends PassThroughTextureShader
 {

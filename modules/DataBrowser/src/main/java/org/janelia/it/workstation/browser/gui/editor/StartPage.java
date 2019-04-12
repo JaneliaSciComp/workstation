@@ -38,7 +38,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.gui.listview.ViewerToolbar;
 import org.janelia.it.workstation.browser.options.ApplicationOptions;
 import org.janelia.it.workstation.browser.options.OptionConstants;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.browser.nb_action.NewFilterActionListener;
 import org.janelia.it.workstation.browser.util.HelpTextUtils;
 import org.janelia.it.workstation.browser.util.Utils;

@@ -3,7 +3,7 @@ package org.janelia.it.workstation.browser.api.state;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.it.workstation.browser.gui.editor.DomainObjectEditorState;
+import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.nb_action.NavigateBack;

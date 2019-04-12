@@ -9,12 +9,12 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.browser.nb_action.AddOntologyTermAction;
 import org.janelia.it.workstation.browser.nb_action.OntologyExportAction;
 import org.janelia.it.workstation.browser.nb_action.OntologyImportAction;
@@ -23,6 +23,7 @@ import org.janelia.it.workstation.browser.nb_action.RenameAction;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.workstation.common.nodes.DomainObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

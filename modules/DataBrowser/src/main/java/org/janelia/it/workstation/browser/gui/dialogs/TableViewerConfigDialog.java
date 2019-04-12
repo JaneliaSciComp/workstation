@@ -31,8 +31,9 @@ import com.google.common.collect.Ordering;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.gui.listview.table.TableViewerConfiguration;
-import org.janelia.it.workstation.browser.gui.support.panels.ScrollablePanel;
-import org.janelia.it.workstation.browser.gui.util.UIUtils;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.panels.ScrollablePanel;
+import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainObjectAttribute;
 

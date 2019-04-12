@@ -4,10 +4,10 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 
 import org.janelia.it.workstation.browser.events.selection.SelectionModel;
-import org.janelia.it.workstation.browser.gui.model.ImageDecorator;
-import org.janelia.it.workstation.browser.gui.model.ImageModel;
-import org.janelia.it.workstation.browser.gui.support.Icons;
-import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
+import org.janelia.workstation.common.gui.model.ImageDecorator;
+import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.util.Utils;
 
 /**

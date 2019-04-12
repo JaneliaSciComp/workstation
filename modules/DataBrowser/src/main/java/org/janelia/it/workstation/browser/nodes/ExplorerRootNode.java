@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.nodes;
 
 import java.awt.Image;
 
+import org.janelia.workstation.common.nodes.RootNode;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 

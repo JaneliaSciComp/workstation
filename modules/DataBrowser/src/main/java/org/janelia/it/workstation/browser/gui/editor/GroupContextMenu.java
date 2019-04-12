@@ -9,8 +9,8 @@ import javax.swing.Action;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
-import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
-import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.gui.support.PopupContextMenu;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;

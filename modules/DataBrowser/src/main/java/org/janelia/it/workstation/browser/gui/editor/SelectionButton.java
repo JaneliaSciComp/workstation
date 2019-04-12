@@ -14,7 +14,7 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 
 /**
  * A button which allows the user to select multiple values from a drop-down list. 

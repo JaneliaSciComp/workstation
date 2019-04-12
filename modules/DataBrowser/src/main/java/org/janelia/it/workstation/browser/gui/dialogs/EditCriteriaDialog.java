@@ -17,6 +17,7 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.model.domain.gui.search.criteria.AttributeValueCriteria;
 import org.janelia.model.domain.gui.search.criteria.Criteria;
 import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.jdesktop.swingx.JXDatePicker;
 
 import net.miginfocom.swing.MigLayout;

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.janelia</groupId>
+        <artifactId>workstation</artifactId>
+        <version>8.0</version>
+        <relativePath>../..</relativePath>
+    </parent>
+
+    <name>Core</name>
+    <groupId>org.janelia.workstation</groupId>
+    <artifactId>core</artifactId>
+    <version>8.0</version>
+    <packaging>nbm</packaging>
+
+    <dependencies>
+
+        <!-- ConsoleWrapper -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>libraries</artifactId>
+        </dependency>
+
+        <!-- Integration APIs -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>integration</artifactId>
+        </dependency>
+
+        <!-- Jars from Workstation Maven Repo -->
+        <dependency>
+            <groupId>org.janelia.legacy</groupId>
+            <artifactId>compute-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.janelia.legacy</groupId>
+            <artifactId>model</artifactId>
+        </dependency>
+
+        <!-- NetBeans Modules -->
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-nodes</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-autoupdate-services</artifactId>
+        </dependency>
+
+        <!-- Maven Central dependencies -->
+        <!-- These dependencies are used for the External Client API -->
+        <dependency>
+            <groupId>org.apache.axis2</groupId>
+            <artifactId>axis2</artifactId>
+            <version>1.5.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ws.commons.axiom</groupId>
+            <artifactId>axiom-api</artifactId>
+            <version>1.2.11</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ws.commons.axiom</groupId>
+            <artifactId>axiom-impl</artifactId>
+            <version>1.2.11</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <configuration>
+                    <publicPackages>
+                        <publicPackage>org.janelia.it.FlyWorkstation.ws</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.actions</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.activity_logging</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.exceptions</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.facade.interfaces</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.http</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.lifecycle</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.services</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.state</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.api.web</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.events</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.events.lifecycle</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.events.model</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.events.prefs</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.events.selection</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.events.workers</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.filecache</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.logging</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.model</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.model.descriptors</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.model.keybind</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.model.search</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.nodes</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.options</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.util</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.util.compression</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.web</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.workers</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.browser.ws</publicPackage>
+                        <publicPackage>org.janelia.it.workstation.gui.framework.console</publicPackage>
+                        <publicPackage>org.janelia.workstation.commonmodel</publicPackage>
+                    </publicPackages>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

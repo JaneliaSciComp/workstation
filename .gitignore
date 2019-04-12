@@ -15,4 +15,4 @@ groovy/.settings
 dist
 private
 modules/DataBrowser/src/main/resources/my*.properties
-modules/CommonModel/src/main/resources/my*.properties
+modules/Core/src/main/resources/my*.properties
