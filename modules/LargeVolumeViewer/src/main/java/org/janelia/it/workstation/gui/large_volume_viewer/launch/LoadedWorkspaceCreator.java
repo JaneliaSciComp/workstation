@@ -16,9 +16,12 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
@@ -119,7 +122,13 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
                     errorLabel.setText("'" + swcFolder + "' not found on server. Please Try again.");
                 } else {
                     inputDialog.setVisible(false);
-                    importSWC(sample.getId(), workspaceNameTextField.getText().trim(), swcFolder, systemOwnerCheckbox.isSelected());
+                    String neuronsOwnerKey;
+                    if (systemOwnerCheckbox.isSelected()) {
+                        neuronsOwnerKey = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+                    } else {
+                        neuronsOwnerKey = null;
+                    }
+                    importSWC(sample.getId(), workspaceNameTextField.getText().trim(), swcFolder, neuronsOwnerKey);
                 }
             }
         });
@@ -131,7 +140,7 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
         inputDialog.setVisible(true);
     }
 
-    private void importSWC(Long sampleId, String workspace, String swcFolder, boolean withSystemOwner) {
+    private void importSWC(Long sampleId, String workspace, String swcFolder, String neuronsOwner) {
         BackgroundWorker worker = new AsyncServiceMonitoringWorker() {
 
             private String taskDisplayName;
@@ -148,7 +157,7 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
 
                 setStatus("Submitting task " + taskDisplayName);
 
-                Long taskId = startImportSWC(sampleId, workspace, swcFolder, withSystemOwner);
+                Long taskId = startImportSWC(sampleId, workspace, swcFolder, neuronsOwner);
 
                 setServiceId(taskId);
 
@@ -163,14 +172,14 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
         worker.executeWithEvents();
     }
 
-    private Long startImportSWC(Long sampleId, String workspace, String swcFolder, boolean withSystemOwner) {
+    private Long startImportSWC(Long sampleId, String workspace, String swcFolder, String neuronsOwner) {
         AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
         ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
                 .add("-sampleId", sampleId.toString());
         serviceArgsBuilder.add("-workspace", workspace);
         serviceArgsBuilder.add("-swcDirName", swcFolder);
-        if (withSystemOwner) {
-            serviceArgsBuilder.add("-withSystemOwner");
+        if (StringUtils.isNotBlank(neuronsOwner)) {
+            serviceArgsBuilder.add("-neuronsOwner", neuronsOwner);
         }
         return asyncServiceClient.invokeService("swcImport",
                 serviceArgsBuilder.build(),

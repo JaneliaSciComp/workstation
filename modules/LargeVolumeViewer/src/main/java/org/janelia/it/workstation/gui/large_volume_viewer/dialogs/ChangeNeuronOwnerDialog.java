@@ -23,7 +23,7 @@ public class ChangeNeuronOwnerDialog extends JDialog {
     private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     public enum UserFilter {NONE, TRACERS, ACTIVE_TRACERS};
-    UserFilter userFilter = UserFilter.NONE;
+    UserFilter userFilter;
 
     JComboBox subjectCombobox;
     JCheckBox filterUserListCheckbox;
