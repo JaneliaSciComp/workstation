@@ -98,7 +98,7 @@
 
         <!-- Mac OS X signing identity - must match with a verified Apple developer certificate in the keychain -->
         <janeliaws.codesign.identity>Developer ID Application</janeliaws.codesign.identity>
-    
+
         <!--==== Dependency Versions ==================================================================================-->
         
         <janeliaws.slf4j.version>1.7.26</janeliaws.slf4j.version>
@@ -689,7 +689,11 @@
                     <artifactId>maven-deploy-plugin</artifactId>
                     <version>${janeliaws.maven-deploy-plugin.version}</version>
                 </plugin>
-
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${janeliaws.maven-gpg-plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -1034,7 +1038,7 @@
         <module>modules/AdministrationGUI</module>
         <module>modules/application</module>
         <module>modules/branding</module>
-        <module>modules/ConsoleWrapper</module>
+        <module>modules/CommonLibraries</module>
         <module>modules/IntegrationAPIs</module>
         <module>modules/Core</module>
         <module>modules/CommonGUI</module>

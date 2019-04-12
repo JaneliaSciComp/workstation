@@ -8,14 +8,18 @@ import org.openide.util.HelpCtx;
 import org.openide.util.Lookup;
 
 @OptionsPanelController.SubRegistration(
-        location = "Core",
+        location = "Browser",
+        id = DownloadOptionsPanelController.ID,
         displayName = "#AdvancedOption_DisplayName_FilePaths",
         keywords = "#AdvancedOption_Keywords_FilePaths",
-        keywordsCategory = "Core/FilePaths",
+        keywordsCategory = "Browser/FilePaths",
         position=3
 )
 @org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_FilePaths=Downloads", "AdvancedOption_Keywords_FilePaths=download directories file paths"})
 public final class DownloadOptionsPanelController extends OptionsPanelController {
+
+    public static final String ID = "org.janelia.workstation.browser.gui.options.DownloadOptionsPanelController";
+    public static final String PATH = "Browser/"+ID;
 
     private DownloadOptionsPanel panel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);

@@ -356,7 +356,8 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
 
     private String readFromResource(String resource) {
         StringBuilder builder = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(SecondaryDataRemovalDialog.class.getResourceAsStream(resource)))) {
+        ClassLoader cl = SecondaryDataRemovalDialog.class.getClassLoader();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(cl.getResourceAsStream(resource)))) {
             String inputLine = null;
             while (null != (inputLine = br.readLine())) {
                 builder.append(inputLine);

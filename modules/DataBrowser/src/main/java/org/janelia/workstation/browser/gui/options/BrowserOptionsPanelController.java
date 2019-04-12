@@ -8,14 +8,18 @@ import org.openide.util.HelpCtx;
 import org.openide.util.Lookup;
 
 @OptionsPanelController.SubRegistration(
-        location = "Core",
-        displayName = "#AdvancedOption_DisplayName_Browser",
-        keywords = "#AdvancedOption_Keywords_Browser",
-        keywordsCategory = "Core/Browser",
+        location = "Browser",
+        id = BrowserOptionsPanelController.ID,
+        displayName = "#AdvancedOption_DisplayName_ImageView",
+        keywords = "#AdvancedOption_Keywords_ImageView",
+        keywordsCategory = "Browser/ImageView",
         position=2
 )
-@org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_Browser=Browser", "AdvancedOption_Keywords_Browser=browser 2d"})
+@org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_ImageView=Image View", "AdvancedOption_Keywords_ImageView=browser images 2d"})
 public final class BrowserOptionsPanelController extends OptionsPanelController {
+
+    public static final String ID = "org.janelia.workstation.browser.gui.options.BrowserOptionsPanelController";
+    public static final String PATH = "Browser/"+ID;
 
     private BrowserOptionsPanel panel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);

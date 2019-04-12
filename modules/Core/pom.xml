@@ -71,6 +71,13 @@
             <artifactId>jetty-server</artifactId>
         </dependency>
 
+        <!-- For communication with JACSv1 -->
+        <dependency>
+            <groupId>jboss</groupId>
+            <artifactId>jbossall-client</artifactId>
+            <version>4.2.2.GA</version>
+        </dependency>
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.mockito</groupId>

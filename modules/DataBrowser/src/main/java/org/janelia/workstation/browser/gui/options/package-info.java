@@ -1,4 +1,10 @@
-@OptionsPanelController.ContainerRegistration(id = "Browser", categoryName = "#OptionsCategory_Name_Browser", iconBase = "images/folders_explorer_medium.png", keywords = "#OptionsCategory_Keywords_Browser", keywordsCategory = "Browser")
+@OptionsPanelController.ContainerRegistration(
+        id = "Browser",
+        categoryName = "#OptionsCategory_Name_Browser",
+        iconBase = "images/folders_explorer_medium.png",
+        keywords = "#OptionsCategory_Keywords_Browser",
+        keywordsCategory = "Browser",
+        position = 2)
 @NbBundle.Messages(value = {"OptionsCategory_Name_Browser=Browser", "OptionsCategory_Keywords_Browser=browser"})
 package org.janelia.workstation.browser.gui.options;
 

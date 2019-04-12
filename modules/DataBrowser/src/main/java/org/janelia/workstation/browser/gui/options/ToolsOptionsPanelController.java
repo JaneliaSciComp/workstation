@@ -10,18 +10,18 @@ import org.openide.util.HelpCtx;
 import org.openide.util.Lookup;
 
 @OptionsPanelController.SubRegistration(
-        location = "Core",
+        location = "Browser",
         id = ToolsOptionsPanelController.ID,
         displayName = "#AdvancedOption_DisplayName_Tools",
         keywords = "#AdvancedOption_Keywords_Tools",
-        keywordsCategory = "Core/Tools",
+        keywordsCategory = "Browser/Tools",
         position=4
 )
 @org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_Tools=Tools", "AdvancedOption_Keywords_Tools=tools vaa3d fiji"})
 public final class ToolsOptionsPanelController extends OptionsPanelController {
 
-    public static final String ID = "org.janelia.workstation.browser.gui.options.Tools";
-    public static final String PATH = "Core/"+ID;
+    public static final String ID = "org.janelia.workstation.browser.gui.options.ToolsOptionsPanelController";
+    public static final String PATH = "Browser/"+ID;
     
     private ToolsOptionsPanel panel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);

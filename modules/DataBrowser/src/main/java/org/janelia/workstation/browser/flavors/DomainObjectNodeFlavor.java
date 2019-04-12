@@ -28,7 +28,7 @@ public class DomainObjectNodeFlavor extends DataFlavor {
         }
     }
     
-    public static final DataFlavor SINGLE_FLAVOR = createConstant("application/x-domain-object;class=org.janelia.workstation.browser.nodes.DomainObjectNode","Domain Object Node");
+    public static final DataFlavor SINGLE_FLAVOR = createConstant("application/x-domain-object;class=org.janelia.workstation.common.nodes.DomainObjectNode","Domain Object Node");
     public static final DataFlavor LIST_FLAVOR = createConstant("application/x-domain-object-list;class=java.util.List","Domain Object Node List");
 
     private DomainObjectNodeFlavor(String mt, String prn) {
