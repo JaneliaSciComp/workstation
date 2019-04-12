@@ -12,7 +12,7 @@ import java.awt.event.ActionEvent;
 
 @ActionID(
         category = "Help",
-        id = "org.janelia.it.workstation.browser.nb_action.ReleaseNotes"
+        id = "org.janelia.workstation.common.nb_action.ReleaseNotes"
 )
 @ActionRegistration(
         displayName = "#CTL_ReleaseNotes"

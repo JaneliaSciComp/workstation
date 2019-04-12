@@ -1,9 +1,9 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.model_adapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.api.ClientDomainUtils;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;

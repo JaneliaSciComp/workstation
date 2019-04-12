@@ -15,13 +15,13 @@ import javax.swing.*;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.options.ApplicationOptions;
-import org.janelia.it.workstation.browser.util.SystemInfo;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.workstation.core.options.ApplicationOptions;
+import org.janelia.workstation.core.util.SystemInfo;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.janelia.it.workstation.browser.options.OptionConstants.LAST_SHOWN_RELEASE_NOTES;
+import static org.janelia.workstation.core.options.OptionConstants.LAST_SHOWN_RELEASE_NOTES;
 
 /**
  * A dialog for viewing Release Notes for the system.
@@ -32,8 +32,8 @@ public class ReleaseNotesDialog extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(ReleaseNotesDialog.class);
     
-    private static final String CURR_RELEASE_FILE = "resources/release_notes/curr_release.txt";
-    private static final String PREV_RELEASES_FILE = "resources/release_notes/prev_releases.txt";
+    private static final String CURR_RELEASE_FILE = "org/janelia/workstation/common/release_notes/curr_release.txt";
+    private static final String PREV_RELEASES_FILE = "org/janelia/workstation/common/release_notes/prev_releases.txt";
     
     private final JLabel titleLabel;
     private final JCheckBox showAfterUpdate;

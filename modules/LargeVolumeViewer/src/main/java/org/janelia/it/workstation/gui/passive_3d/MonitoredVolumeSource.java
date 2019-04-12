@@ -6,7 +6,7 @@
 
 package org.janelia.it.workstation.gui.passive_3d;
 
-import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;
 
 /**
  * A special volume source which can be monitored, and will call feedback

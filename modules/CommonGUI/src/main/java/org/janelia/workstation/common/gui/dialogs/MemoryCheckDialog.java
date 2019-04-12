@@ -1,6 +1,6 @@
 package org.janelia.workstation.common.gui.dialogs;
 
-import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.workstation.core.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

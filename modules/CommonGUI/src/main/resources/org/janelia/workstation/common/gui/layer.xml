@@ -107,7 +107,6 @@
             <file name="SelectDocumentNode_hidden"/>
             <file name="ShowTerminalTCAction.instance_hidden"/>
             <file name="TerminalSettingsAction.instance_hidden"/>
-            <file name="org-janelia-it-workstation-nb_action-LaunchAppAction.instance_hidden"/>
             <file name="org-netbeans-core-actions-NextViewCallbackAction.instance_hidden"/>
             <file name="org-netbeans-core-actions-PreviousViewCallbackAction.instance_hidden"/>
             <file name="org-netbeans-core-windows-actions-CloneDocumentAction.instance_hidden"/>

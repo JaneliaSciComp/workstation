@@ -144,8 +144,8 @@
             <artifactId>org-netbeans-libs-junit4</artifactId>
             <scope>test</scope>
         </dependency>
-        
-        <!-- Maven Central dependencies -->
+
+        <!-- Test dependencies -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
@@ -177,34 +177,34 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <configuration>
                     <publicPackages>
-                        <publicPackage>org.janelia.it.workstation.browser.actions</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.activity_logging</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.api</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.api.state</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.components</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.events</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.events.selection</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.flavors</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.colordepth</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.dialogs</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.editor</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.find</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.hud</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.inspector</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.lasso</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.listview</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.listview.icongrid</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.listview.table</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.ontology</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.options</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.progress</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.support</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.gui.tree</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.nb_action</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.nodes</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.tools</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.tools.preferences</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.browser.workers</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.actions</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.activity_logging</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.api</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.api.state</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.components</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.events</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.events.selection</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.flavors</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.colordepth</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.dialogs</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.editor</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.find</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.hud</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.inspector</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.lasso</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.listview</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.listview.icongrid</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.listview.table</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.ontology</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.options</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.progress</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.support</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.tree</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.nb_action</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.nodes</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.tools</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.tools.preferences</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.workers</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

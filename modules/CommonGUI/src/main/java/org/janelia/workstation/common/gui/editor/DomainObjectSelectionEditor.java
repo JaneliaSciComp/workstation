@@ -1,6 +1,6 @@
 package org.janelia.workstation.common.gui.editor;
 
-import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionSupport;
+import org.janelia.workstation.core.events.selection.DomainObjectSelectionSupport;
 import org.janelia.model.domain.DomainObject;
 
 /**

@@ -57,7 +57,6 @@
                         <publicPackage>org.janelia.workstation.common.actions</publicPackage>
                         <publicPackage>org.janelia.workstation.common.gui.dialogs</publicPackage>
                         <publicPackage>org.janelia.workstation.common.gui.editor</publicPackage>
-                        <publicPackage>org.janelia.workstation.common.gui.keybind</publicPackage>
                         <publicPackage>org.janelia.workstation.common.gui.listview</publicPackage>
                         <publicPackage>org.janelia.workstation.common.gui.model</publicPackage>
                         <publicPackage>org.janelia.workstation.common.gui.options</publicPackage>

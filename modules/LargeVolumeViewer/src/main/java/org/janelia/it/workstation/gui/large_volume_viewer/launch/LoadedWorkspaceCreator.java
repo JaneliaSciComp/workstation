@@ -19,10 +19,10 @@ import javax.swing.JTextField;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
-import org.janelia.it.workstation.browser.api.web.AsyncServiceClient;
-import org.janelia.it.workstation.browser.util.SystemInfo;
-import org.janelia.it.workstation.browser.workers.AsyncServiceMonitoringWorker;
-import org.janelia.it.workstation.browser.workers.BackgroundWorker;
+import org.janelia.workstation.core.api.web.AsyncServiceClient;
+import org.janelia.workstation.core.util.SystemInfo;
+import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
+import org.janelia.workstation.core.workers.BackgroundWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeRestClient;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;

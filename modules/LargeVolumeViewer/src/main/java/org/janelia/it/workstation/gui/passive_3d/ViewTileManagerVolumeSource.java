@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
-import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;

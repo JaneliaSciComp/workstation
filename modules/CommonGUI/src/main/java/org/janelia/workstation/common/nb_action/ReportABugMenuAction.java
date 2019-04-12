@@ -6,8 +6,8 @@ import javax.swing.AbstractAction;
 import javax.swing.JFrame;
 
 import org.janelia.workstation.common.gui.support.WindowLocator;
-import org.janelia.it.workstation.browser.util.MailDialogueBox;
-import org.janelia.it.workstation.browser.logging.NBExceptionHandler;
+import org.janelia.workstation.core.util.MailDialogueBox;
+import org.janelia.workstation.core.logging.NBExceptionHandler;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;

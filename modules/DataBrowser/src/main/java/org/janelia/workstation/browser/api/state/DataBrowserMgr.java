@@ -1,0 +1,58 @@
+package org.janelia.workstation.browser.api.state;
+
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.util.ImageCache;
+import org.janelia.workstation.browser.gui.components.DomainListViewManager;
+import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
+import org.openide.windows.TopComponent;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Singleton for tracking the state of various data browser UI components.
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
+public class DataBrowserMgr {
+
+    // Singleton
+    private static DataBrowserMgr instance;
+    public static synchronized DataBrowserMgr getDataBrowserMgr() {
+        if (instance==null) {
+            instance = new DataBrowserMgr();
+            Events.getInstance().registerOnEventBus(instance);
+        }
+        return instance;
+    }
+
+    private final Map<TopComponent,NavigationHistory> navigationHistoryMap = new HashMap<>();
+
+    private final ImageCache imageCache = new ImageCache();
+
+    public ImageCache getImageCache() {
+        return imageCache;
+    }
+
+    public NavigationHistory getNavigationHistory(DomainListViewTopComponent topComponent) {
+        if (topComponent==null) return null;
+        NavigationHistory navigationHistory = navigationHistoryMap.get(topComponent);
+        if (navigationHistory==null) {
+            navigationHistory = new NavigationHistory();
+            navigationHistoryMap.put(topComponent, navigationHistory);
+        }
+        return navigationHistory;
+    }
+
+    public NavigationHistory getNavigationHistory() {
+        return getNavigationHistory(DomainListViewManager.getInstance().getActiveViewer());
+    }
+
+    public void updateNavigationButtons(DomainListViewTopComponent topComponent) {
+        NavigationHistory navigationHistory = getNavigationHistory(topComponent);
+        if (navigationHistory!=null) {
+            navigationHistory.updateButtons();
+        }
+    }
+
+}

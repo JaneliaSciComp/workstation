@@ -10,9 +10,9 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.workstation.common.gui.appoptions.ApplicationOptionsPanelController;
-import org.janelia.it.workstation.browser.logging.CustomLoggingLevel;
-import org.janelia.it.workstation.browser.util.Utils;
+import org.janelia.workstation.common.gui.options.ApplicationOptionsPanelController;
+import org.janelia.workstation.core.logging.CustomLoggingLevel;
+import org.janelia.workstation.core.util.Utils;
 import org.netbeans.api.options.OptionsDisplayer;
 
 /**

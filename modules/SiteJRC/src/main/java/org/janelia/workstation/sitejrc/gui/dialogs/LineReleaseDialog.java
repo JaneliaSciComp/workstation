@@ -1,37 +1,47 @@
 package org.janelia.workstation.sitejrc.gui.dialogs;
 
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+
 import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.api.DomainModel;
-import org.janelia.it.workstation.browser.api.StateMgr;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.sample.DataSet;
+import org.janelia.model.domain.sample.LineRelease;
+import org.janelia.model.security.Subject;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.ComboMembershipListPanel;
 import org.janelia.workstation.common.gui.support.DataSetComboBoxRenderer;
 import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
 import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.sample.DataSet;
-import org.janelia.model.domain.sample.LineRelease;
-import org.janelia.model.security.Subject;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.api.StateMgr;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.core.workers.TaskMonitoringWorker;
 import org.jdesktop.swingx.JXDatePicker;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.List;
-import java.util.*;
-import java.util.concurrent.Callable;
 
 /**
  * A dialog for viewing the list of accessible fly line releases, editing them,
@@ -472,7 +482,7 @@ public class LineReleaseDialog extends ModalDialog {
                 return new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        DomainExplorerTopComponent.getInstance().refresh(true, true, null);
+                        FrameworkImplProvider.getBrowsingProvider().refreshExplorer();
                         return null;
                     }
                 };

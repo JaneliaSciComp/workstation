@@ -5,7 +5,7 @@ import javax.swing.JTextArea;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
-import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.openide.util.lookup.ServiceProvider;

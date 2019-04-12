@@ -11,7 +11,7 @@ import java.awt.event.ItemListener;
 
 import javax.swing.*;
 
-import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronColorAction;

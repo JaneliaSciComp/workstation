@@ -10,7 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.workstation.core.util.SystemInfo;
 
 /**
  * This panel holds the memory settings widgets, including the action

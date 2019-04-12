@@ -36,7 +36,7 @@ import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Quaternion;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;

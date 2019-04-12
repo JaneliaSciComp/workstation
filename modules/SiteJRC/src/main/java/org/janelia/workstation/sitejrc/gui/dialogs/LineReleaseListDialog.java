@@ -2,15 +2,15 @@ package org.janelia.workstation.sitejrc.gui.dialogs;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.table.DynamicColumn;
 import org.janelia.workstation.common.gui.table.DynamicRow;
 import org.janelia.workstation.common.gui.table.DynamicTable;
 import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.sample.LineRelease;
 
 import javax.swing.*;

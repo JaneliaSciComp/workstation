@@ -5,7 +5,7 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.octree.ZoomLevel;
 import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
-import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;
 
 /**
  * within the large volume viewer, this interface enables our bad habits; the data

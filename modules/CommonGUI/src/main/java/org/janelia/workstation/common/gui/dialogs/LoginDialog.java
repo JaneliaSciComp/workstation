@@ -20,13 +20,13 @@ import javax.swing.UIManager;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.api.exceptions.AuthenticationException;
-import org.janelia.it.workstation.browser.api.exceptions.ServiceException;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.exceptions.AuthenticationException;
+import org.janelia.workstation.core.api.exceptions.ServiceException;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.it.workstation.browser.model.ErrorType;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.workstation.core.model.ErrorType;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

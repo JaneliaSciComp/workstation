@@ -5,7 +5,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
-import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.common.gui.dialogs.RunAsUserDialog;
 import org.janelia.model.domain.enums.SubjectRole;
 import org.openide.awt.ActionID;

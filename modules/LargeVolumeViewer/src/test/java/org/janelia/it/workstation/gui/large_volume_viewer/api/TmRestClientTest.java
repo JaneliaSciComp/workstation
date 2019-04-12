@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;

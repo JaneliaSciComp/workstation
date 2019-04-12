@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.swing.DefaultComboBoxModel;
-import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 

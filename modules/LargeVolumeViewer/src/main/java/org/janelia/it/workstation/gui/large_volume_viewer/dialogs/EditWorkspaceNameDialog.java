@@ -23,8 +23,8 @@ import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 

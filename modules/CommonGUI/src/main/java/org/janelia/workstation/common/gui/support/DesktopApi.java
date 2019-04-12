@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.workstation.core.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

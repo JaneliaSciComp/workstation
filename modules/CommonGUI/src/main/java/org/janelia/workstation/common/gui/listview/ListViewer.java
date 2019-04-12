@@ -5,10 +5,10 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
-import org.janelia.it.workstation.browser.events.selection.ChildSelectionModel;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.common.gui.model.ImageModel;
-import org.janelia.it.workstation.browser.model.AnnotatedObjectList;
-import org.janelia.it.workstation.browser.model.search.ResultPage;
+import org.janelia.workstation.core.model.AnnotatedObjectList;
+import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
 

@@ -964,7 +964,7 @@
                                 <configuration>
                                     <show>public</show>
                                     <doctitle>Workstation ${project.version} API Index</doctitle>
-                                    <subpackages>org.janelia.it.jacs:org.janelia.it.workstation</subpackages>
+                                    <subpackages>org.janelia.it.jacs:org.janelia.workstation</subpackages>
                                     <nohelp>true</nohelp>
                                     <detectLinks>false</detectLinks>
                                     <detectOfflineLinks>true</detectOfflineLinks>

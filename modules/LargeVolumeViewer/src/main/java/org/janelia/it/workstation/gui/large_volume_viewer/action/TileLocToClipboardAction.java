@@ -3,7 +3,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.action;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

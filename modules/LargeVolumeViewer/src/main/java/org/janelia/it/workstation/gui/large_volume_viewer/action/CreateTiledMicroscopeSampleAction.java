@@ -7,9 +7,9 @@ import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.api.DomainMgr;
-import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 

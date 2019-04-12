@@ -14,7 +14,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
 import org.janelia.model.access.tiledMicroscope.TmModelManipulator;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;

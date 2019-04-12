@@ -10,8 +10,8 @@ import javax.jws.soap.SOAPBinding;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.workstation.browser.model.keybind.OntologyKeyBindings;
-import org.janelia.it.workstation.browser.ws.AnnotationSession;
+import org.janelia.workstation.core.model.keybind.OntologyKeyBindings;
+import org.janelia.workstation.core.ws.AnnotationSession;
 
 /**
  * The Console server interface for clients to call in order to request data. This implementation accepts and returns

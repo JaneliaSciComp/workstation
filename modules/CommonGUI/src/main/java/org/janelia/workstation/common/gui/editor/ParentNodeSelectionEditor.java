@@ -1,7 +1,7 @@
 package org.janelia.workstation.common.gui.editor;
 
-import org.janelia.it.workstation.browser.events.selection.ChildPickingSupport;
-import org.janelia.it.workstation.browser.events.selection.ChildSelectionSupport;
+import org.janelia.workstation.core.events.selection.ChildPickingSupport;
+import org.janelia.workstation.core.events.selection.ChildSelectionSupport;
 import org.janelia.model.domain.DomainObject;
 
 /**

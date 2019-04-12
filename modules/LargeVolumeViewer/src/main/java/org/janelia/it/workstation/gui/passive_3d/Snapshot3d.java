@@ -17,8 +17,8 @@ import javax.swing.Action;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
-import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.ColorButtonPanel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 

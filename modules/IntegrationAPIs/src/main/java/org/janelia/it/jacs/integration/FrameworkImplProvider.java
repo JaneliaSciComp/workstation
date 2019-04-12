@@ -8,12 +8,14 @@ import org.janelia.it.jacs.integration.framework.compression.CompressedFileResol
 import org.janelia.it.jacs.integration.framework.domain.PreferenceHandler;
 import org.janelia.it.jacs.integration.framework.exceptions.UnprovidedServiceException;
 import org.janelia.it.jacs.integration.framework.system.ActivityLogging;
+import org.janelia.it.jacs.integration.framework.system.BrowsingProvider;
 import org.janelia.it.jacs.integration.framework.system.ErrorHandler;
 import org.janelia.it.jacs.integration.framework.system.FileAccess;
 import org.janelia.it.jacs.integration.framework.system.InspectionHandler;
 import org.janelia.it.jacs.integration.framework.system.ParentFrame;
 import org.janelia.it.jacs.integration.framework.system.ProgressHandler;
 import org.janelia.it.jacs.integration.framework.system.SettingsModel;
+import org.openide.util.Lookup;
 import org.openide.util.NbPreferences;
 import org.openide.util.lookup.Lookups;
 
@@ -63,6 +65,18 @@ public class FrameworkImplProvider {
 
     public static ProgressHandler getProgressHandler() {
         return getProvider(ProgressHandler.LOOKUP_PATH, ProgressHandler.class);
+    }
+
+    public static BrowsingProvider getBrowsingProvider() {
+        return getProvider(BrowsingProvider.class);
+    }
+
+    private static <T> T getProvider(Class<T> clazz) {
+        Collection<? extends T> candidates = Lookup.getDefault().lookupAll(clazz);
+        for(T handler : candidates) {
+            return handler;
+        }
+        throw new UnprovidedServiceException("No service provider found for "+clazz.getName());
     }
 
     private static <T> T getProvider(String path, Class<T> clazz) {

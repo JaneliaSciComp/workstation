@@ -8,9 +8,9 @@ import java.awt.event.KeyEvent;
 
 import javax.swing.*;
 
-import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.model.security.Subject;
 
 /**

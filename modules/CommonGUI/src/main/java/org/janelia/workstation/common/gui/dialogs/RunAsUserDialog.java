@@ -17,7 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.workstation.core.api.AccessManager;
 
 import net.miginfocom.swing.MigLayout;
 

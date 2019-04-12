@@ -32,7 +32,7 @@ import org.janelia.it.jacs.shared.lvv.ViewBoundingBox;
 import org.janelia.it.jacs.shared.octree.ZoomLevel;
 import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.raster.VoxelIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;

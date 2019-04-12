@@ -4,9 +4,9 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.Utils;
-import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.core.util.Utils;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
