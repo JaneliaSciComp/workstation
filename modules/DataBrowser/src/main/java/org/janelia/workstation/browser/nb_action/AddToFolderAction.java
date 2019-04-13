@@ -13,7 +13,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -44,7 +44,7 @@ public class AddToFolderAction extends NodePresenterAction {
 
     private final static Logger log = LoggerFactory.getLogger(AddToFolderAction.class);
 
-    protected final Component mainFrame = FrameworkImplProvider.getMainFrame();
+    protected final Component mainFrame = FrameworkAccess.getMainFrame();
 
     private final static AddToFolderAction singleton = new AddToFolderAction();
     public static AddToFolderAction get() {
@@ -148,7 +148,7 @@ public class AddToFolderAction extends NodePresenterAction {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
                 
@@ -231,7 +231,7 @@ public class AddToFolderAction extends NodePresenterAction {
             @Override
             protected void hadSuccess() {
                 if (treeNode==null) {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "This folder no longer exists.", "Folder no longer exists", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "This folder no longer exists.", "Folder no longer exists", JOptionPane.ERROR_MESSAGE);
                 }
                 else {
                     addUniqueItemsToFolder(treeNode, idPath, success);
@@ -240,7 +240,7 @@ public class AddToFolderAction extends NodePresenterAction {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));
@@ -265,7 +265,7 @@ public class AddToFolderAction extends NodePresenterAction {
             else {
                 message = existing + " items are already in the target folder. "+(domainObjects.size()-existing)+" item(s) will be added.";
             }
-            int result = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(),
+            int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
                     message, "Items already present", JOptionPane.OK_CANCEL_OPTION);
             if (result != 0) {
                 return;
@@ -288,14 +288,14 @@ public class AddToFolderAction extends NodePresenterAction {
                         success.accept(idPath);
                     }
                     catch (Exception e) {
-                        FrameworkImplProvider.handleException(e);
+                        FrameworkAccess.handleException(e);
                     }
                 }
             }
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));

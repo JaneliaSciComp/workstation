@@ -1,7 +1,7 @@
 package org.janelia.workstation.core.activity_logging;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.system.ActivityLogging;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.api.ActivityLogging;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
@@ -34,7 +34,7 @@ public class ActivityLogHelper {
     private static final ActionString LOGOUT_ACTION = new ActionString("Logout");
     private static final CategoryString USER_ACTION_CTG = new CategoryString("UserAction");
 
-    private static final ActivityLogging activityLogging = FrameworkImplProvider.getSessionSupport();
+    private static final ActivityLogging activityLogging = FrameworkAccess.getActivityLogging();
     
     public static void logSessionBegin() {
         activityLogging.logToolEvent(TOOL_STRING, SESS_CTG, LOGIN_ACTION);

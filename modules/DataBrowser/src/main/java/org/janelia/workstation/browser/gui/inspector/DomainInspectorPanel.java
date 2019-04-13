@@ -32,7 +32,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.dialogs.DomainObjectPermissionDialog;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -253,7 +253,7 @@ public class DomainInspectorPanel extends JPanel {
 
                                     @Override
                                     protected void hadError(Throwable error) {
-                                        FrameworkImplProvider.handleException(error);
+                                        FrameworkAccess.handleException(error);
                                         UIUtils.setDefaultCursor(DomainInspectorPanel.this);
                                         refresh();
                                     }
@@ -453,7 +453,7 @@ public class DomainInspectorPanel extends JPanel {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         worker.execute();
@@ -552,7 +552,7 @@ public class DomainInspectorPanel extends JPanel {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
                 annotationsPanel.removeAll();
                 annotationsPanel.add((JPanel) annotationsView, BorderLayout.CENTER);
                 annotationsPanel.updateUI();
@@ -617,7 +617,7 @@ public class DomainInspectorPanel extends JPanel {
             }
         } 
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
 }

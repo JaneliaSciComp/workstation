@@ -27,7 +27,7 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.workstation.core.api.AccessManager;
@@ -311,7 +311,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     String errorMessage = "Problems handling roundtrip request for ownership of System-owned neuron";
                     log.error(errorMessage);
                     e.printStackTrace();
-                    FrameworkImplProvider.handleException(e);
+                    FrameworkAccess.handleException(e);
                 }
                 return false;
             }
@@ -341,7 +341,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void moveAnchor(Anchor anchor) {
 
         if (!editsAllowed()) {
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Workspace is read-only", "Cannot edit annotation", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "Workspace is read-only", "Cannot edit annotation", JOptionPane.INFORMATION_MESSAGE);
             annotationModel.fireAnnotationNotMoved(annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid()));
             return;
         }
@@ -468,7 +468,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
 
         if (!editsAllowed()) {
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Workspace is read-only", "Cannot add annotation", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "Workspace is read-only", "Cannot add annotation", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         
@@ -534,7 +534,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         adder.execute();
@@ -591,7 +591,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         deleter.execute();
@@ -639,7 +639,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         deleter.execute();
@@ -671,7 +671,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         mover.execute();
@@ -756,7 +756,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         merger.execute();
@@ -835,7 +835,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         merger.execute();
@@ -1280,7 +1280,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         setter.execute();
@@ -1620,10 +1620,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
-        creator.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Creating new workspace...", ""));
+        creator.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Creating new workspace...", ""));
         creator.execute();
     }
 
@@ -1656,11 +1656,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
-        creator.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Copying workspace...", ""));
+        creator.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Copying workspace...", ""));
         creator.execute();
     }
 
@@ -1821,10 +1821,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
-        updater.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), visibility?"Showing neurons...":"Hiding neurons...", ""));
+        updater.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), visibility?"Showing neurons...":"Hiding neurons...", ""));
         return updater.executeWithFuture();
     }
 
@@ -1843,10 +1843,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
-        updater.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Hiding neurons...", ""));
+        updater.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Hiding neurons...", ""));
         updater.execute();
     }
     
@@ -1947,7 +1947,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         setter.execute();
@@ -1967,7 +1967,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
     
@@ -1985,7 +1985,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -1996,7 +1996,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             saveCurrentWorkspace();
         }
         catch(Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -2007,7 +2007,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             saveCurrentWorkspace();
         }
         catch(Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -2141,7 +2141,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * a SimpleWorker's error clause; log those errors!
      */
     public void presentError(String message, Throwable error) throws HeadlessException {
-        FrameworkImplProvider.handleException(new Exception(message,error));
+        FrameworkAccess.handleException(new Exception(message,error));
     }
 
     private Long getSampleID() {

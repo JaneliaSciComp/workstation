@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.options.ApplicationOptionsPanelController;
 import org.janelia.workstation.core.logging.CustomLoggingLevel;
 import org.janelia.workstation.core.util.Utils;
@@ -63,7 +63,7 @@ public class EDTExceptionInterceptor extends EventQueue {
                 html.append("<br>You can increase the amount of memory allocated to the Workstation in the Preferences dialog.</body></html>");
 
                 String[] buttons = { "Open Preferences", "Cancel" };
-                int selectedOption = JOptionPane.showOptionDialog(FrameworkImplProvider.getMainFrame(), html,
+                int selectedOption = JOptionPane.showOptionDialog(FrameworkAccess.getMainFrame(), html,
                         "Out of Memory", JOptionPane.YES_NO_OPTION, 0, null, buttons, buttons[0]);
 
                 if (selectedOption == 0) {
@@ -77,7 +77,7 @@ public class EDTExceptionInterceptor extends EventQueue {
         // Ignore all disk space issues, these do not represent bugs.
         if (e.getMessage()!=null && e.getMessage().contains("No space left on device")) {
             SwingUtilities.invokeLater(() -> {
-                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                         "<html>There is no space left on the disk you are using.</html>", 
                         "No Space on Disk", JOptionPane.ERROR_MESSAGE);
             });

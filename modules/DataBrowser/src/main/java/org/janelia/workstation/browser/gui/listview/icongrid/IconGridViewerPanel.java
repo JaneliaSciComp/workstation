@@ -21,7 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.lifecycle.SessionEvent;
 import org.janelia.workstation.core.events.prefs.LocalPreferenceChanged;
@@ -524,7 +524,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         imagesPanel.setImageObjects(objects);
 
         // Update preferences for each button
-        Boolean tagTable = (Boolean) FrameworkImplProvider.getModelProperty(
+        Boolean tagTable = (Boolean) FrameworkAccess.getModelProperty(
                 OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY);
         if (tagTable == null) {
             tagTable = false;

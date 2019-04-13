@@ -8,7 +8,7 @@ import java.util.List;
 import javax.swing.JOptionPane;
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -49,7 +49,7 @@ public final class NewSearchActionListener implements ActionListener {
                 String[] values = alignmentSpaces.toArray(new String[alignmentSpaces.size()]);
                 
                 String alignmentSpace = (String)JOptionPane.showInputDialog(
-                        FrameworkImplProvider.getMainFrame(),
+                        FrameworkAccess.getMainFrame(),
                         "Choose an alignment space to search within",
                         "Choose alignment space", JOptionPane.QUESTION_MESSAGE,
                         null,
@@ -65,7 +65,7 @@ public final class NewSearchActionListener implements ActionListener {
 
                 String defaultName = ClientDomainUtils.getNextNumberedName(searches, alignmentSpace+" Search", true);
                 
-                String name = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Search Name:\n",
+                String name = (String) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(), "Search Name:\n",
                         "", JOptionPane.PLAIN_MESSAGE, null, null, defaultName);
                 if (StringUtils.isEmpty(name)) return;
                         
@@ -88,21 +88,21 @@ public final class NewSearchActionListener implements ActionListener {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
 
-                worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Creating search", ""));
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Creating search", ""));
                 worker.execute();
             }
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Fetching alignment spaces", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Fetching alignment spaces", ""));
         worker.execute();
     }
 }

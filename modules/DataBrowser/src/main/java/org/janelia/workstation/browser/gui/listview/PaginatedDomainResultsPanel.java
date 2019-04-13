@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.listview;
 
 import java.util.List;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.model.DomainObjectAnnotationChangeEvent;
@@ -80,7 +80,7 @@ public abstract class PaginatedDomainResultsPanel extends PaginatedResultsPanel<
 
                     @Override
                     protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
 

@@ -16,8 +16,8 @@ import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.browser.actions.AnnotationContextMenu;
 import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.workstation.browser.actions.ExportPickedGUIDs;
@@ -426,7 +426,7 @@ public class DomainObjectIconGridViewer
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -462,7 +462,7 @@ public class DomainObjectIconGridViewer
                     
                 }
                 catch (Exception e) {
-                    FrameworkImplProvider.handleExceptionQuietly("Error matching on attribute: "+attr.getName(), e);
+                    FrameworkAccess.handleExceptionQuietly("Error matching on attribute: "+attr.getName(), e);
                 }
             }
         }
@@ -534,7 +534,7 @@ public class DomainObjectIconGridViewer
             }
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -559,18 +559,18 @@ public class DomainObjectIconGridViewer
             }
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
     @Override
     protected void setMustHaveImage(boolean mustHaveImage) {
         try {
-            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
+            FrameworkAccess.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
             refreshView(null);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -579,7 +579,7 @@ public class DomainObjectIconGridViewer
         boolean defaultValue = false;
         Boolean preference;
         try {
-            preference = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, defaultValue);
+            preference = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, defaultValue);
         }
         catch (Exception e) {
             log.error("Error getting preference", e);
@@ -609,7 +609,7 @@ public class DomainObjectIconGridViewer
             hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), toggle, true);
         } 
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
     
@@ -618,7 +618,7 @@ public class DomainObjectIconGridViewer
             return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return null;
         }
     }

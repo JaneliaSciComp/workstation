@@ -12,7 +12,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.selection.SelectionModel;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -127,7 +127,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
             DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
 
-            String preference2 = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString(), null);
+            String preference2 = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString(), null);
             log.info("Got image type preference: "+preference2);
             if (preference2!=null) {
                 typeButton.setImageTypeName(preference2);
@@ -146,7 +146,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             resultsPanel.showObjects(sortedGroups, success);
             showResults(isUserDriven);
         }  catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
     
@@ -225,7 +225,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             }
         }  
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -329,7 +329,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             protected void doStuff() throws Exception {
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject.getId()!=null) {
-                    FrameworkImplProvider.setRemotePreferenceValue(name, parentObject.getId().toString(), value);
+                    FrameworkAccess.setRemotePreferenceValue(name, parentObject.getId().toString(), value);
                 }
             }
 
@@ -342,7 +342,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             @Override
             protected void hadError(Throwable error) {
                 UIUtils.setMainFrameCursorWaitStatus(false);
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 

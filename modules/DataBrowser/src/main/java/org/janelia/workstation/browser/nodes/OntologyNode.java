@@ -8,7 +8,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.browser.nb_action.AddOntologyTermAction;
 import org.janelia.workstation.browser.nb_action.OntologyExportAction;
@@ -113,7 +113,7 @@ public class OntologyNode extends OntologyTermNode implements DomainObjectNode<O
             }
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         worker.execute();

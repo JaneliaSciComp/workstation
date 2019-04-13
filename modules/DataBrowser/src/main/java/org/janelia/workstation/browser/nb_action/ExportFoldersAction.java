@@ -10,7 +10,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -99,7 +99,7 @@ public final class ExportFoldersAction extends NodePresenterAction {
             }
         });
 
-        if (chooser.showDialog(FrameworkImplProvider.getMainFrame(), "OK") == FileChooser.CANCEL_OPTION) {
+        if (chooser.showDialog(FrameworkAccess.getMainFrame(), "OK") == FileChooser.CANCEL_OPTION) {
             return;
         }
 
@@ -117,7 +117,7 @@ public final class ExportFoldersAction extends NodePresenterAction {
 
             @Override
             protected void hadSuccess() {
-                int rv = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(), "Data was successfully exported to " + destFile + ". Open file in default viewer?",
+                int rv = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(), "Data was successfully exported to " + destFile + ". Open file in default viewer?",
                         "Export successful", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
                 if (rv == JOptionPane.YES_OPTION) {
                     OpenWithDefaultAppAction openAction = new OpenWithDefaultAppAction(destFile);
@@ -127,11 +127,11 @@ public final class ExportFoldersAction extends NodePresenterAction {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new IndeterminateNoteProgressMonitor(FrameworkImplProvider.getMainFrame(), "Exporting data", ""));
+        worker.setProgressMonitor(new IndeterminateNoteProgressMonitor(FrameworkAccess.getMainFrame(), "Exporting data", ""));
         worker.execute();   
     }
     

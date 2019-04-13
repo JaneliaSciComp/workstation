@@ -6,7 +6,7 @@ import java.util.List;
 import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.model.access.domain.DomainUtils;
@@ -31,7 +31,7 @@ public abstract class AnnotationTagCloudPanel extends TagCloudPanel<Annotation> 
             }
         }
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
     

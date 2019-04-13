@@ -6,7 +6,7 @@ import java.util.HashSet;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.tiledMicroscope.LargeVolumeDiscoveryTask;
@@ -23,7 +23,7 @@ public class LargeVolumeSampleDiscoveryAction extends AbstractAction {
     	
         // Let user decide if it's a go.
         int optionSelected = JOptionPane.showConfirmDialog(
-                FrameworkImplProvider.getMainFrame(),
+                FrameworkAccess.getMainFrame(),
                 "Launch Discovery Process Now?",
                 "Launch Large Volume Sample Discovery",
                 JOptionPane.OK_CANCEL_OPTION,
@@ -51,7 +51,7 @@ public class LargeVolumeSampleDiscoveryAction extends AbstractAction {
 	            tmw.executeWithEvents();
         	}
         	catch (Exception e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
         	}
         }
 	}

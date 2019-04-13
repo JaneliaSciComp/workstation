@@ -8,7 +8,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.model.domain.enums.SubjectRole;
 import org.openide.awt.ActionID;
@@ -81,7 +81,7 @@ public final class TestExceptionActions extends AbstractAction implements Presen
                         }
                     }
                     catch (Exception ex) {
-                        FrameworkImplProvider.handleException("Testing Unexpected Exception", ex);
+                        FrameworkAccess.handleException("Testing Unexpected Exception", ex);
                     }
                 }
             });
@@ -95,7 +95,7 @@ public final class TestExceptionActions extends AbstractAction implements Presen
                         exceptionTest(null); // Generate some causes to test the "Caused:" logging
                     }
                     catch (Exception ex) {
-                        FrameworkImplProvider.handleException(ex);
+                        FrameworkAccess.handleException(ex);
                     }
                 }
             });

@@ -16,7 +16,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.actions.ExportPickedGUIDs;
 import org.janelia.workstation.browser.actions.ExportPickedLineNames;
 import org.janelia.workstation.browser.actions.ExportPickedToSplitGenWebsite;
@@ -401,7 +401,7 @@ public class ColorDepthResultIconGridViewer
             hud.setFilepathAndToggleDialog(filepath, title, toggle, false);
         } 
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
 
@@ -454,7 +454,7 @@ public class ColorDepthResultIconGridViewer
             return selected;
         }  
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return null;
         }
     }

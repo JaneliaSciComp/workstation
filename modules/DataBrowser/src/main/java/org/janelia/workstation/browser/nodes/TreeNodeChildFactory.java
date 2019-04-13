@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.workstation.integration.framework.domain.DomainObjectHelper;
-import org.janelia.workstation.integration.framework.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.model.access.domain.DomainUtils;
@@ -49,7 +49,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             // TODO: this should use the other isCompatible() method which takes a class, 
             // instead of constructing a dummy object
             DomainObject dummyChild = (DomainObject)clazz.newInstance();
-            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(dummyChild);
+            DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(dummyChild);
             if (provider!=null) {
                 return true;
             }
@@ -121,7 +121,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     protected org.openide.nodes.Node createNodeForKey(DomainObject key) {
         log.debug("Creating node for '{}'",key.getName());
         try {
-            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(key);
+            DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(key);
             if (provider!=null) {
                 return provider.getNode(key, this);
             }

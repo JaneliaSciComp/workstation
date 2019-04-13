@@ -7,7 +7,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.util.Utils;
@@ -49,7 +49,7 @@ public class CreateMaskFromImageAction extends AbstractAction {
         log.debug("imagePath: "+imagePath);
         
         if (imagePath==null) {
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "No image selected", 
                     "No image", JOptionPane.ERROR_MESSAGE);
             return;
@@ -74,7 +74,7 @@ public class CreateMaskFromImageAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -93,7 +93,7 @@ public class CreateMaskFromImageAction extends AbstractAction {
             maskCreationDialog.showForMask();
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 }

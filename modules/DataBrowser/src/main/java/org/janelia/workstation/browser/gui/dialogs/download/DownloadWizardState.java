@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptorList;
@@ -142,7 +142,7 @@ class DownloadWizardState {
             return DescriptorUtils.serializeList(list);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleExceptionQuietly(e);
+            FrameworkAccess.handleExceptionQuietly(e);
             return null;
         }
     }
@@ -181,7 +181,7 @@ class DownloadWizardState {
             return mapper.writeValueAsString(map);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleExceptionQuietly(e);
+            FrameworkAccess.handleExceptionQuietly(e);
             return null;
         }
     }

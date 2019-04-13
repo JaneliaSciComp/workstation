@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.workstation.gui.viewer3d.*;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 
@@ -101,7 +101,7 @@ public class Snapshot3d extends JPanel {
         setHasBeenFiltered( false );
         SnapshotWorker loadWorker = new SnapshotWorker(volumeSource);
         if (getMonitor() == null) {
-            setLoadProgressMonitor(new IndeterminateNoteProgressMonitor(FrameworkImplProvider.getMainFrame(), "Fetching tiles", volumeSource.getInfo()));
+            setLoadProgressMonitor(new IndeterminateNoteProgressMonitor(FrameworkAccess.getMainFrame(), "Fetching tiles", volumeSource.getInfo()));
         }
         loadWorker.setProgressMonitor(getMonitor());
         volumeSource.setProgressMonitor(getMonitor());
@@ -238,7 +238,7 @@ public class Snapshot3d extends JPanel {
 
         @Override
         protected void hadError(Throwable error) {
-            FrameworkImplProvider.handleException(error);
+            FrameworkAccess.handleException(error);
         }
     }
 }

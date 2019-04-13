@@ -28,7 +28,7 @@ import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.pipelines.PipelineProcess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -311,7 +311,7 @@ public class DataSetDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
                 UIUtils.setDefaultCursor(DataSetDialog.this);
                 setVisible(false);
             }

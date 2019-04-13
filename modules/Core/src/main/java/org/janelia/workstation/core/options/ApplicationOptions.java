@@ -4,7 +4,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.prefs.Preferences;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.openide.util.NbPreferences;
 import org.slf4j.Logger;
@@ -73,7 +73,7 @@ public class ApplicationOptions {
     }
     
     public boolean isShowReleaseNotes() {
-        Boolean value = (Boolean) FrameworkImplProvider.getModelProperty(OptionConstants.SHOW_RELEASE_NOTES);
+        Boolean value = (Boolean) FrameworkAccess.getModelProperty(OptionConstants.SHOW_RELEASE_NOTES);
         return value==null || value;
     }
     
@@ -83,7 +83,7 @@ public class ApplicationOptions {
             return;
         }
         
-        FrameworkImplProvider.setModelProperty(OptionConstants.SHOW_RELEASE_NOTES, value);  
+        FrameworkAccess.setModelProperty(OptionConstants.SHOW_RELEASE_NOTES, value);
         log.info("Set show release notes = {}", value);
         
         if (null != propSupport)
@@ -91,7 +91,7 @@ public class ApplicationOptions {
     }
     
     public boolean isUseRunAsUserPreferences() {
-        Boolean value = (Boolean) FrameworkImplProvider.getModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES);
+        Boolean value = (Boolean) FrameworkAccess.getModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES);
         return value!=null && value;
     }
     
@@ -101,7 +101,7 @@ public class ApplicationOptions {
             return;
         }
         
-        FrameworkImplProvider.setModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES, value); 
+        FrameworkAccess.setModelProperty(OptionConstants.USE_RUN_AS_USER_PREFERENCES, value);
         log.info("Set use run as user preferences = {}", value);
         
         if (null != propSupport)
@@ -109,7 +109,7 @@ public class ApplicationOptions {
     }
         
     public boolean isUseHTTPForTileAccess() {
-        Boolean value = FrameworkImplProvider.getModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, true);
+        Boolean value = FrameworkAccess.getModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, true);
         return value!=null && value;
     }
     
@@ -119,7 +119,7 @@ public class ApplicationOptions {
             return;
         }
         
-        FrameworkImplProvider.setModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, value); 
+        FrameworkAccess.setModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, value);
         log.info("Set use HTTP for tile access = {}", value);
         
         if (null != propSupport)

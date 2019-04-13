@@ -33,7 +33,7 @@ import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SimpleIcons;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.geom.Quaternion;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.workstation.core.api.AccessManager;
@@ -453,7 +453,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Choose export file");
         chooser.setMultiSelectionEnabled(false);
-        int result = chooser.showSaveDialog(FrameworkImplProvider.getMainFrame());
+        int result = chooser.showSaveDialog(FrameworkAccess.getMainFrame());
         if (result == JFileChooser.APPROVE_OPTION) {
             File exportFile = chooser.getSelectedFile();
             try {
@@ -552,7 +552,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 }
             }
         } catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
     
@@ -914,7 +914,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Choose point file");
         chooser.setMultiSelectionEnabled(false);
-        int result = chooser.showOpenDialog(FrameworkImplProvider.getMainFrame());
+        int result = chooser.showOpenDialog(FrameworkAccess.getMainFrame());
         if (result == JFileChooser.APPROVE_OPTION) {
             File pointFile = chooser.getSelectedFile();
 

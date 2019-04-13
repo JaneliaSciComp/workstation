@@ -7,9 +7,9 @@ import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.domain.DomainObjectHelper;
-import org.janelia.workstation.integration.framework.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextActivator;
@@ -159,7 +159,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             p.setProperty("editorState", serializedState);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleExceptionQuietly("Could not serialize editor state", e);
+            FrameworkAccess.handleExceptionQuietly("Could not serialize editor state", e);
             p.remove("editorState");
         }
     }
@@ -288,7 +288,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             add(editorComponent, BorderLayout.CENTER);
         }
         catch (InstantiationException | IllegalAccessException e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
         setName(editor.getName());
     }
@@ -399,7 +399,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
     @SuppressWarnings("unchecked")
     private static Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
-        DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
+        DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
         if (provider!=null) {
             return (Class<? extends ParentNodeSelectionEditor<? extends DomainObject, ?, ?>>) 
                     provider.getEditorClass(domainObject);

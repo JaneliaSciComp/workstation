@@ -51,11 +51,11 @@
                 <configuration>
                     <publicPackages>
                         <publicPackage>org.janelia.workstation.integration</publicPackage>
-                        <publicPackage>org.janelia.workstation.integration.framework.compression</publicPackage>
-                        <publicPackage>org.janelia.workstation.integration.framework.domain</publicPackage>
-                        <publicPackage>org.janelia.workstation.integration.framework.exceptions</publicPackage>
-                        <publicPackage>org.janelia.workstation.integration.framework.nodes</publicPackage>
-                        <publicPackage>org.janelia.workstation.integration.framework.system</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.api</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.spi.compression</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.spi.domain</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.spi.nodes</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.util</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

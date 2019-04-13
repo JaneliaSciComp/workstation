@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import javax.swing.ProgressMonitor;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import org.slf4j.Logger;
@@ -225,7 +225,7 @@ public class MatrixFilter3D {
                         } catch (Exception ex) {
                             // Exception implies useless output.
                             executorService.shutdownNow();
-                            FrameworkImplProvider.handleException(ex);
+                            FrameworkAccess.handleException(ex);
                         }
                         return null;
                     }
@@ -245,7 +245,7 @@ public class MatrixFilter3D {
             // the loads to complete.
             ThreadUtils.followUpExecution(executorService, callbacks, 5);
         } catch ( Exception ex ) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
         logger.info("Ending the filter run.");
         return outputBytes;

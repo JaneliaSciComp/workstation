@@ -28,7 +28,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.dialogs.EditCriteriaDialog;
@@ -169,7 +169,7 @@ public class FilterEditorPanel
 
                     @Override
                     protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
                 worker.execute();
@@ -185,7 +185,7 @@ public class FilterEditorPanel
                 String name = filter.getName().equals(DEFAULT_FILTER_NAME)?null:filter.getName();
                 String newName = null;
                 while (StringUtils.isEmpty(newName)) {
-                    newName = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(),
+                    newName = (String) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(),
                             "Search Name:\n", "Save Search", JOptionPane.PLAIN_MESSAGE, null, null, name);
                     log.info("newName:" + newName);
                     if (newName == null) {
@@ -193,7 +193,7 @@ public class FilterEditorPanel
                         return;
                     }
                     if (StringUtils.isBlank(newName)) {
-                        JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Filter name cannot be blank");
+                        JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "Filter name cannot be blank");
                         return;
                     }
                 }
@@ -232,7 +232,7 @@ public class FilterEditorPanel
 
                     @Override
                     protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
 
@@ -266,7 +266,7 @@ public class FilterEditorPanel
                     }
                 }
                 catch (Exception ex) {
-                    FrameworkImplProvider.handleException(ex);
+                    FrameworkAccess.handleException(ex);
                 }
             }
         });
@@ -364,7 +364,7 @@ public class FilterEditorPanel
             });
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
 
         ActivityLogHelper.logElapsed("FilterEditorPanel.loadDomainObject", filter, w);
@@ -444,7 +444,7 @@ public class FilterEditorPanel
             protected void hadError(Throwable error) {
                 showNothing();
                 ConcurrentUtils.invokeAndHandleExceptions(failure);
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -787,7 +787,7 @@ public class FilterEditorPanel
             }
         } 
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -898,7 +898,7 @@ public class FilterEditorPanel
     private void loadPreferences() {
         if (filter.getId()==null) return;
         try {
-            String sortCriteriaPref = FrameworkImplProvider.getRemotePreferenceValue(
+            String sortCriteriaPref = FrameworkAccess.getRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), null);
             if (sortCriteriaPref!=null) {
                 log.debug("Loaded sort criteria preference: {}",sortCriteriaPref);
@@ -916,7 +916,7 @@ public class FilterEditorPanel
     private void savePreferences() {
         if (filter.getId()==null || StringUtils.isEmpty(searchConfig.getSortCriteria())) return;
         try {
-            FrameworkImplProvider.setRemotePreferenceValue(
+            FrameworkAccess.setRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), searchConfig.getSortCriteria());
             log.debug("Saved sort criteria preference: {}",searchConfig.getSortCriteria());
         }
@@ -953,11 +953,11 @@ public class FilterEditorPanel
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Loading...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Loading...", ""));
         worker.execute();
     }
 

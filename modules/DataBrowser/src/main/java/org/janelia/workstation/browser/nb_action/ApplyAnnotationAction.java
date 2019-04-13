@@ -8,7 +8,7 @@ import java.util.List;
 
 import javax.swing.ProgressMonitor;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -128,7 +128,7 @@ public class ApplyAnnotationAction extends NodeAction {
             annotateReferences(ontologyTerm, selectedIds);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
     
@@ -160,12 +160,12 @@ public class ApplyAnnotationAction extends NodeAction {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
 
             };
 
-            worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Adding annotations", "", 0, 100));
+            worker.setProgressMonitor(new ProgressMonitor(FrameworkAccess.getMainFrame(), "Adding annotations", "", 0, 100));
             return worker.executeWithFuture();
     }
 
@@ -189,7 +189,7 @@ public class ApplyAnnotationAction extends NodeAction {
         int i = 1;
         for (DomainObject domainObject : domainObjects) {
             
-            Boolean allowDups = (Boolean)FrameworkImplProvider.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY);
+            Boolean allowDups = (Boolean) FrameworkAccess.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY);
 
             Annotation existingAnnotation = null;
             if (allowDups==null || !allowDups) {

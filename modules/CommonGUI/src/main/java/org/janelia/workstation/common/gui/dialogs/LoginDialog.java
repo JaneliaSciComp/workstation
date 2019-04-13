@@ -18,7 +18,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.exceptions.AuthenticationException;
@@ -192,9 +192,9 @@ public class LoginDialog extends ModalDialog {
         String username = usernameField.getText().trim();
         String password = new String(passwordField.getPassword());
         
-        FrameworkImplProvider.setModelProperty(AccessManager.USER_NAME, username);
-        FrameworkImplProvider.setModelProperty(AccessManager.USER_PASSWORD, rememberCheckbox.isSelected()?password:null);
-        FrameworkImplProvider.setModelProperty(AccessManager.REMEMBER_PASSWORD, rememberCheckbox.isSelected());
+        FrameworkAccess.setModelProperty(AccessManager.USER_NAME, username);
+        FrameworkAccess.setModelProperty(AccessManager.USER_PASSWORD, rememberCheckbox.isSelected()?password:null);
+        FrameworkAccess.setModelProperty(AccessManager.REMEMBER_PASSWORD, rememberCheckbox.isSelected());
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -243,7 +243,7 @@ public class LoginDialog extends ModalDialog {
     }
     
     private Object getModelProperty(String key, Object defaultValue) {
-        Object value = FrameworkImplProvider.getModelProperty(key);
+        Object value = FrameworkAccess.getModelProperty(key);
         if (value == null) {
             value = defaultValue;
         }

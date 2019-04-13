@@ -9,7 +9,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.components.OntologyExplorerTopComponent;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -42,7 +42,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
 
     private final static Logger log = LoggerFactory.getLogger(AddOntologyTermAction.class);
     
-    protected final Component mainFrame = FrameworkImplProvider.getMainFrame();
+    protected final Component mainFrame = FrameworkAccess.getMainFrame();
 
     private final static AddOntologyTermAction singleton = new AddOntologyTermAction();
     public static AddOntologyTermAction get() {
@@ -99,7 +99,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
                     addMenuPopup.add(smi);
                 }
                 catch (Exception ex) {
-                    FrameworkImplProvider.handleException(ex);
+                    FrameworkAccess.handleException(ex);
                 }
             }
         }
@@ -116,7 +116,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
         final OntologyTerm ontologyTerm = createTypeByName(termClass);
         ActivityLogHelper.logUserAction("AddOntologyTermAction.createTerm", ontologyTerm.getTypeName());
 
-        final String termName = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Ontology Term:\n",
+        final String termName = (String) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(), "Ontology Term:\n",
                 "Adding to " + parentNode.getDisplayName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 
         if ((termName == null) || (termName.length() <= 0)) {
@@ -127,9 +127,9 @@ public class AddOntologyTermAction extends NodePresenterAction {
 
         if (ontologyTerm instanceof Interval) {
 
-            String lowerBoundStr = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Lower bound:\n",
+            String lowerBoundStr = (String) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(), "Lower bound:\n",
                     "Adding an interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
-            String upperBoundStr = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Upper bound:\n",
+            String upperBoundStr = (String) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(), "Upper bound:\n",
                     "Adding an interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
 
             try {
@@ -138,7 +138,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
                 ((Interval) ontologyTerm).init(lowerBound, upperBound);
             }
             catch (NumberFormatException ex) {
-                FrameworkImplProvider.handleException(ex);
+                FrameworkAccess.handleException(ex);
                 return;
             }
         }
@@ -157,14 +157,14 @@ public class AddOntologyTermAction extends NodePresenterAction {
             OntologyTerm chosenTerm = chosenEnumNode.getOntologyTerm();
             
             if (!(chosenTerm instanceof org.janelia.model.domain.ontology.Enum)) {
-                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "You must choosen an enumeration", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "You must choosen an enumeration", "Error", JOptionPane.ERROR_MESSAGE);
             }
 
             try {
                 ((EnumText) ontologyTerm).init(chosenTerm.getId());
             }
             catch (Exception ex) {
-                FrameworkImplProvider.handleException(ex);
+                FrameworkAccess.handleException(ex);
             }
         }
         
@@ -186,7 +186,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
             
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         

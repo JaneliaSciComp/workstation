@@ -1,6 +1,6 @@
 package org.janelia.workstation.browser.nb_action;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.tools.ToolMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -49,7 +49,7 @@ public final class LaunchVvdAction extends CallableSystemAction {
             ToolMgr.runToolSafely(ToolMgr.TOOL_VVD);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 }

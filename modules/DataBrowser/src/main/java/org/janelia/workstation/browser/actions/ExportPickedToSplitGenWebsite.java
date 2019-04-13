@@ -12,7 +12,7 @@ import javax.swing.JOptionPane;
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -49,7 +49,7 @@ public class ExportPickedToSplitGenWebsite extends AbstractAction {
     public void actionPerformed(ActionEvent event) {
 
         if (refs.isEmpty()) {
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "Select some items with the checkboxes first.", 
                     "No items picked for export", JOptionPane.ERROR_MESSAGE);
             return;
@@ -71,7 +71,7 @@ public class ExportPickedToSplitGenWebsite extends AbstractAction {
             protected void hadSuccess() {
 
                 if (StringUtils.isBlank(idStr)) {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                             "No split line identifiers were found", 
                             "Identifiers missing", JOptionPane.ERROR_MESSAGE);
                 }
@@ -90,11 +90,11 @@ public class ExportPickedToSplitGenWebsite extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Exporting data...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Exporting data...", ""));
         worker.execute();
     }
     

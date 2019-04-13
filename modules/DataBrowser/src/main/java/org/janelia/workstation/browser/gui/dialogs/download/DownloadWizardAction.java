@@ -28,7 +28,7 @@ import javax.swing.ProgressMonitor;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -123,7 +123,7 @@ public final class DownloadWizardAction implements ActionListener {
 
     private void findDownloadObjects() {
         
-        UIUtils.setWaitingCursor(FrameworkImplProvider.getMainFrame());
+        UIUtils.setWaitingCursor(FrameworkAccess.getMainFrame());
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -184,7 +184,7 @@ public final class DownloadWizardAction implements ActionListener {
 
             @Override
             protected void hadSuccess() {
-                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
+                UIUtils.setDefaultCursor(FrameworkAccess.getMainFrame());
                 if (!isCancelled()) {
                     showWizard();
                 }
@@ -192,12 +192,12 @@ public final class DownloadWizardAction implements ActionListener {
 
             @Override
             protected void hadError(Throwable error) {
-                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
-                FrameworkImplProvider.handleException(error);
+                UIUtils.setDefaultCursor(FrameworkAccess.getMainFrame());
+                FrameworkAccess.handleException(error);
             }
         };
 
-        ProgressMonitor monitor = new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Finding files for download...", "", 0, 100);
+        ProgressMonitor monitor = new ProgressMonitor(FrameworkAccess.getMainFrame(), "Finding files for download...", "", 0, 100);
         monitor.setMillisToDecideToPopup(0);
         monitor.setMillisToPopup(0);
         worker.setProgressMonitor(monitor);
@@ -245,7 +245,7 @@ public final class DownloadWizardAction implements ActionListener {
             }
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
         return downloadItems;
     }
@@ -351,53 +351,53 @@ public final class DownloadWizardAction implements ActionListener {
         state.setArtifactFileCounts(artifactFileCounts);
         
         // Restore previous state from user's last usage
-        String objective = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "objective", null);
+        String objective = FrameworkAccess.getLocalPreferenceValue(DownloadWizardState.class, "objective", null);
         log.info("Setting last objective: "+objective);
         state.setObjective(objective);
         
-        String area = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "area", null);
+        String area = FrameworkAccess.getLocalPreferenceValue(DownloadWizardState.class, "area", null);
         log.info("Setting last anatomical area: "+area);
         state.setArea(area);
         
-        String resultCategory = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "resultCategory", null);
+        String resultCategory = FrameworkAccess.getLocalPreferenceValue(DownloadWizardState.class, "resultCategory", null);
         log.info("Setting last resultCategory: "+resultCategory);
         state.setResultCategory(resultCategory);
         
-        String imageCategory = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "imageCategory", null);
+        String imageCategory = FrameworkAccess.getLocalPreferenceValue(DownloadWizardState.class, "imageCategory", null);
         log.info("Setting last imageCategory: "+imageCategory);
         state.setImageCategory(imageCategory);
         
-        String artifactDescriptorString = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", null);
+        String artifactDescriptorString = FrameworkAccess.getLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", null);
         try {
             log.info("Setting last artifactDescriptorString: "+artifactDescriptorString);
             state.setArtifactDescriptorString(artifactDescriptorString);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleExceptionQuietly(e);
+            FrameworkAccess.handleExceptionQuietly(e);
             log.error("Error reading artifactDescriptors preference. Clearing the corrupted preference.", e);
-            FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", null);
+            FrameworkAccess.setLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", null);
         }
         
-        String outputExtensionString = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", null);
+        String outputExtensionString = FrameworkAccess.getLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", null);
         try {
             log.info("Setting last outputExtensionString: "+outputExtensionString);
             state.setOutputExtensionString(outputExtensionString);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleExceptionQuietly(e);
+            FrameworkAccess.handleExceptionQuietly(e);
             log.error("Error reading outputExtensions preference. Clearing the corrupted preference.", e);
-            FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", null);
+            FrameworkAccess.setLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", null);
         }
 
-        boolean splitChannels = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "splitChannels", state.isSplitChannels());
+        boolean splitChannels = FrameworkAccess.getLocalPreferenceValue(DownloadWizardState.class, "splitChannels", state.isSplitChannels());
         log.info("Setting last splitChannels: "+splitChannels);
         state.setSplitChannels(splitChannels);
 
-        boolean flattenStructure = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "flattenStructure", state.isFlattenStructure());
+        boolean flattenStructure = FrameworkAccess.getLocalPreferenceValue(DownloadWizardState.class, "flattenStructure", state.isFlattenStructure());
         log.info("Setting last flattenStructure: "+flattenStructure);
         state.setFlattenStructure(flattenStructure);
 
-        String filenamePattern = FrameworkImplProvider.getLocalPreferenceValue(DownloadWizardState.class, "filenamePattern", null);
+        String filenamePattern = FrameworkAccess.getLocalPreferenceValue(DownloadWizardState.class, "filenamePattern", null);
         log.info("Setting last filenamePattern: "+filenamePattern);
         state.setFilenamePattern(filenamePattern);
 
@@ -509,19 +509,19 @@ public final class DownloadWizardAction implements ActionListener {
                         
                     }
                     else {
-                        JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "There are no downloads to start.", "Nothing to do", JOptionPane.PLAIN_MESSAGE);
+                        JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "There are no downloads to start.", "Nothing to do", JOptionPane.PLAIN_MESSAGE);
                     }
                 }
             }
             
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
             
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Verifying files", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(FrameworkAccess.getMainFrame(), "Verifying files", "", 0, 100));
         worker.execute();
         
     }
@@ -578,7 +578,7 @@ public final class DownloadWizardAction implements ActionListener {
             
             String[] options = { "Open Folder", "Run Download", "Ignore" };
             chosenOptionIndex = JOptionPane.showOptionDialog(
-                    FrameworkImplProvider.getMainFrame(),
+                    FrameworkAccess.getMainFrame(),
                     questionPanel,
                     "File Previously Downloaded",
                     JOptionPane.YES_NO_OPTION,
@@ -601,7 +601,7 @@ public final class DownloadWizardAction implements ActionListener {
         if (chosenOptionIndex == 0) {
             if (numBrowseFileAttempts == MAX_BROWSE_FILES) {
                 log.info("Reached max number of file browses for this download context: {}", numBrowseFileAttempts);
-                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                         "Maximum number of folders have been opened. Further folders will not be opened for this file set.", "Open Folder", JOptionPane.WARNING_MESSAGE);
             }
             else if (numBrowseFileAttempts < MAX_BROWSE_FILES) {

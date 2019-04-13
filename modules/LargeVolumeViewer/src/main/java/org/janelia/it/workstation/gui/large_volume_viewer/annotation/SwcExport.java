@@ -19,7 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 
 public class SwcExport {
@@ -97,7 +97,7 @@ public class SwcExport {
 
         chooser.setPreferredSize(getDialogSize());
         chooser.setAccessory(panel);
-        int returnValue = chooser.showSaveDialog(FrameworkImplProvider.getMainFrame());
+        int returnValue = chooser.showSaveDialog(FrameworkAccess.getMainFrame());
         setDialogSize(chooser.getSize());
 
         final String textInput = downsampleModuloField.getText().trim();
@@ -115,7 +115,7 @@ public class SwcExport {
             }
         } catch (NumberFormatException nfe) {
             annotationMgr.presentError("Failed to parse input text as number: " + textInput, "Invalid Downsample");
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), nfe);
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), nfe);
         }
         return rtnVal;
     }

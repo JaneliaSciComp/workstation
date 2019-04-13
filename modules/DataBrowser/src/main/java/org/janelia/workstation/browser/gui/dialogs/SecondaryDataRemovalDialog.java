@@ -34,7 +34,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.Constants;
@@ -167,7 +167,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
                 UIUtils.setDefaultCursor(SecondaryDataRemovalDialog.this);
                 setVisible(false);
             }
@@ -272,7 +272,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
 
             log.info("Submitting task {}, {} \n( {}\n{} ).",  task.getJobName(), task.getObjectId(), trimDepth, stringifiedAreas);
         } catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return;
         }
 

@@ -22,7 +22,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
@@ -301,10 +301,10 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     @Override
                     protected void hadSuccess() {
                         if (sample==null) {
-                            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "This neuron fragment is orphaned and its sample cannot be loaded.", "Sample data missing", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "This neuron fragment is orphaned and its sample cannot be loaded.", "Sample data missing", JOptionPane.ERROR_MESSAGE);
                         }
                         else if (result==null) {
-                            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
                         }
                         else {
                             viewer.requestActive();
@@ -320,7 +320,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
                 worker.execute();
@@ -415,7 +415,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                                 }
                             }
                             catch (Exception ex) {
-                                FrameworkImplProvider.handleException(ex);
+                                FrameworkAccess.handleException(ex);
                             }
                         });
                     }
@@ -491,7 +491,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
 
@@ -525,7 +525,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                 ActivityLogHelper.logUserAction("DomainObjectContentMenu.purgeAndBlock", domainObject);
 
-                int result = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(),
+                int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
                         "Are you sure you want to purge " + samples.size() + " sample(s) " +
                                 "by deleting all large files associated with them, and block all future processing?",
                         "Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
@@ -545,7 +545,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     task = StateMgr.getStateMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
                 }
                 catch (Exception e) {
-                    FrameworkImplProvider.handleException(e);
+                    FrameworkAccess.handleException(e);
                     return;
                 }
 
@@ -744,7 +744,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             rtnVal.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
-                            FrameworkImplProvider.getMainFrame(),
+                            FrameworkAccess.getMainFrame(),
                             sample,
                             WHOLE_AA_REMOVAL_MSG,
                             Constants.TRIM_DEPTH_WHOLE_AREA_VALUE
@@ -765,7 +765,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             rtnVal.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
-                            FrameworkImplProvider.getMainFrame(),
+                            FrameworkAccess.getMainFrame(),
                             sample,
                             STITCHED_IMG_REMOVAL_MSG,
                             Constants.TRIM_DEPTH_AREA_IMAGE_VALUE
@@ -785,7 +785,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             rtnVal.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
-                            FrameworkImplProvider.getMainFrame(),
+                            FrameworkAccess.getMainFrame(),
                             sample,
                             NEURON_SEP_REMOVAL_MSG,
                             Constants.TRIM_DEPTH_NEURON_SEPARATION_VALUE
@@ -1026,7 +1026,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                                         @Override
                                         protected void hadError(Throwable error) {
-                                            FrameworkImplProvider.handleException(error);
+                                            FrameworkAccess.handleException(error);
                                         }
                                     };
 
@@ -1043,7 +1043,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             mergeItem.setEnabled(multiple);
             return mergeItem;
         } catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return null;
         }
     }

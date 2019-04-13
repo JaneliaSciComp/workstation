@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.model.DomainModelViewUtils;
 import org.janelia.model.domain.DomainObject;
@@ -85,7 +85,7 @@ public class DescriptorUtils {
                     }
                 }
                 catch (Exception e) {
-                    FrameworkImplProvider.handleException(e);
+                    FrameworkAccess.handleException(e);
                 }
             }
             else if (domainObject instanceof HasFiles) {

@@ -48,7 +48,7 @@ import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.PredefinedNote;
@@ -146,7 +146,7 @@ public class NeuronSetAdapter
             TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
             return LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().getNeuronManager().requestOwnershipChange(neuron);
         } catch (Exception error) {
-            FrameworkImplProvider.handleException(error);
+            FrameworkAccess.handleException(error);
         }
         return null;
     }
@@ -370,7 +370,7 @@ public class NeuronSetAdapter
             annotationModel.getCurrentWorkspace().addObjectMesh(mesh);
             annotationModel.saveCurrentWorkspace();
         } catch (Exception error) {
-            FrameworkImplProvider.handleException(error);
+            FrameworkAccess.handleException(error);
         }
     }
     
@@ -389,7 +389,7 @@ public class NeuronSetAdapter
                 annotationModel.saveCurrentWorkspace();
             }
         } catch (Exception error) {
-            FrameworkImplProvider.handleException(error);
+            FrameworkAccess.handleException(error);
         }
     }
 
@@ -405,7 +405,7 @@ public class NeuronSetAdapter
                 }
             }
         } catch (Exception error) {
-            FrameworkImplProvider.handleException(error);
+            FrameworkAccess.handleException(error);
         }
     }
 
@@ -741,14 +741,14 @@ public class NeuronSetAdapter
                             annotationModel.loadUserPreferences();
                             repaintHorta();
                         } catch (Exception error) {
-                            FrameworkImplProvider.handleException(error);
+                            FrameworkAccess.handleException(error);
                         }
                     }
 
                     @Override
                     protected void hadError(Throwable error) {
                         progress.finish();
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
                 worker.execute();

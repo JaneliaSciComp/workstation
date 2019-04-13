@@ -29,7 +29,7 @@ import javax.swing.JViewport;
 import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.events.selection.SelectionModel;
 import org.janelia.workstation.common.gui.model.ImageModel;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
@@ -291,7 +291,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
                 button.setImageSize(maxImageWidth, maxImageHeight);
             }
             catch (Exception e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
         }
         
@@ -309,7 +309,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
                 button.resizeTable(tableHeight);
             }
             catch (Exception e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
         }
     }
@@ -693,7 +693,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
                         button.setViewable(wantViewable);
                     }
                     catch (Exception e) {
-                        FrameworkImplProvider.handleException(e);
+                        FrameworkAccess.handleException(e);
                     }
                 }
             }

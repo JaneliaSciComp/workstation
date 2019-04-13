@@ -1,6 +1,6 @@
 package org.janelia.workstation.core.api;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.api.exceptions.AuthenticationException;
 import org.janelia.workstation.core.api.exceptions.ServiceException;
@@ -121,7 +121,7 @@ public final class AccessManager {
             }
             catch (Exception e) {
                 prefs.setModelProperty(AccessManager.RUN_AS_USER, "");
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
         }
         
@@ -166,11 +166,11 @@ public final class AccessManager {
                 moveToLoggedOutState();
                 loginIssue = ErrorType.AuthError;
             } catch (ServiceException e) {
-                FrameworkImplProvider.handleExceptionQuietly("Problem encountered during auto-login", e);
+                FrameworkAccess.handleExceptionQuietly("Problem encountered during auto-login", e);
                 moveToLoggedOutState();
                 loginIssue = ErrorType.NetworkError;
             } catch (Throwable t) {
-                FrameworkImplProvider.handleExceptionQuietly("Problem encountered during auto-login", t);
+                FrameworkAccess.handleExceptionQuietly("Problem encountered during auto-login", t);
                 moveToLoggedOutState();
                 loginIssue = ErrorType.OtherError;
             }
@@ -210,7 +210,7 @@ public final class AccessManager {
             return true;
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             setActualSubject(authenticatedSubject);
             return false;
         }
@@ -290,7 +290,7 @@ public final class AccessManager {
                 SimpleJwtParser parser = new SimpleJwtParser(token);
                 this.tokenExpirationDate = new Date(Long.parseLong(parser.getExp()) * 1000);
             } catch (Exception e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
 
             LOG.info("Now using token {} with expiration date: {}", token, tokenExpirationDate);

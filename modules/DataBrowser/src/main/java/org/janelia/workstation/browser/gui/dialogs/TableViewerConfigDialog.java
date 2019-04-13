@@ -28,7 +28,7 @@ import javax.swing.JScrollPane;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.browser.gui.listview.table.TableViewerConfiguration;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
@@ -198,7 +198,7 @@ public class TableViewerConfigDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
                 UIUtils.setDefaultCursor(TableViewerConfigDialog.this);
                 returnValue = ERROR_OPTION;
                 setVisible(false);

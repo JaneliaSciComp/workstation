@@ -21,7 +21,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.table.TableCellEditor;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.browser.gui.listview.icongrid.ImagesPanel;
@@ -113,7 +113,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
         summaryLabel.addMouseListener(new MouseHandler() {
             @Override
             protected void doubleLeftClicked(MouseEvent e) {
-                FrameworkImplProvider.setModelProperty(
+                FrameworkAccess.setModelProperty(
                         OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
                 e.consume();
             }
@@ -180,7 +180,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
     private void deleteAnnotation(final Annotation toDelete) {
 
-        UIUtils.setWaitingCursor(FrameworkImplProvider.getMainFrame());
+        UIUtils.setWaitingCursor(FrameworkAccess.getMainFrame());
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -191,13 +191,13 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
             @Override
             protected void hadSuccess() {
-                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
+                UIUtils.setDefaultCursor(FrameworkAccess.getMainFrame());
             }
 
             @Override
             protected void hadError(Throwable error) {
                 log.error("Error deleting annotation",error);
-                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
+                UIUtils.setDefaultCursor(FrameworkAccess.getMainFrame());
                 JOptionPane.showMessageDialog(AnnotationTablePanel.this, "Error deleting annotation", "Error", JOptionPane.ERROR_MESSAGE);
             }
         };
@@ -207,7 +207,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
     private void deleteAnnotations(final List<Annotation> toDeleteList) {
 
-        UIUtils.setWaitingCursor(FrameworkImplProvider.getMainFrame());
+        UIUtils.setWaitingCursor(FrameworkAccess.getMainFrame());
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -220,13 +220,13 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
             @Override
             protected void hadSuccess() {
-                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
+                UIUtils.setDefaultCursor(FrameworkAccess.getMainFrame());
             }
 
             @Override
             protected void hadError(Throwable error) {
                 log.error("Error deleting annotation",error);
-                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
+                UIUtils.setDefaultCursor(FrameworkAccess.getMainFrame());
                 JOptionPane.showMessageDialog(AnnotationTablePanel.this, "Error deleting annotations", "Error", JOptionPane.ERROR_MESSAGE);
             }
         };
@@ -297,7 +297,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                             model.save(annotation);
                         }
                         catch (Exception e1) {
-                            FrameworkImplProvider.handleException(e1);
+                            FrameworkAccess.handleException(e1);
                         }
                     }
                 });

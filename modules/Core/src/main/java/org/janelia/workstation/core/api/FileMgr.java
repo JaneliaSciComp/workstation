@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.filecache.LocalFileCache;
@@ -190,7 +190,7 @@ public class FileMgr {
                 log.warn("File does not exist: " + standardPath, e);
             } catch (Exception e) {
                 if ("No space left on device".equals(e.getMessage())) {
-                    FrameworkImplProvider.handleException("No space left on disk", e);
+                    FrameworkAccess.handleException("No space left on disk", e);
                 } else {
                     log.error("Failed to retrieve " + standardPath + " from local cache", e);
                 }

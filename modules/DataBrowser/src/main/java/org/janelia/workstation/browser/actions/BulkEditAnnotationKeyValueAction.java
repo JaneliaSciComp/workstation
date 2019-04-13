@@ -6,7 +6,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.ProgressMonitor;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -75,7 +75,7 @@ public class BulkEditAnnotationKeyValueAction extends AbstractAction {
                     }
                 }
                 catch (Exception e1) {
-                    FrameworkImplProvider.handleException(e1);
+                    FrameworkAccess.handleException(e1);
                 }
             }
 
@@ -95,11 +95,11 @@ public class BulkEditAnnotationKeyValueAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Editing Annotations", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(FrameworkAccess.getMainFrame(), "Editing Annotations", "", 0, 100));
         worker.execute();
     }
 }

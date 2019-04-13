@@ -8,7 +8,7 @@ import java.util.List;
 import javax.swing.SwingUtilities;
 import javax.swing.text.Position;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,7 +123,7 @@ public class ResultIterator<T,S> implements Iterator<T> {
             return object;
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return null;
         }
     }

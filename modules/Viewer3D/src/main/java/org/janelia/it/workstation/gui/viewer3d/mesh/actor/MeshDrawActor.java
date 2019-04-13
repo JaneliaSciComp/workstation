@@ -8,7 +8,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
@@ -245,7 +245,7 @@ public class MeshDrawActor implements GLActor {
                 // Failure at this level.  Need to do this again.
                 bBuffersNeedUpload = true;
             } catch ( Exception ex ) {
-                FrameworkImplProvider.handleException(ex);
+                FrameworkAccess.handleException(ex);
             }
         }
         

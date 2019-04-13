@@ -2,8 +2,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.launch;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.domain.ObjectOpenAcceptor;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.spi.domain.ObjectOpenAcceptor;
 import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
@@ -61,7 +61,7 @@ public class Launcher implements ObjectOpenAcceptor  {
                 try {
                     win.openLargeVolumeViewer(domainObject);
                 } catch ( Exception ex ) {
-                    FrameworkImplProvider.handleException( ex );
+                    FrameworkAccess.handleException( ex );
                 }
             }
         }

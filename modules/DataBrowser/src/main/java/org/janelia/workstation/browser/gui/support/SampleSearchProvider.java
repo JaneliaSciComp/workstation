@@ -1,6 +1,6 @@
 package org.janelia.workstation.browser.gui.support;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
 import org.janelia.workstation.core.model.search.SearchConfiguration;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
@@ -32,7 +32,7 @@ public class SampleSearchProvider implements SearchProvider {
             }
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleExceptionQuietly(e);
+            FrameworkAccess.handleExceptionQuietly(e);
             return;
         }
         

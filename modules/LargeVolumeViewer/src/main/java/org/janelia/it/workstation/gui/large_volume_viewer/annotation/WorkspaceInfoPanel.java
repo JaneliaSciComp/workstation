@@ -7,7 +7,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
@@ -87,7 +87,7 @@ public class WorkspaceInfoPanel extends JPanel {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
             labelFiller.execute();

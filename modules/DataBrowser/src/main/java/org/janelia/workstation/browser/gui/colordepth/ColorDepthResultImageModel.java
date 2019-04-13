@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.model.ImageDecorator;
 import org.janelia.workstation.common.gui.model.ImageModel;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -167,10 +167,10 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
     protected void setShowVtLineNames(boolean showVtLineNames) {
         try {
             this.isShowVtLineNamesCached = showVtLineNames;
-            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, showVtLineNames);
+            FrameworkAccess.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, showVtLineNames);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
     
@@ -178,7 +178,7 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
         if (isShowVtLineNamesCached==null) {
             boolean defaultValue = true;
             try {
-                isShowVtLineNamesCached = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, defaultValue);
+                isShowVtLineNamesCached = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, DomainConstants.PREFERENCE_CATEGORY_SHOW_VT_LINE_NAMES, defaultValue);
                 log.info("Got preference: "+isShowVtLineNamesCached);
             }
             catch (Exception e) {

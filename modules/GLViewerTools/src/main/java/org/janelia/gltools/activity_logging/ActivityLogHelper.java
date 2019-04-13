@@ -1,7 +1,7 @@
 package org.janelia.gltools.activity_logging;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.system.ActivityLogging;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.api.ActivityLogging;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
@@ -17,7 +17,7 @@ public class ActivityLogHelper {
         return instance;
     }
 
-    private ActivityLogging activityLogging = FrameworkImplProvider.getSessionSupport();
+    private ActivityLogging activityLogging = FrameworkAccess.getActivityLogging();
 
     private ActivityLogHelper() {
     }

@@ -2,8 +2,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.launch;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.domain.ObjectOpenAcceptor;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.spi.domain.ObjectOpenAcceptor;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
@@ -28,7 +28,7 @@ public class EditSamplePath implements ObjectOpenAcceptor  {
         final TmSample sample = (TmSample)obj;
         
         final String editedPath = (String) JOptionPane.showInputDialog(
-                FrameworkImplProvider.getMainFrame(),
+                FrameworkAccess.getMainFrame(),
                 "New Linux path to sample:",
                 "Edit sample path",
                 JOptionPane.PLAIN_MESSAGE,
@@ -53,7 +53,7 @@ public class EditSamplePath implements ObjectOpenAcceptor  {
                 }
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
             saver.execute();

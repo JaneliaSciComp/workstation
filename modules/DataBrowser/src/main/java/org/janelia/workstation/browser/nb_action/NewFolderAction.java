@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.nb_action;
 
 import java.awt.Component;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -32,7 +32,7 @@ import org.openide.util.actions.CallableSystemAction;
 @Messages("CTL_NewFolderAction=Folder")
 public final class NewFolderAction extends CallableSystemAction {
 
-    protected final Component mainFrame = FrameworkImplProvider.getMainFrame();
+    protected final Component mainFrame = FrameworkAccess.getMainFrame();
 
     public NewFolderAction() {
     }

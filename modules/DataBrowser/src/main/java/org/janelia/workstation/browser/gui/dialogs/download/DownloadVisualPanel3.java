@@ -33,7 +33,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.common.gui.support.Debouncer;
@@ -134,7 +134,7 @@ public final class DownloadVisualPanel3 extends JPanel {
         filePatternCombo.setEditable(true);
         filePatternCombo.setToolTipText("Select a standard file naming pattern, or enter your own.");
         DefaultComboBoxModel<String> fpmodel = (DefaultComboBoxModel<String>) filePatternCombo.getModel();
-        String userFilePattern = (String)FrameworkImplProvider.getModelProperty(FILE_PATTERN_PROP_NAME);
+        String userFilePattern = (String) FrameworkAccess.getModelProperty(FILE_PATTERN_PROP_NAME);
         if (userFilePattern!=null) {
             fpmodel.addElement(userFilePattern);
         }
@@ -277,7 +277,7 @@ public final class DownloadVisualPanel3 extends JPanel {
             @Override
             protected void hadError(Throwable error) {
                 debouncer.failure();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 

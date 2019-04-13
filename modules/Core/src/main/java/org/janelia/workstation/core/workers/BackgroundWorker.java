@@ -3,7 +3,7 @@ package org.janelia.workstation.core.workers;
 import java.beans.PropertyChangeEvent;
 import java.util.concurrent.Callable;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.workers.WorkerChangedEvent;
@@ -98,7 +98,7 @@ public abstract class BackgroundWorker extends SimpleWorker {
             ConcurrentUtils.invoke(getSuccessCallback());
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException("Problem invoking success callback", e);
+            FrameworkAccess.handleException("Problem invoking success callback", e);
         }
     }
     

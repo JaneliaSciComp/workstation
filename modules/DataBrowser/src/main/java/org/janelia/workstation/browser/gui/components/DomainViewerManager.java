@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.components;
 
 import java.awt.Component;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.common.gui.util.UIUtils;
@@ -150,7 +150,7 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleExceptionQuietly(error);
+                FrameworkAccess.handleExceptionQuietly(error);
             }
         };
 

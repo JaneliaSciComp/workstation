@@ -1,6 +1,6 @@
 package org.janelia.workstation.core.workers;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 /**
  * A simple result worker that doesn't return any results directly.
@@ -40,7 +40,7 @@ public abstract class SimpleWorker extends ResultWorker<Void> {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         

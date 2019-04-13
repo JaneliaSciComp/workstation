@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.model.domain.DomainObject;
@@ -76,7 +76,7 @@ public class ApplyPublishingNamesAction extends AbstractAction {
             actionListener.actionPerformed(null);
         }
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
 }

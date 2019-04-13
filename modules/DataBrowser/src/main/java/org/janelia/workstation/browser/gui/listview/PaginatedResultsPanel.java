@@ -25,7 +25,7 @@ import javax.swing.ProgressMonitor;
 import javax.swing.UIManager;
 import javax.swing.text.Position;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextRegistration;
 import org.janelia.workstation.browser.gui.find.FindToolbar;
@@ -323,7 +323,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     private void loadAndSelectAll() {
         
         if (!searchResults.isAllLoaded()) {
-            int rv = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(),
+            int rv = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
                     "Load all "+searchResults.getNumTotalResults()+" results?",
                     "Load all?", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
             if (rv == JOptionPane.YES_OPTION) {
@@ -343,18 +343,18 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
                     @Override
                     protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
 
-                worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Loading result pages...", "", 0, 100));
+                worker.setProgressMonitor(new ProgressMonitor(FrameworkAccess.getMainFrame(), "Loading result pages...", "", 0, 100));
                 worker.execute();
             }
         }
         else {
-            UIUtils.setWaitingCursor(FrameworkImplProvider.getMainFrame());
+            UIUtils.setWaitingCursor(FrameworkAccess.getMainFrame());
             selectAll();
-            UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
+            UIUtils.setDefaultCursor(FrameworkAccess.getMainFrame());
         }
     }
     
@@ -566,7 +566,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         
@@ -582,7 +582,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                     objects.add(object);
                 }
             }  catch (Exception e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
         }
         
@@ -629,7 +629,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
         params.put("bias", bias);
         params.put("skipStartingNode", skipStartingNode);
 
-        UIUtils.setWaitingCursor(FrameworkImplProvider.getMainFrame());
+        UIUtils.setWaitingCursor(FrameworkAccess.getMainFrame());
         if (!matchDebouncer.queueWithParameters(success, params)) {
             return;
         }
@@ -695,7 +695,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
             @Override
             protected void hadSuccess() {
-                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
+                UIUtils.setDefaultCursor(FrameworkAccess.getMainFrame());
                 if (match != null) {
                     log.info("Found match for '{}': {}", text, match);
                     if (matchPage!=null && matchPage!=currPage) {
@@ -724,9 +724,9 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
             @Override
             protected void hadError(Throwable error) {
-                UIUtils.setDefaultCursor(FrameworkImplProvider.getMainFrame());
+                UIUtils.setDefaultCursor(FrameworkAccess.getMainFrame());
                 matchDebouncer.failure();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
     }

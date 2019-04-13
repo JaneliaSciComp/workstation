@@ -18,8 +18,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.domain.ObjectOpenAcceptor;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.spi.domain.ObjectOpenAcceptor;
 import org.janelia.workstation.core.api.web.AsyncServiceClient;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
@@ -50,7 +50,7 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
     public void acceptObject(Object obj) {
         DomainObject domainObject = (DomainObject) obj;
         TmSample sample = (TmSample) domainObject;
-        JFrame mainFrame = FrameworkImplProvider.getMainFrame();
+        JFrame mainFrame = FrameworkAccess.getMainFrame();
 
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
         String workspaceName = dialog.showForSample(sample);

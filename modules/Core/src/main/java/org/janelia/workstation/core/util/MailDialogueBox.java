@@ -124,7 +124,7 @@ public class MailDialogueBox {
 
         // TODO: this should only be shown when the user manually reports a bug
 //        JOptionPane.showMessageDialog(
-//                FrameworkImplProvider.getMainFrame(), "Bug was reported successfully", "Success",
+//                FrameworkAccess.getMainFrame(), "Bug was reported successfully", "Success",
 //                JOptionPane.INFORMATION_MESSAGE);
     }
 }

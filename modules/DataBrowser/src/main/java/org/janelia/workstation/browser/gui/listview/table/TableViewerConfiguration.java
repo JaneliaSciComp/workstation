@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.model.domain.DomainConstants;
 
 /**
@@ -54,7 +54,7 @@ public class TableViewerConfiguration {
     public static TableViewerConfiguration loadConfig() {
         try {
             TableViewerConfiguration config;
-            String columnsPreference = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, null);
+            String columnsPreference = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, null);
             
             if (columnsPreference==null) {
                 config = new TableViewerConfiguration();
@@ -71,13 +71,13 @@ public class TableViewerConfiguration {
             return config;
         }  
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return null;
         }
     }
 
     public void save() throws Exception {
         String value = TableViewerConfiguration.serialize(this);
-        FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, value);
+        FrameworkAccess.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, value);
     }
 }

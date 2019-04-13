@@ -6,9 +6,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.nodes.NodeGenerator;
-import org.janelia.workstation.integration.framework.nodes.NodeProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.spi.nodes.NodeGenerator;
+import org.janelia.workstation.integration.spi.nodes.NodeProvider;
 import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -40,7 +40,7 @@ public class RecentlyOpenedNodeProvider implements NodeProvider  {
     }
     
     public static boolean isShowRecentMenuItems() {
-        Boolean navigate = (Boolean) FrameworkImplProvider.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS);
+        Boolean navigate = (Boolean) FrameworkAccess.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS);
         return navigate==null || navigate;
     }
     

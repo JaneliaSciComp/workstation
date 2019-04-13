@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.ontology;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -41,7 +41,7 @@ public class AnnotationEditor {
                 keyTerm = model.getOntologyTermByReference(annotation.getKeyTerm());
             }
             catch (Exception e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
         }
     }
@@ -65,7 +65,7 @@ public class AnnotationEditor {
                     currValue = annotation.getValue();
                 }
 
-                value = JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Value:\n", currValue);
+                value = JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(), "Value:\n", currValue);
 
                 Interval interval = (Interval) keyTerm;
                 if (StringUtils.isEmpty(value)) return null;
@@ -76,7 +76,7 @@ public class AnnotationEditor {
                     }
                 }
                 catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                             "Input out of range [" + interval.getLowerBound() + "," + interval.getUpperBound() + "]");
                     return null;
                 }
@@ -89,7 +89,7 @@ public class AnnotationEditor {
 
                 if (valueEnum == null) {
                     Exception error = new Exception(keyTerm.getName() + " has no supporting enumeration.");
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                     return null;
                 }
 
@@ -102,7 +102,7 @@ public class AnnotationEditor {
                     }
                 }
 
-                OntologyTerm enumTerm = (OntologyTerm) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(),
+                OntologyTerm enumTerm = (OntologyTerm) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(),
                         "Value:\n", keyTerm.getName(), JOptionPane.PLAIN_MESSAGE, null, valueEnum.getTerms().toArray(), currValue);
                 if (enumTerm != null) {
                     value = enumTerm.getName();
@@ -127,13 +127,13 @@ public class AnnotationEditor {
                     currValue = annotation.getValue();
                 }
 
-                value = JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Value:\n", currValue);
+                value = JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(), "Value:\n", currValue);
             }
 
             return value;
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return null;
         }
     }

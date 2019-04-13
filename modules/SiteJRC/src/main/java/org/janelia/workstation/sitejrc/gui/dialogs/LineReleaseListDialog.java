@@ -1,6 +1,6 @@
 package org.janelia.workstation.sitejrc.gui.dialogs;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
@@ -138,7 +138,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
                                 @Override
                                 protected void hadError(Throwable error) {
-                                    FrameworkImplProvider.handleException(error);
+                                    FrameworkAccess.handleException(error);
                                     UIUtils.setDefaultCursor(LineReleaseListDialog.this);
                                     loadReleases();
                                 }
@@ -187,7 +187,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
                         @Override
                         protected void hadError(Throwable error) {
-                            FrameworkImplProvider.handleException(error);
+                            FrameworkAccess.handleException(error);
                         }
                     };
                     worker.execute();
@@ -232,7 +232,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
         loadReleases();
 
-        Component mainFrame = FrameworkImplProvider.getMainFrame();
+        Component mainFrame = FrameworkAccess.getMainFrame();
         setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.4)));
 
         ActivityLogHelper.logUserAction("LineReleaseListDialog.showDialog");
@@ -274,7 +274,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
                 mainPanel.removeAll();
                 mainPanel.add(dynamicTable, BorderLayout.CENTER);
                 mainPanel.revalidate();

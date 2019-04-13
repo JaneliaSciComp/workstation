@@ -21,7 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -66,7 +66,7 @@ public final class SetPublishingNameActionListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
 
         if (samples==null || samples.isEmpty()) {
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "In order to annotate the published line name, first select some Samples.");
             return;
         }
@@ -80,7 +80,7 @@ public final class SetPublishingNameActionListener implements ActionListener {
                     consensusLine = sample.getLine();
                 }
                 else if (!consensusLine.equals(sample.getLine())) {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                             "In order to annotate the published line name for multiple Samples, "
                             + "they must all share the same line name.");
                     return;
@@ -89,7 +89,7 @@ public final class SetPublishingNameActionListener implements ActionListener {
             
 
             if (consensusLine==null) {
-                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                         "Selected samples have no associated line information", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
@@ -119,14 +119,14 @@ public final class SetPublishingNameActionListener implements ActionListener {
     
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
     
             worker.execute();
         }
         catch (Exception ex) {
-            FrameworkImplProvider.handleException("Problem setting publishing name", ex);
+            FrameworkAccess.handleException("Problem setting publishing name", ex);
         }
     }
     
@@ -255,7 +255,7 @@ public final class SetPublishingNameActionListener implements ActionListener {
                 @Override
                 protected void hadError(Throwable error) {
                     setVisible(false);
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
 

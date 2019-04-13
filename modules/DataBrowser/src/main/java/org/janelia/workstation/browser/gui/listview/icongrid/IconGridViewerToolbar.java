@@ -12,7 +12,7 @@ import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
@@ -39,9 +39,9 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
     public IconGridViewerToolbar() {
         super();
 
-        Boolean showTitles = FrameworkImplProvider.getModelProperty(
+        Boolean showTitles = FrameworkAccess.getModelProperty(
                 OptionConstants.ICON_GRID_VIEWER_SHOW_TITLES, true);
-        Boolean showAnnotations = FrameworkImplProvider.getModelProperty(
+        Boolean showAnnotations = FrameworkAccess.getModelProperty(
                 OptionConstants.ICON_GRID_VIEWER_SHOW_TAGS, true);
         
         showTitlesButton = new JToggleButton();
@@ -54,7 +54,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("IconGridViewerToolbar.showTitlesButtonPressed");
                 showTitlesButtonPressed();
-                FrameworkImplProvider.setModelProperty(
+                FrameworkAccess.setModelProperty(
                         OptionConstants.ICON_GRID_VIEWER_SHOW_TITLES, showTitlesButton.isSelected());
             }
         });
@@ -71,7 +71,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("IconGridViewerToolbar.showTagsButtonPressed");
                 showTagsButtonPressed();
-                FrameworkImplProvider.setModelProperty(
+                FrameworkAccess.setModelProperty(
                         OptionConstants.ICON_GRID_VIEWER_SHOW_TAGS, showTagsButton.isSelected());
             }
         });

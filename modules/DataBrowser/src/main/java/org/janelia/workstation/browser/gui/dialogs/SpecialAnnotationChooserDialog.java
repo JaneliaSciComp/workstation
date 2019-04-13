@@ -21,7 +21,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.StateMgr;
@@ -73,7 +73,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
         try {
             this.ontology = DomainMgr.getDomainMgr().getModel().getDomainObject(Ontology.class, ontologyId);
         }  catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
 
         iterateAndAddRows(ontology.getTerms(), 0);
@@ -180,11 +180,11 @@ public class SpecialAnnotationChooserDialog extends JFrame {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
 
-                worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Adding annotations", "", 0, 100));
+                worker.setProgressMonitor(new ProgressMonitor(FrameworkAccess.getMainFrame(), "Adding annotations", "", 0, 100));
                 worker.execute();
             }
         });
@@ -259,7 +259,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
 
                     if (valueEnum==null) {
                         Exception error = new Exception(element.getName()+" has no supporting enumeration.");
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                         return;
                     }
 
@@ -285,7 +285,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
                 comboBox = new JComboBox<>();
             }
         }  catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 

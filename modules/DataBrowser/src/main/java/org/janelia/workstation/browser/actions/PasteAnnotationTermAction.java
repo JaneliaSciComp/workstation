@@ -7,7 +7,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.ProgressMonitor;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.api.StateMgr;
@@ -65,11 +65,11 @@ public class PasteAnnotationTermAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Pasting Annotations", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(FrameworkAccess.getMainFrame(), "Pasting Annotations", "", 0, 100));
         worker.execute();
     }
 }

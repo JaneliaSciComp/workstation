@@ -15,7 +15,7 @@ import javax.swing.JPanel;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.workstation.core.events.Events;
@@ -163,7 +163,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
 
             private SimpleListenableFuture<Void> loadWorkspace() {
@@ -196,7 +196,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     protected void hadError(Throwable error) {
                         logger.error("workspace loader failed", error);
                         progress2.finish();
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
                 return workspaceLoader.executeWithFuture();
@@ -249,7 +249,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     @Override
                     protected void hadError(Throwable error) {
                         progress.finish();
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
                 return volumeLoader.executeWithFuture();
@@ -308,7 +308,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
             worker.execute();
@@ -333,7 +333,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 logger.info("instantiating AnnotationModel");
                 annotationModel = new AnnotationModel(sliceSample, currentWorkspace);
                 Events.getInstance().registerOnEventBus(annotationModel);
-                viewUI =  QuadViewUiProvider.createQuadViewUi(FrameworkImplProvider.getMainFrame(), initialObject, false, annotationModel);
+                viewUI =  QuadViewUiProvider.createQuadViewUi(FrameworkAccess.getMainFrame(), initialObject, false, annotationModel);
             }
             
             removeAll();

@@ -7,7 +7,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 /**
  * Common base class for pop-up context menus.
@@ -16,7 +16,7 @@ import org.janelia.workstation.integration.FrameworkImplProvider;
  */
 public abstract class PopupContextMenu extends JPopupMenu {
 
-    protected static final Component mainFrame = FrameworkImplProvider.getMainFrame();
+    protected static final Component mainFrame = FrameworkAccess.getMainFrame();
     
     // Internal state
     protected boolean nextAddRequiresSeparator = false;

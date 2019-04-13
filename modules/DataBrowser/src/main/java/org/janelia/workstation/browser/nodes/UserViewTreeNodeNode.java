@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -145,7 +145,7 @@ public class UserViewTreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                 
             } 
             catch (Exception e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
             
             return true;
@@ -159,7 +159,7 @@ public class UserViewTreeNodeNode extends AbstractDomainObjectNode<TreeNode> {
                     return new UserViewTreeNodeNode((TreeNode)key, config);
                 }
                 if (config.getVisibleClasses().contains(GroupedFolder.class) && GroupedFolder.class.isAssignableFrom(key.getClass())) {
-                    // Should use TreeNodeObjectHelper to generate these
+                    // Should use TreeNodeObjectHandler to generate these
                     return new GroupedFolderNode(this, (GroupedFolder)key);
                 }
                 else {

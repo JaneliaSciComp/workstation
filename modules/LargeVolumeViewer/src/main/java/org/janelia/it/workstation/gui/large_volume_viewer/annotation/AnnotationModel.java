@@ -28,7 +28,7 @@ import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.geom.ParametrizedLine;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.SWCData;
@@ -358,7 +358,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             RefreshHandler.getInstance().ifPresent(rh -> rh.setAnnotationModel(this));
             TaskWorkflowViewTopComponent.getInstance().loadHistory();
         } catch (Exception error) {
-            FrameworkImplProvider.handleException(error);
+            FrameworkAccess.handleException(error);
         }
         SwingUtilities.invokeLater(() -> fireNeuronSelected(null));
         if (workspace!=null) {
@@ -1879,7 +1879,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             parameters.put("neuron", updatedNeuron);
             finishBulkSWCData(parameters);
         } catch (Exception error) {
-            FrameworkImplProvider.handleException(error);
+            FrameworkAccess.handleException(error);
         }
 
     }
@@ -2110,7 +2110,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     
      public void loadUserPreferences() throws Exception {
          if (this.getCurrentSample()==null || this.getCurrentSample().getId()==null) return;
-         Map<String,Map<String,Object>> tagGroupMappings = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), null);
+         Map<String,Map<String,Object>> tagGroupMappings = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), null);
         if (tagGroupMappings!=null && currentTagMap!=null) {
             currentTagMap.saveTagGroupMappings(tagGroupMappings);
             if (neuronSetAdapter!=null && neuronSetAdapter.getMetaWorkspace()!=null) {
@@ -2142,7 +2142,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
          // NOTE: For now, comment since users don't want to restore their user preferences, and that
          // was the only thing in the prefs
          // NOTE: the following code probably no longer works correctly!
-         /*List<String> userTagPreferences = FrameworkImplProvider
+         /*List<String> userTagPreferences = FrameworkAccess
                  .getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_TAGS, 
                          this.getCurrentSample().getId().toString(), null);
          if (userTagPreferences!=null) {            
@@ -2158,7 +2158,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     public void saveUserPreferences() throws Exception {
         // for now use the tag map as the user preferences... as preferences increase, generalize the structure
-        FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, 
+        FrameworkAccess.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT,
                 this.getCurrentSample().getId().toString(), currentTagMap.getAllTagGroupMappings());      
     }
     
@@ -2193,7 +2193,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         try {
             saveUserTags();
         } catch (Exception error) {
-            FrameworkImplProvider.handleException(error);
+            FrameworkAccess.handleException(error);
         }
     }
     
@@ -2202,7 +2202,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         try {
             saveUserTags();
         } catch (Exception error) {
-            FrameworkImplProvider.handleException(error);
+            FrameworkAccess.handleException(error);
         }
     }
     

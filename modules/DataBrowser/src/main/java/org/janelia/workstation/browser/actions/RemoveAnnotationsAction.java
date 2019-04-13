@@ -9,7 +9,7 @@ import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 
 import org.apache.commons.lang.StringUtils;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -57,7 +57,7 @@ public class RemoveAnnotationsAction extends AbstractAction {
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
         if (selectedObjects.size() > 1) {
-            int deleteConfirmation = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(), "Are you sure you want to delete this annotation from all selected items?", "Delete Annotations", JOptionPane.YES_NO_OPTION);
+            int deleteConfirmation = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(), "Are you sure you want to delete this annotation from all selected items?", "Delete Annotations", JOptionPane.YES_NO_OPTION);
             if (deleteConfirmation != 0) {
                 return;
             }
@@ -102,11 +102,11 @@ public class RemoveAnnotationsAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(FrameworkImplProvider.getMainFrame(), "Deleting Annotations", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(FrameworkAccess.getMainFrame(), "Deleting Annotations", "", 0, 100));
         worker.execute();
     }
 }

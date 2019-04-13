@@ -6,7 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.browser.gui.components.DomainListViewManager;
@@ -64,7 +64,7 @@ public final class NewFilterActionListener implements ActionListener {
         }
 
         // Since we're putting the filter under a parent, we need the name up front
-        final String name = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(),
+        final String name = (String) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(),
                 "Filter Name:\n", "Create new filter", JOptionPane.PLAIN_MESSAGE, null, null, null);
         if (StringUtils.isEmpty(name)) {
             return;
@@ -97,7 +97,7 @@ public final class NewFilterActionListener implements ActionListener {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 

@@ -19,7 +19,7 @@ import javax.swing.filechooser.FileFilter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
@@ -238,7 +238,7 @@ public class ImportImageFilesDialog extends ModalDialog {
         // Load preferences
 
         final String importSourceDirectory = (String)
-                FrameworkImplProvider.getModelProperty(PREF_IMPORT_SOURCE_DIR);
+                FrameworkAccess.getModelProperty(PREF_IMPORT_SOURCE_DIR);
         if (!StringUtils.isEmpty(importSourceDirectory)) {
             final File importSourceFolder = new File(importSourceDirectory);
             if (importSourceFolder.exists()) {
@@ -246,22 +246,22 @@ public class ImportImageFilesDialog extends ModalDialog {
             }
         }
         
-        final Boolean generateMovies = FrameworkImplProvider.getModelProperty(PREF_IMPORT_MOVIES, true);
+        final Boolean generateMovies = FrameworkAccess.getModelProperty(PREF_IMPORT_MOVIES, true);
         generateMoviesCheckbox.setSelected(generateMovies);
 
-        final Boolean generateMips = FrameworkImplProvider.getModelProperty(PREF_IMPORT_MIPS, true);
+        final Boolean generateMips = FrameworkAccess.getModelProperty(PREF_IMPORT_MIPS, true);
         generateMipsCheckbox.setSelected(generateMips);
 
-        final Boolean hist = FrameworkImplProvider.getModelProperty(PREF_IMPORT_HIST, true);
+        final Boolean hist = FrameworkAccess.getModelProperty(PREF_IMPORT_HIST, true);
         histCheckbox.setSelected(hist);
 
-        final Boolean gamma = FrameworkImplProvider.getModelProperty(PREF_IMPORT_GAMMA, true);
+        final Boolean gamma = FrameworkAccess.getModelProperty(PREF_IMPORT_GAMMA, true);
         gammaCheckbox.setSelected(gamma);
 
-        final Boolean legends = FrameworkImplProvider.getModelProperty(PREF_IMPORT_LEGENDS, false);
+        final Boolean legends = FrameworkAccess.getModelProperty(PREF_IMPORT_LEGENDS, false);
         legendsCheckbox.setSelected(legends);
         
-        final String storageTier = FrameworkImplProvider.getModelProperty(PREF_IMPORT_STORAGE_TIER, NRS_STORAGE);
+        final String storageTier = FrameworkAccess.getModelProperty(PREF_IMPORT_STORAGE_TIER, NRS_STORAGE);
         storageChoice.setSelectedItem(storageTier);
         
         try {
@@ -287,7 +287,7 @@ public class ImportImageFilesDialog extends ModalDialog {
         }
 
         // save the user preferences for later
-        FrameworkImplProvider.setModelProperty(PREF_IMPORT_TARGET_FOLDER, folderName);
+        FrameworkAccess.setModelProperty(PREF_IMPORT_TARGET_FOLDER, folderName);
 
         int fileCount = 1;
         double transferMegabytes = 0;
@@ -299,13 +299,13 @@ public class ImportImageFilesDialog extends ModalDialog {
         if (selectedFile.exists()) {
 
             // save the user preferences for later
-            FrameworkImplProvider.setModelProperty(PREF_IMPORT_SOURCE_DIR, selectedFile.getAbsolutePath());
-            FrameworkImplProvider.setModelProperty(PREF_IMPORT_MOVIES, generateMoviesCheckbox.isSelected());
-            FrameworkImplProvider.setModelProperty(PREF_IMPORT_MIPS, generateMipsCheckbox.isSelected());
-            FrameworkImplProvider.setModelProperty(PREF_IMPORT_HIST, histCheckbox.isSelected());
-            FrameworkImplProvider.setModelProperty(PREF_IMPORT_GAMMA, gammaCheckbox.isSelected());
-            FrameworkImplProvider.setModelProperty(PREF_IMPORT_LEGENDS, legendsCheckbox.isSelected());
-            FrameworkImplProvider.setModelProperty(PREF_IMPORT_STORAGE_TIER, storageTier);
+            FrameworkAccess.setModelProperty(PREF_IMPORT_SOURCE_DIR, selectedFile.getAbsolutePath());
+            FrameworkAccess.setModelProperty(PREF_IMPORT_MOVIES, generateMoviesCheckbox.isSelected());
+            FrameworkAccess.setModelProperty(PREF_IMPORT_MIPS, generateMipsCheckbox.isSelected());
+            FrameworkAccess.setModelProperty(PREF_IMPORT_HIST, histCheckbox.isSelected());
+            FrameworkAccess.setModelProperty(PREF_IMPORT_GAMMA, gammaCheckbox.isSelected());
+            FrameworkAccess.setModelProperty(PREF_IMPORT_LEGENDS, legendsCheckbox.isSelected());
+            FrameworkAccess.setModelProperty(PREF_IMPORT_STORAGE_TIER, storageTier);
             
             if (selectedFile.isDirectory()) {
 

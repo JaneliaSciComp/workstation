@@ -23,7 +23,7 @@ import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableModel;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.workstation.browser.gui.hud.Hud;
@@ -147,7 +147,7 @@ public class ColorDepthResultTableViewer
         try {
             this.config = TableViewerConfiguration.loadConfig();
         } catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
 
         this.matchList = matchList;
@@ -226,7 +226,7 @@ public class ColorDepthResultTableViewer
             return popupMenu;
         } 
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
             return null;
         }
     }
@@ -246,7 +246,7 @@ public class ColorDepthResultTableViewer
                     updateTableModel();
                 }
                 catch (Exception ex) {
-                    FrameworkImplProvider.handleException(ex);
+                    FrameworkAccess.handleException(ex);
                 }
             }
         });
@@ -259,7 +259,7 @@ public class ColorDepthResultTableViewer
         try {
             getContextualPopupMenu().runDefaultAction();
         } catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
 
@@ -416,7 +416,7 @@ public class ColorDepthResultTableViewer
             hud.setFilepathAndToggleDialog(filepath, title, toggle, false);
         } 
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
 
@@ -436,7 +436,7 @@ public class ColorDepthResultTableViewer
             return selected;
         }  
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return null;
         }
     }

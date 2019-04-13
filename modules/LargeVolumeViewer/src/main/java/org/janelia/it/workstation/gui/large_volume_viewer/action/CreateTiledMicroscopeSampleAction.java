@@ -6,7 +6,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -29,7 +29,7 @@ public class CreateTiledMicroscopeSampleAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent event) {
         
-        final Component mainFrame = FrameworkImplProvider.getMainFrame();
+        final Component mainFrame = FrameworkAccess.getMainFrame();
 
         SimpleWorker worker = new SimpleWorker() {
             
@@ -55,7 +55,7 @@ public class CreateTiledMicroscopeSampleAction extends AbstractAction {
             
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating sample...", ""));

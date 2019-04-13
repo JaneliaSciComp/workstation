@@ -1,6 +1,6 @@
 package org.janelia.workstation.common.gui.support;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.workers.SimpleListenableFuture;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -81,7 +81,7 @@ public interface PreferenceSupport {
             @Override
             protected void hadError(Throwable error) {
                 UIUtils.setMainFrameCursorWaitStatus(false);
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -96,7 +96,7 @@ public interface PreferenceSupport {
      * @throws Exception
      */
     default void setPreference(final String category, final String key, final Object value) throws Exception {
-        FrameworkImplProvider.setRemotePreferenceValue(category, key, value);
+        FrameworkAccess.setRemotePreferenceValue(category, key, value);
     }
     
     /**
@@ -108,7 +108,7 @@ public interface PreferenceSupport {
     default String getPreference(String category) {
         String key = getCurrentContextId()==null?"DEFAULT_KEY":getCurrentContextId().toString();
         try {
-            return FrameworkImplProvider.getRemotePreferenceValue(category, key, null);
+            return FrameworkAccess.getRemotePreferenceValue(category, key, null);
         }
         catch (Exception e) {
             log.error("Error getting preference", e);
@@ -124,7 +124,7 @@ public interface PreferenceSupport {
      */
     default <T> T getPreference(String category, String key, T defaultValue) {
         try {
-            return FrameworkImplProvider.getRemotePreferenceValue(category, key, defaultValue);
+            return FrameworkAccess.getRemotePreferenceValue(category, key, defaultValue);
         }
         catch (Exception e) {
             log.error("Error getting preference", e);

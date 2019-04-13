@@ -3,7 +3,7 @@ package org.janelia.workstation.browser.nb_action;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -44,7 +44,7 @@ public final class ViewDetailsAction implements ActionListener {
             }
         }
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
 }

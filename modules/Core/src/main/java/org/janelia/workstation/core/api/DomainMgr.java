@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.api.exceptions.SystemError;
 import org.janelia.workstation.core.api.facade.interfaces.DomainFacade;
@@ -83,7 +83,7 @@ public class DomainMgr {
             sageClient = new SageRestClient();
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
         
         ApplicationOptions.getInstance().addPropertyChangeListener(new PropertyChangeListener() {

@@ -23,7 +23,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.SwingConstants;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.workstation.core.events.Events;
@@ -220,7 +220,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
             }
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
     
@@ -307,7 +307,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
             protected void hadError(Throwable error) {
                 showNothing();
                 debouncer.failure();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         worker.execute();
@@ -439,7 +439,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
             protected void hadError(Throwable error) {
                 showNothing();
                 groupDebouncer.failure();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -531,7 +531,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
             }
         }  
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -559,7 +559,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
             }
         }  
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
     
@@ -645,7 +645,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
     private void loadPreferences() {
         if (groupedFolder==null || groupedFolder.getId()==null) return;
         try {
-            sortCriteria = (String)FrameworkImplProvider.getRemotePreferenceValue(
+            sortCriteria = (String) FrameworkAccess.getRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, groupedFolder.getId().toString(), null);
             log.debug("Loaded sort criteria preference: {}",sortCriteria);
         }
@@ -657,7 +657,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
     private void savePreferences() {
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
-            FrameworkImplProvider.setRemotePreferenceValue(
+            FrameworkAccess.setRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, groupedFolder.toString(), sortCriteria);
             log.debug("Saved sort criteria preference: {}",sortCriteria);
         }

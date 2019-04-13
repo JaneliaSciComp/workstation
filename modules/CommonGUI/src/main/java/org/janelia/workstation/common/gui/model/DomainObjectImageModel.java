@@ -3,9 +3,9 @@ package org.janelia.workstation.common.gui.model;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.domain.DomainObjectHelper;
-import org.janelia.workstation.integration.framework.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -42,7 +42,7 @@ public abstract class DomainObjectImageModel implements ImageModel<DomainObject,
     @Override
     public BufferedImage getStaticIcon(DomainObject imageObject) {
         String filename = null;
-        DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(imageObject);
+        DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(imageObject);
         if (provider!=null) {
             filename = provider.getLargeIcon(imageObject);
         }
@@ -55,7 +55,7 @@ public abstract class DomainObjectImageModel implements ImageModel<DomainObject,
             return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return null;
         }
     }

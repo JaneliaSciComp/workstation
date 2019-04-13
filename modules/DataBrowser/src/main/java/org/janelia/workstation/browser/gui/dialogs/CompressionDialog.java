@@ -18,7 +18,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -333,7 +333,7 @@ public class CompressionDialog extends ModalDialog {
                     }
                 }
                 catch (Exception e) {
-                    FrameworkImplProvider.handleException(e);
+                    FrameworkAccess.handleException(e);
                     return;
                 }
             }
@@ -353,7 +353,7 @@ public class CompressionDialog extends ModalDialog {
 
                             DomainExplorerTopComponent.getInstance().refresh(true, true, () -> {
 
-                                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), 
+                                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                                         "<html>Sample compression strategy has been updated for "+dirtySamples.size()+" samples.<br>"
                                             + "Any samples needing reprocessing have been scheduled.<br> "
                                             + "Results will be available once the pipeline has completed.</html>",
@@ -372,7 +372,7 @@ public class CompressionDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -437,7 +437,7 @@ public class CompressionDialog extends ModalDialog {
                     }
                 }
                 catch (Exception e) {
-                    FrameworkImplProvider.handleException(e);
+                    FrameworkAccess.handleException(e);
                     return;
                 }
             }
@@ -459,14 +459,14 @@ public class CompressionDialog extends ModalDialog {
                             DomainExplorerTopComponent.getInstance().refresh(true, true, () -> {
 
                                 if (applyToExisting) {
-                                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), 
+                                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                                             "<html>Sample compression strategy has been updated for "+dataSet.getIdentifier()
                                                 + ".<br> Any samples needing reprocessing have been scheduled.<br> "
                                                 + "Results will be available once the pipeline has completed.</html>",
                                             "Data set updated successfully", JOptionPane.INFORMATION_MESSAGE);
                                 }
                                 else {
-                                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), 
+                                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                                             "<html>Sample compression strategy has been updated for "+dataSet.getIdentifier()
                                                 +".<br> Future samples will be processed to the given compression.</html>",
                                             "Data set updated successfully", JOptionPane.INFORMATION_MESSAGE);
@@ -485,7 +485,7 @@ public class CompressionDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 

@@ -13,7 +13,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -78,7 +78,7 @@ public class DomainDetailsDialog extends ModalDialog {
 
         detailsPanel.loadDomainObject(domainObject, defaultTab);
         setTitle("Details: "+domainObject.getName());
-        Component mainFrame = FrameworkImplProvider.getMainFrame();
+        Component mainFrame = FrameworkAccess.getMainFrame();
         setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.4),(int)(mainFrame.getHeight()*0.6)));
 
         ActivityLogHelper.logUserAction("DomainDetailsDialog.showForDomainObject", domainObject);

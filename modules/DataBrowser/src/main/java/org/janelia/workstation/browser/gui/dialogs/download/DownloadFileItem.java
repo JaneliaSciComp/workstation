@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
@@ -197,7 +197,7 @@ public class DownloadFileItem {
         }
         catch (Exception e) {
             // TODO: this may pop up a ton of dialog boxes, need to throttle it
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
     

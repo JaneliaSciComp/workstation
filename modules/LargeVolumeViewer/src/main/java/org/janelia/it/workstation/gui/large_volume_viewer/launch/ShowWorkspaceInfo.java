@@ -3,8 +3,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.launch;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.domain.ObjectOpenAcceptor;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.spi.domain.ObjectOpenAcceptor;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
@@ -47,7 +47,7 @@ public class ShowWorkspaceInfo implements ObjectOpenAcceptor  {
         // need to use text area so you can copy the info to clipboard
         JTextArea textarea= new JTextArea(message);
         textarea.setEditable(false);
-        JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+        JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                 textarea, title, JOptionPane.PLAIN_MESSAGE);
     }
 

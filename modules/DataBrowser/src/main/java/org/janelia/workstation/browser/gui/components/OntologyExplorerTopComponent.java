@@ -32,7 +32,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.dialogs.AutoAnnotationPermissionDialog;
 import org.janelia.workstation.browser.gui.dialogs.BulkAnnotationPermissionDialog;
 import org.janelia.workstation.browser.gui.dialogs.KeyBindDialog;
@@ -558,7 +558,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 @Override
                 protected void hadError(Throwable error) {
                     debouncer.failure();
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
             
@@ -626,7 +626,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     
     private JToolBar getBottomToolbar() {
 
-        final Component mainFrame = FrameworkImplProvider.getMainFrame();
+        final Component mainFrame = FrameworkAccess.getMainFrame();
     
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
@@ -887,7 +887,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         }
         catch (Exception e) {
             log.error("Could not load user's key binding preferences", e);
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -916,7 +916,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         }
         catch (Exception e) {
             log.error("Could not save user's key binding preferences", e);
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 }

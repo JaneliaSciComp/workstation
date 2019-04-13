@@ -13,7 +13,7 @@ import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
 import net.miginfocom.swing.MigLayout;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.workers.BackgroundWorker;
 import org.slf4j.Logger;
@@ -228,7 +228,7 @@ public class ProgressMeterPanel extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     if (worker.getError()!=null) {
-                        FrameworkImplProvider.handleException("User viewing background task error", worker.getError());
+                        FrameworkAccess.handleException("User viewing background task error", worker.getError());
                     }
                     else {
                         worker.runSuccessCallback();    

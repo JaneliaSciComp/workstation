@@ -11,7 +11,7 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.util.UIUtils;
 
 /**
@@ -22,22 +22,22 @@ import org.janelia.workstation.common.gui.util.UIUtils;
 public class ModalDialog extends JDialog {
 
     public ModalDialog() {
-        super(FrameworkImplProvider.getMainFrame());
+        super(FrameworkAccess.getMainFrame());
         init();
     }
     
     public ModalDialog(Dialog parent) {
-        super(parent == null ? FrameworkImplProvider.getMainFrame() : parent);
+        super(parent == null ? FrameworkAccess.getMainFrame() : parent);
         init();
     }
     
     public ModalDialog(Window parent) {
-        super(parent == null ? FrameworkImplProvider.getMainFrame() : parent);
+        super(parent == null ? FrameworkAccess.getMainFrame() : parent);
         init();
     }
     
     public ModalDialog(Frame parent) {
-        super(parent == null ? FrameworkImplProvider.getMainFrame() : parent);
+        super(parent == null ? FrameworkAccess.getMainFrame() : parent);
         init();
     }
 

@@ -27,7 +27,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.text.DefaultFormatter;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
@@ -276,7 +276,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
                 
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
             worker.execute();
@@ -314,7 +314,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
             memoryPanel.setMemorySetting(Utils.getMemoryAllocation());
         }
         catch (IOException e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
         
         updateFileCacheComponents(false);
@@ -339,7 +339,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
                 Utils.setMemoryAllocation(memoryPanel.getMemorySetting());
             }
             catch (IOException e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
         }
        
@@ -349,7 +349,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         Integer cacheCapacity = (Integer) fileCacheSpinner.getValue();
         
         final boolean cacheDisabledChanged =
-                ! cacheDisabled.equals(FrameworkImplProvider.getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY));
+                ! cacheDisabled.equals(FrameworkAccess.getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY));
         if (cacheDisabledChanged) {
             log.info("Saving file cache disabled setting: "+cacheDisabled);
             FileMgr.getFileMgr().setFileCacheDisabled(cacheDisabled);

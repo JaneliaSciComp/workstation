@@ -21,7 +21,7 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
@@ -247,7 +247,7 @@ public class EditWorkspaceNameDialog extends ModalDialog {
     
     private void presentError(String message, String title) throws HeadlessException {
         JOptionPane.showMessageDialog(
-                FrameworkImplProvider.getMainFrame(),
+                FrameworkAccess.getMainFrame(),
                 message,
                 title,
                 JOptionPane.ERROR_MESSAGE);

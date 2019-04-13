@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.dialogs.download;
 
 import javax.swing.event.ChangeListener;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
@@ -88,8 +88,8 @@ public class DownloadWizardPanel2 implements WizardDescriptor.ValidatingPanel<Wi
         state.setSplitChannels(splitChannels);
         state.setOutputExtensions(getComponent().getOutputExtensions());
         // Updated serialized state
-        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", state.getOutputExtensionString());
-        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "splitChannels", state.isSplitChannels());
+        FrameworkAccess.setLocalPreferenceValue(DownloadWizardState.class, "outputExtensions", state.getOutputExtensionString());
+        FrameworkAccess.setLocalPreferenceValue(DownloadWizardState.class, "splitChannels", state.isSplitChannels());
     }
 
 }

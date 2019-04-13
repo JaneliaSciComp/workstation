@@ -17,7 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.common.gui.support.Debouncer;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
@@ -274,7 +274,7 @@ public final class DownloadVisualPanel2 extends JPanel {
             @Override
             protected void hadError(Throwable error) {
                 debouncer.failure();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 

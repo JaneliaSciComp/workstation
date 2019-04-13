@@ -24,7 +24,7 @@ import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableModel;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.workstation.browser.actions.RemoveItemsFromFolderAction;
@@ -175,7 +175,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         try {
             this.config = TableViewerConfiguration.loadConfig();
         } catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
 
         this.domainObjectList = domainObjectList;
@@ -254,7 +254,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             return popupMenu;
         } 
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
             return null;
         }
     }
@@ -274,7 +274,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                     updateTableModel();
                 }
                 catch (Exception ex) {
-                    FrameworkImplProvider.handleException(ex);
+                    FrameworkAccess.handleException(ex);
                 }
             }
         });
@@ -289,7 +289,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             if (popupMenu!=null) popupMenu.runDefaultAction();
         } 
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
 
@@ -319,7 +319,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 }
             }
         } catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
 
@@ -446,7 +446,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             hud.setObjectAndToggleDialog(domainObject, null, null, toggle, true);
         } 
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
     

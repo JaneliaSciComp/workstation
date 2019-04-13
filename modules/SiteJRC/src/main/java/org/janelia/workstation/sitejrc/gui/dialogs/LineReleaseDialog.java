@@ -21,7 +21,7 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 
 import net.miginfocom.swing.MigLayout;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -332,7 +332,7 @@ public class LineReleaseDialog extends ModalDialog {
             @Override
             protected void hadError(Throwable error) {
                 UIUtils.setDefaultCursor(LineReleaseDialog.this);
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -442,7 +442,7 @@ public class LineReleaseDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
                 UIUtils.setDefaultCursor(LineReleaseDialog.this);
                 setVisible(false);
             }
@@ -460,7 +460,7 @@ public class LineReleaseDialog extends ModalDialog {
             task = StateMgr.getStateMgr().submitJob("ConsoleSyncReleaseFolders", "Sync Release Folders", taskParameters);
         } 
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return;
         }
 
@@ -482,7 +482,7 @@ public class LineReleaseDialog extends ModalDialog {
                 return new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        FrameworkImplProvider.getBrowsingProvider().refreshExplorer();
+                        FrameworkAccess.getBrowsingController().refreshExplorer();
                         return null;
                     }
                 };

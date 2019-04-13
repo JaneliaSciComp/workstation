@@ -18,7 +18,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -72,7 +72,7 @@ public class GenerateNeuronsDialog extends ModalDialog {
     private TileFormat tileFormat;
        
     public GenerateNeuronsDialog() {
-    	super(FrameworkImplProvider.getMainFrame());
+    	super(FrameworkAccess.getMainFrame());
     	
     	if (annotationMgr==null) {
     	    throw new IllegalStateException("LVV needs to be opened before this dialog is opened");
@@ -121,7 +121,7 @@ public class GenerateNeuronsDialog extends ModalDialog {
                     }
                 }
                 catch (Exception ex) {
-                    FrameworkImplProvider.handleException(ex);
+                    FrameworkAccess.handleException(ex);
                 }
             }
         });

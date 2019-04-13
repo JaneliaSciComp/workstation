@@ -7,7 +7,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.workstation.browser.actions.OpenWithDefaultAppAction;
@@ -96,7 +96,7 @@ public class MaskContextMenu extends PopupContextMenu {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
 

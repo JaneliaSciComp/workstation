@@ -16,7 +16,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.AccessManager;
 
 import net.miginfocom.swing.MigLayout;
@@ -94,7 +94,7 @@ public class RunAsUserDialog extends ModalDialog {
     private void saveAndClose() {
 
         String runAsUser = usernameField.getText().trim();
-        FrameworkImplProvider.setModelProperty(AccessManager.RUN_AS_USER, runAsUser);
+        FrameworkAccess.setModelProperty(AccessManager.RUN_AS_USER, runAsUser);
         boolean runAsSuccess = AccessManager.getAccessManager().setRunAsUser(runAsUser);
         
         if (!runAsSuccess) {
@@ -103,7 +103,7 @@ public class RunAsUserDialog extends ModalDialog {
                     "User does not exist.", "Username Invalid",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
             if (answer != 0) {
-                FrameworkImplProvider.setModelProperty(AccessManager.RUN_AS_USER, "");
+                FrameworkAccess.setModelProperty(AccessManager.RUN_AS_USER, "");
                 setVisible(false);
             }
         }
@@ -113,7 +113,7 @@ public class RunAsUserDialog extends ModalDialog {
     }
     
     private Object getModelProperty(String key, Object defaultValue) {
-        Object value = FrameworkImplProvider.getModelProperty(key);
+        Object value = FrameworkAccess.getModelProperty(key);
         if (value == null) {
             value = defaultValue;
         }

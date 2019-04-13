@@ -3,7 +3,7 @@ package org.janelia.workstation.common.gui.support;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.windows.Mode;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
@@ -38,7 +38,7 @@ public class WindowLocator {
                     SwingUtilities.invokeAndWait( runnable );
                 }
             } catch (Exception ex) {
-                FrameworkImplProvider.handleException(ex);
+                FrameworkAccess.handleException(ex);
             }
         }
         return mainFrame;
@@ -63,7 +63,7 @@ public class WindowLocator {
                 SwingUtilities.invokeAndWait(runnable);
             }
         } catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
         return component[ 0 ];
     }

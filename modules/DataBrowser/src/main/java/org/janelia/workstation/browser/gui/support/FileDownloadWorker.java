@@ -16,7 +16,7 @@ import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -189,7 +189,7 @@ public class FileDownloadWorker {
                 taskWorker.executeWithEvents();
             }
             catch (Exception e) {
-                FrameworkImplProvider.handleExceptionQuietly(e);
+                FrameworkAccess.handleExceptionQuietly(e);
             }
         }
         
@@ -230,10 +230,10 @@ public class FileDownloadWorker {
                             else {
                                 if (errors==1) {
                                     // First exception is shown to the user
-                                    FrameworkImplProvider.handleException(e);
+                                    FrameworkAccess.handleException(e);
                                 }
                                 else {
-                                    FrameworkImplProvider.handleExceptionQuietly(e);
+                                    FrameworkAccess.handleExceptionQuietly(e);
                                 }
                             }
                         }
@@ -267,7 +267,7 @@ public class FileDownloadWorker {
                         }
                     }
                     catch (Exception e) {
-                        FrameworkImplProvider.handleExceptionQuietly("Error removing partially downloaded file", e);
+                        FrameworkAccess.handleExceptionQuietly("Error removing partially downloaded file", e);
                     }
                 }
             };

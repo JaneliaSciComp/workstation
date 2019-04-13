@@ -35,7 +35,7 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.janelia.workstation.core.filecache.URLProxy;
@@ -85,7 +85,7 @@ public class Utils {
      */
     public static BufferedImage readImage(String path) throws Exception {
         try {
-            String selectedRenderer = FrameworkImplProvider.getModelProperty(
+            String selectedRenderer = FrameworkAccess.getModelProperty(
                     OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.LOCI.toString());
             RendererType2D renderer = RendererType2D.valueOf(selectedRenderer);
             String format = FilenameUtils.getExtension(path);
@@ -439,10 +439,10 @@ public class Utils {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Retrieving file...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Retrieving file...", ""));
         worker.execute();
     }
 
@@ -458,7 +458,7 @@ public class Utils {
                 callback.call(file);
             }
             catch (Exception e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
         }
         else {
@@ -466,7 +466,7 @@ public class Utils {
                 @Override
                 public void call(File file) throws Exception {
                     if (file == null) {
-                        JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                        JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                                 "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                     else {
@@ -792,12 +792,12 @@ public class Utils {
     }
 
     public static void setDownloadsDir(String downloadsDir) {
-        FrameworkImplProvider.setModelProperty(OptionConstants.FILE_DOWNLOADS_DIR, downloadsDir);
+        FrameworkAccess.setModelProperty(OptionConstants.FILE_DOWNLOADS_DIR, downloadsDir);
     }
 
     public static Path getDownloadsDir() {
 
-        String fileDownloadsDir = (String) FrameworkImplProvider.getModelProperty(OptionConstants.FILE_DOWNLOADS_DIR);
+        String fileDownloadsDir = (String) FrameworkAccess.getModelProperty(OptionConstants.FILE_DOWNLOADS_DIR);
 
         Path fileDownloadsPath;
         // Check for existence and clear out references to tmp

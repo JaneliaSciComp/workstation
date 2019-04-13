@@ -3,7 +3,7 @@ package org.janelia.workstation.core.options;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +45,7 @@ public class DownloadOptions {
     }
     
     public int getNumConcurrentDownloads() {
-        return FrameworkImplProvider.getModelProperty(
+        return FrameworkAccess.getModelProperty(
                 OptionConstants.NUM_CONCURRENT_DOWNLOADS_PROPERTY, NUM_CONCURRENT_DOWNLOADS_DEFAULT);
     }
     
@@ -53,7 +53,7 @@ public class DownloadOptions {
         int currValue = getNumConcurrentDownloads();
         if (newValue == currValue) return;
 
-        FrameworkImplProvider.setModelProperty(OptionConstants.NUM_CONCURRENT_DOWNLOADS_PROPERTY, newValue);
+        FrameworkAccess.setModelProperty(OptionConstants.NUM_CONCURRENT_DOWNLOADS_PROPERTY, newValue);
         log.info("Saved num concurrent downloads: {}", newValue);
 
         if (null != propSupport)
@@ -61,7 +61,7 @@ public class DownloadOptions {
     }
     
     public boolean getSanitizeDownloads() {
-        return FrameworkImplProvider.getModelProperty(
+        return FrameworkAccess.getModelProperty(
                 OptionConstants.SANITIZE_FILENAMES_PROPERTY, SANITIZE_FILENAMES_DEFAULT);
     }
     
@@ -69,7 +69,7 @@ public class DownloadOptions {
         boolean currValue = getSanitizeDownloads();
         if (newValue == currValue) return;
         
-        FrameworkImplProvider.setModelProperty(OptionConstants.SANITIZE_FILENAMES_PROPERTY, newValue);
+        FrameworkAccess.setModelProperty(OptionConstants.SANITIZE_FILENAMES_PROPERTY, newValue);
         log.info("Saved show sanitize downloads: {}", newValue);
     }
     

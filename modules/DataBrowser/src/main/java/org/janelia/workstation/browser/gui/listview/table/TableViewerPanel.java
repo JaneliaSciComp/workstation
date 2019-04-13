@@ -25,7 +25,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.lifecycle.SessionEvent;
@@ -128,7 +128,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
                     }
                     updateHud(false);
                 } catch (Exception ex) {
-                    FrameworkImplProvider.handleException(ex);
+                    FrameworkAccess.handleException(ex);
                 }
             }
         });

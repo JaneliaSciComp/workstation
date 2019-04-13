@@ -7,7 +7,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.ws.ExternalClient;
 import org.janelia.workstation.core.ws.ExternalClientMgr;
@@ -86,10 +86,10 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
             @Override
             protected void hadSuccess() {
                 if (sample==null) {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "This neuron fragment is orphaned and its sample cannot be loaded.", "Sample data missing", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "This neuron fragment is orphaned and its sample cannot be loaded.", "Sample data missing", JOptionPane.ERROR_MESSAGE);
                 }
                 else if (separation==null) {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
                 }
                 else {
                     openSeparation();
@@ -98,7 +98,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -107,7 +107,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
 
     private void openSeparation() {
         if (separation.getParentRun()!=null && separation.getParentRun().getParent().getParent().isSamplePurged()) {
-            int result = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(), "This sample was previously purged, and may not load correctly in Neuron Annotator. Continue with load?",  "Data missing", JOptionPane.OK_CANCEL_OPTION);
+            int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(), "This sample was previously purged, and may not load correctly in Neuron Annotator. Continue with load?",  "Data missing", JOptionPane.OK_CANCEL_OPTION);
             if (result==JOptionPane.CANCEL_OPTION) {
                 return;
             }
@@ -118,7 +118,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
             ExternalClientMgr.getInstance().sendNeuronSeparationRequested(separation);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -135,12 +135,12 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
                 ExternalClientMgr.getInstance().sendImageRequested(result, FileType.VisuallyLosslessStack);
             }
             else {
-                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "Result has no associated image stack that can be viewed in Neuron Annotator.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
     
@@ -173,7 +173,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
         }
 
         if (ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "Could not get Neuron Annotator to launch and connect. "
                             + "Please contact support.", "Launch Error", JOptionPane.ERROR_MESSAGE);
             return;

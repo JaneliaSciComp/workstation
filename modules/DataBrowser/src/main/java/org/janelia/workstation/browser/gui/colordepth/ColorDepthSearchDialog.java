@@ -20,7 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -274,7 +274,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
             @Override
             protected void hadError(Throwable error) {
                 setVisible(false);
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -388,11 +388,11 @@ public class ColorDepthSearchDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Saving changes", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Saving changes", ""));
         worker.execute();
     }
     

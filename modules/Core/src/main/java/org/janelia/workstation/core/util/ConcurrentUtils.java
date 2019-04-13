@@ -1,6 +1,6 @@
 package org.janelia.workstation.core.util;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 import java.util.concurrent.Callable;
 
@@ -17,7 +17,7 @@ public class ConcurrentUtils {
                 callback.call();
             }
             catch (Exception e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
         }
     }

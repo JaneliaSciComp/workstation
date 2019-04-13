@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.dialogs.download;
 
 import javax.swing.event.ChangeListener;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.openide.WizardDescriptor;
@@ -104,11 +104,11 @@ public class DownloadWizardPanel1 implements WizardDescriptor.ValidatingPanel<Wi
         state.setResultCategory(getComponent().getCurrResultCategory());
         state.setImageCategory(getComponent().getCurrImageCategory());
         // Updated serialized state
-        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "objective", state.getObjective());
-        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "area", state.getArea());
-        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "resultCategory", state.getResultCategory());
-        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "imageCategory", state.getImageCategory());        
-        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", state.getArtifactDescriptorString());
+        FrameworkAccess.setLocalPreferenceValue(DownloadWizardState.class, "objective", state.getObjective());
+        FrameworkAccess.setLocalPreferenceValue(DownloadWizardState.class, "area", state.getArea());
+        FrameworkAccess.setLocalPreferenceValue(DownloadWizardState.class, "resultCategory", state.getResultCategory());
+        FrameworkAccess.setLocalPreferenceValue(DownloadWizardState.class, "imageCategory", state.getImageCategory());
+        FrameworkAccess.setLocalPreferenceValue(DownloadWizardState.class, "artifactDescriptors", state.getArtifactDescriptorString());
     }
 
 }

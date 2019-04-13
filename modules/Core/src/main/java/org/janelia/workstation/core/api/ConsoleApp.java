@@ -4,7 +4,7 @@ import java.io.File;
 import java.security.ProtectionDomain;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.lifecycle.ConsoleState;
 import org.janelia.workstation.core.api.lifecycle.GracefulBrick;
 import org.janelia.workstation.core.events.Events;
@@ -87,11 +87,11 @@ public class ConsoleApp {
                 uninstaller.brickAndUninstall();
             }
             catch (Exception e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
         }
         catch (Throwable e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             LifecycleManager.getDefault().exit(0);
         }
 
@@ -110,7 +110,7 @@ public class ConsoleApp {
 
             @Override
             protected void hadError(Throwable e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
         };
 

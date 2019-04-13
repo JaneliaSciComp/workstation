@@ -30,7 +30,7 @@ import javax.swing.SwingConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.progress.ProgressMeterMgr;
@@ -120,12 +120,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             public void actionPerformed(ActionEvent e) {
                 
                 if (search.getMasks().isEmpty()) {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "You need to select some masks to search on.");
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "You need to select some masks to search on.");
                     return;
                 }
                 
                 if (search.getDataSets().isEmpty()) {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "You need to select some data sets to search against.");
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "You need to select some data sets to search against.");
                     return;
                 }
                 
@@ -153,7 +153,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
 
                     @Override
                     protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
 
@@ -257,7 +257,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
     
@@ -354,7 +354,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             protected void hadError(Throwable error) {
                 showNothing();
                 debouncer.failure();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         worker.execute();
@@ -510,7 +510,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         
         if (event.isUserDriven()) {
             log.info("colorDepthMatchSelected({})", match.getFilepath());
-            FrameworkImplProvider.getInspectionHandler().inspect(getProperties(match));
+            FrameworkAccess.getInspectionController().inspect(getProperties(match));
         }
     }
     
@@ -545,7 +545,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleExceptionQuietly(e);
+            FrameworkAccess.handleExceptionQuietly(e);
         }
         
         return values;
@@ -558,7 +558,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
                 DomainMgr.getDomainMgr().getModel().invalidate(search);
             }
             catch (Exception ex) {
-                FrameworkImplProvider.handleExceptionQuietly(ex);
+                FrameworkAccess.handleExceptionQuietly(ex);
             }
         });
     }
@@ -658,7 +658,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
         }  
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -687,7 +687,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
             }
         }  
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
     

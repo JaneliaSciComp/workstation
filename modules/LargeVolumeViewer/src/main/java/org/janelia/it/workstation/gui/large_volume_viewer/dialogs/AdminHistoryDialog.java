@@ -16,7 +16,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
@@ -42,7 +42,7 @@ public class AdminHistoryDialog extends ModalDialog implements BackgroundAnnotat
     private AdminHistoryDialog dialog;
        
     public AdminHistoryDialog() {
-    	super(FrameworkImplProvider.getMainFrame());
+    	super(FrameworkAccess.getMainFrame());
         dialog = this;
     	
         setTitle("View neuron change history");

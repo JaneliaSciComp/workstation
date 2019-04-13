@@ -6,9 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.domain.DomainObjectHelper;
-import org.janelia.workstation.integration.framework.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.api.StateMgr;
@@ -91,7 +91,7 @@ public class RecentOpenedItemsNode extends AbstractNode implements HasIdentifier
             // TODO: this should use the other isCompatible() method which takes a class, 
             // instead of constructing a dummy object
             DomainObject dummyChild = (DomainObject)clazz.newInstance();
-            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(dummyChild);
+            DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(dummyChild);
             if (provider!=null) {
                 return true;
             }
@@ -147,7 +147,7 @@ public class RecentOpenedItemsNode extends AbstractNode implements HasIdentifier
                 list.addAll(temp);
             } 
             catch (Exception ex) {
-                FrameworkImplProvider.handleException(ex);
+                FrameworkAccess.handleException(ex);
             }
             return true;
         }
@@ -155,7 +155,7 @@ public class RecentOpenedItemsNode extends AbstractNode implements HasIdentifier
         @Override
         protected Node createNodeForKey(DomainObject key) {
             try {
-                DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(key);
+                DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(key);
                 if (provider!=null) {
                     return provider.getNode(key, this);
                 }

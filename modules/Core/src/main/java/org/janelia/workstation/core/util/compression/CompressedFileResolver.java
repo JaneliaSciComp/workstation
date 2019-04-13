@@ -1,7 +1,7 @@
 package org.janelia.workstation.core.util.compression;
 
-import org.janelia.workstation.integration.framework.compression.CompressionAlgorithm;
-import org.janelia.workstation.integration.framework.compression.CompressedFileResolverI;
+import org.janelia.workstation.integration.spi.compression.CompressionAlgorithm;
+import org.janelia.workstation.integration.spi.compression.CompressedFileResolverI;
 import org.openide.util.lookup.ServiceProvider;
 import java.io.File;
 import java.util.ArrayList;

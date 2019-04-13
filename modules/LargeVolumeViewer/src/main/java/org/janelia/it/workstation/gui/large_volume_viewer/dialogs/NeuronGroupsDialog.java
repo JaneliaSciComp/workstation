@@ -28,7 +28,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.core.keybind.ShortcutTextField;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
@@ -62,7 +62,7 @@ public class NeuronGroupsDialog extends ModalDialog {
     private final AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
        
     public NeuronGroupsDialog() {
-    	super(FrameworkImplProvider.getMainFrame());
+    	super(FrameworkAccess.getMainFrame());
     	
         setTitle("Edit Neuron Groups");
 
@@ -89,7 +89,7 @@ public class NeuronGroupsDialog extends ModalDialog {
                     }
                 }
                 catch (Exception ex) {
-                    FrameworkImplProvider.handleException(ex);
+                    FrameworkAccess.handleException(ex);
                 }
             }
         });

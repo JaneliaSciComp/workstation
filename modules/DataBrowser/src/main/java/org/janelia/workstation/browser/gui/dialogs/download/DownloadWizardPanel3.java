@@ -6,7 +6,7 @@ import java.util.Map;
 
 import javax.swing.event.ChangeListener;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
@@ -129,8 +129,8 @@ public class DownloadWizardPanel3 implements WizardDescriptor.ValidatingPanel<Wi
         state.setDownloadItems(getComponent().getDownloadItems());
 
         // Updated serialized state
-        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "flattenStructure", state.isFlattenStructure());
-        FrameworkImplProvider.setLocalPreferenceValue(DownloadWizardState.class, "filenamePattern", state.getFilenamePattern());
+        FrameworkAccess.setLocalPreferenceValue(DownloadWizardState.class, "flattenStructure", state.isFlattenStructure());
+        FrameworkAccess.setLocalPreferenceValue(DownloadWizardState.class, "filenamePattern", state.getFilenamePattern());
 
         String filePattern = getComponent().getFilenamePattern();
         boolean found = false;
@@ -141,7 +141,7 @@ public class DownloadWizardPanel3 implements WizardDescriptor.ValidatingPanel<Wi
             }
         }
         if (!found) {
-            FrameworkImplProvider.setModelProperty(DownloadVisualPanel3.FILE_PATTERN_PROP_NAME, filePattern);
+            FrameworkAccess.setModelProperty(DownloadVisualPanel3.FILE_PATTERN_PROP_NAME, filePattern);
         }
     }
 }

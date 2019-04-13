@@ -16,7 +16,7 @@ import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
@@ -320,7 +320,7 @@ public class NeuronSeparationEditorPanel
             protected void hadError(Throwable error) {
                 showNothing();
                 debouncer.failure();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -410,7 +410,7 @@ public class NeuronSeparationEditorPanel
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -430,7 +430,7 @@ public class NeuronSeparationEditorPanel
     private void saveSortCriteria() {
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
-            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
+            FrameworkAccess.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);
@@ -439,7 +439,7 @@ public class NeuronSeparationEditorPanel
     
     private String loadSortCriteria() {
         try {
-            return FrameworkImplProvider.getRemotePreferenceValue(
+            return FrameworkAccess.getRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, 
                     PREFERENCE_KEY, DEFAULT_SORT_CRITERIA);
         }
@@ -456,7 +456,7 @@ public class NeuronSeparationEditorPanel
 
         try {
             @SuppressWarnings("unchecked")
-            List<Object> neuronSepVisibility = (List<Object>)FrameworkImplProvider.getRemotePreferenceValue(
+            List<Object> neuronSepVisibility = (List<Object>) FrameworkAccess.getRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
                     Long.toString(separation.getId()), null);
 
@@ -481,7 +481,7 @@ public class NeuronSeparationEditorPanel
             log.info("Got {} hidden fragments", hiddenFragments.size());
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException("Could not load hidden fragments", e);
+            FrameworkAccess.handleException("Could not load hidden fragments", e);
         }
         
         return hiddenFragments;
@@ -500,13 +500,13 @@ public class NeuronSeparationEditorPanel
             }
             log.info("Hiding {}/{} fragments", hiddenFragments.size(), neuronFragments.size());
             
-            FrameworkImplProvider.setRemotePreferenceValue(
+            FrameworkAccess.setRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY, 
                     Long.toString(separation.getId()), hiddenFragments);
             log.info("Saved {} hidden fragments", hiddenFragments.size());
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException("Could not save hidden fragments", e);
+            FrameworkAccess.handleException("Could not save hidden fragments", e);
         }
     }
     
@@ -597,7 +597,7 @@ public class NeuronSeparationEditorPanel
                 }
             }
         }  catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 }

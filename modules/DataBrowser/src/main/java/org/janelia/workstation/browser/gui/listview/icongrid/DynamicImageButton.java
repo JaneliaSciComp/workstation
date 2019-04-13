@@ -8,7 +8,7 @@ import java.util.List;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.events.selection.SelectionModel;
 import org.janelia.workstation.common.gui.model.ImageDecorator;
 import org.janelia.workstation.common.gui.model.ImageModel;
@@ -192,7 +192,7 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
     }
 
     private boolean isUnloadImages() {
-        Boolean unloadImagesBool = (Boolean) FrameworkImplProvider.getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY);
+        Boolean unloadImagesBool = (Boolean) FrameworkAccess.getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY);
         return unloadImagesBool != null && unloadImagesBool;
     }
 

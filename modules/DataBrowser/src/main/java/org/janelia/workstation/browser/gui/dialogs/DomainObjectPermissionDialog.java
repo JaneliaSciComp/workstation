@@ -19,7 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -219,7 +219,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
                 parent.refresh();
                 
                 if (unwriteable>0) {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                             "<html>Some of the items contained in this folder could not be shared because <br>"
                             + "you don't have write access to them. Please contact the item owners for write access, <br>"
                             + "or ask them to share the data on your behalf.</html>", unwriteable+" items could not be shared", JOptionPane.WARNING_MESSAGE); 
@@ -230,7 +230,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
                 UIUtils.setDefaultCursor(parent);
             }
         };

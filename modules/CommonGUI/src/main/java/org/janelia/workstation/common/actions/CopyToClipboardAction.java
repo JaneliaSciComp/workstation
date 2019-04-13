@@ -7,7 +7,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 
 /**
@@ -32,7 +32,7 @@ public class CopyToClipboardAction extends AbstractAction {
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 }

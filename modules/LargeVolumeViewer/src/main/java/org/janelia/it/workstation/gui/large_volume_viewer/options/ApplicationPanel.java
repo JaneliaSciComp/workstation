@@ -14,7 +14,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -148,27 +148,27 @@ public class ApplicationPanel extends javax.swing.JPanel {
 
     void store() {
         
-        FrameworkImplProvider.setLocalPreferenceValue(
+        FrameworkAccess.setLocalPreferenceValue(
                 ApplicationPanel.class, 
                 PREFERENCE_LOAD_LAST_OBJECT, 
                 loadLastCheckbox.isSelected()+"");
 
-        FrameworkImplProvider.setLocalPreferenceValue(
+        FrameworkAccess.setLocalPreferenceValue(
                 ApplicationPanel.class, 
                 PREFERENCE_VERIFY_NEURONS, 
                 verifyNeuronsCheckbox.isSelected()+"");
         
-        FrameworkImplProvider.setLocalPreferenceValue(
+        FrameworkAccess.setLocalPreferenceValue(
                 ApplicationPanel.class, 
                 PREFERENCE_ANCHORS_IN_VIEWPORT, 
                 anchorsInViewportCheckbox.isSelected()+"");  
 
-        FrameworkImplProvider.setLocalPreferenceValue(
+        FrameworkAccess.setLocalPreferenceValue(
                 ApplicationPanel.class,
                 PREFERENCE_ANNOTATIONS_CLICK_MODE,
                 (String) clickModeCombo.getSelectedItem());
 
-        FrameworkImplProvider.setLocalPreferenceValue(
+        FrameworkAccess.setLocalPreferenceValue(
                 ApplicationPanel.class, 
                 PREFERENCE_Z_THICKNESS, 
                 zThicknessField.getText());  
@@ -200,7 +200,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
     // End of variables declaration//GEN-END:variables
     
     public static boolean isLoadLastObject() {
-        String loadLastStr = FrameworkImplProvider.getLocalPreferenceValue(
+        String loadLastStr = FrameworkAccess.getLocalPreferenceValue(
                 ApplicationPanel.class, 
                 ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT, 
                 ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT_DEFAULT);
@@ -208,7 +208,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
     }
 
     public static boolean isVerifyNeurons() {
-        String loadLastStr = FrameworkImplProvider.getLocalPreferenceValue(
+        String loadLastStr = FrameworkAccess.getLocalPreferenceValue(
                 ApplicationPanel.class, 
                 ApplicationPanel.PREFERENCE_VERIFY_NEURONS, 
                 ApplicationPanel.PREFERENCE_VERIFY_NEURONS_DEFAULT);
@@ -216,7 +216,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
     }
     
     public static boolean isAnchorsInViewport() {
-        String anchorsInViewportStr = FrameworkImplProvider.getLocalPreferenceValue(
+        String anchorsInViewportStr = FrameworkAccess.getLocalPreferenceValue(
                 ApplicationPanel.class, 
                 ApplicationPanel.PREFERENCE_ANCHORS_IN_VIEWPORT, 
                 ApplicationPanel.PREFERENCE_ANCHORS_IN_VIEWPORT_DEFAULT);
@@ -224,14 +224,14 @@ public class ApplicationPanel extends javax.swing.JPanel {
     }
 
     public static String getAnnotationClickMode() {
-        return FrameworkImplProvider.getLocalPreferenceValue(
+        return FrameworkAccess.getLocalPreferenceValue(
                 ApplicationPanel.class,
                 ApplicationPanel.PREFERENCE_ANNOTATIONS_CLICK_MODE,
                 ApplicationPanel.PREFERENCE_ANNOTATIONS_CLICK_MODE_DEFAULT);
     }
 
     public static int getZThickness() {
-        String zThicknessStr = FrameworkImplProvider.getLocalPreferenceValue(
+        String zThicknessStr = FrameworkAccess.getLocalPreferenceValue(
                 ApplicationPanel.class, 
                 ApplicationPanel.PREFERENCE_Z_THICKNESS, 
                 ApplicationPanel.PREFERENCE_Z_THICKNESS_DEFAULT);

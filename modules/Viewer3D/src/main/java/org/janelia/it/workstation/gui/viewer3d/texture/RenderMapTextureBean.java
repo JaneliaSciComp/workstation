@@ -8,7 +8,7 @@ import java.util.Map;
 
 import javax.media.opengl.GL2;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
@@ -109,7 +109,7 @@ public class RenderMapTextureBean implements TextureDataI {
             Collection<float[]> acceptedCoordinates = volumeModel.getCropCoords().getAcceptedCoordinates();
             if ( acceptedCoordinates.size() > MAX_COORD_SETS ) {
                 acceptedCoordinates.clear();
-                FrameworkImplProvider.handleException(
+                FrameworkAccess.handleException(
                         new IllegalArgumentException( "Too many crop volumes.  Max is " + MAX_COORD_SETS + ". Rejecting all saved coords.")
                 );
             }

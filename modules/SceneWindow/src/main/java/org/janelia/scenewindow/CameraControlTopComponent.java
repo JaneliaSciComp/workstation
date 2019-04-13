@@ -41,7 +41,7 @@ import org.janelia.geometry3d.CoordinateAxis;
 import org.janelia.geometry3d.Rotation;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.ViewSlab;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.geometry3d.Vector3;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -1078,7 +1078,7 @@ implements LookupListener
                         immediateUpdateControllerFields();
                     }
                     catch (Throwable e) {
-                        FrameworkImplProvider.handleException("Error updating controller fields",e);
+                        FrameworkAccess.handleException("Error updating controller fields",e);
                     }
                 }
             }, remaining);

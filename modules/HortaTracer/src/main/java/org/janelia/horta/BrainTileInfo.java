@@ -45,8 +45,8 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.VoxelIndex;
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.compression.CompressedFileResolverI;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.spi.compression.CompressedFileResolverI;
 import org.janelia.it.jacs.shared.img_3d_loader.FileStreamSource;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.slf4j.Logger;
@@ -296,7 +296,7 @@ public class BrainTileInfo implements BrickInfo {
             if (!folderExists())
                 throw new IOException("no such tile folder " + folderPath.getAbsolutePath());
 
-            CompressedFileResolverI resolver = FrameworkImplProvider.getCompressedFileResolver();
+            CompressedFileResolverI resolver = FrameworkAccess.getCompressedFileResolver();
 
             if (leverageCompressedFiles && resolver == null) {
                 throw new IOException("Failed to find compression resolver.");

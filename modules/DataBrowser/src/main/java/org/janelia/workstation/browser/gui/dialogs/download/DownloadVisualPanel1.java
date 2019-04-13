@@ -30,7 +30,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.SelfArtifactDescriptor;
@@ -368,7 +368,7 @@ public final class DownloadVisualPanel1 extends JPanel {
             checkboxPanel.updateUI();
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
         
         if (fileTypesCheckboxes.isEmpty()) {

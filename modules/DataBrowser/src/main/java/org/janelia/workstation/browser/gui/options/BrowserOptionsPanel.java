@@ -16,7 +16,7 @@ import javax.swing.JSlider;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.listview.icongrid.ImagesPanel;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
 import org.slf4j.Logger;
@@ -89,10 +89,10 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
             }
         });
 
-        if (FrameworkImplProvider.getModelProperty(UNLOAD_IMAGES_PROPERTY) == null) {
-            FrameworkImplProvider.setModelProperty(UNLOAD_IMAGES_PROPERTY, Boolean.FALSE);
+        if (FrameworkAccess.getModelProperty(UNLOAD_IMAGES_PROPERTY) == null) {
+            FrameworkAccess.setModelProperty(UNLOAD_IMAGES_PROPERTY, Boolean.FALSE);
         }
-        unloadImagesCheckbox.setSelected((Boolean) FrameworkImplProvider.getModelProperty(UNLOAD_IMAGES_PROPERTY));
+        unloadImagesCheckbox.setSelected((Boolean) FrameworkAccess.getModelProperty(UNLOAD_IMAGES_PROPERTY));
 
         mainPanel.addItem(unloadImagesCheckbox);
 
@@ -106,10 +106,10 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
             }
         });
 
-        if (FrameworkImplProvider.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY) == null) {
-            FrameworkImplProvider.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, Boolean.FALSE);
+        if (FrameworkAccess.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY) == null) {
+            FrameworkAccess.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, Boolean.FALSE);
         }
-        disableImageDrag.setSelected((Boolean) FrameworkImplProvider.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY));
+        disableImageDrag.setSelected((Boolean) FrameworkAccess.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY));
 
         mainPanel.addItem(disableImageDrag);
 
@@ -122,10 +122,10 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
                 controller.changed();
             }
         });
-        if (FrameworkImplProvider.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY) == null) {
-            FrameworkImplProvider.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, Boolean.FALSE);
+        if (FrameworkAccess.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY) == null) {
+            FrameworkAccess.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, Boolean.FALSE);
         }
-        allowDuplicateAnnotations.setSelected((Boolean) FrameworkImplProvider.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY));
+        allowDuplicateAnnotations.setSelected((Boolean) FrameworkAccess.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY));
      
         mainPanel.addItem(allowDuplicateAnnotations);
         
@@ -136,10 +136,10 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
         showAnnotationTables.addActionListener((e) -> {
             controller.changed();
         });
-        if (FrameworkImplProvider.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY) == null) {
-            FrameworkImplProvider.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, Boolean.FALSE);
+        if (FrameworkAccess.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY) == null) {
+            FrameworkAccess.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, Boolean.FALSE);
         }
-        showAnnotationTables.setSelected((Boolean) FrameworkImplProvider.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
+        showAnnotationTables.setSelected((Boolean) FrameworkAccess.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
 
         mainPanel.addItem(showAnnotationTables);
 
@@ -152,39 +152,39 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
             controller.changed();
         });
 
-        if (FrameworkImplProvider.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY) == null) {
-            FrameworkImplProvider.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
+        if (FrameworkAccess.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY) == null) {
+            FrameworkAccess.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
         }
-        annotationTableHeight.setValue((Integer) FrameworkImplProvider.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));
+        annotationTableHeight.setValue((Integer) FrameworkAccess.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));
 
         mainPanel.addItem("Annotation table height", annotationTableHeight);
     }
 
     void store() {
 
-        if (unloadImagesCheckbox.isSelected() != (Boolean) FrameworkImplProvider.getModelProperty(UNLOAD_IMAGES_PROPERTY)) {
+        if (unloadImagesCheckbox.isSelected() != (Boolean) FrameworkAccess.getModelProperty(UNLOAD_IMAGES_PROPERTY)) {
             log.info("Saving unload images setting: {}", unloadImagesCheckbox.isSelected());
-            FrameworkImplProvider.setModelProperty(UNLOAD_IMAGES_PROPERTY, unloadImagesCheckbox.isSelected());
+            FrameworkAccess.setModelProperty(UNLOAD_IMAGES_PROPERTY, unloadImagesCheckbox.isSelected());
         }
 
-        if (disableImageDrag.isSelected() != (Boolean) FrameworkImplProvider.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY)) {
+        if (disableImageDrag.isSelected() != (Boolean) FrameworkAccess.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY)) {
             log.info("Saving disable image drag: {}", disableImageDrag.isSelected());
-            FrameworkImplProvider.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, disableImageDrag.isSelected());
+            FrameworkAccess.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, disableImageDrag.isSelected());
         }
 
-        if (allowDuplicateAnnotations.isSelected() != (Boolean) FrameworkImplProvider.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY)) {
+        if (allowDuplicateAnnotations.isSelected() != (Boolean) FrameworkAccess.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY)) {
             log.info("Saving allow annotation duplicates: {}", allowDuplicateAnnotations.isSelected());
-            FrameworkImplProvider.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, allowDuplicateAnnotations.isSelected());
+            FrameworkAccess.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, allowDuplicateAnnotations.isSelected());
         }
         
-        if (showAnnotationTables.isSelected() != (Boolean) FrameworkImplProvider.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY)) {
+        if (showAnnotationTables.isSelected() != (Boolean) FrameworkAccess.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY)) {
             log.info("Saving show annotation tables: {}", showAnnotationTables.isSelected());
-            FrameworkImplProvider.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, showAnnotationTables.isSelected());
+            FrameworkAccess.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, showAnnotationTables.isSelected());
         }
 
-        if (annotationTableHeight.getValue() != (Integer) FrameworkImplProvider.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY)) {
+        if (annotationTableHeight.getValue() != (Integer) FrameworkAccess.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY)) {
             log.info("Saving annotation table height: {}", annotationTableHeight.getValue());
-            FrameworkImplProvider.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, annotationTableHeight.getValue());
+            FrameworkAccess.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, annotationTableHeight.getValue());
         }
     }
 

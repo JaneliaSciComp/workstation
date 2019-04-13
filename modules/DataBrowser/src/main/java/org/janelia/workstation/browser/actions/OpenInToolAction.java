@@ -6,7 +6,7 @@ import java.io.File;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.editor.SampleResultContextMenu;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.util.Utils;
@@ -86,13 +86,13 @@ public class OpenInToolAction extends AbstractAction {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
 
             // TODO: it should be possible to indicate progress for file downloads to cache
             worker.setProgressMonitor(new IndeterminateProgressMonitor(
-                    FrameworkImplProvider.getMainFrame(), "Downloading and decompressing LSM...", ""));
+                    FrameworkAccess.getMainFrame(), "Downloading and decompressing LSM...", ""));
             worker.execute();
         }
         else {
@@ -107,7 +107,7 @@ public class OpenInToolAction extends AbstractAction {
         } 
         catch (Exception e) {
             log.error("Error launching tool", e);
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Could not launch this tool. "
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "Could not launch this tool. "
                     + "Please choose the appropriate file path from the Tools->Configure Tools area",
                     "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
         }

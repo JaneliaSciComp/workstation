@@ -5,7 +5,7 @@ import java.awt.BorderLayout;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.editor.SampleEditorPanel;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -187,7 +187,7 @@ public final class DomainViewerTopComponent extends TopComponent {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         worker.execute();
@@ -228,7 +228,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             repaint();
         }
         catch (InstantiationException | IllegalAccessException e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
         setName(editor.getName());
     }
@@ -244,7 +244,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             return DomainUtils.equals(getCurrent(), domainObject);
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return false;
         }
     }
@@ -272,7 +272,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             setName(editor.getName());
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 

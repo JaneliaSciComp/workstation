@@ -23,7 +23,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -76,7 +76,7 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
     public void actionPerformed(ActionEvent e) {
 
         if (samples==null || samples.isEmpty()) {
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "In order to annotate the published line name, first select some Samples.");
             return;
         }
@@ -103,7 +103,7 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
 
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
 
@@ -111,7 +111,7 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
             
         }
         catch (Exception ex) {
-            FrameworkImplProvider.handleException("Problem setting publishing name", ex);
+            FrameworkAccess.handleException("Problem setting publishing name", ex);
         }
     }
     
@@ -136,7 +136,7 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
             }
             catch (Exception e) {
                 // Handle exceptions here so that one error with the SAGE responder doesn't prevent other images from being annotated
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
         }
     }
@@ -168,7 +168,7 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -308,7 +308,7 @@ public final class ApplyPublishingNamesActionListener implements ActionListener 
                 @Override
                 protected void hadError(Throwable error) {
                     setVisible(false);
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
 

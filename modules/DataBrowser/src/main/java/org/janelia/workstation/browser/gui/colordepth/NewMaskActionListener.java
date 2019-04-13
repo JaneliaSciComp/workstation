@@ -12,7 +12,7 @@ import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.util.Utils;
@@ -46,7 +46,7 @@ public final class NewMaskActionListener implements ActionListener {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileFilter(new FileNameExtensionFilter("PNG Mask Files", "png"));
         
-        int returnVal = fileChooser.showOpenDialog(FrameworkImplProvider.getMainFrame());
+        int returnVal = fileChooser.showOpenDialog(FrameworkAccess.getMainFrame());
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File localFile = fileChooser.getSelectedFile();
             
@@ -83,11 +83,11 @@ public final class NewMaskActionListener implements ActionListener {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
 
-            worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Uploading mask", ""));
+            worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Uploading mask", ""));
             worker.execute();
         }
     }

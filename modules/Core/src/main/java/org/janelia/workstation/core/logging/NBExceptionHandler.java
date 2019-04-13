@@ -14,7 +14,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.exceptions.AuthenticationException;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -234,7 +234,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             String titleSuffix = " from "+AccessManager.getSubjectName()+" -- "+version+" -- "+firstLine;
             String subject = (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix;
              
-            MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(FrameworkImplProvider.getMainFrame(), REPORT_EMAIL)
+            MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(FrameworkAccess.getMainFrame(), REPORT_EMAIL)
                     .withTitle("Create A Ticket")
                     .withPromptText("If possible, please describe what you were doing when the error occurred:")
                     .withEmailSubject(subject)
@@ -262,7 +262,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         catch (Exception ex) {
             log.warn("Error sending exception email",ex);
             if (askForInput) { // JW-25430: Only show this message if the email was initiated by the user
-                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                         "Your message was NOT able to be sent to our support staff.  "
                         + "Please contact your support representative.", "Error sending email", JOptionPane.ERROR_MESSAGE);
             }

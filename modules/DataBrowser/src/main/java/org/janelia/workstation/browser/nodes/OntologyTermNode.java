@@ -14,7 +14,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.actions.OntologyElementAction;
 import org.janelia.workstation.browser.gui.components.OntologyExplorerTopComponent;
 import org.janelia.workstation.browser.flavors.OntologyTermFlavor;
@@ -105,7 +105,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                         }
                         @Override
                         protected void hadError(Throwable error) {
-                            FrameworkImplProvider.handleException(error);
+                            FrameworkAccess.handleException(error);
                         }
                     };
                     NodeUtils.executeNodeOperation(worker);
@@ -294,7 +294,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                 msg = "Are you sure you want to delete the item '"+getOntologyTerm().getName()+"' and all of its descendants?";   
             }
             
-            int result = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(),
+            int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
                     msg, title, JOptionPane.OK_CANCEL_OPTION);
 
             if (result != 0) return;
@@ -311,7 +311,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                 }
             }
             catch (Exception ex) {
-                FrameworkImplProvider.handleException(ex);
+                FrameworkAccess.handleException(ex);
             }
         }
     }

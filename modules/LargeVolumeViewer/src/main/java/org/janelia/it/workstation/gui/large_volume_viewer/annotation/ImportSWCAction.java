@@ -12,7 +12,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 /**
  * Drag the SWCs into the workspace, and make neurons.
@@ -51,7 +51,7 @@ public class ImportSWCAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
 
         if (annotationModel.getCurrentWorkspace() == null) {
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "No workspace is open", "Cannot Import", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "No workspace is open", "Cannot Import", JOptionPane.ERROR_MESSAGE);
             return;
         }
         
@@ -66,7 +66,7 @@ public class ImportSWCAction extends AbstractAction {
             final FileFilter swcAndDirFilter = new SwcDirAndFileFilter();
             chooser.setFileFilter(swcAndDirFilter);
             chooser.setPreferredSize(getDialogSize());
-            int returnValue = chooser.showOpenDialog(FrameworkImplProvider.getMainFrame());
+            int returnValue = chooser.showOpenDialog(FrameworkAccess.getMainFrame());
             setDialogSize(chooser.getSize());
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 List<File> swcFiles = getFilesList(chooser.getSelectedFile());
@@ -77,7 +77,7 @@ public class ImportSWCAction extends AbstractAction {
             }
         }
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
 

@@ -12,7 +12,7 @@ import java.util.Map;
 
 import javax.swing.Action;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.flavors.DomainObjectFlavor;
 import org.janelia.workstation.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.workstation.browser.nb_action.AddToFolderAction;
@@ -146,7 +146,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<Node> {
                         }
                         @Override
                         protected void hadError(Throwable error) {
-                            FrameworkImplProvider.handleException(error);
+                            FrameworkAccess.handleException(error);
                         }
                     };
                     

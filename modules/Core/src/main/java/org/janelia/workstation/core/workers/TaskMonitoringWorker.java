@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.AbstractAction;
 
 import org.janelia.it.jacs.compute.engine.service.ServiceException;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.workstation.core.api.StateMgr;
@@ -73,7 +73,7 @@ public class TaskMonitoringWorker extends NamedBackgroundWorker {
                     handle = ProgressHandleFactory.createHandle(task.getDisplayName(), new AbstractAction() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            FrameworkImplProvider.getProgressHandler().showProgressPanel();
+                            FrameworkAccess.getProgressController().showProgressPanel();
                         }
                     });
                     handle.start();

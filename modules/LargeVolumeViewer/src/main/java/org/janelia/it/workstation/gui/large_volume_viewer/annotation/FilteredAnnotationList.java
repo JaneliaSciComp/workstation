@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
@@ -166,7 +166,7 @@ public class FilteredAnnotationList extends JPanel {
                                             }
                                         }
                                     } catch (Exception e) {
-                                        FrameworkImplProvider.handleException(e);
+                                        FrameworkAccess.handleException(e);
                                     }
                                     
                                 }

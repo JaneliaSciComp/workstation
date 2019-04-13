@@ -10,7 +10,7 @@ import java.util.Set;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -41,7 +41,7 @@ public class ExportPickedLineNames extends AbstractAction {
     public void actionPerformed(ActionEvent event) {
 
         if (refs.isEmpty()) {
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "Select some items with the checkboxes first.", 
                     "No items picked for export", JOptionPane.ERROR_MESSAGE);
             return;
@@ -65,11 +65,11 @@ public class ExportPickedLineNames extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Exporting data...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Exporting data...", ""));
         worker.execute();
     }
     

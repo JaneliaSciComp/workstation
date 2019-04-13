@@ -12,7 +12,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.browser.nb_action.NodePresenterAction;
 import org.janelia.workstation.browser.nodes.GroupedFolderNode;
@@ -48,7 +48,7 @@ public class AddToResultsAction extends NodePresenterAction {
 
     private final static Logger log = LoggerFactory.getLogger(AddToResultsAction.class);
 
-    protected final Component mainFrame = FrameworkImplProvider.getMainFrame();
+    protected final Component mainFrame = FrameworkAccess.getMainFrame();
 
     private final static AddToResultsAction singleton = new AddToResultsAction();
     public static AddToResultsAction get() {
@@ -123,7 +123,7 @@ public class AddToResultsAction extends NodePresenterAction {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
                 
@@ -218,7 +218,7 @@ public class AddToResultsAction extends NodePresenterAction {
             @Override
             protected void hadSuccess() {
                 if (folder==null) {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "This result set no longer exists.", "Result set no longer exists", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "This result set no longer exists.", "Result set no longer exists", JOptionPane.ERROR_MESSAGE);
                 }
                 else {
                     addUniqueItemsToFolder(folder, idPath);
@@ -227,7 +227,7 @@ public class AddToResultsAction extends NodePresenterAction {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));
@@ -269,7 +269,7 @@ public class AddToResultsAction extends NodePresenterAction {
                     else {
                         message = existing + " items are already in the target result set. "+(domainObjects.size()-existing)+" item(s) will be added.";
                     }
-                    int result = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(),
+                    int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
                             message, "Items already present", JOptionPane.OK_CANCEL_OPTION);
                     if (result != 0) {
                         return;
@@ -306,7 +306,7 @@ public class AddToResultsAction extends NodePresenterAction {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        FrameworkImplProvider.handleException(error);
+                        FrameworkAccess.handleException(error);
                     }
                 };
                 worker.execute();
@@ -314,7 +314,7 @@ public class AddToResultsAction extends NodePresenterAction {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         worker.execute();

@@ -23,7 +23,7 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.actions.ExportResultsAction;
 import org.janelia.workstation.browser.gui.editor.SelectionButton;
@@ -324,7 +324,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -385,7 +385,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -430,7 +430,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         }
         catch (Exception e) {
             // If split type fails, show an error but keep going
-            FrameworkImplProvider.handleException("Failed to load AB/DBD split half information", e);
+            FrameworkAccess.handleException("Failed to load AB/DBD split half information", e);
         }
         
         // Create and set image model
@@ -639,7 +639,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         if (mask==null || mask.getId()==null) return;
         try {
             String key = search.getId() + "~" + mask.getId();
-            sortCriteria = (String)FrameworkImplProvider.getRemotePreferenceValue(
+            sortCriteria = (String) FrameworkAccess.getRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, key, null);
             log.debug("Loaded sort criteria preference: {}",sortCriteria);
         }
@@ -654,7 +654,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
             String key = search.getId() + "~" + mask.getId();
-            FrameworkImplProvider.setRemotePreferenceValue(
+            FrameworkAccess.setRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, key, sortCriteria);
             log.debug("Saved sort criteria preference: {}",sortCriteria);
         }

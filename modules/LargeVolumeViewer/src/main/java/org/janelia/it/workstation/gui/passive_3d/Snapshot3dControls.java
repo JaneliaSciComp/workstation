@@ -19,7 +19,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.ProgressMonitor;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.StateDrivenIconToggleButton;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
@@ -245,7 +245,7 @@ public class Snapshot3dControls {
                 @Override
                 protected void hadError(Throwable error) {
                     view.setHasBeenFiltered( false );
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
                 
             };

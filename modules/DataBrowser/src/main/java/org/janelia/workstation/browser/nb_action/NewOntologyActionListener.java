@@ -5,7 +5,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.components.OntologyExplorerTopComponent;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -26,7 +26,7 @@ public final class NewOntologyActionListener implements ActionListener {
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
-        final String name = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Ontology Name:\n",
+        final String name = (String) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(), "Ontology Name:\n",
                 "Create new ontology", JOptionPane.PLAIN_MESSAGE, null, null, null);
         if (StringUtils.isEmpty(name)) {
             return;
@@ -57,7 +57,7 @@ public final class NewOntologyActionListener implements ActionListener {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
 
         };

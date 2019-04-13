@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.web.EmbeddedWebServer;
 import org.janelia.workstation.core.ws.EmbeddedAxisServer;
@@ -81,7 +81,7 @@ public class ServiceMgr {
             return -1;
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return -1;
         }
     }
@@ -123,7 +123,7 @@ public class ServiceMgr {
             return -1;
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return -1;
         }
     }
@@ -133,7 +133,7 @@ public class ServiceMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), msg);
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), msg);
                 }
             });
         }

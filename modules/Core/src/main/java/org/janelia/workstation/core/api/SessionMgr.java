@@ -65,7 +65,7 @@ public class SessionMgr {
 //            ActivityLogHelper.logSessionBegin();
 //        }
 //        catch (Exception e) {
-//            FrameworkImplProvider.handleExceptionQuietly(e);
+//            FrameworkAccess.handleExceptionQuietly(e);
 //        }
     }
 
@@ -85,7 +85,7 @@ public class SessionMgr {
 //            ActivityLogHelper.logSessionEnd();
 //        }
 //        catch (Exception e) {
-//            FrameworkImplProvider.handleExceptionQuietly(e);
+//            FrameworkAccess.handleExceptionQuietly(e);
 //        }
         this.currentSessionId = null;
     }

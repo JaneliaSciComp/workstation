@@ -20,9 +20,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
-import org.janelia.workstation.integration.framework.domain.DomainObjectHelper;
-import org.janelia.workstation.integration.framework.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextManager;
 import org.janelia.workstation.browser.gui.find.FindToolbar;
@@ -354,7 +354,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         
@@ -524,7 +524,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             protected void hadError(Throwable error) {
                 debouncer.failure();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         
@@ -666,7 +666,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
      * @return
      */
     public static boolean isSupported(DomainObject domainObject) {
-        DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
+        DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
         if (provider!=null) {
             return true;
         }
@@ -674,20 +674,20 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     public static boolean isNavigateOnClick() {
-        Boolean navigate = (Boolean) FrameworkImplProvider.getModelProperty(NAVIGATE_ON_CLICK);
+        Boolean navigate = (Boolean) FrameworkAccess.getModelProperty(NAVIGATE_ON_CLICK);
         return navigate==null || navigate;
     }
     
     private static void setNavigateOnClick(boolean value) {
-        FrameworkImplProvider.setModelProperty(NAVIGATE_ON_CLICK, value);  
+        FrameworkAccess.setModelProperty(NAVIGATE_ON_CLICK, value);
     }
 
     public static boolean isShowRecentMenuItems() {
-        Boolean navigate = (Boolean) FrameworkImplProvider.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS);
+        Boolean navigate = (Boolean) FrameworkAccess.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS);
         return navigate==null || navigate;
     }
     
     private static void setShowRecentMenuItems(boolean value) {
-        FrameworkImplProvider.setModelProperty(SHOW_RECENTLY_OPENED_ITEMS, value);  
+        FrameworkAccess.setModelProperty(SHOW_RECENTLY_OPENED_ITEMS, value);
     }
 }

@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -100,7 +100,7 @@ public class UserViewRootNode extends AbstractNode implements RootNode {
 
             } 
             catch (Exception e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
             }
             
             return true;

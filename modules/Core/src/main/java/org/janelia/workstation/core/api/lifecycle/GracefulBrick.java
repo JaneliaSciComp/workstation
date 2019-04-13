@@ -7,7 +7,7 @@ import java.util.MissingResourceException;
 import javax.swing.JOptionPane;
 
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.core.api.http.HttpClientManager;
@@ -79,7 +79,7 @@ public class GracefulBrick {
         "</body></html>";
       
         String[] buttons = { "Continue" };
-        JOptionPane.showOptionDialog(FrameworkImplProvider.getMainFrame(), html,
+        JOptionPane.showOptionDialog(FrameworkAccess.getMainFrame(), html,
               "Manual Update Required", JOptionPane.YES_NO_OPTION, 0, null, buttons, buttons[0]);
         
         // Delete any logs to ensure that the install directory is properly cleaned up

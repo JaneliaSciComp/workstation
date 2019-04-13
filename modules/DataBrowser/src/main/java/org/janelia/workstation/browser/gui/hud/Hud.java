@@ -28,7 +28,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
@@ -374,7 +374,7 @@ public class Hud extends ModalDialog {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
                     

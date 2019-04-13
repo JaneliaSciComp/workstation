@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.swing.JMenuItem;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -66,7 +66,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
             }
         }  
         catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
 

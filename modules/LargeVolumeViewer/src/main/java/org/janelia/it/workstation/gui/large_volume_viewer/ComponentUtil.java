@@ -9,7 +9,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 
 /**
@@ -40,7 +40,7 @@ public class ComponentUtil {
                 SwingUtilities.invokeAndWait(runnable);
             }
         } catch (Exception ex) {
-            FrameworkImplProvider.handleException(ex);
+            FrameworkAccess.handleException(ex);
         }
     }
 }

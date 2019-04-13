@@ -23,7 +23,7 @@ import javax.swing.UIManager;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import net.miginfocom.swing.MigLayout;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.workstation.core.events.Events;
@@ -356,7 +356,7 @@ public class SampleEditorPanel
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
 
@@ -376,7 +376,7 @@ public class SampleEditorPanel
     private void loadPreferences() {
         if (sample.getId()==null) return;
         try {
-            sortCriteria = FrameworkImplProvider.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, null);
+            sortCriteria = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, null);
         }
         catch (Exception e) {
             log.error("Could not load sort criteria",e);
@@ -386,7 +386,7 @@ public class SampleEditorPanel
     private void savePreferences() {
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
-            FrameworkImplProvider.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
+            FrameworkAccess.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);
@@ -484,7 +484,7 @@ public class SampleEditorPanel
             protected void hadError(Throwable error) {
                 showNothing();
                 debouncer.failure();
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
         };
         worker.execute();
@@ -1126,7 +1126,7 @@ public class SampleEditorPanel
                 }
             }
         }  catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -1171,7 +1171,7 @@ public class SampleEditorPanel
         if (event.isUserDriven()) {
             PipelineResult result = event.getPipelineResult();
             log.info("resultSelected({})", result.getId());
-            FrameworkImplProvider.getInspectionHandler().inspect(getProperties(result));
+            FrameworkAccess.getInspectionController().inspect(getProperties(result));
         }
     }
 
@@ -1180,7 +1180,7 @@ public class SampleEditorPanel
         if (event.isUserDriven()) {
             PipelineError error = event.getPipelineError();
             log.info("errorSelected()");
-            FrameworkImplProvider.getInspectionHandler().inspect(getProperties(error));
+            FrameworkAccess.getInspectionController().inspect(getProperties(error));
         }
     }
 

@@ -6,7 +6,7 @@ import java.awt.GridBagLayout;
 
 import javax.swing.*;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.CreateTiledMicroscopeSampleAction;
 import org.jdesktop.swingx.VerticalLayout;
 
@@ -25,7 +25,7 @@ public class NewTiledMicroscopeSampleDialog extends JDialog {
 		setUpValues();
 		SwingUtilities.updateComponentTreeUI(this);
 		pack();
-		setLocationRelativeTo(FrameworkImplProvider.getMainFrame());
+		setLocationRelativeTo(FrameworkAccess.getMainFrame());
 		setVisible(true);
 	}
 
@@ -70,7 +70,7 @@ public class NewTiledMicroscopeSampleDialog extends JDialog {
 		JButton okButton = new JButton("Add Sample");
 		okButton.addActionListener(e -> {
                 if (nameTextField.getText().isEmpty() || pathToRenderFolderTextField.getText().isEmpty()) {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                         "You must specify both a sample name and location!",
                         "Missing values",
                         JOptionPane.WARNING_MESSAGE);

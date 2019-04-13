@@ -7,7 +7,7 @@ import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.TransferHandler;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.common.gui.model.ImageModel;
 import org.janelia.model.domain.DomainObject;
@@ -49,7 +49,7 @@ public class DomainObjectTransferHandler extends TransferHandler {
                 return null;
             }
         }  catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
             return null;
         }
     }

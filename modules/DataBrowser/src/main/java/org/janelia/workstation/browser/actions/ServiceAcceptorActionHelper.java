@@ -12,8 +12,8 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JSeparator;
 
-import org.janelia.workstation.integration.framework.domain.ObjectOpenAcceptor;
-import org.janelia.workstation.integration.framework.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.spi.domain.ObjectOpenAcceptor;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

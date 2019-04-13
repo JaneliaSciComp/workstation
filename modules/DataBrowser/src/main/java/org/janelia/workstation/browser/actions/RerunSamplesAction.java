@@ -19,7 +19,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -106,7 +106,7 @@ public class RerunSamplesAction extends AbstractAction {
     public void actionPerformed(ActionEvent event) {
         
         if (samples.size() > MAX_SAMPLE_RERUN_COUNT && !AccessManager.authenticatedSubjectIsInGroup(SubjectRole.Admin)) {
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "You cannot submit more than "+MAX_SAMPLE_RERUN_COUNT+" samples for reprocessing at a time.",
                     "Too many samples selected", 
                     JOptionPane.ERROR_MESSAGE);
@@ -133,7 +133,7 @@ public class RerunSamplesAction extends AbstractAction {
         if (!dialog.showDialog()) return;
         
         if (numBlocked>0) {
-            int result2 = JOptionPane.showConfirmDialog(FrameworkImplProvider.getMainFrame(), "You have selected "+numBlocked+" blocked samples for reprocessing. Continue with unblocking and reprocessing?",
+            int result2 = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(), "You have selected "+numBlocked+" blocked samples for reprocessing. Continue with unblocking and reprocessing?",
                     "Blocked Samples Selected", JOptionPane.OK_CANCEL_OPTION);
             if (result2 != 0) return;
         }
@@ -170,11 +170,11 @@ public class RerunSamplesAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
             }
             
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Marking samples for reprocessing", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Marking samples for reprocessing", ""));
         worker.execute();
     }
     

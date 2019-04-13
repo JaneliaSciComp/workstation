@@ -1,6 +1,6 @@
 package org.janelia.workstation.core.api.services;
 
-import org.janelia.workstation.integration.framework.system.ActivityLogging;
+import org.janelia.workstation.integration.api.ActivityLogging;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;

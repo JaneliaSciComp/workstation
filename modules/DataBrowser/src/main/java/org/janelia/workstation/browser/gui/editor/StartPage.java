@@ -29,7 +29,7 @@ import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -342,7 +342,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
             @Override
             protected void hadError(Throwable e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
                 diskUsageSummary = null;
                 populateDiskView(diskUsageSummary);
             }
@@ -367,7 +367,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
             @Override
             protected void hadError(Throwable e) {
-                FrameworkImplProvider.handleException(e);
+                FrameworkAccess.handleException(e);
                 dataSummary = null;
                 populateDataView(dataSummary);
             }

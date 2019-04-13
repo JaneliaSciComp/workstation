@@ -1,7 +1,7 @@
 package org.janelia.workstation.core.api.lifecycle;
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.netbeans.api.autoupdate.*;
@@ -175,7 +175,7 @@ public class AutoUpdater extends SimpleWorker {
                     + "</body></html>";
 
             String[] buttons = { "Restart and Update", "Later" };
-            int selectedOption = JOptionPane.showOptionDialog(FrameworkImplProvider.getMainFrame(), html,
+            int selectedOption = JOptionPane.showOptionDialog(FrameworkAccess.getMainFrame(), html,
                     "Updates Ready", JOptionPane.YES_NO_OPTION, 0, null, buttons, buttons[0]);
 
             if (selectedOption == 0) {
@@ -195,7 +195,7 @@ public class AutoUpdater extends SimpleWorker {
 
     @Override
     protected void hadError(Throwable ex) {
-        FrameworkImplProvider.handleException("Error running auto-update check", ex);
+        FrameworkAccess.handleException("Error running auto-update check", ex);
     }
         
     private Collection<UpdateElement> doRealCheck(ProgressHandle handle) {    
@@ -301,7 +301,7 @@ public class AutoUpdater extends SimpleWorker {
         }
         catch (RuntimeException e) {
             // The above step isn't critical, so we handle any exceptions to allow install to continue. 
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
         
         log.info("Downloading updates with flags: global={}, userDirAsFallback={}", global, userDirAsFallback);

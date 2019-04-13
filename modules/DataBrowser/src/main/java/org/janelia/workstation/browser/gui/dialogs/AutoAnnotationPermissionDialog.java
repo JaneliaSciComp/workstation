@@ -20,7 +20,7 @@ import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.StateMgr;
@@ -149,7 +149,7 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
             packAndShow();
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
             
         return pressedOk;

@@ -10,7 +10,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ConsoleApp;
 import org.janelia.workstation.core.api.lifecycle.AutoUpdater;
@@ -77,7 +77,7 @@ public class ShowingHook implements Runnable {
             }
         }
         catch (Throwable e) {
-            FrameworkImplProvider.handleExceptionQuietly(e);
+            FrameworkAccess.handleExceptionQuietly(e);
         }
 
         // Things that can be lazily initialized
@@ -98,7 +98,7 @@ public class ShowingHook implements Runnable {
             }
         }
         catch (Throwable e) {
-            FrameworkImplProvider.handleExceptionQuietly(e);
+            FrameworkAccess.handleExceptionQuietly(e);
         }
 
         // If there were any issues with auto-login before, resolve them now by showing the login dialog

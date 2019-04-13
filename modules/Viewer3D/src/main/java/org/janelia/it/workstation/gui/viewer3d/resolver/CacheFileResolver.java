@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.viewer3d.resolver;
 
 import java.io.File;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +21,7 @@ public class CacheFileResolver implements FileResolver {
     public String getResolvedFilename(String fileName) {
         File cachedFile = null;
         try {
-            cachedFile = FrameworkImplProvider.getFileAccess().getCachedFile( fileName, false );
+            cachedFile = FrameworkAccess.getFileAccessController().getCachedFile( fileName, false );
         } catch ( Throwable ex ) {
             logger.warn( "Failed to use session manager to resolve file " + fileName + ", returning as-is.",ex);
         }

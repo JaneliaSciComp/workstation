@@ -5,7 +5,7 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.editor.FileGroupEditorPanel;
 import org.janelia.workstation.browser.gui.editor.NeuronSeparationEditorPanel;
@@ -179,7 +179,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
             
         }
         catch (InstantiationException | IllegalAccessException e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
         setName(editor.getName());
     }

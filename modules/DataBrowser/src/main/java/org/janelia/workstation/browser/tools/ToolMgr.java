@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.JOptionPane;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.options.ToolsOptionsPanelController;
 import org.janelia.workstation.browser.tools.preferences.InfoObject;
 import org.janelia.workstation.core.api.LocalPreferenceMgr;
@@ -108,10 +108,10 @@ public class ToolMgr extends PreferenceManager {
 
         // Check for the existence of the group directory property and/or set values.
         String groupDir = "";
-        if (FrameworkImplProvider.getModelProperty(GROUP_DIR)==null) {
-            FrameworkImplProvider.setModelProperty(GROUP_DIR, groupDir);
+        if (FrameworkAccess.getModelProperty(GROUP_DIR)==null) {
+            FrameworkAccess.setModelProperty(GROUP_DIR, groupDir);
         }
-        else groupDir = (String)FrameworkImplProvider.getModelProperty(GROUP_DIR);
+        else groupDir = (String) FrameworkAccess.getModelProperty(GROUP_DIR);
         setGroupPreferenceDirectory(groupDir);
 
         // Establish the initial "default" user file.
@@ -288,7 +288,7 @@ public class ToolMgr extends PreferenceManager {
     public boolean removeTool(ToolInfo targetTool) throws Exception {
         String tmpName = targetTool.getName();
         if(isSystemTool(tmpName)) {
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "Cannot remove a system tool", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -317,7 +317,7 @@ public class ToolMgr extends PreferenceManager {
 
         if (tool==null || null == tool.getPath() || "".equals(tool.getPath())) {
             log.error("Cannot find tool "+toolName+" in map: "+toolTreeMap.keySet());
-            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "'"+toolName+"' is not configured. Please set a path for this tool in "+SystemInfo.optionsMenuName+".", "Error", JOptionPane.ERROR_MESSAGE);
             OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
             return null;
@@ -341,7 +341,7 @@ public class ToolMgr extends PreferenceManager {
         catch (Exception e1) {
             log.error("Could launch tool: "+toolName,e1);
             JOptionPane.showMessageDialog(
-                    FrameworkImplProvider.getMainFrame(),
+                    FrameworkAccess.getMainFrame(),
                     "Could not launch this tool. "
                     + "Please choose the appropriate file path from the Tools->Configure Tools area",
                     "ToolInfo Launch ERROR",
@@ -394,13 +394,13 @@ public class ToolMgr extends PreferenceManager {
             if (!exeFile.exists()) {
                 String msg = "Tool " + toolName + " (" + exeFile.getAbsolutePath() + ") does not exist.";
                 log.error(msg);
-                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             } 
             else if (!exeFile.canExecute()) {
                 String msg = "Tool " + toolName + " (" + exeFile.getAbsolutePath() + ") cannot be executed.";
                 log.error(msg);
-                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             
@@ -449,7 +449,7 @@ public class ToolMgr extends PreferenceManager {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    FrameworkImplProvider.handleException(error);
+                    FrameworkAccess.handleException(error);
                 }
             };
 
@@ -458,7 +458,7 @@ public class ToolMgr extends PreferenceManager {
             if (p.waitFor(100, TimeUnit.MILLISECONDS)) {
                 // Process terminated immediately, check the exit code
                 if (p.exitValue()!=0) {
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                         "'"+toolName+"' could not start. Please check your configuration.", "Error", JOptionPane.ERROR_MESSAGE);
                     OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
                 }
@@ -478,7 +478,7 @@ public class ToolMgr extends PreferenceManager {
                 
                 if (file==null) {
                     log.error("Could not open file path "+standardFilepath);
-                    JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(),
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                             "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }

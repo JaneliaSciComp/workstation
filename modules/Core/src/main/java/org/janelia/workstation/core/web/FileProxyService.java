@@ -12,7 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.util.WorkstationFile;
 import org.janelia.workstation.core.util.Utils;
 import org.slf4j.Logger;
@@ -114,7 +114,7 @@ public class FileProxyService extends AbstractHandler {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().print("Error proxying file\n");
             e.printStackTrace(response.getWriter());
-            FrameworkImplProvider.handleExceptionQuietly(e);
+            FrameworkAccess.handleExceptionQuietly(e);
         } 
         finally {
             if (wfile != null) {

@@ -1,7 +1,7 @@
 package org.janelia.workstation.core.ws;
 
 import org.hibernate.HibernateException;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -134,7 +134,7 @@ public class DomainToEntityTranslator {
             }
         }
         catch (Exception e) {
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
         
         return translatePaths(separationEntity);

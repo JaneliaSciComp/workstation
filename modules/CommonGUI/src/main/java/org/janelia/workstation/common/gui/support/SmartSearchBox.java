@@ -9,7 +9,7 @@ import javax.swing.JComboBox;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +85,7 @@ public class SmartSearchBox extends JComboBox<String> {
      */
     protected List<String> getSearchHistory() {
         @SuppressWarnings("unchecked")
-        List<String> searchHistory = (List<String>) FrameworkImplProvider.getModelProperty(modelPropertyName);
+        List<String> searchHistory = (List<String>) FrameworkAccess.getModelProperty(modelPropertyName);
         log.trace("Returning current search history: {} ",searchHistory);
         return searchHistory;
     }
@@ -98,7 +98,7 @@ public class SmartSearchBox extends JComboBox<String> {
      */
     protected void setSearchHistory(List<String> searchHistory) {
         log.trace("Saving search history: {} ",searchHistory);
-        FrameworkImplProvider.setModelProperty(modelPropertyName, searchHistory);
+        FrameworkAccess.setModelProperty(modelPropertyName, searchHistory);
     }
 
     public void addCurrentSearchTermToHistory() {

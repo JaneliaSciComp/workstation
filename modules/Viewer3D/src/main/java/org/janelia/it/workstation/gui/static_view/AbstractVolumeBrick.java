@@ -11,7 +11,7 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.DirectionalAxis;
@@ -142,7 +142,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 
                 bBuffersNeedUpload = false;
             } catch ( Exception ex ) {
-                FrameworkImplProvider.handleException(ex);
+                FrameworkAccess.handleException(ex);
             }
         }
 		// tidy up

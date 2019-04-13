@@ -10,7 +10,7 @@ import javax.swing.JComponent;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.WizardDescriptor;
 import org.openide.util.ChangeSupport;
 
@@ -58,7 +58,7 @@ public final class DownloadWizardIterator implements WizardDescriptor.Iterator<W
             allPanels.add(panel3);
             String[] steps = new String[allPanels.size()];
 
-            Component mainFrame = FrameworkImplProvider.getMainFrame();
+            Component mainFrame = FrameworkAccess.getMainFrame();
             
             for (int i = 0; i < allPanels.size(); i++) {
                 Component c = allPanels.get(i).getComponent();

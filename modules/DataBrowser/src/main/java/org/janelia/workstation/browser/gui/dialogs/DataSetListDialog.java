@@ -22,7 +22,7 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
@@ -170,7 +170,7 @@ public class DataSetListDialog extends ModalDialog {
 
                                 @Override
                                 protected void hadError(Throwable error) {
-                                    FrameworkImplProvider.handleException(error);
+                                    FrameworkAccess.handleException(error);
                                     UIUtils.setDefaultCursor(DataSetListDialog.this);
                                     loadDataSets();
                                 }
@@ -235,7 +235,7 @@ public class DataSetListDialog extends ModalDialog {
                             }
                         }
                         catch (Exception e) {
-                            FrameworkImplProvider.handleException(e);
+                            FrameworkAccess.handleException(e);
                         }
                     });
                 }
@@ -281,7 +281,7 @@ public class DataSetListDialog extends ModalDialog {
     public void showDialog() {
         loadDataSets();
 
-        Component mainFrame = FrameworkImplProvider.getMainFrame();
+        Component mainFrame = FrameworkAccess.getMainFrame();
         setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.5), (int) (mainFrame.getHeight() * 0.4)));
 
         ActivityLogHelper.logUserAction("DataSetListDialog.showDialog");
@@ -326,7 +326,7 @@ public class DataSetListDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkImplProvider.handleException(error);
+                FrameworkAccess.handleException(error);
                 mainPanel.removeAll();
                 mainPanel.add(dynamicTable, BorderLayout.CENTER);
                 mainPanel.revalidate();

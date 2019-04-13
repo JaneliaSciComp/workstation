@@ -10,7 +10,7 @@ import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
@@ -80,21 +80,21 @@ public class StateMgr {
         log.info("Initializing State Manager");
         this.legacyFacade = new LegacyFacadeImpl();
         try {
-            this.autoShareTemplate = (PermissionTemplate)FrameworkImplProvider.getModelProperty(AUTO_SHARE_TEMPLATE);
+            this.autoShareTemplate = (PermissionTemplate) FrameworkAccess.getModelProperty(AUTO_SHARE_TEMPLATE);
             
-            if (FrameworkImplProvider.getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
-                FrameworkImplProvider.setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
+            if (FrameworkAccess.getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
+                FrameworkAccess.setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
             }
     
-            if (FrameworkImplProvider.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D) == null) {
-                FrameworkImplProvider.setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
+            if (FrameworkAccess.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D) == null) {
+                FrameworkAccess.setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
             }
             
-            log.debug("Using 2d renderer: {}", FrameworkImplProvider.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D));
+            log.debug("Using 2d renderer: {}", FrameworkAccess.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D));
         }
         catch (Throwable e) {
             // Catch all exceptions, because anything failing to init here cannot be allowed to prevent the Workstation from starting
-            FrameworkImplProvider.handleException(e);
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -125,7 +125,7 @@ public class StateMgr {
     @Subscribe
     public void cleanup(ApplicationClosing e) {
         log.info("Saving auto-share template");
-        FrameworkImplProvider.setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
+        FrameworkAccess.setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
     }
     
     public UserColorMapping getUserColorMapping() {
@@ -137,7 +137,7 @@ public class StateMgr {
     }
     
     public Long getCurrentOntologyId() {
-        String lastSelectedOntology = (String) FrameworkImplProvider.getModelProperty("lastSelectedOntology");
+        String lastSelectedOntology = (String) FrameworkAccess.getModelProperty("lastSelectedOntology");
         if (StringUtils.isEmpty(lastSelectedOntology)) {
             return null;
         }
@@ -148,7 +148,7 @@ public class StateMgr {
     public void setCurrentOntologyId(Long ontologyId) {
         log.info("Setting current ontology to {}", ontologyId);
         String idStr = ontologyId==null?null:ontologyId.toString();
-        FrameworkImplProvider.setModelProperty("lastSelectedOntology", idStr);
+        FrameworkAccess.setModelProperty("lastSelectedOntology", idStr);
         Events.getInstance().postOnEventBus(new OntologySelectionEvent(ontologyId));
     }
 
@@ -182,7 +182,7 @@ public class StateMgr {
                     }
                 }
             } catch (Exception ex) {
-                FrameworkImplProvider.handleException(ex);
+                FrameworkAccess.handleException(ex);
             }
             
         }
@@ -246,7 +246,7 @@ public class StateMgr {
 
     public void setAutoShareTemplate(PermissionTemplate autoShareTemplate) {
         this.autoShareTemplate = autoShareTemplate;
-        FrameworkImplProvider.setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
+        FrameworkAccess.setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
     }
     
     public List<String> getRecentlyOpenedHistory() {
@@ -302,7 +302,7 @@ public class StateMgr {
     
     private List<String> getHistoryProperty(String prop) {
         @SuppressWarnings("unchecked")
-        List<String> history = (List<String>)FrameworkImplProvider.getModelProperty(prop);
+        List<String> history = (List<String>) FrameworkAccess.getModelProperty(prop);
         if (history == null) return new ArrayList<>();
         // Must make a copy of the list so that we don't use the same reference that's in the cache.
         log.debug("History property {} contains {}",prop,history);
@@ -322,7 +322,7 @@ public class StateMgr {
         log.debug("Adding {} to recently opened history",value);
         // Must make a copy of the list so that our reference doesn't go into the cache.
         List<String> copy = new ArrayList<>(history);
-        FrameworkImplProvider.setModelProperty(prop, copy); 
+        FrameworkAccess.setModelProperty(prop, copy);
     }
     
     public Task getTaskById(Long taskId) throws Exception {
