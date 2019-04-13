@@ -16,7 +16,7 @@ import javax.swing.JSlider;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.browser.gui.listview.icongrid.ImagesPanel;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
 import org.slf4j.Logger;

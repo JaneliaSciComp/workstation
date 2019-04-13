@@ -10,7 +10,7 @@ import javax.swing.JComponent;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.openide.WizardDescriptor;
 import org.openide.util.ChangeSupport;
 

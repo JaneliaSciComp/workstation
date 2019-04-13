@@ -1,6 +1,6 @@
 package org.janelia.workstation.core.workers;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 
 /**
  * A simple result worker that doesn't return any results directly.

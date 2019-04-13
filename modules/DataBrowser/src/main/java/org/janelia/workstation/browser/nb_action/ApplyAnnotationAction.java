@@ -8,7 +8,7 @@ import java.util.List;
 
 import javax.swing.ProgressMonitor;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;

@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.dialogs.download;
 
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.openide.WizardDescriptor;

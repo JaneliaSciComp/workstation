@@ -2,8 +2,8 @@ package org.janelia.workstation.core.util.compression;
 
 import java.io.File;
 
-import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;
-import org.janelia.it.jacs.integration.framework.compression.CompressionException;
+import org.janelia.workstation.integration.framework.compression.CompressionAlgorithm;
+import org.janelia.workstation.integration.framework.compression.CompressionException;
 
 /**
  * Simplistic '1:1' compression algorithm. It just reads data off the disk.

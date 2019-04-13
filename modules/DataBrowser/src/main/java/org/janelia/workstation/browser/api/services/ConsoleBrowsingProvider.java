@@ -2,8 +2,7 @@ package org.janelia.workstation.browser.api.services;
 
 import java.util.concurrent.Callable;
 
-import org.janelia.it.jacs.integration.framework.system.BrowsingProvider;
-import org.janelia.it.jacs.integration.framework.system.ErrorHandler;
+import org.janelia.workstation.integration.framework.system.BrowsingProvider;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.openide.util.lookup.ServiceProvider;
 

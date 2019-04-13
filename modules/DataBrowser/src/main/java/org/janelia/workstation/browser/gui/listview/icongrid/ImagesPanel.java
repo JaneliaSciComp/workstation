@@ -29,7 +29,7 @@ import javax.swing.JViewport;
 import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.events.selection.SelectionModel;
 import org.janelia.workstation.common.gui.model.ImageModel;
 import org.janelia.workstation.common.gui.support.MouseForwarder;

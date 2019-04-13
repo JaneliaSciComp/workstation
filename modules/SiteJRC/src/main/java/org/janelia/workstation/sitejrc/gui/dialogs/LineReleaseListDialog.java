@@ -1,6 +1,6 @@
 package org.janelia.workstation.sitejrc.gui.dialogs;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;

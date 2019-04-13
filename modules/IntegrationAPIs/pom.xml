@@ -50,12 +50,12 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <configuration>
                     <publicPackages>
-                        <publicPackage>org.janelia.it.jacs.integration</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.integration.framework.compression</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.integration.framework.domain</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.integration.framework.exceptions</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.integration.framework.nodes</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.integration.framework.system</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.framework.compression</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.framework.domain</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.framework.exceptions</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.framework.nodes</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.framework.system</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

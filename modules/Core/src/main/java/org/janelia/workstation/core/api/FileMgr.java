@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.filecache.LocalFileCache;

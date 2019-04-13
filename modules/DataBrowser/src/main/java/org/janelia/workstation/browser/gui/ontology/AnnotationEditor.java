@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.ontology;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.workstation.core.api.DomainMgr;

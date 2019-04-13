@@ -28,7 +28,7 @@ import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.pipelines.PipelineProcess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;

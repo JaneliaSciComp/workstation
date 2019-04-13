@@ -7,7 +7,7 @@ import java.util.MissingResourceException;
 import javax.swing.JOptionPane;
 
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.core.api.http.HttpClientManager;

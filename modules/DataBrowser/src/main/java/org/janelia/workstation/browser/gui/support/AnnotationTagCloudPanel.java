@@ -6,7 +6,7 @@ import java.util.List;
 import javax.swing.JLabel;
 import javax.swing.JPopupMenu;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.model.access.domain.DomainUtils;

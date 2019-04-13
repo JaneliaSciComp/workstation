@@ -27,7 +27,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.text.DefaultFormatter;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;

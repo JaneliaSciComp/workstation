@@ -21,7 +21,7 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 
 import net.miginfocom.swing.MigLayout;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.StringUtils;

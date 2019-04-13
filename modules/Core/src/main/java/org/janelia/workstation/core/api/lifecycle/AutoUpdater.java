@@ -1,7 +1,7 @@
 package org.janelia.workstation.core.api.lifecycle;
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.netbeans.api.autoupdate.*;

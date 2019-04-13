@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
-import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.framework.domain.DomainObjectHelper;
+import org.janelia.workstation.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.model.access.domain.DomainUtils;

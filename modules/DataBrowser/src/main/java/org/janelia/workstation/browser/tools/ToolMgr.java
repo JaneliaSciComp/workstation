@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.JOptionPane;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.browser.gui.options.ToolsOptionsPanelController;
 import org.janelia.workstation.browser.tools.preferences.InfoObject;
 import org.janelia.workstation.core.api.LocalPreferenceMgr;

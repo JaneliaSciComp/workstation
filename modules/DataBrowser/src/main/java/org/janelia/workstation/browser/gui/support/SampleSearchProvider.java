@@ -1,6 +1,6 @@
 package org.janelia.workstation.browser.gui.support;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
 import org.janelia.workstation.core.model.search.SearchConfiguration;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;

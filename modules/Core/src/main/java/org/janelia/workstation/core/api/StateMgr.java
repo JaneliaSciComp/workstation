@@ -10,7 +10,7 @@ import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;

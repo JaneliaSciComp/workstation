@@ -6,7 +6,7 @@ import java.util.Map;
 
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;

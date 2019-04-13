@@ -5,8 +5,7 @@ import java.awt.BorderLayout;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.workstation.browser.gui.components.Bundle;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.browser.gui.editor.SampleEditorPanel;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;

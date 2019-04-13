@@ -21,7 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.lifecycle.SessionEvent;
 import org.janelia.workstation.core.events.prefs.LocalPreferenceChanged;

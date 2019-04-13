@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.model.DomainModelViewUtils;
 import org.janelia.model.domain.DomainObject;

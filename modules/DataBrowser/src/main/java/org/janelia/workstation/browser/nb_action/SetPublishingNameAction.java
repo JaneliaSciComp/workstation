@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.model.domain.DomainObject;

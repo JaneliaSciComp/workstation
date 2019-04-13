@@ -13,7 +13,7 @@ import java.util.List;
 
 import javax.swing.*;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.SystemInfo;

@@ -10,7 +10,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.AccessManager;
 import org.openide.modules.Places;
 import org.slf4j.Logger;

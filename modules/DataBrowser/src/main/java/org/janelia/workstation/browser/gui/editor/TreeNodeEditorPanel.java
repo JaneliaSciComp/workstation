@@ -4,7 +4,7 @@ import java.awt.BorderLayout;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;

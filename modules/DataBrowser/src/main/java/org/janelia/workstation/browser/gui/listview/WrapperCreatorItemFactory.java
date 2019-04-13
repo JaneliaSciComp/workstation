@@ -9,10 +9,10 @@ import java.util.List;
 
 import javax.swing.JMenuItem;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectAppender;
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectCreator;
-import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.framework.domain.DomainObjectAppender;
+import org.janelia.workstation.integration.framework.domain.DomainObjectCreator;
+import org.janelia.workstation.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.PipelineResult;

@@ -3,7 +3,7 @@ package org.janelia.workstation.common.gui.support;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.openide.windows.Mode;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;

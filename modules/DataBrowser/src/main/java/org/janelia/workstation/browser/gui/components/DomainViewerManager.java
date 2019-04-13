@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.components;
 
 import java.awt.Component;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.common.gui.util.UIUtils;

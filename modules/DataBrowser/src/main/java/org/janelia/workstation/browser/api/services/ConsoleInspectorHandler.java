@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.api.services;
 
 import java.util.Map;
 
-import org.janelia.it.jacs.integration.framework.system.InspectionHandler;
+import org.janelia.workstation.integration.framework.system.InspectionHandler;
 import org.janelia.workstation.browser.gui.components.DomainInspectorTopComponent;
 import org.janelia.model.domain.DomainObject;
 import org.openide.util.lookup.ServiceProvider;

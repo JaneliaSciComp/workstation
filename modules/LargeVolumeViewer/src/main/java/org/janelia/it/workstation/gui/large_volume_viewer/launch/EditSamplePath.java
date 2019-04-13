@@ -2,8 +2,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.launch;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
+import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.framework.domain.ObjectOpenAcceptor;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;

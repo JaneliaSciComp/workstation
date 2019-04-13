@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 AutoUpdate-Essential-Module: true
 AutoUpdate-Show-In-Client: false
-OpenIDE-Module-Localizing-Bundle: org/janelia/it/jacs/integration/Bundle.properties
+OpenIDE-Module-Localizing-Bundle: org/janelia/workstation/integration/Bundle.properties
 OpenIDE-Module-Specification-Version: ${janeliaws.modules.specification.version}
 OpenIDE-Module-Implementation-Version: ${buildNumber}

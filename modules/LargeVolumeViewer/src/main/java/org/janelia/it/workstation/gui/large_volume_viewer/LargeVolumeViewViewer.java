@@ -15,7 +15,7 @@ import javax.swing.JPanel;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.workstation.core.events.Events;

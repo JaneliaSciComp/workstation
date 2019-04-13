@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.viewer3d.resolver;
 
 import java.io.File;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

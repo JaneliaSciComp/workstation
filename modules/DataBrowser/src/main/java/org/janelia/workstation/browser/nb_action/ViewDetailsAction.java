@@ -3,7 +3,7 @@ package org.janelia.workstation.browser.nb_action;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;

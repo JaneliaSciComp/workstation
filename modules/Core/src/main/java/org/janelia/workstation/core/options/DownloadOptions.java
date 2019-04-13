@@ -3,7 +3,7 @@ package org.janelia.workstation.core.options;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

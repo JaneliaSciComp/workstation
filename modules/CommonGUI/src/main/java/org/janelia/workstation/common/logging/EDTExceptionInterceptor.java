@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.common.gui.options.ApplicationOptionsPanelController;
 import org.janelia.workstation.core.logging.CustomLoggingLevel;
 import org.janelia.workstation.core.util.Utils;

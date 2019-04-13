@@ -19,7 +19,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.ProgressMonitor;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.StateDrivenIconToggleButton;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;

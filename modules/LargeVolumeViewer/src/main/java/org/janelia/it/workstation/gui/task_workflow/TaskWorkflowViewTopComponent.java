@@ -33,7 +33,7 @@ import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SimpleIcons;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Quaternion;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.workstation.core.api.AccessManager;

@@ -1,6 +1,6 @@
 package org.janelia.workstation.core.api.services;
 
-import org.janelia.it.jacs.integration.framework.system.SettingsModel;
+import org.janelia.workstation.integration.framework.system.SettingsModel;
 import org.janelia.workstation.core.api.LocalPreferenceMgr;
 import org.openide.util.lookup.ServiceProvider;
 

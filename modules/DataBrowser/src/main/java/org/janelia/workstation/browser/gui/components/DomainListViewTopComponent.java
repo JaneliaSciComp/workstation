@@ -7,10 +7,9 @@ import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
-import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.workstation.browser.gui.components.Bundle;
+import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.framework.domain.DomainObjectHelper;
+import org.janelia.workstation.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextActivator;

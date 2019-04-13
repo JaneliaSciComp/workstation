@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.AbstractAction;
 
 import org.janelia.it.jacs.compute.engine.service.ServiceException;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.web.AsyncServiceClient;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.workers.WorkerChangedEvent;

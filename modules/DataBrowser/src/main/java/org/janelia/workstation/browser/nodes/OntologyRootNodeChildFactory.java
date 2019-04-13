@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.nodes;
 
 import java.util.List;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.model.domain.ontology.Ontology;

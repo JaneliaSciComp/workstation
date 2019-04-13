@@ -18,8 +18,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
+import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.framework.domain.ObjectOpenAcceptor;
 import org.janelia.workstation.core.api.web.AsyncServiceClient;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;

@@ -13,7 +13,7 @@ import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
 import net.miginfocom.swing.MigLayout;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.workers.BackgroundWorker;
 import org.slf4j.Logger;

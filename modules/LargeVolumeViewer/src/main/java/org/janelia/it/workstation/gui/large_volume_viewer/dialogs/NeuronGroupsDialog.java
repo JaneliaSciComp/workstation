@@ -28,7 +28,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.core.keybind.ShortcutTextField;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;

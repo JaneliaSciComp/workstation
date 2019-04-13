@@ -1,6 +1,6 @@
 package org.janelia.workstation.core.api;
 
-import org.janelia.it.jacs.integration.framework.domain.PreferenceHandler;
+import org.janelia.workstation.integration.framework.domain.PreferenceHandler;
 import org.openide.util.lookup.ServiceProvider;
 
 /**

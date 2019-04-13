@@ -4,7 +4,7 @@ import java.io.File;
 import java.security.ProtectionDomain;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.lifecycle.ConsoleState;
 import org.janelia.workstation.core.api.lifecycle.GracefulBrick;
 import org.janelia.workstation.core.events.Events;

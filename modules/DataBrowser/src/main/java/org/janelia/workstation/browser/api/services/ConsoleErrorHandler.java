@@ -6,8 +6,8 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.hibernate.exception.ExceptionUtils;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.integration.framework.system.ErrorHandler;
+import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.framework.system.ErrorHandler;
 import org.janelia.workstation.core.model.ErrorType;
 import org.janelia.workstation.common.gui.dialogs.LoginDialog;
 import org.janelia.workstation.core.logging.CustomLoggingLevel;

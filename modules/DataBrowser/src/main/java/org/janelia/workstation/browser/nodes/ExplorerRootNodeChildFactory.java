@@ -5,9 +5,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.integration.framework.nodes.NodeGenerator;
-import org.janelia.it.jacs.integration.framework.nodes.NodeProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.framework.nodes.NodeGenerator;
+import org.janelia.workstation.integration.framework.nodes.NodeProvider;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.model.domain.workspace.Workspace;
 import org.openide.nodes.ChildFactory;

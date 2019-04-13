@@ -8,7 +8,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.browser.nb_action.AddOntologyTermAction;
 import org.janelia.workstation.browser.nb_action.OntologyExportAction;

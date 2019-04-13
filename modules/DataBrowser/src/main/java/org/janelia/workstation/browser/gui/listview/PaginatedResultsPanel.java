@@ -25,7 +25,7 @@ import javax.swing.ProgressMonitor;
 import javax.swing.UIManager;
 import javax.swing.text.Position;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextRegistration;
 import org.janelia.workstation.browser.gui.find.FindToolbar;

@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.api;
 
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.workstation.integration.framework.domain.DomainObjectHelper;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.it.workstation.gui.large_volume_viewer.nodes.TmSampleNode;
 import org.janelia.it.workstation.gui.large_volume_viewer.nodes.TmWorkspaceNode;

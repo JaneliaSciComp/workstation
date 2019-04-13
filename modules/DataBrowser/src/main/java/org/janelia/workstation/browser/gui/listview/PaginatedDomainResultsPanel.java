@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.listview;
 
 import java.util.List;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.model.DomainObjectAnnotationChangeEvent;

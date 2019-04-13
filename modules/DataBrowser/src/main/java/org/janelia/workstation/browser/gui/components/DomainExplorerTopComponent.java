@@ -20,10 +20,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
-import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.workstation.browser.gui.components.Bundle;
+import org.janelia.workstation.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.framework.domain.DomainObjectHelper;
+import org.janelia.workstation.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextManager;
 import org.janelia.workstation.browser.gui.find.FindToolbar;

@@ -14,7 +14,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.exceptions.AuthenticationException;
 import org.janelia.workstation.core.util.ConsoleProperties;

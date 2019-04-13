@@ -3,7 +3,7 @@ package org.janelia.workstation.core.workers;
 import java.beans.PropertyChangeEvent;
 import java.util.concurrent.Callable;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.workers.WorkerChangedEvent;

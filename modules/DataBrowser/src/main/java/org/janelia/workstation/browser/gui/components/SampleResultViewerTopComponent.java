@@ -5,9 +5,8 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.browser.gui.components.Bundle;
 import org.janelia.workstation.browser.gui.editor.FileGroupEditorPanel;
 import org.janelia.workstation.browser.gui.editor.NeuronSeparationEditorPanel;
 import org.janelia.workstation.browser.gui.find.FindContext;

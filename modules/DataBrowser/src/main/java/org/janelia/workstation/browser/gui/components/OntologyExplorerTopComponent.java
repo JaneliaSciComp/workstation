@@ -32,7 +32,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.browser.gui.dialogs.AutoAnnotationPermissionDialog;
 import org.janelia.workstation.browser.gui.dialogs.BulkAnnotationPermissionDialog;
 import org.janelia.workstation.browser.gui.dialogs.KeyBindDialog;

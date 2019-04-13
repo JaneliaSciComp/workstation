@@ -7,7 +7,7 @@ import java.io.FileNotFoundException;
 
 import javax.swing.JPanel;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.util.Utils;

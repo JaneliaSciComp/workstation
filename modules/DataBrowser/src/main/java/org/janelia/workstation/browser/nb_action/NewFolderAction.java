@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.nb_action;
 
 import java.awt.Component;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;

@@ -1,6 +1,6 @@
 package org.janelia.workstation.browser.api.lifecycle;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.browser.gui.progress.ProgressMeterMgr;
 import org.janelia.workstation.browser.nb_action.NavigateBack;
 import org.janelia.workstation.browser.nb_action.NavigateForward;

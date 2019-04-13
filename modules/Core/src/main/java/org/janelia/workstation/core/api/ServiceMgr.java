@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.web.EmbeddedWebServer;
 import org.janelia.workstation.core.ws.EmbeddedAxisServer;

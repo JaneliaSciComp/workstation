@@ -1,6 +1,6 @@
 package org.janelia.workstation.browser.nb_action;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.browser.tools.ToolMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;

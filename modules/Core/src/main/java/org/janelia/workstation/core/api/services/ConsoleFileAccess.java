@@ -2,7 +2,7 @@ package org.janelia.workstation.core.api.services;
 
 import java.io.File;
 
-import org.janelia.it.jacs.integration.framework.system.FileAccess;
+import org.janelia.workstation.integration.framework.system.FileAccess;
 import org.janelia.workstation.core.api.FileMgr;
 import org.openide.util.lookup.ServiceProvider;
 

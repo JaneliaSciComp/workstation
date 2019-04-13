@@ -1,6 +1,6 @@
 package org.janelia.workstation.core.util;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 
 import java.util.concurrent.Callable;
 

@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.api.services;
 
 import java.util.Arrays;
 
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.workstation.integration.framework.domain.DomainObjectHelper;
 import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;

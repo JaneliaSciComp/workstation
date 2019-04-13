@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.common.gui.model.ImageDecorator;
 import org.janelia.workstation.common.gui.model.ImageModel;
 import org.janelia.workstation.common.gui.support.Icons;

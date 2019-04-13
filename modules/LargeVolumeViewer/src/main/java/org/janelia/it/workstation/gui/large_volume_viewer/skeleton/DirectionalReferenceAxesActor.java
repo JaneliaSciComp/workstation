@@ -5,7 +5,7 @@
  */
 package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

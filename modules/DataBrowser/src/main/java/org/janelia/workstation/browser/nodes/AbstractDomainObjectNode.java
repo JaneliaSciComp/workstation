@@ -16,7 +16,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.browser.actions.ServiceAcceptorActionHelper;
 import org.janelia.workstation.browser.gui.components.DomainListViewManager;
 import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;

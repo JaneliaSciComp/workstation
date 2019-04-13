@@ -12,8 +12,8 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JPopupMenu;
 
-import org.janelia.it.jacs.integration.framework.domain.ObjectOpenAcceptor;
-import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.framework.domain.ObjectOpenAcceptor;
+import org.janelia.workstation.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.model.domain.DomainObject;
 
 /**

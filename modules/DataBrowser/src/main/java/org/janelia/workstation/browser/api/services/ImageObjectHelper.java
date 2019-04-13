@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 
 import com.google.common.io.Files;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.workstation.integration.framework.domain.DomainObjectHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.workstation.core.api.DomainModel;

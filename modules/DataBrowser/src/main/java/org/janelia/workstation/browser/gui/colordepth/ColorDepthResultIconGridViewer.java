@@ -16,7 +16,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.workstation.browser.actions.ExportPickedGUIDs;
 import org.janelia.workstation.browser.actions.ExportPickedLineNames;
 import org.janelia.workstation.browser.actions.ExportPickedToSplitGenWebsite;

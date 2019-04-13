@@ -6,7 +6,7 @@ import java.awt.GridBagLayout;
 
 import javax.swing.*;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.workstation.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.CreateTiledMicroscopeSampleAction;
 import org.jdesktop.swingx.VerticalLayout;
 
