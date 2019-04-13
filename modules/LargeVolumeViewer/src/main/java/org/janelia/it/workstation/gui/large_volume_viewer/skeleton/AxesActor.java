@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.workstation.gui.opengl.GLActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,15 +15,15 @@ import java.util.Collection;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
-import org.janelia.it.workstation.gui.viewer3d.text.AxisLabel;
-import org.janelia.it.workstation.gui.viewer3d.text.FontInfo;
-import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
-import org.janelia.it.workstation.gui.viewer3d.axes.AxisIteration;
-import org.janelia.it.workstation.gui.viewer3d.axes.Geometry;
-import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
-import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
-import org.janelia.it.workstation.gui.viewer3d.text.AxisLabel.AxisOfParallel;
+import org.janelia.workstation.gui.viewer3d.MeshViewContext;
+import org.janelia.workstation.gui.viewer3d.text.AxisLabel;
+import org.janelia.workstation.gui.viewer3d.text.FontInfo;
+import static org.janelia.workstation.gui.viewer3d.OpenGLUtils.*;
+import org.janelia.workstation.gui.viewer3d.axes.AxisIteration;
+import org.janelia.workstation.gui.viewer3d.axes.Geometry;
+import org.janelia.workstation.gui.viewer3d.matrix_support.MatrixManager;
+import org.janelia.workstation.gui.viewer3d.shader.AbstractShader;
+import org.janelia.workstation.gui.viewer3d.text.AxisLabel.AxisOfParallel;
 
 /**
  * Draws three conventional axes, with tick marks for scale.

@@ -10,7 +10,7 @@ import javax.swing.JComponent;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 
 public interface MouseModalWidget 
 extends MouseListener, MouseMotionListener, MouseWheelListener, KeyListener

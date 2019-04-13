@@ -29,7 +29,7 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
@@ -38,18 +38,18 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.DirectionalRe
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.NeuronTraceVtxAttribMgr;
-import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
-import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer;
-import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer.OcclusiveVolumeModel;
-import org.janelia.it.workstation.gui.viewer3d.OcclusiveViewer;
-import org.janelia.it.workstation.gui.viewer3d.ResetPositionerI;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.workstation.gui.viewer3d.mesh.actor.AttributeManagerBufferUploader;
-import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
-import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
-import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
-import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
+import org.janelia.workstation.gui.opengl.GLActor;
+import org.janelia.workstation.gui.viewer3d.MeshViewContext;
+import org.janelia.workstation.gui.viewer3d.OcclusiveRenderer;
+import org.janelia.workstation.gui.viewer3d.OcclusiveRenderer.OcclusiveVolumeModel;
+import org.janelia.workstation.gui.viewer3d.OcclusiveViewer;
+import org.janelia.workstation.gui.viewer3d.ResetPositionerI;
+import org.janelia.workstation.gui.viewer3d.VolumeModel;
+import org.janelia.workstation.gui.viewer3d.mesh.actor.AttributeManagerBufferUploader;
+import org.janelia.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
+import org.janelia.workstation.gui.viewer3d.mesh.actor.MeshDrawActor.MeshDrawActorConfigurator;
+import org.janelia.workstation.gui.viewer3d.picking.IdCoderProvider;
+import org.janelia.workstation.gui.viewer3d.picking.RenderedIdPicker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -278,11 +278,11 @@ public class AnnotationSkeletonPanel extends JPanel {
      * @return the actor.
      */
     public GLActor buildOpenGLFixedFunctionActor(BoundingBox3d boundingBox, double axisLengthDivisor, VolumeModel volumeModel) {
-        org.janelia.it.workstation.gui.viewer3d.axes.AxesActor axes = new org.janelia.it.workstation.gui.viewer3d.axes.AxesActor();
+        org.janelia.workstation.gui.viewer3d.axes.AxesActor axes = new org.janelia.workstation.gui.viewer3d.axes.AxesActor();
         axes.setVolumeModel(volumeModel);
         axes.setBoundingBox(boundingBox);
         axes.setAxisLengths( boundingBox.getWidth(), boundingBox.getHeight(), boundingBox.getDepth() );
-        axes.setRenderMethod(org.janelia.it.workstation.gui.viewer3d.axes.AxesActor.RenderMethod.MESH);
+        axes.setRenderMethod(org.janelia.workstation.gui.viewer3d.axes.AxesActor.RenderMethod.MESH);
         axes.setAxisLengthDivisor( axisLengthDivisor );
         axes.setFullAxes( true );
         return axes;

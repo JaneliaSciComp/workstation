@@ -4,11 +4,11 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.opengl.GLOrthoCamera;
-import org.janelia.it.workstation.gui.viewer3d.BaseRenderer;
-import org.janelia.it.workstation.gui.viewer3d.ViewportGL;
+import org.janelia.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.opengl.GLActor;
+import org.janelia.workstation.gui.opengl.GLOrthoCamera;
+import org.janelia.workstation.gui.viewer3d.BaseRenderer;
+import org.janelia.workstation.gui.viewer3d.ViewportGL;
 
 public class SliceRenderer
 extends BaseRenderer

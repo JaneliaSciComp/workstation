@@ -18,7 +18,7 @@ import javax.swing.ImageIcon;
 
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
@@ -26,9 +26,9 @@ import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughText
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PathShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
-import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
-import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
+import org.janelia.workstation.gui.opengl.GLActor;
+import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

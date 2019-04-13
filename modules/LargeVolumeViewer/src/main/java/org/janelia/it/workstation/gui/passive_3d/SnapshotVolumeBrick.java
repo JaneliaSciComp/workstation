@@ -1,9 +1,9 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
-import org.janelia.it.workstation.gui.static_view.*;
 import org.janelia.it.workstation.gui.passive_3d.shader.SnapshotShader;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
+import org.janelia.workstation.gui.static_view.AbstractVolumeBrick;
+import org.janelia.workstation.gui.viewer3d.VolumeModel;
+import static org.janelia.workstation.gui.viewer3d.OpenGLUtils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,9 +14,9 @@ import java.awt.Color;
 import java.util.Collection;
 import java.util.Iterator;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
-import org.janelia.it.workstation.gui.viewer3d.shader.TexturedShader;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
+import org.janelia.workstation.gui.viewer3d.shader.TexturedShader;
+import org.janelia.workstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.workstation.gui.viewer3d.texture.TextureMediator;
 
 /**
  * VolumeTexture class draws a transparent rectangular volume with a 3D opengl texture

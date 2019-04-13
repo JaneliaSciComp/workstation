@@ -9,7 +9,7 @@ import javax.swing.KeyStroke;
 import com.jogamp.newt.event.KeyEvent;
 
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.camera.Camera3d;
 
 public class ZoomOutAction extends AbstractAction 
 {

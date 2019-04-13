@@ -29,8 +29,8 @@ import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.passive_3d.filter.MatrixFilter3D;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
+import org.janelia.workstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 
 /**
  * Represents the group of controls.  Actions against controls are encapsulated

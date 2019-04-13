@@ -7,8 +7,8 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
 
-import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
-//import org.janelia.it.workstation.signal.Signal;
+import org.janelia.workstation.gui.viewer3d.interfaces.AwtActor;
+//import Signal;
 
 public class RubberBand
 implements AwtActor

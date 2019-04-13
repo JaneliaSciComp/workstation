@@ -1,22 +1,12 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import java.awt.image.ColorModel;
-import java.awt.image.IndexColorModel;
-import java.awt.image.Raster;
-import java.awt.image.RenderedImage;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.ShortBuffer;
-
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.glu.GLU;
 
-import org.janelia.it.jacs.shared.lvv.ChannelBrightnessStats;
-import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
 import org.janelia.it.jacs.shared.lvv.TextureData2d;
-import org.janelia.it.workstation.gui.opengl.GLError;
+import org.janelia.workstation.gui.opengl.GLError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

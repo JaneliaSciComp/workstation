@@ -23,7 +23,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.Anch
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.LineEnclosurePrecomputes;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
+import org.janelia.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;

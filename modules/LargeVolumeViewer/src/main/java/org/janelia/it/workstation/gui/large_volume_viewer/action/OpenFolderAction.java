@@ -11,7 +11,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 public class OpenFolderAction extends AbstractAction 
 {

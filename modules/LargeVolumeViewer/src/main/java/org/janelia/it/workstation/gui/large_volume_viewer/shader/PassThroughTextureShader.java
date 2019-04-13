@@ -10,7 +10,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.glu.GLU;
 
-import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
+import org.janelia.workstation.gui.viewer3d.shader.AbstractShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

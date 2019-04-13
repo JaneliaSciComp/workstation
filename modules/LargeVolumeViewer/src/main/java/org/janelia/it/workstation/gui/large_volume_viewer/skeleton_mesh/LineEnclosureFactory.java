@@ -16,7 +16,7 @@ import org.janelia.it.jacs.shared.mesh_loader.Triangle;
 import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
 import org.janelia.it.jacs.shared.mesh_loader.VertexInfoBean;
 import org.janelia.it.jacs.shared.mesh_loader.VertexInfoKey;
-import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
+import org.janelia.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -13,11 +13,11 @@ import java.util.Vector;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.MenuItemGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.MouseModalWidget;
 import org.janelia.it.workstation.gui.large_volume_viewer.RubberBand;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 
 public class ZoomMode 
 implements WheelMode, MouseMode

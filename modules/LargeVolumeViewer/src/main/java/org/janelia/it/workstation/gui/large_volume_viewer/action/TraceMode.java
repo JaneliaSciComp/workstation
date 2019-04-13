@@ -40,7 +40,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;

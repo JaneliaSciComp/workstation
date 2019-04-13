@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.workstation.gui.viewer3d.texture.TextureDataI;
 
 /**
  * Created with IntelliJ IDEA.

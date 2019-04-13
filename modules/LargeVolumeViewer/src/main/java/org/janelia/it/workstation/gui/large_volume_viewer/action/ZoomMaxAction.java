@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
-import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 import java.awt.event.ActionEvent;
 

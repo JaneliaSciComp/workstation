@@ -6,8 +6,8 @@
 
 package org.janelia.it.workstation.gui.passive_3d;
 
-import org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI;
-import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
+import org.janelia.workstation.gui.viewer3d.masking.VolumeDataI;
+import org.janelia.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 
 /**
  * Created with IntelliJ IDEA.

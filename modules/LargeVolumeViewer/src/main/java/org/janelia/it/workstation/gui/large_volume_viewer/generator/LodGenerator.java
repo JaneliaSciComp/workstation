@@ -2,8 +2,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.generator;
 
 import java.util.Iterator;
 
-import org.janelia.it.workstation.gui.camera.BasicCamera3d;
-import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.camera.BasicCamera3d;
+import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.Tile2d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileConsumer;
 import org.janelia.it.jacs.shared.lvv.TileIndex;

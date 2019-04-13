@@ -22,7 +22,7 @@ import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
@@ -32,7 +32,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVerte
 import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.workstation.tracing.VoxelPosition;

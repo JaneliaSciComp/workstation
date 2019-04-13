@@ -13,9 +13,9 @@ import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.it.jacs.shared.lvv.ViewBoundingBox;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.StatusUpdateListener;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

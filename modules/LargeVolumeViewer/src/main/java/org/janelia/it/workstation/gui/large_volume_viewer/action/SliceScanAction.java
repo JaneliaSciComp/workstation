@@ -4,8 +4,8 @@ import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
-import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;

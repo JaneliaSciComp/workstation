@@ -40,7 +40,7 @@ import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.workstation.common.gui.support.MissingIcon;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.viewer3d.Mip3d;
+import org.janelia.workstation.gui.viewer3d.Mip3d;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.enums.FileType;

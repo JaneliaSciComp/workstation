@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.camera.Camera3d;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;

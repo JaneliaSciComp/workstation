@@ -8,8 +8,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
-import org.janelia.it.workstation.gui.viewer3d.OpenGLUtils;
-import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
+import org.janelia.workstation.gui.viewer3d.OpenGLUtils;
+import org.janelia.workstation.gui.viewer3d.shader.AbstractShader;
 
 /**
  * This is the CPU-side wrapper around the shader used by the directional

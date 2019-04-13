@@ -2,15 +2,15 @@ package org.janelia.workstation.browser.gui.hud;
 
 import javax.swing.SwingWorker;
 
-import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.static_view.RGBExcludableVolumeBrick;
-import org.janelia.it.workstation.gui.viewer3d.Mip3d;
-import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
-import org.janelia.it.workstation.gui.viewer3d.VolumeBrickFactory;
-import org.janelia.it.workstation.gui.viewer3d.VolumeBrickI;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.workstation.gui.viewer3d.resolver.CacheFileResolver;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.workstation.gui.opengl.GLActor;
+import org.janelia.workstation.gui.static_view.RGBExcludableVolumeBrick;
+import org.janelia.workstation.gui.viewer3d.Mip3d;
+import org.janelia.workstation.gui.viewer3d.VolumeBrickActorBuilder;
+import org.janelia.workstation.gui.viewer3d.VolumeBrickFactory;
+import org.janelia.workstation.gui.viewer3d.VolumeBrickI;
+import org.janelia.workstation.gui.viewer3d.VolumeModel;
+import org.janelia.workstation.gui.viewer3d.resolver.CacheFileResolver;
+import org.janelia.workstation.gui.viewer3d.texture.TextureDataI;
 
 public class Load3dSwingWorker extends SwingWorker<Boolean,Boolean> {
     private Mip3d mip3d;

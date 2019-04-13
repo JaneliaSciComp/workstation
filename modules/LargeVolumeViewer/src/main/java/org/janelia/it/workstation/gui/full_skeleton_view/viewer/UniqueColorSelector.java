@@ -10,9 +10,9 @@ import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.Activ
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
-import org.janelia.it.workstation.gui.viewer3d.picking.IdCoder;
-import org.janelia.it.workstation.gui.viewer3d.picking.IdCoderProvider;
-import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
+import org.janelia.workstation.gui.viewer3d.picking.IdCoder;
+import org.janelia.workstation.gui.viewer3d.picking.IdCoderProvider;
+import org.janelia.workstation.gui.viewer3d.picking.RenderedIdPicker;
 
 /**
  * Using color-under-click to find what was selected.

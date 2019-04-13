@@ -11,8 +11,8 @@ import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.opengl.GLActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

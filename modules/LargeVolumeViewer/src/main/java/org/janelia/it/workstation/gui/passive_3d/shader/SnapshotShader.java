@@ -4,13 +4,13 @@
  */
 package org.janelia.it.workstation.gui.passive_3d.shader;
 
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
+import org.janelia.workstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import org.janelia.it.workstation.gui.viewer3d.shader.TexturedShader;
+import org.janelia.workstation.gui.viewer3d.shader.TexturedShader;
 
 public class SnapshotShader extends TexturedShader {
     public static final String INTERLEAVED_TEXTURE_NAME = "interleavedTexture";

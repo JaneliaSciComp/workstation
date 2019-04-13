@@ -6,7 +6,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
+import org.janelia.workstation.gui.viewer3d.matrix_support.MatrixManager;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -15,13 +15,13 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager.FocusBehavior;
-import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.workstation.gui.viewer3d.matrix_support.MatrixManager.FocusBehavior;
+import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
-import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
-import org.janelia.it.workstation.gui.viewer3d.axes.Geometry;
-import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
+import org.janelia.workstation.gui.viewer3d.MeshViewContext;
+import static org.janelia.workstation.gui.viewer3d.OpenGLUtils.reportError;
+import org.janelia.workstation.gui.viewer3d.axes.Geometry;
+import org.janelia.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 
 /**
  * Actor which shows a trio of vertex-joined rays, indicating what direction the

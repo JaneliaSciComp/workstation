@@ -1,8 +1,9 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
+import org.janelia.workstation.gui.viewer3d.Mip3d;
+import org.janelia.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.workstation.gui.viewer3d.*;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.workstation.gui.viewer3d.texture.TextureDataI;
 
 import java.beans.PropertyChangeEvent;
 import java.util.Collection;

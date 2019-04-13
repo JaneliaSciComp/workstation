@@ -3,9 +3,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 import java.nio.IntBuffer;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
-import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
-import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
-import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
+import org.janelia.workstation.gui.viewer3d.MeshViewContext;
+import static org.janelia.workstation.gui.viewer3d.OpenGLUtils.reportError;
+import org.janelia.workstation.gui.viewer3d.matrix_support.MatrixManager;
 
 /**
  * Carries out the display task for a Generic Vertex Pointer-using class.

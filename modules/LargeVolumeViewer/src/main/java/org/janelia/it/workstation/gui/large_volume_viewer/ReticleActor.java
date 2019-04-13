@@ -4,8 +4,8 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.workstation.gui.viewer3d.interfaces.AwtActor;
+import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 
 /**
  * Paints a cross-hair to indicate the exact center of the view

@@ -3,11 +3,11 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
-import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.OutlineShader;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
+import org.janelia.workstation.gui.viewer3d.shader.AbstractShader;
 
 public class TileOutlineActor 
 implements GLActor
