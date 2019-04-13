@@ -1,11 +1,11 @@
-package org.janelia.it.workstation.admin;
+package org.janelia.workstation.admin;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import javax.swing.AbstractAction;
+
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;

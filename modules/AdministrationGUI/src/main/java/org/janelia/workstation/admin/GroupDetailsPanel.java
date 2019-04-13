@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.admin;
+package org.janelia.workstation.admin;
 
 import java.awt.Dimension;
 import java.awt.Font;

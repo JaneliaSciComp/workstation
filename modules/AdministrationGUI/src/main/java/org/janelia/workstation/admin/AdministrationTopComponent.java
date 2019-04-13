@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.admin;
+package org.janelia.workstation.admin;
 
 import javax.swing.*;
 import java.awt.Font;
@@ -24,7 +24,7 @@ import org.openide.windows.WindowManager;
 
 
 @ConvertAsProperties(
-        dtd = "-//org.janelia.it.workstation.admin//AdministrationTopComponent//EN",
+        dtd = "-//org.janelia.workstation.admin//AdministrationTopComponent//EN",
         autostore = false
 )
 @TopComponent.Description(
@@ -33,7 +33,7 @@ import org.openide.windows.WindowManager;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = false)
-@ActionID(category = "Window", id = "org.janelia.it.workstation.admin.AdministrationTopComponent")
+@ActionID(category = "Window", id = "org.janelia.workstation.admin.AdministrationTopComponent")
 @ActionReference(path = "Menu/Window/Core" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AdministrationTopComponentAction",

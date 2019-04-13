@@ -3,11 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.janelia.it.workstation.admin;
+package org.janelia.workstation.admin;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -27,7 +25,6 @@ import javax.swing.table.AbstractTableModel;
 
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;
