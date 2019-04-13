@@ -17,7 +17,6 @@ import org.janelia.horta.camera.PrimitiveInterpolator;
 import org.janelia.horta.camera.Vector3Interpolator;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.scenewindow.SceneWindow;
-import org.openide.util.Exceptions;
 
 /**
  *

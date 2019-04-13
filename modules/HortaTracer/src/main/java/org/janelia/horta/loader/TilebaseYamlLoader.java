@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.text.ParseException;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.horta.NeuronTracerTopComponent;
-import org.janelia.horta.volume.MouseLightYamlBrickSource;
 import org.openide.util.Exceptions;
 
 /**

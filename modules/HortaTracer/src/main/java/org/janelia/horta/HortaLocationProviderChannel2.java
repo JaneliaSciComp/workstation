@@ -33,7 +33,6 @@ import java.net.URL;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
-import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
