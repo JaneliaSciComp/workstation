@@ -13,7 +13,7 @@ import javax.swing.table.TableCellRenderer;
  */
 public class TableSelectBox extends AbstractCellEditor implements TableCellEditor, TableCellRenderer {
 
-    JComboBox selectBox;
+    private JComboBox selectBox;
 
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {

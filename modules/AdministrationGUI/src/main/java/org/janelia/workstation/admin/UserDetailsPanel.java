@@ -40,20 +40,20 @@ import org.slf4j.LoggerFactory;
  */
 public class UserDetailsPanel extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(UserDetailsPanel.class);
-    
-    AdministrationTopComponent parent;
-    JComboBox newGroupSelector;
-    JButton saveUserButton;
-    JButton removeGroupButton;
-    JButton newGroupButton;
-    UserDetailsTableModel userDetailsTableModel;
-    JTable userDetailsTable;
-    GroupRolesModel groupRolesModel;
-    JTable groupRolesTable;
-    User currentUser;
-    User admin;
-    boolean passwordChanged = false;
-    boolean dirtyFlag = false;
+
+    private AdministrationTopComponent parent;
+    private JComboBox newGroupSelector;
+    private JButton saveUserButton;
+    private JButton removeGroupButton;
+    private JButton newGroupButton;
+    private UserDetailsTableModel userDetailsTableModel;
+    private JTable userDetailsTable;
+    private GroupRolesModel groupRolesModel;
+    private JTable groupRolesTable;
+    private User currentUser;
+    private User admin;
+    private boolean passwordChanged = false;
+    private boolean dirtyFlag = false;
     private int COLUMN_NAME = 0;
     private int COLUMN_VALUE = 1;
     

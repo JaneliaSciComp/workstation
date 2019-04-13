@@ -31,11 +31,11 @@ import org.slf4j.LoggerFactory;
 public class NewGroupPanel extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(NewGroupPanel.class);
     
-    AdministrationTopComponent parent;
-    NewGroupTableModel newGroupTableModel;
-    JTable newGroupTable;
-    Group currentGroup;
-    JButton saveUserButton;
+    private AdministrationTopComponent parent;
+    private NewGroupTableModel newGroupTableModel;
+    private JTable newGroupTable;
+    private Group currentGroup;
+    private JButton saveUserButton;
     private int COLUMN_NAME = 0;
     private int COLUMN_VALUE = 1;
     

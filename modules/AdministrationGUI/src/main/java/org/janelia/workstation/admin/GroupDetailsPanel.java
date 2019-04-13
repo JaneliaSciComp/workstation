@@ -34,12 +34,12 @@ import org.slf4j.LoggerFactory;
 public class GroupDetailsPanel extends JPanel implements ActionListener {
     private static final Logger log = LoggerFactory.getLogger(GroupDetailsPanel.class);
 
-    AdministrationTopComponent parent;
-    String groupKey;
-    GroupRolesModel groupRolesModel;
-    JTable groupRolesTable;
-    JComboBox addUserBox;
-    Map<String, User> lookupUser;
+    private AdministrationTopComponent parent;
+    private String groupKey;
+    private GroupRolesModel groupRolesModel;
+    private JTable groupRolesTable;
+    private JComboBox addUserBox;
+    private Map<String, User> lookupUser;
     private int COLUMN_NAME = 0;
     private int COLUMN_ROLE = 1;
 

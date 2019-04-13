@@ -34,7 +34,7 @@ public class UserManagementPanel extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(UserManagementPanel.class);
     
     private AdministrationTopComponent parent;
-    UserManagementTableModel userManagementTableModel;
+    private UserManagementTableModel userManagementTableModel;
     private JTable userManagementTable;
     private JButton editUserButton;
 
@@ -139,24 +139,27 @@ public class UserManagementPanel extends JPanel {
     }
 
     class UserManagementTableModel extends AbstractTableModel {
-        String[] columnNames = {"Username", "Groups"};
-        List<List<Object>> data = new ArrayList<List<Object>>();
-        List<User> users = new ArrayList<>();
+
+        private String[] columnNames = {"Username", "Groups"};
+        private List<List<Object>> data = new ArrayList<>();
+        private List<User> users = new ArrayList<>();
         private UserManagementPanel manager;
-        
+
+        @Override
         public int getColumnCount() {
             return columnNames.length;
-        }        
+        }
 
+        @Override
         public int getRowCount() {
             return data.size();
         }
-        
+
         public void clear() {
-            data = new ArrayList<List<Object>>();
+            data = new ArrayList<>();
             users = new ArrayList<>();
         }
-        
+
         public void addUsers(List<User> userList) {
             data = new ArrayList<List<Object>>();
             users = new ArrayList<>();
@@ -172,7 +175,7 @@ public class UserManagementPanel extends JPanel {
             }            
             fireTableRowsInserted(0, data.size()-1);
         }
-        
+
         public void addUser (User user) {
             ArrayList userRow = new ArrayList<>();
             userRow.add(user.getFullName());
@@ -181,10 +184,12 @@ public class UserManagementPanel extends JPanel {
             fireTableRowsInserted(data.size()-1, data.size()-1);
         }
 
+        @Override
         public String getColumnName(int col) {
             return columnNames[col];
         }
 
+        @Override
         public Object getValueAt(int row, int col) {
             return data.get(row).get(col);
         }
@@ -193,12 +198,13 @@ public class UserManagementPanel extends JPanel {
         public User getUserAtRow(int row) {
             return users.get(row);
         }
-        
+
         public void removeUser(int row) {
             data.remove(row);
             this.fireTableRowsDeleted(row, row);
         }
 
+        @Override
         public Class getColumnClass(int c) {
             return (getValueAt(0, c)==null?String.class:getValueAt(0,c).getClass());
         }
