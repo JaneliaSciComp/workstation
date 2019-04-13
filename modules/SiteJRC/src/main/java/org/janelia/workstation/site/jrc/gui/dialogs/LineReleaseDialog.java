@@ -1,4 +1,4 @@
-package org.janelia.workstation.sitejrc.gui.dialogs;
+package org.janelia.workstation.site.jrc.gui.dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.Font;

@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
-OpenIDE-Module-Localizing-Bundle: org/janelia/workstation/sitejrc/Bundle.properties
+OpenIDE-Module-Localizing-Bundle: org/janelia/workstation/site/jrc/Bundle.properties
 OpenIDE-Module-Specification-Version: ${janeliaws.modules.specification.version}
 OpenIDE-Module-Implementation-Version: ${buildNumber}

@@ -1,4 +1,4 @@
-package org.janelia.workstation.sitejrc.nb_action;
+package org.janelia.workstation.site.jrc.nb_action;
 
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.Utils;

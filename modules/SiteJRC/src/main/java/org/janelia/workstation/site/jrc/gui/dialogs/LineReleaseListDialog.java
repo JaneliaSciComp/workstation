@@ -1,4 +1,4 @@
-package org.janelia.workstation.sitejrc.gui.dialogs;
+package org.janelia.workstation.site.jrc.gui.dialogs;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
