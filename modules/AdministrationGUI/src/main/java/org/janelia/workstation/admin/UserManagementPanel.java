@@ -22,6 +22,7 @@ import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,9 +134,7 @@ public class UserManagementPanel extends JPanel {
                 userManagementTableModel.addUsers(userList);
             }
         } catch (Exception e) {
-            String errorMessage = "Problem retrieving user information";
-            log.error(errorMessage);
-            e.printStackTrace();
+            FrameworkAccess.handleException("Problem retrieving user information", e);
         }
     }
 

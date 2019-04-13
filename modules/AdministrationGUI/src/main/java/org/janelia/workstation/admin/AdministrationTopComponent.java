@@ -10,6 +10,7 @@ import org.janelia.model.security.User;
 import org.janelia.model.security.Group;
 import org.janelia.model.security.dto.AuthenticationRequest;
 
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -17,12 +18,9 @@ import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.WindowManager;
 
-
 /**
  * Top component which displays something.
  */
-
-
 @ConvertAsProperties(
         dtd = "-//org.janelia.workstation.admin//AdministrationTopComponent//EN",
         autostore = false
@@ -115,7 +113,7 @@ public final class AdministrationTopComponent extends TopComponent {
             add(panel);
             revalidate();
         } catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }        
     }
     
@@ -127,7 +125,7 @@ public final class AdministrationTopComponent extends TopComponent {
             add(panel);
             revalidate();
         } catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }        
     }
         
@@ -147,7 +145,7 @@ public final class AdministrationTopComponent extends TopComponent {
             add(panel);
             revalidate();
         } catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }        
     }
     
@@ -159,7 +157,7 @@ public final class AdministrationTopComponent extends TopComponent {
             SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
             subjectFacade.updateUserRoles(user.getKey(), user.getUserGroupRoles());
         } catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }
     }
 
@@ -182,7 +180,7 @@ public final class AdministrationTopComponent extends TopComponent {
             return newUser;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }
         return null;
     }
@@ -209,7 +207,7 @@ public final class AdministrationTopComponent extends TopComponent {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }
     }
     
@@ -218,7 +216,7 @@ public final class AdministrationTopComponent extends TopComponent {
             SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();            
             subjectFacade.createGroup(group);
         } catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }
     }
     

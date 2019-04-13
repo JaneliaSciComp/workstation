@@ -29,6 +29,7 @@ import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;
 import org.janelia.model.security.Group;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,9 +143,7 @@ public class GroupManagementPanel extends JPanel {
                 groupManagementTableModel.loadGroups(groupList, groupTotals);
             }
         } catch (Exception e) {
-            String errorMessage = "Problem retrieving group information";
-            log.error(errorMessage);
-            e.printStackTrace();
+            FrameworkAccess.handleException("Problem retrieving group information", e);
         }
     }
         

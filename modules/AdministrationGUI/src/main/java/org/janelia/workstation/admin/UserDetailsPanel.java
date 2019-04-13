@@ -30,6 +30,7 @@ import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -287,9 +288,7 @@ public class UserDetailsPanel extends JPanel {
                 validateUserChanges();
                 this.fireTableCellUpdated(row, col);
             } catch (Exception ex) {
-                ex.printStackTrace();
-                String errorMessage = "Problem updating user information using reflection";
-                log.error(errorMessage);
+                FrameworkAccess.handleException("Problem updating user information using reflection", ex);
             }
         }
     }

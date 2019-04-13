@@ -20,6 +20,7 @@ import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.model.security.Group;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,9 +160,7 @@ public class NewGroupPanel extends JPanel {
                 validateGroupChanges();
                 this.fireTableCellUpdated(row, col);
             } catch (Exception ex) {
-                ex.printStackTrace();
-                String errorMessage = "Problem updating user information using reflection";
-                log.error(errorMessage);
+                FrameworkAccess.handleException("Problem updating user information using reflection", ex);
             }
         }
 
