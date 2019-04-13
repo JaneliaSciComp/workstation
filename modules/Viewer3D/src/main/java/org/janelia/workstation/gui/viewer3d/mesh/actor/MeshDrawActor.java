@@ -440,7 +440,7 @@ public class MeshDrawActor implements GLActor {
             }
 
         } catch ( AbstractShader.ShaderCreationException sce ) {
-            sce.printStackTrace();
+            logger.error("Error creating shader", sce);
             rtnVal = false;
         }
         return rtnVal;

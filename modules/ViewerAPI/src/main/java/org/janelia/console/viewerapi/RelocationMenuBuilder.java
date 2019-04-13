@@ -76,11 +76,13 @@ public class RelocationMenuBuilder {
     }
 
     private class PushSampleLocationAction extends AbstractAction {
+        private String description;
         private ViewerLocationAcceptor locationAcceptor;
         private Tiled3dSampleLocationProviderAcceptor locationProvider;
 
         public PushSampleLocationAction(String description, Tiled3dSampleLocationProviderAcceptor locationAcceptor, Tiled3dSampleLocationProviderAcceptor locationProvider) {
             super("Navigate to This Location in " + description);
+            this.description = description;
             this.locationAcceptor = new DefaultViewerLocationAcceptor(locationAcceptor);  
             this.locationProvider = locationProvider;
         }
@@ -95,7 +97,7 @@ public class RelocationMenuBuilder {
                 locationAcceptor.acceptLocation(sampleLocation);
             } 
             catch (Exception ioe) {
-                Exceptions.printStackTrace(ioe);
+                logger.warn("Failed to navigate to location in "+description, ioe);
                 JOptionPane.showMessageDialog(
                         null,
                         "Navigation failed. Check that required files exist in synch source.",
@@ -108,11 +110,13 @@ public class RelocationMenuBuilder {
     
     private class AcceptSampleLocationAction extends AbstractAction {
 
+        private String description;
         private Tiled3dSampleLocationProviderAcceptor provider;
         private ViewerLocationAcceptor acceptor;
 
         public AcceptSampleLocationAction(String description, Tiled3dSampleLocationProviderAcceptor provider, ViewerLocationAcceptor acceptor) {
             super("Accept location from " + description + " now");
+            this.description = description;
             this.provider = provider;
             this.acceptor = acceptor;
         }
@@ -132,8 +136,7 @@ public class RelocationMenuBuilder {
            try {
                 acceptor.acceptLocation(sampleLocation);
             } catch (Exception ioe) {
-                logger.error(ioe.getMessage());
-                Exceptions.printStackTrace(ioe);
+                logger.warn("Failed to accept location from "+description, ioe);
                 JOptionPane.showMessageDialog(
                         null,
                         "Check that required files exist in synch source"

@@ -599,10 +599,9 @@ public final class NeuronTracerTopComponent extends TopComponent
             volumeCache.setColorChannel(defaultColorChannel);
 
         } catch (Exception ex) {
-            Exceptions.printStackTrace(ex);
             throw new RuntimeException(
                     "Failed to load location " + sampleLocation.getSampleUrl().toString() + ", " +
-                    sampleLocation.getFocusXUm() + "," + sampleLocation.getFocusYUm() + "," + sampleLocation.getFocusZUm()
+                    sampleLocation.getFocusXUm() + "," + sampleLocation.getFocusYUm() + "," + sampleLocation.getFocusZUm(), ex
             );
         }
     }
@@ -980,7 +979,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
             } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
+                logger.error("Failed to load mesh actors", ex);
             }
         }
     }
@@ -1190,8 +1189,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                     });
 
                 } catch (UnsupportedFlavorException | IOException ex) {
+                    logger.warn("Error loading dragged file", ex);
                     JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading dragged file");
-                    Exceptions.printStackTrace(ex);
                 }
 
             }
@@ -1602,7 +1601,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         try {
                             ImageIO.write(image, "png", outputFile);
                         } catch (IOException ex) {
-                            Exceptions.printStackTrace(ex);
+                            throw new RuntimeException("Error saving screenshot", ex);
                         }
                     }
                 });
@@ -1995,8 +1994,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         try {
             neuronMPRenderer.clearNeuronReconstructions();
         } catch (Exception e) {
-            logger.warn("exception suppressed when closing Horta top component");
-            e.printStackTrace();
+            logger.warn("exception suppressed when closing Horta top component", e);
         }
     }
 
@@ -2160,11 +2158,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         try {
             return KtxOctreeBlockTileSourceProvider.createKtxOctreeBlockTileSource(this.getCurrentSample(), null);
         } catch (Exception ex) {
-            Exceptions.printStackTrace(ex);
+            logger.warn("Error initializing KTX source for "+getCurrentSample().getFilepath(), ex);
             JOptionPane.showMessageDialog(
                     this,
-                    "ERROR: Error initilizing KTX source for sample at " + this.getCurrentSample().getFilepath(),
-                    "ERROR: Error initilizing KTX source for sample at " + this.getCurrentSample().getFilepath(),
+                    "Error initializing KTX source for sample at " + getCurrentSample().getFilepath(),
+                    "Error initializing KTX source",
                     JOptionPane.ERROR_MESSAGE);
             return null;
         }

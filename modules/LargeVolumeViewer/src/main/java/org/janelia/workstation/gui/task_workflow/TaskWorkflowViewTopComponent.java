@@ -475,7 +475,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 mapper.writeValue(exportFile,pointReviews);
 
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Error saving reviewed points", e);
                 JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
                         "Could not write out reviewed points " + exportFile,
                         "Error writing point reviews file",
@@ -925,7 +925,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 ObjectMapper mapper = new ObjectMapper();
                 reviewData = mapper.readValue(new FileInputStream(pointFile), new TypeReference<Map<String,Object>>(){});
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Error reading point file "+pointFile, e);
                 JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
                         "Could not read file " + pointFile,
                         "Error reading point file",

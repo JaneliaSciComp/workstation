@@ -89,8 +89,7 @@ public class HortaCompressedLocationProviderChannel2
                 sampleLocation.setCompressed(true);
                 nttc.setSampleLocation(sampleLocation);
             } catch (Exception ex) {
-                logger.error(ex.getMessage());
-                ex.printStackTrace();
+                throw new RuntimeException("Error setting sample location", ex);
             }
         }
         else {

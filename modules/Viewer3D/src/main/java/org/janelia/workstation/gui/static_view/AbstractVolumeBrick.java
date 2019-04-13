@@ -122,7 +122,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
                 getShader().addTextureMediator(getPrimaryTextureMediator(), TexturedShader.SIGNAL_TEXTURE_NAME);
                 getShader().init(gl);
             } catch ( Exception ex ) {
-                ex.printStackTrace();
+                logger.error("Error setting up shader. Disabling shader for future operations.", ex);
                 bUseShader = false;
             }
         }

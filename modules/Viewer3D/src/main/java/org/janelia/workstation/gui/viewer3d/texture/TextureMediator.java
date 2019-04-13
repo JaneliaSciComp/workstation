@@ -185,9 +185,9 @@ public class TextureMediator {
                         getConstantName(this.getInternalFormat()) + ":" +
                         getConstantName(this.getVoxelComponentOrder()) + ":" +
                         this.getStorageFormatMultiplier() + ":" + 
-                        getConstantName(this.getVoxelComponentType())
+                        getConstantName(this.getVoxelComponentType()),
+                        exGlTexImage
                 );
-                exGlTexImage.printStackTrace();
             }
             if (OpenGLUtils.reportError( "glTexImage", gl, textureName )) {
                 return false;
@@ -274,9 +274,9 @@ public class TextureMediator {
                         this.textureName + ":" + this.getTextureOffset(),
                         getConstantName(this.getInternalFormat()) + ":" +
                         getConstantName(this.getVoxelComponentOrder()) + ":" +
-                        getConstantName(this.getStorageFormatMultiplier())
+                        getConstantName(this.getStorageFormatMultiplier()),
+                        exGlTexImage
                 );
-                exGlTexImage.printStackTrace();
             }
             OpenGLUtils.reportError( "glTexImage", gl, textureName );
 

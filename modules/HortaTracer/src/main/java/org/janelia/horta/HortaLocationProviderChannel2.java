@@ -68,8 +68,7 @@ public class HortaLocationProviderChannel2
         try {
             url = nttc.getCurrentSourceURL();
         } catch (Exception ex) {
-            logger.error(ex.getMessage());
-            Exceptions.printStackTrace(ex);
+            logger.error("Error getting current source URL", ex);
         }
         result.setSampleUrl(url);
         double[] focus = nttc.getStageLocation();
@@ -102,8 +101,7 @@ public class HortaLocationProviderChannel2
                 sampleLocation.setDefaultColorChannel(1);
                 nttc.setSampleLocation(sampleLocation);
             } catch (Exception ex) {
-                logger.error(ex.getMessage());
-                ex.printStackTrace();
+                logger.error("Error setting channel location", ex);
             }
         }
         else {

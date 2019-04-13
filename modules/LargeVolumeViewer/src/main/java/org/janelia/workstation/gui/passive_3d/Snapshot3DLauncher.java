@@ -196,8 +196,7 @@ public class Snapshot3DLauncher {
             makeAndLaunch(frameTitle, collector, labelText);
 
         } catch (Exception ex) {
-            System.err.println("Failed to launch viewer: " + ex.getMessage());
-            ex.printStackTrace();
+            LOG.error("Failed to launch viewer", ex);
         }
     }
 
@@ -224,8 +223,7 @@ public class Snapshot3DLauncher {
             makeAndLaunch(frameTitle, collector, labelText);
 
         } catch ( Exception ex ) {
-            System.err.println("Failed to launch viewer: " + ex.getMessage());
-            ex.printStackTrace();
+            LOG.error("Failed to launch viewer", ex);
         }
     }
     

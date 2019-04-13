@@ -3,6 +3,8 @@ package org.janelia.workstation.gui.opengl;
 import org.janelia.workstation.gui.opengl.shader.BasicShader;
 import org.janelia.workstation.gui.opengl.shader.Mesh120Shader;
 import org.janelia.workstation.gui.opengl.shader.Mesh150Shader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Vector;
@@ -18,6 +20,8 @@ import javax.media.opengl.GL2GL3;
 public class MeshGroupActor extends CompositeGLActor
 implements GL3Actor
 {
+    private final static Logger log = LoggerFactory.getLogger(MeshGroupActor.class);
+
 	// Different shaders appropriate for GL2 and GL3...
     private Mesh120Shader shader120 = new Mesh120Shader();
     private Mesh150Shader shader150 = new Mesh150Shader();
@@ -85,7 +89,7 @@ implements GL3Actor
             vertexLocation = gl2gl3.glGetAttribLocation(shader.getShaderProgram(), "vertex");
             normalLocation = gl2gl3.glGetAttribLocation(shader.getShaderProgram(), "normal");
         } catch (BasicShader.ShaderCreationException e) {
-            e.printStackTrace();
+            log.error("Error creating shader", e);
         }
         for (GL3Actor actor : actors) {
             actor.init(actorContext); 

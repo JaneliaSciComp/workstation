@@ -66,8 +66,7 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProviderAccep
         try {
             url = nttc.getCurrentSourceURL();
         } catch (Exception ex) {
-            logger.error(ex.getMessage());
-            Exceptions.printStackTrace(ex);
+            logger.error("Failed to get current source URL", ex);
         }
         result.setSampleUrl(url);
         double[] focus = nttc.getStageLocation();
@@ -109,8 +108,7 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProviderAccep
                 sampleLocation.setDefaultColorChannel(0);
                 nttc.setSampleLocation(sampleLocation);
             } catch (Exception ex) {
-                logger.error(ex.getMessage());
-                ex.printStackTrace();
+                logger.error("Failed to set sample location", ex);
             }
         }
         else {

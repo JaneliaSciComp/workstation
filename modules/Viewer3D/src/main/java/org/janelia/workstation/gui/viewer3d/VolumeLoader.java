@@ -39,7 +39,7 @@ public class VolumeLoader implements VolumeLoaderI {
 
     public boolean loadVolume(String unCachedFileName)
     {
-        System.out.println("Start load volume: " + new java.util.Date());
+        logger.info("Start load volume: " + new java.util.Date());
         try {
             String localFileName = resolver.getResolvedFilename( unCachedFileName );
             if ( localFileName == null ) {
@@ -135,8 +135,7 @@ public class VolumeLoader implements VolumeLoaderI {
                         Thread.sleep( WAIT_BETWEEN_FILE_LOAD_RETRIES );
                     } catch ( Exception sleepEx ) {
                         // Will basically ignore this, since it is in a retry loop.
-                        logger.error( "Interrupted during volume-load retry.  Continuing..." );
-                        sleepEx.printStackTrace();
+                        logger.warn( "Interrupted during volume-load retry.  Continuing...");
                     }
                     tryCount ++;
                     if ( tryCount > MAX_FILE_LOAD_RETRY ) {
@@ -182,11 +181,11 @@ public class VolumeLoader implements VolumeLoaderI {
 //                textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_BYTE);
             }
 
-            System.out.println("End load volume: " + new java.util.Date());
+            logger.info("End load volume: " + new java.util.Date());
             return true;
         }
         catch (Exception exc) {
-            exc.printStackTrace();
+            logger.info("Error loading volume", exc);
         }
 
         return false;

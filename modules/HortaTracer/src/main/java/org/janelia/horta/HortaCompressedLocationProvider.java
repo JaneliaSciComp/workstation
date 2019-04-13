@@ -86,8 +86,7 @@ public class HortaCompressedLocationProvider extends HortaLocationProviderBase i
                 sampleLocation.setCompressed(true);
                 nttc.setSampleLocation(sampleLocation);
             } catch (Exception ex) {
-                logger.error(ex.getMessage());
-                ex.printStackTrace();
+                throw new RuntimeException("Error setting sample location", ex);
             }
         }
         else {

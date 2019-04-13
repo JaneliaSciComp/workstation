@@ -103,9 +103,8 @@ public class TextTextureMediator {
                     "Exception reported during texture upload of NAME:OFFS={}, FORMAT:COMP-ORDER:MULTIPLIER={}",
                     this.textureName + ":" + textureOffset,
                     INTERNAL_FORMAT + ":" + VOXEL_COMPONENT_ORDER + ":"
-                    + STORAGE_FORMAT_MULTIPLIER
+                    + STORAGE_FORMAT_MULTIPLIER, exGlTexImage
             );
-            exGlTexImage.printStackTrace();
         }
         OpenGLUtils.reportError("glTexImage", gl, textureName);
 

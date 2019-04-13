@@ -1,20 +1,25 @@
 package org.janelia.workstation.gui.viewer3d.learning;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.workstation.gui.opengl.GLActor;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
+import java.util.Date;
+
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
-import java.nio.*;
-import java.util.Date;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.gui.opengl.GLActor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RectSolid implements GLActor {
+
+    private final static Logger log = LoggerFactory.getLogger(RectSolid.class);
 
     private static final float Z_BACK_PLANE = -75.0f;
     private static final float Z_FRONT_PLANE = 75.0f;
@@ -190,7 +195,7 @@ public class RectSolid implements GLActor {
             GL2 gl = glDrawable.getGL().getGL2();
             draw( gl );
         } catch ( Exception ex ) {
-            ex.printStackTrace();
+            log.error("Error drawing", ex);
         }
 
     }
@@ -213,7 +218,7 @@ public class RectSolid implements GLActor {
         try {
             vertexBufHandle = enableBuffer(gl, mFVertexBuffer);
         } catch ( Exception ex ) {
-            ex.printStackTrace();
+            log.error("Error building buffer", ex);
         }
     }
 

@@ -12,12 +12,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Describes a font for 2D text.
  * 
  * @author fosterl
  */
 public class FontInfo {
+
+    private static final Logger log = LoggerFactory.getLogger(FontInfo.class);
+
     public enum FontComponentExtension { properties, png }
     public enum FontStyle { Plain, Bold, Italic }
     public static final String FONT_RESOURCE_LOC = "/font/";
@@ -38,7 +44,7 @@ public class FontInfo {
         try {
             fontProperties.load(getFontComponentStream( FontComponentExtension.properties ));            
         } catch (IOException ex) {
-            ex.printStackTrace();
+            log.error("Error loading font", ex);
             throw new AxisLabel.UnknownFontException(baseFontName);
         }
         init(fontProperties);
@@ -54,7 +60,7 @@ public class FontInfo {
      */
     public InputStream getFontComponentStream( FontComponentExtension ext ) {
         final String fullResourceName = getFullResourceName( ext );
-        System.out.println("Full Resource Name is " + fullResourceName);
+        log.debug("Full Resource Name is " + fullResourceName);
         return FontInfo.class.getResourceAsStream( fullResourceName );
     }
 

@@ -6,13 +6,6 @@
 
 package org.janelia.console.viewerapi.color_slider;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.awt.Color;
-import org.janelia.console.viewerapi.actions.ImportExportColorModelAction;
-import org.janelia.console.viewerapi.controller.UnmixingListener;
-import org.janelia.console.viewerapi.model.ChannelColorModel;
-import org.janelia.console.viewerapi.model.ImageColorModel;
 import java.awt.Insets;
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,17 +25,27 @@ import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.janelia.console.viewerapi.SimpleIcons;
+import org.janelia.console.viewerapi.actions.ImportExportColorModelAction;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
+import org.janelia.console.viewerapi.model.ChannelColorModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.UnmixingParameters;
-import org.openide.util.Lookup;
 import org.openide.util.Utilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Encapsulates all multi-slider functionality for reuse.
  * @author fosterl
  */
 public class SliderPanel extends JPanel {
+
+    private final static Logger log = LoggerFactory.getLogger(SliderPanel.class);
+
     public enum VIEW {Horta, LVV};
     private static final String IMAGES_LOCK = "lock.png";
     private static final String IMAGES_LOCK_UNLOCK = "lock_unlock.png";
@@ -266,7 +269,7 @@ public class SliderPanel extends JPanel {
             imageColorModel.fireUnmixingParametersChanged();
         }
         catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error importing color model", e);
         }
     }
 
@@ -293,7 +296,7 @@ public class SliderPanel extends JPanel {
             ObjectMapper mapper = new ObjectMapper();
             mapper.writeValue(fileWriter, fullColorModel);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error exporting color model", e);
         }
     }
 

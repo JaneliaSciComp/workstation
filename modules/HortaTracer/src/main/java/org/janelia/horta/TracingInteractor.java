@@ -1240,8 +1240,7 @@ public class TracingInteractor extends MouseAdapter
                 return ownershipDecision.booleanValue();
             } catch (Exception e) {
                 String errorMessage = "Problems handling roundtrip request for ownership of System-owned neuron";
-                log.error(errorMessage);
-                e.printStackTrace();
+                log.error(errorMessage, e);
                 JOptionPane.showMessageDialog(
                         volumeProjection.getMouseableComponent(),
                         errorMessage,

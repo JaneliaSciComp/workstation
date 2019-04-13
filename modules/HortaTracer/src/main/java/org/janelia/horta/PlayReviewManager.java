@@ -81,56 +81,52 @@ public class PlayReviewManager {
         SimpleWorker scrollWorker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                try {
-                    fpsAnimator.start();
-                    SampleLocation sampleLocation = locationList.get(0);
-                    Quaternion q = new Quaternion();
-                    float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
+                fpsAnimator.start();
+                SampleLocation sampleLocation = locationList.get(0);
+                Quaternion q = new Quaternion();
+                float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
+                if (quaternionRotation != null) {
+                    q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
+                }
+                ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+                        currentSource, loader, neuronTracer, sceneWindow
+                );
+                acceptor.acceptLocation(sampleLocation);
+                Vantage vantage = sceneWindow.getVantage();
+                vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
+                Thread.sleep(500);
+
+                for (int i = 1; i < locationList.size(); i++) {
+                    sampleLocation = locationList.get(i);
+
+                    q = new Quaternion();
+                    quaternionRotation = sampleLocation.getRotationAsQuaternion();
                     if (quaternionRotation != null) {
                         q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
                     }
-                    ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+                    acceptor = new SampleLocationAcceptor(
                             currentSource, loader, neuronTracer, sceneWindow
                     );
-                    acceptor.acceptLocation(sampleLocation);
-                    Vantage vantage = sceneWindow.getVantage();
-                    vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
-                    Thread.sleep(500);
 
-                    for (int i = 1; i < locationList.size(); i++) {
-                        sampleLocation = locationList.get(i);
-
-                        q = new Quaternion();
-                        quaternionRotation = sampleLocation.getRotationAsQuaternion();
-                        if (quaternionRotation != null) {
-                            q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
-                        }
-                        acceptor = new SampleLocationAcceptor(
-                                currentSource, loader, neuronTracer, sceneWindow
-                        );
-
-                        // figure out number of steps
-                        vantage = sceneWindow.getVantage();
-                        float[] startLocation = vantage.getFocus();
-                        double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm() - startLocation[0], 2)
-                                + Math.pow(sampleLocation.getFocusYUm() - startLocation[1], 2)
-                                + Math.pow(sampleLocation.getFocusZUm() - startLocation[2], 2));
-                        // # of steps is 1 per uM
-                        int steps = (int) Math.round(distance);
-                        if (steps < 1) {
-                            steps = 1;
-                        }
-                        steps = steps * stepScale;                        
-                        boolean interrupt = animateToLocationWithRotation(acceptor, q, sampleLocation, steps, null);                                             
-                        if (interrupt) {
-                            playState.setCurrentNode(i);
-                            break;
-                        }
+                    // figure out number of steps
+                    vantage = sceneWindow.getVantage();
+                    float[] startLocation = vantage.getFocus();
+                    double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm() - startLocation[0], 2)
+                            + Math.pow(sampleLocation.getFocusYUm() - startLocation[1], 2)
+                            + Math.pow(sampleLocation.getFocusZUm() - startLocation[2], 2));
+                    // # of steps is 1 per uM
+                    int steps = (int) Math.round(distance);
+                    if (steps < 1) {
+                        steps = 1;
                     }
-                    fpsAnimator.stop();
-                } catch (Exception ex) {
-                    Exceptions.printStackTrace(ex);
+                    steps = steps * stepScale;
+                    boolean interrupt = animateToLocationWithRotation(acceptor, q, sampleLocation, steps, null);
+                    if (interrupt) {
+                        playState.setCurrentNode(i);
+                        break;
+                    }
                 }
+                fpsAnimator.stop();
             }
 
             @Override
@@ -152,63 +148,58 @@ public class PlayReviewManager {
         SimpleWorker scrollWorker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                try {                    
-                    int startNode = playState.getCurrentNode();  
-                    sceneWindow.setControlsVisibility(true);
-                    List<SampleLocation> locationList = playState.getPlayList();
-                    SampleLocation sampleLocation;
-                    Quaternion q;
-                    float[] quaternionRotation = new float[4];
-                    ViewerLocationAcceptor acceptor;
-                    Vantage vantage;
-                    fpsAnimator.setFPS(playState.getFps());
-                    fpsAnimator.start();
-                    boolean interrupt;
-                    if (direction==PlayDirection.REVERSE) {
-                        startNode--;
-                        interrupt = animateToNextPoint(locationList.get(startNode), null);
-                    } else {
-                        interrupt = animateToNextPoint(locationList.get(startNode), null);
-                    }
-                    
-                    if (interrupt) {
-                        playState.setCurrentNode(startNode);
-                    } else {
-
-                        switch (direction) {
-                            case FORWARD:
-                                if (startNode > locationList.size()) {
-                                    startNode = locationList.size() - 1;
-                                }
-                                for (int i = startNode + 1; i < locationList.size(); i++) {
-                                    sampleLocation = locationList.get(i);
-                                    interrupt = animateToNextPoint(sampleLocation, null);
-                                    if (interrupt) {
-                                        playState.setCurrentNode(i);
-                                        break;
-                                    }
-                                }
-                                break;
-                            case REVERSE:
-                                if (startNode < 1) {
-                                    startNode = 1;
-                                }
-                                for (int i = startNode - 1; i > 0; i--) {
-                                    sampleLocation = locationList.get(i);
-                                    interrupt = animateToNextPoint(sampleLocation, null);
-                                    if (interrupt) {
-                                        playState.setCurrentNode(i+1);
-                                        break;
-                                    }
-                                }
-                                break;
-                        }
-                    }
-                    fpsAnimator.stop();
-
-                } catch (Exception ex) {
-                    Exceptions.printStackTrace(ex);
+                int startNode = playState.getCurrentNode();
+                sceneWindow.setControlsVisibility(true);
+                List<SampleLocation> locationList = playState.getPlayList();
+                SampleLocation sampleLocation;
+                Quaternion q;
+                float[] quaternionRotation = new float[4];
+                ViewerLocationAcceptor acceptor;
+                Vantage vantage;
+                fpsAnimator.setFPS(playState.getFps());
+                fpsAnimator.start();
+                boolean interrupt;
+                if (direction==PlayDirection.REVERSE) {
+                    startNode--;
+                    interrupt = animateToNextPoint(locationList.get(startNode), null);
+                } else {
+                    interrupt = animateToNextPoint(locationList.get(startNode), null);
                 }
+
+                if (interrupt) {
+                    playState.setCurrentNode(startNode);
+                } else {
+
+                    switch (direction) {
+                        case FORWARD:
+                            if (startNode > locationList.size()) {
+                                startNode = locationList.size() - 1;
+                            }
+                            for (int i = startNode + 1; i < locationList.size(); i++) {
+                                sampleLocation = locationList.get(i);
+                                interrupt = animateToNextPoint(sampleLocation, null);
+                                if (interrupt) {
+                                    playState.setCurrentNode(i);
+                                    break;
+                                }
+                            }
+                            break;
+                        case REVERSE:
+                            if (startNode < 1) {
+                                startNode = 1;
+                            }
+                            for (int i = startNode - 1; i > 0; i--) {
+                                sampleLocation = locationList.get(i);
+                                interrupt = animateToNextPoint(sampleLocation, null);
+                                if (interrupt) {
+                                    playState.setCurrentNode(i+1);
+                                    break;
+                                }
+                            }
+                            break;
+                    }
+                }
+                fpsAnimator.stop();
             }
 
             @Override

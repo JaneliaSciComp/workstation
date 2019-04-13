@@ -66,8 +66,7 @@ public class HortaLocationFocusProvider implements Tiled3dSampleLocationProvider
         try {
             url = nttc.getCurrentSourceURL();
         } catch (Exception ex) {
-            logger.error(ex.getMessage());
-            Exceptions.printStackTrace(ex);
+            logger.error("Error getting current source URL", ex);
         }
         result.setSampleUrl(url);
         double[] focus = nttc.getStageLocation();
@@ -109,8 +108,7 @@ public class HortaLocationFocusProvider implements Tiled3dSampleLocationProvider
                 sampleLocation.setDefaultColorChannel(0);
                 nttc.setSampleLocation(sampleLocation);
             } catch (Exception ex) {
-                logger.error(ex.getMessage());
-                ex.printStackTrace();
+                throw new RuntimeException("Error setting sample location", ex);
             }
         }
         else {
@@ -132,8 +130,7 @@ public class HortaLocationFocusProvider implements Tiled3dSampleLocationProvider
             try {                
                 nttc.playSampleLocations(locationList, autoRotation, speed, stepScale);
             } catch (Exception ex) {
-                logger.error(ex.getMessage());
-                ex.printStackTrace();
+                throw new RuntimeException("Error playing sample locations", ex);
             }
         }
         else {

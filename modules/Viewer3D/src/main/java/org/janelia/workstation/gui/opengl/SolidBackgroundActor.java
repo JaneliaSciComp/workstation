@@ -11,6 +11,8 @@ import javax.media.opengl.GL2GL3;
 import org.janelia.workstation.gui.opengl.shader.BasicShader;
 import org.janelia.workstation.gui.opengl.shader.SolidColor120Shader;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Should work for both GL2 and GL3
@@ -20,6 +22,8 @@ import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 public class SolidBackgroundActor 
 implements GL3Actor
 {
+    private final static Logger log = LoggerFactory.getLogger(SolidBackgroundActor.class);
+
     public enum Method {
         CLEAR_COLOR, // simple, but fails with interleaved stereo modes
         QUAD_VBO,
@@ -114,8 +118,7 @@ implements GL3Actor
         try {
             shader.init(gl2gl3);
         } catch (BasicShader.ShaderCreationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("Error creating shader", e);
         }
 
         int ix[] = {0};

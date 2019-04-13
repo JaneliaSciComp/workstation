@@ -8,6 +8,8 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -15,6 +17,9 @@ import org.janelia.model.security.User;
  */
 
 public class CommonDialogItems {
+
+    private final static Logger log = LoggerFactory.getLogger(CommonDialogItems.class);
+
     private static final String ACTIVE_TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.activetracersgroup").trim();
     private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
@@ -53,7 +58,7 @@ public class CommonDialogItems {
         catch (Exception e) {
             // I feel I need to handle this error better; it should
             //  default to nothing in the list
-            e.printStackTrace();
+            log.error("Error updating owner list", e);
         }
 
         for (Subject subject: subjects) {

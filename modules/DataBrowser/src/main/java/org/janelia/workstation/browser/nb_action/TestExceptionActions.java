@@ -15,6 +15,7 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
+import org.openide.util.Exceptions;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.actions.Presenter;
 
@@ -118,7 +119,15 @@ public final class TestExceptionActions extends AbstractAction implements Presen
                 }
             });
             subMenu.add(noSpaceItem);
-            
+
+            JMenuItem nbExceptionItem = new JMenuItem("NetBeans-style Exceptions.printStackTrace");
+            nbExceptionItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Exceptions.printStackTrace(new Exception("Test Exception"));
+                }
+            });
+            subMenu.add(nbExceptionItem);
         }
         return subMenu;
     }

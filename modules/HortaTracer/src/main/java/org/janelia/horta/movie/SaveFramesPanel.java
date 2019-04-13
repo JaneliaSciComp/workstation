@@ -382,7 +382,7 @@ public class SaveFramesPanel extends JPanel
                             reportCancel();
                             return;
                         } catch (InvocationTargetException ex) {
-                            Exceptions.printStackTrace(ex);
+                            logger.error("Error playing frames", ex);
                         }
                         
                         // TODO: check for "Cancel" operation

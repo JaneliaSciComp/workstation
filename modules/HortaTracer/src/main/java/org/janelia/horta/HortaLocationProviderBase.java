@@ -30,10 +30,10 @@
 package org.janelia.horta;
 
 import java.net.URL;
+
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
-import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +57,7 @@ public abstract class HortaLocationProviderBase implements Tiled3dSampleLocation
         try {
             url = nttc.getCurrentSourceURL();
         } catch (Exception ex) {
-            logger.error(ex.getMessage());
-            Exceptions.printStackTrace(ex);
+            logger.error("Error getting current source URL", ex);
         }
         result.setSampleUrl(url);
         double[] focus = nttc.getStageLocation();

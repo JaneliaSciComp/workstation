@@ -1,19 +1,24 @@
 package org.janelia.workstation.gui.viewer3d.learning;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+
+import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
+
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.workstation.gui.viewer3d.texture.TextureMediator;
-
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Rubics implements GLActor {
+
+    private static final Logger log = LoggerFactory.getLogger( Rubics.class );
 
     // This helps to track whether the class has been re-loaded by Android or not.
     private static int __class_instance = 0;
@@ -97,7 +102,7 @@ public class Rubics implements GLActor {
         try {
             draw( glDrawable );
         } catch ( Exception ex ) {
-            ex.printStackTrace();
+            log.error("Error drawing rubics", ex);
         }
 
     }
@@ -121,7 +126,7 @@ public class Rubics implements GLActor {
             GL2 gl = glDrawable.getGL().getGL2();
             bufferManager.enableBuffers(gl);
         } catch ( Exception ex ) {
-            ex.printStackTrace();
+            log.error("Error building buffers", ex);
         }
     }
 
