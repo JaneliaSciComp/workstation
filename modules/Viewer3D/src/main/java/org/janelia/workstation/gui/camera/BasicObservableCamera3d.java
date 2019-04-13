@@ -22,7 +22,7 @@ implements Camera3d, ObservableCamera3d
 	}
 
 	/* (non-Javadoc)
-	 * @see org.janelia.it.workstation.gui.viewer3d.camera.ObservableCamera3d#getViewChangedSignal()
+	 * @see org.janelia.workstation.gui.viewer3d.camera.ObservableCamera3d#getViewChangedSignal()
 	 */
 	@Override
 	public Signal getViewChangedSignal() {

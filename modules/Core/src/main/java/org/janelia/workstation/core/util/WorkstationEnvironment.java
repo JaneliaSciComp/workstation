@@ -1,7 +1,6 @@
-package org.janelia.workstation.core.api;
+package org.janelia.workstation.core.util;
 
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.util.ConsoleProperties;
 
 /**
  * Helps mock out the Workstation well enough to carry out tests. Logs in, etc.
@@ -15,4 +14,3 @@ public class WorkstationEnvironment {
         AccessManager.getAccessManager().loginUsingSavedCredentials();
     }
 }
-

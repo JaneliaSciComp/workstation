@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.viewer3d;
+package org.janelia.workstation.gui.viewer3d;
 
 import java.awt.event.ActionEvent;
 
@@ -12,9 +12,8 @@ import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
+import org.janelia.workstation.core.util.WorkstationEnvironment;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.browser.api.WorkstationEnvironment;
-import org.janelia.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.janelia.workstation.gui.viewer3d.mesh.MeshViewer;
 import org.janelia.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr;

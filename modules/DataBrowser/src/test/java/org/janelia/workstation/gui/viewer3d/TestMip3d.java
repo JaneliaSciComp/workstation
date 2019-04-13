@@ -2,7 +2,7 @@
  * 
  */
 
-package org.janelia.it.workstation.gui.viewer3d;
+package org.janelia.workstation.gui.viewer3d;
 
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.gui.static_view.RGBExcludableVolumeBrick;
