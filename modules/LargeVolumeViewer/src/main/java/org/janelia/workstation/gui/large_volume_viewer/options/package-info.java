@@ -1,7 +1,7 @@
 @OptionsPanelController.ContainerRegistration(
         id = "LargeVolumeViewer",
         categoryName = "#OptionsCategory_Name_LargeVolumeViewer",
-        iconBase = "org/janelia/it/workstation/gui/large_volume_viewer/options/map-icon-32.png",
+        iconBase = "org/janelia/workstation/gui/large_volume_viewer/options/map-icon-32.png",
         keywords = "#OptionsCategory_Keywords_LargeVolumeViewer",
         keywordsCategory = "LargeVolumeViewer",
         position = 30)
