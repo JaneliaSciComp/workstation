@@ -123,14 +123,14 @@ public class ChangeNeuronOwnerDialog extends JDialog {
     }
 
     private void updateList() {
-        // note: in testing, there were occasionally resize problems when the
-        //  filter changed--sometimes when the list got wider, the window didn't
         DefaultComboBoxModel model = (DefaultComboBoxModel) subjectCombobox.getModel();
         if (filterUserListCheckbox.isSelected()) {
             CommonDialogItems.updateOwnerList(model, userFilter);
         } else {
             CommonDialogItems.updateOwnerList(model, UserFilter.NONE);
         }
+        // needed to make the dialog resize properly for the new name list
+        pack();
     }
 
     private void onCancel() {
