@@ -10,8 +10,7 @@ The Janelia Workstation currently supports two large-scale team projects at Jane
 
 ## For Users
 
-Download the [User Manual](https://www.dropbox.com/s/kpf3yw35ts9y2y4/Janelia%20Workstation%20User%20Manual.pdf?dl=1) 
-to find out more about the Workstation's capabilities and how to use them.
+Read the [User Manual](docs/UserManual.md) to find out more about the Workstation's capabilities and how to use them.
 
 ## For System Administrators
 
