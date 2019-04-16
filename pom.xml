@@ -182,9 +182,9 @@
         <!-- Workstation repo for libraries not found in any public Maven repository -->
         <repository>
             <id>janelia-repo</id>
-            <url>https://raw.githubusercontent.com/JaneliaSciComp/mvn-repo/master/repository/</url>
+            <url>https://nexus.janelia.org/repository/maven-releases/</url>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>
         </repository>
     </repositories>
