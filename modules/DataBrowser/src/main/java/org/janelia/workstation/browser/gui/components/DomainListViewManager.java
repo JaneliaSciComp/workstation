@@ -5,7 +5,7 @@ import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
-import org.janelia.workstation.common.nodes.DomainObjectNode;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.nodes.NodeSelectionEvent;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;

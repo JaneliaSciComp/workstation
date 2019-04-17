@@ -3,7 +3,7 @@ package org.janelia.workstation.browser.gui.editor;
 import java.util.Collection;
 
 import org.janelia.workstation.common.gui.listview.ListViewerState;
-import org.janelia.workstation.common.nodes.DomainObjectNode;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.workspace.GroupedFolder;

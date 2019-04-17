@@ -50,7 +50,7 @@ import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.workstation.common.gui.support.Debouncer;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.common.nodes.DomainObjectNode;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.util.HelpTextUtils;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;

@@ -9,7 +9,7 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.common.nodes.DomainObjectNode;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.model.domain.DomainObject;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;

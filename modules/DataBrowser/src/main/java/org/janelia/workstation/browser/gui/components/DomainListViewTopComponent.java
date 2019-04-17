@@ -22,7 +22,7 @@ import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.browser.gui.editor.DomainObjectEditorStateImpl;
-import org.janelia.workstation.common.nodes.DomainObjectNode;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.netbeans.api.settings.ConvertAsProperties;

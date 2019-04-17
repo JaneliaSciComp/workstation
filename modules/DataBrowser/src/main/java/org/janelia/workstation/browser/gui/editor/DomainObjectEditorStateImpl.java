@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
 import org.janelia.workstation.core.model.DomainModelViewUtils;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
-import org.janelia.workstation.common.nodes.DomainObjectNode;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.common.gui.listview.ListViewerState;
 import org.janelia.model.domain.DomainObject;
 import org.openide.windows.TopComponent;

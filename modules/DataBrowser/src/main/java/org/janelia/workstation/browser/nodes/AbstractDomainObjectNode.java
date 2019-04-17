@@ -35,7 +35,7 @@ import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasFiles;
-import org.janelia.workstation.common.nodes.DomainObjectNode;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;

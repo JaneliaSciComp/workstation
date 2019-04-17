@@ -3,7 +3,7 @@ package org.janelia.workstation.common.gui.editor;
 import java.util.Collection;
 
 import org.janelia.workstation.common.gui.listview.ListViewerState;
-import org.janelia.workstation.common.nodes.DomainObjectNode;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.model.domain.DomainObject;
 import org.openide.windows.TopComponent;
 

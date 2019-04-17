@@ -14,7 +14,7 @@ import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
-import org.janelia.workstation.common.nodes.RootNode;
+import org.janelia.workstation.core.nodes.RootNode;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;

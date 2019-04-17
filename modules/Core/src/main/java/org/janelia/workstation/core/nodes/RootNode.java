@@ -1,4 +1,4 @@
-package org.janelia.workstation.common.nodes;
+package org.janelia.workstation.core.nodes;
 
 import org.janelia.model.domain.interfaces.HasIdentifier;
 

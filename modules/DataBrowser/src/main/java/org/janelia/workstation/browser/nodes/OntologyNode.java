@@ -23,7 +23,7 @@ import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.ontology.Ontology;
-import org.janelia.workstation.common.nodes.DomainObjectNode;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

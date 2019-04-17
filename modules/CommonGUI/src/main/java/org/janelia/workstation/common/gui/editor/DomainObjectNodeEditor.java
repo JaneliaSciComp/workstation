@@ -2,7 +2,7 @@ package org.janelia.workstation.common.gui.editor;
 
 import java.util.concurrent.Callable;
 
-import org.janelia.workstation.common.nodes.DomainObjectNode;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.model.domain.DomainObject;
 
 /**
