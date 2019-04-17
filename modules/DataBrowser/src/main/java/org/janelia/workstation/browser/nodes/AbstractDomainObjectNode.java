@@ -16,27 +16,27 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.browser.actions.ServiceAcceptorActionHelper;
-import org.janelia.workstation.browser.gui.components.DomainListViewManager;
-import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
-import org.janelia.workstation.browser.gui.components.ViewerUtils;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.workstation.browser.flavors.DomainObjectFlavor;
 import org.janelia.workstation.browser.flavors.DomainObjectNodeFlavor;
+import org.janelia.workstation.browser.gui.components.DomainListViewManager;
+import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
+import org.janelia.workstation.browser.gui.components.DomainObjectAcceptorHelper;
+import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
+import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.workstation.browser.nb_action.RemoveAction;
 import org.janelia.workstation.browser.nb_action.RenameAction;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
-import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.PropertySupport;
@@ -225,7 +225,7 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
         actions.add(RenameAction.get());
         actions.add(RemoveAction.get());
         actions.add(null);
-        for (AbstractAction action : ServiceAcceptorActionHelper.getOpenForContextActions(getDomainObject())) {
+        for (AbstractAction action : DomainObjectAcceptorHelper.getOpenForContextActions(getDomainObject())) {
             if (action==null) {
                 actions.add(null);
             }

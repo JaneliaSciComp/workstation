@@ -13,8 +13,15 @@ import org.janelia.model.domain.Reference;
  */
 public interface BrowsingController {
 
+    /**
+     * Refresh the data explorer.
+     */
     void refreshExplorer();
 
+    /**
+     * Refresh the data explorer and call the given callback when complete.
+     * @param success callback if refresh is successful
+     */
     void refreshExplorer(final Callable<Void> success);
 
     /**

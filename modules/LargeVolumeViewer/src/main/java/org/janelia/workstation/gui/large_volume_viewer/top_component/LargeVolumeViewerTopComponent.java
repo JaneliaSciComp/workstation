@@ -119,9 +119,6 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         setCurrent(domainObject);
         Snapshot3DLauncher.removeStaleViewer();
         getLvvv().loadDomainObject(domainObject);
-
-        // Update "Recently Opened" history
-        FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor(domainObject));
     }
 
     /**

@@ -19,8 +19,6 @@ public class ServiceAcceptorHelper {
      * Do a generic lookup, for things that can deal with found values on
      * the outline.
      * 
-     * @param T type of the thing to return in collection.
-     * @param S type of things to check.
      * @param criterion this is used to judge compatibility of found items.
      * @param clazz tells what type of thing to find.
      * @param path tells the path identifier for searching compatible items.

@@ -30,7 +30,7 @@ import org.janelia.it.jacs.shared.utils.Constants;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.utils.domain.DataReporter;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
-import org.janelia.workstation.browser.gui.components.DomainObjectProviderHelper;
+import org.janelia.workstation.browser.gui.components.DomainObjectAcceptorHelper;
 import org.janelia.workstation.browser.gui.components.DomainViewerManager;
 import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.SampleResultViewerManager;
@@ -103,8 +103,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
 
-    private static final DomainObjectProviderHelper domainObjectProviderHelper = new DomainObjectProviderHelper();
-    
     private static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
     private static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
     private static final String NEURON_SEP_REMOVAL_MSG = "Remove/preclude Neuron Separation(s)";
@@ -152,8 +150,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             }
         }
         else {
-            if (domainObjectProviderHelper.isSupported(domainObject)) {
-                domainObjectProviderHelper.service(domainObject);
+            if (DomainObjectAcceptorHelper.isSupported(domainObject)) {
+                DomainObjectAcceptorHelper.service(domainObject);
             }
         }
     }
@@ -1096,7 +1094,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         }
         
         if (contextObject==null) return Collections.emptyList();
-        return ServiceAcceptorActionHelper.getOpenForContextItems(contextObject);
+        return DomainObjectAcceptorHelper.getOpenForContextItems(contextObject);
     }
         
     private List<JMenuItem> getWrapObjectItems() {

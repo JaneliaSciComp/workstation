@@ -9,24 +9,6 @@ import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
-import org.janelia.workstation.browser.gui.dialogs.download.DownloadWizardAction;
-import org.janelia.workstation.common.gui.support.PopupContextMenu;
-import org.janelia.workstation.core.model.SampleImage;
-import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
-import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
-import org.janelia.workstation.common.actions.CopyToClipboardAction;
-import org.janelia.workstation.browser.actions.OpenInFinderAction;
-import org.janelia.workstation.browser.actions.OpenInNeuronAnnotatorAction;
-import org.janelia.workstation.browser.actions.OpenInToolAction;
-import org.janelia.workstation.browser.actions.OpenWithDefaultAppAction;
-import org.janelia.workstation.browser.actions.ServiceAcceptorActionHelper;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.gui.components.SampleResultViewerManager;
-import org.janelia.workstation.browser.gui.components.SampleResultViewerTopComponent;
-import org.janelia.workstation.browser.gui.components.ViewerUtils;
-import org.janelia.workstation.browser.gui.hud.Hud;
-import org.janelia.workstation.browser.gui.listview.WrapperCreatorItemFactory;
-import org.janelia.workstation.browser.tools.ToolMgr;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.enums.FileType;
@@ -35,6 +17,24 @@ import org.janelia.model.domain.sample.NeuronSeparation;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.browser.actions.OpenInFinderAction;
+import org.janelia.workstation.browser.actions.OpenInNeuronAnnotatorAction;
+import org.janelia.workstation.browser.actions.OpenInToolAction;
+import org.janelia.workstation.browser.actions.OpenWithDefaultAppAction;
+import org.janelia.workstation.browser.gui.components.DomainObjectAcceptorHelper;
+import org.janelia.workstation.browser.gui.components.SampleResultViewerManager;
+import org.janelia.workstation.browser.gui.components.SampleResultViewerTopComponent;
+import org.janelia.workstation.browser.gui.components.ViewerUtils;
+import org.janelia.workstation.browser.gui.dialogs.download.DownloadWizardAction;
+import org.janelia.workstation.browser.gui.hud.Hud;
+import org.janelia.workstation.browser.gui.listview.WrapperCreatorItemFactory;
+import org.janelia.workstation.browser.tools.ToolMgr;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.gui.support.PopupContextMenu;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.model.SampleImage;
+import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
+import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
 
 /**
  * Right-click context menu for sample results presented in the Sample Editor. 
@@ -169,7 +169,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
     private Collection<JComponent> getOpenObjectItems() {
         // TODO: pass the actual file type the user clicked on
         SampleImage sampleImage = new SampleImage(result, FileType.ReferenceMip);
-        return ServiceAcceptorActionHelper.getOpenForContextItems(sampleImage);
+        return DomainObjectAcceptorHelper.getOpenForContextItems(sampleImage);
     }
     
     protected List<JMenuItem> getWrapObjectItems() {
