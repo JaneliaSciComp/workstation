@@ -6,16 +6,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
-import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.core.api.StateMgr;
-import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.interfaces.HasIdentifier;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -90,7 +89,7 @@ public class RecentOpenedItemsNode extends AbstractNode implements HasIdentifier
         try {
             // TODO: this should use the other isCompatible() method which takes a class, 
             // instead of constructing a dummy object
-            DomainObject dummyChild = (DomainObject)clazz.newInstance();
+            DomainObject dummyChild = clazz.newInstance();
             DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(dummyChild);
             if (provider!=null) {
                 return true;
@@ -109,16 +108,12 @@ public class RecentOpenedItemsNode extends AbstractNode implements HasIdentifier
             try {
                 log.debug("Creating children keys for RecentOpenedItemsNode");
 
-                List<String> strRefs =  StateMgr.getStateMgr().getRecentlyOpenedHistory();
-                List<Reference> refs = new ArrayList<>();
-                for(String strRef : strRefs) {
-                    refs.add(Reference.createFor(strRef));
-                }
+                List<Reference> refs =  FrameworkAccess.getBrowsingController().getRecentlyOpenedHistory();
                 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 List<DomainObject> children = model.getDomainObjects(refs);
-                if (children.size()!=strRefs.size()) {
-                    log.info("Got {} children but expected {}",children.size(),strRefs.size());
+                if (children.size()!=refs.size()) {
+                    log.info("Got {} children but expected {}",children.size(),refs.size());
                 }
                 log.debug("Got children: {}",children);
 

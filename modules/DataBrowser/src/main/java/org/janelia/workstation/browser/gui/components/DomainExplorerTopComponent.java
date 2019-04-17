@@ -20,6 +20,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
+import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
 import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
@@ -31,7 +32,6 @@ import org.janelia.workstation.browser.gui.tree.CustomTreeView;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
@@ -363,7 +363,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     
     @Subscribe
     public void prefChanged(LocalPreferenceChanged event) {
-        if (event.getKey().equals(StateMgr.RECENTLY_OPENED_HISTORY)) {
+        if (event.getKey().equals(DataBrowserMgr.RECENTLY_OPENED_HISTORY)) {
             // Something was added to the history, so we need to update the node's children
             if (root!=null) {
                 for(Node child : root.getChildren().getNodes()) {

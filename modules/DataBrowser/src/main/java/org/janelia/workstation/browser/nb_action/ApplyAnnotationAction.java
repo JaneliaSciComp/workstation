@@ -1,24 +1,13 @@
 package org.janelia.workstation.browser.nb_action;
 
-import static org.janelia.workstation.core.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import javax.swing.ProgressMonitor;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import com.google.common.collect.Multimap;
 import org.janelia.it.jacs.shared.utils.Progress;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.core.api.StateMgr;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelectionModel;
-import org.janelia.workstation.browser.gui.ontology.AnnotationEditor;
-import org.janelia.workstation.browser.nodes.OntologyTermNode;
-import org.janelia.workstation.core.workers.ResultWorker;
-import org.janelia.workstation.core.workers.SimpleListenableFuture;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
@@ -29,13 +18,23 @@ import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.ontology.OntologyTermReference;
 import org.janelia.model.security.util.PermissionTemplate;
+import org.janelia.workstation.browser.api.state.DataBrowserMgr;
+import org.janelia.workstation.browser.gui.ontology.AnnotationEditor;
+import org.janelia.workstation.browser.nodes.OntologyTermNode;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelectionModel;
+import org.janelia.workstation.core.workers.ResultWorker;
+import org.janelia.workstation.core.workers.SimpleListenableFuture;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Multimap;
+import static org.janelia.workstation.core.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
 
 /**
  * Create an annotation by applying the current ontology term to the 
@@ -275,7 +274,7 @@ public class ApplyAnnotationAction extends NodeAction {
         Annotation savedAnnotation = model.save(annotation);
         log.info("Saved annotation: " + savedAnnotation);
         
-        PermissionTemplate template = StateMgr.getStateMgr().getAutoShareTemplate();
+        PermissionTemplate template = DataBrowserMgr.getDataBrowserMgr().getAutoShareTemplate();
         if (template!=null) {
             model.changePermissions(savedAnnotation, template.getSubjectKey(), template.getPermissions());
             log.info("Auto-shared annotation with " + template.getSubjectKey());

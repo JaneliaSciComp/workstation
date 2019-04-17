@@ -9,8 +9,6 @@ import java.util.Set;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
-import com.google.common.eventbus.Subscribe;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
@@ -18,24 +16,22 @@ import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.core.api.facade.impl.ejb.LegacyFacadeImpl;
-import org.janelia.workstation.core.api.facade.interfaces.LegacyFacade;
-import org.janelia.workstation.core.api.state.UserColorMapping;
-import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.core.events.lifecycle.ApplicationClosing;
-import org.janelia.workstation.core.events.selection.OntologySelectionEvent;
-import org.janelia.workstation.core.model.RecentFolder;
-import org.janelia.workstation.core.model.keybind.OntologyKeyBind;
-import org.janelia.workstation.core.model.keybind.OntologyKeyBindings;
-import org.janelia.workstation.core.util.RendererType2D;
-import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Category;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
-import org.janelia.model.security.util.PermissionTemplate;
+import org.janelia.workstation.core.api.facade.impl.ejb.LegacyFacadeImpl;
+import org.janelia.workstation.core.api.facade.interfaces.LegacyFacade;
+import org.janelia.workstation.core.api.state.UserColorMapping;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.selection.OntologySelectionEvent;
+import org.janelia.workstation.core.model.keybind.OntologyKeyBind;
+import org.janelia.workstation.core.model.keybind.OntologyKeyBindings;
+import org.janelia.workstation.core.options.OptionConstants;
+import org.janelia.workstation.core.util.RendererType2D;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,28 +55,18 @@ public class StateMgr {
         }
         return instance;
     }
-    
-    public static final String AUTO_SHARE_TEMPLATE = "Browser.AutoShareTemplate";
-    public final static String RECENTLY_OPENED_HISTORY = "Browser.RecentlyOpenedHistory";
-    public static final int MAX_RECENTLY_OPENED_HISTORY = 10;
-    public static final String ADD_TO_FOLDER_HISTORY = "ADD_TO_FOLDER_HISTORY";
-    public static final String ADD_TO_RESULTSET_HISTORY = "ADD_TO_RESULTSET_HISTORY";
-    public static final int MAX_ADD_TO_ROOT_HISTORY = 5;
-    
+
     private final LegacyFacade legacyFacade;
     private final UserColorMapping userColorMapping = new UserColorMapping();
     
     private Annotation currentSelectedOntologyAnnotation;
     private OntologyTerm errorOntology;
-    private PermissionTemplate autoShareTemplate;
-
-    public static boolean isDarkLook = true;
     
     private StateMgr() {     
         log.info("Initializing State Manager");
         this.legacyFacade = new LegacyFacadeImpl();
         try {
-            this.autoShareTemplate = (PermissionTemplate) FrameworkAccess.getModelProperty(AUTO_SHARE_TEMPLATE);
+
             
             if (FrameworkAccess.getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
                 FrameworkAccess.setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
@@ -121,13 +107,7 @@ public class StateMgr {
         Boolean dark = (Boolean) UIManager.get("nb.dark.theme");
         return (dark != null && dark);
     }
-    
-    @Subscribe
-    public void cleanup(ApplicationClosing e) {
-        log.info("Saving auto-share template");
-        FrameworkAccess.setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
-    }
-    
+
     public UserColorMapping getUserColorMapping() {
         return userColorMapping;
     }
@@ -240,91 +220,6 @@ public class StateMgr {
         }
     }
 
-    public PermissionTemplate getAutoShareTemplate() {
-        return autoShareTemplate;
-    }
-
-    public void setAutoShareTemplate(PermissionTemplate autoShareTemplate) {
-        this.autoShareTemplate = autoShareTemplate;
-        FrameworkAccess.setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
-    }
-    
-    public List<String> getRecentlyOpenedHistory() {
-        return getHistoryProperty(RECENTLY_OPENED_HISTORY);
-    }
-
-    public void updateRecentlyOpenedHistory(String ref) {
-        updateHistoryProperty(RECENTLY_OPENED_HISTORY, MAX_RECENTLY_OPENED_HISTORY, ref);
-    }
-
-    public List<RecentFolder> getAddToFolderHistory() {
-        List<String> recentFolderStrs = getHistoryProperty(ADD_TO_FOLDER_HISTORY);
-        List<RecentFolder> recentFolders = new ArrayList<>();
-        
-        for(String recentFolderStr : recentFolderStrs) {
-            if (recentFolderStr.contains(":")) {
-                String[] arr = recentFolderStr.split("\\:");
-                String path = arr[0];
-                String label = arr[1];
-                recentFolders.add(new RecentFolder(path, label));
-            }
-        }
-        
-        return recentFolders;
-    }
-    
-    public void updateAddToFolderHistory(RecentFolder folder) {
-        // TODO: update automatically when a folder is deleted, so it no longer appears in the recent list
-        String recentFolderStr = folder.getPath()+":"+folder.getLabel();
-        updateHistoryProperty(ADD_TO_FOLDER_HISTORY, MAX_ADD_TO_ROOT_HISTORY, recentFolderStr);
-    }
-
-    public List<RecentFolder> getAddToResultSetHistory() {
-        List<String> recentFolderStrs = getHistoryProperty(ADD_TO_RESULTSET_HISTORY);
-        List<RecentFolder> recentFolders = new ArrayList<>();
-        
-        for(String recentFolderStr : recentFolderStrs) {
-            if (recentFolderStr.contains(":")) {
-                String[] arr = recentFolderStr.split("\\:");
-                String path = arr[0];
-                String label = arr[1];
-                recentFolders.add(new RecentFolder(path, label));
-            }
-        }
-        
-        return recentFolders;
-    }
-    
-    public void updateAddToResultSetHistory(RecentFolder folder) {
-        String recentFolderStr = folder.getPath()+":"+folder.getLabel();
-        updateHistoryProperty(ADD_TO_RESULTSET_HISTORY, MAX_ADD_TO_ROOT_HISTORY, recentFolderStr);
-    }
-    
-    private List<String> getHistoryProperty(String prop) {
-        @SuppressWarnings("unchecked")
-        List<String> history = (List<String>) FrameworkAccess.getModelProperty(prop);
-        if (history == null) return new ArrayList<>();
-        // Must make a copy of the list so that we don't use the same reference that's in the cache.
-        log.debug("History property {} contains {}",prop,history);
-        return new ArrayList<>(history);
-    }
-
-    private void updateHistoryProperty(String prop, int maxItems, String value) {
-        List<String> history = getHistoryProperty(prop);
-        if (history.contains(value)) {
-            log.debug("Recently opened history already contains {}. Bringing it forward.",value);
-            history.remove(value);
-        }
-        if (history.size()>=maxItems) {
-            history.remove(history.size()-1);
-        }
-        history.add(0, value);
-        log.debug("Adding {} to recently opened history",value);
-        // Must make a copy of the list so that our reference doesn't go into the cache.
-        List<String> copy = new ArrayList<>(history);
-        FrameworkAccess.setModelProperty(prop, copy);
-    }
-    
     public Task getTaskById(Long taskId) throws Exception {
         // TODO: use web service
         return legacyFacade.getTaskById(taskId);

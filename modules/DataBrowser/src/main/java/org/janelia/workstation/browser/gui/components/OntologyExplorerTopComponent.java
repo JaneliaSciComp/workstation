@@ -18,21 +18,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import javax.swing.ActionMap;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JSeparator;
-import javax.swing.JToggleButton;
-import javax.swing.JToolBar;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.eventbus.Subscribe;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.security.Subject;
+import org.janelia.model.security.util.PermissionTemplate;
+import org.janelia.workstation.browser.actions.OntologyElementAction;
+import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.dialogs.AutoAnnotationPermissionDialog;
 import org.janelia.workstation.browser.gui.dialogs.BulkAnnotationPermissionDialog;
 import org.janelia.workstation.browser.gui.dialogs.KeyBindDialog;
@@ -41,6 +40,21 @@ import org.janelia.workstation.browser.gui.find.FindContextManager;
 import org.janelia.workstation.browser.gui.find.FindToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeView;
+import org.janelia.workstation.browser.nb_action.ApplyAnnotationAction;
+import org.janelia.workstation.browser.nb_action.NewOntologyActionListener;
+import org.janelia.workstation.browser.nodes.NodeTracker;
+import org.janelia.workstation.browser.nodes.NodeUtils;
+import org.janelia.workstation.browser.nodes.OntologyNode;
+import org.janelia.workstation.browser.nodes.OntologyRootNode;
+import org.janelia.workstation.browser.nodes.OntologyTermNode;
+import org.janelia.workstation.common.gui.support.Debouncer;
+import org.janelia.workstation.common.gui.support.ExpandedTreeState;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.JScrollPopupMenu;
+import org.janelia.workstation.common.gui.support.MouseForwarder;
+import org.janelia.workstation.common.gui.support.WindowLocator;
+import org.janelia.workstation.core.actions.Action;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -56,33 +70,12 @@ import org.janelia.workstation.core.keybind.KeyBindChangedEvent;
 import org.janelia.workstation.core.keybind.KeyBindings;
 import org.janelia.workstation.core.keybind.KeyboardShortcut;
 import org.janelia.workstation.core.keybind.KeymapUtil;
-import org.janelia.workstation.common.gui.support.Debouncer;
-import org.janelia.workstation.common.gui.support.ExpandedTreeState;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.JScrollPopupMenu;
-import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.common.gui.support.WindowLocator;
 import org.janelia.workstation.core.model.keybind.OntologyKeyBind;
 import org.janelia.workstation.core.model.keybind.OntologyKeyBindings;
-import org.janelia.workstation.core.util.ConcurrentUtils;
-import org.janelia.workstation.core.actions.Action;
-import org.janelia.workstation.browser.actions.OntologyElementAction;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.nb_action.ApplyAnnotationAction;
-import org.janelia.workstation.browser.nb_action.NewOntologyActionListener;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
-import org.janelia.workstation.browser.nodes.NodeTracker;
-import org.janelia.workstation.browser.nodes.NodeUtils;
-import org.janelia.workstation.browser.nodes.OntologyNode;
-import org.janelia.workstation.browser.nodes.OntologyRootNode;
-import org.janelia.workstation.browser.nodes.OntologyTermNode;
+import org.janelia.workstation.core.util.ConcurrentUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.ontology.Ontology;
-import org.janelia.model.domain.ontology.OntologyTerm;
-import org.janelia.model.security.Subject;
-import org.janelia.model.security.util.PermissionTemplate;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -94,9 +87,6 @@ import org.openide.windows.TopComponent;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.eventbus.Subscribe;
 
 /**
  * Top component for the Ontology Editor, which lets users create ontologies
@@ -718,7 +708,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 if (autoShareButton.isSelected()) {
                     boolean pressedOk = autoAnnotationDialog.showAutoAnnotationConfiguration();
                     if (pressedOk) {
-                        PermissionTemplate template = StateMgr.getStateMgr().getAutoShareTemplate();
+                        PermissionTemplate template = DataBrowserMgr.getDataBrowserMgr().getAutoShareTemplate();
                         if (template!=null) {
                             JOptionPane.showMessageDialog(mainFrame,
                                 "Auto-sharing annotation with "+
@@ -728,29 +718,23 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     }
                 }
                 else {
-                    StateMgr.getStateMgr().setAutoShareTemplate(null);
+                    DataBrowserMgr.getDataBrowserMgr().setAutoShareTemplate(null);
                     JOptionPane.showMessageDialog(mainFrame,
                         "No longer auto-sharing annotations", "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
                 }
 
-                autoShareButton.setSelected(StateMgr.getStateMgr().getAutoShareTemplate()!=null);
+                autoShareButton.setSelected(DataBrowserMgr.getDataBrowserMgr().getAutoShareTemplate()!=null);
             }
 
         });
-        autoShareButton.setSelected(StateMgr.getStateMgr().getAutoShareTemplate()!=null);
+        autoShareButton.setSelected(DataBrowserMgr.getDataBrowserMgr().getAutoShareTemplate()!=null);
         toolBar.add(autoShareButton);
                     
         final JButton bulkPermissionsButton = new JButton();
         bulkPermissionsButton.setIcon(Icons.getIcon("group_edit.png"));
         bulkPermissionsButton.setToolTipText("Bulk-edit permissions for annotations on selected entities");
         bulkPermissionsButton.setFocusable(false);
-        bulkPermissionsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                bulkAnnotationDialog.showForSelectedDomainObjects();
-            }
-            
-        });
+        bulkPermissionsButton.addActionListener(e -> bulkAnnotationDialog.showForSelectedDomainObjects());
         toolBar.add(bulkPermissionsButton);
         
         return toolBar;

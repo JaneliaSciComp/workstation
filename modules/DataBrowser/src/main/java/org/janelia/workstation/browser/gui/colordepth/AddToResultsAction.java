@@ -12,21 +12,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
-import org.janelia.workstation.browser.nb_action.NodePresenterAction;
-import org.janelia.workstation.browser.nodes.GroupedFolderNode;
-import org.janelia.workstation.browser.nodes.NodeUtils;
-import org.janelia.workstation.browser.nodes.UserViewConfiguration;
-import org.janelia.workstation.browser.nodes.UserViewRootNode;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.core.api.StateMgr;
-import org.janelia.workstation.core.model.RecentFolder;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.gui.support.TreeNodeChooser;
-import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
-import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
@@ -35,6 +20,21 @@ import org.janelia.model.domain.workspace.GroupedFolder;
 import org.janelia.model.domain.workspace.ProxyGroup;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
+import org.janelia.workstation.browser.api.state.DataBrowserMgr;
+import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
+import org.janelia.workstation.browser.gui.support.TreeNodeChooser;
+import org.janelia.workstation.browser.nb_action.NodePresenterAction;
+import org.janelia.workstation.browser.nodes.GroupedFolderNode;
+import org.janelia.workstation.browser.nodes.NodeUtils;
+import org.janelia.workstation.browser.nodes.UserViewConfiguration;
+import org.janelia.workstation.browser.nodes.UserViewRootNode;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.model.RecentFolder;
+import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,7 +170,7 @@ public class AddToResultsAction extends NodePresenterAction {
         newFolderMenu.add(chooseItem);
         newFolderMenu.addSeparator();
 
-        List<RecentFolder> addHistory = StateMgr.getStateMgr().getAddToResultSetHistory();
+        List<RecentFolder> addHistory = DataBrowserMgr.getDataBrowserMgr().getAddToResultSetHistory();
         if (addHistory!=null && !addHistory.isEmpty()) {
 
             JMenuItem item = new JMenuItem("Recent:");
@@ -332,6 +332,6 @@ public class AddToResultsAction extends NodePresenterAction {
     protected void updateHistory(final Long[] idPath, String label) throws Exception {
         // Update history
         String pathString = NodeUtils.createPathString(idPath);
-        StateMgr.getStateMgr().updateAddToResultSetHistory(new RecentFolder(pathString, label));
+        DataBrowserMgr.getDataBrowserMgr().updateAddToResultSetHistory(new RecentFolder(pathString, label));
     }
 }

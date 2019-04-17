@@ -2,15 +2,13 @@ package org.janelia.workstation.gui.large_volume_viewer.launch;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.integration.spi.domain.ObjectOpenAcceptor;
-import org.janelia.workstation.core.api.StateMgr;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
-import org.janelia.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
+import org.janelia.workstation.integration.spi.domain.ObjectOpenAcceptor;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
 import org.openide.windows.TopComponentGroup;
@@ -68,10 +66,6 @@ public class Launcher implements ObjectOpenAcceptor  {
         else {
             JOptionPane.showMessageDialog(WindowManager.getDefault().getMainWindow(), "Failed to open window group for plugin.");
         }
-
-        // Update "Recently Opened" history
-        String strRef = Reference.createFor(domainObject).toString();
-        StateMgr.getStateMgr().updateRecentlyOpenedHistory(strRef);
     }
 
     @Override

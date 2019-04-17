@@ -23,6 +23,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -120,8 +121,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         getLvvv().loadDomainObject(domainObject);
 
         // Update "Recently Opened" history
-        String strRef = Reference.createFor(domainObject).toString();
-        StateMgr.getStateMgr().updateRecentlyOpenedHistory(strRef);
+        FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor(domainObject));
     }
 
     /**

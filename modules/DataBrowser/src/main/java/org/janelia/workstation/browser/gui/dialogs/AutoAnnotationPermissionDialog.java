@@ -6,28 +6,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.StateMgr;
-import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.util.PermissionTemplate;
+import org.janelia.workstation.browser.api.state.DataBrowserMgr;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 /**
  * A dialog for selecting permissions to auto-add for any annotations
@@ -116,7 +105,7 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
     public boolean showAutoAnnotationConfiguration() {
         pressedOk = false;
             
-        template = StateMgr.getStateMgr().getAutoShareTemplate();
+        template = DataBrowserMgr.getDataBrowserMgr().getAutoShareTemplate();
         
         try {
             DomainMgr mgr = DomainMgr.getDomainMgr();
@@ -174,7 +163,7 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
         String permissions = (read ? "r" : "") + (write ? "w" : "");
         template.setPermissions(permissions);
 
-        StateMgr.getStateMgr().setAutoShareTemplate(template);
+        DataBrowserMgr.getDataBrowserMgr().setAutoShareTemplate(template);
         
         setVisible(false);
     }
