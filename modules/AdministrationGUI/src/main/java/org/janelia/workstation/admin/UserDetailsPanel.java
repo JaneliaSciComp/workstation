@@ -184,7 +184,7 @@ public class UserDetailsPanel extends JPanel {
     // adds the user to a new group   
     private void addNewGroup() {
         String groupKey = (String)newGroupSelector.getSelectedItem();
-        groupRolesModel.addNewGroup(groupKey);        
+        groupRolesModel.addNewGroup(groupKey);
     }
 
     // removes the user from a group
@@ -330,6 +330,7 @@ public class UserDetailsPanel extends JPanel {
             roles.add(newRole);
             user.setUserGroupRoles(roles);
             data.add(user.getRole(groupKey));
+            dirtyFlag = true;
             validateUserChanges();
             fireTableRowsInserted(getRowCount()-1, getRowCount()-1);
         }

@@ -4,11 +4,8 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -96,6 +93,8 @@ public class GroupDetailsPanel extends JPanel implements ActionListener {
     }
 
     public void editGroupDetails(String groupKey, List<User> userList) throws Exception {
+        Set<String> currentUsers = userList.stream().map(user -> user.getKey()).
+                collect(Collectors.toSet());
         if (AccessManager.getAccessManager().isAdmin()) {
             groupRolesModel.loadGroupRoles(groupKey, userList);
             List<Subject> subjectList = DomainMgr.getDomainMgr().getSubjects();
@@ -104,7 +103,9 @@ public class GroupDetailsPanel extends JPanel implements ActionListener {
                 if (subject instanceof User) {
                     User user = (User)subject;
                     lookupUser.put(user.getFullName(), user);
-                    addUserBox.addItem(user.getFullName());                    
+                    if (!currentUsers.contains(user.getKey()))
+                        addUserBox.addItem(user.getFullName());
+
                 }
             }
         }
