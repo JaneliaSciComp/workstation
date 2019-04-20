@@ -8,6 +8,7 @@ import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.workstation.browser.gui.dialogs.download.DownloadWizardAction;
 import org.janelia.workstation.common.actions.DomainObjectNodeAction;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
@@ -23,7 +24,12 @@ public class DownloadBuilder implements ContextualActionBuilder {
 
     @Override
     public boolean isCompatible(Object obj) {
-        return obj instanceof DomainObject;
+        return obj instanceof DomainObject && !(obj instanceof OntologyTerm);
+    }
+
+    @Override
+    public boolean isPrecededBySeparator() {
+        return true;
     }
 
     @Override

@@ -39,7 +39,7 @@ public class ReportProblemBuilder implements ContextualActionBuilder {
 
     @Override
     public boolean isCompatible(Object obj) {
-        return obj instanceof DomainObject;
+        return obj instanceof DomainObject && !(obj instanceof OntologyTerm);
     }
 
     @Override

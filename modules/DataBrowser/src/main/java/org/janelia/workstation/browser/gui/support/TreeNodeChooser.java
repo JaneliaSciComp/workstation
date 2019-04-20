@@ -6,8 +6,8 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.workstation.browser.nodes.AbstractDomainObjectNode;
-import org.janelia.workstation.browser.nodes.UserViewTreeNodeNode;
+import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
+import org.janelia.workstation.common.nodes.UserViewTreeNodeNode;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.openide.nodes.Node;

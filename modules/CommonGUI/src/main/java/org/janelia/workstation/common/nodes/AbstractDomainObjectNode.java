@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.nodes;
+package org.janelia.workstation.common.nodes;
 
 import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;

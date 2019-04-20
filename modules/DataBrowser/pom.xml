@@ -162,13 +162,9 @@
                 <configuration>
                     <publicPackages>
                         <publicPackage>org.janelia.workstation.browser.actions</publicPackage>
-                        <publicPackage>org.janelia.workstation.browser.activity_logging</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.api</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.api.state</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.components</publicPackage>
-                        <publicPackage>org.janelia.workstation.browser.events</publicPackage>
-                        <publicPackage>org.janelia.workstation.browser.events.selection</publicPackage>
-                        <publicPackage>org.janelia.workstation.browser.flavors</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.gui.colordepth</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.gui.dialogs</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.gui.editor</publicPackage>
@@ -186,9 +182,9 @@
                         <publicPackage>org.janelia.workstation.browser.gui.tree</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.nb_action</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.nodes</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.selection</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.tools</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.tools.preferences</publicPackage>
-                        <publicPackage>org.janelia.workstation.browser.workers</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

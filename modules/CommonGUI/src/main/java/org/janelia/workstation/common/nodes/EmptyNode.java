@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.nodes;
+package org.janelia.workstation.common.nodes;
 
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;

@@ -5,7 +5,7 @@ import java.util.Arrays;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
-import org.janelia.workstation.browser.nodes.FilterNode;
+import org.janelia.workstation.common.nodes.FilterNode;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;

@@ -41,13 +41,6 @@
             <artifactId>common-gui</artifactId>
         </dependency>
 
-        <!-- Data Browser
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>browser</artifactId>
-        </dependency>
-         -->
-
         <!-- JOGL213 -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>

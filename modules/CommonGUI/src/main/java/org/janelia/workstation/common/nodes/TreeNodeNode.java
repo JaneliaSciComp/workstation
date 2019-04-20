@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.nodes;
+package org.janelia.workstation.common.nodes;
 
 import java.awt.Image;
 import java.awt.datatransfer.Transferable;
@@ -232,7 +232,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<Node> {
         List<AbstractDomainObjectNode<?>> nodes = new ArrayList<>();
         
         if (t.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
-            AbstractDomainObjectNode<?> node = AbstractDomainObjectNode.getDomainObjectNode(t);
+            AbstractDomainObjectNode<?> node = getDomainObjectNode(t);
             log.trace("  Single drop - {} with parent {}",node.getDisplayName(),node.getParentNode().getDisplayName());
             nodes.add(node);
         }
@@ -281,7 +281,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<Node> {
             for(int i=0; i<multi.getCount(); i++) {
                 Transferable st = multi.getTransferableAt(i);
                 if (st.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
-                    AbstractDomainObjectNode<?> node = AbstractDomainObjectNode.getDomainObjectNode(st);
+                    AbstractDomainObjectNode<?> node = getDomainObjectNode(st);
                     if (node==null || !(node instanceof AbstractDomainObjectNode)) {
                         continue;
                     }   

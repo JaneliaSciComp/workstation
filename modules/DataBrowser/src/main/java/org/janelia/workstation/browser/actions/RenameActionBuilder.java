@@ -22,7 +22,7 @@ import org.openide.util.lookup.ServiceProvider;
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position = 130)
+@ServiceProvider(service = ContextualActionBuilder.class, position = 120)
 public class RenameActionBuilder implements ContextualActionBuilder {
 
     private static final RenameAction action = new RenameAction();

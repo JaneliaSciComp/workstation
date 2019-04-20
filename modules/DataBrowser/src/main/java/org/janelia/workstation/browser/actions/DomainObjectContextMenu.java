@@ -46,7 +46,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             ArtifactDescriptor resultDescriptor, String typeName, ChildSelectionModel<DomainObject,Reference> editSelectionModel) {
         this.contextObject = contextObject;
         this.domainObjectList = domainObjectList;
-        this.domainObject = domainObjectList.size() == 1 ? domainObjectList.get(0) : null;
+        this.domainObject = domainObjectList.isEmpty() ? null : domainObjectList.get(0);
         this.multiple = domainObjectList.size() > 1;
         this.resultDescriptor = resultDescriptor;
         this.typeName = typeName;

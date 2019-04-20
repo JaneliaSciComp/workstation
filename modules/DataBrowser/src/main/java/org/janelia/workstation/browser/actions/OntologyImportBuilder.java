@@ -33,7 +33,7 @@ import org.yaml.snakeyaml.Yaml;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=500)
+@ServiceProvider(service = ContextualActionBuilder.class, position=600)
 public class OntologyImportBuilder extends SimpleActionBuilder {
 
     private final static Logger log = LoggerFactory.getLogger(OntologyImportBuilder.class);

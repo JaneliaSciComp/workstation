@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.nodes;
+package org.janelia.workstation.common.nodes;
 
 import java.util.ArrayList;
 import java.util.HashMap;

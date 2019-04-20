@@ -13,7 +13,7 @@ import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent
 import org.janelia.workstation.browser.gui.components.DomainViewerManager;
 import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
-import org.janelia.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;

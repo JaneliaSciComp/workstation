@@ -16,7 +16,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import org.janelia.workstation.browser.nodes.NodeUtils;
+import org.janelia.workstation.common.nodes.NodeUtils;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerManager.Provider;
 import org.openide.explorer.view.BeanTreeView;

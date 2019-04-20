@@ -9,7 +9,7 @@ import org.openide.util.lookup.ServiceProvider;
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=550)
+@ServiceProvider(service = ContextualActionBuilder.class, position=650)
 public class ApplyAnnotationBuilder implements ContextualActionBuilder {
 
     @Override

@@ -4,7 +4,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
-import org.janelia.workstation.browser.nodes.NodeUtils;
+import org.janelia.workstation.common.nodes.NodeUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.workers.SimpleWorker;

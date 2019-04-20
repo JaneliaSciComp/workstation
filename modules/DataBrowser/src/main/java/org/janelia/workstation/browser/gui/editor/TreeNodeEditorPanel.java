@@ -25,7 +25,7 @@ import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
-import org.janelia.workstation.browser.nodes.TreeNodeNode;
+import org.janelia.workstation.common.nodes.TreeNodeNode;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;

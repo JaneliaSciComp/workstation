@@ -11,7 +11,7 @@ import org.openide.util.lookup.ServiceProvider;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=520)
+@ServiceProvider(service = ContextualActionBuilder.class, position=620)
 public class OntologyShortcutBuilder extends SimpleActionBuilder {
 
     @Override

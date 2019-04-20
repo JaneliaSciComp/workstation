@@ -14,15 +14,16 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.browser.gui.support.TreeNodeChooser;
-import org.janelia.workstation.browser.nodes.NodeUtils;
-import org.janelia.workstation.browser.nodes.UserViewConfiguration;
-import org.janelia.workstation.browser.nodes.UserViewRootNode;
-import org.janelia.workstation.browser.nodes.UserViewTreeNodeNode;
+import org.janelia.workstation.common.nodes.NodeUtils;
+import org.janelia.workstation.common.nodes.UserViewConfiguration;
+import org.janelia.workstation.common.nodes.UserViewRootNode;
+import org.janelia.workstation.common.nodes.UserViewTreeNodeNode;
 import org.janelia.workstation.common.actions.DomainObjectNodeAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -50,7 +51,7 @@ public class AddToFolderBuilder implements ContextualActionBuilder {
 
     @Override
     public boolean isCompatible(Object obj) {
-        return obj instanceof DomainObject;
+        return obj instanceof DomainObject && !(obj instanceof OntologyTerm);
     }
 
     @Override

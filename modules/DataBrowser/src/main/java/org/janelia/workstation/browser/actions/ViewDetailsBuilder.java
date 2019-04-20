@@ -1,9 +1,13 @@
 package org.janelia.workstation.browser.actions;
 
+import java.awt.event.ActionEvent;
+
+import javax.swing.Action;
+
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
+import org.janelia.workstation.common.actions.ViewerContextAction;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -12,12 +16,9 @@ import org.openide.util.lookup.ServiceProvider;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ServiceProvider(service = ContextualActionBuilder.class, position=100)
-public class ViewDetailsBuilder extends SimpleActionBuilder {
+public class ViewDetailsBuilder implements ContextualActionBuilder {
 
-    @Override
-    protected String getName() {
-        return "View Details";
-    }
+    private static ViewDetailsAction action = new ViewDetailsAction();
 
     @Override
     public boolean isCompatible(Object obj) {
@@ -30,7 +31,26 @@ public class ViewDetailsBuilder extends SimpleActionBuilder {
     }
 
     @Override
-    protected void performAction(Object obj) {
-        DomainObject domainObject = (DomainObject)obj;
-        new DomainDetailsDialog().showForDomainObject(domainObject);
-    }}
+    public Action getAction(Object obj) {
+        return action;
+    }
+
+    public static class ViewDetailsAction extends ViewerContextAction {
+
+        @Override
+        protected String getName() {
+            return "View Details";
+        }
+
+        @Override
+        protected boolean isVisible() {
+            return !getViewerContext().isMultiple();
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            DomainObject domainObject = getViewerContext().getDomainObject();
+            new DomainDetailsDialog().showForDomainObject(domainObject);
+        }
+    }
+}

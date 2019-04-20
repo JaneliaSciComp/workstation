@@ -4,7 +4,7 @@ import java.awt.Image;
 
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;

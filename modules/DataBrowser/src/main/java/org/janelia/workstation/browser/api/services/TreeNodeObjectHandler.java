@@ -7,7 +7,7 @@ import org.janelia.workstation.browser.gui.editor.TreeNodeEditorPanel;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.browser.nodes.TreeNodeNode;
+import org.janelia.workstation.common.nodes.TreeNodeNode;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.openide.nodes.ChildFactory;

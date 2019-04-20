@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.api.services;
+package org.janelia.workstation.common.services;
 
 import java.util.logging.Logger;
 

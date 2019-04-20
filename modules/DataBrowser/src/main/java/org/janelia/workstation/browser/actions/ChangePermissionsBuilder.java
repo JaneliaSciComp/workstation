@@ -1,23 +1,24 @@
 package org.janelia.workstation.browser.actions;
 
+import java.awt.event.ActionEvent;
+
+import javax.swing.Action;
+
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.workstation.common.actions.ViewerContextAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ServiceProvider(service = ContextualActionBuilder.class, position=110)
-public class ChangePermissionsBuilder extends SimpleActionBuilder {
+public class ChangePermissionsBuilder implements ContextualActionBuilder {
 
-    @Override
-    protected String getName() {
-        return "Change Permissions";
-    }
+    private static ChangePermissionsAction action = new ChangePermissionsAction();
 
     @Override
     public boolean isCompatible(Object obj) {
@@ -30,8 +31,26 @@ public class ChangePermissionsBuilder extends SimpleActionBuilder {
     }
 
     @Override
-    protected void performAction(Object obj) {
-        DomainObject domainObject = (DomainObject)obj;
-        new DomainDetailsDialog().showForDomainObject(domainObject, DomainInspectorPanel.TAB_NAME_PERMISSIONS);
+    public Action getAction(Object obj) {
+        return action;
+    }
+
+    public static class ChangePermissionsAction extends ViewerContextAction {
+
+        @Override
+        protected String getName() {
+            return "Change Permissions";
+        }
+
+        @Override
+        protected boolean isVisible() {
+            return !getViewerContext().isMultiple();
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            DomainObject domainObject = getViewerContext().getDomainObject();
+            new DomainDetailsDialog().showForDomainObject(domainObject, DomainInspectorPanel.TAB_NAME_PERMISSIONS);
+        }
     }
 }

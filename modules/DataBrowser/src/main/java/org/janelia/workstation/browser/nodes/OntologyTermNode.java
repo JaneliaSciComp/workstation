@@ -18,6 +18,8 @@ import org.janelia.workstation.browser.actions.ApplyAnnotationAction;
 import org.janelia.workstation.browser.actions.OntologyElementAction;
 import org.janelia.workstation.common.flavors.OntologyTermFlavor;
 import org.janelia.workstation.common.flavors.OntologyTermNodeFlavor;
+import org.janelia.workstation.common.nodes.InternalNode;
+import org.janelia.workstation.common.nodes.NodeUtils;
 import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
 import org.janelia.workstation.browser.gui.components.OntologyExplorerTopComponent;
 import org.janelia.workstation.common.gui.support.Icons;

@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.nodes;
+package org.janelia.workstation.common.nodes;
 
 import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
@@ -30,7 +30,7 @@ public class InternalNode<T extends HasIdentifier> extends IdentifiableNode<T> {
     private final ChildFactory<?> parentChildFactory;
     private final InstanceContent lookupContents;
     
-    InternalNode(ChildFactory<?> parentChildFactory, Children children, T object) {
+    protected InternalNode(ChildFactory<?> parentChildFactory, Children children, T object) {
         this(new InstanceContent(), parentChildFactory, children, object);
     }
 

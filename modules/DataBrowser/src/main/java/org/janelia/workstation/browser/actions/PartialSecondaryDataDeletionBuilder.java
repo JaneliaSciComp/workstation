@@ -65,14 +65,12 @@ public class PartialSecondaryDataDeletionBuilder implements ContextualActionBuil
             }
 
             ContextualActionUtils.setVisible(this, false);
-            if (!samples.isEmpty()) {
-                if (samples.size()==domainObjectList.size() || (samples.size()==1)) {
-                    ContextualActionUtils.setVisible(this, true);
-                    ContextualActionUtils.setEnabled(this, true);
-                    for (Sample sample : samples) {
-                        if (!ClientDomainUtils.hasWriteAccess(sample)) {
-                            ContextualActionUtils.setEnabled(this, false);
-                        }
+            if (samples.size()==1) {
+                ContextualActionUtils.setVisible(this, true);
+                ContextualActionUtils.setEnabled(this, true);
+                for (Sample sample : samples) {
+                    if (!ClientDomainUtils.hasWriteAccess(sample)) {
+                        ContextualActionUtils.setEnabled(this, false);
                     }
                 }
             }

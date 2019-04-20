@@ -23,7 +23,7 @@ import org.openide.util.lookup.ServiceProvider;
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=600)
+@ServiceProvider(service = ContextualActionBuilder.class, position=420)
 public class SearchHereBuilder implements ContextualActionBuilder {
 
     private static final SearchHereAction action = new SearchHereAction();

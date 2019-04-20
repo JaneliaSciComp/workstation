@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.nodes;
+package org.janelia.workstation.common.nodes;
 
 import com.google.common.collect.ComparisonChain;
 import java.awt.Image;

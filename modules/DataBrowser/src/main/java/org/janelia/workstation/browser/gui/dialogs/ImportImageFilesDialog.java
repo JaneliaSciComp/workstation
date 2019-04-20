@@ -33,7 +33,7 @@ import org.janelia.workstation.core.filecache.WebDavUploader;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
 import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.browser.nodes.NodeUtils;
+import org.janelia.workstation.common.nodes.NodeUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
 import org.janelia.workstation.core.workers.BackgroundWorker;

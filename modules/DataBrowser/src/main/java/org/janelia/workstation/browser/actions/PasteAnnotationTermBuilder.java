@@ -28,7 +28,7 @@ import org.openide.util.lookup.ServiceProvider;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=600)
+@ServiceProvider(service = ContextualActionBuilder.class, position=10)
 public class PasteAnnotationTermBuilder implements ContextualActionBuilder {
 
     private static final PasteAnnotationTermAction action = new PasteAnnotationTermAction();
@@ -40,6 +40,9 @@ public class PasteAnnotationTermBuilder implements ContextualActionBuilder {
 
     @Override
     public Action getAction(Object obj) {
+        if (StateMgr.getStateMgr().getCurrentSelectedOntologyAnnotation() == null) {
+            return null;
+        }
         return action;
     }
 

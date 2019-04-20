@@ -3,7 +3,7 @@ package org.janelia.workstation.browser.gui.colordepth;
 import java.awt.Image;
 
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.workstation.browser.nodes.TreeNodeNode;
+import org.janelia.workstation.common.nodes.TreeNodeNode;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.openide.nodes.ChildFactory;

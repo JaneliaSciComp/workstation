@@ -16,7 +16,6 @@ import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -30,6 +29,11 @@ public class LightboxToggleBuilder implements ContextualActionBuilder {
     @Override
     public boolean isCompatible(Object obj) {
         return obj instanceof DomainObject;
+    }
+
+    @Override
+    public boolean isPrecededBySeparator() {
+        return true;
     }
 
     @Override
@@ -48,8 +52,6 @@ public class LightboxToggleBuilder implements ContextualActionBuilder {
             this.domainObject = viewerContext.getDomainObject();
             this.resultDescriptor = viewerContext.getResultDescriptor();
             this.typeName = viewerContext.getTypeName();
-            ContextualActionUtils.setVisible(this, false);
-            ContextualActionUtils.setEnabled(this, true);
         }
 
         @Override

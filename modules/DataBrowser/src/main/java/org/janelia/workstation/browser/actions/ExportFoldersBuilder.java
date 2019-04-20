@@ -37,7 +37,7 @@ import org.openide.util.lookup.ServiceProvider;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=620)
+@ServiceProvider(service = ContextualActionBuilder.class, position=410)
 public class ExportFoldersBuilder implements ContextualActionBuilder {
 
     private static final String DEFAULT_EXPORT_DIR = System.getProperty("user.home");

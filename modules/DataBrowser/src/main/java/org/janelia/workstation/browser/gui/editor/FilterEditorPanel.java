@@ -59,7 +59,7 @@ import org.janelia.workstation.common.gui.support.SmartSearchBox;
 import org.janelia.workstation.common.gui.support.WindowLocator;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
-import org.janelia.workstation.browser.nodes.FilterNode;
+import org.janelia.workstation.common.nodes.FilterNode;
 import org.janelia.workstation.core.util.ConcurrentUtils;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;

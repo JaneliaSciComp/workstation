@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.nb_action;
+package org.janelia.workstation.common.nb_action;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;

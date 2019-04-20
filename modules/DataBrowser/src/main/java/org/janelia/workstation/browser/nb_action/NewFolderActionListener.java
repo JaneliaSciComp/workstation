@@ -12,8 +12,8 @@ import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.nodes.NodeUtils;
-import org.janelia.workstation.browser.nodes.TreeNodeNode;
+import org.janelia.workstation.common.nodes.NodeUtils;
+import org.janelia.workstation.common.nodes.TreeNodeNode;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;

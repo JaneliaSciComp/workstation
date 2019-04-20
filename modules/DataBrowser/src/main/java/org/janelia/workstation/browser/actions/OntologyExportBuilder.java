@@ -28,7 +28,7 @@ import org.yaml.snakeyaml.Yaml;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=501)
+@ServiceProvider(service = ContextualActionBuilder.class, position=601)
 public class OntologyExportBuilder extends SimpleActionBuilder {
 
     private static final String SAVE_FILE_EXTENSION = "yaml";

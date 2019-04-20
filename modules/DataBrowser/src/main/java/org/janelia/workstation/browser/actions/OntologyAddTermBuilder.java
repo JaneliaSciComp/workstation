@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=510)
+@ServiceProvider(service = ContextualActionBuilder.class, position=120)
 public class OntologyAddTermBuilder implements ContextualActionBuilder {
 
     private final static Logger log = LoggerFactory.getLogger(OntologyAddTermBuilder.class);
@@ -40,11 +40,6 @@ public class OntologyAddTermBuilder implements ContextualActionBuilder {
     @Override
     public boolean isCompatible(Object obj) {
         return obj instanceof OntologyTerm;
-    }
-
-    @Override
-    public boolean isPrecededBySeparator() {
-        return true;
     }
 
     @Override

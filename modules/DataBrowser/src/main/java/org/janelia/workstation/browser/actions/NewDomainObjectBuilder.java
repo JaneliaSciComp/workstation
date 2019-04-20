@@ -9,7 +9,7 @@ import javax.swing.JMenuItem;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.workstation.browser.nb_action.NewFilterActionListener;
 import org.janelia.workstation.browser.nb_action.NewFolderActionListener;
-import org.janelia.workstation.browser.nodes.TreeNodeNode;
+import org.janelia.workstation.common.nodes.TreeNodeNode;
 import org.janelia.workstation.common.actions.NodePresenterAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
@@ -23,7 +23,7 @@ import org.openide.util.lookup.ServiceProvider;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position = 120)
+@ServiceProvider(service = ContextualActionBuilder.class, position = 130)
 public class NewDomainObjectBuilder implements ContextualActionBuilder {
 
     private static final NewDomainObjectAction nodeAction = new NewDomainObjectAction();
