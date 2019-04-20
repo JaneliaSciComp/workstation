@@ -49,7 +49,7 @@ import org.janelia.workstation.core.nodes.IdentifiableNodeSelectionModel;
 import org.janelia.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.browser.nodes.ExplorerRootNode;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
-import org.janelia.workstation.browser.nodes.NodeTracker;
+import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.browser.nodes.NodeUtils;
 import org.janelia.workstation.browser.nodes.RecentOpenedItemsNode;
 import org.janelia.workstation.browser.nodes.WorkspaceNode;

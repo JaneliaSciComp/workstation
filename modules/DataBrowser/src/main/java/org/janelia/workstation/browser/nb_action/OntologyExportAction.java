@@ -14,6 +14,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.filechooser.FileFilter;
 
+import org.janelia.workstation.common.nb_action.NodePresenterAction;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.support.YamlFileFilter;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -30,7 +31,7 @@ import org.yaml.snakeyaml.Yaml;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyExportAction extends NodePresenterAction   {
+public class OntologyExportAction extends NodePresenterAction {
 
     private static final String SAVE_FILE_EXTENSION = "yaml";
 

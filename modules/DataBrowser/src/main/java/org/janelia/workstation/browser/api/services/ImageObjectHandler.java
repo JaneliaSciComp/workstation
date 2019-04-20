@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author goinac
  */
-@ServiceProvider(service = DomainObjectHandler.class, path = DomainObjectHandler.DOMAIN_OBJECT_LOOKUP_PATH)
+@ServiceProvider(service = DomainObjectHandler.class)
 public class ImageObjectHandler implements DomainObjectHandler {
 
     private final static Logger log = LoggerFactory.getLogger(ImageObjectHandler.class);

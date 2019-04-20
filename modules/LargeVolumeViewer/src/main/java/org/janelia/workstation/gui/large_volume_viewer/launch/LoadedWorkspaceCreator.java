@@ -1,7 +1,5 @@
 package org.janelia.workstation.gui.large_volume_viewer.launch;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
@@ -9,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.concurrent.CancellationException;
+
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
@@ -17,19 +16,21 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
-import org.janelia.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.integration.spi.domain.ObjectOpenAcceptor;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.core.api.web.AsyncServiceClient;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
 import org.janelia.workstation.core.workers.BackgroundWorker;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeRestClient;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
+import org.janelia.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
+import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
+import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,17 +40,30 @@ import org.slf4j.LoggerFactory;
  * 
  * @author fosterl
  */
-@ServiceProvider(service = ObjectOpenAcceptor.class, path = ObjectOpenAcceptor.LOOKUP_PATH)
-public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
+@ServiceProvider(service = ContextualActionBuilder.class, position=1530)
+public class LoadedWorkspaceCreator extends SimpleActionBuilder {
     
     private static final Logger LOG = LoggerFactory.getLogger(LoadedWorkspaceCreator.class);
 
-    private static final int MENU_ORDER = 500;
-   
     @Override
-    public void acceptObject(Object obj) {
-        DomainObject domainObject = (DomainObject) obj;
-        TmSample sample = (TmSample) domainObject;
+    protected String getName() {
+        return "Load Linux SWC Folder into New Workspace on Sample";
+    }
+
+    @Override
+    public boolean isCompatible(Object obj) {
+        return obj instanceof TmSample;
+    }
+
+    @Override
+    public boolean isEnabled(Object obj) {
+        return true;
+    }
+
+    @Override
+    protected void performAction(Object obj) {
+
+        TmSample sample = (TmSample) obj;
         JFrame mainFrame = FrameworkAccess.getMainFrame();
 
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
@@ -186,36 +200,6 @@ public class LoadedWorkspaceCreator implements ObjectOpenAcceptor {
                 null,
                 ImmutableMap.of()
         );
-    }
-
-    @Override
-    public String getActionLabel() {
-        return "  Load Linux SWC Folder into New Workspace on Sample";
-    }
-
-    @Override
-    public boolean isCompatible(Object obj) {
-        return obj != null && (obj instanceof TmSample);
-    }
-
-    @Override
-    public boolean isEnabled(Object obj) {
-        return true;
-    }
-    
-    @Override
-    public Integer getOrder() {
-        return MENU_ORDER;
-    }
-
-    @Override
-    public boolean isPrecededBySeparator() {
-        return false;
-    }
-
-    @Override
-    public boolean isSucceededBySeparator() {
-        return false;
     }
 
 }

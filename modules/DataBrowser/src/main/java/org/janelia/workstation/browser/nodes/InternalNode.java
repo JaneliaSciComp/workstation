@@ -9,6 +9,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
+import org.janelia.workstation.core.nodes.NodeTracker;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.util.datatransfer.ExTransferable;

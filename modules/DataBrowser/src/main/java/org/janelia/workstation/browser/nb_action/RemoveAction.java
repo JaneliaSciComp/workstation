@@ -3,14 +3,16 @@ package org.janelia.workstation.browser.nb_action;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.browser.nodes.TreeNodeNode;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.workspace.Node;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Action which implements node removal for Folders and Workspaces. 
@@ -18,6 +20,9 @@ import org.openide.util.actions.NodeAction;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public final class RemoveAction extends NodeAction {
+
+    private final static Logger log = LoggerFactory.getLogger(RemoveAction.class);
+
 
     private final static RemoveAction singleton = new RemoveAction();
     public static RemoveAction get() {
@@ -89,7 +94,7 @@ public final class RemoveAction extends NodeAction {
     }
     
     @Override
-    protected void performAction (org.openide.nodes.Node[] activatedNodes) {
+    protected void performAction(org.openide.nodes.Node[] activatedNodes) {
         RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(parentTreeNode, toRemove);
         action.actionPerformed(null);
     }

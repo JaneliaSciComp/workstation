@@ -8,8 +8,7 @@ import org.janelia.model.domain.DomainObject;
  * @author fosterl
  */
 public interface DomainObjectCreator extends Compatible<DomainObject> {
-    public static final String LOOKUP_PATH = "DomainPerspective/DomainObjectCreator";
-    
+
     void useDomainObject( DomainObject e );
     @Override
     boolean isCompatible( DomainObject e );

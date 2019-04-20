@@ -7,7 +7,7 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.janelia.workstation.browser.nb_action.NewDomainObjectAction;
-import org.janelia.workstation.browser.nb_action.PopupLabelAction;
+import org.janelia.workstation.common.nb_action.PopupLabelAction;
 import org.janelia.workstation.browser.nb_action.SearchHereAction;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;

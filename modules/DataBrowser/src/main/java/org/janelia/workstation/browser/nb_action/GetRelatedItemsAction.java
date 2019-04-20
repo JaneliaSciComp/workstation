@@ -29,6 +29,7 @@ import org.janelia.workstation.browser.nodes.NodeUtils;
 import org.janelia.workstation.browser.nodes.UserViewConfiguration;
 import org.janelia.workstation.browser.nodes.UserViewRootNode;
 import org.janelia.workstation.browser.nodes.UserViewTreeNodeNode;
+import org.janelia.workstation.common.nb_action.NodePresenterAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -115,15 +116,15 @@ public class GetRelatedItemsAction extends NodePresenterAction {
         
         return getRelatedMenu;
     }
-    
+
     private JMenu createClassMenu(MappingType targetType) {
-        
+
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
-        
+
         JMenu classMenu = new JMenu(targetType.getLabel());
 
         JMenuItem createNewItem = new JMenuItem("Create New Folder...");
-        
+
         createNewItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
@@ -137,7 +138,7 @@ public class GetRelatedItemsAction extends NodePresenterAction {
                 }
 
                 SimpleWorker worker = new SimpleWorker() {
-                    
+
                     private TreeNode folder;
                     private Long[] idPath;
 
@@ -170,7 +171,7 @@ public class GetRelatedItemsAction extends NodePresenterAction {
                         FrameworkAccess.handleException(error);
                     }
                 };
-                
+
                 worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating folder...", ""));
                 worker.execute();
             }
@@ -187,13 +188,13 @@ public class GetRelatedItemsAction extends NodePresenterAction {
 
                 TreeNodeChooser nodeChooser = new TreeNodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class)), "Choose folder to add to", true);
                 nodeChooser.setRootVisible(false);
-                
+
                 int returnVal = nodeChooser.showDialog(explorer);
                 if (returnVal != TreeNodeChooser.CHOOSE_OPTION) return;
                 if (nodeChooser.getChosenElements().isEmpty()) return;
                 final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
                 final TreeNode folder = selectedNode.getTreeNode();
-                
+
                 addUniqueItemsToFolder(folder, NodeUtils.createIdPath(selectedNode), targetType);
             }
         });
@@ -209,16 +210,16 @@ public class GetRelatedItemsAction extends NodePresenterAction {
             classMenu.add(item);
 
             for (RecentFolder recentFolder : addHistory) {
-                
+
                 String path = recentFolder.getPath();
                 if (path.contains("#")) {
                     log.warn("Ignoring reference in add history: "+path);
                     continue;
                 }
-                
+
                 final Long[] idPath = NodeUtils.createIdPath(path);
                 final Long folderId = idPath[idPath.length-1];
-                
+
                 JMenuItem commonRootItem = new JMenuItem(recentFolder.getLabel());
                 commonRootItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -230,21 +231,21 @@ public class GetRelatedItemsAction extends NodePresenterAction {
                 classMenu.add(commonRootItem);
             }
         }
-        
+
         return classMenu;
     }
 
     private void addUniqueItemsToFolder(Long folderId, Long[] idPath, final MappingType targetType) {
 
         SimpleWorker worker = new SimpleWorker() {
-            
+
             private TreeNode treeNode;
-            
+
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 treeNode = model.getDomainObject(TreeNode.class, folderId);
-                
+
             }
 
             @Override
@@ -264,9 +265,9 @@ public class GetRelatedItemsAction extends NodePresenterAction {
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));
         worker.execute();
-        
+
     }
-    
+
     private void addUniqueItemsToFolder(final TreeNode treeNode, final Long[] idPath, final MappingType targetType) {
 
         final DomainObjectMapper mapper = new DomainObjectMapper(domainObjects);
@@ -278,10 +279,10 @@ public class GetRelatedItemsAction extends NodePresenterAction {
 
             @Override
             protected void doStuff() throws Exception {
-                
+
                 // Map the items first
                 List<DomainObject> mapped = mapper.map(targetType, DomainObject.class);
-                
+
                 existing = 0;
                 for(DomainObject domainObject : mapped) {
                     if (treeNode.hasChild(domainObject)) {
@@ -311,7 +312,7 @@ public class GetRelatedItemsAction extends NodePresenterAction {
                         return;
                     }
                 }
-                
+
                 log.info("Added {} items to folder {}", numAdded, treeNode.getId());
             }
 
@@ -321,9 +322,9 @@ public class GetRelatedItemsAction extends NodePresenterAction {
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Adding items to folder...", ""));
-        
+
         if (targetType==MappingType.AlignedNeuronFragment) {
-            
+
             // We need to first ask the user which alignment space to use
 
             SimpleWorker worker2 = new SimpleWorker() {
@@ -332,12 +333,12 @@ public class GetRelatedItemsAction extends NodePresenterAction {
 
                 @Override
                 protected void doStuff() throws Exception {
-                    
+
                     // Map the fragments to samples first
                     List<Sample> samples = mapper.map(MappingType.Sample, Sample.class);
-                    
+
                     Set<String> alignmentSpaces = new HashSet<>();
-                    
+
                     for (Sample sample : samples) {
                         for (ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
                             for (SamplePipelineRun samplePipelineRun : objectiveSample.getPipelineRuns()) {
@@ -347,16 +348,16 @@ public class GetRelatedItemsAction extends NodePresenterAction {
                             }
                         }
                     }
-                    
+
                     List<String> alignmentSpacesList = new ArrayList<>();
                     alignmentSpacesList.add(LATEST);
                     alignmentSpacesList.addAll(alignmentSpaces);
                     String[] values = alignmentSpacesList.toArray(new String[alignmentSpacesList.size()]);
-                    
+
                     alignmentSpace = (String)JOptionPane.showInputDialog(
                             FrameworkAccess.getMainFrame(),
                             "Choose an alignment space",
-                            "Choose alignment space", 
+                            "Choose alignment space",
                             JOptionPane.QUESTION_MESSAGE,
                             null,
                             values, values[0]);
@@ -386,7 +387,7 @@ public class GetRelatedItemsAction extends NodePresenterAction {
 
     protected <T extends DomainObject> void addItemsToFolder(final TreeNode treeNode, final Long[] idPath, MappingType targetType, List<? extends DomainObject> objects) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        
+
         // Add them to the given folder
         model.addChildren(treeNode, objects);
 
@@ -394,5 +395,5 @@ public class GetRelatedItemsAction extends NodePresenterAction {
         String pathString = NodeUtils.createPathString(idPath);
         DataBrowserMgr.getDataBrowserMgr().updateAddToFolderHistory(new RecentFolder(pathString, treeNode.getName()));
     }
-        
+
 }

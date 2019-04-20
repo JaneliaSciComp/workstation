@@ -5,6 +5,7 @@ import java.util.List;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
+import org.janelia.workstation.common.nb_action.NodePresenterAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.browser.nodes.TreeNodeNode;
 import org.openide.nodes.Node;

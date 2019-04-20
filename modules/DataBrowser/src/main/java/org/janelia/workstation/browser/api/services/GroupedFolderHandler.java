@@ -20,7 +20,7 @@ import org.openide.util.lookup.ServiceProvider;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = DomainObjectHandler.class, path = DomainObjectHandler.DOMAIN_OBJECT_LOOKUP_PATH)
+@ServiceProvider(service = DomainObjectHandler.class)
 public class GroupedFolderHandler implements DomainObjectHandler {
 
     @Override

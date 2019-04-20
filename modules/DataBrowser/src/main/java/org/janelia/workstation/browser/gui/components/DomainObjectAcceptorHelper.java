@@ -1,28 +1,22 @@
 package org.janelia.workstation.browser.gui.components;
 
-import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
-import org.janelia.workstation.integration.spi.domain.ObjectOpenAcceptor;
+import org.janelia.workstation.core.actions.ViewerContextReceiver;
+import org.janelia.workstation.core.actions.PopupMenuGenerator;
+import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
+import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,96 +50,77 @@ public class DomainObjectAcceptorHelper {
         // Option to popup menu is carried out here, if multiple handlers exist.
         if (domainObject != null) {
             handledHere = true;
-            Collection<ObjectOpenAcceptor> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(domainObject);
-            if (domainObjectAcceptors.size() == 1) {
-                ObjectOpenAcceptor acceptor = domainObjectAcceptors.iterator().next();
-                ServiceAction action = new ServiceAction(acceptor, domainObject);
+            Collection<ContextualActionBuilder> builders = ServiceAcceptorHelper.findAcceptors(domainObject);
+            if (builders.size() == 1) {
+                ContextualActionBuilder builder = builders.iterator().next();
+                Action action = getAction(builder, domainObject);
                 action.actionPerformed(null);
-            } else if (domainObjectAcceptors.size() > 1) {
-                showMenu(domainObject, domainObjectAcceptors);
+            } else if (builders.size() > 1) {
+                showMenu(domainObject, builders);
             }
         }
         return handledHere;
     }
 
-    private static void showMenu(DomainObject dObj, Collection<ObjectOpenAcceptor> acceptors) {
-        Map<Integer, Action> orderingMap = new HashMap<>();
-        List<Integer> orderingList = new ArrayList<>();
-        JPopupMenu popupMenu = new JPopupMenu("Multiple Choices for " + dObj.getName());
-        for (ObjectOpenAcceptor acceptor : acceptors) {
-            orderingMap.put(acceptor.getOrder(), new ServiceAction(acceptor, dObj));
-        }
-        Collections.sort(orderingList);
-        for (Integer orderingItem : orderingList) {
-            popupMenu.add(orderingMap.get(orderingItem));
+    private static void showMenu(DomainObject domainObject, Collection<ContextualActionBuilder> builders) {
+        JPopupMenu popupMenu = new JPopupMenu("Multiple Choices for " + domainObject.getName());
+        for (ContextualActionBuilder builder : builders) {
+            Action action = getAction(builder, domainObject);
+            popupMenu.add(action);
         }
         popupMenu.setVisible(true);
+    }
+
+    private static Action getAction(ContextualActionBuilder acceptor, Object obj) {
+
+        Action action = acceptor.getNodeAction(obj);
+        if (action == null) {
+            // No node action is defined, try the regular action
+            action = acceptor.getAction(obj);
+        }
+
+        action.setEnabled(ContextualActionUtils.isEnabled(action));
+        return action;
     }
 
     /**
      * Makes the item for showing the object in its own viewer iff the object
      * type is correct.
      */
-    public static Collection<AbstractAction> getOpenForContextActions(final Object obj) {
+    public static Collection<Action> getOpenForContextActions(final Object obj) {
 
-        Collection<ObjectOpenAcceptor> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(obj);
+        Collection<ContextualActionBuilder> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(obj);
 
-        boolean lastItemWasSeparator = false;
-        int expectedCount = 0;
-        TreeMap<Integer, AbstractAction> orderedMap = new TreeMap<>();
-        List<AbstractAction> actionItemList = new ArrayList<>();
+        List<Action> actions = new ArrayList<>();
 
-        for (final ObjectOpenAcceptor domainObjectAcceptor : domainObjectAcceptors) {
+        int i = 0;
+        for (final ContextualActionBuilder builder : domainObjectAcceptors) {
 
-            final Integer order = domainObjectAcceptor.getOrder();
-            if (domainObjectAcceptor.isPrecededBySeparator() && (!lastItemWasSeparator)) {
-                orderedMap.put(order - 1, null);
-                expectedCount++;
+            if (builder.isPrecededBySeparator()) {
+                if (!actions.isEmpty() && actions.get(actions.size()-1) != null) {
+                    actions.add(null);
+                }
             }
 
-            ServiceAction action = new ServiceAction(domainObjectAcceptor, obj);
-            action.setEnabled(domainObjectAcceptor.isEnabled(obj));
+            Action action = getAction(builder, obj);
+            actions.add(action);
 
-            orderedMap.put(order, action);
-            expectedCount++;
-
-            actionItemList.add(action); // Bail alternative if ordering fails.
-
-            if (domainObjectAcceptor.isSucceededBySeparator()) {
-                orderedMap.put(order + 1, null);
-                expectedCount++;
-                lastItemWasSeparator = true;
-            }
-            else {
-                lastItemWasSeparator = false;
+            if (builder.isSucceededBySeparator()) {
+                actions.add(null);
             }
         }
 
-        // This is the bail strategy for order key clashes.
-        if (orderedMap.size() < expectedCount) {
-            log.warn("With menu items and separators, expected {} but added {} open-for-context items."
-                            + "  This indicates an order key clash.  Please check the getOrder methods of all impls."
-                            + "  Returning an unordered version of item list.",
-                    expectedCount, orderedMap.size());
-            return actionItemList;
+        if (!actions.isEmpty() && actions.get(actions.size()-1) == null) {
+            // Remove trailing nulls
+            actions.remove(actions.size()-1);
         }
 
-        log.debug("Created context menu items from domain object acceptors:");
-        for (Integer key : orderedMap.keySet()) {
-            AbstractAction action = orderedMap.get(key);
-            if (action == null) {
-                log.debug("{} = Separator", key);
-            } else {
-                log.debug("{} = {}", key, action.getValue(Action.NAME));
-            }
-        }
-
-        return orderedMap.values();
+        return actions;
     }
 
     public static Collection<JComponent> getOpenForContextItems(final Object obj) {
         List<JComponent> components = new ArrayList<>();
-        for (AbstractAction action : getOpenForContextActions(obj)) {
+        for (Action action : getOpenForContextActions(obj)) {
             if (action == null) {
                 components.add(new JSeparator());
             }
@@ -156,35 +131,148 @@ public class DomainObjectAcceptorHelper {
         return components;
     }
 
-    /**
-     * Usable for placing into menu, to make the provider just work.
-     */
-    private static class ServiceAction extends AbstractAction implements Comparable<ServiceAction> {
+    public static Collection<Action> getNodeContextMenuItems(Object obj) {
 
-        private ObjectOpenAcceptor acceptor;
-        private Object obj;
+        Collection<ContextualActionBuilder> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(obj);
 
-        public ServiceAction(ObjectOpenAcceptor acceptor, Object obj) {
-            this.acceptor = acceptor;
-            this.obj = obj;
-            putValue(Action.NAME, acceptor.getActionLabel());
-        }
+        List<Action> actions = new ArrayList<>();
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            acceptor.acceptObject(obj);
+        int i = 0;
+        for (final ContextualActionBuilder builder : domainObjectAcceptors) {
 
-            if (obj instanceof DomainObject) {
-                // Update "Recently Opened" history
-                FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor((DomainObject) obj));
+            Action action = builder.getNodeAction(obj);
+            if (action == null) {
+                log.debug("Action builder accepted object but returned null NodeAction: {}",
+                        builder.getClass().getName());
+                continue;
+            }
+
+            if (!ContextualActionUtils.isVisible(action)) {
+                continue;
+            }
+
+            // Add pre-separator
+            if (builder.isPrecededBySeparator()) {
+                if (!actions.isEmpty() && actions.get(actions.size()-1) != null) {
+                    actions.add(null);
+                }
+            }
+
+            actions.add(action);
+
+            if (builder.isSucceededBySeparator()) {
+                actions.add(null);
             }
         }
 
-        @Override
-        public int compareTo(ServiceAction o) {
-            return ComparisonChain.start()
-                    .compare(acceptor.getOrder(), o.acceptor.getOrder(), Ordering.natural().nullsLast())
-                    .result();
+        // Add post-separator
+        if (!actions.isEmpty() && actions.get(actions.size()-1) == null) {
+            // Remove trailing nulls
+            actions.remove(actions.size()-1);
+        }
+
+        return actions;
+    }
+
+    public static Collection<JComponent> getContextMenuItems(Object obj, ViewerContext viewerContext) {
+
+        List<JComponent> items = new ArrayList<>();
+
+        for (final ContextualActionBuilder builder : ServiceAcceptorHelper.findAcceptors(obj)) {
+            try {
+                buildAction(builder, items, obj, viewerContext);
+            }
+            catch (Exception e) {
+                log.error("Error processing contextual action builder {}", builder.getClass().getName());
+            }
+        }
+
+        if (!items.isEmpty() && items.get(items.size()-1) instanceof JSeparator) {
+            // Remove trailing separators
+            items.remove(items.size()-1);
+        }
+
+        return items;
+    }
+
+    private static void buildAction(ContextualActionBuilder builder, List<JComponent> items, Object obj, ViewerContext viewerContext) {
+
+        log.info("Using builder {}", builder.getClass().getSimpleName());
+
+        Action action = builder.getAction(obj);
+        if (action == null) {
+            log.info("  Action builder accepted object but returned null Action");
+            return;
+        }
+
+        if (action instanceof ViewerContextReceiver) {
+            // Inject the context
+            log.info("  Injecting viewer context: {}", viewerContext);
+            ((ViewerContextReceiver)action).setViewerContext(viewerContext);
+        }
+
+        if (!ContextualActionUtils.isVisible(action)) {
+            log.info("  Action is not visible");
+            return;
+        }
+
+        // Add pre-separator
+        if (builder.isPrecededBySeparator()) {
+            if (!items.isEmpty() && !(items.get(items.size()-1) instanceof JSeparator)) {
+                log.info("  Adding pre-separator");
+                items.add(new JSeparator());
+            }
+        }
+
+        if (action instanceof PopupMenuGenerator) {
+            // If the action has a popup generator, use that
+            JMenuItem popupPresenter = ((PopupMenuGenerator) action).getPopupPresenter();
+            if (popupPresenter != null) {
+                log.info("  Adding popup presenter");
+                items.add(popupPresenter);
+            }
+            else {
+                log.info("  Popup presenter was null, falling back on wrapping action in menu item");
+                JMenuItem item = new JMenuItem(action);
+                items.add(item);
+            }
+        }
+        else {
+            // Otherwise, just wrap the action
+            log.info("  Wrapping action in menu item");
+            JMenuItem item = new JMenuItem(action);
+            items.add(item);
+        }
+
+        // Add post-separator
+        if (builder.isSucceededBySeparator()) {
+            log.info("  Adding post-separator");
+            items.add(new JSeparator());
         }
     }
+
+//    /**
+//     * Usable for placing into menu, to make the provider just work.
+//     */
+//    private static class ServiceAction extends AbstractAction {
+//
+//        private ContextualActionBuilder acceptor;
+//        private Object obj;
+//
+//        ServiceAction(ContextualActionBuilder acceptor, Object obj) {
+//            this.acceptor = acceptor;
+//            this.obj = obj;
+//            putValue(Action.NAME, acceptor.getName());
+//        }
+//
+//        @Override
+//        public void actionPerformed(ActionEvent e) {
+//            acceptor.acceptObject(obj);
+//
+//            if (obj instanceof DomainObject) {
+//                // Update "Recently Opened" history
+//                FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor((DomainObject) obj));
+//            }
+//        }
+//    }
 }

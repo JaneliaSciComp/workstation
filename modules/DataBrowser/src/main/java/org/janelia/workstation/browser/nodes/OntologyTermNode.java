@@ -23,7 +23,7 @@ import org.janelia.workstation.browser.nb_action.AddOntologyTermAction;
 import org.janelia.workstation.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.workstation.browser.nb_action.OntologyExportAction;
 import org.janelia.workstation.browser.nb_action.OntologyImportAction;
-import org.janelia.workstation.browser.nb_action.PopupLabelAction;
+import org.janelia.workstation.common.nb_action.PopupLabelAction;
 import org.janelia.workstation.browser.nb_action.RemoveAnnotationByTermAction;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;

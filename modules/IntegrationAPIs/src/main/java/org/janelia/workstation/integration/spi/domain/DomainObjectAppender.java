@@ -12,8 +12,7 @@ import org.janelia.model.domain.DomainObject;
  * @author fosterl
  */
 public interface DomainObjectAppender extends Compatible<List<DomainObject>> {
-    public static final String LOOKUP_PATH = "DomainPerspective/DomainObjectAppender";
-    
+
     void useDomainObjects( List<DomainObject> l );
 	
 	/** 

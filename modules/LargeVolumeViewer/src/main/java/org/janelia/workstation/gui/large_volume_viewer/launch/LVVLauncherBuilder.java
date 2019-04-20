@@ -7,7 +7,8 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
-import org.janelia.workstation.integration.spi.domain.ObjectOpenAcceptor;
+import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
+import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
@@ -17,15 +18,32 @@ import org.openide.windows.WindowManager;
 /**
  * Launches the Data Viewer from a context-menu.
  */
-@ServiceProvider(service = ObjectOpenAcceptor.class, path = ObjectOpenAcceptor.LOOKUP_PATH)
-public class Launcher implements ObjectOpenAcceptor  {
-    
-    private static final int MENU_ORDER = 300;
-    
-    public Launcher() {
+@ServiceProvider(service = ContextualActionBuilder.class, position=1510)
+public class LVVLauncherBuilder extends SimpleActionBuilder {
+
+    @Override
+    protected String getName() {
+        return "Open In Large Volume Viewer";
     }
 
-    public void launch(final Object obj) {
+    @Override
+    public boolean isCompatible(Object obj) {
+        return (obj instanceof TmWorkspace) || (obj instanceof TmSample);
+    }
+
+    @Override
+    public boolean isEnabled(Object obj) {
+        return true;
+    }
+
+    @Override
+    public boolean isPrecededBySeparator() {
+        return true;
+    }
+
+
+    @Override
+    protected void performAction(Object obj) {
         
         DomainObject domainObject = (DomainObject)obj;
         
@@ -66,40 +84,5 @@ public class Launcher implements ObjectOpenAcceptor  {
         else {
             JOptionPane.showMessageDialog(WindowManager.getDefault().getMainWindow(), "Failed to open window group for plugin.");
         }
-    }
-
-    @Override
-    public void acceptObject(Object object) {
-        launch(object);
-    }
-
-    @Override
-    public String getActionLabel() {
-        return "  Open In Large Volume Viewer";
-    }
-
-    @Override
-    public boolean isCompatible(Object obj) {
-        return obj != null &&  ((obj instanceof TmWorkspace) || (obj instanceof TmSample));
-    }
-
-    @Override
-    public boolean isEnabled(Object obj) {
-        return true;
-    }
-    
-    @Override
-    public Integer getOrder() {
-        return MENU_ORDER;
-    }
-
-    @Override
-    public boolean isPrecededBySeparator() {
-        return false;
-    }
-
-    @Override
-    public boolean isSucceededBySeparator() {
-        return true;
     }
 }

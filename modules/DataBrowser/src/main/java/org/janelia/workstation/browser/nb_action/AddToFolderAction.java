@@ -24,6 +24,9 @@ import org.janelia.workstation.browser.nodes.NodeUtils;
 import org.janelia.workstation.browser.nodes.UserViewConfiguration;
 import org.janelia.workstation.browser.nodes.UserViewRootNode;
 import org.janelia.workstation.browser.nodes.UserViewTreeNodeNode;
+import org.janelia.workstation.common.nb_action.NodePresenterAction;
+import org.janelia.workstation.core.actions.ViewerContextReceiver;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -40,7 +43,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AddToFolderAction extends NodePresenterAction {
+public class AddToFolderAction extends NodePresenterAction implements ViewerContextReceiver {
 
     private final static Logger log = LoggerFactory.getLogger(AddToFolderAction.class);
 
@@ -59,10 +62,21 @@ public class AddToFolderAction extends NodePresenterAction {
     /**
      * Activation method #1: set the domain objects directly
      * @param domainObjectList
+     * @deprecated
      */
     public void setDomainObjects(Collection<? extends DomainObject> domainObjectList) {
         domainObjects.clear();
         domainObjects.addAll(domainObjectList);
+    }
+
+    /**
+     * Activation method #1: set the domain objects directly
+     * @param viewerContext
+     */
+    @Override
+    public void setViewerContext(ViewerContext viewerContext) {
+        domainObjects.clear();
+        domainObjects.addAll(viewerContext.getDomainObjectList());
     }
 
     /**

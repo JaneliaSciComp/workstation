@@ -6,12 +6,14 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.Action;
 
+import org.janelia.workstation.browser.gui.components.DomainObjectAcceptorHelper;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.flavors.DomainObjectFlavor;
 import org.janelia.workstation.browser.flavors.DomainObjectNodeFlavor;
@@ -19,7 +21,7 @@ import org.janelia.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.workstation.browser.nb_action.DownloadAction;
 import org.janelia.workstation.browser.nb_action.ExportFoldersAction;
 import org.janelia.workstation.browser.nb_action.NewDomainObjectAction;
-import org.janelia.workstation.browser.nb_action.PopupLabelAction;
+import org.janelia.workstation.common.nb_action.PopupLabelAction;
 import org.janelia.workstation.browser.nb_action.RemoveAction;
 import org.janelia.workstation.browser.nb_action.RenameAction;
 import org.janelia.workstation.browser.nb_action.SearchHereAction;
@@ -227,26 +229,39 @@ public class TreeNodeNode extends AbstractDomainObjectNode<Node> {
     
     @Override
     public Action[] getActions(boolean context) {
-        List<Action> actions = new ArrayList<>();
-        actions.add(PopupLabelAction.get());
-        actions.add(null);
-        actions.add(new CopyToClipboardAction("Name", getName()));
-        actions.add(new CopyToClipboardAction("GUID", getId()+""));
-        actions.add(null);
-        actions.add(new OpenInViewerAction());
-        actions.add(new OpenInNewViewerAction());
-        actions.add(null);
-        actions.add(new ViewDetailsAction());
-        actions.add(new ChangePermissionsAction());
-        actions.add(NewDomainObjectAction.get());
-        actions.add(AddToFolderAction.get());
-        actions.add(RenameAction.get());
-        actions.add(RemoveAction.get());
-        actions.add(null);
-        actions.add(SearchHereAction.get());
-        actions.add(DownloadAction.get());
-        actions.add(ExportFoldersAction.get());
-        return actions.toArray(new Action[actions.size()]);
+        Collection<Action> actions = DomainObjectAcceptorHelper.getNodeContextMenuItems(getDomainObject());
+//        List<Action> actions = new ArrayList<>();
+//        actions.add(PopupLabelAction.get());
+//        actions.add(null);
+//        actions.add(new CopyToClipboardAction("Name", getName()));
+//        actions.add(new CopyToClipboardAction("GUID", getId()+""));
+//        actions.add(null);
+//        actions.add(new OpenInViewerAction());
+//        actions.add(new OpenInNewViewerAction());
+//        actions.add(null);
+//        actions.add(new ViewDetailsAction());
+//        actions.add(new ChangePermissionsAction());
+//        actions.add(NewDomainObjectAction.get());
+//        actions.add(AddToFolderAction.get());
+//        actions.add(RenameAction.get());
+//        actions.add(RemoveAction.get());
+//        actions.add(null);
+//        actions.add(SearchHereAction.get());
+//        actions.add(DownloadAction.get());
+//        actions.add(ExportFoldersAction.get());
+//        for (Action action : DomainObjectAcceptorHelper.getNodeContextMenuItems(getDomainObject())) {
+//            if (action==null) {
+//                actions.add(null);
+//            }
+//            else {
+////                String name = (String)action.getValue(Action.NAME);
+////                if (name!=null) {
+////                    action.putValue(Action.NAME, name.trim());
+////                }
+//                actions.add(action);
+//            }
+//        }
+        return actions.toArray(new Action[0]);
     }
 
     @Override
@@ -268,9 +283,6 @@ public class TreeNodeNode extends AbstractDomainObjectNode<Node> {
         
         if (t.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
             AbstractDomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(t);
-            if (node==null || !(node instanceof AbstractDomainObjectNode)) { 
-                return null;
-            }
             log.trace("  Single drop - {} with parent {}",node.getDisplayName(),node.getParentNode().getDisplayName());
             nodes.add(node);
         }

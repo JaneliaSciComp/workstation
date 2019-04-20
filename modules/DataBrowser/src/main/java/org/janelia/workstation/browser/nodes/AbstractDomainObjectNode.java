@@ -10,6 +10,7 @@ import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -28,7 +29,6 @@ import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.workstation.browser.nb_action.AddToFolderAction;
-import org.janelia.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.workstation.browser.nb_action.RemoveAction;
 import org.janelia.workstation.browser.nb_action.RenameAction;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
@@ -36,6 +36,7 @@ import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
+import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -210,34 +211,25 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
 
     @Override
     public Action[] getActions(boolean context) {
-        List<Action> actions = new ArrayList<>();
-        actions.add(PopupLabelAction.get());
-        actions.add(null);
-        actions.add(new CopyToClipboardAction("Name", getName()));
-        actions.add(new CopyToClipboardAction("GUID", getId()+""));
-        actions.add(null);
-        actions.add(new OpenInViewerAction());
-        actions.add(new OpenInNewViewerAction());
-        actions.add(null);
-        actions.add(new ViewDetailsAction());
-        actions.add(new ChangePermissionsAction());
-        actions.add(AddToFolderAction.get());
-        actions.add(RenameAction.get());
-        actions.add(RemoveAction.get());
-        actions.add(null);
-        for (AbstractAction action : DomainObjectAcceptorHelper.getOpenForContextActions(getDomainObject())) {
-            if (action==null) {
-                actions.add(null);
-            }
-            else {
-                String name = (String)action.getValue(Action.NAME);
-                if (name!=null) {
-                    action.putValue(Action.NAME, name.trim());
-                }
-                actions.add(action);
-            }
-        }
-        return actions.toArray(new Action[actions.size()]);
+        Collection<Action> actions = DomainObjectAcceptorHelper.getNodeContextMenuItems(getDomainObject());
+//        actions.add(new PopupLabelAction());
+//        actions.add(null);
+//        actions.add(new CopyToClipboardAction("Name", getName()));
+//        actions.add(new CopyToClipboardAction("GUID", getId()+""));
+//        actions.add(null);
+//        actions.add(new OpenInViewerAction());
+//        actions.add(new OpenInNewViewerAction());
+//        actions.add(null);
+//        actions.add(new ViewDetailsAction());
+//        actions.add(new ChangePermissionsAction());
+//        actions.add(AddToFolderAction.get());
+//        actions.add(RenameAction.get());
+//        actions.add(RemoveAction.get());
+//        actions.add(null);
+//        for (Action action : DomainObjectAcceptorHelper.getNodeContextMenuItems(getDomainObject())) {
+//            actions.add(action);
+//        }
+        return actions.toArray(new Action[0]);
     }
 
     @Override

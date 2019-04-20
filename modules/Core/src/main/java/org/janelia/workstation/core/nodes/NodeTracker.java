@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.nodes;
+package org.janelia.workstation.core.nodes;
 
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.janelia.model.domain.interfaces.HasIdentifier;
-import org.janelia.workstation.core.nodes.IdentifiableNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +38,7 @@ public class NodeTracker {
      * Package private method for nodes to use to register themselves.
      * @param node
      */
-    void registerNode(final IdentifiableNode<?> node) {
+    public void registerNode(final IdentifiableNode<?> node) {
         // Clear existing references to similar nodes
         int c = 0;
         for(Iterator<WeakReference> iterator = nodesById.get(node.getId()).iterator(); iterator.hasNext(); ) {
@@ -64,7 +63,7 @@ public class NodeTracker {
      * Package private method for nodes to use to deregister themselves.
      * @param node
      */
-    void deregisterNode(final IdentifiableNode<?> node) {
+    public void deregisterNode(final IdentifiableNode<?> node) {
         Long id = node.getId();
         for(Iterator<WeakReference> iterator = nodesById.get(id).iterator(); iterator.hasNext(); ) {
             WeakReference<IdentifiableNode<?>> ref = iterator.next();

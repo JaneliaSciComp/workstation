@@ -9,7 +9,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import org.janelia.workstation.browser.nb_action.AddToFolderAction;
-import org.janelia.workstation.browser.nb_action.PopupLabelAction;
+import org.janelia.workstation.common.nb_action.PopupLabelAction;
 import org.janelia.workstation.browser.nb_action.RemoveAction;
 import org.janelia.workstation.browser.nb_action.RenameAction;
 import org.janelia.workstation.browser.nodes.TreeNodeNode;

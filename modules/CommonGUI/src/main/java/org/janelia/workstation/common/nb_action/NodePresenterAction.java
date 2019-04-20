@@ -1,8 +1,9 @@
-package org.janelia.workstation.browser.nb_action;
+package org.janelia.workstation.common.nb_action;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.janelia.workstation.core.actions.PopupMenuGenerator;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
@@ -13,7 +14,7 @@ import org.openide.util.actions.NodeAction;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class NodePresenterAction extends NodeAction {
+public abstract class NodePresenterAction extends NodeAction implements PopupMenuGenerator {
 
     private final List<Node> selected = new ArrayList<>();
         
@@ -29,7 +30,7 @@ public abstract class NodePresenterAction extends NodeAction {
     }
 
     @Override
-    protected void performAction (Node[] activatedNodes) {
+    protected void performAction(Node[] activatedNodes) {
         // Implemented by popup presenter
     }
 

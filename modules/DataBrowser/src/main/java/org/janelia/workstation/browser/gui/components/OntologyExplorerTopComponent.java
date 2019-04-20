@@ -42,7 +42,7 @@ import org.janelia.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeView;
 import org.janelia.workstation.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.workstation.browser.nb_action.NewOntologyActionListener;
-import org.janelia.workstation.browser.nodes.NodeTracker;
+import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.browser.nodes.NodeUtils;
 import org.janelia.workstation.browser.nodes.OntologyNode;
 import org.janelia.workstation.browser.nodes.OntologyRootNode;

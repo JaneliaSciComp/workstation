@@ -14,6 +14,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
+import org.janelia.workstation.common.nb_action.NodePresenterAction;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.common.gui.support.YamlFileFilter;
@@ -35,7 +36,7 @@ import org.yaml.snakeyaml.Yaml;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyImportAction extends NodePresenterAction   {
+public class OntologyImportAction extends NodePresenterAction {
 
     private final static Logger log = LoggerFactory.getLogger(OntologyImportAction.class);
 

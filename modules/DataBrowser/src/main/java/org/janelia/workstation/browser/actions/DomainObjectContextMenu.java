@@ -22,6 +22,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -165,67 +166,69 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             return;
         }
 
-        add(getTitleItem());
-        add(getCopyNameToClipboardItem());
-        add(getCopyIdToClipboardItem());
-
-        setNextAddRequiresSeparator(true);
-        add(getOpenInNewEditorItem());
-        add(getOpenSeparationInNewEditorItem());
-
-        setNextAddRequiresSeparator(true);
-        add(getPasteAnnotationItem());
-        add(getDetailsItem());
-        add(getPermissionItem());
-
-        if (editSelectionModel != null) {
-            add(getCheckItem(true));
-            add(getCheckItem(false));
-        }
-        
-        add(getAddToFolderItem());
-        add(getRelatedItemsItem());
-        add(getRemoveFromFolderItem());
-
-        setNextAddRequiresSeparator(true);
-        add(getOpenInFinderItem());
-        add(getOpenWithAppItem());
-        add(getNeuronAnnotatorItem());
-        add(getVaa3dTriViewItem());
-        add(getVaa3d3dViewItem());
-        add(getVvdViewerItem());
-        add(getFijiViewerItem());
-        add(getDownloadItem());
+//        add(getTitleItem());
+//        add(getCopyNameToClipboardItem());
+//        add(getCopyIdToClipboardItem());
+//
+//        setNextAddRequiresSeparator(true);
+//        add(getOpenInNewEditorItem());
+//        add(getOpenSeparationInNewEditorItem());
+//
+//        setNextAddRequiresSeparator(true);
+//        add(getPasteAnnotationItem());
+//        add(getDetailsItem());
+//        add(getPermissionItem());
+//
+//        if (editSelectionModel != null) {
+//            add(getCheckItem(true));
+//            add(getCheckItem(false));
+//        }
+//
+//        add(getAddToFolderItem());
+//        add(getRelatedItemsItem());
+//        add(getRemoveFromFolderItem());
+//
+//        setNextAddRequiresSeparator(true);
+//        add(getOpenInFinderItem());
+//        add(getOpenWithAppItem());
+//        add(getNeuronAnnotatorItem());
+//        add(getVaa3dTriViewItem());
+//        add(getVaa3d3dViewItem());
+//        add(getVvdViewerItem());
+//        add(getFijiViewerItem());
+//        add(getDownloadItem());
 
         // TODO: move these options to a separate "Confocal" module 
         // along with all other Sample-specific functionality 
-        setNextAddRequiresSeparator(true);
-        add(getReportProblemItem());
-        add(getRerunSamplesAction());
-        add(getSampleCompressionItem());
-        add(getProcessingBlockItem());
-        add(getPartialSecondaryDataDeletiontItem());
+//        setNextAddRequiresSeparator(true);
+//        add(getReportProblemItem());
+//        add(getRerunSamplesAction());
+//        add(getSampleCompressionItem());
+//        add(getProcessingBlockItem());
+//        add(getPartialSecondaryDataDeletiontItem());
         //add(getSetPublishingNameItem());
-        add(getApplyPublishingNamesItem());
-        add(getDataSetDialogItem());
-        add(getMergeItem());
-        add(getCreateColorDepthMaskItem());
-        add(getAddToColorDepthSearchItem());
-        
-        setNextAddRequiresSeparator(true);
-        add(getHudMenuItem());
+//        add(getApplyPublishingNamesItem());
+//        add(getDataSetDialogItem());
+//        add(getMergeItem());
+//        add(getCreateColorDepthMaskItem());
+//        add(getAddToColorDepthSearchItem());
+//
+//        setNextAddRequiresSeparator(true);
+//        add(getHudMenuItem());
+//
+//        setNextAddRequiresSeparator(true);
 
-        if (domainObject!=null) {
+//        if (domainObject!=null) {
             for (JComponent item : getOpenObjectItems()) {
                 add(item);
             }
-            for (JMenuItem item : getWrapObjectItems()) {
-                add(item);
-            }
-            for (JMenuItem item : getAppendObjectItems()) {
-                add(item);
-            }
-        }
+//            for (JMenuItem item : getWrapObjectItems()) {
+//                add(item);
+//            }
+//            for (JMenuItem item : getAppendObjectItems()) {
+//                add(item);
+//            }
+//        }
 
         add(getSpecialAnnotationSession());
     }
@@ -1075,26 +1078,29 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
     
     private Collection<JComponent> getOpenObjectItems() {
-        if (multiple) {
-            return Collections.emptyList();
-        }
+//        if (multiple) {
+//            return Collections.emptyList();
+//        }
+//        Object contextObject = null;
+//
+//        if (domainObject instanceof Sample && resultDescriptor != null && typeName != null) {
+//            Sample sample = (Sample)domainObject;
+//            HasFiles hasFiles = DescriptorUtils.getResult(sample, resultDescriptor);
+//            if (hasFiles instanceof PipelineResult) {
+//                PipelineResult result = (PipelineResult)DescriptorUtils.getResult(sample, resultDescriptor);
+//                contextObject = new SampleImage(result, FileType.valueOf(typeName));
+//            }
+//        }
+//        else {
+//            contextObject = domainObject;
+//        }
+//
+//        if (contextObject==null) return Collections.emptyList();
 
-        Object contextObject = null;
-        
-        if (domainObject instanceof Sample && resultDescriptor != null && typeName != null) {
-            Sample sample = (Sample)domainObject;
-            HasFiles hasFiles = DescriptorUtils.getResult(sample, resultDescriptor);
-            if (hasFiles instanceof PipelineResult) {
-                PipelineResult result = (PipelineResult)DescriptorUtils.getResult(sample, resultDescriptor);
-                contextObject = new SampleImage(result, FileType.valueOf(typeName));
-            }
-        }
-        else {
-            contextObject = domainObject;
-        }
-        
-        if (contextObject==null) return Collections.emptyList();
-        return DomainObjectAcceptorHelper.getOpenForContextItems(contextObject);
+        ViewerContext viewerContext = new ViewerContext(
+                contextObject, domainObjectList, resultDescriptor, typeName, editSelectionModel);
+
+        return DomainObjectAcceptorHelper.getContextMenuItems(domainObject, viewerContext);
     }
         
     private List<JMenuItem> getWrapObjectItems() {

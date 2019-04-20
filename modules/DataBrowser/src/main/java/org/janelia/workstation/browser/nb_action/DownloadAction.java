@@ -6,6 +6,7 @@ import java.util.List;
 import org.janelia.workstation.browser.gui.dialogs.download.DownloadWizardAction;
 import org.janelia.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.workstation.common.nb_action.NodePresenterAction;
 import org.openide.nodes.Node;
 
 /**
