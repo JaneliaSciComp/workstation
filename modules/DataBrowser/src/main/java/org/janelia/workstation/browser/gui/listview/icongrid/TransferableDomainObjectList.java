@@ -9,7 +9,7 @@ import java.util.Set;
 
 import javax.swing.JComponent;
 
-import org.janelia.workstation.browser.flavors.DomainObjectFlavor;
+import org.janelia.workstation.common.flavors.DomainObjectFlavor;
 import org.janelia.model.domain.DomainObject;
 
 /**

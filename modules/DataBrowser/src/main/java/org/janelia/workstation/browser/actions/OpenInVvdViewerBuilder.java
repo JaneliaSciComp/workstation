@@ -7,7 +7,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.workstation.browser.tools.ToolMgr;
-import org.janelia.workstation.common.nb_action.DomainObjectNodeAction;
+import org.janelia.workstation.common.actions.DomainObjectNodeAction;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;

@@ -3,7 +3,7 @@ package org.janelia.workstation.browser.actions;
 import javax.swing.Action;
 
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.workstation.common.nb_action.DomainObjectNodeAction;
+import org.janelia.workstation.common.actions.DomainObjectNodeAction;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;

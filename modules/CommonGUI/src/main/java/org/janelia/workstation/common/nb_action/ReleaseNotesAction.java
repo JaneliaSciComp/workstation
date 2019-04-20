@@ -12,16 +12,16 @@ import java.awt.event.ActionEvent;
 
 @ActionID(
         category = "Help",
-        id = "org.janelia.workstation.common.nb_action.ReleaseNotes"
+        id = "org.janelia.workstation.common.nb_action.ReleaseNotesAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_ReleaseNotes"
+        displayName = "#CTL_ReleaseNotesAction"
 )
 @ActionReferences({
     @ActionReference(path = "Menu/Help", position = 101)
 })
-@Messages("CTL_ReleaseNotes=View Release Notes")
-public final class ReleaseNotes extends AbstractAction {
+@Messages("CTL_ReleaseNotesAction=View Release Notes")
+public final class ReleaseNotesAction extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {

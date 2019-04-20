@@ -23,7 +23,7 @@ import org.janelia.workstation.browser.nodes.NodeUtils;
 import org.janelia.workstation.browser.nodes.UserViewConfiguration;
 import org.janelia.workstation.browser.nodes.UserViewRootNode;
 import org.janelia.workstation.browser.nodes.UserViewTreeNodeNode;
-import org.janelia.workstation.common.nb_action.DomainObjectNodeAction;
+import org.janelia.workstation.common.actions.DomainObjectNodeAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;

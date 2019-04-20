@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.gui.components;
+package org.janelia.workstation.core.actions;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,9 +11,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
 import org.janelia.model.domain.DomainObject;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
-import org.janelia.workstation.core.actions.PopupMenuGenerator;
-import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
@@ -250,29 +247,4 @@ public class DomainObjectAcceptorHelper {
             items.add(new JSeparator());
         }
     }
-
-//    /**
-//     * Usable for placing into menu, to make the provider just work.
-//     */
-//    private static class ServiceAction extends AbstractAction {
-//
-//        private ContextualActionBuilder acceptor;
-//        private Object obj;
-//
-//        ServiceAction(ContextualActionBuilder acceptor, Object obj) {
-//            this.acceptor = acceptor;
-//            this.obj = obj;
-//            putValue(Action.NAME, acceptor.getName());
-//        }
-//
-//        @Override
-//        public void actionPerformed(ActionEvent e) {
-//            acceptor.acceptObject(obj);
-//
-//            if (obj instanceof DomainObject) {
-//                // Update "Recently Opened" history
-//                FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor((DomainObject) obj));
-//            }
-//        }
-//    }
 }

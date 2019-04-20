@@ -9,7 +9,7 @@ import javax.swing.KeyStroke;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.browser.gui.dialogs.download.DownloadWizardAction;
-import org.janelia.workstation.common.nb_action.DomainObjectNodeAction;
+import org.janelia.workstation.common.actions.DomainObjectNodeAction;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.openide.util.lookup.ServiceProvider;
 

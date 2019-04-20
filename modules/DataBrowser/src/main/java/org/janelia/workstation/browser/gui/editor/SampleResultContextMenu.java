@@ -21,7 +21,7 @@ import org.janelia.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.workstation.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.workstation.browser.actions.OpenInToolAction;
 import org.janelia.workstation.browser.actions.OpenWithDefaultAppAction;
-import org.janelia.workstation.browser.gui.components.DomainObjectAcceptorHelper;
+import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
 import org.janelia.workstation.browser.gui.components.SampleResultViewerManager;
 import org.janelia.workstation.browser.gui.components.SampleResultViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;

@@ -23,7 +23,7 @@ import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.browser.gui.support.TreeNodeChooser;
-import org.janelia.workstation.common.nb_action.NodePresenterAction;
+import org.janelia.workstation.common.actions.NodePresenterAction;
 import org.janelia.workstation.browser.nodes.GroupedFolderNode;
 import org.janelia.workstation.browser.nodes.NodeUtils;
 import org.janelia.workstation.browser.nodes.UserViewConfiguration;

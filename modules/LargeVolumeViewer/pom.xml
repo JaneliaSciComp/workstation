@@ -29,23 +29,24 @@
             <artifactId>integration</artifactId>
         </dependency>
 
-        <!-- CommonGUI -->
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>common-gui</artifactId>
-        </dependency>
-
         <!-- Core -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>core</artifactId>
         </dependency>
 
-        <!-- Data Browser -->
+        <!-- CommonGUI -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>common-gui</artifactId>
+        </dependency>
+
+        <!-- Data Browser
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>browser</artifactId>
         </dependency>
+         -->
 
         <!-- JOGL213 -->
         <dependency>

@@ -1,18 +1,13 @@
 package org.janelia.workstation.browser.nodes;
 
 import java.awt.Image;
-import java.awt.event.ActionEvent;
 import java.util.Collection;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import org.janelia.model.domain.ontology.Ontology;
-import org.janelia.workstation.browser.gui.components.DomainObjectAcceptorHelper;
-import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
@@ -97,34 +92,5 @@ public class OntologyNode extends OntologyTermNode implements DomainObjectNode<O
             }
         };
         worker.execute();
-    }
-    
-    protected final class ViewDetailsAction extends AbstractAction {
-
-        public ViewDetailsAction() {
-            putValue(NAME, "View Details");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            new DomainDetailsDialog().showForDomainObject(getOntology());
-        }
-    }
-
-    protected final class ChangePermissionsAction extends AbstractAction {
-
-        public ChangePermissionsAction() {
-            putValue(NAME, "Change Permissions");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            new DomainDetailsDialog().showForDomainObject(getOntology(), DomainInspectorPanel.TAB_NAME_PERMISSIONS);
-        }
-
-        @Override
-        public boolean isEnabled() {
-            return ClientDomainUtils.isOwner(getOntology());
-        }
     }
 }

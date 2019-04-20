@@ -10,7 +10,6 @@ import javax.swing.Action;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.workstation.common.nb_action.NodePresenterAction;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;

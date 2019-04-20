@@ -1,12 +1,7 @@
-package org.janelia.workstation.browser.flavors;
+package org.janelia.workstation.common.flavors;
 
 import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
-import java.util.List;
 
-import org.janelia.workstation.browser.nodes.OntologyTermNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,27 +29,5 @@ public class OntologyTermNodeFlavor extends DataFlavor {
     private OntologyTermNodeFlavor(String mt, String prn) {
         super(mt, prn);
     }
-    
-    public static OntologyTermNode getOntologyTermNode(Transferable t) {
-        OntologyTermNode node = null;
-        try {
-            node = (OntologyTermNode)t.getTransferData(SINGLE_FLAVOR);
-        }
-        catch (UnsupportedFlavorException | IOException e) {
-            log.error("Error getting transfer data", e);
-        }
-        return node;
-    }
-    
-    @SuppressWarnings("unchecked")
-    public static List<OntologyTermNode> getOntologyTermNodeList(Transferable t) {
-        List<OntologyTermNode> node = null;
-        try {
-            node = (List<OntologyTermNode>)t.getTransferData(LIST_FLAVOR);
-        }
-        catch (UnsupportedFlavorException | IOException e) {
-            log.error("Error getting transfer data", e);
-        }
-        return node;
-    }
-} 
+
+}

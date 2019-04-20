@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.workspace.Node;
-import org.janelia.workstation.browser.flavors.DomainObjectNodeFlavor;
+import org.janelia.workstation.common.flavors.DomainObjectNodeFlavor;
 import org.janelia.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -75,7 +75,7 @@ public class ColorDepthSearchNode extends AbstractDomainObjectNode<ColorDepthSea
         List<ColorDepthMaskNode> nodes = new ArrayList<>();
         
         if (t.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
-            AbstractDomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(t);
+            AbstractDomainObjectNode<?> node = AbstractDomainObjectNode.getDomainObjectNode(t);
             if (node==null || !(node instanceof ColorDepthMaskNode)) { 
                 return null;
             }
@@ -95,7 +95,7 @@ public class ColorDepthSearchNode extends AbstractDomainObjectNode<ColorDepthSea
             for(int i=0; i<multi.getCount(); i++) {
                 Transferable st = multi.getTransferableAt(i);
                 if (st.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
-                    AbstractDomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(st);
+                    AbstractDomainObjectNode<?> node = AbstractDomainObjectNode.getDomainObjectNode(st);
                     if (node==null || !(node instanceof ColorDepthMaskNode)) {
                         continue;
                     }   

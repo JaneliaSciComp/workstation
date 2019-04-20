@@ -13,8 +13,8 @@ import java.util.Map;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.workspace.Node;
-import org.janelia.workstation.browser.flavors.DomainObjectFlavor;
-import org.janelia.workstation.browser.flavors.DomainObjectNodeFlavor;
+import org.janelia.workstation.common.flavors.DomainObjectFlavor;
+import org.janelia.workstation.common.flavors.DomainObjectNodeFlavor;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -232,7 +232,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<Node> {
         List<AbstractDomainObjectNode<?>> nodes = new ArrayList<>();
         
         if (t.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
-            AbstractDomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(t);
+            AbstractDomainObjectNode<?> node = AbstractDomainObjectNode.getDomainObjectNode(t);
             log.trace("  Single drop - {} with parent {}",node.getDisplayName(),node.getParentNode().getDisplayName());
             nodes.add(node);
         }
@@ -281,7 +281,7 @@ public class TreeNodeNode extends AbstractDomainObjectNode<Node> {
             for(int i=0; i<multi.getCount(); i++) {
                 Transferable st = multi.getTransferableAt(i);
                 if (st.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
-                    AbstractDomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(st);
+                    AbstractDomainObjectNode<?> node = AbstractDomainObjectNode.getDomainObjectNode(st);
                     if (node==null || !(node instanceof AbstractDomainObjectNode)) {
                         continue;
                     }   

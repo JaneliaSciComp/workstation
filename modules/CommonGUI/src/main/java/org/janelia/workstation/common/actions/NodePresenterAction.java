@@ -1,4 +1,4 @@
-package org.janelia.workstation.common.nb_action;
+package org.janelia.workstation.common.actions;
 
 import java.util.ArrayList;
 import java.util.List;

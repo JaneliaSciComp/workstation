@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.flavors;
+package org.janelia.workstation.common.flavors;
 
 import java.awt.datatransfer.DataFlavor;
 import org.slf4j.Logger;

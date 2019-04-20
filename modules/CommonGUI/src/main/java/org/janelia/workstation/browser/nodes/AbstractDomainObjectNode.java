@@ -3,12 +3,14 @@ package org.janelia.workstation.browser.nodes;
 import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.List;
 
 import javax.swing.Action;
 
@@ -16,10 +18,10 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasFiles;
-import org.janelia.workstation.browser.flavors.DomainObjectFlavor;
-import org.janelia.workstation.browser.flavors.DomainObjectNodeFlavor;
-import org.janelia.workstation.browser.gui.components.DomainObjectAcceptorHelper;
+import org.janelia.workstation.common.flavors.DomainObjectFlavor;
+import org.janelia.workstation.common.flavors.DomainObjectNodeFlavor;
 import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
@@ -277,4 +279,26 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
         return null;
     }
 
+    public static AbstractDomainObjectNode<?> getDomainObjectNode(Transferable t) {
+        AbstractDomainObjectNode<?> node = null;
+        try {
+            node = (AbstractDomainObjectNode<?>)t.getTransferData(DomainObjectNodeFlavor.SINGLE_FLAVOR);
+        }
+        catch (UnsupportedFlavorException | IOException e) {
+            log.error("Error getting transfer data", e);
+        }
+        return node;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<AbstractDomainObjectNode<?>> getDomainObjectNodeList(Transferable t) {
+        List<AbstractDomainObjectNode<?>> node = null;
+        try {
+            node = (List<AbstractDomainObjectNode<?>>)t.getTransferData(DomainObjectNodeFlavor.LIST_FLAVOR);
+        }
+        catch (UnsupportedFlavorException | IOException e) {
+            log.error("Error getting transfer data", e);
+        }
+        return node;
+    }
 }

@@ -10,7 +10,7 @@ import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.workstation.browser.nb_action.NewFilterActionListener;
 import org.janelia.workstation.browser.nb_action.NewFolderActionListener;
 import org.janelia.workstation.browser.nodes.TreeNodeNode;
-import org.janelia.workstation.common.nb_action.NodePresenterAction;
+import org.janelia.workstation.common.actions.NodePresenterAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.openide.nodes.Node;

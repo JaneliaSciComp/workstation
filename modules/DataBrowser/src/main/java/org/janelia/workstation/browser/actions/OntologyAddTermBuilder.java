@@ -14,7 +14,7 @@ import org.janelia.workstation.browser.gui.components.OntologyExplorerTopCompone
 import org.janelia.workstation.browser.gui.support.NodeChooser;
 import org.janelia.workstation.browser.nodes.OntologyNode;
 import org.janelia.workstation.browser.nodes.OntologyTermNode;
-import org.janelia.workstation.common.nb_action.NodePresenterAction;
+import org.janelia.workstation.common.actions.NodePresenterAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;

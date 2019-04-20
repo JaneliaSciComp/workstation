@@ -14,12 +14,12 @@ import javax.swing.Action;
 
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.*;
-import org.janelia.workstation.browser.actions.OntologyElementAction;
-import org.janelia.workstation.browser.flavors.OntologyTermFlavor;
-import org.janelia.workstation.browser.flavors.OntologyTermNodeFlavor;
-import org.janelia.workstation.browser.gui.components.DomainObjectAcceptorHelper;
-import org.janelia.workstation.browser.gui.components.OntologyExplorerTopComponent;
 import org.janelia.workstation.browser.actions.ApplyAnnotationAction;
+import org.janelia.workstation.browser.actions.OntologyElementAction;
+import org.janelia.workstation.common.flavors.OntologyTermFlavor;
+import org.janelia.workstation.common.flavors.OntologyTermNodeFlavor;
+import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
+import org.janelia.workstation.browser.gui.components.OntologyExplorerTopComponent;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -97,7 +97,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
             });
         }
     }
-    
+
     protected OntologyChildFactory getChildFactory() {
         return childFactory;
     }
@@ -282,7 +282,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         }
         
         if (t.isDataFlavorSupported(OntologyTermNodeFlavor.SINGLE_FLAVOR)) {
-            OntologyTermNode node = OntologyTermNodeFlavor.getOntologyTermNode(t);
+            OntologyTermNode node = getOntologyTermNode(t);
             if (node==null || node.getParentNode() == null || !(node instanceof OntologyTermNode)) { 
                 return null;
             }
@@ -303,7 +303,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
             for(int i=0; i<multi.getCount(); i++) {
                 Transferable st = multi.getTransferableAt(i);
                 if (st.isDataFlavorSupported(OntologyTermNodeFlavor.SINGLE_FLAVOR)) {
-                    OntologyTermNode node = OntologyTermNodeFlavor.getOntologyTermNode(st);
+                    OntologyTermNode node = getOntologyTermNode(st);
                     if (node==null || !(node instanceof OntologyTermNode)) {
                         continue;
                     }   
@@ -405,5 +405,28 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
             }
             return null;
         }
+    }
+
+    public static OntologyTermNode getOntologyTermNode(Transferable t) {
+        OntologyTermNode node = null;
+        try {
+            node = (OntologyTermNode)t.getTransferData(OntologyTermNodeFlavor.SINGLE_FLAVOR);
+        }
+        catch (UnsupportedFlavorException | IOException e) {
+            log.error("Error getting transfer data", e);
+        }
+        return node;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<OntologyTermNode> getOntologyTermNodeList(Transferable t) {
+        List<OntologyTermNode> node = null;
+        try {
+            node = (List<OntologyTermNode>)t.getTransferData(OntologyTermNodeFlavor.LIST_FLAVOR);
+        }
+        catch (UnsupportedFlavorException | IOException e) {
+            log.error("Error getting transfer data", e);
+        }
+        return node;
     }
 }
