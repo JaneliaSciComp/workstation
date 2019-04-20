@@ -34,7 +34,7 @@ public class RemoveAnnotationsAction extends AbstractAction {
     private final ImageModel<DomainObject,Reference> imageModel;
     private final List<DomainObject> selectedObjects;
     private Annotation annotation;
-    private boolean matchIdOrName = false;
+    private boolean matchIdOrName;
 
     public RemoveAnnotationsAction(ImageModel<DomainObject,Reference> imageModel, List<DomainObject> selectedObjects, Annotation annotation, boolean matchIdOrName) {
         super(getName(selectedObjects, annotation, matchIdOrName));
@@ -44,7 +44,7 @@ public class RemoveAnnotationsAction extends AbstractAction {
         this.matchIdOrName = matchIdOrName;
     }
 
-    public static final String getName(List<DomainObject> selectedObjects, Annotation annotation, boolean matchIdOrName) {
+    public static String getName(List<DomainObject> selectedObjects, Annotation annotation, boolean matchIdOrName) {
         String target = matchIdOrName ? annotation.getName() : annotation.getKey();
         return selectedObjects.size() > 1 ? "Remove \"" + target + "\" Annotation From " + selectedObjects.size() + " Items" : "Remove Annotation";
     }    

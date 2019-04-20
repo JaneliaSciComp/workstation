@@ -5,7 +5,6 @@ import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -15,10 +14,8 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.OntologyTerm;
-import org.janelia.workstation.browser.nb_action.ApplyAnnotationAction;
-import org.janelia.workstation.core.actions.PopupMenuGenerator;
+import org.janelia.workstation.common.nb_action.DomainObjectNodeAction;
 import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.StateMgr;
@@ -55,7 +52,12 @@ public class ReportProblemBuilder implements ContextualActionBuilder {
         return action;
     }
 
-    public static class ReportProblemAction extends AbstractAction implements ViewerContextReceiver, PopupMenuGenerator {
+    @Override
+    public Action getNodeAction(Object obj) {
+        return action;
+    }
+
+    public static class ReportProblemAction extends DomainObjectNodeAction {
 
         private DomainObject domainObject;
 
@@ -63,11 +65,6 @@ public class ReportProblemBuilder implements ContextualActionBuilder {
         public void setViewerContext(ViewerContext viewerContext) {
             this.domainObject = viewerContext.getDomainObject();
             ContextualActionUtils.setVisible(this, !viewerContext.isMultiple());
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            // Handled by popup menu
         }
 
         @Override

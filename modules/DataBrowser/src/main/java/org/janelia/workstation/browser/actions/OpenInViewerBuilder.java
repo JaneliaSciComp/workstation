@@ -82,7 +82,7 @@ public class OpenInViewerBuilder implements ContextualActionBuilder {
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                ActivityLogHelper.logUserAction("OpenInViewerAction.actionPerformed", domainObject);
+                ActivityLogHelper.logUserAction("OpenInViewerBuilder.actionPerformed", domainObject);
                 DomainViewerTopComponent viewer = ViewerUtils.provisionViewer(DomainViewerManager.getInstance(), "editor");
                 viewer.loadDomainObject(objectToLoad, true);
             }
@@ -103,7 +103,7 @@ public class OpenInViewerBuilder implements ContextualActionBuilder {
 
         @Override
         public HelpCtx getHelpCtx() {
-            return new HelpCtx("OpenInViewerAction");
+            return new HelpCtx("");
         }
 
         @Override

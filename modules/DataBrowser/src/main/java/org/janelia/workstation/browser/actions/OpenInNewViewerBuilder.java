@@ -14,8 +14,8 @@ import org.janelia.workstation.browser.gui.components.DomainViewerManager;
 import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.browser.nodes.AbstractDomainObjectNode;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
@@ -81,7 +81,7 @@ public class OpenInNewViewerBuilder implements ContextualActionBuilder {
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
-                ActivityLogHelper.logUserAction("OpenInNewViewerAction.actionPerformed", domainObject);
+                ActivityLogHelper.logUserAction("OpenInNewViewerBuilder.actionPerformed", domainObject);
                 DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
                 viewer.requestActive();
                 viewer.loadDomainObject(objectToLoad, true);
@@ -103,7 +103,7 @@ public class OpenInNewViewerBuilder implements ContextualActionBuilder {
 
         @Override
         public HelpCtx getHelpCtx() {
-            return new HelpCtx("OpenInNewViewerAction");
+            return new HelpCtx("");
         }
 
         @Override

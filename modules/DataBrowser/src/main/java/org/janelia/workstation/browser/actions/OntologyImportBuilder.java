@@ -1,7 +1,5 @@
-package org.janelia.workstation.browser.nb_action;
+package org.janelia.workstation.browser.actions;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -10,71 +8,61 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JFileChooser;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
-import org.janelia.workstation.common.nb_action.NodePresenterAction;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.common.gui.support.YamlFileFilter;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.nodes.OntologyTermNode;
-import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.ontology.EnumText;
 import org.janelia.model.domain.ontology.Interval;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyElementType;
 import org.janelia.model.domain.ontology.OntologyTerm;
-import org.openide.nodes.Node;
+import org.janelia.workstation.common.gui.support.YamlFileFilter;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
+import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * Imports an ontology into YAML format.
+ * Action to import an ontology at the selected ontology node.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyImportAction extends NodePresenterAction {
+@ServiceProvider(service = ContextualActionBuilder.class, position=500)
+public class OntologyImportBuilder extends SimpleActionBuilder {
 
-    private final static Logger log = LoggerFactory.getLogger(OntologyImportAction.class);
+    private final static Logger log = LoggerFactory.getLogger(OntologyImportBuilder.class);
 
-    private final static OntologyImportAction singleton = new OntologyImportAction();
-    public static OntologyImportAction get() {
-        return singleton;
-    }
-
-    private OntologyImportAction() {
+    @Override
+    protected String getName() {
+        return "Import Ontology Here...";
     }
 
     @Override
-    public synchronized JMenuItem getPopupPresenter() {
-
-        List<Node> selectedNodes = getSelectedNodes();
-
-        assert !selectedNodes.isEmpty() : "No nodes are selected";
-
-        JMenuItem importMenuItem = new JMenuItem("Import Ontology Here...");
-        Node selectedNode = selectedNodes.get(0);
-        final OntologyTermNode termNode = (OntologyTermNode) selectedNode;
-
-        importMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                importOntology(termNode);
-            }
-        });
-        return importMenuItem;
-
+    public boolean isCompatible(Object obj) {
+        return obj instanceof OntologyTerm;
     }
 
-    private void importOntology(OntologyTermNode termNode) {
+    @Override
+    public boolean isPrecededBySeparator() {
+        return true;
+    }
 
-        ActivityLogHelper.logUserAction("OntologyImportAction.importOntology");
+    @Override
+    protected void performAction(Object obj) {
+        importOntology((OntologyTerm)obj);
+    }
 
-        final OntologyTerm ontologyTerm = termNode.getOntologyTerm();
-        final Ontology ontology = termNode.getOntology();
+    private void importOntology(final OntologyTerm ontologyTerm) {
+
+        ActivityLogHelper.logUserAction("OntologyImportBuilder.importOntology");
+
+        final Ontology ontology = ontologyTerm.getOntology();
         final JFileChooser fc = new JFileChooser();
         FileFilter ff = new YamlFileFilter();
         fc.addChoosableFileFilter(ff);

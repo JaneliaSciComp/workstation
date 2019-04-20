@@ -1,7 +1,5 @@
-package org.janelia.workstation.browser.nb_action;
+package org.janelia.workstation.browser.actions;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,62 +9,53 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JFileChooser;
-import javax.swing.JMenuItem;
 import javax.swing.filechooser.FileFilter;
 
-import org.janelia.workstation.common.nb_action.NodePresenterAction;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.common.gui.support.YamlFileFilter;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.nodes.OntologyTermNode;
 import org.janelia.model.domain.ontology.EnumText;
 import org.janelia.model.domain.ontology.Interval;
 import org.janelia.model.domain.ontology.OntologyTerm;
-import org.openide.nodes.Node;
+import org.janelia.workstation.common.gui.support.YamlFileFilter;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
+import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.openide.util.lookup.ServiceProvider;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * Export an ontology into YAML format. 
- * 
+ * Builds an action to export the ontology from the selected node.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyExportAction extends NodePresenterAction {
+@ServiceProvider(service = ContextualActionBuilder.class, position=501)
+public class OntologyExportBuilder extends SimpleActionBuilder {
 
     private static final String SAVE_FILE_EXTENSION = "yaml";
 
-    private final static OntologyExportAction singleton = new OntologyExportAction();
-    public static OntologyExportAction get() {
-        return singleton;
-    }
-
-    private OntologyExportAction() {
+    @Override
+    protected String getName() {
+        return "Export Ontology...";
     }
 
     @Override
-    public synchronized JMenuItem getPopupPresenter() {
+    public boolean isCompatible(Object obj) {
+        return obj instanceof OntologyTerm;
+    }
 
-        List<Node> selectedNodes = getSelectedNodes();
+    @Override
+    public boolean isSucceededBySeparator() {
+        return true;
+    }
 
-        assert !selectedNodes.isEmpty() : "No nodes are selected";
-
-        JMenuItem exportMenuItem = new JMenuItem("Export Ontology...");
-        Node selectedNode = selectedNodes.get(0);
-        final OntologyTermNode termNode = (OntologyTermNode) selectedNode;
-        final OntologyTerm ontologyTerm = termNode.getOntologyTerm();
-
-        exportMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                exportOntology(ontologyTerm);
-            }
-        });
-        return exportMenuItem;
+    @Override
+    protected void performAction(Object obj) {
+        exportOntology((OntologyTerm)obj);
     }
 
     private void exportOntology(OntologyTerm ontologyTerm) {
 
-        ActivityLogHelper.logUserAction("OntologyExportAction.exportOntology");
+        ActivityLogHelper.logUserAction("OntologyExportBuilder.exportOntology");
 
         String defaultSaveFilename = ontologyTerm.getName().replaceAll("\\s+", "_") + "." + SAVE_FILE_EXTENSION;
 
@@ -75,7 +64,7 @@ public class OntologyExportAction extends NodePresenterAction {
         fc.addChoosableFileFilter(ff);
         fc.setFileFilter(ff);
         fc.setSelectedFile(new File(defaultSaveFilename));
-        
+
         int returnVal = fc.showSaveDialog(FrameworkAccess.getMainFrame());
         if (returnVal != JFileChooser.APPROVE_OPTION) {
             return;

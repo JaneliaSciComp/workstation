@@ -73,7 +73,7 @@ public class SearchHereBuilder implements ContextualActionBuilder {
 
     private static void searchHere(DomainObject domainObject) {
 
-        ActivityLogHelper.logUserAction("SearchHereAction.performAction");
+        ActivityLogHelper.logUserAction("SearchHereBuilder.performAction");
 
         if (domainObject==null) return;
 

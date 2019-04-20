@@ -40,7 +40,7 @@ import org.janelia.workstation.browser.gui.find.FindContextManager;
 import org.janelia.workstation.browser.gui.find.FindToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeView;
-import org.janelia.workstation.browser.nb_action.ApplyAnnotationAction;
+import org.janelia.workstation.browser.actions.ApplyAnnotationAction;
 import org.janelia.workstation.browser.nb_action.NewOntologyActionListener;
 import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.browser.nodes.NodeUtils;
@@ -767,7 +767,15 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     @Override
     public void openMatch() {
     }
-    
+
+    public void showKeyBindDialog(OntologyTerm term) {
+        OntologyElementAction action = getActionForTerm(term);
+        if (action!=null) {
+            getKeyBindDialog().showForAction(action);
+        }
+    }
+
+    /** @deprecated */
     public void showKeyBindDialog(OntologyTermNode node) {
         OntologyElementAction action = getActionForTerm(node.getOntologyTerm());
         if (action!=null) {

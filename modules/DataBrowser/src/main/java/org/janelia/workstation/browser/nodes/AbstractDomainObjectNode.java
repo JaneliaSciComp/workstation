@@ -3,17 +3,13 @@ package org.janelia.workstation.browser.nodes;
 import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import org.apache.commons.lang.StringEscapeUtils;
@@ -22,16 +18,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.workstation.browser.flavors.DomainObjectFlavor;
 import org.janelia.workstation.browser.flavors.DomainObjectNodeFlavor;
-import org.janelia.workstation.browser.gui.components.DomainListViewManager;
-import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
 import org.janelia.workstation.browser.gui.components.DomainObjectAcceptorHelper;
-import org.janelia.workstation.browser.gui.components.ViewerUtils;
-import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
-import org.janelia.workstation.browser.nb_action.AddToFolderAction;
-import org.janelia.workstation.browser.nb_action.RemoveAction;
-import org.janelia.workstation.browser.nb_action.RenameAction;
-import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
@@ -212,23 +199,6 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
     @Override
     public Action[] getActions(boolean context) {
         Collection<Action> actions = DomainObjectAcceptorHelper.getNodeContextMenuItems(getDomainObject());
-//        actions.add(new PopupLabelAction());
-//        actions.add(null);
-//        actions.add(new CopyToClipboardAction("Name", getName()));
-//        actions.add(new CopyToClipboardAction("GUID", getId()+""));
-//        actions.add(null);
-//        actions.add(new OpenInViewerAction());
-//        actions.add(new OpenInNewViewerAction());
-//        actions.add(null);
-//        actions.add(new ViewDetailsAction());
-//        actions.add(new ChangePermissionsAction());
-//        actions.add(AddToFolderAction.get());
-//        actions.add(RenameAction.get());
-//        actions.add(RemoveAction.get());
-//        actions.add(null);
-//        for (Action action : DomainObjectAcceptorHelper.getNodeContextMenuItems(getDomainObject())) {
-//            actions.add(action);
-//        }
         return actions.toArray(new Action[0]);
     }
 
@@ -260,72 +230,6 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
 
         sheet.put(set);
         return sheet;
-    }
-
-    protected final class OpenInViewerAction extends AbstractAction {
-
-        public OpenInViewerAction() {
-            putValue(NAME, "Open In Viewer");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            DomainListViewTopComponent viewer = ViewerUtils.provisionViewer(DomainListViewManager.getInstance(), "editor");
-            viewer.loadDomainObjectNode(AbstractDomainObjectNode.this, true);
-        }
-
-        @Override
-        public boolean isEnabled() {
-            return DomainListViewTopComponent.isSupported(getDomainObject());
-        }
-    }
-    
-    protected final class OpenInNewViewerAction extends AbstractAction {
-
-        public OpenInNewViewerAction() {
-            putValue(NAME, "Open In New Viewer");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            DomainListViewTopComponent viewer = ViewerUtils.createNewViewer(DomainListViewManager.getInstance(), "editor");
-            viewer.requestActive();
-            viewer.loadDomainObjectNode(AbstractDomainObjectNode.this, true);
-        }
-
-        @Override
-        public boolean isEnabled() {
-            return DomainListViewTopComponent.isSupported(getDomainObject());
-        }
-    }
-
-    protected final class ViewDetailsAction extends AbstractAction {
-
-        public ViewDetailsAction() {
-            putValue(NAME, "View Details");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            new DomainDetailsDialog().showForDomainObject(getDomainObject());
-        }
-    }
-
-    protected final class ChangePermissionsAction extends AbstractAction {
-
-        public ChangePermissionsAction() {
-            putValue(NAME, "Change Permissions");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            new DomainDetailsDialog().showForDomainObject(getDomainObject(), DomainInspectorPanel.TAB_NAME_PERMISSIONS);
-        }
-
-        @Override
-        public boolean isEnabled() {
-            return ClientDomainUtils.isOwner(getDomainObject());
-        }
     }
 
     @Override

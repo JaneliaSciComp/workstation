@@ -1,18 +1,10 @@
 package org.janelia.workstation.browser.nodes;
 
 import java.awt.Image;
-import java.util.ArrayList;
-import java.util.List;
 
-import javax.swing.Action;
-
-import org.janelia.workstation.browser.nb_action.NewDomainObjectAction;
-import org.janelia.workstation.common.nb_action.PopupLabelAction;
-import org.janelia.workstation.browser.nb_action.SearchHereAction;
-import org.janelia.workstation.common.actions.CopyToClipboardAction;
-import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.model.domain.workspace.Workspace;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 
 /**
  * A top-level Workspace node in the data graph. Functions as a tree node 
@@ -58,24 +50,5 @@ public class WorkspaceNode extends TreeNodeNode {
     @Override
     public boolean canDestroy() {
         return false;
-    }
-    
-    @Override
-    public Action[] getActions(boolean context) {
-        List<Action> actions = new ArrayList<>();
-        actions.add(PopupLabelAction.get());
-        actions.add(null);
-        actions.add(new CopyToClipboardAction("Name", getName()));
-        actions.add(new CopyToClipboardAction("GUID", getId()+""));
-        actions.add(null);
-        actions.add(new OpenInViewerAction());
-        actions.add(new OpenInNewViewerAction());
-        actions.add(null);
-        actions.add(new ViewDetailsAction());
-        actions.add(new ChangePermissionsAction());
-        actions.add(NewDomainObjectAction.get());
-        actions.add(null);
-        actions.add(SearchHereAction.get());
-        return actions.toArray(new Action[0]);
     }
 }

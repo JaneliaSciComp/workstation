@@ -2,28 +2,22 @@ package org.janelia.workstation.browser.nodes;
 
 import java.awt.Image;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.workstation.browser.gui.components.DomainObjectAcceptorHelper;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.workstation.browser.nb_action.AddOntologyTermAction;
-import org.janelia.workstation.browser.nb_action.OntologyExportAction;
-import org.janelia.workstation.browser.nb_action.OntologyImportAction;
-import org.janelia.workstation.common.nb_action.PopupLabelAction;
-import org.janelia.workstation.browser.nb_action.RenameAction;
-import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,22 +70,8 @@ public class OntologyNode extends OntologyTermNode implements DomainObjectNode<O
 
     @Override
     public Action[] getActions(boolean context) {
-        List<Action> actions = new ArrayList<>();
-        actions.add(PopupLabelAction.get());
-        actions.add(null);
-        actions.add(new CopyToClipboardAction("Name", getName()));
-        actions.add(new CopyToClipboardAction("GUID", getId()+""));
-        actions.add(null);
-        actions.add(new ViewDetailsAction());
-        actions.add(new ChangePermissionsAction());
-        actions.add(RenameAction.get());
-        actions.add(new RemoveAction());
-        actions.add(null);
-        actions.add(OntologyImportAction.get());
-        actions.add(OntologyExportAction.get());
-        actions.add(null);
-        actions.add(AddOntologyTermAction.get());
-        return actions.toArray(new Action[actions.size()]);
+        Collection<Action> actions = DomainObjectAcceptorHelper.getNodeContextMenuItems(getDomainObject());
+        return actions.toArray(new Action[0]);
     }
     
     @Override

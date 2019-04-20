@@ -21,8 +21,6 @@ public class DownloadBuilder implements ContextualActionBuilder {
 
     private static final DownloadAction action = new DownloadAction();
 
-    private static final String ACTION_NAME = "Download Files...";
-
     @Override
     public boolean isCompatible(Object obj) {
         return obj instanceof DomainObject;
@@ -42,7 +40,7 @@ public class DownloadBuilder implements ContextualActionBuilder {
 
         @Override
         public String getName() {
-            return ACTION_NAME;
+            return "Download Files...";
         }
 
         @Override

@@ -4,14 +4,14 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 
-import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
- * Action to copy a domain object GUID to the clipboard.
+ * Action to copy a GUID to the clipboard. Supports any object which implements the HasIdentifier interface.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -25,7 +25,7 @@ public class CopyGUIDToClipboardActionBuilder extends SimpleActionBuilder {
 
     @Override
     public boolean isCompatible(Object obj) {
-        return obj instanceof DomainObject;
+        return obj instanceof HasIdentifier;
     }
 
     @Override
@@ -35,7 +35,7 @@ public class CopyGUIDToClipboardActionBuilder extends SimpleActionBuilder {
 
     @Override
     protected void performAction(Object obj) {
-        DomainObject domainObject = (DomainObject)obj;
+        HasIdentifier domainObject = (HasIdentifier)obj;
         String value = domainObject.getId()+"";
         ActivityLogHelper.logUserAction("CopyGUIDToClipboardActionBuilder.performAction", value);
         Transferable t = new StringSelection(value);

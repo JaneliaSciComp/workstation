@@ -5,9 +5,9 @@ import javax.swing.Action;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
 /**
- * A builder for simple named actions. Just implement getName and performAction.
+ * A builder for simple named actions which only refer to the object that was selected by the user.
  *
- * Takes care of action creation and exception handling.
+ * Just implement getName and performAction, and this base class takes care of action creation and exception handling.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

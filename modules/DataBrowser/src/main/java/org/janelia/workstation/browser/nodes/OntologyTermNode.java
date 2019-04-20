@@ -4,47 +4,31 @@ import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JOptionPane;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.model.domain.interfaces.HasIdentifier;
+import org.janelia.model.domain.ontology.*;
 import org.janelia.workstation.browser.actions.OntologyElementAction;
-import org.janelia.workstation.browser.gui.components.OntologyExplorerTopComponent;
 import org.janelia.workstation.browser.flavors.OntologyTermFlavor;
 import org.janelia.workstation.browser.flavors.OntologyTermNodeFlavor;
-import org.janelia.workstation.browser.nb_action.AddOntologyTermAction;
-import org.janelia.workstation.browser.nb_action.ApplyAnnotationAction;
-import org.janelia.workstation.browser.nb_action.OntologyExportAction;
-import org.janelia.workstation.browser.nb_action.OntologyImportAction;
-import org.janelia.workstation.common.nb_action.PopupLabelAction;
-import org.janelia.workstation.browser.nb_action.RemoveAnnotationByTermAction;
-import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.browser.gui.components.DomainObjectAcceptorHelper;
+import org.janelia.workstation.browser.gui.components.OntologyExplorerTopComponent;
+import org.janelia.workstation.browser.actions.ApplyAnnotationAction;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.keybind.KeyBindings;
 import org.janelia.workstation.core.keybind.KeyboardShortcut;
 import org.janelia.workstation.core.keybind.KeymapUtil;
-import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.domain.interfaces.HasIdentifier;
-import org.janelia.model.domain.ontology.Accumulation;
-import org.janelia.model.domain.ontology.Category;
-import org.janelia.model.domain.ontology.Custom;
-import org.janelia.model.domain.ontology.EnumItem;
-import org.janelia.model.domain.ontology.EnumText;
-import org.janelia.model.domain.ontology.Interval;
-import org.janelia.model.domain.ontology.Ontology;
-import org.janelia.model.domain.ontology.OntologyTerm;
-import org.janelia.model.domain.ontology.Tag;
-import org.janelia.model.domain.ontology.Text;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
 import org.openide.nodes.Node;
@@ -198,13 +182,13 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         else if (term instanceof Tag) {
             return Icons.getIcon("page_white.png").getImage();
         }
-        else if (term instanceof Text) {
-            return Icons.getIcon("page_white_text.png").getImage();
-        }
         else if (term instanceof Accumulation) {
             return Icons.getIcon("page_white_edit.png").getImage();
         }
         else if (term instanceof Custom) {
+            return Icons.getIcon("page_white_text.png").getImage();
+        }
+        else if (term instanceof Text) {
             return Icons.getIcon("page_white_text.png").getImage();
         }
         else if (term instanceof EnumItem) {
@@ -238,147 +222,15 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     
     @Override
     public Action[] getActions(boolean context) {
-        List<Action> actions = new ArrayList<>();
-        actions.add(PopupLabelAction.get());
-        actions.add(null);
-        actions.add(new CopyToClipboardAction("Name", getName()));
-        actions.add(new CopyToClipboardAction("GUID", getId()+""));
-        actions.add(null);
-        actions.add(new RemoveAction());
-        actions.add(null);
-        actions.add(OntologyImportAction.get());
-        actions.add(OntologyExportAction.get());
-        actions.add(null);
-        actions.add(new AssignShortcutAction());
-        actions.add(AddOntologyTermAction.get());
-        actions.add(null);
-        actions.add(ApplyAnnotationAction.get());
-        actions.add(RemoveAnnotationByTermAction.get());
-        return actions.toArray(new Action[actions.size()]);
+        Collection<Action> actions = DomainObjectAcceptorHelper.getNodeContextMenuItems(getObject());
+        return actions.toArray(new Action[0]);
     }
 
     @Override
     public Action getPreferredAction() {
         return ApplyAnnotationAction.get();
     }
-    
-    protected final class AssignShortcutAction extends AbstractAction {
 
-        public AssignShortcutAction() {
-            putValue(NAME, "Assign Shortcut...");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            OntologyExplorerTopComponent.getInstance().showKeyBindDialog(OntologyTermNode.this);
-        }
-    }
-    
-    protected final class RemoveAction extends AbstractAction {
-
-        public RemoveAction() {
-            putValue(NAME, "Remove");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-
-            String title;
-            String msg;
-            if (getOntologyTerm() instanceof Ontology) {
-                title = "Delete Ontology";
-                msg = "Are you sure you want to delete this ontology?";
-            }
-            else {
-                title = "Delete Ontology Item";
-                msg = "Are you sure you want to delete the item '"+getOntologyTerm().getName()+"' and all of its descendants?";   
-            }
-            
-            int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
-                    msg, title, JOptionPane.OK_CANCEL_OPTION);
-
-            if (result != 0) return;
-            
-            try {
-                DomainModel model = DomainMgr.getDomainMgr().getModel();
-                if (getOntologyTerm() instanceof Ontology) {
-                    model.removeOntology(getOntology().getId());   
-                    log.info("Removed ontology {}", getOntology().getId());
-                }
-                else {
-                    model.removeOntologyTerm(getOntology().getId(), getParent().getId(), getOntologyTerm().getId());
-                    log.info("Removed ontology term {} from ontology {}", getOntologyTerm().getId(), getOntology().getId());
-                }
-            }
-            catch (Exception ex) {
-                FrameworkAccess.handleException(ex);
-            }
-        }
-    }
-    
-//    protected final class RemoveAnnotationAction extends AbstractAction {
-//
-//        public RemoveAnnotationAction() {
-//            putValue(NAME, "Remove Annotation From Selected Items");
-//        }
-//
-//        @Override
-//        public void actionPerformed(ActionEvent e) {
-//            
-//            OntologyTermNode node = OntologyTermNode.this;
-//            OntologyTerm ontologyTerm = getLookup().lookup(OntologyTerm.class);
-//            OntologyTermNode key = (ontologyTerm instanceof EnumItem) ? ((OntologyTermNode)node.getParentNode()) : node;
-//            Long keyTermId = key.getId();
-//            String keyTermValue = key.getDisplayName();
-//            
-//            log.info("Will remove annotation from all selected entities: {} ({})",keyTermValue,keyTermId);
-//            
-//            OntologyTermReference keyTermRef = new OntologyTermReference();
-//            keyTermRef.setOntologyId(getOntology().getId());
-//            keyTermRef.setOntologyTermId(key.getId());
-//            
-//            DomainListViewTopComponent listView = DomainListViewTopComponent.getActiveInstance();
-//            if (listView==null || listView.getEditor()==null) return;
-//            
-//            DomainObjectSelectionModel selectionModel = listView.getEditor().getSelectionModel();
-//            if (selectionModel==null) return;
-//
-//            // TODO: how to get image model?
-//            ImageModel<DomainObject,DomainObjectId> imageModel = listView.getEditor().getImageModel();
-//            if (imageModel==null) return;
-//            
-//            List<DomainObjectId> selectedIds = selectionModel.getSelectedIds();
-//
-//            DomainModel model = DomainMgr.getDomainMgr().getModel();
-//            final List<DomainObject> selectedDomainObjects = model.getDomainObjectsByDomainObjectId(selectedIds);
-//            
-//            RemoveAnnotationTermAction<DomainObject,DomainObjectId> action = new RemoveAnnotationTermAction<>(imageModel, selectedDomainObjects, keyTermRef, keyTermValue);
-//            action.doAction();
-//        }
-//    }
-
-//    @Override
-//    public void destroy() throws IOException {
-//        if (!ClientDomainUtils.hasWriteAccess(getOntology())) {
-//            return;
-//        }
-//        if (parentChildFactory==null) {
-//            throw new IllegalStateException("Cannot destroy node without parent");
-//        }
-//        if (parentChildFactory instanceof OntologyChildFactory) {
-//            OntologyChildFactory ontologyChildFactory = parentChildFactory;
-//            try {
-//                ontologyChildFactory.removeChild(getOntologyTerm());
-//            }
-//            catch (Exception e) {
-//                throw new IOException("Error destroying node",e);
-//            }
-//        }
-//        else {
-//            throw new IllegalStateException("Cannot destroy term without parent");
-//        }
-//    }
-    
     @Override
     public Transferable clipboardCopy() throws IOException {
         log.debug("Copy to clipboard: {}",getOntologyTerm());

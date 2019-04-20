@@ -17,7 +17,7 @@ import org.janelia.workstation.browser.gui.components.DomainViewerManager;
 import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.browser.gui.hud.Hud;
-import org.janelia.workstation.browser.nb_action.AddToFolderAction;
+import org.janelia.workstation.browser.actions.AddToFolderAction;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;

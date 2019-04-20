@@ -6,15 +6,6 @@ import java.util.List;
 
 import javax.swing.JMenuItem;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.StateMgr;
-import org.janelia.workstation.common.actions.CopyToClipboardAction;
-import org.janelia.workstation.common.gui.model.ImageModel;
-import org.janelia.workstation.common.gui.support.PopupContextMenu;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Accumulation;
@@ -23,6 +14,15 @@ import org.janelia.model.domain.ontology.EnumText;
 import org.janelia.model.domain.ontology.Interval;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.ontology.Text;
+import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.common.gui.support.PopupContextMenu;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.StateMgr;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 /**
  * Context pop up menu for annotations.

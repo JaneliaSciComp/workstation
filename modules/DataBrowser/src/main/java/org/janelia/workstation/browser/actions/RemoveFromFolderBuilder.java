@@ -18,11 +18,12 @@ import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.browser.nodes.TreeNodeNode;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -54,7 +55,8 @@ public class RemoveFromFolderBuilder implements ContextualActionBuilder {
 
     @Override
     public boolean isCompatible(Object obj) {
-        return obj instanceof DomainObject;
+        // TODO: unify deletion of ontologies, currently handled in RemoveOntologyTermBuilder
+        return obj instanceof DomainObject && !(obj instanceof Ontology);
     }
 
     @Override

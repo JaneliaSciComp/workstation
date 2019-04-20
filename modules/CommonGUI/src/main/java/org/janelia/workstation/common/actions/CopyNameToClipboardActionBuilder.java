@@ -4,7 +4,7 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 
-import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.interfaces.HasName;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
@@ -25,12 +25,12 @@ public class CopyNameToClipboardActionBuilder extends SimpleActionBuilder {
 
     @Override
     public boolean isCompatible(Object obj) {
-        return obj instanceof DomainObject;
+        return obj instanceof HasName;
     }
 
     @Override
     protected void performAction(Object obj) {
-        DomainObject domainObject = (DomainObject)obj;
+        HasName domainObject = (HasName)obj;
         String value = domainObject.getName();
         ActivityLogHelper.logUserAction("CopyNameToClipboardActionBuilder.performAction", value);
         Transferable t = new StringSelection(value);

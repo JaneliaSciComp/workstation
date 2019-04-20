@@ -3,12 +3,10 @@ package org.janelia.workstation.browser.actions;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -21,15 +19,11 @@ import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.browser.gui.support.TreeNodeChooser;
-import org.janelia.workstation.browser.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.browser.nodes.NodeUtils;
 import org.janelia.workstation.browser.nodes.UserViewConfiguration;
 import org.janelia.workstation.browser.nodes.UserViewRootNode;
 import org.janelia.workstation.browser.nodes.UserViewTreeNodeNode;
-import org.janelia.workstation.common.nb_action.NodePresenterAction;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
-import org.janelia.workstation.core.actions.PopupMenuGenerator;
-import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.common.nb_action.DomainObjectNodeAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -38,8 +32,6 @@ import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.nodes.Node;
-import org.openide.util.HelpCtx;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +47,6 @@ public class AddToFolderBuilder implements ContextualActionBuilder {
     private static final Component mainFrame = FrameworkAccess.getMainFrame();
 
     private static final AddToFolderAction action = new AddToFolderAction();
-    private static final AddToFolderNodeAction nodeAction = new AddToFolderNodeAction();
 
     @Override
     public boolean isCompatible(Object obj) {
@@ -69,76 +60,14 @@ public class AddToFolderBuilder implements ContextualActionBuilder {
 
     @Override
     public Action getNodeAction(Object obj) {
-        return nodeAction;
+        return action;
     }
 
-    public static class AddToFolderAction extends AbstractAction implements ViewerContextReceiver, PopupMenuGenerator {
-
-        private final Collection<DomainObject> domainObjects = new ArrayList<>();
-
-        @Override
-        public void setViewerContext(ViewerContext viewerContext) {
-            domainObjects.clear();
-            domainObjects.addAll(viewerContext.getDomainObjectList());
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            // Handled by popup menu
-        }
+    public static class AddToFolderAction extends DomainObjectNodeAction {
 
         @Override
         public JMenuItem getPopupPresenter() {
-            return AddToFolderBuilder.getPopupPresenter(domainObjects);
-        }
-    }
-
-    private static class AddToFolderNodeAction extends NodePresenterAction {
-
-        private Collection<DomainObject> domainObjects = new ArrayList<>();
-
-        @Override
-        public String getName() {
-            return "  Open In Viewer";
-        }
-
-        @Override
-        public HelpCtx getHelpCtx() {
-            return new HelpCtx("OpenInViewerAction");
-        }
-
-        @Override
-        protected boolean asynchronous() {
-            return false;
-        }
-
-        /**
-         * Activation method #2: set the domain objects via the NetBeans Nodes API
-         *
-         * @param activatedNodes
-         * @return
-         */
-        @Override
-        protected boolean enable(Node[] activatedNodes) {
-            boolean enabled = super.enable(activatedNodes);
-            List<Node> selectedNodes = getSelectedNodes();
-
-            // Build list of things to add
-            domainObjects.clear();
-            for (Node node : selectedNodes) {
-                if (node instanceof AbstractDomainObjectNode) {
-                    @SuppressWarnings("unchecked")
-                    AbstractDomainObjectNode<DomainObject> selectedNode = (AbstractDomainObjectNode<DomainObject>) node;
-                    domainObjects.add(selectedNode.getDomainObject());
-                }
-            }
-
-            return enabled;
-        }
-
-        @Override
-        public JMenuItem getPopupPresenter() {
-            return AddToFolderBuilder.getPopupPresenter(domainObjects);
+            return AddToFolderBuilder.getPopupPresenter(domainObjectList);
         }
     }
 

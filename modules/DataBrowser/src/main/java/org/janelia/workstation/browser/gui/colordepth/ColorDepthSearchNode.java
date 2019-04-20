@@ -8,22 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.swing.Action;
-
-import org.janelia.workstation.browser.flavors.DomainObjectNodeFlavor;
-import org.janelia.workstation.browser.nb_action.AddToFolderAction;
-import org.janelia.workstation.common.nb_action.PopupLabelAction;
-import org.janelia.workstation.browser.nb_action.RemoveAction;
-import org.janelia.workstation.browser.nb_action.RenameAction;
-import org.janelia.workstation.browser.nodes.AbstractDomainObjectNode;
-import org.janelia.workstation.browser.nodes.TreeNodeNode;
-import org.janelia.workstation.common.actions.CopyToClipboardAction;
-import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.workspace.Node;
+import org.janelia.workstation.browser.flavors.DomainObjectNodeFlavor;
+import org.janelia.workstation.browser.nodes.AbstractDomainObjectNode;
+import org.janelia.workstation.browser.nodes.TreeNodeNode;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.api.DomainMgr;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.NodeTransfer;
@@ -63,25 +56,6 @@ public class ColorDepthSearchNode extends AbstractDomainObjectNode<ColorDepthSea
     @Override
     public boolean canDestroy() {
         return true;
-    }
-
-    @Override
-    public Action[] getActions(boolean context) {
-        List<Action> actions = new ArrayList<>();
-        actions.add(PopupLabelAction.get());
-        actions.add(null);
-        actions.add(new CopyToClipboardAction("Name", getName()));
-        actions.add(new CopyToClipboardAction("GUID", getId()+""));
-        actions.add(null);
-        actions.add(new OpenInViewerAction());
-        actions.add(new OpenInNewViewerAction());
-        actions.add(null);
-        actions.add(new ViewDetailsAction());
-        actions.add(new ChangePermissionsAction());
-        actions.add(AddToFolderAction.get());
-        actions.add(RenameAction.get());
-        actions.add(RemoveAction.get());
-        return actions.toArray(new Action[actions.size()]);
     }
 
     @Override
