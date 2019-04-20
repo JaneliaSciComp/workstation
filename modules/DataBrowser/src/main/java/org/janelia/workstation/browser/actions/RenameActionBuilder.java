@@ -10,6 +10,7 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.workstation.common.actions.DomainObjectNodeAction;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -31,7 +32,7 @@ public class RenameActionBuilder implements ContextualActionBuilder {
 
     @Override
     public boolean isCompatible(Object obj) {
-        return obj instanceof DomainObject;
+        return obj instanceof DomainObject && !(obj instanceof Workspace);
     }
 
     @Override

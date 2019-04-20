@@ -71,6 +71,11 @@ public abstract class DomainObjectNodeAction extends NodeAction implements Viewe
     @Override
     public void setViewerContext(ViewerContext viewerContext) {
         this.domainObjectList = viewerContext.getDomainObjectList();
+        ContextualActionUtils.setVisible(this, isVisible());
+    }
+
+    protected boolean isVisible() {
+        return true;
     }
 
     protected void executeAction() {

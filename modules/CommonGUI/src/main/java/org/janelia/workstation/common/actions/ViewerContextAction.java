@@ -1,5 +1,7 @@
 package org.janelia.workstation.common.actions;
 
+import java.awt.event.ActionEvent;
+
 import javax.swing.AbstractAction;
 
 import org.janelia.workstation.core.actions.ViewerContext;
@@ -17,15 +19,24 @@ public abstract class ViewerContextAction extends AbstractAction implements View
     public void setViewerContext(ViewerContext viewerContext) {
         this.viewerContext = viewerContext;
         ContextualActionUtils.setName(this, getName());
+        ContextualActionUtils.setVisible(this, isVisible());
     }
 
     protected ViewerContext getViewerContext() {
         return viewerContext;
     }
 
-    protected abstract String getName();
+    public abstract String getName();
 
     protected boolean isVisible() {
         return true;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        executeAction();
+    }
+
+    protected void executeAction() {
     }
 }
