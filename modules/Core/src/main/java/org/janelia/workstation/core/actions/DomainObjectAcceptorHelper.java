@@ -32,7 +32,7 @@ public class DomainObjectAcceptorHelper {
      * @param domainObject handling this data.
      * @return some provider has registered to handle this data=T.
      */
-    public static  boolean isSupported(DomainObject domainObject) {
+    public static boolean isSupported(DomainObject domainObject) {
         return !ServiceAcceptorHelper.findAcceptors(domainObject).isEmpty();
     }
 
@@ -194,29 +194,29 @@ public class DomainObjectAcceptorHelper {
 
     private static void buildAction(ContextualActionBuilder builder, List<JComponent> items, Object obj, ViewerContext viewerContext) {
 
-        log.info("Using builder {}", builder.getClass().getSimpleName());
+        log.trace("Using builder {}", builder.getClass().getSimpleName());
 
         Action action = builder.getAction(obj);
         if (action == null) {
-            log.info("  Action builder accepted object but returned null Action");
+            log.trace("  Action builder accepted object but returned null Action");
             return;
         }
 
         if (action instanceof ViewerContextReceiver) {
             // Inject the context
-            log.info("  Injecting viewer context: {}", viewerContext);
+            log.trace("  Injecting viewer context: {}", viewerContext);
             ((ViewerContextReceiver)action).setViewerContext(viewerContext);
         }
 
         if (!ContextualActionUtils.isVisible(action)) {
-            log.info("  Action is not visible");
+            log.trace("  Action is not visible");
             return;
         }
 
         // Add pre-separator
         if (builder.isPrecededBySeparator()) {
             if (!items.isEmpty() && !(items.get(items.size()-1) instanceof JSeparator)) {
-                log.info("  Adding pre-separator");
+                log.trace("  Adding pre-separator");
                 items.add(new JSeparator());
             }
         }
@@ -225,25 +225,25 @@ public class DomainObjectAcceptorHelper {
             // If the action has a popup generator, use that
             JMenuItem popupPresenter = ((PopupMenuGenerator) action).getPopupPresenter();
             if (popupPresenter != null) {
-                log.info("  Adding popup presenter");
+                log.trace("  Adding popup presenter");
                 items.add(popupPresenter);
             }
             else {
-                log.info("  Popup presenter was null, falling back on wrapping action in menu item");
+                log.trace("  Popup presenter was null, falling back on wrapping action in menu item");
                 JMenuItem item = new JMenuItem(action);
                 items.add(item);
             }
         }
         else {
             // Otherwise, just wrap the action
-            log.info("  Wrapping action in menu item");
+            log.trace("  Wrapping action in menu item");
             JMenuItem item = new JMenuItem(action);
             items.add(item);
         }
 
         // Add post-separator
         if (builder.isSucceededBySeparator()) {
-            log.info("  Adding post-separator");
+            log.trace("  Adding post-separator");
             items.add(new JSeparator());
         }
     }

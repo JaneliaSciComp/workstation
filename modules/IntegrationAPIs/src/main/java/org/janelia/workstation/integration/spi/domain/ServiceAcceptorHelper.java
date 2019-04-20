@@ -30,14 +30,14 @@ public class ServiceAcceptorHelper {
     public static <S, T extends Compatible<S>> Collection<T> findHandler(S criterion, Class<T> clazz) {
         Collection<? extends T> candidates = Lookup.getDefault().lookupAll(clazz);
         Collection<T> rtnVal = new ArrayList<>();
-        log.info("Found {} handlers:", clazz.getSimpleName());
+        log.trace("Found {} handlers:", clazz.getSimpleName());
         for (T nextAcceptor : candidates) {
             if (nextAcceptor.isCompatible(criterion)) {
-                log.info("  [X] {} is compatible with criterion {}", nextAcceptor.getClass().getSimpleName(), criterion);
+                log.trace("  [X] {} is compatible with criterion {}", nextAcceptor.getClass().getSimpleName(), criterion);
                 rtnVal.add(nextAcceptor);
             }
             else {
-                log.info("  [ ] {} is incompatible with criterion {}", nextAcceptor.getClass().getSimpleName(), criterion);
+                log.trace("  [ ] {} is incompatible with criterion {}", nextAcceptor.getClass().getSimpleName(), criterion);
             }
         }
         return rtnVal;
