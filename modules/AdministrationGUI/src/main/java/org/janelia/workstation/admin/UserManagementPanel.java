@@ -83,6 +83,10 @@ public class UserManagementPanel extends JPanel {
             }
         });
 
+        // hide the column we use to hold the User object
+        userManagementTable.removeColumn(userManagementTable.getColumnModel().getColumn(UserManagementTableModel.COLUMN_SUBJECT));
+
+
         JScrollPane tableScroll = new JScrollPane(userManagementTable);
         add(tableScroll);
 
@@ -140,8 +144,13 @@ public class UserManagementPanel extends JPanel {
 
     class UserManagementTableModel extends AbstractTableModel {
 
-        private String[] columnNames = {"Username", "Groups"};
-        private List<List<Object>> data = new ArrayList<>();
+        private String[] columnNames = {"Name", "Username", "Groups", "Subject"};
+        public static final int COLUMN_FULLNAME = 0;
+        public static final int COLUMN_USERNAME = 1;
+        public static final int COLUMN_GROUPS = 2;
+        public static final int COLUMN_SUBJECT = 3;
+
+
         private List<User> users = new ArrayList<>();
         private UserManagementPanel manager;
 
@@ -152,36 +161,22 @@ public class UserManagementPanel extends JPanel {
 
         @Override
         public int getRowCount() {
-            return data.size();
+            return users.size();
         }
 
         public void clear() {
-            data = new ArrayList<>();
             users = new ArrayList<>();
         }
 
         public void addUsers(List<User> userList) {
-            data = new ArrayList<List<Object>>();
-            users = new ArrayList<>();
-            ArrayList userRow;
-            for (User user: userList) {
-               userRow = new ArrayList<>();
-               userRow.add(user.getFullName());
-               String groups = user.getReadGroups().toString();
-               groups = groups.replaceAll("group:", "");
-               userRow.add(groups);
-               data.add(userRow);
-               users.add(user); 
-            }            
-            fireTableRowsInserted(0, data.size()-1);
+            // add users in bulk, replacing existing
+            users = new ArrayList<>(userList);
+            fireTableRowsInserted(0, users.size()-1);
         }
 
         public void addUser (User user) {
-            ArrayList userRow = new ArrayList<>();
-            userRow.add(user.getFullName());
-            data.add(userRow);
             users.add(user);
-            fireTableRowsInserted(data.size()-1, data.size()-1);
+            fireTableRowsInserted(users.size()-1, users.size()-1);
         }
 
         @Override
@@ -191,16 +186,32 @@ public class UserManagementPanel extends JPanel {
 
         @Override
         public Object getValueAt(int row, int col) {
-            return data.get(row).get(col);
+            switch (col) {
+                case COLUMN_FULLNAME:
+                    // full name
+                    return users.get(row).getFullName();
+                case COLUMN_USERNAME:
+                    // username
+                    return users.get(row).getName();
+                case COLUMN_GROUPS:
+                    // groups
+                    String groups = users.get(row).getReadGroups().toString();
+                    return groups.replaceAll("group:", "");
+                case COLUMN_SUBJECT:
+                    // subject (User) object:
+                    return users.get(row);
+                default:
+                    throw new IllegalStateException("column " + col + "does not exist");
+            }
         }
         
-        // kludgy way to store the Subject at the end of the row in a hidden column
+        // we store the Subject at the end of the row in a hidden column
         public User getUserAtRow(int row) {
             return users.get(row);
         }
 
         public void removeUser(int row) {
-            data.remove(row);
+            users.remove(row);
             this.fireTableRowsDeleted(row, row);
         }
 

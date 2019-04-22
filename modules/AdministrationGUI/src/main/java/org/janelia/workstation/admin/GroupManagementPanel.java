@@ -84,6 +84,10 @@ public class GroupManagementPanel extends JPanel {
                 }
             }
         });
+
+        // hide the column we use to hold the Group object
+        groupManagementTable.removeColumn(groupManagementTable.getColumnModel().getColumn(GroupManagementTableModel.COLUMN_SUBJECT));
+
         JScrollPane tableScroll = new JScrollPane(groupManagementTable);
         add(tableScroll);
         
@@ -147,25 +151,28 @@ public class GroupManagementPanel extends JPanel {
     }
     
     class GroupManagementTableModel extends AbstractTableModel {
-        String[] columnNames = {"Name","Number of Users"};
-        List<List<Object>> data = new ArrayList<List<Object>>();
+        String[] columnNames = {"Name", "Group Name", "Number of Users", "Subject"};
+        public static final int COLUMN_FULLNAME = 0;
+        public static final int COLUMN_GROUPNAME = 1;
+        public static final int COLUMN_NUMUSERS = 2;
+        public static final int COLUMN_SUBJECT = 3;
+
         List<Subject> groups = new ArrayList<>();
+        Map<String,Integer> groupCounts = new HashMap<>();
         
         public int getColumnCount() {
             return columnNames.length;
         }        
 
         public int getRowCount() {
-            return data.size();
+            return groups.size();
         }
         
         public void clear() {
-            data = new ArrayList<List<Object>>();
             groups = new ArrayList<>();
         }
         
         public void loadGroups(List<Group> groupList, Map<String,Integer> groupTotals) {
-            data = new ArrayList<List<Object>>();
             groups = new ArrayList<>();
             for (Group group: groupList) {
                 Integer total = groupTotals.get(group.getKey());
@@ -177,12 +184,9 @@ public class GroupManagementPanel extends JPanel {
         }
         
         public void addGroup (Subject group, int total) {
-            ArrayList groupRow = new ArrayList<>();
-            groupRow.add(group.getFullName());
-            groupRow.add(total);
             groups.add(group);
-            data.add(groupRow);
-            fireTableRowsInserted(data.size()-1, data.size()-1);
+            groupCounts.put(group.getKey(), total);
+            fireTableRowsInserted(groups.size()-1, groups.size()-1);
         }
 
         public String getColumnName(int col) {
@@ -190,7 +194,21 @@ public class GroupManagementPanel extends JPanel {
         }
 
         public Object getValueAt(int row, int col) {
-            return data.get(row).get(col);
+            switch (col) {
+                case COLUMN_FULLNAME:
+                    // name
+                    return groups.get(row).getFullName();
+                case COLUMN_GROUPNAME:
+                    // group name
+                    return groups.get(row).getName();
+                case COLUMN_NUMUSERS:
+                    // number of groups
+                    return groupCounts.get(groups.get(row).getKey());
+                case COLUMN_SUBJECT:
+                    return groups.get(row);
+                default:
+                    throw new IllegalStateException("column " + col + "does not exist");
+            }
         }
         
         // kludgy way to store the Subject at the end of the row in a hidden column
@@ -199,7 +217,7 @@ public class GroupManagementPanel extends JPanel {
         }
         
         public void removeGroup(int row) {
-            data.remove(row);
+            groupCounts.remove(groups.get(row).getKey());
             groups.remove(row);
             this.fireTableRowsDeleted(row, row);
         }
