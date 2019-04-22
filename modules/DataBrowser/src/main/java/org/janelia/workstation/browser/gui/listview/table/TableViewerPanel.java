@@ -33,7 +33,7 @@ import org.janelia.workstation.core.events.selection.SelectionModel;
 import org.janelia.workstation.core.keybind.KeyBindings;
 import org.janelia.workstation.core.keybind.KeyboardShortcut;
 import org.janelia.workstation.core.keybind.KeymapUtil;
-import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.table.DynamicColumn;
 import org.janelia.workstation.common.gui.table.DynamicRow;

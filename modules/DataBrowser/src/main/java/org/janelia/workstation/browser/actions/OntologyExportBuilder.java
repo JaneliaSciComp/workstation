@@ -17,7 +17,7 @@ import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.workstation.common.gui.support.YamlFileFilter;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
+import org.janelia.workstation.common.actions.SimpleActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.lookup.ServiceProvider;
 import org.yaml.snakeyaml.DumperOptions;

@@ -4,11 +4,11 @@ import javax.swing.JOptionPane;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.workstation.common.actions.SimpleActionBuilder;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.lookup.ServiceProvider;
 

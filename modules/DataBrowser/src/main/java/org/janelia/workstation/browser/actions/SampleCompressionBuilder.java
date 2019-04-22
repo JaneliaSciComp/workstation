@@ -10,6 +10,7 @@ import javax.swing.Action;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.dialogs.CompressionDialog;
+import org.janelia.workstation.common.actions.ViewerContextAction;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -35,19 +36,22 @@ public class SampleCompressionBuilder implements ContextualActionBuilder {
         return action;
     }
 
-    public static class SampleCompressionAction extends AbstractAction implements ViewerContextReceiver {
+    public static class SampleCompressionAction extends ViewerContextAction {
 
         private List<Sample> samples;
 
         @Override
-        public void setViewerContext(ViewerContext viewerContext) {
+        public String getName() {
+            return "Change Sample Compression Strategy";
+        }
 
-            ContextualActionUtils.setName(this, "Change Sample Compression Strategy");
+        @Override
+        public void setup() {
 
             this.samples = new ArrayList<>();
-            for (DomainObject re : viewerContext.getDomainObjectList()) {
-                if (re instanceof Sample) {
-                    samples.add((Sample)re);
+            for (Object obj : getViewerContext().getSelectedObjects()) {
+                if (obj instanceof Sample) {
+                    samples.add((Sample)obj);
                 }
             }
 

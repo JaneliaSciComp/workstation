@@ -6,14 +6,21 @@ import java.util.List;
 import javax.swing.JMenuItem;
 
 import org.janelia.model.domain.DomainObject;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.workstation.core.model.Decorator;
+import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
 import org.janelia.workstation.core.actions.PopupMenuGenerator;
 import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.core.actions.ViewerContextReceiver;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
+import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
+import org.openide.util.NotImplementedException;
 import org.openide.util.actions.NodeAction;
 
 /**
@@ -31,8 +38,8 @@ import org.openide.util.actions.NodeAction;
  */
 public abstract class DomainObjectNodeAction extends NodeAction implements ViewerContextReceiver, PopupMenuGenerator {
 
-    protected List<DomainObjectNode> domainObjectNodeList;
-    protected List<DomainObject> domainObjectList;
+    protected final List<DomainObjectNode> domainObjectNodeList = new ArrayList<>();
+    protected final List<DomainObject> domainObjectList = new ArrayList<>();
 
     @Override
     public String getName() {
@@ -70,7 +77,12 @@ public abstract class DomainObjectNodeAction extends NodeAction implements Viewe
 
     @Override
     public void setViewerContext(ViewerContext viewerContext) {
-        this.domainObjectList = viewerContext.getDomainObjectList();
+        domainObjectList.clear();
+        for(Object obj : viewerContext.getSelectedObjects()) {
+            if (obj instanceof DomainObject) {
+                domainObjectList.add((DomainObject)obj);
+            }
+        }
         ContextualActionUtils.setVisible(this, isVisible());
     }
 
@@ -90,17 +102,61 @@ public abstract class DomainObjectNodeAction extends NodeAction implements Viewe
     @Override
     protected boolean enable(Node[] activatedNodes) {
         List<DomainObject> domainObjectList = new ArrayList<>();
-        this.domainObjectNodeList = new ArrayList<>();
+        domainObjectNodeList.clear();
         for(Node node : activatedNodes) {
             if (node instanceof DomainObjectNode) {
-                DomainObjectNode<DomainObject> domainObjectNode = (DomainObjectNode<DomainObject>)node;
+                DomainObjectNode domainObjectNode = (DomainObjectNode)node;
                 domainObjectNodeList.add(domainObjectNode);
                 domainObjectList.add(domainObjectNode.getDomainObject());
             }
         }
-        ViewerContext viewerContext = new ViewerContext(null, domainObjectList, null, null, null);
+
+        // Create dummy models
+        FixedDomainObjectSelectionModel selectionModel = new FixedDomainObjectSelectionModel();
+        selectionModel.select(domainObjectList, true, false);
+        FixedDomainObjectImageModel imageModel = new FixedDomainObjectImageModel();
+
+        // Inject viewer context
+        ViewerContext viewerContext = new ViewerContext<>(selectionModel, null,
+                imageModel, null);
         setViewerContext(viewerContext);
+
         // Enable state is determined by the popup presenter
         return true;
     }
+
+    public class FixedDomainObjectSelectionModel extends ChildSelectionModel<DomainObject, Reference> {
+
+        @Override
+        protected void selectionChanged(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
+        }
+
+        @Override
+        public Reference getId(DomainObject domainObject) {
+            return Reference.createFor(domainObject);
+        }
+    }
+
+    public class FixedDomainObjectImageModel extends DomainObjectImageModel {
+
+        @Override
+        public ArtifactDescriptor getArtifactDescriptor() {
+            return null;
+        }
+
+        @Override
+        public String getImageTypeName() {
+            return null;
+        }
+
+        @Override
+        public List<Annotation> getAnnotations(DomainObject domainObject) {
+            throw new NotImplementedException();
+        }
+
+        @Override
+        public List<Decorator> getDecorators(DomainObject imageObject) {
+            throw new NotImplementedException();
+        }
+    };
 }

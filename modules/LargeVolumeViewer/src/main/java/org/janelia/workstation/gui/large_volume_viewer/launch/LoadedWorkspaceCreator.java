@@ -29,7 +29,7 @@ import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeRestCl
 import org.janelia.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
+import org.janelia.workstation.common.actions.SimpleActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
@@ -53,11 +53,6 @@ public class LoadedWorkspaceCreator extends SimpleActionBuilder {
     @Override
     public boolean isCompatible(Object obj) {
         return obj instanceof TmSample;
-    }
-
-    @Override
-    public boolean isEnabled(Object obj) {
-        return true;
     }
 
     @Override

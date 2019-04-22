@@ -73,12 +73,12 @@ public class ExportFoldersBuilder implements ContextualActionBuilder {
         @Override
         public void setViewerContext(ViewerContext viewerContext) {
             this.nodes = new ArrayList<>();
-            for (DomainObject domainObject : viewerContext.getDomainObjectList()) {
-                if (domainObject instanceof Node) {
-                    nodes.add((Node) domainObject);
+            for (Object obj : viewerContext.getSelectedObjects()) {
+                if (obj instanceof Node) {
+                    nodes.add((Node) obj);
                 }
             }
-            boolean visible = viewerContext.getDomainObjectList().size()==nodes.size();
+            boolean visible = viewerContext.getSelectedObjects().size()==nodes.size();
             ContextualActionUtils.setVisible(this, visible);
         }
 

@@ -1,25 +1,24 @@
 package org.janelia.workstation.browser.actions;
 
 import java.awt.event.ActionEvent;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ProgressMonitor;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.workstation.common.actions.ViewerContextAction;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -51,14 +50,18 @@ public class PasteAnnotationTermBuilder implements ContextualActionBuilder {
         return null;
     }
 
-    private static class PasteAnnotationTermAction extends AbstractAction implements ViewerContextReceiver {
+    private static class PasteAnnotationTermAction extends ViewerContextAction {
 
-        private List<DomainObject> domainObjectList;
+        private Collection<DomainObject> domainObjects;
 
         @Override
-        public void setViewerContext(ViewerContext viewerContext) {
-            this.domainObjectList = viewerContext.getDomainObjectList();
-            ContextualActionUtils.setName(this, "Paste Annotation");
+        public String getName() {
+            return "Paste Annotation";
+        }
+
+        @Override
+        public void setup() {
+            this.domainObjects = DomainUIUtils.getSelectedDomainObjects(getViewerContext());
         }
 
         @Override
@@ -74,7 +77,7 @@ public class PasteAnnotationTermBuilder implements ContextualActionBuilder {
                 protected void doStuff() throws Exception {
 
                     int i = 1;
-                    for (DomainObject domainObject : domainObjectList) {
+                    for (DomainObject domainObject : domainObjects) {
                         Annotation baseAnnotation = StateMgr.getStateMgr().getCurrentSelectedOntologyAnnotation();
                         Annotation annotation = new Annotation(baseAnnotation);
                         // We may be copying an annotation we don't own. Don't copy the ownership.
@@ -83,7 +86,7 @@ public class PasteAnnotationTermBuilder implements ContextualActionBuilder {
                         annotation.setWriters(Collections.emptySet());
                         annotation.setTarget(Reference.createFor(domainObject));
                         model.create(annotation);
-                        setProgress(i++, domainObjectList.size());
+                        setProgress(i++, domainObjects.size());
                     }
                 }
 

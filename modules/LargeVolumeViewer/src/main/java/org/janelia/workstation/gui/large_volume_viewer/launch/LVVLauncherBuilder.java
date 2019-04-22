@@ -8,7 +8,7 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
+import org.janelia.workstation.common.actions.SimpleActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
@@ -32,15 +32,9 @@ public class LVVLauncherBuilder extends SimpleActionBuilder {
     }
 
     @Override
-    public boolean isEnabled(Object obj) {
-        return true;
-    }
-
-    @Override
     public boolean isPrecededBySeparator() {
         return true;
     }
-
 
     @Override
     protected void performAction(Object obj) {

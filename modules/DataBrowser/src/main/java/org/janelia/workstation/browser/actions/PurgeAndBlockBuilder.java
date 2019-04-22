@@ -13,6 +13,8 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.common.actions.ViewerContextAction;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -29,7 +31,7 @@ import org.openide.util.lookup.ServiceProvider;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ServiceProvider(service = ContextualActionBuilder.class, position=530)
-public class ProcessingBlockBuilder implements ContextualActionBuilder {
+public class PurgeAndBlockBuilder implements ContextualActionBuilder {
 
     private static ProcessingBlockAction action = new ProcessingBlockAction();
 
@@ -43,23 +45,21 @@ public class ProcessingBlockBuilder implements ContextualActionBuilder {
         return action;
     }
 
-    public static class ProcessingBlockAction extends AbstractAction implements ViewerContextReceiver {
+    public static class ProcessingBlockAction extends ViewerContextAction {
 
         private DomainObject domainObject;
         private List<Sample> samples;
 
         @Override
-        public void setViewerContext(ViewerContext viewerContext) {
+        public void setup() {
 
-            this.domainObject = viewerContext.getDomainObject();
-
-            final String samplesText = viewerContext.isMultiple()?samples.size()+" Samples":"Sample";
-            ContextualActionUtils.setName(this, "Purge And Block "+samplesText+"");
+            ViewerContext viewerContext = getViewerContext();
+            this.domainObject = DomainUIUtils.getLastSelectedDomainObject(viewerContext);
 
             this.samples = new ArrayList<>();
-            for (DomainObject re : viewerContext.getDomainObjectList()) {
-                if (re instanceof Sample) {
-                    samples.add((Sample)re);
+            for (Object obj : viewerContext.getSelectedObjects()) {
+                if (obj instanceof Sample) {
+                    samples.add((Sample)obj);
                 }
             }
 
@@ -76,9 +76,15 @@ public class ProcessingBlockBuilder implements ContextualActionBuilder {
         }
 
         @Override
+        public String getName() {
+            String samplesText = getViewerContext().isMultiple()?samples.size()+" Samples":"Sample";
+            return "Purge And Block "+samplesText;
+        }
+
+        @Override
         public void actionPerformed(ActionEvent e) {
 
-            ActivityLogHelper.logUserAction("DomainObjectContentMenu.purgeAndBlock", domainObject);
+            ActivityLogHelper.logUserAction("ProcessingBlockAction.actionPerformed", domainObject);
 
             int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
                     "Are you sure you want to purge " + samples.size() + " sample(s) " +

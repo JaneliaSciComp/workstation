@@ -23,6 +23,8 @@ import javax.swing.UIManager;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
 import net.miginfocom.swing.MigLayout;
+import org.janelia.workstation.browser.gui.support.SampleUIUtils;
+import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.support.SelectablePanel;
@@ -58,8 +60,6 @@ import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.workstation.browser.gui.support.SelectablePanelListPanel;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
-import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.common.gui.model.ImageDecorator;
 import org.janelia.workstation.core.util.ConcurrentUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
@@ -912,7 +912,7 @@ public class SampleEditorPanel
                 
                 String refMip = DomainUtils.getFilepath(files, FileType.ReferenceMip);
                 
-                List<ImageDecorator> decorators = UIUtils.getDecorators(result);
+                List<Decorator> decorators = SampleUIUtils.getDecorators(result);
                 if (signalMip!=null || refMip!=null) {
                     imagePanel.add(getImagePanel(signalMip, decorators));
                     imagePanel.add(getImagePanel(refMip, decorators));
@@ -944,7 +944,7 @@ public class SampleEditorPanel
             return resultDescriptor;
         }
     
-        private JPanel getImagePanel(String filepath, List<ImageDecorator> decorators) {
+        private JPanel getImagePanel(String filepath, List<Decorator> decorators) {
             LoadedImagePanel lip = new LoadedImagePanel(filepath, decorators) {
                 @Override
                 protected void doneLoading() {
@@ -1075,7 +1075,7 @@ public class SampleEditorPanel
             return resultDescriptor;
         }
     
-        private JPanel getImagePanel(String filepath, List<ImageDecorator> decorators) {
+        private JPanel getImagePanel(String filepath, List<Decorator> decorators) {
             LoadedImagePanel lip = new LoadedImagePanel(filepath, decorators) {
                 @Override
                 protected void doneLoading() {

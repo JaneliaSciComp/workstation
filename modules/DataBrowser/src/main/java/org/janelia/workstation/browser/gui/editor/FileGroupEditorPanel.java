@@ -12,6 +12,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
+import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.selection.SelectionModel;
@@ -20,13 +21,12 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.browser.selection.FileGroupSelectionModel;
 import org.janelia.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
 import org.janelia.workstation.common.gui.editor.SampleResultEditor;
-import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.Debouncer;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.common.gui.model.ImageDecorator;
 import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainUtils;
@@ -271,7 +271,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
         }
 
         @Override
-        public List<ImageDecorator> getDecorators(FileGroup imageObject) {
+        public List<Decorator> getDecorators(FileGroup imageObject) {
             return Collections.emptyList();
         }
     };

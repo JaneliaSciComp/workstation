@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
@@ -21,10 +20,11 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.model.security.util.SubjectUtils;
+import org.janelia.workstation.common.actions.ViewerContextAction;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.common.nodes.TreeNodeNode;
 import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -75,24 +75,27 @@ public class RemoveFromFolderBuilder implements ContextualActionBuilder {
         return nodeAction;
     }
 
-    private static class RemoveItemsFromFolderAction extends AbstractAction implements ViewerContextReceiver {
+    private static class RemoveItemsFromFolderAction extends ViewerContextAction {
 
         private org.janelia.model.domain.workspace.Node parentTreeNode;
         private Collection<DomainObject> toRemove;
 
         @Override
-        public void setViewerContext(ViewerContext viewerContext) {
+        public String getName() {
+            return buildName(parentTreeNode, toRemove);
+        }
+
+        @Override
+        public void setup() {
+            ViewerContext viewerContext = getViewerContext();
+            ContextualActionUtils.setVisible(this, false);
             Object contextObject = viewerContext.getContextObject();
             log.info("RemoveItemsFromFolderAction contextObject="+contextObject);
             if (contextObject instanceof org.janelia.model.domain.workspace.Node) {
                 this.parentTreeNode = (org.janelia.model.domain.workspace.Node) contextObject;
-                this.toRemove = viewerContext.getDomainObjectList();
+                this.toRemove = DomainUIUtils.getSelectedDomainObjects(viewerContext);
                 ContextualActionUtils.setVisible(this, true);
                 ContextualActionUtils.setEnabled(this, ClientDomainUtils.hasWriteAccess(parentTreeNode));
-                ContextualActionUtils.setName(this, getName(parentTreeNode, toRemove));
-            }
-            else {
-                ContextualActionUtils.setVisible(this, false);
             }
         }
 
@@ -168,7 +171,7 @@ public class RemoveFromFolderBuilder implements ContextualActionBuilder {
         }
     }
 
-    private static String getName(org.janelia.model.domain.workspace.Node node, Collection<DomainObject> domainObjects) {
+    private static String buildName(org.janelia.model.domain.workspace.Node node, Collection<DomainObject> domainObjects) {
         if (node==null) {
             return domainObjects.size() > 1 ? "Delete " + domainObjects.size() + " Items" : "Delete This Item";
         }

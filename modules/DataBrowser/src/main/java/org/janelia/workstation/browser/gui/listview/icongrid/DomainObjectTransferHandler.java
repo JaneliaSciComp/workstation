@@ -9,7 +9,7 @@ import javax.swing.TransferHandler;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
-import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.slf4j.Logger;

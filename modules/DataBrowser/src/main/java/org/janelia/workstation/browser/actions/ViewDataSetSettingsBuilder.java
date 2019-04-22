@@ -2,16 +2,14 @@ package org.janelia.workstation.browser.actions;
 
 import java.awt.event.ActionEvent;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.dialogs.DataSetDialog;
+import org.janelia.workstation.common.actions.ViewerContextAction;
 import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -38,25 +36,31 @@ public class ViewDataSetSettingsBuilder implements ContextualActionBuilder {
         return action;
     }
 
-    public static class ViewDataSetSettingsAction extends AbstractAction implements ViewerContextReceiver {
+    public static class ViewDataSetSettingsAction extends ViewerContextAction {
 
         private Sample sample;
 
         @Override
-        public void setViewerContext(ViewerContext viewerContext) {
+        public String getName() {
+            return "View Data Set Settings";
+        }
 
-            DomainObject domainObject = viewerContext.getDomainObject();
+        @Override
+        public void setup() {
+            ViewerContext viewerContext = getViewerContext();
 
             // reset values
-            ContextualActionUtils.setName(this, "View Data Set Settings");
             ContextualActionUtils.setVisible(this, false);
             ContextualActionUtils.setEnabled(this, true);
 
-            if (domainObject instanceof Sample) {
-                this.sample = (Sample)domainObject;
-                ContextualActionUtils.setVisible(this, true);
-                if (!ClientDomainUtils.hasWriteAccess(sample)) {
-                    ContextualActionUtils.setEnabled(this, false);
+            if (!viewerContext.isMultiple()) {
+                Object obj = viewerContext.getLastSelectedObject();
+                if (obj instanceof Sample) {
+                    this.sample = (Sample) obj;
+                    ContextualActionUtils.setVisible(this, true);
+                    if (!ClientDomainUtils.hasWriteAccess(sample)) {
+                        ContextualActionUtils.setEnabled(this, false);
+                    }
                 }
             }
         }

@@ -86,8 +86,8 @@ public class DomainObjectMapper {
     
     /**
      * Map the given objects to the given class, and return a list of joined objects.
-     * @param domainObjects
-     * @param targetClass
+     * @param targetType
+     * @param outputClass
      * @return
      * @throws Exception
      */
@@ -108,7 +108,7 @@ public class DomainObjectMapper {
     /**
      * Map the given object to the given class, and return a list of joined objects.
      * @param domainObject
-     * @param targetClass
+     * @param targetType
      * @return
      * @throws Exception
      */

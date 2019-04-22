@@ -13,7 +13,7 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;

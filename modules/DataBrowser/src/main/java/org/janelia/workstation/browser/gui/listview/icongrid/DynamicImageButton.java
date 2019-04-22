@@ -8,17 +8,16 @@ import java.util.List;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.events.selection.SelectionModel;
-import org.janelia.workstation.common.gui.model.ImageDecorator;
-import org.janelia.workstation.common.gui.model.ImageModel;
+import loci.formats.FormatException;
+import org.janelia.workstation.core.model.Decorator;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.core.util.Utils;
+import org.janelia.workstation.core.events.selection.SelectionModel;
 import org.janelia.workstation.core.options.OptionConstants;
+import org.janelia.workstation.core.util.Utils;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import loci.formats.FormatException;
 
 /**
  * An button containing a dynamic image, i.e. one that is loaded
@@ -36,7 +35,7 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
     
     // Model
     private final String imageFilename;
-    private List<ImageDecorator> decorators;
+    private List<Decorator> decorators;
     
     // State
     private BufferedImage maxSizeImage;

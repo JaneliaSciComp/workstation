@@ -20,6 +20,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.common.actions.ViewerContextAction;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -51,29 +52,25 @@ public class NeuronMergeBuilder implements ContextualActionBuilder {
         return action;
     }
 
-    public static class ViewDataSetSettingsAction extends AbstractAction implements ViewerContextReceiver {
+    public static class ViewDataSetSettingsAction extends ViewerContextAction {
 
         private HashSet<NeuronFragment> fragments;
 
         @Override
-        public void setViewerContext(ViewerContext viewerContext) {
+        public String getName() {
+            return "Merge " + fragments.size() + " Selected Neurons";
+        }
 
+        @Override
+        public void setup() {
+            ViewerContext viewerContext = getViewerContext();
             this.fragments = new LinkedHashSet<>();
-            for (DomainObject domainObject : viewerContext.getDomainObjectList()) {
-                if (!(domainObject instanceof NeuronFragment)) {
-                    continue;
+            for (Object obj : viewerContext.getSelectedObjects()) {
+                if (obj instanceof NeuronFragment) {
+                    fragments.add((NeuronFragment)obj);
                 }
-                fragments.add((NeuronFragment)domainObject);
             }
-
-            // reset values
-            ContextualActionUtils.setName(this, "Merge " + fragments.size() + " Selected Neurons");
-            ContextualActionUtils.setVisible(this, false);
-            ContextualActionUtils.setEnabled(this, true);
-
-            if (fragments.size()>=2) {
-                ContextualActionUtils.setVisible(this, true);
-            }
+            ContextualActionUtils.setVisible(this, fragments.size()>=2);
         }
 
         @Override

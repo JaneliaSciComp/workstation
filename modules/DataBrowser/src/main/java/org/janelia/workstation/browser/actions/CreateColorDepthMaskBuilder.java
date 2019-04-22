@@ -2,20 +2,21 @@ package org.janelia.workstation.browser.actions;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.Image;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.colordepth.CreateMaskFromImageAction;
 import org.janelia.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
+import org.janelia.workstation.common.actions.ViewerContextAction;
+import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
@@ -40,35 +41,42 @@ public class CreateColorDepthMaskBuilder implements ContextualActionBuilder {
         return action;
     }
 
-    public static class CreateColorDepthMaskAction extends AbstractAction implements ViewerContextReceiver {
+    public static class CreateColorDepthMaskAction extends ViewerContextAction {
 
         private Action innerAction;
 
         @Override
-        public void setViewerContext(ViewerContext viewerContext) {
+        public String getName() {
+            return ContextualActionUtils.getName(innerAction);
+        }
 
-            List<DomainObject> domainObjectList = viewerContext.getDomainObjectList();
-            ArtifactDescriptor resultDescriptor = viewerContext.getResultDescriptor();
-            String typeName = viewerContext.getTypeName();
+        @Override
+        public void setup() {
+            ViewerContext viewerContext = getViewerContext();
 
             // reset values
             ContextualActionUtils.setVisible(this, false);
             ContextualActionUtils.setEnabled(this, true);
 
-            if (!viewerContext.isMultiple()) {
+            DomainObjectImageModel doim = DomainUIUtils.getDomainObjectImageModel(viewerContext);
+            if (!viewerContext.isMultiple() && doim != null) {
+
+                Collection selectedObjects = viewerContext.getSelectedObjects();
+                ArtifactDescriptor resultDescriptor = doim.getArtifactDescriptor();
+                String typeName = doim.getImageTypeName();
+
                 List<Sample> samples = new ArrayList<>();
                 List<Image> images = new ArrayList<>();
-
-                for (DomainObject domainObject : domainObjectList) {
-                    if (domainObject instanceof Sample) {
-                        samples.add((Sample) domainObject);
+                for (Object obj : viewerContext.getSelectedObjects()) {
+                    if (obj instanceof Sample) {
+                        samples.add((Sample) obj);
                     }
-                    else if (domainObject instanceof Image) {
-                        images.add((Image) domainObject);
+                    else if (obj instanceof Image) {
+                        images.add((Image) obj);
                     }
                 }
 
-                if (samples.size()==domainObjectList.size()) {
+                if (samples.size()==selectedObjects.size()) {
                     if (resultDescriptor.isAligned()) {
                         ContextualActionUtils.setVisible(this, true);
 
@@ -92,7 +100,7 @@ public class CreateColorDepthMaskBuilder implements ContextualActionBuilder {
                         }
                     }
                 }
-                else if (images.size()==domainObjectList.size()) {
+                else if (images.size()==selectedObjects.size()) {
                     ContextualActionUtils.setVisible(this, true);
                     this.innerAction = new CreateMaskFromImageAction(images.get(0));
                 }

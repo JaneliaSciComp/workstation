@@ -22,7 +22,7 @@ import org.janelia.workstation.browser.actions.ExportPickedLineNames;
 import org.janelia.workstation.browser.actions.ExportPickedToSplitGenWebsite;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
-import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.core.model.AnnotatedObjectList;

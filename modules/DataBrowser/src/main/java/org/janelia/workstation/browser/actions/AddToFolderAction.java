@@ -19,6 +19,7 @@ import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.browser.gui.support.TreeNodeChooser;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.common.nodes.NodeUtils;
 import org.janelia.workstation.common.nodes.UserViewConfiguration;
@@ -76,7 +77,7 @@ public class AddToFolderAction extends NodePresenterAction implements ViewerCont
     @Override
     public void setViewerContext(ViewerContext viewerContext) {
         domainObjects.clear();
-        domainObjects.addAll(viewerContext.getDomainObjectList());
+        domainObjects.addAll(DomainUIUtils.getSelectedDomainObjects(viewerContext));
     }
 
     /**

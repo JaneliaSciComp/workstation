@@ -11,6 +11,8 @@ import javax.swing.JMenuItem;
 
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.SampleUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFileGroups;
 import org.janelia.model.domain.sample.NeuronSeparation;
@@ -21,7 +23,6 @@ import org.janelia.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.workstation.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.workstation.browser.actions.OpenInToolAction;
 import org.janelia.workstation.browser.actions.OpenWithDefaultAppAction;
-import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
 import org.janelia.workstation.browser.gui.components.SampleResultViewerManager;
 import org.janelia.workstation.browser.gui.components.SampleResultViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
@@ -29,8 +30,13 @@ import org.janelia.workstation.browser.gui.dialogs.download.DownloadWizardAction
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.workstation.browser.tools.ToolMgr;
+import org.janelia.workstation.common.actions.CopyGUIDToClipboardActionBuilder;
+import org.janelia.workstation.common.actions.CopyNameToClipboardActionBuilder;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.actions.PopupLabelActionBuilder;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
+import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.model.SampleImage;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
@@ -43,9 +49,12 @@ import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
  */
 public class SampleResultContextMenu extends PopupContextMenu {
 
+    private ViewerContext<DomainObject, Reference> viewerContext;
     private final PipelineResult result;
 
     public SampleResultContextMenu(PipelineResult result) {
+//        this.viewerContext = new ViewerContext<>(
+//                selectionModel, editSelectionModel, imageModel, result);
         this.result = result;
     }
     
@@ -57,11 +66,17 @@ public class SampleResultContextMenu extends PopupContextMenu {
             add(titleMenuItem);
             return;
         }
-        
-        add(getTitleItem());
-        add(getCopyNameToClipboardItem());
-        add(getCopyIdToClipboardItem());
-        
+
+//        DomainObject domainObject = viewerContext.getLastSelectedObject();
+//        Collection<JComponent> contextMenuItems = DomainObjectAcceptorHelper.getContextMenuItems(domainObject, viewerContext);
+//        for (JComponent item : contextMenuItems) {
+//            add(item);
+//        }
+
+        add((new PopupLabelActionBuilder()).getAction(result));
+        add((new CopyNameToClipboardActionBuilder()).getAction(result));
+        add((new CopyGUIDToClipboardActionBuilder()).getAction(result));
+
         setNextAddRequiresSeparator(true);
         add(getOpenResultsInNewViewerItem());
         add(getOpenSeparationInNewViewerItem());
@@ -82,20 +97,29 @@ public class SampleResultContextMenu extends PopupContextMenu {
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
 
-        for (JComponent item : getOpenObjectItems()) {
-            add(item);
-        }
-        
-        for (JMenuItem item: getWrapObjectItems()) {
-            add(item);
-        }
-        
-        for (JMenuItem item: getAppendObjectItems()) {
-            add(item);
-        }
-        
+//        for (JComponent item : getOpenObjectItems()) {
+//            add(item);
+//        }
+//
+//        for (JMenuItem item: getWrapObjectItems()) {
+//            add(item);
+//        }
+//
+//        for (JMenuItem item: getAppendObjectItems()) {
+//            add(item);
+//        }
+
+//        for (JComponent item : getContextMenuItems()) {
+//            add(item);
+//        }
     }
-    
+
+//    private Collection<JComponent> getContextMenuItems() {
+//        ViewerContext viewerContext = new ViewerContext(
+//                contextObject, domainObjectList, resultDescriptor, typeName, editSelectionModel);
+//        return DomainObjectAcceptorHelper.getContextMenuItems(domainObject, viewerContext);
+//    }
+
     public void runDefaultAction() {
         if (result.getLatestSeparationResult()!=null || result instanceof HasFileGroups) {
             SampleResultViewerTopComponent viewer = ViewerUtils.getViewer(SampleResultViewerManager.getInstance(), "editor3");
@@ -105,21 +129,6 @@ public class SampleResultContextMenu extends PopupContextMenu {
                 viewer.loadSampleResult(result, true, null);
             }
         }
-    }
-    
-    protected JMenuItem getTitleItem() {
-        String name = result.getName();
-        JMenuItem titleMenuItem = new JMenuItem(name);
-        titleMenuItem.setEnabled(false);
-        return titleMenuItem;
-    }
-    
-    protected JMenuItem getCopyNameToClipboardItem() {
-        return getNamedActionItem(new CopyToClipboardAction("Name",result.getName()));
-    }
-
-    protected JMenuItem getCopyIdToClipboardItem() {
-        return getNamedActionItem(new CopyToClipboardAction("GUID",result.getId().toString()));
     }
 
     protected JMenuItem getOpenResultsInNewViewerItem() {

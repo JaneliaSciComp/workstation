@@ -7,7 +7,7 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
+import org.janelia.workstation.common.actions.SimpleActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
@@ -29,11 +29,6 @@ public class ShowWorkspaceInfo extends SimpleActionBuilder {
     @Override
     public boolean isCompatible(Object obj) {
         return obj instanceof TmWorkspace;
-    }
-
-    @Override
-    public boolean isEnabled(Object obj) {
-        return true;
     }
 
     @Override

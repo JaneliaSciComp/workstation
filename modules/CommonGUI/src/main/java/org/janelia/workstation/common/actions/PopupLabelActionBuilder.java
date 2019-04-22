@@ -1,19 +1,14 @@
 package org.janelia.workstation.common.actions;
 
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
+import org.janelia.model.domain.interfaces.HasName;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -43,35 +38,34 @@ public class PopupLabelActionBuilder implements ContextualActionBuilder {
         return nodeAction;
     }
 
-    private static class PopupLabelAction extends AbstractAction implements ViewerContextReceiver {
+    private static class PopupLabelAction extends ViewerContextAction {
 
-        private Collection<DomainObject> domainObjects = new ArrayList<>();
+        @Override
+        public String getName() {
+            Collection selectedObjects = getViewerContext().getSelectedObjects();
+            if (selectedObjects.size()>1) {
+                return "(Multiple selected)";
+            }
+            else {
+                Object lastSelectedObject = getViewerContext().getLastSelectedObject();
+                if (lastSelectedObject != null) {
+                    String name;
+                    if (lastSelectedObject instanceof HasName) {
+                        HasName named = (HasName) lastSelectedObject;
+                        name = named.getName();
+                    }
+                    else {
+                        name = lastSelectedObject.toString();
+                    }
+                    return StringUtils.abbreviate(name, 50);
+                }
+            }
+            return "(Nothing selected)";
+        }
 
         @Override
         public boolean isEnabled() {
             return false;
-        }
-
-        @Override
-        public void setViewerContext(ViewerContext viewerContext) {
-            domainObjects.clear();
-            domainObjects.addAll(viewerContext.getDomainObjectList());
-
-            if (domainObjects.isEmpty()) {
-                ContextualActionUtils.setName(this,"(Nothing selected)");
-            }
-            else if (domainObjects.size()>1) {
-                ContextualActionUtils.setName(this,"(Multiple selected)");
-            }
-            else {
-                String name = StringUtils.abbreviate(
-                        viewerContext.getDomainObject().getName(), 50);
-                ContextualActionUtils.setName(this, name);
-            }
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
         }
     }
 
@@ -86,15 +80,12 @@ public class PopupLabelActionBuilder implements ContextualActionBuilder {
         @Override
         public String getName() {
             List<Node> selected = getSelectedNodes();
-
             if (selected.isEmpty()) {
                 return "(Nothing selected)";
             }
-
-            if (selected.size()>1) {
+            else if (selected.size()>1) {
                 return "(Multiple selected)";
             }
-
             Node node = selected.get(0);
             return StringUtils.abbreviate(node.getDisplayName(), 50);
         }

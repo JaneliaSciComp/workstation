@@ -16,8 +16,15 @@ import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
+import com.google.common.eventbus.Subscribe;
+import org.janelia.model.access.domain.DomainObjectAttribute;
+import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.workstation.browser.actions.AnnotationContextMenu;
 import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.workstation.browser.actions.ExportPickedGUIDs;
@@ -28,39 +35,33 @@ import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.browser.gui.dialogs.IconGridViewerConfigDialog;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.workstation.browser.gui.support.ResultSelectionButton;
+import org.janelia.workstation.browser.gui.support.SampleUIUtils;
+import org.janelia.workstation.common.gui.listview.ListViewer;
+import org.janelia.workstation.common.gui.listview.ListViewerActionListener;
+import org.janelia.workstation.common.gui.listview.ListViewerState;
+import org.janelia.workstation.core.model.Decorator;
+import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.PreferenceSupport;
+import org.janelia.workstation.common.gui.support.SearchProvider;
+import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
-import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionEvent;
 import org.janelia.workstation.core.model.AnnotatedObjectList;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.core.util.ConcurrentUtils;
 import org.janelia.workstation.core.util.HelpTextUtils;
-import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionEvent;
-import org.janelia.workstation.common.gui.listview.ListViewer;
-import org.janelia.workstation.common.gui.listview.ListViewerActionListener;
-import org.janelia.workstation.common.gui.listview.ListViewerState;
-import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
-import org.janelia.workstation.common.gui.support.PreferenceSupport;
-import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainObjectAttribute;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.workspace.Node;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * An IconGridViewer implementation for viewing domain objects. 
@@ -96,12 +97,12 @@ public class DomainObjectIconGridViewer
     private final DomainObjectImageModel imageModel = new DomainObjectImageModel() {
 
         @Override
-        protected ArtifactDescriptor getArtifactDescriptor() {
+        public ArtifactDescriptor getArtifactDescriptor() {
             return resultButton.getResultDescriptor();
         }
 
         @Override
-        protected String getImageTypeName() {
+        public String getImageTypeName() {
             return typeButton.getImageTypeName();
         }
 
@@ -121,6 +122,11 @@ public class DomainObjectIconGridViewer
         public List<Annotation> getAnnotations(DomainObject domainObject) {
             if (domainObjectList==null) return Collections.emptyList();
             return domainObjectList.getAnnotations(Reference.createFor(domainObject));
+        }
+
+        @Override
+        public List<Decorator> getDecorators(DomainObject imageObject) {
+            return SampleUIUtils.getDecorators(imageObject);
         }
     };
 
@@ -493,11 +499,9 @@ public class DomainObjectIconGridViewer
     
     private DomainObjectContextMenu getPopupMenu(List<DomainObject> domainObjectList) {
         DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(
-                (DomainObject)selectionModel.getParentObject(), 
-                domainObjectList, 
-                resultButton.getResultDescriptor(),
-                typeButton.getImageTypeName(),
-                editMode ? editSelectionModel : null);
+                selectionModel,
+                editMode ? editSelectionModel : null,
+                imageModel);
         popupMenu.addMenuItems();
         return popupMenu;
     }

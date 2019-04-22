@@ -1,9 +1,13 @@
 package org.janelia.workstation.browser.actions;
 
+import java.util.Collection;
+
 import javax.swing.Action;
 
+import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.common.actions.DomainObjectNodeAction;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
@@ -38,7 +42,8 @@ public class RerunSamplesBuilder implements ContextualActionBuilder {
 
         @Override
         public void setViewerContext(ViewerContext viewerContext) {
-            this.innerAction = RerunSamplesAction.createAction(viewerContext.getDomainObjectList());
+            Collection<DomainObject> domainObjects = DomainUIUtils.getSelectedDomainObjects(viewerContext);
+            this.innerAction = RerunSamplesAction.createAction(domainObjects);
             if (innerAction!=null) {
                 ContextualActionUtils.setName(this, (String) innerAction.getValue(Action.NAME));
                 ContextualActionUtils.setVisible(this, true);

@@ -8,6 +8,7 @@ import javax.swing.JOptionPane;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.workstation.browser.gui.support.SampleUIUtils;
 import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.janelia.workstation.common.actions.DomainObjectNodeAction;
 import org.janelia.workstation.core.actions.ViewerContext;
@@ -63,7 +64,7 @@ public class OpenInFinderBuilder implements ContextualActionBuilder {
         public void setViewerContext(ViewerContext viewerContext) {
             ContextualActionUtils.setVisible(this, false);
             if (!viewerContext.isMultiple()) {
-                HasFiles fileProvider = SampleActionUtils.getSingleResult(viewerContext);
+                HasFiles fileProvider = SampleUIUtils.getSingleResult(viewerContext);
                 if (fileProvider != null) {
                     this.filepath = DomainUtils.getDefault3dImageFilePath(fileProvider);
                     if (filepath != null) {

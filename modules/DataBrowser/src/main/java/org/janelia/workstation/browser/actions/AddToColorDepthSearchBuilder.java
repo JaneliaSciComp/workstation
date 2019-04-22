@@ -5,7 +5,6 @@ import java.util.List;
 
 import javax.swing.Action;
 
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.workstation.browser.gui.colordepth.ColorDepthSearchDialog;
 import org.janelia.workstation.common.actions.DomainObjectNodeAction;
@@ -49,8 +48,6 @@ public class AddToColorDepthSearchBuilder implements ContextualActionBuilder {
         @Override
         public void setViewerContext(ViewerContext viewerContext) {
 
-            List<DomainObject> domainObjectList = viewerContext.getDomainObjectList();
-
             // reset values
             ContextualActionUtils.setVisible(this, false);
             ContextualActionUtils.setEnabled(this, true);
@@ -58,9 +55,9 @@ public class AddToColorDepthSearchBuilder implements ContextualActionBuilder {
             if (!viewerContext.isMultiple()) {
 
                 List<ColorDepthMask> masks = new ArrayList<>();
-                for(DomainObject domainObject : domainObjectList) {
-                    if (domainObject instanceof ColorDepthMask) {
-                        masks.add((ColorDepthMask)domainObject);
+                for(Object obj : viewerContext.getSelectedObjects()) {
+                    if (obj instanceof ColorDepthMask) {
+                        masks.add((ColorDepthMask)obj);
                     }
                 }
 

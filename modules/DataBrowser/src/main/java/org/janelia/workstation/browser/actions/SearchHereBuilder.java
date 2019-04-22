@@ -14,6 +14,7 @@ import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
 import org.janelia.workstation.common.actions.DomainObjectNodeAction;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
@@ -61,8 +62,8 @@ public class SearchHereBuilder implements ContextualActionBuilder {
 
         @Override
         public void setViewerContext(ViewerContext viewerContext) {
-            this.domainObject = viewerContext.getDomainObject();
-            ContextualActionUtils.setVisible(this, !viewerContext.isMultiple());
+            this.domainObject = DomainUIUtils.getLastSelectedDomainObject(viewerContext);
+            ContextualActionUtils.setVisible(this, domainObject!=null && !viewerContext.isMultiple());
         }
 
         @Override

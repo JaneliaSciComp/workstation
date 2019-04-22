@@ -10,6 +10,7 @@ import javax.swing.Action;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.nb_action.ApplyPublishingNamesAction;
+import org.janelia.workstation.common.actions.ViewerContextAction;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -35,23 +36,29 @@ public class ApplyPublishingNamesBuilder implements ContextualActionBuilder {
         return action;
     }
 
-    public static class ApplyPublishingNamesHarness extends AbstractAction implements ViewerContextReceiver {
+    public static class ApplyPublishingNamesHarness extends ViewerContextAction {
 
         private List<Sample> samples;
         private ApplyPublishingNamesAction innerAction;
 
         @Override
-        public void setViewerContext(ViewerContext viewerContext) {
+        public String getName() {
+            return ContextualActionUtils.getName(innerAction);
+        }
+
+        @Override
+        public void setup() {
+            ViewerContext viewerContext = getViewerContext();
 
             this.samples = new ArrayList<>();
-            for (DomainObject re : viewerContext.getDomainObjectList()) {
-                if (re instanceof Sample) {
-                    samples.add((Sample)re);
+            for (Object obj : viewerContext.getSelectedObjects()) {
+                if (obj instanceof Sample) {
+                    samples.add((Sample)obj);
                 }
             }
 
             ContextualActionUtils.setVisible(this, false);
-            if (samples.size()==viewerContext.getDomainObjectList().size()) {
+            if (samples.size()==viewerContext.getSelectedObjects().size()) {
                 ContextualActionUtils.setVisible(this, true);
                 ContextualActionUtils.setEnabled(this, true);
                 for(Sample sample : samples) {
@@ -62,7 +69,6 @@ public class ApplyPublishingNamesBuilder implements ContextualActionBuilder {
             }
 
             this.innerAction = new ApplyPublishingNamesAction(samples);
-            ContextualActionUtils.setName(this, ContextualActionUtils.getName(innerAction));
         }
 
         @Override

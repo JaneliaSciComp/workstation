@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -56,7 +57,7 @@ public class RerunSamplesAction extends AbstractAction {
      * @param selectedObjects containing 1-10 samples.
      * @return named action or null.
      */
-    public static RerunSamplesAction createAction(List<DomainObject> selectedObjects) {
+    public static RerunSamplesAction createAction(Collection<DomainObject> selectedObjects) {
         RerunSamplesAction action = null;
         List<Sample> samples = new ArrayList<>();
         for (DomainObject re : selectedObjects) {

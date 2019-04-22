@@ -24,6 +24,8 @@ import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableModel;
 
+import org.janelia.workstation.browser.gui.support.SampleUIUtils;
+import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
@@ -84,13 +86,13 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private final DomainObjectImageModel imageModel = new DomainObjectImageModel() {
 
         @Override
-        protected ArtifactDescriptor getArtifactDescriptor() {
-            throw new UnsupportedOperationException();
+        public ArtifactDescriptor getArtifactDescriptor() {
+            return null;
         }
 
         @Override
-        protected String getImageTypeName() {
-            throw new UnsupportedOperationException();
+        public String getImageTypeName() {
+            return null;
         }
 
         @Override
@@ -107,6 +109,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         public List<Annotation> getAnnotations(DomainObject domainObject) {
             if (domainObjectList==null) return Collections.emptyList();
             return domainObjectList.getAnnotations(Reference.createFor(domainObject));
+        }
+
+        @Override
+        public List<Decorator> getDecorators(DomainObject imageObject) {
+            return SampleUIUtils.getDecorators(imageObject);
         }
     };
     
@@ -217,8 +224,9 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
             // TODO: should this use the same result as the icon grid viewer?
             DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(
-                    (DomainObject) selectionModel.getParentObject(), 
-                    selected, ArtifactDescriptor.LATEST, null, null);
+                    selectionModel,
+                    null,
+                    imageModel);
 
             JTable table = getTable();
             ListSelectionModel lsm = table.getSelectionModel();

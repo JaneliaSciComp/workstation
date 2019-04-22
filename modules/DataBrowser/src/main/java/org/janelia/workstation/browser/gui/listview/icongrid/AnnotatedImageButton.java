@@ -31,7 +31,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.SelectionModel;
-import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.AnnotationView;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.core.options.OptionConstants;

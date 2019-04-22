@@ -28,7 +28,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
-import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.table.DynamicColumn;
 import org.janelia.workstation.core.model.AnnotatedObjectList;

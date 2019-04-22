@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import org.janelia.model.domain.DomainObject;
@@ -13,8 +12,9 @@ import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent
 import org.janelia.workstation.browser.gui.components.DomainViewerManager;
 import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
+import org.janelia.workstation.common.actions.ViewerContextAction;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
@@ -35,11 +35,7 @@ public class OpenInViewerBuilder implements ContextualActionBuilder {
 
     @Override
     public boolean isCompatible(Object obj) {
-        if (obj instanceof DomainObject) {
-            DomainObject domainObject = (DomainObject) obj;
-            return DomainListViewTopComponent.isSupported(domainObject);
-        }
-        return false;
+        return obj instanceof DomainObject;
     }
 
     @Override
@@ -57,21 +53,26 @@ public class OpenInViewerBuilder implements ContextualActionBuilder {
         return nodeAction;
     }
 
-    private static class OpenInViewerAction extends AbstractAction implements ViewerContextReceiver {
+    private static class OpenInViewerAction extends ViewerContextAction {
 
         private DomainObject domainObject;
         private DomainObject objectToLoad;
 
         @Override
-        public void setViewerContext(ViewerContext viewerContext) {
+        public String getName() {
+            return "Open " + objectToLoad.getType() + " In Viewer";
+        }
+
+        @Override
+        public void setup() {
+            ViewerContext viewerContext = getViewerContext();
+            ContextualActionUtils.setVisible(this, false);
             try {
-                if (viewerContext.isMultiple()) {
-                    ContextualActionUtils.setVisible(this, false);
-                }
-                else {
-                    this.domainObject = viewerContext.getDomainObject();
+                if (!viewerContext.isMultiple()) {
+                    this.domainObject = DomainUIUtils.getLastSelectedDomainObject(viewerContext);
                     this.objectToLoad = DomainViewerManager.getObjectToLoad(domainObject);
-                    ContextualActionUtils.setName(this, "Open " + objectToLoad.getType() + " In Viewer");
+                    boolean supported = DomainListViewTopComponent.isSupported(domainObject);
+                    ContextualActionUtils.setVisible(this, supported);
                 }
             }
             catch (Exception ex) {

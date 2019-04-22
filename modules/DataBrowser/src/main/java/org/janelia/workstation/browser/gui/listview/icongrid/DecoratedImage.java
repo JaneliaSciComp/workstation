@@ -22,7 +22,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 
-import org.janelia.workstation.common.gui.model.ImageDecorator;
+import org.janelia.workstation.core.model.Decorator;
 
 /**
  * An image with some decorators overlaid on top of it.
@@ -56,19 +56,19 @@ public class DecoratedImage extends JComponent {
     private final Map<Rectangle, String> tooltipLocations = new HashMap<>();
  
     private BufferedImage image;
-    private final List<ImageDecorator> decorators;
+    private final List<Decorator> decorators;
     private String text;
     private Color fontColor;
 
-    public DecoratedImage(BufferedImage image, List<ImageDecorator> decorators) {
+    public DecoratedImage(BufferedImage image, List<Decorator> decorators) {
         this(image, decorators, null, null);
     }
     
-    public DecoratedImage(BufferedImage image, List<ImageDecorator> decorators, String text) {
+    public DecoratedImage(BufferedImage image, List<Decorator> decorators, String text) {
         this(image, decorators, text, null);
     }
     
-    public DecoratedImage(BufferedImage image, List<ImageDecorator> decorators, String text, Color fontColor) {
+    public DecoratedImage(BufferedImage image, List<Decorator> decorators, String text, Color fontColor) {
         setImage(image);
         this.decorators = decorators;
         this.text = text;
@@ -275,7 +275,7 @@ public class DecoratedImage extends JComponent {
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, DECORATOR_OPACITY));
             
             // Draw the decorators
-            for (ImageDecorator imageDecorator : decorators) {
+            for (Decorator imageDecorator : decorators) {
                 ImageIcon icon = imageDecorator.getIcon();
                 x -= icon.getIconWidth();
                 paintDecorator(g, imageDecorator, icon, x, bounds.y+decoratorOffset);
@@ -287,7 +287,7 @@ public class DecoratedImage extends JComponent {
         }
     }
     
-    private void paintDecorator(Graphics g, ImageDecorator imageDecorator, ImageIcon decorator, int x, int y) {
+    private void paintDecorator(Graphics g, Decorator imageDecorator, ImageIcon decorator, int x, int y) {
         Rectangle rect = new Rectangle(x, y, decorator.getIconWidth(), decorator.getIconHeight());
         tooltipLocations.put(rect, imageDecorator.getLabel());
         g.drawImage(decorator.getImage(), x, y, decorator.getIconWidth(), decorator.getIconHeight(), null);

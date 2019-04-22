@@ -128,49 +128,12 @@ public class DomainObjectAcceptorHelper {
         return components;
     }
 
-    public static Collection<Action> getNodeContextMenuItems(Object obj) {
-
-        Collection<ContextualActionBuilder> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(obj);
-
-        List<Action> actions = new ArrayList<>();
-
-        int i = 0;
-        for (final ContextualActionBuilder builder : domainObjectAcceptors) {
-
-            Action action = builder.getNodeAction(obj);
-            if (action == null) {
-                log.debug("Action builder accepted object but returned null NodeAction: {}",
-                        builder.getClass().getName());
-                continue;
-            }
-
-            if (!ContextualActionUtils.isVisible(action)) {
-                continue;
-            }
-
-            // Add pre-separator
-            if (builder.isPrecededBySeparator()) {
-                if (!actions.isEmpty() && actions.get(actions.size()-1) != null) {
-                    actions.add(null);
-                }
-            }
-
-            actions.add(action);
-
-            if (builder.isSucceededBySeparator()) {
-                actions.add(null);
-            }
-        }
-
-        // Add post-separator
-        if (!actions.isEmpty() && actions.get(actions.size()-1) == null) {
-            // Remove trailing nulls
-            actions.remove(actions.size()-1);
-        }
-
-        return actions;
-    }
-
+    /**
+     * Builds a context menu for the given object in the specified viewer context.
+     * @param obj context object
+     * @param viewerContext viewer context
+     * @return context menu of JMenuItems and JSeparators
+     */
     public static Collection<JComponent> getContextMenuItems(Object obj, ViewerContext viewerContext) {
 
         List<JComponent> items = new ArrayList<>();
@@ -246,5 +209,58 @@ public class DomainObjectAcceptorHelper {
             log.trace("  Adding post-separator");
             items.add(new JSeparator());
         }
+    }
+
+    /**
+     * Builds the node actions which should be shown for the given object.
+     * @param obj context object
+     * @return Ordered collection of actions. Null actions represent separators.
+     */
+    public static Collection<Action> getNodeContextMenuItems(Object obj) {
+
+        Collection<ContextualActionBuilder> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(obj);
+        List<Action> actions = new ArrayList<>();
+
+        int i = 0;
+        for (final ContextualActionBuilder builder : domainObjectAcceptors) {
+
+            log.trace("Using builder {}", builder.getClass().getSimpleName());
+
+            Action action = builder.getNodeAction(obj);
+            if (action == null) {
+                log.trace("Action builder accepted object but returned null NodeAction: {}",
+                        builder.getClass().getName());
+                continue;
+            }
+
+            if (!ContextualActionUtils.isVisible(action)) {
+                log.trace("  Action is not visible");
+                continue;
+            }
+
+            // Add pre-separator
+            if (builder.isPrecededBySeparator()) {
+                if (!actions.isEmpty() && actions.get(actions.size()-1) != null) {
+                    log.trace("  Adding pre-separator");
+                    actions.add(null);
+                }
+            }
+
+            log.trace("  Adding action");
+            actions.add(action);
+
+            if (builder.isSucceededBySeparator()) {
+                log.trace("  Adding post-separator");
+                actions.add(null);
+            }
+        }
+
+        // Add post-separator
+        if (!actions.isEmpty() && actions.get(actions.size()-1) == null) {
+            // Remove trailing nulls
+            actions.remove(actions.size()-1);
+        }
+
+        return actions;
     }
 }

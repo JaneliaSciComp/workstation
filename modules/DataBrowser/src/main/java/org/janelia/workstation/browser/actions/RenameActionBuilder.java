@@ -12,6 +12,7 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.workstation.common.actions.DomainObjectNodeAction;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -56,7 +57,7 @@ public class RenameActionBuilder implements ContextualActionBuilder {
 
         @Override
         public void setViewerContext(ViewerContext viewerContext) {
-            this.domainObject = viewerContext.getDomainObject();
+            this.domainObject = DomainUIUtils.getLastSelectedDomainObject(viewerContext);
             boolean visible = !viewerContext.isMultiple() && userCanRename(domainObject);
             ContextualActionUtils.setVisible(this, visible);
             if (domainObject != null) {
@@ -90,7 +91,8 @@ public class RenameActionBuilder implements ContextualActionBuilder {
         }
         try {
             DomainMgr.getDomainMgr().getModel().updateProperty(domainObject, "name", newName);
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             FrameworkAccess.handleException(ex);
         }
     }

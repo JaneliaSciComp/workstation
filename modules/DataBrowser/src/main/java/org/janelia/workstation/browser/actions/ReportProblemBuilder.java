@@ -15,6 +15,7 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.workstation.common.actions.DomainObjectNodeAction;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
@@ -63,8 +64,8 @@ public class ReportProblemBuilder implements ContextualActionBuilder {
 
         @Override
         public void setViewerContext(ViewerContext viewerContext) {
-            this.domainObject = viewerContext.getDomainObject();
-            ContextualActionUtils.setVisible(this, !viewerContext.isMultiple());
+            this.domainObject = DomainUIUtils.getLastSelectedDomainObject(viewerContext);
+            ContextualActionUtils.setVisible(this, domainObject!=null && !viewerContext.isMultiple());
         }
 
         @Override

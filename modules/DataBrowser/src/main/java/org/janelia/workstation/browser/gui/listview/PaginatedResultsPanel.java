@@ -34,7 +34,7 @@ import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.common.gui.listview.ListViewer;
 import org.janelia.workstation.common.gui.listview.ListViewerActionListener;
 import org.janelia.workstation.common.gui.listview.ListViewerClassProvider;
-import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.Debouncer;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseForwarder;

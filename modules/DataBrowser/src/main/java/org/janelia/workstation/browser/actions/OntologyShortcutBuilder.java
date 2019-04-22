@@ -3,7 +3,7 @@ package org.janelia.workstation.browser.actions;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.workstation.browser.gui.components.OntologyExplorerTopComponent;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
+import org.janelia.workstation.common.actions.SimpleActionBuilder;
 import org.openide.util.lookup.ServiceProvider;
 
 /**

@@ -16,7 +16,7 @@ import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.ontology.Text;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
-import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;

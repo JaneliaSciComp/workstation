@@ -16,6 +16,7 @@ public class ContextualActionUtils {
     private static final String ENABLED = "enabled";
 
     public static boolean isVisible(Action action) {
+        if (action == null) return false;
         Object visible = action.getValue(VISIBLE);
         if (visible instanceof Boolean) {
             return (Boolean)visible;
@@ -29,6 +30,7 @@ public class ContextualActionUtils {
     }
 
     public static boolean isEnabled(Action action) {
+        if (action == null) return false;
         Object enabled = action.getValue(ENABLED);
         if (enabled instanceof Boolean) {
             return (Boolean)enabled;
@@ -43,6 +45,7 @@ public class ContextualActionUtils {
 
 
     public static String getName(Action action) {
+        if (action == null) return null;
         Object name = action.getValue(Action.NAME);
         if (name instanceof String) {
             return (String)name;

@@ -1,23 +1,22 @@
 package org.janelia.workstation.common.gui.model;
 
 import java.awt.image.BufferedImage;
-import java.util.List;
 
-import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
-import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
-import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.model.ImageModel;
+import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
+import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
+import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 public abstract class DomainObjectImageModel implements ImageModel<DomainObject, Reference> {
 
@@ -75,17 +74,17 @@ public abstract class DomainObjectImageModel implements ImageModel<DomainObject,
         DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
         return StringUtils.replaceVariablePattern(subtitlePattern, proxy);
     }
-    
-    @Override
-    public List<ImageDecorator> getDecorators(DomainObject imageObject) {
-        return UIUtils.getDecorators(imageObject);
+
+    protected String getTitlePattern(Class<? extends DomainObject> clazz) {
+        return "{Name}";
     }
     
-    protected abstract ArtifactDescriptor getArtifactDescriptor();
+    protected String getSubtitlePattern(Class<? extends DomainObject> clazz) {
+        return "";
+    }
 
-    protected abstract String getImageTypeName();
-    
-    protected abstract String getTitlePattern(Class<? extends DomainObject> clazz);
-    
-    protected abstract String getSubtitlePattern(Class<? extends DomainObject> clazz);
+    public abstract ArtifactDescriptor getArtifactDescriptor();
+
+    public abstract String getImageTypeName();
+
 }

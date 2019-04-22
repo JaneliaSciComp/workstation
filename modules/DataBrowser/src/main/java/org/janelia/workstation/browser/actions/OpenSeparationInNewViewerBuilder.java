@@ -15,6 +15,7 @@ import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.components.SampleResultViewerManager;
 import org.janelia.workstation.browser.gui.components.SampleResultViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -53,8 +54,8 @@ public class OpenSeparationInNewViewerBuilder implements ContextualActionBuilder
 
         @Override
         public void setViewerContext(ViewerContext viewerContext) {
-            this.domainObject = viewerContext.getDomainObject();
-            ContextualActionUtils.setVisible(this, !viewerContext.isMultiple());
+            this.domainObject = DomainUIUtils.getLastSelectedDomainObject(viewerContext);
+            ContextualActionUtils.setVisible(this, domainObject!=null && !viewerContext.isMultiple());
         }
 
         @Override

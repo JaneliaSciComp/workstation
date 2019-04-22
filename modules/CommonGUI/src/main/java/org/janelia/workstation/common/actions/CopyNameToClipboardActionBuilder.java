@@ -7,7 +7,6 @@ import java.awt.datatransfer.Transferable;
 import org.janelia.model.domain.interfaces.HasName;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.SimpleActionBuilder;
 import org.openide.util.lookup.ServiceProvider;
 
 /**

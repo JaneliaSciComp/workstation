@@ -3,13 +3,14 @@ package org.janelia.workstation.common.gui.model;
 import javax.swing.ImageIcon;
 
 import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.model.Decorator;
 
 /**
  * Canned decorators on images.  
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public enum ImageDecorator {
+public enum SampleDecorator implements Decorator {
 
     PURGED("Purged", Icons.getIcon("decorator_trash.png")),
     SYNC("SAGE Sync", Icons.getIcon("decorator_connect.png")),
@@ -21,15 +22,17 @@ public enum ImageDecorator {
     private final String label;
     private final ImageIcon icon;
     
-    private ImageDecorator(String label, ImageIcon icon) {
+    SampleDecorator(String label, ImageIcon icon) {
         this.label = label;
         this.icon = icon;
     }
 
+    @Override
     public String getLabel() {
         return label;
     }
 
+    @Override
     public ImageIcon getIcon() {
         return icon;
     }

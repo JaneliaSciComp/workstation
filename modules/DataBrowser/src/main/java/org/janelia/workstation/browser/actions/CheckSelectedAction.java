@@ -1,14 +1,16 @@
 package org.janelia.workstation.browser.actions;
 
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractAction;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 
@@ -32,9 +34,12 @@ public class CheckSelectedAction extends AbstractAction implements ViewerContext
     
     @Override
     public void setViewerContext(ViewerContext viewerContext) {
-        this.domainObjectList = viewerContext.getDomainObjectList();
-        this.editSelectionModel = viewerContext.getEditSelectionModel();
-        ContextualActionUtils.setVisible(this, editSelectionModel != null);
+        ContextualActionUtils.setVisible(this,false);
+        if (DomainUIUtils.getDomainObjectImageModel(viewerContext) != null) {
+            this.domainObjectList = new ArrayList<>(DomainUIUtils.getSelectedDomainObjects(viewerContext));
+            this.editSelectionModel = viewerContext.getEditSelectionModel();
+            ContextualActionUtils.setVisible(this, editSelectionModel != null);
+        }
     }
 
     @Override

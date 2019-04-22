@@ -5,6 +5,7 @@ import javax.swing.Action;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.workstation.browser.gui.support.SampleUIUtils;
 import org.janelia.workstation.browser.tools.ToolMgr;
 import org.janelia.workstation.common.actions.DomainObjectNodeAction;
 import org.janelia.workstation.core.actions.ViewerContext;
@@ -43,7 +44,7 @@ public class OpenInVaa3d3dViewBuilder implements ContextualActionBuilder {
         public void setViewerContext(ViewerContext viewerContext) {
             ContextualActionUtils.setVisible(this, false);
             if (!viewerContext.isMultiple()) {
-                HasFiles fileProvider = SampleActionUtils.getSingle3dResult(viewerContext);
+                HasFiles fileProvider = SampleUIUtils.getSingle3dResult(viewerContext);
                 if (fileProvider != null) {
                     this.filepath = DomainUtils.getDefault3dImageFilePath(fileProvider);
                     if (filepath != null) {

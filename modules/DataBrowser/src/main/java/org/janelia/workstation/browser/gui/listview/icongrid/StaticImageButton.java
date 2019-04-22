@@ -3,11 +3,11 @@ package org.janelia.workstation.browser.gui.listview.icongrid;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
-import org.janelia.workstation.core.events.selection.SelectionModel;
-import org.janelia.workstation.common.gui.model.ImageDecorator;
-import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.core.model.Decorator;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
+import org.janelia.workstation.core.events.selection.SelectionModel;
 import org.janelia.workstation.core.util.Utils;
 
 /**
@@ -25,7 +25,7 @@ public class StaticImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
     public StaticImageButton(T imageObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, String filepath) {
         super(imageObject, imageModel, selectionModel, filepath);
-        List<ImageDecorator> decorators = imageModel.getDecorators(imageObject);
+        List<Decorator> decorators = imageModel.getDecorators(imageObject);
         this.maxSizeImage = imageModel.getStaticIcon(imageObject);
         String errorText = null;
         if (maxSizeImage==null) {

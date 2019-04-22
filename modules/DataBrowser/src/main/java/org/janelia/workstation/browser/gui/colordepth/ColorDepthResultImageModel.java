@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.common.gui.model.ImageDecorator;
-import org.janelia.workstation.common.gui.model.ImageModel;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.model.SplitTypeInfo;
 import org.janelia.model.access.domain.DomainUtils;
@@ -108,7 +108,7 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
     }
     
     @Override
-    public List<ImageDecorator> getDecorators(ColorDepthMatch match) {
+    public List<Decorator> getDecorators(ColorDepthMatch match) {
         return Collections.emptyList();
     }
 
