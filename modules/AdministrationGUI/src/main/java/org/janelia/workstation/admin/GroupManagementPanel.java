@@ -151,7 +151,7 @@ public class GroupManagementPanel extends JPanel {
     }
     
     class GroupManagementTableModel extends AbstractTableModel {
-        String[] columnNames = {"Name", "Group Name", "Number of Users", "Subject"};
+        String[] columnNames = {"Full group name", "Group name", "Number of users", "Subject"};
         public static final int COLUMN_FULLNAME = 0;
         public static final int COLUMN_GROUPNAME = 1;
         public static final int COLUMN_NUMUSERS = 2;

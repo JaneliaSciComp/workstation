@@ -144,7 +144,7 @@ public class UserManagementPanel extends JPanel {
 
     class UserManagementTableModel extends AbstractTableModel {
 
-        private String[] columnNames = {"Name", "Username", "Groups", "Subject"};
+        private String[] columnNames = {"Full name", "Username", "Groups", "Subject"};
         public static final int COLUMN_FULLNAME = 0;
         public static final int COLUMN_USERNAME = 1;
         public static final int COLUMN_GROUPS = 2;
