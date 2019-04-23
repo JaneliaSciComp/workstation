@@ -34,14 +34,13 @@ public class RecentlyOpenedNodeProvider implements NodeProvider  {
             
             @Override
             public Node createNode() {
-                return new RecentOpenedItemsNode();
+                return new RecentlyOpenedItemsNode();
             }
         });
     }
     
     public static boolean isShowRecentMenuItems() {
-        Boolean navigate = (Boolean) FrameworkAccess.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS);
-        return navigate==null || navigate;
+        return FrameworkAccess.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS, true);
     }
     
 }

@@ -7,7 +7,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.workstation.browser.gui.support.SampleUIUtils;
 import org.janelia.workstation.browser.tools.ToolMgr;
-import org.janelia.workstation.common.actions.DomainObjectNodeAction;
+import org.janelia.workstation.common.actions.ViewerContextAction;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
@@ -31,7 +31,7 @@ public class OpenInVaa3d3dViewBuilder implements ContextualActionBuilder {
         return action;
     }
 
-    public static class OpenInVaa3dTriViewAction extends DomainObjectNodeAction {
+    public static class OpenInVaa3dTriViewAction extends ViewerContextAction {
 
         private String filepath;
 
@@ -41,7 +41,8 @@ public class OpenInVaa3d3dViewBuilder implements ContextualActionBuilder {
         }
 
         @Override
-        public void setViewerContext(ViewerContext viewerContext) {
+        public void setup() {
+            ViewerContext viewerContext = getViewerContext();
             ContextualActionUtils.setVisible(this, false);
             if (!viewerContext.isMultiple()) {
                 HasFiles fileProvider = SampleUIUtils.getSingle3dResult(viewerContext);
@@ -58,6 +59,19 @@ public class OpenInVaa3d3dViewBuilder implements ContextualActionBuilder {
         protected void executeAction() {
             OpenInToolAction action = new OpenInToolAction(ToolMgr.TOOL_VAA3D, filepath, ToolMgr.MODE_VAA3D_3D);
             action.actionPerformed(null);
+
+            /*
+             TODO: this could be supported but it needs some changed to the DomainObjectHandler so that sample
+                   nodes can be generated under the RecentlyOpenedItemsNode, but not otherwise
+             */
+//            Object obj = getViewerContext().getLastSelectedObject();
+//            if (obj instanceof Sample) {
+//                FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor((Sample)obj));
+//            }
+//            else if (obj instanceof LSMImage) {
+//                FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor((LSMImage)obj));
+//            }
+
         }
     }
 }

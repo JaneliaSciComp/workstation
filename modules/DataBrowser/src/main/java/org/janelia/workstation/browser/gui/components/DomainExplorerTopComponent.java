@@ -21,6 +21,7 @@ import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
+import org.janelia.workstation.common.nodes.RecentlyOpenedItemsNode;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
 import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
@@ -51,7 +52,6 @@ import org.janelia.workstation.common.nodes.ExplorerRootNode;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
 import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.common.nodes.NodeUtils;
-import org.janelia.workstation.common.nodes.RecentOpenedItemsNode;
 import org.janelia.workstation.common.nodes.WorkspaceNode;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
@@ -367,8 +367,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             // Something was added to the history, so we need to update the node's children
             if (root!=null) {
                 for(Node child : root.getChildren().getNodes()) {
-                    if (child instanceof RecentOpenedItemsNode) {
-                        RecentOpenedItemsNode node = (RecentOpenedItemsNode)child;
+                    if (child instanceof RecentlyOpenedItemsNode) {
+                        RecentlyOpenedItemsNode node = (RecentlyOpenedItemsNode)child;
                         node.refreshChildren();
                     }
                 }

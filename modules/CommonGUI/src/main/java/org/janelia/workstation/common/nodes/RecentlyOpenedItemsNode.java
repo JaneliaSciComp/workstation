@@ -27,19 +27,19 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class RecentOpenedItemsNode extends AbstractNode implements HasIdentifier {
+public class RecentlyOpenedItemsNode extends AbstractNode implements HasIdentifier {
         
-    private final static Logger log = LoggerFactory.getLogger(RecentOpenedItemsNode.class);
+    private final static Logger log = LoggerFactory.getLogger(RecentlyOpenedItemsNode.class);
     
     private static final long RECENTLY_OPENED_ID = 2L; // This magic number means nothing, it just needs to be unique and different from GUID space.
     
     private final DomainObjectNodeChildFactory childFactory;
 
-    public RecentOpenedItemsNode() {
+    public RecentlyOpenedItemsNode() {
         this(new DomainObjectNodeChildFactory());
     }
     
-    private RecentOpenedItemsNode(DomainObjectNodeChildFactory childFactory) {
+    private RecentlyOpenedItemsNode(DomainObjectNodeChildFactory childFactory) {
         super(Children.create(childFactory, false));
         this.childFactory = childFactory;
     }
@@ -106,7 +106,7 @@ public class RecentOpenedItemsNode extends AbstractNode implements HasIdentifier
         @Override
         protected boolean createKeys(List<DomainObject> list) {
             try {
-                log.debug("Creating children keys for RecentOpenedItemsNode");
+                log.debug("Creating children keys for RecentlyOpenedItemsNode");
 
                 List<Reference> refs =  FrameworkAccess.getBrowsingController().getRecentlyOpenedHistory();
                 

@@ -48,7 +48,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         try {
             // TODO: this should use the other isCompatible() method which takes a class, 
             // instead of constructing a dummy object
-            DomainObject dummyChild = (DomainObject)clazz.newInstance();
+            DomainObject dummyChild = clazz.newInstance();
             DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(dummyChild);
             if (provider!=null) {
                 return true;

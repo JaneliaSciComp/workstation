@@ -1,8 +1,11 @@
 package org.janelia.workstation.gui.large_volume_viewer.launch;
 
+import java.util.List;
+
 import javax.swing.JOptionPane;
 
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
@@ -74,6 +77,8 @@ public class LVVLauncherBuilder extends SimpleActionBuilder {
                     FrameworkAccess.handleException( ex );
                 }
             }
+
+            FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor(domainObject));
         }
         else {
             JOptionPane.showMessageDialog(WindowManager.getDefault().getMainWindow(), "Failed to open window group for plugin.");
