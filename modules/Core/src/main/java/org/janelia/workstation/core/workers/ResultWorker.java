@@ -23,9 +23,9 @@ public abstract class ResultWorker<T> extends SwingWorker<T, Void> implements Pr
     private static final Logger log = LoggerFactory.getLogger(SimpleWorker.class);
     
     protected Throwable error;
-    protected boolean disregard;
+    private boolean disregard;
     protected ProgressMonitor progressMonitor; 
-    protected SimpleListenableFuture<T> future;
+    private SimpleListenableFuture<T> future;
     protected T result;
     
     /**
@@ -43,7 +43,7 @@ public abstract class ResultWorker<T> extends SwingWorker<T, Void> implements Pr
     protected T doInBackground() throws Exception {
         addPropertyChangeListener(this);
         setProgress(0);
-        if (progressMonitor!=null) {
+        if (progressMonitor != null) {
             setProgress(1);
         }
         try {
@@ -58,10 +58,10 @@ public abstract class ResultWorker<T> extends SwingWorker<T, Void> implements Pr
 
     @Override
     protected void done() {
+        setProgress(100);
         if (isCancelled() || isDisregarded()) {
             return;
         }
-        setProgress(100);
         if (error == null) {
             try {
                 hadSuccess();

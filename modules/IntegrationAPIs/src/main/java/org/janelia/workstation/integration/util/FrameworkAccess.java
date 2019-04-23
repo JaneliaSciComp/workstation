@@ -100,8 +100,7 @@ public class FrameworkAccess {
         ErrorHandler eh = getErrorHandler();
         if (eh == null) {
             th.printStackTrace(); // If all else fails. 
-        }
-        else {
+        } else {
             eh.handleException(message, th);
         }
     }

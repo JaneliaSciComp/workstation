@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.swing.AbstractCellEditor;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -25,11 +26,13 @@ import javax.swing.SwingConstants;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 
+import org.janelia.model.security.Group;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;
+import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * @author schauderd
  */
 public class UserDetailsPanel extends JPanel {
-    private static final Logger log = LoggerFactory.getLogger(UserDetailsPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UserDetailsPanel.class);
 
     private AdministrationTopComponent parent;
     private JComboBox newGroupSelector;
@@ -133,54 +136,65 @@ public class UserDetailsPanel extends JPanel {
         add(actionPanel);
     }
     
-    public void saveUser () {
-        if (currentUser.getId()==null) {
+    private void saveUser () {
+        if (currentUser.getId() == null) {
             User newUser = parent.createUser(currentUser);
-            currentUser.setId(newUser.getId());
-            currentUser.setKey(newUser.getKey());
+            if (newUser != null) {
+                currentUser.setId(newUser.getId());
+                currentUser.setKey(newUser.getKey());
+            }
         }
         parent.saveUser(currentUser, passwordChanged);
         parent.saveUserRoles(currentUser);
         parent.viewUserList();
     }
     
-    public void editUserDetails(User user) throws Exception {
+    void editUserDetails(User user) throws Exception {
         currentUser = user;
         Subject rawAdmin = AccessManager.getAccessManager().getActualSubject();
         if (rawAdmin instanceof User && AccessManager.getAccessManager().isAdmin()) {
             admin = (User) rawAdmin;
         }
-            
+
         // load user details
         userDetailsTableModel.loadUser(user);
         groupRolesModel.loadGroupRoles(user);
         refreshUserGroupsToAdd();
     }
 
-    void refreshUserGroupsToAdd() {
-        if (admin==null)
-            return;
+    private void refreshUserGroupsToAdd() {
         // load up the new groups available to add to this user
         newGroupSelector.removeAllItems();
-        Iterator<UserGroupRole> groupRoles = admin.getUserGroupRoles().iterator();
-        while (groupRoles.hasNext()) {
-            UserGroupRole groupRole = groupRoles.next();
-            if (groupRole.getRole() == GroupRole.Admin
-                    || groupRole.getRole() == GroupRole.Owner
-                    || AccessManager.getAccessManager().isAdmin()) {
-                if (currentUser.getRole(groupRole.getGroupKey()) == null) {
-                    newGroupSelector.addItem(groupRole.getGroupKey());
-                }
-            }
-        }
-        // no groups to add
-        if (newGroupSelector.getItemCount()==0) {
-             newGroupButton.setEnabled(false);
+        groupSelectionSource().forEach(g -> newGroupSelector.addItem(g));
+        if (newGroupSelector.getItemCount() == 0) {
+            // no groups to add
+            newGroupButton.setEnabled(false);
         } else
             newGroupButton.setEnabled(true);
     }
-                
-    
+
+    private Stream<String> groupSelectionSource() {
+        Stream<String> selectionSource;
+        if (AccessManager.getAccessManager().isAdmin()) {
+            try {
+                selectionSource = DomainMgr.getDomainMgr().getSubjects()
+                        .stream()
+                        .filter(s -> s instanceof Group)
+                        .map(s -> s.getKey());
+            } catch (Exception e) {
+                LOG.error("Error retrieving group subjects for setting user groups", e);
+                selectionSource = Stream.of();
+            }
+        } else {
+            LOG.debug("Populate user groups from the current list");
+            selectionSource = currentUser.getUserGroupRoles().stream()
+                    .map(ug -> ug.getGroupKey());
+        }
+
+        return selectionSource
+                .filter(g -> currentUser.getRole(g) == null);
+    }
+
     // adds the user to a new group   
     private void addNewGroup() {
         String groupKey = (String)newGroupSelector.getSelectedItem();
@@ -190,11 +204,12 @@ public class UserDetailsPanel extends JPanel {
     // removes the user from a group
     private void removeGroup() {
         int row = groupRolesTable.getSelectedRow();
-        if (row!=-1) {
+        if (row != -1) {
             groupRolesModel.removeGroup(row);
             removeGroupButton.setEnabled(false);
             saveUserButton.setEnabled(true);
             refreshUserGroupsToAdd();
+            dirtyFlag = true;
         }
     }
 

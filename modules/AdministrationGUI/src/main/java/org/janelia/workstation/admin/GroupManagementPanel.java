@@ -98,7 +98,6 @@ public class GroupManagementPanel extends JPanel {
         JButton newGroupButton = new JButton("New Group");
         newGroupButton.addActionListener(event -> newGroup());
         JPanel actionPanel = new JPanel();
-//        newGroupPanel.setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));   
         actionPanel.add(newGroupButton);
         actionPanel.add(editGroupButton);
         add(actionPanel);

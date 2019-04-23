@@ -100,13 +100,16 @@ public class TiledMicroscopeDomainMgr {
             }
 
             // call out to server to get origin/scaling information
-            sample = save(sample);
+            TmSample persistedSample = save(sample);
 
             // Server should have put the sample in the Samples root folder. Refresh the Samples folder to show it in the explorer.
             model.invalidate(tmSampleFolder);
 
-            return sample;
-        } else throw new RuntimeException ("problem creating sample; no sample constants available.");
+            return persistedSample;
+        } else {
+            LOG.error("Problem creating sample; no sample constants available for sample {} at {}.", name, filepath);
+            return null;
+        }
     }
 
     public TmSample save(TmSample sample) throws Exception {

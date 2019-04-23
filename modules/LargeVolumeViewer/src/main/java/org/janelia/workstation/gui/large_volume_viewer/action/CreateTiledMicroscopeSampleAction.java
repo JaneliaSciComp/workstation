@@ -37,25 +37,29 @@ public class CreateTiledMicroscopeSampleAction extends AbstractAction {
 
             @Override
             protected void doStuff() throws Exception {
-                newSample = TiledMicroscopeDomainMgr.getDomainMgr().createSample(name, pathToRenderFolder);
+                try {
+                    newSample = TiledMicroscopeDomainMgr.getDomainMgr().createSample(name, pathToRenderFolder);
+                } catch (Exception e) {
+                    error = new IllegalStateException("Error creating sample " + name + " for path " + pathToRenderFolder + ". Make sure the path is correct and is accessible", e);
+                }
             }
             
             @Override
             protected void hadSuccess() {
-                if (null!=newSample) {
+                if (null != newSample) {
                     JOptionPane.showMessageDialog(mainFrame, "Sample " + newSample.getName() + " added successfully.",
                             "Add New Tiled Microscope Sample", JOptionPane.PLAIN_MESSAGE, null);
                     DomainMgr.getDomainMgr().getModel().invalidateAll();
-                }
-                else {
-                    JOptionPane.showMessageDialog(mainFrame, "Error adding sample " + name + ". Please contact support.",
+                } else {
+                    JOptionPane.showMessageDialog(mainFrame, "Error adding sample " + name + " at " + pathToRenderFolder +
+                                    ". Check that path exists and is accessible. If you continue to experience problems please contact support.",
                             "Failed to Add Tiled Microscope Sample", JOptionPane.ERROR_MESSAGE, null);
                 }
             }
             
             @Override
             protected void hadError(Throwable error) {
-                FrameworkAccess.handleException(error);
+                FrameworkAccess.handleException("Error creating a sample - make sure the provided sample path is correct and that the pass is accessible", error);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating sample...", ""));

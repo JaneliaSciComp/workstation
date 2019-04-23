@@ -176,9 +176,7 @@ public final class AdministrationTopComponent extends TopComponent {
             // set up a user default directory
 
             // if mail set up, register the user's email address
-
             return newUser;
-
         } catch (Exception e) {
             FrameworkAccess.handleException(e);
         }

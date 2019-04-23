@@ -147,15 +147,15 @@ public class TiledMicroscopeRestClient {
         return response.readEntity(new GenericType<List<TmSample>>() {});
     }
         
-    public Map<String,Object> getTmSampleConstants(String samplePath) throws Exception {
+    Map<String,Object> getTmSampleConstants(String samplePath) throws Exception {
         Response response = getMouselightDataEndpoint("/sample/constants")
                 .queryParam("samplePath", samplePath)
                 .request("application/json")
                 .get();
         if (checkBadResponse(response, "getTmSampleConstants")) {
             LOG.error("Error getting sample constants from {}", samplePath);
-            throw new WebApplicationException(response);
-        }
+            return null;
+       }
         return response.readEntity(new GenericType<Map<String,Object>>() {});
     }
 
