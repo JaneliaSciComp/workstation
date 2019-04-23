@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.domain.workspace.TreeNode;
@@ -58,9 +59,14 @@ public class RenameActionBuilder implements ContextualActionBuilder {
         @Override
         public void setViewerContext(ViewerContext viewerContext) {
             this.domainObject = DomainUIUtils.getLastSelectedDomainObject(viewerContext);
-            boolean visible = !viewerContext.isMultiple() && userCanRename(domainObject);
-            ContextualActionUtils.setVisible(this, visible);
+
+            // Reset values
+            ContextualActionUtils.setVisible(this, false);
+            ContextualActionUtils.setEnabled(this, true);
+
             if (domainObject != null) {
+                boolean visible = !viewerContext.isMultiple() && userCanRename(domainObject);
+                ContextualActionUtils.setVisible(this, visible);
                 ContextualActionUtils.setEnabled(this, ClientDomainUtils.hasWriteAccess(domainObject));
             }
         }
@@ -80,7 +86,8 @@ public class RenameActionBuilder implements ContextualActionBuilder {
                 || domainObject instanceof TmWorkspace
                 || domainObject instanceof TmSample
                 || domainObject instanceof ColorDepthMask
-                || domainObject instanceof ColorDepthSearch);
+                || domainObject instanceof ColorDepthSearch
+                || domainObject instanceof Filter);
     }
 
     private static void renameObject(DomainObject domainObject) {

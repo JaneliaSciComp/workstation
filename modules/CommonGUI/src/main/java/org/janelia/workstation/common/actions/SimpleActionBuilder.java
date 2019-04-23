@@ -17,7 +17,7 @@ public abstract class SimpleActionBuilder implements ContextualActionBuilder {
 
     @Override
     public Action getAction(Object contextObject) {
-        return new SimpleAction(getName(), contextObject, supportsMultipleSelection());
+        return new SimpleAction(getName(), contextObject);
     }
 
     @Override
@@ -33,14 +33,6 @@ public abstract class SimpleActionBuilder implements ContextualActionBuilder {
     protected abstract String getName();
 
     /**
-     * Return false here if your action should not appear when the user has selected multiple items.
-     * @return
-     */
-    protected boolean supportsMultipleSelection() {
-        return false;
-    }
-
-    /**
      * Perform the action on the given contextual object. Before this method is called, it's guaranteed
      * that isCompatible returned true for the same object.
      * @param contextObject an object which is compatible with this builder
@@ -52,17 +44,15 @@ public abstract class SimpleActionBuilder implements ContextualActionBuilder {
 
         private String name;
         private Object contextObject;
-        private boolean supportsMultipleSelection;
 
-        SimpleAction(String name, Object contextObject, boolean supportsMultipleSelection) {
+        SimpleAction(String name, Object contextObject) {
             this.name = name;
             this.contextObject = contextObject;
-            this.supportsMultipleSelection = supportsMultipleSelection;
             ContextualActionUtils.setName(this, name);
         }
 
         protected Boolean isVisible() {
-            return getViewerContext()==null || getViewerContext().isMultiple()==supportsMultipleSelection;
+            return getViewerContext()==null || !getViewerContext().isMultiple();
         }
 
         @Override

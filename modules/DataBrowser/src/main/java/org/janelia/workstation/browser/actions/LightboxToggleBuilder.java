@@ -62,7 +62,7 @@ public class LightboxToggleBuilder implements ContextualActionBuilder {
                 this.domainObject = DomainUIUtils.getLastSelectedDomainObject(viewerContext);
                 this.resultDescriptor = doim.getArtifactDescriptor();
                 this.typeName = doim.getImageTypeName();
-                ContextualActionUtils.setVisible(this, domainObject!=null && !viewerContext.isMultiple());
+                ContextualActionUtils.setVisible(this, domainObject!=null && resultDescriptor!=null && typeName!=null && !viewerContext.isMultiple());
             }
         }
 

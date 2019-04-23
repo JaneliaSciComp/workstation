@@ -70,7 +70,7 @@ public class OpenInNewViewerBuilder implements ContextualActionBuilder {
                 if (!viewerContext.isMultiple()) {
                     this.domainObject = DomainUIUtils.getLastSelectedDomainObject(viewerContext);
                     this.objectToLoad = DomainViewerManager.getObjectToLoad(domainObject);
-                    boolean supported = DomainListViewTopComponent.isSupported(domainObject);
+                    boolean supported = DomainViewerTopComponent.isSupported(domainObject);
                     ContextualActionUtils.setVisible(this, supported);
                 }
             }

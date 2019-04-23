@@ -1,5 +1,6 @@
 package org.janelia.workstation.browser.actions;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import javax.swing.JComponent;
@@ -7,6 +8,12 @@ import javax.swing.JMenuItem;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
+import org.janelia.workstation.browser.gui.components.DomainViewerManager;
+import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
+import org.janelia.workstation.browser.gui.components.ViewerUtils;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
@@ -37,30 +44,33 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         ActivityLogHelper.logUserAction("DomainObjectContentMenu.create");
     }
 
+    // TODO: this should be made into a SPI
     public void runDefaultAction() {
-//        if (multiple) return;
-//        if (DomainViewerTopComponent.isSupported(domainObject)) {
-//            DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
-//            if (viewer == null || !viewer.isCurrent(domainObject)) {
-//                viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
-//                viewer.requestActive();
-//                viewer.loadDomainObject(domainObject, true);
-//            }
-//        }
-//        else if (DomainExplorerTopComponent.isSupported(domainObject)) {
-//            // TODO: here we should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
-//            DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
-//            if (DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(domainObject.getId()) == null) {
-//                // Node could not be found in tree. Try navigating directly.
-//                log.info("Node not found in tree: {}", domainObject);
-//                Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(domainObject), true, true, true));
-//            }
-//        }
-//        else {
-//            if (DomainObjectAcceptorHelper.isSupported(domainObject)) {
-//                DomainObjectAcceptorHelper.service(domainObject);
-//            }
-//        }
+        if (viewerContext.isMultiple()) return;
+        DomainObject domainObject = viewerContext.getLastSelectedObject();
+        DomainObject contextObject = (DomainObject)viewerContext.getContextObject();
+        if (DomainViewerTopComponent.isSupported(domainObject)) {
+            DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
+            if (viewer == null || !viewer.isCurrent(domainObject)) {
+                viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
+                viewer.requestActive();
+                viewer.loadDomainObject(domainObject, true);
+            }
+        }
+        else if (DomainExplorerTopComponent.isSupported(domainObject)) {
+            // TODO: here we should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
+            DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
+            if (DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(domainObject.getId()) == null) {
+                // Node could not be found in tree. Try navigating directly.
+                log.info("Node not found in tree: {}", domainObject);
+                Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(domainObject), true, true, true));
+            }
+        }
+        else {
+            if (DomainObjectAcceptorHelper.isSupported(domainObject)) {
+                DomainObjectAcceptorHelper.service(domainObject);
+            }
+        }
     }
 
     public void addMenuItems() {

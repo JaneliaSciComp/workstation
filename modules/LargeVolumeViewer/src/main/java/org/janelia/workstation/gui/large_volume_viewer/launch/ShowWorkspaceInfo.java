@@ -32,11 +32,6 @@ public class ShowWorkspaceInfo extends SimpleActionBuilder {
     }
 
     @Override
-    public boolean isPrecededBySeparator() {
-        return true;
-    }
-
-    @Override
     protected void performAction(Object obj) {
     	
     	TmWorkspace workspace = (TmWorkspace)obj;

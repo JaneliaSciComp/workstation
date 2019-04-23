@@ -59,15 +59,13 @@ public class OntologyAddTermBuilder implements ContextualActionBuilder {
         public JMenuItem getPopupPresenter() {
 
             List<Node> selectedNodes = getSelectedNodes();
+            if (selectedNodes.size()>1) {
+                return null;
+            }
 
             assert !selectedNodes.isEmpty() : "No nodes are selected";
 
             JMenu addMenuPopup = new JMenu("Add");
-
-            if (selectedNodes.size()>1) {
-                addMenuPopup.setEnabled(false);
-                return addMenuPopup;
-            }
 
             Node selectedNode = selectedNodes.get(0);
             final OntologyTermNode termNode = (OntologyTermNode)selectedNode;
@@ -92,12 +90,7 @@ public class OntologyAddTermBuilder implements ContextualActionBuilder {
                 for (final Class<? extends OntologyTerm> nodeType : nodeTypes) {
                     try {
                         JMenuItem smi = new JMenuItem(nodeType.newInstance().getTypeName());
-                        smi.addActionListener(new ActionListener() {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                createTerm(termNode, ontology, nodeType);
-                            }
-                        });
+                        smi.addActionListener(e -> createTerm(termNode, ontology, nodeType));
                         addMenuPopup.add(smi);
                     }
                     catch (Exception ex) {

@@ -6,7 +6,6 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasName;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.openide.nodes.Node;
@@ -25,7 +24,7 @@ public class PopupLabelActionBuilder implements ContextualActionBuilder {
 
     @Override
     public boolean isCompatible(Object obj) {
-        return obj instanceof DomainObject;
+        return obj instanceof HasName;
     }
 
     @Override
@@ -74,6 +73,7 @@ public class PopupLabelActionBuilder implements ContextualActionBuilder {
         @Override
         protected boolean enable(Node[] activatedNodes) {
             super.enable(activatedNodes);
+            // The label is never enabled, because it's not meant to be clicked on
             return false;
         }
 
