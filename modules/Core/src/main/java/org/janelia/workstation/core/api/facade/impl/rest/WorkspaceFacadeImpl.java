@@ -140,8 +140,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(node);
         query.setReferences(new ArrayList<>(references));
-        Response response = service.path("data/node")
-                .path("children")
+        Response response = service.path("data/node/children")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request addChildrenToNode to server: " + node + "," + references)) {
@@ -157,8 +156,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(node);
         query.setReferences(new ArrayList<>(references));
-        Response response = service.path("data/node")
-                .path("children")
+        Response response = service.path("data/node/children")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request removeChildrenFromNode to server: " + node + "," + references)) {
@@ -178,8 +176,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
             orderList.add(new Integer(order[i]));
         }
         query.setOrdering(orderList);
-        Response response = service.path("data/node")
-                .path("reorder")
+        Response response = service.path("data/node/reorder")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request reorderChildrenInNode to server: " + node + "," + order)) {
@@ -193,8 +190,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(object);
-        Response response = service.path("data/domainobject")
-                .path("references")
+        Response response = service.path("data/domainobject/references")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request to get Ancestors from server for: " + object.getId())) {

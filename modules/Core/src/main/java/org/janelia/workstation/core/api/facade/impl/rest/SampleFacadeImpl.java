@@ -102,10 +102,9 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     @Override
     public Collection<LSMImage> getLsmsForSample(Long sampleId) throws Exception {
-        Response response = service.path("data/sample")
+        Response response = service.path("data/sample/lsms")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("sampleId", sampleId)
-                .path("lsms")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request to get Lsm For Sample: " + sampleId)) {
@@ -175,8 +174,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     @Override
     public String dispatchSamples(SampleReprocessingRequest request) throws Exception {
-        Response response = service.path("process/sample")
-                .path("reprocess")
+        Response response = service.path("process/sample/reprocess")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .post(Entity.json(request));
@@ -201,8 +199,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
     
     @Override
     public Collection<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception {
-        Response response = service.path("data/dataset")
-                .path("colordepth")
+        Response response = service.path("data/dataset/colordepth")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("alignmentSpace", alignmentSpace)
                 .request("application/json")

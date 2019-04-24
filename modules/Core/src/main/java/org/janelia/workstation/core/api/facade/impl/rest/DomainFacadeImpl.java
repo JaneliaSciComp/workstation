@@ -193,8 +193,7 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         params.put("targetId", domainObject.getId());
         params.put("granteeKey", granteeKey);
         params.put("rights", rights);
-        Response response = service.path("data/user")
-                .path("permissions")
+        Response response = service.path("data/user/permissions")
                 .request("application/json")
                 .put(Entity.json(params));
         if (checkBadResponse(response.getStatus(), "problem making request changePermissions to server: " + domainObject + "," + granteeKey + "," + rights)) {
