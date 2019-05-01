@@ -18,8 +18,8 @@ import org.janelia.workstation.common.actions.DomainObjectNodeAction;
 import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.StateMgr;
+import org.janelia.workstation.core.logging.NBExceptionHandler;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.SimpleListenableFuture;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
@@ -91,7 +91,7 @@ public class ReportProblemBuilder implements ContextualActionBuilder {
                                 try {
                                     List<Annotation> annotations = future.get();
                                     if (annotations!=null && !annotations.isEmpty()) {
-                                        DataReporter reporter = new DataReporter(AccessManager.getUserEmail(), HELP_EMAIL, WEBSTATION_URL);
+                                        DataReporter reporter = new DataReporter(NBExceptionHandler.REPORT_EMAIL, HELP_EMAIL, WEBSTATION_URL);
                                         reporter.reportData(domainObject, annotations.get(0).getName());
                                     }
                                 }
