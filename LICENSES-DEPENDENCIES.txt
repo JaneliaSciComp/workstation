@@ -1,0 +1,28 @@
+
+The Janelia workstation integrates dependencies with the following open source licenses:
+
+- the Apache Software License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
+
+- the BSD 2-Clause license: https://opensource.org/licenses/BSD-2-Clause
+
+- the BSD 3-Clause license: https://opensource.org/licenses/BSD-3-Clause
+
+- the Common Development and Distribution License (CDDL), Version 1.1: https://opensource.org/licenses/CDDL-1.0
+
+- the Eclipse Public License - v 2.0: https://www.eclipse.org/legal/epl-2.0/
+
+the GNU General Public License (GPL), Version 2, With Classpath Exception: https://www.gnu.org/licenses/licenses.html#GPL and https://www.gnu.org/software/classpath/license.html
+
+- the GNU Lesser General Public License: https://www.gnu.org/licenses/old-licenses/lgpl-2.0.en.html
+
+- the Janelia Research Campus Software License 1.2: http://license.janelia.org/license/janelia_license_1_2.html
+
+- the Jython Software License: https://www.jython.org/license.html
+
+- the libjpeg-turbo license: https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/LICENSE.md
+
+- the MIT license: https://opensource.org/licenses/MIT
+
+- Public Domain
+
+- the Sun Microsystems, Inc. Binary Code License Agreement: https://download.java.net/media/jai/builds/release/1_1_3/LICENSE-jai.txt
