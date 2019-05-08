@@ -6,10 +6,10 @@ import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
-import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
-import org.janelia.messaging.broker.sharedworkspace.MessageType;
-import org.janelia.messaging.client.ConnectionManager;
-import org.janelia.messaging.client.Sender;
+import org.janelia.messaging.broker.neuronadapter.HeaderConstants;
+import org.janelia.messaging.broker.neuronadapter.MessageType;
+import org.janelia.messaging.core.ConnectionManager;
+import org.janelia.messaging.core.MessageSender;
 import org.janelia.model.access.tiledMicroscope.TmModelAdapter;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
@@ -48,7 +48,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
     private static final String MESSAGESERVER_ROUTINGKEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.routingkey.updates").trim();
     
     private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-    private Sender messageSender;
+    private MessageSender messageSender;
 
     @Override
     public List<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) throws Exception {
@@ -96,13 +96,12 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
         return neurons;
     }
     
-    private Sender getSender() {
+    private MessageSender getSender() {
         if (messageSender==null) {
-            ConnectionManager connManager = ConnectionManager.getInstance();
-            connManager.configureTarget(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD);
-            messageSender = new Sender();
-            messageSender.init(connManager, MESSAGESERVER_UPDATESEXCHANGE, MESSAGESERVER_ROUTINGKEY, 1);
-        } 
+            ConnectionManager connManager = new ConnectionManager(MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 1);
+            messageSender = new MessageSender(connManager);
+            messageSender.connect(MESSAGESERVER_UPDATESEXCHANGE, MESSAGESERVER_ROUTINGKEY, 1);
+        }
         return messageSender;
     }
     

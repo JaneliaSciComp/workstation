@@ -1,41 +1,35 @@
 package org.janelia.workstation.gui.large_volume_viewer.annotation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rabbitmq.client.CancelCallback;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.DeliverCallback;
-import com.rabbitmq.client.Delivery;
-import com.rabbitmq.client.LongString;
-import com.rabbitmq.client.impl.LongStringHelper;
+import org.janelia.messaging.broker.neuronadapter.HeaderConstants;
+import org.janelia.messaging.broker.neuronadapter.MessageType;
+import org.janelia.messaging.core.ConnectionManager;
+import org.janelia.messaging.core.MessageConsumer;
+import org.janelia.messaging.core.MessageHandler;
+import org.janelia.messaging.utils.MessagingUtils;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.perf4j.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
-import javax.swing.SwingUtilities;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
-import org.janelia.messaging.broker.sharedworkspace.HeaderConstants;
-import org.janelia.messaging.broker.sharedworkspace.MessageType;
-import org.janelia.messaging.client.ConnectionManager;
-import org.janelia.messaging.client.Receiver;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
-import org.perf4j.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author schauderd
  * handler to manage updates coming from the persistence broker 
  */
-
-
-public class RefreshHandler implements DeliverCallback, CancelCallback {
+public class RefreshHandler implements MessageHandler {
     private static final Logger log = LoggerFactory.getLogger(RefreshHandler.class);
     private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
     private static final String MESSAGESERVER_USERACCOUNT = ConsoleProperties.getInstance().getProperty("domain.msgserver.useraccount").trim();
@@ -43,8 +37,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
     private static final String MESSAGESERVER_REFRESHEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.refresh").trim();
     
     private AnnotationModel annotationModel;
-    private Channel msgChannel;
-    private Receiver msgReceiver;
+    private MessageConsumer msgReceiver;
     static RefreshHandler handler;
     private boolean receiveUpdates = true;
     private boolean freezeUpdates = false;
@@ -80,14 +73,10 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
 
     private boolean init() {
         try {
-            ConnectionManager connManager = ConnectionManager.getInstance();
-            connManager.configureTarget(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD);
-            connManager.setThreadPoolSize(20);
-            msgChannel = connManager.getConnection(1);
-        
-            msgReceiver = new Receiver();
-            msgReceiver.init(connManager, "ModelRefresh", true, 1);
-            msgReceiver.setupReceiver(this);
+            ConnectionManager connManager = new ConnectionManager(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 20);
+            msgReceiver = new MessageConsumer(connManager);
+            msgReceiver.connect("ModelRefresh", "ModelRefresh", 1);
+            msgReceiver.setupMessageHandler(this);
             log.info("Established connection to message server " + MESSAGESERVER_URL);
             return true;
         } catch (Exception e) {
@@ -100,11 +89,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         }
     }
     
-    private String convertLongString (LongString data) {
-        return LongStringHelper.asLongString(data.getBytes()).toString();
-    }
-    
-    public void refreshNeuronUpdates() {
+    void refreshNeuronUpdates() {
         // freeze neuron updates 
         freezeUpdates = true;
         // play back all the latest neurons and empty the map
@@ -146,14 +131,13 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         freezeUpdates = true;
     }
     
-    private void addNeuronUpdate (Delivery message,  Map<String, Object> msgHeaders, MessageType action, String user) {
+    private void addNeuronUpdate (Map<String, Object> msgHeaders, byte[] msgBody, MessageType action, String user) {
          try {             
              ObjectMapper mapper = new ObjectMapper();
-             String metadata = convertLongString((LongString) msgHeaders.get(HeaderConstants.METADATA));
+             String metadata = MessagingUtils.getHeaderAsString(msgHeaders, HeaderConstants.METADATA);
              TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
 
              TmProtobufExchanger exchanger = new TmProtobufExchanger();
-             byte[] msgBody = message.getBody();
              exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
              
              // assume this has to do with neuron CRUD; otherwise ignore
@@ -161,7 +145,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
              neuronData.put("neuron", neuron);
              neuronData.put("action", action);
              neuronData.put("user", user);
-             log.info ("Adding neuron remote update: {}",neuron.getName());
+             log.info ("Adding neuron remote update: {}", neuron.getName());
              if (neuron!=null && neuron.getId()!=null) {
                  this.updatesMap.put(neuron.getId(), neuronData);
              }
@@ -175,11 +159,10 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
      * Successful refresh update received
      */
     @Override
-    public void handle(String string, Delivery message) throws IOException {
+    public void handleMessage(Map<String, Object> msgHeaders, byte[] msgBody) {
         try {
             StopWatch stopWatch = new StopWatch();
-            Map<String, Object> msgHeaders = message.getProperties().getHeaders();
-        
+
             if (msgHeaders == null) {
                 logError("Issue trying to process metadata from update");
                 return;
@@ -188,19 +171,22 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             log.debug ("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
             log.debug ("Heap Size: {}", Runtime.getRuntime().totalMemory());
             
-            log.debug("message properties: TYPE={},USER={},WORKSPACE={},METADATA={}", msgHeaders.get(HeaderConstants.TYPE), msgHeaders.get(HeaderConstants.USER),
-                    msgHeaders.get(HeaderConstants.WORKSPACE), msgHeaders.get(HeaderConstants.METADATA));
+            log.debug("message properties: TYPE={},USER={},WORKSPACE={},METADATA={}",
+                    msgHeaders.get(HeaderConstants.TYPE),
+                    msgHeaders.get(HeaderConstants.USER),
+                    msgHeaders.get(HeaderConstants.WORKSPACE),
+                    msgHeaders.get(HeaderConstants.METADATA));
 
-            MessageType action = MessageType.valueOf(convertLongString((LongString) msgHeaders.get(HeaderConstants.TYPE)));
-            String user = convertLongString((LongString) msgHeaders.get(HeaderConstants.USER));
+            MessageType action = MessageType.valueOf(MessagingUtils.getHeaderAsString(msgHeaders, HeaderConstants.TYPE));
+            String user = MessagingUtils.getHeaderAsString(msgHeaders, HeaderConstants.USER);
             
-            Long workspace = Long.parseLong(convertLongString((LongString) msgHeaders.get(HeaderConstants.WORKSPACE)));
+            Long workspace = MessagingUtils.getHeaderAsLong(msgHeaders, HeaderConstants.WORKSPACE);
             
             // flag to suppress shared updates
             if (!receiveUpdates && !freezeUpdates && !user.equals(AccessManager.getSubjectKey())) {
                 if (workspace != null && annotationModel!=null && annotationModel.getCurrentWorkspace() != null
                     && workspace.longValue()==annotationModel.getCurrentWorkspace().getId().longValue()) {
-                    addNeuronUpdate (message, msgHeaders, action, user);
+                    addNeuronUpdate (msgHeaders, msgBody, action, user);
                     log.debug("SHARED UPDATE TIME: {}", stopWatch.getElapsedTime());
                 }
                 return;
@@ -209,7 +195,6 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             if (action == MessageType.ERROR_PROCESSING) {
                 if (user != null && user.equals(AccessManager.getSubjectKey())) {
                     log.info("Error message received from server");
-                    byte[] msgBody = message.getBody();
                     logError(new String(msgBody));
                 }
                 return;
@@ -220,7 +205,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                 return;
             }
                 
-            String metadata = convertLongString((LongString) msgHeaders.get(HeaderConstants.METADATA));
+            String metadata = MessagingUtils.getHeaderAsString(msgHeaders, HeaderConstants.METADATA);
             ObjectMapper mapper = new ObjectMapper();
             TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
 
@@ -242,7 +227,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             }
 
             if (action == MessageType.NEURON_OWNERSHIP_DECISION) {
-                boolean decision = Boolean.parseBoolean(convertLongString((LongString) msgHeaders.get(HeaderConstants.DECISION)));
+                boolean decision = MessagingUtils.getHeaderAsBoolean(msgHeaders, HeaderConstants.DECISION);
                 if (decision) {
                     TmNeuronMetadata origNeuron = annotationModel.getNeuronManager().getNeuronById(neuron.getId());
                     origNeuron.setOwnerKey(neuron.getOwnerKey());
@@ -259,7 +244,7 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
             } else if (action == MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
                 // complete the future outside of the swing thread, since the copyGUI thread is blocked
                 StopWatch stopWatch2 = new StopWatch();
-                handleNeuronCreate(message, neuron, n -> annotationModel.getNeuronManager().completeCreateNeuron(n));
+                handleNeuronCreate(neuron, msgBody, n -> annotationModel.getNeuronManager().completeCreateNeuron(n));
                 stopWatch2.stop();
                 log.info("RefreshHandler: Remote own neuron creation update in {} ms", stopWatch2.getElapsedTime());
                 log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
@@ -275,17 +260,17 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
                             // update model or process request
                             switch (action) {
                                 case NEURON_CREATE:
-                                    handleNeuronCreate(message, neuron, n -> annotationModel.getNeuronManager().addNeuron(n));
+                                    handleNeuronCreate(neuron, msgBody, n -> annotationModel.getNeuronManager().addNeuron(n));
                                     break;
                                 case NEURON_SAVE_NEURONDATA:
                                 case NEURON_SAVE_METADATA:
                                     if (!user.equals(AccessManager.getSubjectKey())) {
-                                        handleNeuronChanged(message, neuron);
+                                        handleNeuronChanged(neuron, msgBody);
                                     }
                                     break;
                                 case NEURON_DELETE:
                                     if (!user.equals(AccessManager.getSubjectKey())) {
-                                        handleNeuronDeleted(message, neuron);
+                                        handleNeuronDeleted(neuron, msgBody);
                                     }
                                     break;
                             }
@@ -306,11 +291,10 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         }
     }
 
-    private void handleNeuronCreate(Delivery message, TmNeuronMetadata neuron, Consumer<TmNeuronMetadata> neuronAction) {
+    private void handleNeuronCreate(TmNeuronMetadata neuron, byte[] msgBody, Consumer<TmNeuronMetadata> neuronAction) {
        try {
            log.info("remote processing create neuron " + neuron.getName());
            TmProtobufExchanger exchanger = new TmProtobufExchanger();
-           byte[] msgBody = message.getBody();
            exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
            neuronAction.accept(neuron);
            annotationModel.fireBackgroundNeuronCreated(neuron);
@@ -320,11 +304,10 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
        }  
     }
 
-    private void handleNeuronChanged(Delivery message, TmNeuronMetadata neuron) {
+    private void handleNeuronChanged(TmNeuronMetadata neuron, byte[] msgBody) {
         try {
             log.info("remote processing change neuron " + neuron.getName());
             TmProtobufExchanger exchanger = new TmProtobufExchanger();
-            byte[] msgBody = message.getBody();
             exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
             annotationModel.getNeuronManager().addNeuron(neuron);
             annotationModel.fireBackgroundNeuronChanged(neuron);
@@ -334,11 +317,10 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         }
     }
 
-    private void handleNeuronDeleted(Delivery message, TmNeuronMetadata neuron) {
+    private void handleNeuronDeleted(TmNeuronMetadata neuron, byte[] msgBody) {
         try {
             log.info("remote processing delete neuron" + neuron.getName());
             TmProtobufExchanger exchanger = new TmProtobufExchanger();
-            byte[] msgBody = message.getBody();
             exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
             annotationModel.fireBackgroundNeuronDeleted(neuron);
         } catch (Exception e) {
@@ -358,13 +340,10 @@ public class RefreshHandler implements DeliverCallback, CancelCallback {
         });
         log.error(error);
     }
-    
-    
+
     @Override
-    public void handle(String consumerTag) {
-        // this is a consumer cancel callback.... if this gets called with null, assume it is just a problem with rabbitmq
-        // initializing
-        log.info("Rabbitmq cancelling consumer");
+    public void cancelMessage(String routingTag) {
+        log.info("The messaging system might have canceled the consumer");
     }
 
     public AnnotationModel getAnnotationModel() {

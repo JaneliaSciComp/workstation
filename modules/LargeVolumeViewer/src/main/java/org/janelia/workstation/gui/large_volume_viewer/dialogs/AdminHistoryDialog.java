@@ -22,7 +22,7 @@ import org.janelia.workstation.gui.large_volume_viewer.controller.BackgroundAnno
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
-import org.janelia.messaging.broker.sharedworkspace.MessageType;
+import org.janelia.messaging.broker.neuronadapter.MessageType;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;

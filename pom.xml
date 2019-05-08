@@ -109,6 +109,8 @@
 
         <janeliaws.jacs-model.version>2.0.2</janeliaws.jacs-model.version>
 
+        <janeliaws.jacs-messaging.version>2.0.0-SNAPSHOT</janeliaws.jacs-messaging.version>
+
         <!--==== Plugin Versions ==================================================================================-->
 
         <janeliaws.maven-antrun-plugin.version>1.8</janeliaws.maven-antrun-plugin.version>
@@ -340,8 +342,13 @@
             </dependency>
             <dependency>
                 <groupId>org.janelia.jacs-messaging</groupId>
-                <artifactId>jacs-messaging</artifactId>
-                <version>1.2.0</version>
+                <artifactId>jacs-messaging-core</artifactId>
+                <version>${janeliaws.jacs-messaging.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.janelia.jacs-messaging</groupId>
+                <artifactId>jacs-messaging-broker</artifactId>
+                <version>${janeliaws.jacs-messaging.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.janelia.legacy</groupId>
