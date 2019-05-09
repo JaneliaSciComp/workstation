@@ -288,7 +288,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         dataSummaryPanel.add(new JLabel(sampleIcon), "al right top, w 50%");
         dataSummaryPanel.add(new JLabel(Icons.getLoadingIcon()), "spanx 2, al center center");
 
-        String colorDepthTxt = "<html>To search the color depth projections, you first need to create a search mask.<br>"
+        String colorDepthTxt = "<html>To search the color depth projection libraries, you first need to create a search mask.<br>"
                 + "To begin, right-click any Color Depth Projection and select "+HelpTextUtils.getBoldedLabel("Create Mask for Color Depth Search")+".<br>"
                 + "You can also upload a custom mask using the "+HelpTextUtils.getMenuItemLabel("File","Upload","Color Depth Mask")+"  menu option.<br>";
         
@@ -296,7 +296,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         colorDepthTitlePanel.setLayout(new BoxLayout(colorDepthTitlePanel, BoxLayout.LINE_AXIS));
                 
         colorDepthTitlePanel.add(getLargeLabel("Color Depth Mask Search"));
-        colorDepthTitlePanel.add(getHighlightLabel("NEW"));
+        //colorDepthTitlePanel.add(getHighlightLabel("NEW"));
         
         JButton userManualButton = new JButton("Learn more in the User Manual");
         userManualButton.setFont(mediumFont);
