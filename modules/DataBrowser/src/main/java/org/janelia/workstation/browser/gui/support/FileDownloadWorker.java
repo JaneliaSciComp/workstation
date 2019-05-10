@@ -309,7 +309,15 @@ public class FileDownloadWorker {
             worker.setProgress(0, 100);
             worker.setStatus("Waiting to download...");
         }
-        copySemaphore.acquire();
+
+        try {
+            copySemaphore.acquire();
+        }
+        catch (InterruptedException e) {
+            log.error("Download was cancelled: {}", localFile);
+            throw new CancellationException();
+        }
+
         try {
             if (hasProgress && worker!=null) worker.setStatus("Downloading " + localFile.getName());
             Utils.copyURLToFile(remoteFile, localFile, worker, hasProgress);
@@ -317,6 +325,7 @@ public class FileDownloadWorker {
         finally {
             copySemaphore.release();
         }
+
     }
         
     private Callable<Void> getDownloadSuccessCallback() {
