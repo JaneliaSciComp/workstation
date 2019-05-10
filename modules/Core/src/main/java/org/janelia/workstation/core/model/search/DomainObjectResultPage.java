@@ -1,17 +1,16 @@
 package org.janelia.workstation.core.model.search;
 
+import com.google.common.collect.ListMultimap;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.workstation.core.model.AnnotatedObjectList;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.janelia.workstation.core.model.AnnotatedObjectList;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.ontology.Annotation;
-
-import com.google.common.collect.ListMultimap;
 
 /**
  * One page of annotated domain objects, treated as a unit for performance reasons.

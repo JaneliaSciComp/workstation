@@ -1,15 +1,9 @@
 package org.janelia.workstation.browser.actions;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.swing.ProgressMonitor;
-
 import com.google.common.collect.Multimap;
 import org.janelia.it.jacs.shared.utils.Progress;
-import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Category;
@@ -33,6 +27,11 @@ import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static org.janelia.workstation.core.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
 

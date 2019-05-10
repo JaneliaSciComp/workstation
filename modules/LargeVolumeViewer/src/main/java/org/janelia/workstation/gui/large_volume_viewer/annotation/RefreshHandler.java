@@ -1,8 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer.annotation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.janelia.messaging.broker.neuronadapter.HeaderConstants;
-import org.janelia.messaging.broker.neuronadapter.MessageType;
 import org.janelia.messaging.core.ConnectionManager;
 import org.janelia.messaging.core.MessageConsumer;
 import org.janelia.messaging.core.MessageHandler;
@@ -11,6 +9,7 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.gui.large_volume_viewer.model_adapter.NeuronMessageConstants;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -100,7 +99,7 @@ public class RefreshHandler implements MessageHandler {
                  Long neuronId = neuronIterator.next();
                  Map<String, Object> neuronData = updatesMap.get(neuronId);
                  TmNeuronMetadata neuron = (TmNeuronMetadata)neuronData.get("neuron");
-                 MessageType action = (MessageType) neuronData.get("action");
+                 NeuronMessageConstants.MessageType action = (NeuronMessageConstants.MessageType) neuronData.get("action");
                  String user = (String) neuronData.get("user");
                  // if not a neuron CRUD action, ignore
                  switch (action) {
@@ -131,10 +130,10 @@ public class RefreshHandler implements MessageHandler {
         freezeUpdates = true;
     }
     
-    private void addNeuronUpdate (Map<String, Object> msgHeaders, byte[] msgBody, MessageType action, String user) {
+    private void addNeuronUpdate (Map<String, Object> msgHeaders, byte[] msgBody, NeuronMessageConstants.MessageType action, String user) {
          try {             
              ObjectMapper mapper = new ObjectMapper();
-             String metadata = MessagingUtils.getHeaderAsString(msgHeaders, HeaderConstants.METADATA);
+             String metadata = MessagingUtils.getHeaderAsString(msgHeaders, NeuronMessageConstants.Headers.METADATA);
              TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
 
              TmProtobufExchanger exchanger = new TmProtobufExchanger();
@@ -172,15 +171,15 @@ public class RefreshHandler implements MessageHandler {
             log.debug ("Heap Size: {}", Runtime.getRuntime().totalMemory());
             
             log.debug("message properties: TYPE={},USER={},WORKSPACE={},METADATA={}",
-                    msgHeaders.get(HeaderConstants.TYPE),
-                    msgHeaders.get(HeaderConstants.USER),
-                    msgHeaders.get(HeaderConstants.WORKSPACE),
-                    msgHeaders.get(HeaderConstants.METADATA));
+                    msgHeaders.get(NeuronMessageConstants.Headers.TYPE),
+                    msgHeaders.get(NeuronMessageConstants.Headers.USER),
+                    msgHeaders.get(NeuronMessageConstants.Headers.WORKSPACE),
+                    msgHeaders.get(NeuronMessageConstants.Headers.METADATA));
 
-            MessageType action = MessageType.valueOf(MessagingUtils.getHeaderAsString(msgHeaders, HeaderConstants.TYPE));
-            String user = MessagingUtils.getHeaderAsString(msgHeaders, HeaderConstants.USER);
+            NeuronMessageConstants.MessageType action = NeuronMessageConstants.MessageType.valueOf(MessagingUtils.getHeaderAsString(msgHeaders, NeuronMessageConstants.Headers.TYPE));
+            String user = MessagingUtils.getHeaderAsString(msgHeaders, NeuronMessageConstants.Headers.USER);
             
-            Long workspace = MessagingUtils.getHeaderAsLong(msgHeaders, HeaderConstants.WORKSPACE);
+            Long workspace = MessagingUtils.getHeaderAsLong(msgHeaders, NeuronMessageConstants.Headers.WORKSPACE);
             
             // flag to suppress shared updates
             if (!receiveUpdates && !freezeUpdates && !user.equals(AccessManager.getSubjectKey())) {
@@ -192,7 +191,7 @@ public class RefreshHandler implements MessageHandler {
                 return;
             }
             
-            if (action == MessageType.ERROR_PROCESSING) {
+            if (action == NeuronMessageConstants.MessageType.ERROR_PROCESSING) {
                 if (user != null && user.equals(AccessManager.getSubjectKey())) {
                     log.info("Error message received from server");
                     logError(new String(msgBody));
@@ -200,12 +199,12 @@ public class RefreshHandler implements MessageHandler {
                 return;
             }
 
-            if (!msgHeaders.containsKey(HeaderConstants.METADATA) || msgHeaders.get(HeaderConstants.METADATA)==null) {
+            if (!msgHeaders.containsKey(NeuronMessageConstants.Headers.METADATA) || msgHeaders.get(NeuronMessageConstants.Headers.METADATA)==null) {
                 log.error("Message includes no neuron information; rejecting processing");
                 return;
             }
                 
-            String metadata = MessagingUtils.getHeaderAsString(msgHeaders, HeaderConstants.METADATA);
+            String metadata = MessagingUtils.getHeaderAsString(msgHeaders, NeuronMessageConstants.Headers.METADATA);
             ObjectMapper mapper = new ObjectMapper();
             TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
 
@@ -226,8 +225,8 @@ public class RefreshHandler implements MessageHandler {
                 return;
             }
 
-            if (action == MessageType.NEURON_OWNERSHIP_DECISION) {
-                boolean decision = MessagingUtils.getHeaderAsBoolean(msgHeaders, HeaderConstants.DECISION);
+            if (action == NeuronMessageConstants.MessageType.NEURON_OWNERSHIP_DECISION) {
+                boolean decision = MessagingUtils.getHeaderAsBoolean(msgHeaders, NeuronMessageConstants.Headers.DECISION);
                 if (decision) {
                     TmNeuronMetadata origNeuron = annotationModel.getNeuronManager().getNeuronById(neuron.getId());
                     origNeuron.setOwnerKey(neuron.getOwnerKey());
@@ -241,14 +240,14 @@ public class RefreshHandler implements MessageHandler {
                     stopWatch2.stop();
                     log.info("RefreshHandler.invokeLater: handled ownership decision update in {} ms", stopWatch2.getElapsedTime());
                 });
-            } else if (action == MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
+            } else if (action == NeuronMessageConstants.MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
                 // complete the future outside of the swing thread, since the copyGUI thread is blocked
                 StopWatch stopWatch2 = new StopWatch();
                 handleNeuronCreate(neuron, msgBody, n -> annotationModel.getNeuronManager().completeCreateNeuron(n));
                 stopWatch2.stop();
                 log.info("RefreshHandler: Remote own neuron creation update in {} ms", stopWatch2.getElapsedTime());
                 log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
-            } else if (action == MessageType.REQUEST_NEURON_OWNERSHIP) {
+            } else if (action == NeuronMessageConstants.MessageType.REQUEST_NEURON_OWNERSHIP) {
                 // some other user is asking for ownership of this neuron... process accordingly
             } else {
                 SwingUtilities.invokeLater(new Runnable() {

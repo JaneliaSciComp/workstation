@@ -1,6 +1,44 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
-import java.awt.BorderLayout;
+import com.google.common.collect.ImmutableList;
+import com.google.common.eventbus.Subscribe;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.SampleUtils;
+import org.janelia.model.domain.enums.SplitHalfType;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
+import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.browser.actions.ExportResultsAction;
+import org.janelia.workstation.browser.gui.editor.SelectionButton;
+import org.janelia.workstation.browser.gui.editor.SingleSelectionButton;
+import org.janelia.workstation.browser.gui.listview.PaginatedResultsPanel;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.MouseForwarder;
+import org.janelia.workstation.common.gui.support.PreferenceSupport;
+import org.janelia.workstation.common.gui.support.SearchProvider;
+import org.janelia.workstation.common.gui.support.WrapLayout;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.api.web.SageRestClient;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
+import org.janelia.workstation.core.model.DomainModelViewUtils;
+import org.janelia.workstation.core.model.SplitTypeInfo;
+import org.janelia.workstation.core.model.search.ResultPage;
+import org.janelia.workstation.core.model.search.SearchResults;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.perf4j.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -15,51 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.browser.actions.ExportResultsAction;
-import org.janelia.workstation.browser.gui.editor.SelectionButton;
-import org.janelia.workstation.browser.gui.editor.SingleSelectionButton;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.core.api.web.SageRestClient;
-import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.core.events.selection.ChildSelectionModel;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.common.gui.support.WrapLayout;
-import org.janelia.workstation.core.model.DomainModelViewUtils;
-import org.janelia.workstation.core.model.SplitTypeInfo;
-import org.janelia.workstation.core.model.search.ResultPage;
-import org.janelia.workstation.core.model.search.SearchResults;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.gui.listview.PaginatedResultsPanel;
-import org.janelia.workstation.common.gui.support.PreferenceSupport;
-import org.janelia.workstation.common.gui.support.SearchProvider;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.SampleUtils;
-import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.enums.SplitHalfType;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
-import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
-import org.janelia.model.domain.sample.Sample;
-import org.perf4j.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.eventbus.Subscribe;
 
 public class ColorDepthResultPanel extends JPanel implements SearchProvider, PreferenceSupport {
 

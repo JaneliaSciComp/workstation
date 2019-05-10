@@ -1,26 +1,10 @@
 package org.janelia.workstation.browser.gui.listview.icongrid;
 
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
-
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JToggleButton;
-import javax.swing.SwingUtilities;
-
 import com.google.common.eventbus.Subscribe;
-import org.janelia.model.access.domain.DomainObjectAttribute;
-import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObjectAttribute;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.ontology.Annotation;
@@ -41,7 +25,6 @@ import org.janelia.workstation.browser.gui.support.SampleUIUtils;
 import org.janelia.workstation.common.gui.listview.ListViewer;
 import org.janelia.workstation.common.gui.listview.ListViewerActionListener;
 import org.janelia.workstation.common.gui.listview.ListViewerState;
-import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
@@ -52,6 +35,7 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionEvent;
 import org.janelia.workstation.core.model.AnnotatedObjectList;
+import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.model.search.ResultPage;
@@ -62,6 +46,14 @@ import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 /**
  * An IconGridViewer implementation for viewing domain objects. 

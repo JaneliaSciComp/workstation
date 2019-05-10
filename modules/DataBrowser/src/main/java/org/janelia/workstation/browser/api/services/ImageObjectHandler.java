@@ -1,13 +1,9 @@
 package org.janelia.workstation.browser.api.services;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import com.google.common.io.Files;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.sample.Image;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
@@ -19,6 +15,10 @@ import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A helper for working with ImageNodes.

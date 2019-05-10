@@ -1,42 +1,30 @@
 package org.janelia.workstation.browser.gui.dialogs;
 
-import static org.janelia.workstation.browser.gui.editor.FilterEditorPanel.DEFAULT_SEARCH_CLASS;
+import net.miginfocom.swing.MigLayout;
+import org.fife.ui.autocomplete.CompletionProvider;
+import org.fife.ui.autocomplete.DefaultCompletionProvider;
+import org.fife.ui.autocomplete.ShorthandCompletion;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObjectAttribute;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.workstation.browser.gui.listview.icongrid.IconGridViewerConfiguration;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.TemplateEditorTextbox;
+import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.HeadlessException;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JRadioButtonMenuItem;
-
-import org.fife.ui.autocomplete.CompletionProvider;
-import org.fife.ui.autocomplete.DefaultCompletionProvider;
-import org.fife.ui.autocomplete.ShorthandCompletion;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.gui.listview.icongrid.IconGridViewerConfiguration;
-import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.common.gui.support.TemplateEditorTextbox;
-import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
-import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainObjectAttribute;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainObject;
-
-import net.miginfocom.swing.MigLayout;
+import static org.janelia.workstation.browser.gui.editor.FilterEditorPanel.DEFAULT_SEARCH_CLASS;
 
 /**
  * A dialog for configuring a IconGridViewer.

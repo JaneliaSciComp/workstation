@@ -1,16 +1,16 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
-import java.io.File;
-
+import org.janelia.model.access.domain.TimebasedIdentifierGenerator;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.FileMgr;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.filecache.RemoteLocation;
 import org.janelia.workstation.core.filecache.WebDavUploader;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
-import org.janelia.model.util.TimebasedIdentifierGenerator;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
 
 public class MaskUtils {
 

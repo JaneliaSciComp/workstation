@@ -1,43 +1,29 @@
 package org.janelia.workstation.browser.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Set;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
+import net.miginfocom.swing.MigLayout;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.workspace.Node;
+import org.janelia.model.security.Subject;
+import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
 import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.model.DomainObjectPermission;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.workspace.Node;
-import org.janelia.model.security.Subject;
-import org.janelia.model.security.util.SubjectUtils;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import net.miginfocom.swing.MigLayout;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Set;
 
 /**
  * A dialog for viewing and editing permissions for a single domain object.

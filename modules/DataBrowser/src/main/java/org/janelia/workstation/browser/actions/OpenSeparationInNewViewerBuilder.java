@@ -1,14 +1,7 @@
 package org.janelia.workstation.browser.actions;
 
-import java.awt.event.ActionEvent;
-import java.util.concurrent.Callable;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JOptionPane;
-
-import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
@@ -16,8 +9,8 @@ import org.janelia.workstation.browser.gui.components.SampleResultViewerManager;
 import org.janelia.workstation.browser.gui.components.SampleResultViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.common.gui.util.DomainUIUtils;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -25,6 +18,10 @@ import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.lookup.ServiceProvider;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.util.concurrent.Callable;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>

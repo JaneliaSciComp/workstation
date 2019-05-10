@@ -1,7 +1,26 @@
 package org.janelia.workstation.browser.gui.dialogs.download;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
+import org.janelia.it.jacs.shared.utils.Progress;
+import org.janelia.model.domain.ChanSpecUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.SampleAlignmentResult;
+import org.janelia.workstation.common.gui.support.Debouncer;
+import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
+import org.janelia.workstation.core.util.Utils;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -17,41 +36,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListModel;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.ListSelectionModel;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.Progress;
-import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
-import org.janelia.workstation.common.gui.support.Debouncer;
-import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.core.util.Utils;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.ChanSpecUtils;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.interfaces.HasFiles;
-import org.janelia.model.domain.sample.SampleAlignmentResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 
 public final class DownloadVisualPanel3 extends JPanel {
 

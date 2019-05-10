@@ -1,35 +1,15 @@
 package org.janelia.workstation.core.api;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
-import javax.swing.SwingUtilities;
-
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
 import org.janelia.it.jacs.shared.solr.SolrParams;
-import org.janelia.workstation.core.api.facade.interfaces.DomainFacade;
-import org.janelia.workstation.core.api.facade.interfaces.OntologyFacade;
-import org.janelia.workstation.core.api.facade.interfaces.SampleFacade;
-import org.janelia.workstation.core.api.facade.interfaces.SubjectFacade;
-import org.janelia.workstation.core.api.facade.interfaces.WorkspaceFacade;
-import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.core.events.model.DomainObjectAnnotationChangeEvent;
-import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
-import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
-import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
-import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
-import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
@@ -51,15 +31,33 @@ import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.model.security.Subject;
+import org.janelia.workstation.core.api.facade.interfaces.DomainFacade;
+import org.janelia.workstation.core.api.facade.interfaces.OntologyFacade;
+import org.janelia.workstation.core.api.facade.interfaces.SampleFacade;
+import org.janelia.workstation.core.api.facade.interfaces.SubjectFacade;
+import org.janelia.workstation.core.api.facade.interfaces.WorkspaceFacade;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.model.DomainObjectAnnotationChangeEvent;
+import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
+import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
+import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
+import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
 import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
+import javax.swing.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Implements a unified domain model for client-side operations. All changes to the model should go through this class, as well as any domain object accesses

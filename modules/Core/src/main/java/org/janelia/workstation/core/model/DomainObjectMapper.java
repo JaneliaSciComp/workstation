@@ -1,16 +1,9 @@
 package org.janelia.workstation.core.model;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronFragment;
@@ -20,10 +13,16 @@ import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleAlignmentResult;
 import org.janelia.model.domain.sample.SamplePipelineRun;
 import org.janelia.model.domain.sample.SampleProcessingResult;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Mapping from one domain object type to another. For example, converting a set of Samples to their 

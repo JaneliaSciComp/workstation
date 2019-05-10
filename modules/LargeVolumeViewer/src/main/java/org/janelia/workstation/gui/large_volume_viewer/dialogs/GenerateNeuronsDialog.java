@@ -18,13 +18,14 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
+import org.janelia.model.access.domain.IdSource;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.workstation.gui.large_volume_viewer.model_adapter.RandomNeuronGenerator;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.RandomNeuronGenerator;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileFormat.MicrometerXyz;
 import org.janelia.it.jacs.shared.lvv.TileFormat.VoxelXyz;
@@ -40,7 +41,6 @@ import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.model.util.IdSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -232,9 +232,7 @@ public class GenerateNeuronsDialog extends ModalDialog {
                 }
             });
             tmw.executeWithEvents();
-        }
-        else {
-
+        } else {
             IdSource idSource = new IdSource((int)(neuronCount*meanPointsPerNeuron*2));
             final RandomNeuronGenerator generator = new RandomNeuronGenerator(idSource, boundingBox, meanPointsPerNeuron, branchProbability);
             BackgroundWorker worker = new BackgroundWorker() {

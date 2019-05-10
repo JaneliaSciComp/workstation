@@ -1,18 +1,17 @@
 package org.janelia.workstation.core.model.descriptors;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleAlignmentResult;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Descriptor for a pipeline result. 

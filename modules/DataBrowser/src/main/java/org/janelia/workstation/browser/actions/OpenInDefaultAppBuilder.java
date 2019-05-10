@@ -1,16 +1,11 @@
 package org.janelia.workstation.browser.actions;
 
-import java.io.File;
-
-import javax.swing.Action;
-import javax.swing.JOptionPane;
-
-import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.workstation.browser.gui.support.SampleUIUtils;
-import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.janelia.workstation.common.actions.DomainObjectNodeAction;
+import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.util.FileCallable;
@@ -20,6 +15,9 @@ import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.lookup.ServiceProvider;
+
+import javax.swing.*;
+import java.io.File;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>

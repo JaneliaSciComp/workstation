@@ -1,6 +1,8 @@
 package org.janelia.workstation.core.ws;
 
 import org.hibernate.HibernateException;
+import org.janelia.model.access.domain.TimebasedIdentifierGenerator;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -9,7 +11,6 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.PathTranslator;
-import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasImageStack;
@@ -23,7 +24,6 @@ import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleAlignmentResult;
 import org.janelia.model.domain.sample.SampleProcessingResult;
-import org.janelia.model.util.TimebasedIdentifierGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

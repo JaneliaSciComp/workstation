@@ -1,35 +1,31 @@
 package org.janelia.workstation.browser.gui.support;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.swing.ButtonGroup;
-import javax.swing.JMenuItem;
-import javax.swing.JRadioButtonMenuItem;
-
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
-import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
-import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
-import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFileGroups;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.NeuronSeparation;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
+import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Multiset;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**

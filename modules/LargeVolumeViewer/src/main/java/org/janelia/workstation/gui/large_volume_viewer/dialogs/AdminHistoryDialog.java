@@ -22,7 +22,6 @@ import org.janelia.workstation.gui.large_volume_viewer.controller.BackgroundAnno
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
-import org.janelia.messaging.broker.neuronadapter.MessageType;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
@@ -32,7 +31,11 @@ import org.slf4j.LoggerFactory;
 public class AdminHistoryDialog extends ModalDialog implements BackgroundAnnotationListener {
 
     private static final Logger log = LoggerFactory.getLogger(NeuronGroupsDialog.class);
-  
+    private static final String NEURON_OWNERSHIP_DECISION_MESSAGE = "NEURON_OWNERSHIP_DECISION";
+    private static final String NEURON_DELETE_MESSAGE = "NEURON_DELETE";
+    private static final String NEURON_CREATE_MESSAGE = "NEURON_CREATE";
+    private static final String NEURON_SAVE_NEURONDATA_MESSAGE = "NEURON_SAVE_NEURONDATA";
+
     private final JButton closeButton;
     private final JTable historyTable;
     private final JPanel buttonPane;
@@ -87,36 +90,35 @@ public class AdminHistoryDialog extends ModalDialog implements BackgroundAnnotat
         packAndShow();
     }
     
-    private void updateTable(TmNeuronMetadata neuron, MessageType type) {
+    private void updateTable(TmNeuronMetadata neuron, String msgType) {
          try {
             // get workspace and sample
             TmWorkspace workspace = annotationModel.getWorkspace(neuron.getWorkspaceId());
             TmSample sample = annotationModel.getSample(workspace.getSampleId());
-            ((NeuronHistoryTableModel)historyTable.getModel()).addRow(neuron, workspace, sample, type);
+            ((NeuronHistoryTableModel)historyTable.getModel()).addRow(neuron, workspace, sample, msgType);
         } catch (Exception e) {
-            log.error("Problem retrieving sample and workspace information");
-            e.printStackTrace();
+            log.error("Problem retrieving sample and workspace information", e);
         }
     }
 
     @Override
     public void neuronModelChanged(TmNeuronMetadata neuron) {
-       updateTable (neuron, MessageType.NEURON_SAVE_NEURONDATA);
+       updateTable(neuron, NEURON_SAVE_NEURONDATA_MESSAGE);
     }
 
     @Override
     public void neuronModelCreated(TmNeuronMetadata neuron) {
-       updateTable (neuron, MessageType.NEURON_CREATE);
+       updateTable(neuron, NEURON_CREATE_MESSAGE);
     }
 
     @Override
     public void neuronModelDeleted(TmNeuronMetadata neuron) {
-       updateTable (neuron, MessageType.NEURON_DELETE);
+       updateTable(neuron, NEURON_DELETE_MESSAGE);
     }
 
     @Override
     public void neuronOwnerChanged(TmNeuronMetadata neuron) {
-       updateTable (neuron, MessageType.NEURON_OWNERSHIP_DECISION);
+       updateTable(neuron, NEURON_OWNERSHIP_DECISION_MESSAGE);
     }
     
     class NeuronHistoryTableModel extends AbstractTableModel {
@@ -149,12 +151,12 @@ public class AdminHistoryDialog extends ModalDialog implements BackgroundAnnotat
             return (getValueAt(0, c)==null?String.class:getValueAt(0,c).getClass());
         }
         
-        public void addRow(TmNeuronMetadata neuron, TmWorkspace workspace, TmSample sample, MessageType type) {
+        public void addRow(TmNeuronMetadata neuron, TmWorkspace workspace, TmSample sample, String msgType) {
              List row = new ArrayList<Object>();
              row.add(sample.getName());
              row.add(workspace.getName());
              row.add(neuron.getName());
-             row.add(type.toString());
+             row.add(msgType);
              row.add("");
              data.add(row);
              this.fireTableDataChanged();

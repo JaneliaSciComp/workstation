@@ -1,18 +1,16 @@
 package org.janelia.workstation.browser.gui.support;
 
-import java.awt.event.MouseEvent;
-import java.util.List;
-
-import javax.swing.JLabel;
-import javax.swing.JPopupMenu;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.core.api.StateMgr;
-import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.workstation.common.gui.support.AnnotationView;
 import org.janelia.workstation.common.gui.support.TagCloudPanel;
+import org.janelia.workstation.core.api.StateMgr;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+
+import javax.swing.*;
+import java.awt.event.MouseEvent;
+import java.util.List;
 
 /**
  * A tag cloud of Entity-based annotations which support context menu operations such as deletion.

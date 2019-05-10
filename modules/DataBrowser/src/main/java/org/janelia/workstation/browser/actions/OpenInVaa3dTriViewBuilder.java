@@ -1,9 +1,7 @@
 package org.janelia.workstation.browser.actions;
 
-import javax.swing.Action;
-
-import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.workstation.browser.gui.support.SampleUIUtils;
 import org.janelia.workstation.browser.tools.ToolMgr;
@@ -12,6 +10,8 @@ import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.openide.util.lookup.ServiceProvider;
+
+import javax.swing.*;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>

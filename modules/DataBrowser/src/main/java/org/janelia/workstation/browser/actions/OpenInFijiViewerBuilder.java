@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.actions;
 
 import javax.swing.Action;
 
-import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.workstation.browser.gui.support.SampleUIUtils;

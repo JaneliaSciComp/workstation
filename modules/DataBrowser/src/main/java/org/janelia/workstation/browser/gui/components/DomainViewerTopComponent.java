@@ -1,25 +1,21 @@
 package org.janelia.workstation.browser.gui.components;
 
-import java.awt.BorderLayout;
-
-import javax.swing.JComponent;
-import javax.swing.SwingUtilities;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.browser.gui.editor.SampleEditorPanel;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
-import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainUtils;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.browser.gui.editor.SampleEditorPanel;
+import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.util.NbBundle.Messages;
@@ -29,7 +25,8 @@ import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * Top component which displays domain object viewers. 

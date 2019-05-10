@@ -20,7 +20,7 @@ import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.SampleUtils;
+import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.sample.LSMImage;

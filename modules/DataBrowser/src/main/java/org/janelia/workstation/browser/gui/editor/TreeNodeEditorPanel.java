@@ -1,44 +1,43 @@
 package org.janelia.workstation.browser.gui.editor;
 
-import java.awt.BorderLayout;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
-import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
-import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
-import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
-import org.janelia.workstation.core.model.search.ResultPage;
-import org.janelia.workstation.core.model.search.SearchResults;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.interfaces.HasIdentifier;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.workstation.browser.actions.ExportResultsAction;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
-import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.workstation.common.gui.support.Debouncer;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
-import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.common.nodes.TreeNodeNode;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
+import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
+import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
+import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
+import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
+import org.janelia.workstation.core.model.search.ResultPage;
+import org.janelia.workstation.core.model.search.SearchResults;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.interfaces.HasIdentifier;
-import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.workspace.Node;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
+import java.awt.*;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Simple editor panel for viewing folders. In the future it may support drag and drop editing of folders.

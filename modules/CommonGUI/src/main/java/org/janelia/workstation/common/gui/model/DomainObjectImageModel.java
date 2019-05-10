@@ -1,11 +1,9 @@
 package org.janelia.workstation.common.gui.model;
 
-import java.awt.image.BufferedImage;
-
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.Sample;
@@ -17,6 +15,8 @@ import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
 import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.integration.util.FrameworkAccess;
+
+import java.awt.image.BufferedImage;
 
 public abstract class DomainObjectImageModel implements ImageModel<DomainObject, Reference> {
 

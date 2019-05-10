@@ -1,23 +1,21 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.sample.Image;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.FileMgr;
+import org.janelia.workstation.core.filecache.URLProxy;
+import org.janelia.workstation.core.util.Utils;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.util.List;
-
-import javax.swing.AbstractAction;
-import javax.swing.JOptionPane;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.FileMgr;
-import org.janelia.workstation.core.util.Utils;
-import org.janelia.workstation.core.filecache.URLProxy;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.sample.Image;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Allows the user to create a mask for color depth search from an existing image.

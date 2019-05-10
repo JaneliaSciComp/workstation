@@ -1,9 +1,18 @@
 package org.janelia.workstation.browser.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.HeadlessException;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
+import org.janelia.model.domain.DomainObjectAttribute;
+import org.janelia.workstation.browser.gui.listview.table.TableViewerConfiguration;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.panels.ScrollablePanel;
+import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -15,27 +24,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
-import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.gui.listview.table.TableViewerConfiguration;
-import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.common.gui.support.panels.ScrollablePanel;
-import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainObjectAttribute;
 
 /**
  * A dialog for configuring a TableViewerPanel.

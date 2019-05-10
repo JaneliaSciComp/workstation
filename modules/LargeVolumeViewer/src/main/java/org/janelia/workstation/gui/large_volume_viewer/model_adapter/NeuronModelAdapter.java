@@ -1,16 +1,14 @@
 package org.janelia.workstation.gui.large_volume_viewer.model_adapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
-import org.janelia.messaging.broker.neuronadapter.HeaderConstants;
-import org.janelia.messaging.broker.neuronadapter.MessageType;
 import org.janelia.messaging.core.ConnectionManager;
 import org.janelia.messaging.core.MessageSender;
-import org.janelia.model.access.tiledMicroscope.TmModelAdapter;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
@@ -37,9 +35,9 @@ import java.util.concurrent.CompletableFuture;
  * @author fosterl
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainMgrTmModelAdapter implements TmModelAdapter {
+class NeuronModelAdapter {
 
-    private static Logger log = LoggerFactory.getLogger(DomainMgrTmModelAdapter.class);
+    private static Logger LOG = LoggerFactory.getLogger(NeuronModelAdapter.class);
 
     private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
     private static final String MESSAGESERVER_USERACCOUNT = ConsoleProperties.getInstance().getProperty("domain.msgserver.useraccount").trim();
@@ -50,30 +48,29 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
     private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
     private MessageSender messageSender;
 
-    @Override
-    public List<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) throws Exception {
-        log.info("Loading neurons for workspace: {}", workspace);
+    List<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) throws Exception {
+        LOG.info("Loading neurons for workspace: {}", workspace);
         List<TmNeuronMetadata> neurons = new ArrayList<>();
 
         try {            
             StopWatch stopWatch = new StopWatch();
             List<TmNeuronMetadata> neuronList = tmDomainMgr.getWorkspaceNeurons(workspace.getId());
-            log.info("Loading {} neurons took {} ms", neuronList.size(), stopWatch.getElapsedTime());
+            LOG.info("Loading {} neurons took {} ms", neuronList.size(), stopWatch.getElapsedTime());
             
             if (ClientDomainUtils.hasWriteAccess(workspace)) {
                 if (ApplicationPanel.isVerifyNeurons()) {
-                    log.info("Checking neuron data consistency");
+                    LOG.info("Checking neuron data consistency");
                         
                     // check neuron consistency and repair (some) problems
                     for (TmNeuronMetadata neuron: neuronList) {
-                        log.debug("Checking neuron data for TmNeuronMetadata#{}", neuron.getId());
+                        LOG.debug("Checking neuron data for TmNeuronMetadata#{}", neuron.getId());
                         List<String> results = neuron.checkRepairNeuron();
                         if (results.size() > 0) {
-                            // save results, then output to log; this is unfortunately
+                            // save results, then output to LOG; this is unfortunately
                             //  not visible to the user; we aren't in a place in the
                             //  code where we can pop a dialog
                             for (String s: results) {
-                                log.warn(s);
+                                LOG.warn(s);
                             }
                         	neuron = tmDomainMgr.save(neuron);
                         }
@@ -105,7 +102,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
         return messageSender;
     }
     
-    private void sendMessage (TmNeuronMetadata neuron, MessageType type, Map<String,String> extraArguments) throws Exception {
+    private void sendMessage (TmNeuronMetadata neuron, NeuronMessageConstants.MessageType type, Map<String,String> extraArguments) throws Exception {
         // whatever the message is, unsync the object and increment the unsynced level counter
         neuron.setSynced(false);
         neuron.incrementSyncLevel();
@@ -115,11 +112,11 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
         
         ObjectMapper mapper = new ObjectMapper();
         Map<String,Object> updateHeaders = new HashMap<String,Object> ();
-        updateHeaders.put(HeaderConstants.TYPE, type.toString());
-        updateHeaders.put(HeaderConstants.USER, AccessManager.getSubjectKey());
-        updateHeaders.put(HeaderConstants.WORKSPACE, neuron.getWorkspaceId().toString());
-        updateHeaders.put(HeaderConstants.METADATA, mapper.writeValueAsString(neuron));
-        updateHeaders.put(HeaderConstants.NEURONIDS, neuronIds.toString());
+        updateHeaders.put(NeuronMessageConstants.Headers.TYPE, type.toString());
+        updateHeaders.put(NeuronMessageConstants.Headers.USER, AccessManager.getSubjectKey());
+        updateHeaders.put(NeuronMessageConstants.Headers.WORKSPACE, neuron.getWorkspaceId().toString());
+        updateHeaders.put(NeuronMessageConstants.Headers.METADATA, mapper.writeValueAsString(neuron));
+        updateHeaders.put(NeuronMessageConstants.Headers.NEURONIDS, neuronIds.toString());
         if (extraArguments!=null) {
             Iterator<String> extraKeys = extraArguments.keySet().iterator();
             while (extraKeys.hasNext()) {
@@ -134,40 +131,34 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
         getSender().sendMessage(updateHeaders, neuronData);
     }
 
-    @Override
-    public CompletableFuture<TmNeuronMetadata> asyncCreateNeuron(TmNeuronMetadata neuron) throws Exception {
+    CompletableFuture<TmNeuronMetadata> asyncCreateNeuron(TmNeuronMetadata neuron) throws Exception {
         // make sure the neuron contains the current user's ownerKey;
         neuron.setOwnerKey(AccessManager.getSubjectKey());
-        sendMessage (neuron, MessageType.NEURON_CREATE, null);
-        return new CompletableFuture<TmNeuronMetadata>();
+        sendMessage (neuron, NeuronMessageConstants.MessageType.NEURON_CREATE, null);
+        return new CompletableFuture<>();
     }
 
-    @Override
-    public void asyncSaveNeuron(TmNeuronMetadata neuron) throws Exception {
-        sendMessage (neuron, MessageType.NEURON_SAVE_NEURONDATA, null);
+    void asyncSaveNeuron(TmNeuronMetadata neuron) throws Exception {
+        sendMessage (neuron, NeuronMessageConstants.MessageType.NEURON_SAVE_NEURONDATA, null);
     }
 
-    @Override
-    public void asyncSaveNeuronMetadata(TmNeuronMetadata neuron) throws Exception {
-        sendMessage (neuron, MessageType.NEURON_SAVE_METADATA, null);
+    void asyncSaveNeuronMetadata(TmNeuronMetadata neuron) throws Exception {
+        sendMessage (neuron, NeuronMessageConstants.MessageType.NEURON_SAVE_METADATA, null);
     }
 
-    @Override
-    public void asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {
-        sendMessage (neuron, MessageType.NEURON_DELETE, null);
+    void asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {
+        sendMessage (neuron, NeuronMessageConstants.MessageType.NEURON_DELETE, null);
     }
     
-    @Override
-    public CompletableFuture<Boolean> requestOwnership(TmNeuronMetadata neuron) throws Exception {
-        sendMessage (neuron, MessageType.REQUEST_NEURON_OWNERSHIP, null);
-        return new CompletableFuture<Boolean>();
+    CompletableFuture<Boolean> requestOwnership(TmNeuronMetadata neuron) throws Exception {
+        sendMessage (neuron, NeuronMessageConstants.MessageType.REQUEST_NEURON_OWNERSHIP, null);
+        return new CompletableFuture<>();
     }
     
-    @Override
-    public CompletableFuture<Boolean> requestAssignment(TmNeuronMetadata neuron, String targetUser) throws Exception {
+    CompletableFuture<Boolean> requestAssignment(TmNeuronMetadata neuron, String targetUser) throws Exception {
         Map<String,String> extraArgs = new HashMap<>();
-        extraArgs.put(HeaderConstants.TARGET_USER, targetUser);        
-        sendMessage (neuron, MessageType.REQUEST_NEURON_ASSIGNMENT, extraArgs);
-        return new CompletableFuture<Boolean>();
+        extraArgs.put(NeuronMessageConstants.Headers.TARGET_USER, targetUser);
+        sendMessage (neuron, NeuronMessageConstants.MessageType.REQUEST_NEURON_ASSIGNMENT, extraArgs);
+        return new CompletableFuture<>();
     }
 }

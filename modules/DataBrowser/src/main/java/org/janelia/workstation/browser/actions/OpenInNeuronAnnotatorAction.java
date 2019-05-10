@@ -1,14 +1,7 @@
 package org.janelia.workstation.browser.actions;
 
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.AbstractAction;
-import javax.swing.JOptionPane;
-
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.access.domain.SampleUtils;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.NeuronSeparation;
@@ -23,6 +16,11 @@ import org.janelia.workstation.core.ws.ExternalClientMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Given an entity with a File Path, reveal the path in Finder.

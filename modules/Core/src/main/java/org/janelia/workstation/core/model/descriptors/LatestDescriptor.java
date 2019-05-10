@@ -1,15 +1,14 @@
 package org.janelia.workstation.core.model.descriptors;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.janelia.model.access.domain.SampleUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.Sample;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class LatestDescriptor extends ArtifactDescriptor {
     

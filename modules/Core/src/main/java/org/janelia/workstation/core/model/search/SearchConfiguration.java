@@ -1,5 +1,38 @@
 package org.janelia.workstation.core.model.search;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.common.SolrDocument;
+import org.janelia.it.jacs.shared.solr.FacetValue;
+import org.janelia.it.jacs.shared.solr.SolrJsonResults;
+import org.janelia.it.jacs.shared.solr.SolrParams;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
+import org.janelia.it.jacs.shared.solr.SolrUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObjectAttribute;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.search.Filter;
+import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
+import org.janelia.model.domain.gui.search.criteria.AttributeValueCriteria;
+import org.janelia.model.domain.gui.search.criteria.Criteria;
+import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
+import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
+import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.support.SearchType;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.perf4j.LoggingStopWatch;
+import org.perf4j.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,41 +44,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.swing.SwingUtilities;
-
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.common.SolrDocument;
-import org.janelia.it.jacs.shared.solr.FacetValue;
-import org.janelia.it.jacs.shared.solr.SolrJsonResults;
-import org.janelia.it.jacs.shared.solr.SolrParams;
-import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
-import org.janelia.it.jacs.shared.solr.SolrUtils;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.model.access.domain.DomainObjectAttribute;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.gui.search.Filter;
-import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
-import org.janelia.model.domain.gui.search.criteria.AttributeValueCriteria;
-import org.janelia.model.domain.gui.search.criteria.Criteria;
-import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
-import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
-import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
-import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.support.SearchType;
-import org.perf4j.LoggingStopWatch;
-import org.perf4j.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 
 /**
  * A faceted search for domain objects of a certain type. 

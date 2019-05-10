@@ -1,37 +1,9 @@
 package org.janelia.workstation.browser.gui.editor;
 
-import java.awt.BorderLayout;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.swing.BorderFactory;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-
-import org.janelia.workstation.core.model.Decorator;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
-import org.janelia.workstation.core.events.selection.SelectionModel;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.browser.selection.FileGroupSelectionModel;
-import org.janelia.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
-import org.janelia.workstation.common.gui.editor.SampleResultEditor;
-import org.janelia.workstation.core.model.ImageModel;
-import org.janelia.workstation.common.gui.support.Debouncer;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
-import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.core.util.Utils;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainUtils;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFileGroups;
 import org.janelia.model.domain.ontology.Annotation;
@@ -39,11 +11,35 @@ import org.janelia.model.domain.sample.FileGroup;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
+import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
+import org.janelia.workstation.browser.selection.FileGroupSelectionModel;
+import org.janelia.workstation.common.gui.editor.SampleResultEditor;
+import org.janelia.workstation.common.gui.support.Debouncer;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.MouseForwarder;
+import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
+import org.janelia.workstation.core.events.selection.SelectionModel;
+import org.janelia.workstation.core.model.Decorator;
+import org.janelia.workstation.core.model.ImageModel;
+import org.janelia.workstation.core.util.Utils;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * An editor which can display the file groups for a given sample result.

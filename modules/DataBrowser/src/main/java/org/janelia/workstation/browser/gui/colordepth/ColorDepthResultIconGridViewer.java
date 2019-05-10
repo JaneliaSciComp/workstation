@@ -33,7 +33,7 @@ import org.janelia.workstation.common.gui.listview.ListViewerState;
 import org.janelia.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
-import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.SplitHalfType;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;

@@ -1,24 +1,10 @@
 package org.janelia.workstation.browser.gui.dialogs.download;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
-import org.janelia.workstation.core.options.DownloadOptions;
-import org.janelia.workstation.core.model.DomainModelViewUtils;
-import org.janelia.workstation.core.model.MappingType;
-import org.janelia.workstation.core.util.PathUtil;
-import org.janelia.workstation.core.util.Utils;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.access.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.model.domain.interfaces.HasFilepath;
@@ -32,8 +18,22 @@ import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.util.MapUnion;
+import org.janelia.workstation.core.model.DomainModelViewUtils;
+import org.janelia.workstation.core.model.MappingType;
+import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
+import org.janelia.workstation.core.options.DownloadOptions;
+import org.janelia.workstation.core.util.PathUtil;
+import org.janelia.workstation.core.util.Utils;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * An item to be downloaded, possibly with some other processing such as file format conversion. 

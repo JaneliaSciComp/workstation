@@ -1,13 +1,28 @@
 package org.janelia.workstation.browser.gui.hud;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.browser.api.state.DataBrowserMgr;
+import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
+import org.janelia.workstation.browser.gui.support.ResultSelectionButton;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.MissingIcon;
+import org.janelia.workstation.core.api.FileMgr;
+import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
+import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
+import org.janelia.workstation.core.util.ImageCache;
+import org.janelia.workstation.core.util.Utils;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.gui.viewer3d.Mip3d;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyListener;
@@ -15,39 +30,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
-
-import javax.swing.ImageIcon;
-import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.browser.gui.support.ResultSelectionButton;
-import org.janelia.workstation.browser.api.state.DataBrowserMgr;
-import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
-import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
-import org.janelia.workstation.core.util.ImageCache;
-import org.janelia.workstation.core.util.Utils;
-import org.janelia.workstation.core.api.FileMgr;
-import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
-import org.janelia.workstation.common.gui.support.MissingIcon;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.gui.viewer3d.Mip3d;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.interfaces.HasFiles;
-import org.janelia.model.domain.sample.Sample;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**

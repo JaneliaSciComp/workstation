@@ -1,22 +1,16 @@
 package org.janelia.workstation.browser.nb_action;
 
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.swing.ProgressMonitor;
-import javax.swing.UIDefaults;
-import javax.swing.UIManager;
-
+import com.google.common.collect.Sets;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrDocument;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
 import org.janelia.it.jacs.shared.solr.SolrParams;
 import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.support.SearchType;
+import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.workstation.browser.gui.components.DomainListViewManager;
 import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
@@ -27,11 +21,7 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.model.search.SearchConfiguration;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.support.SearchType;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.DialogDisplayer;
 import org.openide.WizardDescriptor;
 import org.openide.awt.ActionID;
@@ -44,7 +34,13 @@ import org.openide.util.actions.CallableSystemAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
+import javax.swing.*;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Action which brings up the Import Identifiers wizard 

@@ -1,5 +1,21 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.SampleUtils;
+import org.janelia.model.domain.enums.SplitHalfType;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.model.Decorator;
+import org.janelia.workstation.core.model.ImageModel;
+import org.janelia.workstation.core.model.SplitTypeInfo;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -7,22 +23,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.janelia.workstation.core.model.Decorator;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.model.ImageModel;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.core.model.SplitTypeInfo;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.access.domain.SampleUtils;
-import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.enums.SplitHalfType;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
-import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.sample.Sample;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Image model for color depth search results and their related information. 

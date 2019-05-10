@@ -1,18 +1,9 @@
 package org.janelia.workstation.browser.gui.editor;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.access.domain.SampleUtils;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFileGroups;
 import org.janelia.model.domain.sample.NeuronSeparation;
@@ -32,7 +23,6 @@ import org.janelia.workstation.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.workstation.browser.tools.ToolMgr;
 import org.janelia.workstation.common.actions.CopyGUIDToClipboardActionBuilder;
 import org.janelia.workstation.common.actions.CopyNameToClipboardActionBuilder;
-import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.common.actions.PopupLabelActionBuilder;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
@@ -41,6 +31,13 @@ import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.model.SampleImage;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Right-click context menu for sample results presented in the Sample Editor. 

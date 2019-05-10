@@ -1,31 +1,10 @@
 package org.janelia.workstation.site.jrc.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-
 import net.miginfocom.swing.MigLayout;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.model.security.Subject;
@@ -41,7 +20,23 @@ import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.core.workers.TaskMonitoringWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.jdesktop.swingx.JXDatePicker;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * A dialog for viewing the list of accessible fly line releases, editing them,

@@ -45,7 +45,7 @@ import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.janelia.workstation.browser.gui.support.FileDownloadWorker;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainUtils;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;

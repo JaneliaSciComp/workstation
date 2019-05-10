@@ -28,6 +28,7 @@ import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
@@ -53,14 +54,12 @@ import org.janelia.workstation.gui.large_volume_viewer.activity_logging.Activity
 import org.janelia.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
-import org.janelia.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
+import org.janelia.workstation.gui.large_volume_viewer.model_adapter.NeuronManager;
 import org.janelia.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.janelia.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.access.tiledMicroscope.TmModelManipulator;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
@@ -113,7 +112,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private final TiledMicroscopeDomainMgr tmDomainMgr;
 
     private SWCDataConverter swcDataConverter;
-    private final DomainMgrTmModelAdapter modelAdapter;
 
     private TmSample currentSample;
     private TmWorkspace currentWorkspace;
@@ -133,7 +131,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private final Collection<BackgroundAnnotationListener> backgroundAnnotationListeners = new ArrayList<>();
     private final Collection<TaskReviewListener> taskReviewListeners = new ArrayList<>();
 
-    private final TmModelManipulator neuronManager;
+    private final NeuronManager neuronManager;
 
     private final LoadTimer addTimer = new LoadTimer();
 
@@ -151,8 +149,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         this.currentSample = currentSample;
         this.currentWorkspace = currentWorkspace;
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-        this.modelAdapter = new DomainMgrTmModelAdapter();
-        this.neuronManager = new TmModelManipulator(modelAdapter);
+        this.neuronManager = new NeuronManager();
         this.filteredAnnotationModel = new FilteredAnnotationModel();
         
         this.neuronSetAdapter = new NeuronSetAdapter();
@@ -1033,8 +1030,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             }
         });
 
-        // log.info("ending mergeNeurite(); elapsed = " + stopwatch);
-        
     }
     
     /**
@@ -1881,9 +1876,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         } catch (Exception error) {
             FrameworkAccess.handleException(error);
         }
-
     }
-        
 
     public synchronized void finishBulkSWCData(Map<String,Object> neuronData) {
         TmNeuronMetadata neuron = (TmNeuronMetadata)neuronData.get("neuron");
@@ -1907,9 +1900,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         if (updateFrequency == 0) {
             updateFrequency = 1;
         }
-       /* if (progress != null) {
-            progress.setProgress(0L, totalLength);
-        }*/
 
         Map<Integer, Integer> nodeParentLinkage = new HashMap<>();
 
@@ -1934,10 +1924,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             
             annotations.put(node.getIndex(), unserializedAnnotation);
             nodeParentLinkage.put(node.getIndex(), node.getParentIndex());
-
-           /* if (progress != null && (node.getIndex() % updateFrequency) == 0) {
-                progress.setProgress(node.getIndex(), totalLength);
-            }*/
         }
 
         // Fire off the bulk update.  The "un-serialized" or
@@ -1993,7 +1979,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             
             postWorkspaceUpdate(neuron);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.info("Error saving neurons", e);
         }
     }
 
@@ -2137,23 +2123,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     }
                 }
             }
-        } 
-        // populate user preferences, which for now only deal with user visibility
-         // NOTE: For now, comment since users don't want to restore their user preferences, and that
-         // was the only thing in the prefs
-         // NOTE: the following code probably no longer works correctly!
-         /*List<String> userTagPreferences = FrameworkAccess
-                 .getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_TAGS, 
-                         this.getCurrentSample().getId().toString(), null);
-         if (userTagPreferences!=null) {            
-             List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>();             
-             for (String neuronKey: userTagPreferences) {                 
-                 TmNeuronMetadata neuron = this.getNeuronFromNeuronID(Long.parseLong(neuronKey));
-                 currentTagMap.addUserTag("hidden",neuron);
-                 neuronList.add(neuron);                                  
-             }
-             LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserVisible(neuronList, false);               
-         } */                        
+        }
     }
 
     public void saveUserPreferences() throws Exception {
@@ -2431,11 +2401,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             notesUpdateListener.notesUpdated(ann);
         }
     }
+
     public NeuronSet getNeuronSet() {
         return neuronSetAdapter;
     }
 
-    public TmModelManipulator getNeuronManager() {
+    public NeuronManager getNeuronManager() {
         return neuronManager;
     }
     

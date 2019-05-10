@@ -1,6 +1,41 @@
 package org.janelia.workstation.browser.gui.inspector;
 
-import java.awt.BorderLayout;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
+import net.miginfocom.swing.MigLayout;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObjectAttribute;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.DynamicDomainObjectProxy;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.search.Filtering;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.domain.sample.DataSet;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.security.Subject;
+import org.janelia.workstation.browser.gui.dialogs.DomainObjectPermissionDialog;
+import org.janelia.workstation.browser.gui.support.AnnotationTablePanel;
+import org.janelia.workstation.common.gui.support.AnnotationView;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.table.DynamicColumn;
+import org.janelia.workstation.common.gui.table.DynamicTable;
+import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.model.DomainObjectPermission;
+import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -14,56 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.browser.gui.dialogs.DomainObjectPermissionDialog;
-import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.common.gui.support.AnnotationView;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.table.DynamicColumn;
-import org.janelia.workstation.common.gui.table.DynamicTable;
-import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.core.model.DomainObjectPermission;
-import org.janelia.workstation.browser.gui.support.AnnotationTablePanel;
-import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.access.domain.DomainObjectAttribute;
-import org.janelia.model.access.domain.DomainUtils;
-import org.janelia.model.access.domain.DynamicDomainObjectProxy;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.gui.search.Filtering;
-import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.sample.DataSet;
-import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.workspace.TreeNode;
-import org.janelia.model.security.Subject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
-
-import net.miginfocom.swing.MigLayout;
 
 
 /**

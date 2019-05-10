@@ -10,9 +10,7 @@ import java.util.Iterator;
  * @author brunsc
  *
  */
-public class RangeIterator 
-implements Iterator<Integer>, Iterable<Integer> 
-{
+public class RangeIterator implements Iterator<Integer>, Iterable<Integer> {
 	private int start = 0;
 	private int value = 0;
 	private int increment = 1;
