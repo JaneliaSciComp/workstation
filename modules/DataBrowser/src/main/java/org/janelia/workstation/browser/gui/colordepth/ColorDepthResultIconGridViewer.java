@@ -139,7 +139,9 @@ public class ColorDepthResultIconGridViewer
             ColorDepthMatch match = model.getImageByUniqueId(filepath);
             if (match != null) {
                 Sample sample = model.getSample(match);
-                sampleRefs.add(Reference.createFor(sample));
+                if (sample != null) {
+                    sampleRefs.add(Reference.createFor(sample));
+                }
             }
         }
         
