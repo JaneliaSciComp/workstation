@@ -8,7 +8,9 @@ import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCam
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JLabel;
 import java.awt.event.ActionEvent;
 import java.net.URL;
 

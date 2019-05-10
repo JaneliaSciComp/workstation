@@ -8,7 +8,8 @@ import org.janelia.workstation.common.gui.support.TagCloudPanel;
 import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import javax.swing.*;
+import javax.swing.JLabel;
+import javax.swing.JPopupMenu;
 import java.awt.event.MouseEvent;
 import java.util.List;
 

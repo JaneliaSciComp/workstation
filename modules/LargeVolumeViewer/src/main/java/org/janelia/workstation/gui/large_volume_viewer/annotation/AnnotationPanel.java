@@ -1,18 +1,8 @@
 package org.janelia.workstation.gui.large_volume_viewer.annotation;
 
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-
-import javax.swing.*;
-
-import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.workstation.gui.large_volume_viewer.action.BulkChangeNeuronColorAction;
 import org.janelia.workstation.gui.large_volume_viewer.action.BulkChangeNeuronOwnerAction;
@@ -25,7 +15,30 @@ import org.janelia.workstation.gui.large_volume_viewer.action.WorkspaceInformati
 import org.janelia.workstation.gui.large_volume_viewer.action.WorkspaceSaveAsAction;
 import org.janelia.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.workstation.gui.large_volume_viewer.controller.ViewStateListener;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSeparator;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 /**
  * this is the main class for large volume viewer annotation GUI; it instantiates and contains

@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.framework.console;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Point;
 import java.io.Serializable;
 
 /**

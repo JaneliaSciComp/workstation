@@ -1,22 +1,26 @@
 package org.janelia.workstation.admin;
 
-import javax.swing.*;
-import java.awt.Font;
-import java.util.List;
+import org.janelia.model.security.Group;
+import org.janelia.model.security.User;
+import org.janelia.model.security.dto.AuthenticationRequest;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.facade.interfaces.SubjectFacade;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.model.security.User;
-import org.janelia.model.security.Group;
-import org.janelia.model.security.dto.AuthenticationRequest;
-
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
+
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import java.awt.Font;
+import java.util.List;
 
 /**
  * Top component which displays something.

@@ -1,5 +1,23 @@
 package org.janelia.workstation.browser.gui.progress;
 
+import net.miginfocom.swing.MigLayout;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.workers.BackgroundWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Font;
@@ -8,16 +26,6 @@ import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
-
-import javax.swing.*;
-import javax.swing.plaf.basic.BasicProgressBarUI;
-
-import net.miginfocom.swing.MigLayout;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.core.workers.BackgroundWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A progress meter for all background worker tasks.

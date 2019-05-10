@@ -1,5 +1,46 @@
 package org.janelia.workstation.browser.gui.dialogs;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.model.access.domain.TimebasedIdentifierGenerator;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
+import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.common.nodes.NodeUtils;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.api.FileMgr;
+import org.janelia.workstation.core.api.web.AsyncServiceClient;
+import org.janelia.workstation.core.filecache.RemoteLocation;
+import org.janelia.workstation.core.filecache.WebDavUploader;
+import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
+import org.janelia.workstation.core.workers.BackgroundWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.filechooser.FileFilter;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,37 +53,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.filechooser.FileFilter;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import org.janelia.model.access.domain.TimebasedIdentifierGenerator;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.core.api.FileMgr;
-import org.janelia.workstation.core.api.web.AsyncServiceClient;
-import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
-import org.janelia.workstation.core.filecache.RemoteLocation;
-import org.janelia.workstation.core.filecache.WebDavUploader;
-import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
-import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.common.nodes.NodeUtils;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
-import org.janelia.workstation.core.workers.BackgroundWorker;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.workspace.TreeNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Dialog for importing images using the file import service. 

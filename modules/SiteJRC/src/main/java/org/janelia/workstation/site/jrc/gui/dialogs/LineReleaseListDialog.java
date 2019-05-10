@@ -1,8 +1,7 @@
 package org.janelia.workstation.site.jrc.gui.dialogs;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.table.DynamicColumn;
@@ -10,11 +9,25 @@ import org.janelia.workstation.common.gui.table.DynamicRow;
 import org.janelia.workstation.common.gui.table.DynamicTable;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.domain.sample.LineRelease;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;

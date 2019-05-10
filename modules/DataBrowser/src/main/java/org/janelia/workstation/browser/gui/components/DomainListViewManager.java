@@ -1,18 +1,18 @@
 package org.janelia.workstation.browser.gui.components;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
+import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.nodes.NodeSelectionEvent;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
+import java.awt.Component;
 
 /**
  * Manages the life cycle of domain list viewers based on user generated selected events. This manager

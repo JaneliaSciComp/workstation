@@ -1,7 +1,64 @@
 package org.janelia.workstation.gui.task_workflow;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mxgraph.model.mxCell;
+import com.mxgraph.util.mxEventObject;
+import com.mxgraph.util.mxEventSource;
+import com.mxgraph.view.mxGraphSelectionModel;
+import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.console.viewerapi.SimpleIcons;
+import org.janelia.console.viewerapi.SynchronizationHelper;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
+import org.janelia.it.jacs.shared.geom.Quaternion;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronReviewItem;
+import org.janelia.model.domain.tiledMicroscope.TmPointListReviewItem;
+import org.janelia.model.domain.tiledMicroscope.TmReviewItem;
+import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.MouseHandler;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
+import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.netbeans.api.settings.ConvertAsProperties;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.explorer.ExplorerManager;
+import org.openide.util.Exceptions;
+import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
+import javax.swing.ListSelectionModel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.AbstractTableModel;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -9,57 +66,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mxgraph.model.mxCell;
-import com.mxgraph.util.mxEventObject;
-import com.mxgraph.util.mxEventSource;
-import com.mxgraph.view.mxGraphSelectionModel;
-
-import java.awt.event.MouseEvent;
-import java.util.LinkedList;
-
-import javax.swing.table.AbstractTableModel;
-
-import java.awt.Insets;
-
-import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.console.viewerapi.SimpleIcons;
-import org.janelia.console.viewerapi.SynchronizationHelper;
-import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
-import org.janelia.workstation.gui.task_workflow.Bundle;
-import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.geom.Quaternion;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.MouseHandler;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronReviewItem;
-import org.janelia.model.domain.tiledMicroscope.TmPointListReviewItem;
-import org.janelia.model.domain.tiledMicroscope.TmReviewItem;
-import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
-import org.netbeans.api.settings.ConvertAsProperties;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.explorer.ExplorerManager;
-import org.openide.util.Exceptions;
-import org.openide.windows.TopComponent;
-import org.openide.util.NbBundle.Messages;
-import org.openide.windows.WindowManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.

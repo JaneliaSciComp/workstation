@@ -1,13 +1,17 @@
 package org.janelia.workstation.common.gui.support;
 
-import java.awt.*;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollBar;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Insets;
+import java.awt.LayoutManager;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollBar;
 
 /**
  * Adapted from

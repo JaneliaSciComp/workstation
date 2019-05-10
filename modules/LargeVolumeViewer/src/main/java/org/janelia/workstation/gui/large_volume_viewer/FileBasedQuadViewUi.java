@@ -1,12 +1,13 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;

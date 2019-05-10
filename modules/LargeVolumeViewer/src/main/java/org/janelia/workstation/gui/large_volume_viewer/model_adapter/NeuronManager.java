@@ -7,6 +7,7 @@ import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.util.TmNeuronUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,76 +133,7 @@ public class NeuronManager {
     public void addLinkedGeometricAnnotationsInMemory(Map<Integer, Integer> nodeParentLinkage,
                                                       Map<Integer, TmGeoAnnotation> annotations,
                                                       TmNeuronMetadata tmNeuronMetadata) {
-        Long neuronId = tmNeuronMetadata.getId();
-        int putativeRootCount = 0;
-        // Cache to avoid re-fetch.
-        Map<Integer, Long> nodeIdToAnnotationId = new HashMap<>();
-        // Ensure the order of progression through nodes matches node IDs.
-        Set<Integer> sortedKeys = new TreeSet<>(annotations.keySet());
-        for (Integer nodeId : sortedKeys) {
-            boolean isRoot = false;
-            TmGeoAnnotation unlinkedAnnotation = annotations.get(nodeId);
-
-            // Establish node linkage.
-            Integer parentIndex = nodeParentLinkage.get(nodeId);
-            Long parentAnnotationId = null;
-            if (parentIndex != null && parentIndex != -1) {
-                // NOTE: unless the annotation has been processed as
-                // below, prior to now, the parent ID will be null.
-                parentAnnotationId = nodeIdToAnnotationId.get(parentIndex);
-                if (parentAnnotationId == null) {
-                    parentAnnotationId = neuronId;
-                }
-            } else {
-                putativeRootCount++;
-                parentAnnotationId = neuronId;
-                isRoot = true;
-            }
-
-            // Make the actual annotation, and save its linkage
-            // through its original node id.
-            TmGeoAnnotation linkedAnnotation = createGeometricAnnotationInMemory(tmNeuronMetadata, isRoot, parentAnnotationId, unlinkedAnnotation);
-            TmGeoAnnotation parentAnnotation = tmNeuronMetadata.getParentOf(linkedAnnotation);
-            if (parentAnnotation != null) {
-                parentAnnotation.addChild(linkedAnnotation);
-            }
-            nodeIdToAnnotationId.put(nodeId, linkedAnnotation.getId());
-
-            LOG.trace("Node " + nodeId + " at " + linkedAnnotation.toString() + ", has id " + linkedAnnotation.getId()
-                    + ", has parent " + linkedAnnotation.getParentId() + ", under neuron " + linkedAnnotation.getNeuronId());
-        }
-
-        if (putativeRootCount > 1) {
-            LOG.warn("Number of nodes with neuron as parent is " + putativeRootCount);
-        }
-    }
-
-    private TmGeoAnnotation createGeometricAnnotationInMemory(TmNeuronMetadata neuron,
-                                                              boolean isRoot,
-                                                              Long parentAnnotationId,
-                                                              TmGeoAnnotation unserializedAnno) {
-        return createGeometricAnnotationInMemory(neuron, isRoot, parentAnnotationId, unserializedAnno.getX(), unserializedAnno.getY(), unserializedAnno.getZ(), unserializedAnno.getRadius(), neuron.getId());
-    }
-
-    private TmGeoAnnotation createGeometricAnnotationInMemory(TmNeuronMetadata tmNeuronMetadata,
-                                                              boolean isRoot,
-                                                              Long parentAnnotationId,
-                                                              double x, double y, double z, double radius,
-                                                              Long neuronId) {
-
-        long generatedId = idSource.next();
-        Date now = new Date();
-        TmGeoAnnotation geoAnnotation = new TmGeoAnnotation(generatedId, parentAnnotationId, tmNeuronMetadata.getId(), x, y, z, radius, now, now);
-        tmNeuronMetadata.getGeoAnnotationMap().put(geoAnnotation.getId(), geoAnnotation);
-        if (isRoot) {
-            tmNeuronMetadata.addRootAnnotation(geoAnnotation);
-        }
-        else {
-            if (parentAnnotationId==null) {
-                LOG.error("Non-root geometric annotation has null parent id for neuron "+generatedId);
-            }
-        }
-        return geoAnnotation;
+        TmNeuronUtils.addLinkedGeometricAnnotationsInMemory(nodeParentLinkage, annotations, tmNeuronMetadata, () -> idSource.next());
     }
 
     public TmStructuredTextAnnotation addStructuredTextAnnotation(TmNeuronMetadata neuron, Long parentID, String data) throws Exception {

@@ -2,7 +2,8 @@ package org.janelia.workstation.gui.large_volume_viewer.action;
 
 import org.janelia.workstation.gui.large_volume_viewer.QuadViewUi;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.KeyStroke;
 import java.awt.event.ActionEvent;
 
 /**

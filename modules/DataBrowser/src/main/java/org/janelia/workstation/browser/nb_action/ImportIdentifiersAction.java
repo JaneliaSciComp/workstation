@@ -34,7 +34,9 @@ import org.openide.util.actions.CallableSystemAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
+import javax.swing.ProgressMonitor;
+import javax.swing.UIDefaults;
+import javax.swing.UIManager;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;

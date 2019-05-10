@@ -1,14 +1,24 @@
 package org.janelia.workstation.gui.large_volume_viewer.nb_action;
 
+import org.janelia.workstation.gui.large_volume_viewer.action.CreateTiledMicroscopeSampleAction;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.jdesktop.swingx.VerticalLayout;
+
+import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-
-import javax.swing.*;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.gui.large_volume_viewer.action.CreateTiledMicroscopeSampleAction;
-import org.jdesktop.swingx.VerticalLayout;
 
 public class NewTiledMicroscopeSampleDialog extends JDialog {
 	

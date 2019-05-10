@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer.annotation;
 
-import java.awt.*;
+import java.awt.Color;
 
 /**
  * Created with IntelliJ IDEA.

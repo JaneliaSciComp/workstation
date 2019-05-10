@@ -11,7 +11,7 @@ import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.openide.util.lookup.ServiceProvider;
 
-import javax.swing.*;
+import javax.swing.Action;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>

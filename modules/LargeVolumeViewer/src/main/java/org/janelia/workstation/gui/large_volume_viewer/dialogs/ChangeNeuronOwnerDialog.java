@@ -1,17 +1,26 @@
 package org.janelia.workstation.gui.large_volume_viewer.dialogs;
 
+import org.janelia.model.security.Subject;
+import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.util.ConsoleProperties;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.KeyEvent;
-
-import javax.swing.*;
-
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.model.security.Subject;
 
 /**
  * this dialog lets the user request a change in ownership of the given neuron; it

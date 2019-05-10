@@ -1,5 +1,49 @@
 package org.janelia.workstation.gui.large_volume_viewer.annotation;
 
+import org.janelia.console.viewerapi.SimpleIcons;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.MouseHandler;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
+import org.janelia.workstation.gui.large_volume_viewer.controller.NeuronSelectedListener;
+import org.janelia.workstation.gui.large_volume_viewer.dialogs.ChangeNeuronOwnerDialog;
+import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
+
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultRowSorter;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
+import javax.swing.SwingUtilities;
+import javax.swing.border.Border;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableModel;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -20,33 +64,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.JTableHeader;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableModel;
-
-import org.janelia.console.viewerapi.SimpleIcons;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.MouseHandler;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.NeuronSelectedListener;
-import org.janelia.workstation.gui.large_volume_viewer.dialogs.ChangeNeuronOwnerDialog;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
 /**
  * this widget displays a list of neurons in a workspace

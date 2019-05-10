@@ -1,7 +1,11 @@
 package org.janelia.workstation.common.gui.support;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.Icon;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 
 /**
  * Created by IntelliJ IDEA.

@@ -19,7 +19,9 @@ import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
+import javax.swing.ButtonGroup;
+import javax.swing.JMenuItem;
+import javax.swing.JRadioButtonMenuItem;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;

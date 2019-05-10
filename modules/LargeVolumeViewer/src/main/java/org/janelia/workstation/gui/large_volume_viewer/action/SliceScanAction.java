@@ -7,7 +7,7 @@ import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
 import java.awt.event.ActionEvent;
 
 /**

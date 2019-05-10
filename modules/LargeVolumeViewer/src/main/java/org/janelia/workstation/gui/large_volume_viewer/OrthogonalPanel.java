@@ -13,10 +13,15 @@ import org.janelia.workstation.gui.large_volume_viewer.controller.MessageListene
 import org.janelia.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 
-import javax.swing.*;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import java.awt.*;
+import java.awt.Dimension;
 import java.net.URL;
 
 /*

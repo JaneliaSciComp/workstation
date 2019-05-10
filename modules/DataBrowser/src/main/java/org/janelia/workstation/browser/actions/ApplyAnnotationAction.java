@@ -28,7 +28,7 @@ import org.openide.util.actions.NodeAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
+import javax.swing.ProgressMonitor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

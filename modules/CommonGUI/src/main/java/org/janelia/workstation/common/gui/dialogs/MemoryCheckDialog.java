@@ -4,7 +4,8 @@ import org.janelia.workstation.core.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 

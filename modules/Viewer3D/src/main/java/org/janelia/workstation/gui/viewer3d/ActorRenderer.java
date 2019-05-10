@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GLAutoDrawable;
-import java.awt.*;
+import java.awt.Point;
 
 public abstract class ActorRenderer 
     extends BaseRenderer

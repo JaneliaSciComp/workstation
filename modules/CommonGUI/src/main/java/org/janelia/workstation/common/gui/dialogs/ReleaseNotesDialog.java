@@ -1,5 +1,23 @@
 package org.janelia.workstation.common.gui.dialogs;
 
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.workstation.core.options.ApplicationOptions;
+import org.janelia.workstation.core.util.SystemInfo;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -10,16 +28,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.*;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.core.options.ApplicationOptions;
-import org.janelia.workstation.core.util.SystemInfo;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.janelia.workstation.core.options.OptionConstants.LAST_SHOWN_RELEASE_NOTES;
 

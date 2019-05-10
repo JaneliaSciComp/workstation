@@ -4,14 +4,18 @@ package org.janelia.workstation.gui.large_volume_viewer.components;
  * Created by murphys on 11/6/2015.
  */
 
-import java.awt.*;
+import org.janelia.workstation.gui.large_volume_viewer.TileStackCacheController;
+import org.janelia.workstation.gui.large_volume_viewer.VolumeCache;
+
+import javax.swing.JPanel;
+import javax.swing.Timer;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
-import javax.swing.*;
-import org.janelia.workstation.gui.large_volume_viewer.TileStackCacheController;
-import org.janelia.workstation.gui.large_volume_viewer.VolumeCache;
 
 /**
  * Created by murphys on 11/4/2015.

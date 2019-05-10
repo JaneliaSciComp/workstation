@@ -12,7 +12,8 @@ import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.ProgressMonitor;
 import java.awt.event.ActionEvent;
 import java.util.List;
 

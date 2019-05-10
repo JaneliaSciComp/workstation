@@ -35,7 +35,7 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
+import java.awt.BorderLayout;
 import java.util.List;
 import java.util.concurrent.Callable;
 

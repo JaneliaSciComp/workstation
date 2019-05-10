@@ -2,11 +2,13 @@ package org.janelia.workstation.gui.large_volume_viewer.action;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.workstation.gui.camera.Camera3d;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
 import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
+
+import javax.swing.AbstractAction;
+import javax.swing.JOptionPane;
+import javax.swing.KeyStroke;
+import java.awt.event.ActionEvent;
 
 /**
  * this action lets the user navigate to a specific location

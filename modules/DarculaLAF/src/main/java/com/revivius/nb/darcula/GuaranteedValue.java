@@ -1,7 +1,9 @@
 package com.revivius.nb.darcula;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.UIDefaults;
+import javax.swing.UIManager;
+import java.awt.Color;
+import java.awt.Font;
 
 /** 
  * ------------------------------------------------------------

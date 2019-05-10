@@ -6,15 +6,12 @@ package org.janelia.workstation.gui.viewer3d;
 
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.gui.static_view.RGBExcludableVolumeBrick;
-import org.janelia.workstation.gui.viewer3d.Mip3d;
-import org.janelia.workstation.gui.viewer3d.VolumeBrickActorBuilder;
-import org.janelia.workstation.gui.viewer3d.VolumeBrickFactory;
-import org.janelia.workstation.gui.viewer3d.VolumeBrickI;
-import org.janelia.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.workstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.workstation.gui.viewer3d.texture.TextureDataI;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.SwingUtilities;
 
 /**
  * @author brunsc

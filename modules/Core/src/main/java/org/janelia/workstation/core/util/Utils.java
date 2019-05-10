@@ -1,6 +1,43 @@
 package org.janelia.workstation.core.util;
 
-import java.awt.*;
+import loci.formats.FormatException;
+import loci.formats.IFormatReader;
+import loci.formats.gui.BufferedImageReader;
+import loci.formats.in.APNGReader;
+import loci.formats.in.BMPReader;
+import loci.formats.in.GIFReader;
+import loci.formats.in.JPEGReader;
+import loci.formats.in.TiffReader;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.janelia.workstation.core.api.FileMgr;
+import org.janelia.workstation.core.api.http.HttpClientProxy;
+import org.janelia.workstation.core.filecache.URLProxy;
+import org.janelia.workstation.core.options.OptionConstants;
+import org.janelia.workstation.core.workers.BackgroundWorker;
+import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.perf4j.LoggingStopWatch;
+import org.perf4j.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
+import java.awt.Desktop;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.HeadlessException;
+import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.PixelGrabber;
@@ -26,36 +63,6 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
-
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
-
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.api.FileMgr;
-import org.janelia.workstation.core.api.http.HttpClientProxy;
-import org.janelia.workstation.core.filecache.URLProxy;
-import org.janelia.workstation.core.options.OptionConstants;
-import org.janelia.workstation.core.workers.BackgroundWorker;
-import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.perf4j.LoggingStopWatch;
-import org.perf4j.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import loci.formats.FormatException;
-import loci.formats.IFormatReader;
-import loci.formats.gui.BufferedImageReader;
-import loci.formats.in.APNGReader;
-import loci.formats.in.BMPReader;
-import loci.formats.in.GIFReader;
-import loci.formats.in.JPEGReader;
-import loci.formats.in.TiffReader;
 
 /**
  * Common utilities for loading images, copying files, testing strings, etc.

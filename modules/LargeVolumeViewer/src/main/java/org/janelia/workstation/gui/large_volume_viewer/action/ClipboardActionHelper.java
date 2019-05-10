@@ -10,7 +10,7 @@ import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCam
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
+import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.nio.file.Path;

@@ -10,7 +10,7 @@ package org.janelia.workstation.gui.viewer3d.scaled_image;
  */
 
 import javax.media.jai.JAI;
-import java.awt.*;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;

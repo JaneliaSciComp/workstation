@@ -1,10 +1,14 @@
 package org.janelia.workstation.admin;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import org.janelia.model.security.GroupRole;
+import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
+import org.janelia.model.security.UserGroupRole;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -15,24 +19,19 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
-
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.model.security.GroupRole;
-import org.janelia.model.security.Subject;
-import org.janelia.model.security.User;
-import org.janelia.model.security.UserGroupRole;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
- *
  * @author schauderd
  */
 public class UserManagementPanel extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(UserManagementPanel.class);
-    
+
     private AdministrationTopComponent parent;
     private UserManagementTableModel userManagementTableModel;
     private JTable userManagementTable;
@@ -41,13 +40,13 @@ public class UserManagementPanel extends JPanel {
     public UserManagementPanel(AdministrationTopComponent parent) {
         this.parent = parent;
         setupUI();
-        loadUsers();      
-        
+        loadUsers();
+
     }
 
     private void setupUI() {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-    
+
         JPanel titlePanel = new JPanel();
         titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
         JButton returnHome = new JButton("return to top");
@@ -64,20 +63,20 @@ public class UserManagementPanel extends JPanel {
         horizontalBox.add(Box.createGlue());
         titlePanel.add(horizontalBox);
         add(titlePanel);
-        
+
         add(Box.createRigidArea(new Dimension(0, 10)));
-    
+
         userManagementTableModel = new UserManagementTableModel();
         userManagementTableModel.setParentManager(this);
         userManagementTable = new JTable(userManagementTableModel);
         userManagementTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         userManagementTable.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent mouseEvent) {
-                JTable table =(JTable) mouseEvent.getSource();
+                JTable table = (JTable) mouseEvent.getSource();
                 if (mouseEvent.getClickCount() == 2 && table.getSelectedRow() != -1) {
                     editUser();
                 } else {
-                    if (table.getSelectedRow() !=-1)
+                    if (table.getSelectedRow() != -1)
                         editUserButton.setEnabled(true);
                 }
             }
@@ -116,7 +115,7 @@ public class UserManagementPanel extends JPanel {
         newUser.setUserGroupRoles(roles);
         parent.viewUserDetails(newUser);
     }
-    
+
     public void returnHome() {
         parent.viewTopMenu();
     }
@@ -126,14 +125,14 @@ public class UserManagementPanel extends JPanel {
     If you are a workstation admin, you see everybody
     Group admins only see users in groups in which they are the owners.  
     */
-    private void loadUsers () {
+    private void loadUsers() {
         try {
             if (AccessManager.getAccessManager().isAdmin()) {
                 List<Subject> subjectList = DomainMgr.getDomainMgr().getSubjects();
                 List<User> userList = new ArrayList<>();
-                for (Subject subject: subjectList) {
+                for (Subject subject : subjectList) {
                     if (subject instanceof User)
-                        userList.add((User)subject);
+                        userList.add((User) subject);
                 }
                 userManagementTableModel.addUsers(userList);
             }
@@ -171,12 +170,12 @@ public class UserManagementPanel extends JPanel {
         public void addUsers(List<User> userList) {
             // add users in bulk, replacing existing
             users = new ArrayList<>(userList);
-            fireTableRowsInserted(0, users.size()-1);
+            fireTableRowsInserted(0, users.size() - 1);
         }
 
-        public void addUser (User user) {
+        public void addUser(User user) {
             users.add(user);
-            fireTableRowsInserted(users.size()-1, users.size()-1);
+            fireTableRowsInserted(users.size() - 1, users.size() - 1);
         }
 
         @Override
@@ -204,7 +203,7 @@ public class UserManagementPanel extends JPanel {
                     throw new IllegalStateException("column " + col + "does not exist");
             }
         }
-        
+
         // we store the Subject at the end of the row in a hidden column
         public User getUserAtRow(int row) {
             return users.get(row);
@@ -217,13 +216,13 @@ public class UserManagementPanel extends JPanel {
 
         @Override
         public Class getColumnClass(int c) {
-            return (getValueAt(0, c)==null?String.class:getValueAt(0,c).getClass());
+            return (getValueAt(0, c) == null ? String.class : getValueAt(0, c).getClass());
         }
 
         private void setParentManager(UserManagementPanel parentManager) {
-           manager = parentManager;
+            manager = parentManager;
         }
-        
+
     }
 
 }
