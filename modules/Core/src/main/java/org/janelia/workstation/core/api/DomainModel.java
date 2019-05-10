@@ -16,6 +16,7 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
 import org.janelia.it.jacs.shared.solr.SolrParams;
+import org.janelia.model.domain.compute.ContainerizedService;
 import org.janelia.workstation.core.api.facade.interfaces.DomainFacade;
 import org.janelia.workstation.core.api.facade.interfaces.OntologyFacade;
 import org.janelia.workstation.core.api.facade.interfaces.SampleFacade;
@@ -100,6 +101,7 @@ public class DomainModel {
     private final Cache<Reference, DomainObject> objectCache;
     private Map<Reference, Workspace> workspaceCache;
     private Map<Reference, Ontology> ontologyCache;
+    private Map<Reference, ContainerizedService> containerCache;
 
     public DomainModel(DomainFacade domainFacade, OntologyFacade ontologyFacade, SampleFacade sampleFacade, 
             SubjectFacade subjectFacade, WorkspaceFacade workspaceFacade) {
@@ -115,9 +117,10 @@ public class DomainModel {
             public void onRemoval(RemovalNotification<Reference, DomainObject> notification) {
                 synchronized (modelLock) {
                     Reference id = notification.getKey();
-                    log.trace("Removed key from cache: {}",id);
+                    log.trace("Removed key from caches: {}",id);
                     if (workspaceCache!=null) workspaceCache.remove(id);
                     if (ontologyCache!=null) ontologyCache.remove(id);
+                    if (containerCache!=null) containerCache.remove(id);
                 }
             }
         }).build();
@@ -254,6 +257,9 @@ public class DomainModel {
         else if (domainObject instanceof Ontology) {
             if (ontologyCache!=null) ontologyCache.put(id, (Ontology)domainObject);
         }
+        else if (domainObject instanceof ContainerizedService) {
+            if (containerCache!=null) containerCache.put(id, (ContainerizedService)domainObject);
+        }
     }
 
     /**
@@ -269,6 +275,7 @@ public class DomainModel {
         synchronized (modelLock) {
             this.workspaceCache = null;
             this.ontologyCache = null;
+            this.containerCache = null;
             objectCache.invalidateAll();
         }
         Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent());
@@ -308,6 +315,7 @@ public class DomainModel {
         objectCache.invalidate(ref);
         if (workspaceCache!=null) workspaceCache.remove(ref);
         if (ontologyCache!=null) ontologyCache.remove(ref);
+        if (containerCache!=null) containerCache.remove(ref);
 
         // Reload the domain object and stick it into the cache
         DomainObject canonicalDomainObject;
@@ -661,6 +669,32 @@ public class DomainModel {
             log.info("Removing object storage path: {}", path);
         }
         domainFacade.removeObjectStorage(storagePaths);
+    }
+
+    /**
+     * Returns all of the containerized services in the system.
+     * @return collection of containerized services
+     */
+    public List<ContainerizedService> getContainerizedServices() {
+        synchronized (modelLock) {
+            if (containerCache==null) {
+                log.debug("Getting containerized services from database");
+                this.containerCache = new LinkedHashMap<>();
+                StopWatch w = TIMER ? new LoggingStopWatch() : null;
+                try {
+                    Collection<ContainerizedService> services = getAllDomainObjectsByClass(ContainerizedService.class);
+                    List<ContainerizedService> canonicalObjects = putOrUpdate(services, false);
+                    for (ContainerizedService service : canonicalObjects) {
+                        containerCache.put(Reference.createFor(service), service);
+                    }
+                }
+                catch (Exception e) {
+                    throw new RuntimeException("Could not retrieve containerized services", e);
+                }
+                if (TIMER) w.stop("getContainerizedServices");
+            }
+        }
+        return new ArrayList<>(containerCache.values());
     }
 
     /**
