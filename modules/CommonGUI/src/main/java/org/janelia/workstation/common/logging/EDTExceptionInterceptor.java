@@ -32,7 +32,7 @@ public class EDTExceptionInterceptor extends EventQueue {
         catch (Throwable throwable) {
             if (isKnownHarmlessIssue(throwable)) {
                 // Known harmless issues are logged with lower logging level so as not to bother the user or spam JIRA tickets
-                logger.log(CustomLoggingLevel.SEVERE, null, throwable);
+                logger.log(CustomLoggingLevel.WARNING, null, throwable);
             }
             else {
                 logger.log(CustomLoggingLevel.USER_ERROR, null, throwable);
