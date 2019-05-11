@@ -234,6 +234,11 @@
             <version>${jaxrs.jersey.version}</version>
         </dependency>
         <dependency>
+	    <groupId>org.glassfish.jersey.inject</groupId>
+	    <artifactId>jersey-hk2</artifactId>
+            <version>${jaxrs.jersey.version}</version>
+        </dependency>
+        <dependency>
             <groupId>gov.nist.math</groupId>
             <artifactId>jama</artifactId>
             <version>1.0.3</version>
