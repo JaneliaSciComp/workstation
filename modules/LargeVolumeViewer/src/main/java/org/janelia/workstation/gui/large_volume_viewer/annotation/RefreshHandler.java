@@ -1,9 +1,10 @@
 package org.janelia.workstation.gui.large_volume_viewer.annotation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.janelia.messaging.core.ConnectionManager;
-import org.janelia.messaging.core.MessageConsumer;
+import org.janelia.messaging.core.AsyncMessageConsumer;
 import org.janelia.messaging.core.MessageHandler;
+import org.janelia.messaging.core.impl.AsyncMessageConsumerImpl;
+import org.janelia.messaging.core.impl.ConnectionManager;
 import org.janelia.messaging.utils.MessagingUtils;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
@@ -36,7 +37,7 @@ public class RefreshHandler implements MessageHandler {
     private static final String MESSAGESERVER_REFRESHEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.refresh").trim();
     
     private AnnotationModel annotationModel;
-    private MessageConsumer msgReceiver;
+    private AsyncMessageConsumer msgReceiver;
     static RefreshHandler handler;
     private boolean receiveUpdates = true;
     private boolean freezeUpdates = false;
@@ -72,9 +73,9 @@ public class RefreshHandler implements MessageHandler {
 
     private boolean init() {
         try {
-            ConnectionManager connManager = new ConnectionManager(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 20);
-            msgReceiver = new MessageConsumer(connManager);
-            msgReceiver.connect("ModelRefresh", "ModelRefresh", 1);
+            ConnectionManager connManager = new ConnectionManager(20);
+            msgReceiver = new AsyncMessageConsumerImpl(connManager);
+            msgReceiver.connect(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, "ModelRefresh", "ModelRefresh", 1);
             msgReceiver.setupMessageHandler(this);
             log.info("Established connection to message server " + MESSAGESERVER_URL);
             return true;

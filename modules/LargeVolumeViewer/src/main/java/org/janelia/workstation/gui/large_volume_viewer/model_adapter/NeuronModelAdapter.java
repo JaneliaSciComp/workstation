@@ -1,17 +1,17 @@
 package org.janelia.workstation.gui.large_volume_viewer.model_adapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.org.apache.xpath.internal.operations.Bool;
+import org.janelia.messaging.core.MessageSender;
+import org.janelia.messaging.core.impl.ConnectionManager;
+import org.janelia.messaging.core.impl.MessageSenderImpl;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
-import org.janelia.messaging.core.ConnectionManager;
-import org.janelia.messaging.core.MessageSender;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,9 +95,9 @@ class NeuronModelAdapter {
     
     private MessageSender getSender() {
         if (messageSender==null) {
-            ConnectionManager connManager = new ConnectionManager(MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 1);
-            messageSender = new MessageSender(connManager);
-            messageSender.connect(MESSAGESERVER_UPDATESEXCHANGE, MESSAGESERVER_ROUTINGKEY, 1);
+            ConnectionManager connManager = new ConnectionManager(1);
+            messageSender = new MessageSenderImpl(connManager);
+            messageSender.connect(MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, MESSAGESERVER_UPDATESEXCHANGE, MESSAGESERVER_ROUTINGKEY, 1);
         }
         return messageSender;
     }
