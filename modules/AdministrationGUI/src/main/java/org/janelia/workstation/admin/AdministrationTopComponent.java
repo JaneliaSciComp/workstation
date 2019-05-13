@@ -34,7 +34,7 @@ import org.openide.windows.WindowManager;
         iconBase = "org/janelia/workstation/admin/images/group16.png",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "explorer", openAtStartup = false)
+@TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.workstation.admin.AdministrationTopComponent")
 @ActionReference(path = "Menu/Window/Core" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
@@ -42,9 +42,9 @@ import org.openide.windows.WindowManager;
         preferredID = AdministrationTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_AdministrationTopComponentAction=Administration GUI",
+    "CTL_AdministrationTopComponentAction=Administration Tool",
     "CTL_AdministrationTopComponent=" + AdministrationTopComponent.LABEL_TEXT,
-    "HINT_AdministrationTopComponent=Administration GUI"
+    "HINT_AdministrationTopComponent=Administration Tool"
 })
 public final class AdministrationTopComponent extends TopComponent {
     public static final String PREFERRED_ID = "AdministrationTopComponent";
