@@ -82,7 +82,7 @@ public class Icons {
 	    	cache.put(filename, icon);
 	    	return icon;
     	} 
-    	catch (FileNotFoundException e) {
+    	catch (Exception e) {
             log.error("Error loading icon from classpath: "+filename, e);
     		return null;
     	}

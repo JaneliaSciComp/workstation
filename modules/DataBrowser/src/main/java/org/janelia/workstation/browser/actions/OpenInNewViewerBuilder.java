@@ -131,7 +131,7 @@ public class OpenInNewViewerBuilder implements ContextualActionBuilder {
         protected void performAction(org.openide.nodes.Node[] activatedNodes) {
             if (selected.isEmpty()) return;
             AbstractDomainObjectNode<?> node = selected.get(0);
-            DomainListViewTopComponent viewer = ViewerUtils.createNewViewer(DomainListViewManager.getInstance(), "editor2");
+            DomainListViewTopComponent viewer = ViewerUtils.createNewViewer(DomainListViewManager.getInstance(), "editor");
             viewer.requestActive();
             viewer.loadDomainObjectNode(node, true);
         }

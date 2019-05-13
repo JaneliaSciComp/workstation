@@ -3,6 +3,7 @@ package org.janelia.workstation.common.gui.util;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.io.FileNotFoundException;
+import java.io.UncheckedIOException;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
@@ -21,6 +22,18 @@ import org.slf4j.LoggerFactory;
 public class UIUtils {
 
     private static final Logger log = LoggerFactory.getLogger(UIUtils.class);
+
+    /**
+     * Load an image that is found in the /images directory within the classpath.
+     */
+    public static ImageIcon getClasspathImage(Class loader, String filename) {
+        URL picURL = loader.getResource(filename);
+        if (picURL==null) {
+            log.error("Could not find resource {} with loader {}", filename, loader.getName());
+            return null;
+        }
+        return new ImageIcon(picURL);
+    }
 
     /**
      * Load an image that is found in the /images directory within the classpath.

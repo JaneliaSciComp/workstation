@@ -101,6 +101,8 @@ public class GroupManagementPanel extends JPanel {
         actionPanel.add(newGroupButton);
         actionPanel.add(editGroupButton);
         add(actionPanel);
+
+        add(Box.createVerticalGlue());
     }
 
     public void editGroup() {

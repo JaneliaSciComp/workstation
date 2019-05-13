@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Description(
         preferredID = StartPageTopComponent.TC_NAME,
-        //iconBase="SET/PATH/TO/ICON/HERE", 
+        iconBase = "org/janelia/workstation/browser/images/application_go.png",
         persistenceType = TopComponent.PERSISTENCE_ONLY_OPENED
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false) // We do our own "openAtStartup" in the ShowingHook module. 

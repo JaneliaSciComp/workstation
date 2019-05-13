@@ -3,6 +3,8 @@ package org.janelia.workstation.admin;
 import javax.swing.*;
 import java.awt.Font;
 import java.util.List;
+
+import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.facade.interfaces.SubjectFacade;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -27,7 +29,7 @@ import org.openide.windows.WindowManager;
 )
 @TopComponent.Description(
         preferredID = AdministrationTopComponent.PREFERRED_ID,
-        //iconBase="SET/PATH/TO/ICON/HERE", 
+        iconBase = "org/janelia/workstation/admin/images/group16.png",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = false)
@@ -61,32 +63,33 @@ public final class AdministrationTopComponent extends TopComponent {
     
     private void setupGUI() {
         setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
-        topMenu = new JPanel();
-        topMenu.setLayout(new BoxLayout(topMenu,BoxLayout.X_AXIS));
+
+        this.topMenu = new JPanel();
+        BoxLayout layout = new BoxLayout(topMenu,BoxLayout.X_AXIS);
+        topMenu.setLayout(layout);
       
         // top level buttons
-        JPanel userPanel = new JPanel();
-        userPanel.setLayout(new BoxLayout(userPanel,BoxLayout.Y_AXIS));
-        JButton listUsersButton = new JButton(Icons.getIcon("AdminUser.png"));
-        listUsersButton.setToolTipText("View Users visible to you");
+        JButton listUsersButton = new JButton(UIUtils.getClasspathImage(this.getClass(),"/org/janelia/workstation/admin/images/user.png"));
+        listUsersButton.setText("Users");
+        listUsersButton.setToolTipText("Show all users");
+        listUsersButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        listUsersButton.setHorizontalTextPosition(SwingConstants.CENTER);
         listUsersButton.addActionListener(event -> viewUserList());
-        userPanel.add(listUsersButton);                
-        JLabel userLabel = new JLabel("View Users", SwingConstants.CENTER);  
-        userLabel.setFont(new Font("Serif", Font.PLAIN, 14));
-        userPanel.add(userLabel);
-        topMenu.add(userPanel);
-        
-        JPanel groupPanel = new JPanel();
-        groupPanel.setLayout(new BoxLayout(groupPanel,BoxLayout.Y_AXIS));
-        JButton listGroupsButton = new JButton(Icons.getIcon("AdminGroup.png"));
-        groupPanel.add(listGroupsButton);        
+        topMenu.add(listUsersButton);
+
+        topMenu.add(Box.createHorizontalStrut(20));
+
+        JButton listGroupsButton = new JButton(UIUtils.getClasspathImage(this.getClass(),"/org/janelia/workstation/admin/images/group.png"));
+        listGroupsButton.setText("Groups");
         listGroupsButton.addActionListener(event -> viewGroupList());
-        listGroupsButton.setToolTipText("View groups visible to you");
-        JLabel groupLabel = new JLabel("View Groups", SwingConstants.CENTER);  
-        groupLabel.setFont(new Font("Serif", Font.PLAIN, 14));
-        groupPanel.add(groupLabel);
-        topMenu.add(groupPanel);
+        listGroupsButton.setToolTipText("Show all groups");
+        listGroupsButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        listGroupsButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        topMenu.add(listGroupsButton);
+
         add(topMenu);
+        add(Box.createVerticalGlue());
+
         revalidate();
     }
     

@@ -100,6 +100,8 @@ public class UserManagementPanel extends JPanel {
         actionPanel.add(editUserButton);
         actionPanel.add(newUserButton);
         add(actionPanel);
+
+        add(Box.createVerticalGlue());
     }
 
     public void editUser() {

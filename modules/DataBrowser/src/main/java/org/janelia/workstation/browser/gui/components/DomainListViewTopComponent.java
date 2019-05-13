@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.workstation.browser.components.DomainListViewTopComponent")
-@ActionReference(path = "Menu/Window/Core", position = 3)
+//@ActionReference(path = "Menu/Window/Core", position = 3)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_DomainListViewAction",
         preferredID = DomainListViewTopComponent.TC_NAME
