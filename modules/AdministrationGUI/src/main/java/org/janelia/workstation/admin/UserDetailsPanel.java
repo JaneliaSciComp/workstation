@@ -27,6 +27,7 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 
 import org.janelia.model.security.Group;
+import org.janelia.workstation.common.gui.support.WrapLayout;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
@@ -127,8 +128,8 @@ public class UserDetailsPanel extends JPanel {
         saveUserButton = new JButton("Save User");
         saveUserButton.addActionListener(event -> saveUser());
         saveUserButton.setEnabled(false);
-        JPanel actionPanel = new JPanel();
 
+        JPanel actionPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 2));
         actionPanel.add(newGroupSelector);
         actionPanel.add(newGroupButton);
         actionPanel.add(removeGroupButton);

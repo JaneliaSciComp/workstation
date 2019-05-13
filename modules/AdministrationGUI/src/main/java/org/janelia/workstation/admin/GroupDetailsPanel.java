@@ -15,6 +15,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
+
+import org.janelia.workstation.common.gui.support.WrapLayout;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.model.security.GroupRole;
@@ -83,13 +85,13 @@ public class GroupDetailsPanel extends JPanel implements ActionListener {
         removeUserButton.addActionListener(event -> removeUser());
         JButton saveUserButton = new JButton("Save User");
         saveUserButton.addActionListener(event -> updateUser());
-        JPanel newGroupPanel = new JPanel();
-        
-        newGroupPanel.add(addUserBox);
-        newGroupPanel.add(newUserButton);
-        newGroupPanel.add(removeUserButton);
-        newGroupPanel.add(saveUserButton);
-        add(newGroupPanel);     
+
+        JPanel actionPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 2));
+        actionPanel.add(addUserBox);
+        actionPanel.add(newUserButton);
+        actionPanel.add(removeUserButton);
+        actionPanel.add(saveUserButton);
+        add(actionPanel);
     }
 
     public void editGroupDetails(String groupKey, List<User> userList) throws Exception {
