@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.janelia.messaging.core.AsyncMessageConsumer;
 import org.janelia.messaging.core.MessageHandler;
 import org.janelia.messaging.core.impl.AsyncMessageConsumerImpl;
-import org.janelia.messaging.core.impl.ConnectionManager;
+import org.janelia.messaging.core.impl.MessageConnection;
 import org.janelia.messaging.utils.MessagingUtils;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
@@ -73,9 +73,11 @@ public class RefreshHandler implements MessageHandler {
 
     private boolean init() {
         try {
-            ConnectionManager connManager = new ConnectionManager(20);
-            msgReceiver = new AsyncMessageConsumerImpl(connManager);
-            msgReceiver.connect(MESSAGESERVER_URL,  MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, "ModelRefresh", "ModelRefresh", 1);
+            MessageConnection messageConnection = new MessageConnection();
+            messageConnection.openConnection(MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 20);
+            msgReceiver = new AsyncMessageConsumerImpl(messageConnection);
+            // create a temporary binding to ModelRefresh exchange and listen on that channel for the replies
+            msgReceiver.bindAndConnectTo("ModelRefresh", "", null);
             msgReceiver.setupMessageHandler(this);
             log.info("Established connection to message server " + MESSAGESERVER_URL);
             return true;

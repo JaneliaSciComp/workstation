@@ -2,7 +2,7 @@ package org.janelia.workstation.gui.large_volume_viewer.model_adapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.janelia.messaging.core.MessageSender;
-import org.janelia.messaging.core.impl.ConnectionManager;
+import org.janelia.messaging.core.impl.MessageConnection;
 import org.janelia.messaging.core.impl.MessageSenderImpl;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
@@ -95,9 +95,15 @@ class NeuronModelAdapter {
     
     private MessageSender getSender() {
         if (messageSender==null) {
-            ConnectionManager connManager = new ConnectionManager(1);
-            messageSender = new MessageSenderImpl(connManager);
-            messageSender.connect(MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, MESSAGESERVER_UPDATESEXCHANGE, MESSAGESERVER_ROUTINGKEY, 1);
+            try {
+                MessageConnection messageConnection = new MessageConnection();
+                messageConnection.openConnection(MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 0);
+                MessageSender newMessageSender = new MessageSenderImpl(messageConnection);
+                newMessageSender.connectTo(MESSAGESERVER_UPDATESEXCHANGE, MESSAGESERVER_ROUTINGKEY);
+                messageSender = newMessageSender;
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
         }
         return messageSender;
     }

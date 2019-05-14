@@ -161,10 +161,6 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <configuration>
                     <publicPackages>
-                        <!--
-                        <publicPackage>org.janelia.it.FlyWorkstation.ws</publicPackage>
-                        <publicPackage>org.janelia.it.workstation.gui.framework.console</publicPackage>
-                        -->
                         <publicPackage>org.janelia.workstation.core</publicPackage>
                         <publicPackage>org.janelia.workstation.core.actions</publicPackage>
                         <publicPackage>org.janelia.workstation.core.activity_logging</publicPackage>
