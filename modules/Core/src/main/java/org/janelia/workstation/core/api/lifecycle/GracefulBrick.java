@@ -44,7 +44,7 @@ public class GracefulBrick {
         
         log.info("THIS CLIENT IS BRICKED. PROCEEDING TO FORCED UNINSTALL.");
 
-        String helpPage = "manual/";
+        String helpPage;
         File uninstaller = null;
         if (SystemInfo.isMac) {
             helpPage = "manual/macosx_upgrade.html";
@@ -162,8 +162,7 @@ public class GracefulBrick {
             brickUrl = updateCenterUrl.replace("updates.xml", "brick.xml");
         }
         catch (MissingResourceException e) {
-            // Ignore this. It's probably just development.
-            log.trace("Error finding update center URL", e);
+            log.warn("Error finding update center URL", e);
         }
         
         if (brickUrl==null) return false;

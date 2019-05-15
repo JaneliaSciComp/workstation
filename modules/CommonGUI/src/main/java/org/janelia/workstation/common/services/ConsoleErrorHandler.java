@@ -8,7 +8,7 @@ import javax.swing.SwingUtilities;
 import org.hibernate.exception.ExceptionUtils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.integration.api.ErrorHandler;
-import org.janelia.workstation.core.model.ErrorType;
+import org.janelia.workstation.core.model.LoginErrorType;
 import org.janelia.workstation.common.gui.dialogs.LoginDialog;
 import org.janelia.workstation.core.logging.CustomLoggingLevel;
 import org.openide.util.lookup.ServiceProvider;
@@ -50,7 +50,7 @@ public class ConsoleErrorHandler implements ErrorHandler {
             handleExceptionQuietly(message, t);
             // Show the login dialog and allow the user to re-authenticate.
             SwingUtilities.invokeLater(() -> {
-                LoginDialog.getInstance().showDialog(ErrorType.TokenExpiredError);
+                LoginDialog.getInstance().showDialog(LoginErrorType.TokenExpiredError);
             });
         }
         else {

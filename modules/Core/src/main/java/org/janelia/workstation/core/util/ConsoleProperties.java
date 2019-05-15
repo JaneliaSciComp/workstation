@@ -3,9 +3,8 @@ package org.janelia.workstation.core.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Properties;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,15 +26,15 @@ public class ConsoleProperties extends ConfigProperties {
         return load(reload, null);
     }
 
-    private static ConsoleProperties load(boolean reload, String additionalProperties) {
+    private static ConsoleProperties load(boolean reload, Properties additionalProperties) {
         if (me == null || reload) {
             me = new ConsoleProperties();
             // Needed to prevent getters in other threads from accessing properties while
             // properties are being loaded.
             synchronized (me) {
                 load(CONSOLE_PROPERTIES, me);
-                if (!StringUtils.isBlank(additionalProperties)) {
-                    loadText(additionalProperties, me);
+                if (additionalProperties != null) {
+                    load(additionalProperties, me);
                 }
                 load(DEVELOPER_PROPERTIES, me);
             }
@@ -51,7 +50,7 @@ public class ConsoleProperties extends ConfigProperties {
     /**
      * Can be used to reload properties at runtime.
      */
-    public static void reload(String additionalProperties) {
+    public static void reload(Properties additionalProperties) {
         load(true, additionalProperties);
     }
 
@@ -296,9 +295,9 @@ public class ConsoleProperties extends ConfigProperties {
         return properties;
     }
 
-    protected static ConsoleProperties loadText(String propertiesText, ConsoleProperties properties) {
-        try (InputStream in = IOUtils.toInputStream(propertiesText)) {
-            properties.load(in);
+    protected static ConsoleProperties load(Properties additionalProperties, ConsoleProperties properties) {
+        try {
+            properties.putAll(additionalProperties);
             log.info("Loaded additional runtime properties");
         }
         catch (Exception ex) {

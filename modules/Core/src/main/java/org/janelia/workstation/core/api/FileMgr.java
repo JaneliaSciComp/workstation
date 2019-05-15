@@ -9,6 +9,7 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -56,26 +57,28 @@ public class FileMgr {
 
     @Subscribe
     public void propsLoaded(ConsolePropsLoaded event) {
+        SimpleWorker.runInBackground(() -> {
+            synchronized (FileMgr.this) {
+                log.info("Initializing File Manager");
+                this.consolePrefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
+                this.webdavBaseUrl = ConsoleProperties.getString("console.webDavClient.baseUrl", null);
+                this.webdavMaxConnsPerHost = ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100);
+                this.webdavMaxTotalConnections = ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100);
+                log.info("Using WebDAV server: {}", webdavBaseUrl);
 
-        log.info("Initializing File Manager");
-        this.consolePrefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
-        this.webdavBaseUrl = ConsoleProperties.getString("console.webDavClient.baseUrl", null);
-        this.webdavMaxConnsPerHost = ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100);
-        this.webdavMaxTotalConnections = ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100);
-        log.info("Using WebDAV server: {}", webdavBaseUrl);
+                MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
+                HttpConnectionManagerParams managerParams = mgr.getParams();
+                managerParams.setDefaultMaxConnectionsPerHost(webdavMaxConnsPerHost);
+                managerParams.setMaxTotalConnections(webdavMaxTotalConnections);
+                httpClient = new HttpClientProxy(new HttpClient(mgr));
+                storageClientMgr = new StorageClientMgr(webdavBaseUrl, httpClient);
 
-        MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
-        HttpConnectionManagerParams managerParams = mgr.getParams();
-        managerParams.setDefaultMaxConnectionsPerHost(webdavMaxConnsPerHost);
-        managerParams.setMaxTotalConnections(webdavMaxTotalConnections);
-        httpClient = new HttpClientProxy(new HttpClient(mgr));
-        storageClientMgr = new StorageClientMgr(webdavBaseUrl, httpClient);
-
-        setFileCacheGigabyteCapacity((Integer)
-                LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
-        setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
-                LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
-
+                setFileCacheGigabyteCapacity((Integer)
+                        LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
+                setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
+                        LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
+            }
+        });
     }
 
     public HttpClientProxy getHttpClient() {

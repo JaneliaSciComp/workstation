@@ -1,6 +1,7 @@
 package org.janelia.workstation.browser.gui.editor;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -57,7 +58,7 @@ import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
-import org.janelia.workstation.common.gui.support.SmartSearchBox;
+import org.janelia.workstation.common.gui.support.SmartTextField;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.common.nodes.FilterNode;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -115,7 +116,7 @@ public class FilterEditorPanel
     private final PaginatedDomainResultsPanel resultsPanel;
     private final DropDownButton typeCriteriaButton;
     private final DropDownButton addCriteriaButton;
-    private final SmartSearchBox searchBox;
+    private final SmartTextField searchBox;
     private final JButton infoButton;
 
     // State
@@ -241,7 +242,9 @@ public class FilterEditorPanel
         
         this.typeCriteriaButton = new DropDownButton();
         this.addCriteriaButton = new DropDownButton("Add Criteria...");
-        this.searchBox = new SmartSearchBox("SEARCH_HISTORY");
+        this.searchBox = new SmartTextField("SEARCH_HISTORY");
+        searchBox.setPreferredSize(new Dimension(200, 30));
+        searchBox.setToolTipText("Enter search terms...");
 
         infoButton = new JButton(Icons.getIcon("info.png"));
         infoButton.setMargin(new Insets(0,2,0,2));
@@ -272,7 +275,7 @@ public class FilterEditorPanel
         AbstractAction mySearchAction = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                searchBox.addCurrentSearchTermToHistory();
+                searchBox.addCurrentTextToHistory();
                 refreshSearchResults(true);
             }
         };
@@ -392,7 +395,7 @@ public class FilterEditorPanel
     private void refreshSearchResults(final boolean isUserDriven, final Callable<Void> success, final Callable<Void> failure) {
         log.trace("refresh");
         
-        String inputFieldValue = searchBox.getSearchString();
+        String inputFieldValue = searchBox.getText();
         if (!StringUtils.areEqual(filter.getSearchString(), inputFieldValue)) {
             dirty = true;
         }
@@ -455,7 +458,7 @@ public class FilterEditorPanel
     
     private void updateView() {
 
-        searchBox.setSearchString(filter.getSearchString());
+        searchBox.setText(filter.getSearchString());
 
         final String currType = DomainUtils.getTypeName(searchConfig.getSearchClass());
         typeCriteriaButton.setText("Result Type: " + currType);

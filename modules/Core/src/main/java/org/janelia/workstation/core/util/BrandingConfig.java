@@ -71,7 +71,8 @@ public class BrandingConfig {
     private Integer maxMemoryMB = null;
     private Boolean checkUpdates = null;
     private boolean needsRestart = false;
-    
+    private static boolean brandingValidationException = false;
+
     private BrandingConfig() {
         this.devMode = Places.getUserDirectory().toString().contains("target/userdir");
         if (devMode) {
@@ -84,6 +85,10 @@ public class BrandingConfig {
             loadSystemConfig();
             loadBrandingConfig();
         }
+    }
+
+    public static boolean isBrandingValidationException() {
+        return brandingValidationException;
     }
 
     /**
@@ -281,6 +286,8 @@ public class BrandingConfig {
         }
         catch (Exception e) {
             log.error("Error validating branding config",e);
+            // Save this error state so that it can be shown to the user later, once the MainWindow is visible.
+            brandingValidationException = true;
         }
     }
 

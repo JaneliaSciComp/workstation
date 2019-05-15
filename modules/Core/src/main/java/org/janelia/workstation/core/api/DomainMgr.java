@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
+import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.api.exceptions.SystemError;
@@ -65,7 +67,8 @@ public class DomainMgr {
     private SubjectFacade subjectFacade;
     private WorkspaceFacade workspaceFacade;
     private SageRestClient sageClient;
-    
+    private PropertyChangeListener listener;
+
     private DomainModel model;
     private Map<String,Preference> preferenceMap;
     
@@ -73,7 +76,17 @@ public class DomainMgr {
     }
 
     @Subscribe
-    public void propsLoaded(ConsolePropsLoaded event) {
+    public synchronized void propsLoaded(ConsolePropsLoaded event) {
+
+        // This initialization must be run on the EDT, because other things in the connection sequence depend
+        // on these services, namely the authentication which depends on the AuthServiceClient.
+
+        boolean isRefresh = model != null;
+
+        if (listener!=null) {
+            // In case this is a refresh, we need to remove the existing listener first
+            ApplicationOptions.getInstance().removePropertyChangeListener(listener);
+        }
 
         log.info("Initializing Domain Manager");
         String domainFacadePackageName = ConsoleProperties.getInstance().getProperty("domain.facade.package");
@@ -87,20 +100,26 @@ public class DomainMgr {
             workspaceFacade = getNewInstance(reflections, WorkspaceFacade.class);
             sageClient = new SageRestClient();
             model = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
+            listener = new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    if (evt.getPropertyName().equals(OptionConstants.USE_RUN_AS_USER_PREFERENCES)) {
+                        preferenceMap = null;
+                        model.invalidateAll();
+                    }
+                }
+            };
         }
         catch (Exception e) {
             FrameworkAccess.handleException(e);
         }
 
-        ApplicationOptions.getInstance().addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                if (evt.getPropertyName().equals(OptionConstants.USE_RUN_AS_USER_PREFERENCES)) {
-                    preferenceMap = null;
-                    model.invalidateAll();
-                }
-            }
-        });
+        // Register new listener
+        ApplicationOptions.getInstance().addPropertyChangeListener(listener);
+
+        if (isRefresh) {
+            Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent());
+        }
     }
 
     private <T> T getNewInstance(Reflections reflections, Class<T> clazz) {

@@ -1,6 +1,6 @@
 package org.janelia.workstation.core.model;
 
-public enum ErrorType {
+public enum LoginErrorType {
     NetworkError,
     AuthError,
     TokenExpiredError,

@@ -24,7 +24,7 @@ import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.exceptions.AuthenticationException;
 import org.janelia.workstation.core.api.exceptions.ServiceException;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.core.model.ErrorType;
+import org.janelia.workstation.core.model.LoginErrorType;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -138,7 +138,7 @@ public class LoginDialog extends ModalDialog {
         showDialog(null);
     }
     
-    public void showDialog(final ErrorType errorType) {
+    public void showDialog(final LoginErrorType errorType) {
         
         if (isVisible()) {
             // The singleton dialog is already showing, just bring it to the front
@@ -158,7 +158,10 @@ public class LoginDialog extends ModalDialog {
             errorLabel.setText(getErrorMessage(errorType));
             errorLabel.setVisible(true);
         }
-        
+
+        okButton.setIcon(null);
+        okButton.setText(OK_BUTTON_TEXT);
+
         String username = (String) getModelProperty(AccessManager.USER_NAME, "");
         String password = (String) getModelProperty(AccessManager.USER_PASSWORD, "");
         Boolean remember = (Boolean) getModelProperty(AccessManager.REMEMBER_PASSWORD, Boolean.TRUE);
@@ -171,7 +174,7 @@ public class LoginDialog extends ModalDialog {
         packAndShow();
     }
 
-    private String getErrorMessage(ErrorType errorType) {
+    private String getErrorMessage(LoginErrorType errorType) {
         switch (errorType) {
         case NetworkError: return "<html>There was a problem connecting to the server. Please check your network connection and try again.</html>"; 
         case AuthError: return "<html>There is a problem with your username or password. Please try again.</html>"; 
@@ -185,7 +188,6 @@ public class LoginDialog extends ModalDialog {
         
         okButton.setIcon(Icons.getLoadingIcon());
         okButton.setText(null);
-    
         errorLabel.setText("");
         errorLabel.setVisible(false);
         
@@ -213,7 +215,7 @@ public class LoginDialog extends ModalDialog {
                     setVisible(false);
                 }
                 else {
-                    errorLabel.setText(getErrorMessage(ErrorType.AuthError));
+                    errorLabel.setText(getErrorMessage(LoginErrorType.AuthError));
                     errorLabel.setVisible(true);
                 }
             }
@@ -223,17 +225,17 @@ public class LoginDialog extends ModalDialog {
                 okButton.setIcon(null);
                 okButton.setText(OK_BUTTON_TEXT);
                 if (e instanceof AuthenticationException) {
-                    errorLabel.setText(getErrorMessage(ErrorType.AuthError));
+                    errorLabel.setText(getErrorMessage(LoginErrorType.AuthError));
                     errorLabel.setVisible(true);
                 }
                 if (e instanceof ServiceException) {
                     log.error("Error authenticating", e);
-                    errorLabel.setText(getErrorMessage(ErrorType.NetworkError));
+                    errorLabel.setText(getErrorMessage(LoginErrorType.NetworkError));
                     errorLabel.setVisible(true);
                 }
                 else {
                     log.error("Error authenticating", e);
-                    errorLabel.setText(getErrorMessage(ErrorType.OtherError));
+                    errorLabel.setText(getErrorMessage(LoginErrorType.OtherError));
                     errorLabel.setVisible(true);
                 }
             }
@@ -243,10 +245,6 @@ public class LoginDialog extends ModalDialog {
     }
     
     private Object getModelProperty(String key, Object defaultValue) {
-        Object value = FrameworkAccess.getModelProperty(key);
-        if (value == null) {
-            value = defaultValue;
-        }
-        return value;
+        return FrameworkAccess.getModelProperty(key, defaultValue);
     }
 }

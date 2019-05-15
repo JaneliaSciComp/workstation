@@ -57,8 +57,8 @@ public class SessionMgr {
 //        try {
 //            UserToolEvent loginEvent = EJBFactory.getRemoteComputeBean().beginSession(
 //                    userName,
-//                    ConsoleProperties.getString("console.Title"),
-//                    ConsoleProperties.getString("console.versionNumber"));
+//                    ConsoleProperties.getString("client.Title"),
+//                    ConsoleProperties.getString("client.versionNumber"));
 //            if (null!=loginEvent && null!=loginEvent.getSessionId()) {
 //                this.currentSessionId = loginEvent.getSessionId();
 //            }
@@ -78,7 +78,7 @@ public class SessionMgr {
 //            if (currentSessionId!=null) {
 //                EJBFactory.getRemoteComputeBean().endSession(
 //                        userName,
-//                    ConsoleProperties.getString("console.Title"),
+//                    ConsoleProperties.getString("client.Title"),
 //                    currentSessionId);
 //                this.currentSessionId = null;
 //            }
