@@ -193,9 +193,6 @@ public class ShowingHook implements Runnable {
             releaseNotesDialog = new ReleaseNotesDialog();
             releaseNotesDialog.showIfFirstRunSinceUpdate();
         });
-
-        // Invalidate any existing objects
-        //DomainMgr.getDomainMgr().getModel().invalidateAll();
     }
 
     public static ReleaseNotesDialog getReleaseNotesDialog() {

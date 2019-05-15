@@ -155,8 +155,6 @@ public class Startup implements Runnable {
         Events.getInstance().postOnEventBus(new ApplicationOpening());
     }
 
-
-
     /**
      * This is part of a workaround for JW-25338 which is rendering issues for a combination of NetBeans 7.4 with Synthetica themes on Mac OS X Sierra.
      *

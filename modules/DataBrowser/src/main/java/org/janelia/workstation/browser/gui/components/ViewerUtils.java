@@ -1,5 +1,8 @@
 package org.janelia.workstation.browser.gui.components;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
+import org.janelia.workstation.core.model.DomainModelViewUtils;
 import org.openide.windows.Mode;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
@@ -114,5 +117,14 @@ public class ViewerUtils {
         }
 
         return tc;
+    }
+
+    private static final ObjectMapper mapper = new ObjectMapper();
+    public static String serialize(DomainObjectEditorState<?,?,?> state) throws Exception {
+        return mapper.writeValueAsString(state);
+    }
+
+    public static DomainObjectEditorState<?,?,?> deserialize(String serializedState) throws Exception {
+        return mapper.readValue(DomainModelViewUtils.convertModelPackages(serializedState), DomainObjectEditorState.class);
     }
 }

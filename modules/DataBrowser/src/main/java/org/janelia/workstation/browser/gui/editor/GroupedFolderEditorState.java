@@ -17,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class GroupedFolderEditorState 
-        extends DomainObjectEditorStateImpl<GroupedFolder, DomainObject, Reference> {
+        extends DomainObjectEditorStateImpl<GroupedFolder, DomainObject> {
 
     private Reference selectedGroup;
     

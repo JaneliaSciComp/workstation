@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ConnectionMgr {
 
-    private static final Logger log = LoggerFactory.getLogger(DomainMgr.class);
+    private static final Logger log = LoggerFactory.getLogger(ConnectionMgr.class);
 
     private static final String CONNECTION_STRING_PREF = "connectionString";
 
@@ -110,7 +110,7 @@ public class ConnectionMgr {
         log.info("clientVersion: {}", clientVersion);
         log.info("serverVersion: {}", serverVersion);
 
-        if (!serverVersion.equals(clientVersion) && !"DEV2".equals(clientVersion)) {
+        if (!serverVersion.equals(clientVersion) && !"DEV".equals(clientVersion)) {
             log.warn("CLIENT/SERVER VERSION MISMATCH");
         }
 

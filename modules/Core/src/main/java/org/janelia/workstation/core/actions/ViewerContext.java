@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.slf4j.Logger;
@@ -60,7 +61,6 @@ public class ViewerContext<T,S> {
     }
 
     public Collection<T> getSelectedObjects() {
-        return selectionModel.getSelectedIds().stream().map(
-                s -> imageModel.getImageByUniqueId(s)).collect(Collectors.toList());
+        return ClientDomainUtils.getObjectsFromModel(selectionModel.getSelectedIds(), imageModel);
     }
 }

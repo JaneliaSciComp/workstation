@@ -7,27 +7,25 @@ import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
-import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
+import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextActivator;
 import org.janelia.workstation.browser.gui.find.FindContextManager;
+import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
+import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
+import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
-import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
-import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
-import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.browser.gui.editor.DomainObjectEditorStateImpl;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.domain.DomainObject;
+import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
@@ -153,7 +151,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (p==null || editor==null) return;
         try {
             DomainObjectEditorState<?,?,?> state = editor.saveState();
-            String serializedState = DomainObjectEditorStateImpl.serialize(state);
+            String serializedState = ViewerUtils.serialize(state);
             log.info("Writing state: {}",serializedState);
             p.setProperty("version", TC_VERSION);
             p.setProperty("editorState", serializedState);
@@ -206,7 +204,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     private void loadPreviousSession() {
 
         if (intialState == null) return;
-        log.info("Loading initial session");
+        log.info("Loading initial state");
         final String stateToLoad = intialState;
         this.intialState = null;
 
@@ -216,7 +214,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
             @Override
             protected void doStuff() throws Exception {
-                state = DomainObjectEditorStateImpl.deserialize(stateToLoad);
+                state = ViewerUtils.deserialize(stateToLoad);
                 if (state!=null && state.getDomainObject()!=null && state.getDomainObject().getId()!=null) {
                     // Refresh the object, if it's coming from the database
                     domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(state.getDomainObject());

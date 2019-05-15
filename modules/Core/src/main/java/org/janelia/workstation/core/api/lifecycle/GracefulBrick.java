@@ -30,9 +30,9 @@ public class GracefulBrick {
     
     public void brickAndUninstall() throws Exception {
 
-        log.info("Places.getUserDirectory: "+Places.getUserDirectory());
-        log.info("user.dir: "+System.getProperty("user.dir")); // TODO: delete this before uninstall
-        log.info("netbeans.home: "+System.getProperty("netbeans.home"));
+        log.debug("Places.getUserDirectory: "+Places.getUserDirectory());
+        log.debug("user.dir: "+System.getProperty("user.dir")); // TODO: delete this before uninstall
+        log.debug("netbeans.home: "+System.getProperty("netbeans.home"));
         
         final String configFile = "config/app.conf";
         File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, "org.janelia.workstation", false);

@@ -615,7 +615,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         
         ColorDepthSearchEditorState myState = (ColorDepthSearchEditorState)state;
         log.info("Restoring state: {}", myState);
-        if (state.getListViewerState()!=null) {
+        if (state.getListViewerState()!=null && state.getListViewerState().getType()!=null) {
             colorDepthResultPanel.getResultPanel().setViewerType(state.getListViewerState().getType());
         }
 

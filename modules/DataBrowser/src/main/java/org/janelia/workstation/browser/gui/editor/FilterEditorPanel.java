@@ -93,7 +93,7 @@ import static org.janelia.workstation.core.api.DomainMgr.getDomainMgr;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class FilterEditorPanel 
-        extends DomainObjectEditorPanel<Filtering,DomainObject,Reference> 
+        extends DomainObjectEditorPanel<Filtering,DomainObject>
         implements SearchProvider, PreferenceSupport {
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);

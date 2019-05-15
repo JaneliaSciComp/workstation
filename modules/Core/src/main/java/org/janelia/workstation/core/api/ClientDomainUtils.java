@@ -1,12 +1,15 @@
 package org.janelia.workstation.core.api;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasName;
+import org.janelia.workstation.core.model.ImageModel;
 
 
 /**
@@ -77,5 +80,9 @@ public class ClientDomainUtils {
         }
         
         return prefix+" #"+(max+1);
+    }
+
+    public static <T,S> Collection<T> getObjectsFromModel(Collection<S> ids, ImageModel<T,S> imageModel) {
+        return ids.stream().map(imageModel::getImageByUniqueId).collect(Collectors.toList());
     }
 }

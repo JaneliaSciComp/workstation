@@ -398,7 +398,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     private synchronized void loadInitialState() {
         
         if (!loadInitialState) return;
-        log.info("Loading initial session");
+        log.info("Loading initial state");
         this.loadInitialState = false;
         
         showLoadingIndicator();
@@ -511,34 +511,42 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                         root = new OntologyRootNode();
                         mgr.setRootContext(root);
                         showTree();
-                        
-                        if (pathsToExpand!=null) {
-                            log.info("Restoring serialized expanded state");
-                            beanTreeView.expand(pathsToExpand);
-                            pathsToExpand = null;
-                        }
-                        else {
-                            if (restoreState) {
-                                log.info("Restoring expanded state");
-                                if (expanded!=null) {
-                                    beanTreeView.expand(expanded);
+
+                        // This invokeLater is necessary so that the tree can be displayed before we start expanding nodes
+                        SwingUtilities.invokeLater(() -> {
+
+                            try {
+                                if (pathsToExpand != null) {
+                                    log.info("Restoring serialized expanded state");
+                                    beanTreeView.expand(pathsToExpand);
+                                    pathsToExpand = null;
                                 }
-                                if (selected!=null) {
-                                    beanTreeView.selectPaths(selected);
+                                else {
+                                    if (restoreState) {
+                                        log.info("Restoring expanded state");
+                                        if (expanded != null) {
+                                            beanTreeView.expand(expanded);
+                                        }
+                                        if (selected != null) {
+                                            beanTreeView.selectPaths(selected);
+                                        }
+                                    }
+                                    else {
+                                        // Expand all nodes by default
+                                        SwingUtilities.invokeLater(() -> {
+                                            // expandAll has to happen after tree is fully rendered
+                                            log.info("Expanding all nodes");
+                                            beanTreeView.expandAll();
+                                        });
+                                    }
                                 }
+                                ActivityLogHelper.logElapsed("OntologyExplorerTopComponent.refresh", w);
                             }
-                            else {
-                                // Expand all nodes by default
-                                SwingUtilities.invokeLater(() -> {
-                                    // expandAll has to happen after tree is fully rendered
-                                    log.info("Expanding all nodes");
-                                    beanTreeView.expandAll();
-                                });
+                            finally {
+                                debouncer.success();
                             }
-                        }
-    
-                        ActivityLogHelper.logElapsed("OntologyExplorerTopComponent.refresh", w);
-                        debouncer.success();
+                        });
+
                     }
                     catch (Exception e) {
                         hadError(e);

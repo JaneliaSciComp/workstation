@@ -1,13 +1,17 @@
 package org.janelia.workstation.browser.gui.editor;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
+import org.janelia.model.domain.Reference;
 import org.janelia.workstation.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.model.domain.DomainObject;
 import org.slf4j.Logger;
@@ -18,11 +22,11 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class DomainObjectEditorPanel<P extends DomainObject, T, S> extends JPanel implements ParentNodeSelectionEditor<P, T, S> {
+public abstract class DomainObjectEditorPanel<P extends DomainObject, T> extends JPanel implements ParentNodeSelectionEditor<P, T, Reference> {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectEditorPanel.class);
 
-    protected abstract PaginatedResultsPanel<T,S> getResultsPanel();
+    protected abstract PaginatedResultsPanel<T,Reference> getResultsPanel();
     
     protected abstract P getDomainObject();
     
@@ -35,7 +39,7 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T, S> exte
     public abstract void loadDomainObjectNode(DomainObjectNode<P> domainObjectNode, boolean isUserDriven, Callable<Void> success);
 
     @Override
-    public DomainObjectEditorState<P,T,S> saveState() {
+    public DomainObjectEditorState<P,T,Reference> saveState() {
         if (getDomainObjectNode()==null) {
             if (getDomainObject()==null) {
                 log.warn("No object is loaded, so state cannot be saved");
@@ -66,7 +70,7 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T, S> exte
     }
     
     @Override
-    public void restoreState(final DomainObjectEditorState<P,T,S> state) {
+    public void restoreState(final DomainObjectEditorState<P,T,Reference> state) {
         
         if (state==null) {
             log.warn("Cannot restore null state");
@@ -79,22 +83,24 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T, S> exte
         }
 
         // Prepare to restore the selection
-        List<S> selected = getSelectionModel().getSelectedIds();
-        selected.clear();
-        selected.addAll(state.getSelectedIds());
+        List<Reference> selectedIds = getSelectionModel().getSelectedIds();
+        selectedIds.clear();
+        selectedIds.addAll(state.getSelectedIds());
+        Collection<T> selectedObjects = ClientDomainUtils.getObjectsFromModel(selectedIds, getResultsPanel().getViewer().getImageModel());
         
-        // Prepare to restore the page
+        // Restore the page
         getResultsPanel().setCurrPage(state.getPage());
 
-        getResultsPanel().getViewer().restoreState(state.getListViewerState());
-        
         // Prepare to restore viewer state, after the reload
         Callable<Void> success = new Callable<Void>() {
             @Override
             public Void call() throws Exception {
                 if (state.getListViewerState()!=null) {
                     log.info("State load completed, restoring viewer state {}", state.getListViewerState());
-//                    getResultsPanel().getViewer().restoreState(state.getListViewerState());
+                    // Restore viewer state
+                    getResultsPanel().getViewer().restoreState(state.getListViewerState());
+                    // Restore selection
+                    getResultsPanel().getViewer().select(new ArrayList<>(selectedObjects), true, true, false, false);
                 }
                 return null;
             }

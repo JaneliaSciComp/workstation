@@ -40,16 +40,16 @@ public class AutoUpdater extends SimpleWorker {
     static {
         try {
             updateCenterLabel = rb.getString("Services/AutoupdateType/"+UPDATE_CENTER_KEY+".instance");
-            log.info("Update center name: {}", updateCenterLabel);
+            log.debug("Update center name: {}", updateCenterLabel);
         }
         catch (MissingResourceException e) {
-            log.error("Missing update center label property in bundle, using default '{}'", UPDATE_CENTER_LABEL);
             updateCenterLabel = UPDATE_CENTER_LABEL;
+            log.trace("Missing update center label property in bundle, using default '{}'", UPDATE_CENTER_LABEL);
         }
 
         try {
             updateCenterUrl = rb.getString(AutoUpdater.UPDATE_CENTER_KEY);
-            log.info("Update center URL: {}", updateCenterUrl);
+            log.debug("Update center URL: {}", updateCenterUrl);
         }
         catch (MissingResourceException e) {
             log.trace("Update center label property not specified in bundle.");
@@ -87,14 +87,14 @@ public class AutoUpdater extends SimpleWorker {
                 createUpdateCenter();
             }
             else {
-                log.info("Verifying {} providers", updateUnitProviders.size());
+                log.debug("Verifying {} existing providers", updateUnitProviders.size());
                 for (UpdateUnitProvider provider : updateUnitProviders) {
 
                     if (provider == null || provider.getProviderURL() == null) {
                         continue;
                     }
 
-                    log.info("Verifying {} (displayName={}) (url={})", provider.getName(), provider.getDisplayName(), provider.getProviderURL());
+                    log.info("Verifying {} ({})", provider.getName(), provider.getProviderURL());
                     if (updateCenterLabel.equals(provider.getName()) || updateCenterLabel.equals(provider.getDisplayName())) {
 
                         if (!provider.getProviderURL().toString().equals(updateCenterUrl)) {

@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
         iconBase = "org/janelia/workstation/browser/images/application_go.png",
         persistenceType = TopComponent.PERSISTENCE_ONLY_OPENED
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = false) // We do our own "openAtStartup" in the ShowingHook module. 
+@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 0) // We do our own "openAtStartup" in the ShowingHook module.
 @ActionID(category = "Window", id = "org.janelia.workstation.browser.components.StartPageTopComponent")
 @ActionReference(path = "Menu/Window/Core", position = 40)
 @TopComponent.OpenActionRegistration(

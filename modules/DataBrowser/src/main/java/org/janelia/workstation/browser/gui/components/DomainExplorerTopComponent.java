@@ -489,32 +489,34 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     root = new ExplorerRootNode();
                     mgr.setRootContext(root);
                     showTree();
-                    
-                    if (pathsToExpand!=null) {
-                        log.info("Restoring serialized expanded state");
-                        for (Long[] path : pathsToExpand) {
-                            log.info("pathToExpand: "+NodeUtils.createPathString(path));
-                        }
-                        beanTreeView.expand(pathsToExpand);
-                        pathsToExpand = null;
-                    }
-                    else {
-                        if (restoreState) {
-                            log.info("Restoring expanded state");
-                            if (expanded!=null) {
-                                for (Long[] path : expanded) {
-                                    log.info("pathToExpand: "+NodeUtils.createPathString(path));
+
+                    // This invokeLater is necessary so that the tree can be displayed before we start expanding nodes
+                    SwingUtilities.invokeLater(() -> {
+
+                        try {
+                            if (pathsToExpand != null) {
+                                log.info("Restoring serialized expanded state");
+                                beanTreeView.expand(pathsToExpand);
+                                pathsToExpand = null;
+                            }
+                            else {
+                                if (restoreState) {
+                                    log.info("Restoring expanded state");
+                                    if (expanded != null) {
+                                        beanTreeView.expand(expanded);
+                                    }
+                                    if (selected != null) {
+                                        beanTreeView.selectPaths(selected);
+                                    }
                                 }
-                                beanTreeView.expand(expanded);
-                            }
-                            if (selected!=null) {
-                                beanTreeView.selectPaths(selected);
+                                ActivityLogHelper.logElapsed("DomainExplorer.refresh", w);
                             }
                         }
-                    }
-                    
-                    ActivityLogHelper.logElapsed("DomainExplorer.refresh", w);
-                    debouncer.success();
+                        finally {
+                            debouncer.success();
+                        }
+                    });
+
                 }
                 catch (Exception e) {
                     hadError(e);

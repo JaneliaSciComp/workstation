@@ -488,7 +488,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
         
         GroupedFolderEditorState myState = (GroupedFolderEditorState)state;
         log.info("Restoring state: {}", myState);
-        if (state.getListViewerState()!=null) {
+        if (state.getListViewerState()!=null && state.getListViewerState().getType()!=null) {
             resultsPanel.setViewerType(state.getListViewerState().getType());
         }
 
