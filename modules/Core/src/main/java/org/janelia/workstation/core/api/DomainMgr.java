@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.api.exceptions.SystemError;
@@ -47,8 +48,6 @@ public class DomainMgr {
 
     private static final Logger log = LoggerFactory.getLogger(DomainMgr.class);
 
-    private static final String DOMAIN_FACADE_PACKAGE_NAME = ConsoleProperties.getInstance().getProperty("domain.facade.package");
-    
     // Singleton
     private static DomainMgr instance;
     public static DomainMgr getDomainMgr() {
@@ -71,21 +70,28 @@ public class DomainMgr {
     private Map<String,Preference> preferenceMap;
     
     private DomainMgr() {
+    }
+
+    @Subscribe
+    public void propsLoaded(ConsolePropsLoaded event) {
+
         log.info("Initializing Domain Manager");
+        String domainFacadePackageName = ConsoleProperties.getInstance().getProperty("domain.facade.package");
         try {
             authClient = new AuthServiceClient();
-            final Reflections reflections = ReflectionsFixer.getReflections(DOMAIN_FACADE_PACKAGE_NAME, getClass());
+            final Reflections reflections = ReflectionsFixer.getReflections(domainFacadePackageName, getClass());
             domainFacade = getNewInstance(reflections, DomainFacade.class);
             ontologyFacade = getNewInstance(reflections, OntologyFacade.class);
             sampleFacade = getNewInstance(reflections, SampleFacade.class);
             subjectFacade = getNewInstance(reflections, SubjectFacade.class);
             workspaceFacade = getNewInstance(reflections, WorkspaceFacade.class);
             sageClient = new SageRestClient();
+            model = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
         }
         catch (Exception e) {
             FrameworkAccess.handleException(e);
         }
-        
+
         ApplicationOptions.getInstance().addPropertyChangeListener(new PropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
@@ -94,9 +100,9 @@ public class DomainMgr {
                     model.invalidateAll();
                 }
             }
-        });   
+        });
     }
-    
+
     private <T> T getNewInstance(Reflections reflections, Class<T> clazz) {
         for(Class<? extends T> implClass : reflections.getSubTypesOf(clazz)) {
             try {
@@ -106,7 +112,7 @@ public class DomainMgr {
                 log.error("Cannot instantiate "+implClass.getName(),e);
             }
         }
-        throw new IllegalStateException("No implementation for "+clazz.getName()+" found in "+DOMAIN_FACADE_PACKAGE_NAME);
+        throw new IllegalStateException("No implementation for "+clazz.getName()+" found");
     }
 
     public AuthServiceClient getAuthClient() {
@@ -149,9 +155,6 @@ public class DomainMgr {
      * @return domain model
      */
     public DomainModel getModel() {
-        if (model == null) {
-            model = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
-        }
         return model;
     }
     

@@ -1,7 +1,5 @@
 package org.janelia.workstation.browser.gui.editor;
 
-import static org.janelia.workstation.core.api.DomainMgr.getDomainMgr;
-
 import java.awt.BorderLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -28,41 +26,10 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import com.google.common.collect.Sets;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.browser.gui.dialogs.EditCriteriaDialog;
-import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
-import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
-import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
-import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
-import org.janelia.workstation.core.model.search.ResultPage;
-import org.janelia.workstation.core.model.search.SearchConfiguration;
-import org.janelia.workstation.core.model.search.SearchResults;
-import org.janelia.workstation.browser.actions.ExportResultsAction;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
-import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
-import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
-import org.janelia.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
-import org.janelia.workstation.browser.gui.listview.table.DomainObjectTableViewer;
-import org.janelia.workstation.common.gui.support.Debouncer;
-import org.janelia.workstation.common.gui.support.DesktopApi;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.common.gui.support.PreferenceSupport;
-import org.janelia.workstation.common.gui.support.SearchProvider;
-import org.janelia.workstation.common.gui.support.SmartSearchBox;
-import org.janelia.workstation.common.gui.support.WindowLocator;
-import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
-import org.janelia.workstation.core.nodes.DomainObjectNode;
-import org.janelia.workstation.common.nodes.FilterNode;
-import org.janelia.workstation.core.util.ConcurrentUtils;
-import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
-import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.access.domain.DomainObjectAttribute;
 import org.janelia.model.access.domain.DomainUtils;
 import org.janelia.model.domain.DomainConstants;
@@ -79,12 +46,43 @@ import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.browser.actions.ExportResultsAction;
+import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
+import org.janelia.workstation.browser.gui.dialogs.EditCriteriaDialog;
+import org.janelia.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
+import org.janelia.workstation.browser.gui.listview.table.DomainObjectTableViewer;
+import org.janelia.workstation.common.gui.support.Debouncer;
+import org.janelia.workstation.common.gui.support.DesktopApi;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.MouseForwarder;
+import org.janelia.workstation.common.gui.support.PreferenceSupport;
+import org.janelia.workstation.common.gui.support.SearchProvider;
+import org.janelia.workstation.common.gui.support.SmartSearchBox;
+import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.common.nodes.FilterNode;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
+import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
+import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
+import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
+import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
+import org.janelia.workstation.core.model.search.ResultPage;
+import org.janelia.workstation.core.model.search.SearchConfiguration;
+import org.janelia.workstation.core.model.search.SearchResults;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
+import org.janelia.workstation.core.util.ConcurrentUtils;
+import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
-import com.google.common.eventbus.Subscribe;
+import static org.janelia.workstation.core.api.DomainMgr.getDomainMgr;
 
 /**
  * The Filter Editor is the main search GUI in the Workstation. Users can create, save, and load filters 
@@ -257,7 +255,7 @@ public class FilterEditorPanel
                 try {
                     if (!DesktopApi.browseDesktop(new URI("http://lucene.apache.org/core/old_versioned_docs/versions/3_5_0/queryparsersyntax.html"))) {
                         JOptionPane.showMessageDialog(
-                                WindowLocator.getMainFrame(),
+                                FrameworkAccess.getMainFrame(),
                                 "Cannot open URL. Desktop API is not supported on this platform.",
                                 "Error",
                                 JOptionPane.ERROR_MESSAGE,

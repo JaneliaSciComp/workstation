@@ -53,11 +53,10 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
 
     private static final int COOLDOWN_TIME_SEC = 300; // Allow one auto exception report every 5 minutes
     private static final int MAX_STACKTRACE_CACHE_SIZE = 1000; // Keep track of a max number of unique stacktraces
-    private static final boolean AUTO_SEND_EXCEPTIONS = ConsoleProperties.getBoolean("console.AutoSendExceptions", false);
 
     // email address from which automated reports to the issue tracker will originate;
     //  this address has an account in JIRA that has right permissions to create tickets
-    public static final String REPORT_EMAIL = ConsoleProperties.getString("console.FromEmail");
+
 
     private final HashFunction hf = Hashing.md5();
     
@@ -98,7 +97,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             return;
         }
         
-        if (!AUTO_SEND_EXCEPTIONS) {
+        if (!ConsoleProperties.getBoolean("console.AutoSendExceptions", false)) {
             if (!notified) {
                 notified = true;
                 log.warn("Auto-sending exceptions is not configured. To configure auto-send, set console.AutoSendExceptions=true in console.properties.");
@@ -233,8 +232,8 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             String version = SystemInfo.appVersion;
             String titleSuffix = " from "+AccessManager.getSubjectName()+" -- "+version+" -- "+firstLine;
             String subject = (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix;
-             
-            MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(FrameworkAccess.getMainFrame(), REPORT_EMAIL)
+
+            MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(FrameworkAccess.getMainFrame())
                     .withTitle("Create A Ticket")
                     .withPromptText("If possible, please describe what you were doing when the error occurred:")
                     .withEmailSubject(subject)

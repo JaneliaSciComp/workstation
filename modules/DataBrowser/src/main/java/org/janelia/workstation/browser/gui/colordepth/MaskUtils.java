@@ -16,8 +16,6 @@ public class MaskUtils {
 
     private static final Logger log = LoggerFactory.getLogger(MaskUtils.class);
 
-    private static final String IMPORT_STORAGE_DEFAULT_TAGS = ConsoleProperties.getString("console.upload.StorageTags.nrs");
-
     /**
      * Upload the given local file to the remote storage location, and return its real path.
      * @param localFile
@@ -25,13 +23,15 @@ public class MaskUtils {
      */
     static String uploadMask(File localFile) {
 
+        String importStorageDefaultTags = ConsoleProperties.getString("console.upload.StorageTags.nrs");
+
         WebDavUploader uploader = FileMgr.getFileMgr().getFileUploader();
         String uploadContext = uploader.createUploadContext("WorkstationFileUpload",
                 AccessManager.getSubjectName(),
-                IMPORT_STORAGE_DEFAULT_TAGS);
+                importStorageDefaultTags);
 
         Long guid = TimebasedIdentifierGenerator.generateIdList(1).get(0);
-        RemoteLocation location = uploader.uploadFile("UserGeneratedMask_"+guid, uploadContext, IMPORT_STORAGE_DEFAULT_TAGS, localFile);
+        RemoteLocation location = uploader.uploadFile("UserGeneratedMask_"+guid, uploadContext, importStorageDefaultTags, localFile);
         String uploadPath = location.getRealFilePath();
         log.info("Uploaded mask to: "+uploadPath);
         

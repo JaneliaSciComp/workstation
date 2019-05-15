@@ -18,7 +18,6 @@ public class MailHelper {
 
     private static final Logger log = LoggerFactory.getLogger(MailHelper.class);
 
-    private static final String MAIL_SERVER = ConsoleProperties.getString("console.MailServer");
     private static final String DEFAULT_SMTP_PORT = "25";
 
     public MailHelper() {
@@ -31,6 +30,7 @@ public class MailHelper {
     public void sendEmail(String from, String to, String subject, String bodyText, File attachedFile, String filename) {
         try {
 
+            String MAIL_SERVER = ConsoleProperties.getString("console.MailServer");
             String[] split = MAIL_SERVER.split(":");
             String host = split[0];
             String port = DEFAULT_SMTP_PORT;

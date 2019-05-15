@@ -74,7 +74,7 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T, S> exte
         }
         
         log.info("Restoring state: {}", state);
-        if (state.getListViewerState()!=null) {
+        if (state.getListViewerState()!=null && state.getListViewerState().getType()!=null) {
             getResultsPanel().setViewerType(state.getListViewerState().getType());
         }
 

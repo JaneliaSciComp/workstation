@@ -1,18 +1,15 @@
 package org.janelia.workstation.core.api;
 
 import java.io.File;
-import java.security.ProtectionDomain;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.lifecycle.ConsoleState;
-import org.janelia.workstation.core.api.lifecycle.GracefulBrick;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ApplicationClosing;
 import org.janelia.workstation.core.util.BrandingConfig;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.openide.LifecycleManager;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.modules.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +39,6 @@ public class ConsoleApp {
     private ConsoleApp() {
 
         LOG.info("Initializing Console Application");
-        LOG.debug("Java version: " + System.getProperty("java.version"));
-        ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
-        LOG.debug("Code Source: "+pd.getCodeSource().getLocation());
 
         // Workaround for NetBeans Sierra rendering issues
         findAndRemoveAllResourcesFile();
@@ -63,37 +57,25 @@ public class ConsoleApp {
             brandingValidationException = true;
         }
 
-        // Begin the user's session
-        LOG.info("Initializing Session");
-        ConsoleState.setCurrState(ConsoleState.STARTING_SESSION);
-
         try {
-            // Init singletons so that they're initialized by a single thread
-            LocalPreferenceMgr.getInstance();
-            AccessManager.getAccessManager();
-            DomainMgr.getDomainMgr();
-            FileMgr.getFileMgr();
-            SessionMgr.getSessionMgr();
-
             // Set the Look and Feel
             StateMgr.getStateMgr().initLAF();
+            // Initialize singletons so that they are listening on Event Bus
+            FileMgr.getFileMgr();
+            LocalPreferenceMgr.getInstance();
+            DomainMgr.getDomainMgr();
+            AccessManager.getAccessManager();
+            StateMgr.getStateMgr();
+            SessionMgr.getSessionMgr();
 
-            // Auto-login if credentials were saved from a previous session
-            AccessManager.getAccessManager().loginUsingSavedCredentials();
-
-            // Check for potential remote brick
-            try {
-                GracefulBrick uninstaller = new GracefulBrick();
-                uninstaller.brickAndUninstall();
-            }
-            catch (Exception e) {
-                FrameworkAccess.handleException(e);
-            }
         }
         catch (Throwable e) {
             FrameworkAccess.handleException(e);
-            LifecycleManager.getDefault().exit(0);
         }
+
+        // Begin the user's session
+        LOG.info("Initializing Session");
+        ConsoleState.setCurrState(ConsoleState.STARTING_SESSION);
 
         // Do some things in the background
         SimpleWorker worker = new SimpleWorker() {

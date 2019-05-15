@@ -3,9 +3,9 @@ package org.janelia.workstation.core.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,28 +17,27 @@ import org.slf4j.LoggerFactory;
 public class ConsoleProperties extends ConfigProperties {
 
     private static final Logger log = LoggerFactory.getLogger(ConsoleProperties.class);
-    
+
     private static final String CONSOLE_PROPERTIES = "console.properties";
     private static final String DEVELOPER_PROPERTIES = "my.properties";
-    
-    private static final List<String> fileNames = new ArrayList<String>();
+
     private static ConsoleProperties me;
 
-    static {
-        fileNames.add(CONSOLE_PROPERTIES);
-        fileNames.add(DEVELOPER_PROPERTIES);
+    private static ConsoleProperties load(boolean reload) {
+        return load(reload, null);
     }
 
-    private static ConsoleProperties load(boolean reload) {
+    private static ConsoleProperties load(boolean reload, String additionalProperties) {
         if (me == null || reload) {
             me = new ConsoleProperties();
             // Needed to prevent getters in other threads from accessing properties while
-            // properties are being loaded.  This is especially an issue during
-            // property file reloads
+            // properties are being loaded.
             synchronized (me) {
-                for (String fileName : fileNames) {
-                    load(fileName, me);
+                load(CONSOLE_PROPERTIES, me);
+                if (!StringUtils.isBlank(additionalProperties)) {
+                    loadText(additionalProperties, me);
                 }
+                load(DEVELOPER_PROPERTIES, me);
             }
         }
         return me;
@@ -50,7 +49,14 @@ public class ConsoleProperties extends ConfigProperties {
     }
 
     /**
-     * Can be used to reload a property file at runtime
+     * Can be used to reload properties at runtime.
+     */
+    public static void reload(String additionalProperties) {
+        load(true, additionalProperties);
+    }
+
+    /**
+     * Can be used to reload properties at runtime.
      */
     public static void reload() {
         load(true);
@@ -290,6 +296,16 @@ public class ConsoleProperties extends ConfigProperties {
         return properties;
     }
 
+    protected static ConsoleProperties loadText(String propertiesText, ConsoleProperties properties) {
+        try (InputStream in = IOUtils.toInputStream(propertiesText)) {
+            properties.load(in);
+            log.info("Loaded additional runtime properties");
+        }
+        catch (Exception ex) {
+            log.info("Failed to load additional runtime properties", ex);
+        }
+        return properties;
+    }
 
     /**
      * This method is called by subclasses of BaseProperties to return defaultValue

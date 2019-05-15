@@ -3,9 +3,12 @@ package org.janelia.workstation.core.api;
 import java.io.File;
 import java.io.FileNotFoundException;
 
+import com.google.common.eventbus.Subscribe;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -25,18 +28,13 @@ import org.slf4j.LoggerFactory;
 public class FileMgr {
 
     private static final Logger log = LoggerFactory.getLogger(FileMgr.class);
-    private static final String JACS_WEBDAV_BASE_URL = "http://jacs-webdav.int.janelia.org/Webdav";
-
-    private static final String CONSOLE_PREFS_DIR = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
-    private static final String WEBDAV_BASE_URL = ConsoleProperties.getString("console.webDavClient.baseUrl", JACS_WEBDAV_BASE_URL);
-    private static final int WEBDAV_MAX_CONNS_PER_HOST = ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100);
-    private static final int WEBDAV_MAX_TOTAL_CONNECTIONS = ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100);
 
     // Singleton
     private static FileMgr instance;
     public static synchronized FileMgr getFileMgr() {
         if (instance==null) {
             instance = new FileMgr();
+            Events.getInstance().registerOnEventBus(instance);
         }
         return instance;
     }
@@ -45,27 +43,39 @@ public class FileMgr {
     public static final int DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY = 50;
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
 
-    private final HttpClientProxy httpClient;
-    private final StorageClientMgr storageClientMgr;
+    private String consolePrefsDir;
+    private String webdavBaseUrl;
+    private int webdavMaxConnsPerHost;
+    private int webdavMaxTotalConnections;
+    private HttpClientProxy httpClient;
+    private StorageClientMgr storageClientMgr;
     private LocalFileCache localFileCache;
 
     private FileMgr() {
-        
-        log.info("Initializing File Manager");
+    }
 
-        log.info("Using WebDAV server: {}", WEBDAV_BASE_URL);
+    @Subscribe
+    public void propsLoaded(ConsolePropsLoaded event) {
+
+        log.info("Initializing File Manager");
+        this.consolePrefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
+        this.webdavBaseUrl = ConsoleProperties.getString("console.webDavClient.baseUrl", null);
+        this.webdavMaxConnsPerHost = ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100);
+        this.webdavMaxTotalConnections = ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100);
+        log.info("Using WebDAV server: {}", webdavBaseUrl);
 
         MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
         HttpConnectionManagerParams managerParams = mgr.getParams();
-        managerParams.setDefaultMaxConnectionsPerHost(WEBDAV_MAX_CONNS_PER_HOST);
-        managerParams.setMaxTotalConnections(WEBDAV_MAX_TOTAL_CONNECTIONS);
+        managerParams.setDefaultMaxConnectionsPerHost(webdavMaxConnsPerHost);
+        managerParams.setMaxTotalConnections(webdavMaxTotalConnections);
         httpClient = new HttpClientProxy(new HttpClient(mgr));
-        storageClientMgr = new StorageClientMgr(WEBDAV_BASE_URL, httpClient);
+        storageClientMgr = new StorageClientMgr(webdavBaseUrl, httpClient);
 
         setFileCacheGigabyteCapacity((Integer)
                 LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
         setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
                 LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
+
     }
 
     public HttpClientProxy getHttpClient() {
@@ -98,7 +108,7 @@ public class FileMgr {
             localFileCache = null;
         } else {
             try {
-                final String localCacheRoot = ConsoleProperties.getString("console.localCache.rootDirectory", CONSOLE_PREFS_DIR);
+                final String localCacheRoot = ConsoleProperties.getString("console.localCache.rootDirectory", consolePrefsDir);
                 final long kilobyteCapacity = getFileCacheGigabyteCapacity() * 1024 * 1024;
 
                 localFileCache = new LocalFileCache(new File(localCacheRoot), kilobyteCapacity, null, httpClient, storageClientMgr);

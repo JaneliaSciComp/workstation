@@ -1,14 +1,18 @@
 package org.janelia.workstation.site.jrc.nb_action;
 
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.JOptionPane;
+
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.Utils;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
 
 @ActionID(
         category = "Help",
@@ -21,11 +25,22 @@ import java.awt.event.ActionEvent;
 @ActionReference(path = "Menu/Help", position = 131)
 @Messages("CTL_WebstationMenuAction=Webstation")
 public final class WebstationMenuAction extends AbstractAction {
-
-    private static final String WEBSTATION_URL = ConsoleProperties.getInstance().getProperty("webstation.url");
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        Utils.openUrlInBrowser(WEBSTATION_URL);
+        ActivityLogHelper.logUserAction("WebstationMenuAction.actionPerformed");
+        String webstationUrl = ConsoleProperties.getInstance().getProperty("webstation.url");
+        if (webstationUrl==null) {
+            JOptionPane.showMessageDialog(
+                    FrameworkAccess.getMainFrame(),
+                    "Webstation address has not been configured.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE,
+                    null
+            );
+        }
+        else {
+            Utils.openUrlInBrowser(webstationUrl);
+        }
     }
 }

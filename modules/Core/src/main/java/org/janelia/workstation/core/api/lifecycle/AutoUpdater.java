@@ -31,38 +31,47 @@ public class AutoUpdater extends SimpleWorker {
     private static final Logger log = LoggerFactory.getLogger(AutoUpdater.class);
     
     private static final ResourceBundle rb = ResourceBundle.getBundle("org.janelia.workstation.core.Bundle");
+    private static final String UPDATE_CENTER_LABEL = "Janelia Workstation Update Center";
     private static final String UPDATE_CENTER_KEY = "org_janelia_workstation_update_center";
 
-    static String getUpdateCenterURL() {
-        return rb.getString(AutoUpdater.UPDATE_CENTER_KEY);
-    }
+    private static String updateCenterLabel;
+    private static String updateCenterUrl;
 
-    private String updateCenterLabel;
-    private String updateCenterUrl;
-    
-    private OperationContainer<InstallSupport> containerForUpdate;
-    private Restarter restarter;
-    private boolean restarting = false;
-
-    protected AutoUpdater() {
-        
+    static {
         try {
             updateCenterLabel = rb.getString("Services/AutoupdateType/"+UPDATE_CENTER_KEY+".instance");
             log.info("Update center name: {}", updateCenterLabel);
         }
         catch (MissingResourceException e) {
-            log.error("Missing update center label property in browser bundle!");
+            log.error("Missing update center label property in bundle, using default '{}'", UPDATE_CENTER_LABEL);
+            updateCenterLabel = UPDATE_CENTER_LABEL;
         }
-        
+
         try {
-            updateCenterUrl = getUpdateCenterURL();
+            updateCenterUrl = rb.getString(AutoUpdater.UPDATE_CENTER_KEY);
             log.info("Update center URL: {}", updateCenterUrl);
         }
         catch (MissingResourceException e) {
-            log.warn("Missing update center label property. Running in dev?");
+            log.trace("Update center label property not specified in bundle.");
         }
     }
-    
+
+    public static String getUpdateCenterURL() {
+        return rb.getString(AutoUpdater.UPDATE_CENTER_KEY);
+    }
+
+    public static void setUpdateCenterURL(String newUrl) {
+        updateCenterUrl = newUrl;
+        upgradeToNewUpdateCenter();
+    }
+
+    private OperationContainer<InstallSupport> containerForUpdate;
+    private Restarter restarter;
+    private boolean restarting = false;
+
+    protected AutoUpdater() {
+    }
+
     @Override
     protected void doStuff() throws Exception {
 
@@ -104,7 +113,7 @@ public class AutoUpdater extends SimpleWorker {
         }
     }
 
-    private void upgradeToNewUpdateCenter() {
+    private static void upgradeToNewUpdateCenter() {
 
         log.info("Verifying update center providers");
         
@@ -151,7 +160,7 @@ public class AutoUpdater extends SimpleWorker {
         }
     }
         
-    private void createUpdateCenter() throws MalformedURLException {
+    private static void createUpdateCenter() throws MalformedURLException {
         UpdateUnitProvider newProvider = UpdateUnitProviderFactory.getDefault().create(updateCenterLabel, updateCenterLabel, new URL(updateCenterUrl));
         newProvider.setEnable(true);
         log.warn("Created update center {} ({})", newProvider.getName(), newProvider.getProviderURL());

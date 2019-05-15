@@ -19,7 +19,6 @@ import org.openide.windows.TopComponent;
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "class")
 public class DomainObjectEditorStateImpl<P extends DomainObject, T, S> implements DomainObjectEditorState<P, T, S> {
 
     @JsonIgnore
@@ -123,10 +122,7 @@ public class DomainObjectEditorStateImpl<P extends DomainObject, T, S> implement
     }
 
     public static DomainObjectEditorState<?,?,?> deserialize(String serializedState) throws Exception {
+        System.out.println("WTF: "+DomainModelViewUtils.convertModelPackages(serializedState));
         return mapper.readValue(DomainModelViewUtils.convertModelPackages(serializedState), DomainObjectEditorState.class);
     }
-
-
-
-
 }
