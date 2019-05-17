@@ -107,9 +107,9 @@
 
         <janeliaws.jetty.version>[9.4.17.v20190418,)</janeliaws.jetty.version>
 
-        <janeliaws.jacs-model.version>2.1.0-SNAPSHOT</janeliaws.jacs-model.version>
+        <janeliaws.jacs-model.version>2.1.0</janeliaws.jacs-model.version>
 
-        <janeliaws.jacs-messaging.version>2.0.0-SNAPSHOT</janeliaws.jacs-messaging.version>
+        <janeliaws.jacs-messaging.version>2.0.0</janeliaws.jacs-messaging.version>
 
         <!--==== Plugin Versions ==================================================================================-->
 
