@@ -401,12 +401,12 @@ public class SampleEditorPanel
         }
     }
     
-    private void loadContainers() throws Exception {
+    private void loadContainers() {
         log.info("Loading containers");
         synchronized (this) {
             this.containers = new HashMap<>();
-            for (ContainerizedService container : DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(ContainerizedService.class)) {
-                log.info("Found {}", container);
+            for (ContainerizedService container : DomainMgr.getDomainMgr().getModel().getContainerizedServices()) {
+                log.info("Found service '{}' ({})", container.getName(), container.getId());
                 containers.put(container.getId(), container);
             }
         }

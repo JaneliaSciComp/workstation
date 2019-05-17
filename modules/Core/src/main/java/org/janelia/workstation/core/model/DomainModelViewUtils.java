@@ -21,13 +21,18 @@ public class DomainModelViewUtils {
     private static final String NEW_MODEL = "org.janelia.model";
     private static final String OLD_SECURITY_MODEL_PATTERN = "org\\.janelia\\.it\\.jacs\\.model\\.domain\\.subjects"; 
     private static final String NEW_SECURITY_MODEL = "org.janelia.model.security";
+    private static final String OLD_BROWSER_MODEL_PATTERN = "org\\.janelia\\.it\\.workstation\\.browser\\.model";
+    private static final String NEW_BROWSER_MODEL = "org.janelia.workstation.core.model";
     
     /**
      * Convert any occurrences of the old model packages to the new organization.
      */
     public static String convertModelPackages(String str) {
         if (str==null) return null;
-        return str.replaceAll(OLD_MODEL_PATTERN, NEW_MODEL).replaceAll(OLD_SECURITY_MODEL_PATTERN, NEW_SECURITY_MODEL);
+        return str
+                .replaceAll(OLD_MODEL_PATTERN, NEW_MODEL)
+                .replaceAll(OLD_SECURITY_MODEL_PATTERN, NEW_SECURITY_MODEL)
+                .replaceAll(OLD_BROWSER_MODEL_PATTERN,NEW_BROWSER_MODEL);
     }
     
     public static String getDateString(Date date) {

@@ -15,34 +15,12 @@ import java.beans.PropertyChangeListener;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.JToggleButton;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.browser.gui.support.SelectablePanel;
-import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.browser.gui.listview.ViewerToolbar;
-import org.janelia.workstation.core.options.ApplicationOptions;
-import org.janelia.workstation.core.options.OptionConstants;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.browser.nb_action.NewFilterActionListener;
-import org.janelia.workstation.core.util.HelpTextUtils;
-import org.janelia.workstation.core.util.Utils;
-import org.janelia.workstation.core.workers.SimpleWorker;
+import com.google.common.eventbus.Subscribe;
+import net.miginfocom.swing.MigLayout;
 import org.janelia.model.domain.report.DatabaseSummary;
 import org.janelia.model.domain.report.DiskUsageSummary;
 import org.janelia.model.domain.report.QuotaUsage;
@@ -50,12 +28,22 @@ import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.workstation.browser.gui.listview.ViewerToolbar;
+import org.janelia.workstation.browser.gui.support.SelectablePanel;
+import org.janelia.workstation.browser.nb_action.NewFilterActionListener;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
+import org.janelia.workstation.core.options.ApplicationOptions;
+import org.janelia.workstation.core.options.OptionConstants;
+import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.core.util.HelpTextUtils;
+import org.janelia.workstation.core.util.Utils;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
-
-import net.miginfocom.swing.MigLayout;
 
 /**
  * Start Page which is automatically shown to the user on every startup (unless disabled by user preference) 
@@ -67,7 +55,6 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
     private static final Logger log = LoggerFactory.getLogger(StartPage.class);
 
-    private static final String MANUAL_URL = ConsoleProperties.getInstance().getProperty("manual.color.depth.url");
     private static final ImageIcon DISK_USAGE_ICON = Icons.getIcon("database_400.png");
     private static final ImageIcon SAMPLE_ICON = Icons.getIcon("microscope_400.png");
     private static final ImageIcon COLOR_DEPTH_ICON = Icons.getIcon("color_depth_brain.png");
@@ -288,7 +275,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         dataSummaryPanel.add(new JLabel(sampleIcon), "al right top, w 50%");
         dataSummaryPanel.add(new JLabel(Icons.getLoadingIcon()), "spanx 2, al center center");
 
-        String colorDepthTxt = "<html>To search the color depth projections, you first need to create a search mask.<br>"
+        String colorDepthTxt = "<html>To search the color depth projection libraries, you first need to create a search mask.<br>"
                 + "To begin, right-click any Color Depth Projection and select "+HelpTextUtils.getBoldedLabel("Create Mask for Color Depth Search")+".<br>"
                 + "You can also upload a custom mask using the "+HelpTextUtils.getMenuItemLabel("File","Upload","Color Depth Mask")+"  menu option.<br>";
         
@@ -296,14 +283,26 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         colorDepthTitlePanel.setLayout(new BoxLayout(colorDepthTitlePanel, BoxLayout.LINE_AXIS));
                 
         colorDepthTitlePanel.add(getLargeLabel("Color Depth Mask Search"));
-        colorDepthTitlePanel.add(getHighlightLabel("NEW"));
+        //colorDepthTitlePanel.add(getHighlightLabel("NEW"));
         
         JButton userManualButton = new JButton("Learn more in the User Manual");
         userManualButton.setFont(mediumFont);
         userManualButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Utils.openUrlInBrowser(MANUAL_URL);
+                String manualUrl = ConsoleProperties.getInstance().getProperty("manual.color.depth.url", null);
+                if (manualUrl==null) {
+                    JOptionPane.showMessageDialog(
+                            FrameworkAccess.getMainFrame(),
+                            "No color depth user manual can be found.",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE,
+                            null
+                    );
+                }
+                else {
+                    Utils.openUrlInBrowser(manualUrl);
+                }
             }
         });
         

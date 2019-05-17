@@ -1,7 +1,5 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import static org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_PREFERRED_ID;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -22,38 +20,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+
 import javax.media.opengl.GLProfile;
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.ActionMap;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
-import javax.swing.InputMap;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JSeparator;
-import javax.swing.JSlider;
-import javax.swing.JSpinner;
-import javax.swing.JSplitPane;
-import javax.swing.JToggleButton;
-import javax.swing.JToolBar;
-import javax.swing.KeyStroke;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -70,42 +44,17 @@ import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.tiledMicroscope.TmColorModel;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.common.gui.dialogs.MemoryCheckDialog;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.WindowLocator;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
-import org.janelia.workstation.gui.large_volume_viewer.action.AdvanceZSlicesAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.BacktrackNeuronAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.CenterNextParentAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.GoBackZSlicesAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.GoToLocationAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.MicronsToClipboardAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.MouseMode;
-import org.janelia.workstation.gui.large_volume_viewer.action.NextZSliceAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.OctreeFilePathToClipboardAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.OpenFolderAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.OrthogonalModeAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.PanModeAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.PreviousZSliceAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.RawFileLocToClipboardAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.RecentFileList;
-import org.janelia.workstation.gui.large_volume_viewer.action.RefreshSharedUpdatesAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.ResetColorsAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.ResetViewAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.ResetZoomAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.SliceScanAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.TileLocToClipboardAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.TraceMouseModeAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.WheelMode;
-import org.janelia.workstation.gui.large_volume_viewer.action.ZScanMode;
-import org.janelia.workstation.gui.large_volume_viewer.action.ZScanScrollModeAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.ZoomInAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.ZoomMaxAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.ZoomMouseModeAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.ZoomOutAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.ZoomScrollModeAction;
+import org.janelia.workstation.gui.large_volume_viewer.action.*;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
@@ -128,14 +77,12 @@ import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewLauncher;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.tracing.PathTraceToParentRequest;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.tiledMicroscope.TmColorModel;
-import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_PREFERRED_ID;
 
 /**
  * Main window for QuadView application. Maintained using Google WindowBuilder
@@ -360,7 +307,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
      * Create the frame.
      */
     public QuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel) {
-        new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
+        new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, FrameworkAccess.getMainFrame());
 
         this.annotationModel = annotationModel;
         this.largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);

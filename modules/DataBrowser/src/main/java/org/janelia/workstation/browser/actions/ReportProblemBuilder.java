@@ -19,13 +19,14 @@ import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.StateMgr;
-import org.janelia.workstation.core.logging.NBExceptionHandler;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.SimpleListenableFuture;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.lookup.ServiceProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -33,8 +34,7 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = ContextualActionBuilder.class, position=500)
 public class ReportProblemBuilder implements ContextualActionBuilder {
 
-    private static final String WEBSTATION_URL = ConsoleProperties.getInstance().getProperty("webstation.url");
-    private static final String HELP_EMAIL = ConsoleProperties.getString("console.HelpEmail");
+    private static final Logger log = LoggerFactory.getLogger(ReportProblemBuilder.class);
 
     private static ReportProblemAction action = new ReportProblemAction();
 
@@ -91,8 +91,7 @@ public class ReportProblemBuilder implements ContextualActionBuilder {
                                 try {
                                     List<Annotation> annotations = future.get();
                                     if (annotations!=null && !annotations.isEmpty()) {
-                                        DataReporter reporter = new DataReporter(NBExceptionHandler.REPORT_EMAIL, HELP_EMAIL, WEBSTATION_URL);
-                                        reporter.reportData(domainObject, annotations.get(0).getName());
+                                        reportData(domainObject, annotations.get(0));
                                     }
                                 }
                                 catch (Exception ex) {
@@ -107,5 +106,25 @@ public class ReportProblemBuilder implements ContextualActionBuilder {
 
             return errorMenu;
         }
+    }
+
+    private static void reportData(DomainObject domainObject, Annotation annotation) {
+
+        String fromEmail = ConsoleProperties.getString("console.FromEmail", null);
+        if (fromEmail==null) {
+            log.error("Cannot send exception report: no value for console.FromEmail is configured.");
+            return;
+        }
+
+        String toEmail = ConsoleProperties.getString("console.HelpEmail", null);
+        if (toEmail==null) {
+            log.error("Cannot send exception report: no value for console.HelpEmail is configured.");
+            return;
+        }
+
+        String webstationUrl = ConsoleProperties.getString("webstation.url", null);
+
+        DataReporter reporter = new DataReporter(fromEmail, toEmail, webstationUrl);
+        reporter.reportData(domainObject, annotation.getName());
     }
 }

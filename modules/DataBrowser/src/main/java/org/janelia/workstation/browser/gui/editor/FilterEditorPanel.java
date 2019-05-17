@@ -1,7 +1,35 @@
 package org.janelia.workstation.browser.gui.editor;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.net.URI;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
+
+import javax.swing.AbstractAction;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
+
 import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainConstants;
@@ -31,8 +59,7 @@ import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
-import org.janelia.workstation.common.gui.support.SmartSearchBox;
-import org.janelia.workstation.common.gui.support.WindowLocator;
+import org.janelia.workstation.common.gui.support.SmartTextField;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.common.nodes.FilterNode;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -57,31 +84,6 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.AbstractAction;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-import java.awt.BorderLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.net.URI;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
-
 import static org.janelia.workstation.core.api.DomainMgr.getDomainMgr;
 
 /**
@@ -92,7 +94,7 @@ import static org.janelia.workstation.core.api.DomainMgr.getDomainMgr;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class FilterEditorPanel 
-        extends DomainObjectEditorPanel<Filtering,DomainObject,Reference> 
+        extends DomainObjectEditorPanel<Filtering,DomainObject>
         implements SearchProvider, PreferenceSupport {
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
@@ -115,7 +117,7 @@ public class FilterEditorPanel
     private final PaginatedDomainResultsPanel resultsPanel;
     private final DropDownButton typeCriteriaButton;
     private final DropDownButton addCriteriaButton;
-    private final SmartSearchBox searchBox;
+    private final SmartTextField searchBox;
     private final JButton infoButton;
 
     // State
@@ -241,7 +243,9 @@ public class FilterEditorPanel
         
         this.typeCriteriaButton = new DropDownButton();
         this.addCriteriaButton = new DropDownButton("Add Criteria...");
-        this.searchBox = new SmartSearchBox("SEARCH_HISTORY");
+        this.searchBox = new SmartTextField("SEARCH_HISTORY");
+        searchBox.setPreferredSize(new Dimension(200, 30));
+        searchBox.setToolTipText("Enter search terms...");
 
         infoButton = new JButton(Icons.getIcon("info.png"));
         infoButton.setMargin(new Insets(0,2,0,2));
@@ -255,7 +259,7 @@ public class FilterEditorPanel
                 try {
                     if (!DesktopApi.browseDesktop(new URI("http://lucene.apache.org/core/old_versioned_docs/versions/3_5_0/queryparsersyntax.html"))) {
                         JOptionPane.showMessageDialog(
-                                WindowLocator.getMainFrame(),
+                                FrameworkAccess.getMainFrame(),
                                 "Cannot open URL. Desktop API is not supported on this platform.",
                                 "Error",
                                 JOptionPane.ERROR_MESSAGE,
@@ -272,7 +276,7 @@ public class FilterEditorPanel
         AbstractAction mySearchAction = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                searchBox.addCurrentSearchTermToHistory();
+                searchBox.addCurrentTextToHistory();
                 refreshSearchResults(true);
             }
         };
@@ -392,7 +396,7 @@ public class FilterEditorPanel
     private void refreshSearchResults(final boolean isUserDriven, final Callable<Void> success, final Callable<Void> failure) {
         log.trace("refresh");
         
-        String inputFieldValue = searchBox.getSearchString();
+        String inputFieldValue = searchBox.getText();
         if (!StringUtils.areEqual(filter.getSearchString(), inputFieldValue)) {
             dirty = true;
         }
@@ -455,7 +459,7 @@ public class FilterEditorPanel
     
     private void updateView() {
 
-        searchBox.setSearchString(filter.getSearchString());
+        searchBox.setText(filter.getSearchString());
 
         final String currType = DomainUtils.getTypeName(searchConfig.getSearchClass());
         typeCriteriaButton.setText("Result Type: " + currType);

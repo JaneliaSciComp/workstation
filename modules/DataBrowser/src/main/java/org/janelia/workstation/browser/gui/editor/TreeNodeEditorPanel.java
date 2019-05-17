@@ -44,7 +44,7 @@ import java.util.concurrent.Callable;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObject,Reference> 
+public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObject>
         implements SearchProvider, PreferenceSupport {
 
     private final static Logger log = LoggerFactory.getLogger(TreeNodeEditorPanel.class);

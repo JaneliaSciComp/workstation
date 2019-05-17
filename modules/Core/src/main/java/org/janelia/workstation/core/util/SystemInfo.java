@@ -63,8 +63,8 @@ public class SystemInfo {
 
     public static final String optionsMenuName = isMac ? "Preferences" : "Tools->Options";
 
-    public static final String appName = ConsoleProperties.getString("console.Title");
-    public static final String appVersion = ConsoleProperties.getString("console.versionNumber");
+    public static final String appName = ConsoleProperties.getString("client.Title");
+    public static final String appVersion = ConsoleProperties.getString("client.versionNumber");
 
     public static final boolean isDev = "DEV".equals(appVersion);
     public static final boolean isTest = "TEST".equals(appVersion);

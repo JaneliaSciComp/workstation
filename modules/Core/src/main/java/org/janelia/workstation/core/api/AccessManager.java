@@ -9,7 +9,7 @@ import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.LoginEvent;
 import org.janelia.workstation.core.events.lifecycle.SessionEndEvent;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
-import org.janelia.workstation.core.model.ErrorType;
+import org.janelia.workstation.core.model.LoginErrorType;
 import org.janelia.workstation.core.util.SimpleJwtParser;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.model.domain.enums.SubjectRole;
@@ -60,7 +60,7 @@ public final class AccessManager {
     // Start up state
     private AuthState currState = AuthState.Starting;
     private boolean hadLoginIssue;
-    private ErrorType loginIssue;
+    private LoginErrorType loginIssue;
     
     // Running state
     private final ReentrantLock tokenRefreshLock = new ReentrantLock();
@@ -164,15 +164,15 @@ public final class AccessManager {
             } catch (AuthenticationException e) {
                 LOG.warn("Authentication problem during auto-login", e);
                 moveToLoggedOutState();
-                loginIssue = ErrorType.AuthError;
+                loginIssue = LoginErrorType.AuthError;
             } catch (ServiceException e) {
                 FrameworkAccess.handleExceptionQuietly("Problem encountered during auto-login", e);
                 moveToLoggedOutState();
-                loginIssue = ErrorType.NetworkError;
+                loginIssue = LoginErrorType.NetworkError;
             } catch (Throwable t) {
                 FrameworkAccess.handleExceptionQuietly("Problem encountered during auto-login", t);
                 moveToLoggedOutState();
-                loginIssue = ErrorType.OtherError;
+                loginIssue = LoginErrorType.OtherError;
             }
         }
     }
@@ -181,7 +181,7 @@ public final class AccessManager {
         return hadLoginIssue;
     }
 
-    public ErrorType getLoginIssue() {
+    public LoginErrorType getLoginIssue() {
         return loginIssue;
     }
 

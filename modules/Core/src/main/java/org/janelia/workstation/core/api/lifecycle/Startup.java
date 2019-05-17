@@ -1,26 +1,40 @@
 package org.janelia.workstation.core.api.lifecycle;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.LogManager;
 
 import javax.imageio.ImageIO;
 
+import com.google.common.eventbus.Subscribe;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.FileMgr;
+import org.janelia.workstation.core.api.LocalPreferenceMgr;
+import org.janelia.workstation.core.api.ServiceMgr;
+import org.janelia.workstation.core.api.SessionMgr;
+import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.lifecycle.ApplicationClosing;
 import org.janelia.workstation.core.events.lifecycle.ApplicationOpening;
-import org.janelia.workstation.core.util.SystemInfo;
-import org.janelia.workstation.core.api.ConsoleApp;
 import org.janelia.workstation.core.logging.LogFormatter;
 import org.janelia.workstation.core.logging.NBExceptionHandler;
+import org.janelia.workstation.core.util.BrandingConfig;
+import org.janelia.workstation.core.util.SystemInfo;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.modules.OnStart;
+import org.openide.modules.Places;
 import org.openide.util.NbPreferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The main hook for starting up the Workstation Browser. 
- *  
- * @author fosterl
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ * @author Todd Safford
+ * @author Les Foster
  */
 @OnStart
 public class Startup implements Runnable {
@@ -45,7 +59,6 @@ public class Startup implements Runnable {
          *       ALL
          */
         System.setProperty("org.janelia.it.level", "INFO");
-        System.setProperty("DomainObjectAcceptorHelper.level", "FINEST");
         
         try {
             // Re-read the configuration to parse the system properties we just defined
@@ -89,10 +102,117 @@ public class Startup implements Runnable {
         // disable ImageIO file caching for improved performance
         ImageIO.setUseCache(false);
 
-        // Initialize the application
-        ConsoleApp.getConsoleApp();
+        // Workaround for NetBeans Sierra rendering issues
+        findAndRemoveAllResourcesFile();
+
+        // Minor hack for running NetBeans on Windows
+        findAndRemoveWindowsSplashFile();
+
+        // Load the branding config so that the user settings are available for logging
+        // in the next step (init user session)
+        BrandingConfig.getBrandingConfig().validateBrandingConfig();
+
+        try {
+            // Set the Look and Feel
+            StateMgr.getStateMgr().initLAF();
+            // Initialize all singletons so that they are listening on Event Bus
+            FileMgr.getFileMgr();
+            LocalPreferenceMgr.getInstance();
+            DomainMgr.getDomainMgr();
+            AccessManager.getAccessManager();
+            SessionMgr.getSessionMgr();
+
+        }
+        catch (Throwable e) {
+            FrameworkAccess.handleException(e);
+        }
+
+        // Do some things in the background
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                // Initialize the services
+                ServiceMgr.getServiceMgr().initServices();
+            }
+
+            @Override
+            protected void hadSuccess() {
+            }
+
+            @Override
+            protected void hadError(Throwable e) {
+                FrameworkAccess.handleException(e);
+            }
+        };
+
+        worker.execute();
+
+        LOG.info("Startup sequence complete. Opening the application...");
 
         // Notify listeners that the application is opening
+        ConsoleState.setCurrState(ConsoleState.STARTING_SESSION);
         Events.getInstance().postOnEventBus(new ApplicationOpening());
+    }
+
+    /**
+     * This is part of a workaround for JW-25338 which is rendering issues for a combination of NetBeans 7.4 with Synthetica themes on Mac OS X Sierra.
+     *
+     * The other part of the workaround prevents this file from being generated in the future, by setting
+     * -Dorg.netbeans.core.update.all.resources=never on the startup command line.
+     */
+    private void findAndRemoveAllResourcesFile() {
+        try {
+            File evilCachedResourcesFile = Places.getCacheSubfile("all-resources.dat");
+            if (evilCachedResourcesFile.exists()) {
+                LOG.info("Cached all-resources file "+evilCachedResourcesFile+" exists.  Removing...");
+                boolean deleteSuccess = evilCachedResourcesFile.delete();
+                if (deleteSuccess) {
+                    LOG.info("Successfully removed the all-resources.dat file");
+                }
+                else {
+                    LOG.warn("Could not successfully removed the all-resources.dat file");
+                }
+            }
+            else {
+                LOG.debug("Did not find the cached all-resources.dat file ("+evilCachedResourcesFile+"). Continuing...");
+            }
+        }
+        catch (Exception e) {
+            LOG.error("Ignoring error trying to exorcise the all-resources.dat", e);
+        }
+    }
+
+    /**
+     * Method to work-around a problem with the NetBeans Windows integration
+     */
+    private void findAndRemoveWindowsSplashFile() {
+        try {
+            if (SystemInfo.isWindows) {
+                File evilCachedSplashFile = Places.getCacheSubfile("splash.png");
+                if (evilCachedSplashFile.exists()) {
+                    LOG.info("Cached splash file "+evilCachedSplashFile+" exists.  Removing...");
+                    boolean deleteSuccess = evilCachedSplashFile.delete();
+                    if (deleteSuccess) {
+                        LOG.info("Successfully removed the splash.png file");
+                    }
+                    else {
+                        LOG.warn("Could not successfully removed the splash.png file");
+                    }
+                }
+                else {
+                    LOG.debug("Did not find the cached splash file ("+evilCachedSplashFile+").  Continuing...");
+                }
+            }
+        }
+        catch (Exception e) {
+            LOG.error("Ignoring error trying to exorcise the splash file on Windows", e);
+        }
+    }
+
+    @Subscribe
+    public void systemWillExit(ApplicationClosing closingEvent) {
+        LOG.info("Memory in use at exit: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000f + " MB");
+        findAndRemoveWindowsSplashFile();
     }
 }

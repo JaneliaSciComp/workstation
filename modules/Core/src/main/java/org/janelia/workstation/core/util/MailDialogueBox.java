@@ -26,9 +26,7 @@ public class MailDialogueBox {
     private static final Logger log = LoggerFactory.getLogger(MailDialogueBox.class);
 
     private static final String LOG_FILE_NAME = "messages.log";
-    
-    private final String toEmail = ConsoleProperties.getString("console.HelpEmail");
-    private String fromEmail;
+
     private String subject = "";
     private String initialBody = "";
     private String title = "";
@@ -36,13 +34,12 @@ public class MailDialogueBox {
     private StringBuffer body = new StringBuffer();
     private JFrame parentFrame;
 
-    private MailDialogueBox(JFrame parentFrame, String fromEmail) {
+    private MailDialogueBox(JFrame parentFrame) {
         this.parentFrame = parentFrame;
-        this.fromEmail = fromEmail;
     }
     
-    public static MailDialogueBox newDialog(JFrame parentFrame, String fromEmail) {
-        return new MailDialogueBox(parentFrame, fromEmail);
+    public static MailDialogueBox newDialog(JFrame parentFrame) {
+        return new MailDialogueBox(parentFrame);
     }
 
     public MailDialogueBox withTitle(String title) {
@@ -99,7 +96,19 @@ public class MailDialogueBox {
     }
     
     public void sendEmail() {
-        
+
+        String fromEmail = ConsoleProperties.getString("console.FromEmail", null);
+        if (fromEmail==null) {
+            log.error("Cannot send exception report: no value for console.FromEmail is configured.");
+            return;
+        }
+
+        String toEmail = ConsoleProperties.getString("console.HelpEmail", null);
+        if (toEmail==null) {
+            log.error("Cannot send exception report: no value for console.HelpEmail is configured.");
+            return;
+        }
+
         // Flush all long handlers so that we have a complete log file
         java.util.logging.Logger logger = java.util.logging.Logger.getLogger(""); 
         for (java.util.logging.Handler handler : logger.getHandlers()) {
@@ -117,7 +126,7 @@ public class MailDialogueBox {
             filename = AccessManager.getSubjectName()+"_"+LOG_FILE_NAME;
         }
         
-        log.info("Sending email from {} to {} with attachment {}",fromEmail,toEmail, logfile);
+        log.info("Sending email from {} to {} with attachment {}", fromEmail, toEmail, logfile);
         
         MailHelper helper = new MailHelper();
         helper.sendEmail(fromEmail, toEmail, subject, body.toString(), logfile, filename);

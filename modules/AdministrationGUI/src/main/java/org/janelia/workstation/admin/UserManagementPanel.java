@@ -1,32 +1,33 @@
 package org.janelia.workstation.admin;
 
+import java.awt.BorderLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.AbstractTableModel;
+
 import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;
+import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.table.AbstractTableModel;
-import java.awt.Dimension;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
 /**
+ *
  * @author schauderd
  */
 public class UserManagementPanel extends JPanel {
@@ -41,30 +42,14 @@ public class UserManagementPanel extends JPanel {
         this.parent = parent;
         setupUI();
         loadUsers();
-
     }
 
     private void setupUI() {
-        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
-        JPanel titlePanel = new JPanel();
-        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
-        JButton returnHome = new JButton("return to top");
-        returnHome.setActionCommand("ReturnHome");
-        returnHome.addActionListener(event -> returnHome());
-        returnHome.setBorderPainted(false);
-        returnHome.setOpaque(false);
-        JLabel titleLabel = new JLabel("User List", JLabel.LEADING);
-        Box horizontalBox = Box.createHorizontalBox();
-        horizontalBox.add(returnHome);
-        horizontalBox.add(Box.createGlue());
-        horizontalBox.add(titleLabel);
-        horizontalBox.add(Box.createGlue());
-        horizontalBox.add(Box.createGlue());
-        titlePanel.add(horizontalBox);
-        add(titlePanel);
-
-        add(Box.createRigidArea(new Dimension(0, 10)));
+        setLayout(new BorderLayout());
+    
+        JPanel titlePanel = new TitlePanel("User List", "Return To Top Menu", event -> returnHome());
+        add(titlePanel, BorderLayout.PAGE_START);
 
         userManagementTableModel = new UserManagementTableModel();
         userManagementTableModel.setParentManager(this);
@@ -87,7 +72,7 @@ public class UserManagementPanel extends JPanel {
 
 
         JScrollPane tableScroll = new JScrollPane(userManagementTable);
-        add(tableScroll);
+        add(tableScroll, BorderLayout.CENTER);
 
         // add groups pulldown selection for groups this person is a member of
         editUserButton = new JButton("Edit User");
@@ -95,10 +80,11 @@ public class UserManagementPanel extends JPanel {
         editUserButton.setEnabled(false);
         JButton newUserButton = new JButton("New User");
         newUserButton.addActionListener(event -> newUser());
-        JPanel actionPanel = new JPanel();
+
+        JPanel actionPanel = new ActionPanel();
         actionPanel.add(editUserButton);
         actionPanel.add(newUserButton);
-        add(actionPanel);
+        add(actionPanel, BorderLayout.PAGE_END);
     }
 
     public void editUser() {
@@ -120,12 +106,12 @@ public class UserManagementPanel extends JPanel {
         parent.viewTopMenu();
     }
 
-    /*
-      loads users based off your permissions.. 
-    If you are a workstation admin, you see everybody
-    Group admins only see users in groups in which they are the owners.  
-    */
-    private void loadUsers() {
+    /**
+     * Loads users based off your permissions.
+     * If you are a workstation admin, you see everybody.
+     * Group admins only see users in groups in which they are the owners.
+     */
+    private void loadUsers () {
         try {
             if (AccessManager.getAccessManager().isAdmin()) {
                 List<Subject> subjectList = DomainMgr.getDomainMgr().getSubjects();
@@ -148,7 +134,6 @@ public class UserManagementPanel extends JPanel {
         public static final int COLUMN_USERNAME = 1;
         public static final int COLUMN_GROUPS = 2;
         public static final int COLUMN_SUBJECT = 3;
-
 
         private List<User> users = new ArrayList<>();
         private UserManagementPanel manager;
@@ -194,8 +179,11 @@ public class UserManagementPanel extends JPanel {
                     return users.get(row).getName();
                 case COLUMN_GROUPS:
                     // groups
-                    String groups = users.get(row).getReadGroups().toString();
-                    return groups.replaceAll("group:", "");
+                    return users.get(row).getReadGroups()
+                            .stream()
+                            .map(SubjectUtils::getSubjectName)
+                            .sorted()
+                            .collect(Collectors.joining(", "));
                 case COLUMN_SUBJECT:
                     // subject (User) object:
                     return users.get(row);
@@ -222,7 +210,5 @@ public class UserManagementPanel extends JPanel {
         private void setParentManager(UserManagementPanel parentManager) {
             manager = parentManager;
         }
-
     }
-
 }

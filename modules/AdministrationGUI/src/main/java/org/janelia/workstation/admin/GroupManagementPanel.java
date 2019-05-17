@@ -1,5 +1,21 @@
 package org.janelia.workstation.admin;
 
+import java.awt.BorderLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.AbstractTableModel;
+
 import org.janelia.model.security.Group;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
@@ -10,26 +26,8 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.table.AbstractTableModel;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
+ *
  * @author schauderd
  */
 public class GroupManagementPanel extends JPanel {
@@ -50,25 +48,11 @@ public class GroupManagementPanel extends JPanel {
     }
 
     private void setupUI() {
-        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-        JPanel titlePanel = new JPanel();
 
-        titlePanel.setLayout(new BorderLayout());
-        titleLabel = new JLabel("Groups Management", JLabel.LEADING);
-        titleLabel.setFont(new Font("Serif", Font.PLAIN, 14));
-        JButton returnHome = new JButton("return to top");
-        returnHome.setActionCommand("ReturnHome");
-        returnHome.addActionListener(event -> returnHome());
+        setLayout(new BorderLayout());
 
-        Box horizontalBox = Box.createHorizontalBox();
-        horizontalBox.add(returnHome);
-        horizontalBox.add(Box.createGlue());
-        horizontalBox.add(titleLabel);
-        horizontalBox.add(Box.createGlue());
-        horizontalBox.add(Box.createHorizontalStrut(returnHome.getWidth()));
-        titlePanel.add(horizontalBox);
-        add(titlePanel);
-        add(Box.createRigidArea(new Dimension(0, 10)));
+        JPanel titlePanel = new TitlePanel("Group List", "Return To Top Menu", event -> returnHome());
+        add(titlePanel, BorderLayout.PAGE_START);
 
         groupManagementTableModel = new GroupManagementTableModel();
         groupManagementTable = new JTable(groupManagementTableModel);
@@ -89,18 +73,19 @@ public class GroupManagementPanel extends JPanel {
         groupManagementTable.removeColumn(groupManagementTable.getColumnModel().getColumn(GroupManagementTableModel.COLUMN_SUBJECT));
 
         JScrollPane tableScroll = new JScrollPane(groupManagementTable);
-        add(tableScroll);
-
-        // add groups pulldown selection for groups this person is a member of 
+        add(tableScroll, BorderLayout.CENTER);
+        
+        // add groups pulldown selection for groups this person is a member of
         editGroupButton = new JButton("Edit Group");
         editGroupButton.addActionListener(event -> editGroup());
         editGroupButton.setEnabled(false);
         JButton newGroupButton = new JButton("New Group");
         newGroupButton.addActionListener(event -> newGroup());
-        JPanel actionPanel = new JPanel();
+
+        JPanel actionPanel = new ActionPanel();
         actionPanel.add(newGroupButton);
         actionPanel.add(editGroupButton);
-        add(actionPanel);
+        add(actionPanel, BorderLayout.PAGE_END);
     }
 
     public void editGroup() {

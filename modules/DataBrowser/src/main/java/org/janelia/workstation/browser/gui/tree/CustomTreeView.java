@@ -5,6 +5,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.beans.PropertyVetoException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -217,12 +219,16 @@ public class CustomTreeView extends BeanTreeView {
     public int expand(List<Long[]> paths) {
         int numExpanded = 0;
         if (paths==null) return numExpanded;
+
+        // Sort by length so that shorter paths are expanded first
+        Collections.sort(paths, Comparator.comparingInt(o -> o.length));
+
         for (Iterator<Long[]> it = paths.iterator(); it.hasNext();) {
             Long[] path = it.next();
             if (path==null) continue;
             log.debug("Expanding id path: {}",NodeUtils.createPathString(path));
             TreePath tp = getTreePath(path);
-            log.debug("Expanding tree path: {}",tp);
+            log.info("Expanding tree path: {}",tp);
             if (tp != null) {
                 expand(tp);
                 numExpanded++;

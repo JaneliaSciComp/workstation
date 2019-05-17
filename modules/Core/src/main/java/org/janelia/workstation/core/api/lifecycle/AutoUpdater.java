@@ -42,45 +42,102 @@ public class AutoUpdater extends SimpleWorker {
     private static final Logger log = LoggerFactory.getLogger(AutoUpdater.class);
     
     private static final ResourceBundle rb = ResourceBundle.getBundle("org.janelia.workstation.core.Bundle");
+    private static final String UPDATE_CENTER_LABEL = "Janelia Workstation Update Center";
     private static final String UPDATE_CENTER_KEY = "org_janelia_workstation_update_center";
 
-    static String getUpdateCenterURL() {
-        return rb.getString(AutoUpdater.UPDATE_CENTER_KEY);
+    private static String updateCenterLabel;
+    private static String updateCenterUrl;
+
+    static {
+        try {
+            updateCenterLabel = rb.getString("Services/AutoupdateType/"+UPDATE_CENTER_KEY+".instance");
+            log.debug("Update center name: {}", updateCenterLabel);
+        }
+        catch (MissingResourceException e) {
+            updateCenterLabel = UPDATE_CENTER_LABEL;
+            log.trace("Missing update center label property in bundle, using default '{}'", UPDATE_CENTER_LABEL);
+        }
+
+        try {
+            updateCenterUrl = rb.getString(AutoUpdater.UPDATE_CENTER_KEY);
+            log.debug("Update center URL: {}", updateCenterUrl);
+        }
+        catch (MissingResourceException e) {
+            log.trace("Update center label property not specified in bundle.");
+        }
     }
 
-    private String updateCenterLabel;
-    private String updateCenterUrl;
-    
+    public static String getUpdateCenterURL() {
+        return updateCenterUrl;
+    }
+
+    public static void setUpdateCenterURL(String newUrl) {
+        updateCenterUrl = newUrl;
+        upgradeToNewUpdateCenter();
+    }
+
+    private static void upgradeToNewUpdateCenter() {
+
+        log.info("Verifying update center providers");
+
+        if (StringUtils.isBlank(updateCenterLabel)) {
+            log.trace("Empty update center label, aborting update center check");
+            return;
+        }
+
+        if (StringUtils.isBlank(updateCenterUrl)) {
+            log.trace("Empty update center URL, aborting update center check");
+            return;
+        }
+
+        try {
+            List<UpdateUnitProvider> updateUnitProviders = UpdateUnitProviderFactory.getDefault().getUpdateUnitProviders(true);
+
+            if (updateUnitProviders.isEmpty()) {
+                log.warn("No providers found");
+                createUpdateCenter();
+            }
+            else {
+                log.debug("Verifying {} existing providers", updateUnitProviders.size());
+                for (UpdateUnitProvider provider : updateUnitProviders) {
+
+                    if (provider == null || provider.getProviderURL() == null) {
+                        continue;
+                    }
+
+                    log.info("Verifying {} ({})", provider.getName(), provider.getProviderURL());
+                    if (updateCenterLabel.equals(provider.getName()) || updateCenterLabel.equals(provider.getDisplayName())) {
+
+                        if (!provider.getProviderURL().toString().equals(updateCenterUrl)) {
+                            provider.setProviderURL(new URL(updateCenterUrl));
+                            log.warn("Updated URL for {}", provider.getName(), provider.getProviderURL());
+                            break;
+                        }
+
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            log.error("Error updating to new update center", ex);
+        }
+    }
+
+    private static void createUpdateCenter() throws MalformedURLException {
+        UpdateUnitProvider newProvider = UpdateUnitProviderFactory.getDefault().create(updateCenterLabel, updateCenterLabel, new URL(updateCenterUrl));
+        newProvider.setEnable(true);
+        log.warn("Created update center {} ({})", newProvider.getName(), newProvider.getProviderURL());
+    }
+
     private OperationContainer<InstallSupport> containerForUpdate;
     private Restarter restarter;
     private boolean restarting = false;
 
     protected AutoUpdater() {
-        
-        try {
-            updateCenterLabel = rb.getString("Services/AutoupdateType/"+UPDATE_CENTER_KEY+".instance");
-            log.info("Update center name: {}", updateCenterLabel);
-        }
-        catch (MissingResourceException e) {
-            log.error("Missing update center label property in browser bundle!");
-        }
-        
-        try {
-            updateCenterUrl = getUpdateCenterURL();
-            log.info("Update center URL: {}", updateCenterUrl);
-        }
-        catch (MissingResourceException e) {
-            log.warn("Missing update center label property. Running in dev?");
-        }
     }
-    
+
     @Override
     protected void doStuff() throws Exception {
-
-        if (SystemInfo.isDev || SystemInfo.isTest) {
-            log.info("Skipping updates on non-production build");
-            return;
-        }
 
         ProgressHandle handle = ProgressHandle.createHandle("Checking for updates...");
         
@@ -113,59 +170,6 @@ public class AutoUpdater extends SimpleWorker {
         finally {
             handle.finish();
         }
-    }
-
-    private void upgradeToNewUpdateCenter() {
-
-        log.info("Verifying update center providers");
-        
-        if (StringUtils.isBlank(updateCenterLabel)) {
-            log.trace("Empty update center label, aborting update center check");
-            return;
-        }
-
-        if (StringUtils.isBlank(updateCenterUrl)) {
-            log.trace("Empty update center URL, aborting update center check");
-            return;
-        }
-        
-        try {
-            List<UpdateUnitProvider> updateUnitProviders = UpdateUnitProviderFactory.getDefault().getUpdateUnitProviders(true);
-            
-            if (updateUnitProviders.isEmpty()) {
-                log.warn("No providers found");
-                createUpdateCenter();
-            }
-            else {
-                log.info("Verifying {} providers", updateUnitProviders.size());
-                for (UpdateUnitProvider provider : updateUnitProviders) {
-                    
-                    if (provider == null || provider.getProviderURL() == null) {
-                        continue; 
-                    }
-                    
-                    log.info("Verifying {} (displayName={}) (url={})", provider.getName(), provider.getDisplayName(), provider.getProviderURL());
-                    if (updateCenterLabel.equals(provider.getName()) || updateCenterLabel.equals(provider.getDisplayName())) {
-                        
-                        if (!provider.getProviderURL().toString().equals(updateCenterUrl)) {
-                            provider.setProviderURL(new URL(updateCenterUrl));
-                            log.warn("Updated URL for {}", provider.getName(), provider.getProviderURL());
-                            break;
-                        }
-                        
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            log.error("Error updating to new update center", ex);
-        }
-    }
-        
-    private void createUpdateCenter() throws MalformedURLException {
-        UpdateUnitProvider newProvider = UpdateUnitProviderFactory.getDefault().create(updateCenterLabel, updateCenterLabel, new URL(updateCenterUrl));
-        newProvider.setEnable(true);
-        log.warn("Created update center {} ({})", newProvider.getName(), newProvider.getProviderURL());
     }
 
     @Override

@@ -30,10 +30,10 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Description(
         preferredID = StartPageTopComponent.TC_NAME,
-        //iconBase="SET/PATH/TO/ICON/HERE", 
+        iconBase = "org/janelia/workstation/browser/images/application_go.png",
         persistenceType = TopComponent.PERSISTENCE_ONLY_OPENED
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = false) // We do our own "openAtStartup" in the ShowingHook module. 
+@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 0) // We do our own "openAtStartup" in the ShowingHook module.
 @ActionID(category = "Window", id = "org.janelia.workstation.browser.components.StartPageTopComponent")
 @ActionReference(path = "Menu/Window/Core", position = 40)
 @TopComponent.OpenActionRegistration(
@@ -51,7 +51,7 @@ public class StartPageTopComponent extends TopComponent {
     public static final String TC_NAME = "StartPageTopComponent";
     public static final String TC_VERSION = "1.0";
 
-    private static WeakReference<StartPageTopComponent> component = new WeakReference<StartPageTopComponent>(null); 
+    private static WeakReference<StartPageTopComponent> component = new WeakReference<>(null);
     private StartPage startPage;
 
     private boolean initialized = false;

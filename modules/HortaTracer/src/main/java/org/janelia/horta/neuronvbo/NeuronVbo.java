@@ -214,11 +214,11 @@ public class NeuronVbo implements Iterable<NeuronModel>
                 {
                     return bChanged; // color has not changed
                 }
-                log.info("old neuron color was [{},{},{}]", 
+                log.trace("old neuron color was [{},{},{}]",
                         vertexBuffer.get(offset+0), 
                         vertexBuffer.get(offset+1), 
                         vertexBuffer.get(offset+2));
-                log.info("new neuron color = [{},{},{}]", rgb[0], rgb[1], rgb[2]);
+                log.trace("new neuron color = [{},{},{}]", rgb[0], rgb[1], rgb[2]);
                 for (int v = 0; v < sv; ++v) {
                     int index = offset + v * FLOATS_PER_VERTEX;
                     for (int r = 0; r < 3; ++r) {

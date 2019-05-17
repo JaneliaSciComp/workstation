@@ -3,11 +3,9 @@ package org.janelia.workstation.common.nb_action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
-import javax.swing.JFrame;
 
-import org.janelia.workstation.common.gui.support.WindowLocator;
 import org.janelia.workstation.core.util.MailDialogueBox;
-import org.janelia.workstation.core.logging.NBExceptionHandler;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
@@ -27,10 +25,8 @@ public final class ReportABugMenuAction extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        
-        JFrame parentFrame = WindowLocator.getMainFrame();
 
-        MailDialogueBox popup = MailDialogueBox.newDialog(parentFrame, NBExceptionHandler.REPORT_EMAIL)
+        MailDialogueBox popup = MailDialogueBox.newDialog(FrameworkAccess.getMainFrame())
                 .withTitle("Create A Ticket")
                 .withPromptText("Problem Description:")
                 .withEmailSubject("Bug Report")

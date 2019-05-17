@@ -1,37 +1,28 @@
 package org.janelia.workstation.admin;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.swing.AbstractCellEditor;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
+
+import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 
 import org.janelia.model.security.Group;
-import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;
+import org.janelia.model.security.util.SubjectUtils;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
@@ -66,26 +57,14 @@ public class UserDetailsPanel extends JPanel {
     }
     
     public void setupUI() {
-        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
-        JPanel titlePanel = new JPanel();
-        JButton returnHome = new JButton("return to userlist");
-        returnHome.setActionCommand("ReturnHome");
-        returnHome.addActionListener(event -> returnHome());
-        returnHome.setBorderPainted(false);
-        returnHome.setOpaque(false);
-        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
-        JLabel titleLabel = new JLabel("User Details");
-        Box horizontalBox = Box.createHorizontalBox();
-        horizontalBox.add(returnHome);
-        horizontalBox.add(Box.createGlue());
-        horizontalBox.add(titleLabel);
-        horizontalBox.add(Box.createGlue());
-        horizontalBox.add(Box.createGlue());
-        titlePanel.add(horizontalBox);
-        add(Box.createRigidArea(new Dimension(0, 10)));
+        setLayout(new BorderLayout());
 
-        add(titlePanel);
+        JPanel titlePanel = new TitlePanel("User Details", "Return To User List", event -> returnHome());
+        add(titlePanel, BorderLayout.PAGE_START);
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
 
         userDetailsTableModel = new UserDetailsTableModel();
         userDetailsTable = new JTable(userDetailsTableModel);
@@ -93,7 +72,7 @@ public class UserDetailsPanel extends JPanel {
         userDetailsTable.getColumn("Property").setCellEditor(editor);
         userDetailsTable.setRowHeight(25);
         JScrollPane userTableScroll = new JScrollPane(userDetailsTable);
-        add(userTableScroll);
+        mainPanel.add(userTableScroll);
 
 
         // show group edit table with permissions for that group
@@ -113,7 +92,9 @@ public class UserDetailsPanel extends JPanel {
             }
         });
         JScrollPane groupRolesScroll = new JScrollPane(groupRolesTable);
-        add(groupRolesScroll);
+        mainPanel.add(groupRolesScroll);
+
+        add(mainPanel, BorderLayout.CENTER);
 
         // add groups pulldown selection for groups this person is a member of
         newGroupSelector = new JComboBox();
@@ -127,13 +108,13 @@ public class UserDetailsPanel extends JPanel {
         saveUserButton = new JButton("Save User");
         saveUserButton.addActionListener(event -> saveUser());
         saveUserButton.setEnabled(false);
-        JPanel actionPanel = new JPanel();
 
+        JPanel actionPanel = new ActionPanel();
         actionPanel.add(newGroupSelector);
         actionPanel.add(newGroupButton);
         actionPanel.add(removeGroupButton);
         actionPanel.add(saveUserButton);
-        add(actionPanel);
+        add(actionPanel, BorderLayout.PAGE_END);
     }
     
     private void saveUser () {
@@ -222,6 +203,7 @@ public class UserDetailsPanel extends JPanel {
         User user;
         String password;
         String[] editProperties = {"Name", "FullName", "Email", "Password"};
+        String[] editLabels = {"Name", "Full Name", "Email", "Password"};
         String[] values = new String[editProperties.length];
                 
         @Override
@@ -266,7 +248,7 @@ public class UserDetailsPanel extends JPanel {
 
         public Object getValueAt(int row, int col) {
             if (col==COLUMN_NAME) {
-                return editProperties[row];               
+                return editLabels[row];
             } else 
                 if (editProperties[row].equals("Password")) {
                     return "*********";
@@ -367,8 +349,10 @@ public class UserDetailsPanel extends JPanel {
 
         public Object getValueAt(int row, int col) {
             if (col==COLUMN_NAME) {                
-                return data.get(row).getGroupKey();
-            } else {
+                String groupKey = data.get(row).getGroupKey();
+                return SubjectUtils.getSubjectName(groupKey);
+            }
+            else {
                 JComboBox roleSelection = new JComboBox(roleOptions);
                 roleSelection.setActionCommand(data.get(row).getGroupKey());
                 roleSelection.addActionListener(this);
