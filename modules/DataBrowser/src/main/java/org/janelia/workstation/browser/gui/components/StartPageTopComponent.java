@@ -51,7 +51,7 @@ public class StartPageTopComponent extends TopComponent {
     public static final String TC_NAME = "StartPageTopComponent";
     public static final String TC_VERSION = "1.0";
 
-    private static WeakReference<StartPageTopComponent> component = new WeakReference<StartPageTopComponent>(null); 
+    private static WeakReference<StartPageTopComponent> component = new WeakReference<>(null);
     private StartPage startPage;
 
     private boolean initialized = false;

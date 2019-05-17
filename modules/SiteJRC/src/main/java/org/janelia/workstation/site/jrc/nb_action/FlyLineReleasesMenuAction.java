@@ -16,8 +16,7 @@ import org.openide.util.NbBundle.Messages;
         id = "FlyLineReleasesMenuAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_FlyLineReleasesMenuAction",
-        lazy = true
+        displayName = "#CTL_FlyLineReleasesMenuAction"
 )
 @ActionReference(path = "Menu/Services", position = 200)
 @Messages("CTL_FlyLineReleasesMenuAction=Fly Line Releases")

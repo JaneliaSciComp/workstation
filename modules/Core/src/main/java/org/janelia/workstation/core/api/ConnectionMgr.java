@@ -104,14 +104,19 @@ public class ConnectionMgr {
 
         ConsoleProperties.reload(e.getRemoteProperties());
 
-        String serverVersion = ConsoleProperties.getString("server.versionNumber", "UNKNOWN");
-        String clientVersion = ConsoleProperties.getString("client.versionNumber", "UNKNOWN");
+        String serverVersion = ConsoleProperties.getString("server.versionNumber", "");
 
-        log.info("clientVersion: {}", clientVersion);
-        log.info("serverVersion: {}", serverVersion);
+        if (!StringUtils.isBlank(serverVersion)) {
 
-        if (!serverVersion.equals(clientVersion) && !"DEV".equals(clientVersion)) {
-            log.warn("CLIENT/SERVER VERSION MISMATCH");
+            String clientVersion = ConsoleProperties.getString("client.versionNumber", "");
+
+            log.info("clientVersion: {}", clientVersion);
+            log.info("serverVersion: {}", serverVersion);
+
+            if (!serverVersion.equals(clientVersion) && !"DEV".equals(clientVersion)) {
+                log.warn("CLIENT/SERVER VERSION MISMATCH");
+            }
+
         }
 
         Events.getInstance().postOnEventBus(new ConsolePropsLoaded());
