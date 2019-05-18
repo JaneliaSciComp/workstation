@@ -24,13 +24,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class AuthServiceClient extends RESTClientBase {
 
     private static final Logger log = LoggerFactory.getLogger(AuthServiceClient.class);
-    
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("auth.rest.url");
-    
+
     private WebTarget service;    
 
     public AuthServiceClient() {
-        this(REMOTE_API_URL);
+        this(ConsoleProperties.getInstance().getProperty("auth.rest.url"));
     }
     
     public AuthServiceClient(String serverUrl) {

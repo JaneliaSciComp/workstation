@@ -361,7 +361,8 @@ public final class AccessManager {
             this.readerSet = SubjectUtils.getReaderSet(actualSubject);
             this.writerSet = SubjectUtils.getWriterSet(actualSubject);
             Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
-        } else {
+        }
+        else {
             this.readerSet = new HashSet<>();
             this.writerSet = new HashSet<>();
         }

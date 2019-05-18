@@ -28,12 +28,10 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     private static final Logger log = LoggerFactory.getLogger(SampleFacadeImpl.class);
 
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
-
     private WebTarget service;
     
     public SampleFacadeImpl() {
-        this(REMOTE_API_URL);
+        this(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"));
     }
 
     public SampleFacadeImpl(String serverUrl) {

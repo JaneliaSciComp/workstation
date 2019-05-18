@@ -28,13 +28,11 @@ public class AsyncServiceClient extends RESTClientBase {
 
     private static final Logger log = LoggerFactory.getLogger(AsyncServiceClient.class);
 
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("async.rest.url");
-
     private WebTarget service;
     private ObjectMapper objectMapper;
 
     public AsyncServiceClient() {
-        this(REMOTE_API_URL);
+        this(ConsoleProperties.getInstance().getProperty("async.rest.url"));
     }
 
     public AsyncServiceClient(String serverUrl) {

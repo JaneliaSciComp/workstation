@@ -35,11 +35,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class SageRestClient extends RESTClientBase {
 
     private static final Logger log = LoggerFactory.getLogger(SageRestClient.class);
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("sageResponder.rest.url");
     private WebTarget service;    
 
     public SageRestClient() {
-        this(REMOTE_API_URL);
+        this(ConsoleProperties.getInstance().getProperty("sageResponder.rest.url"));
     }
 
     public SageRestClient(String serverUrl) {

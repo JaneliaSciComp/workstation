@@ -64,15 +64,13 @@ import java.util.Map.Entry;
 public class TiledMicroscopeRestClient {
 
     private static final Logger LOG = LoggerFactory.getLogger(TiledMicroscopeRestClient.class);
-
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("mouselight.rest.url");
-
-    private static final String REMOTE_STORAGE_URL = ConsoleProperties.getInstance().getProperty("jadestorage.rest.url");
-
+    private final String remoteApiUrl = ConsoleProperties.getInstance().getProperty("mouselight.rest.url");
+    private final String remoteStorageUrl = ConsoleProperties.getInstance().getProperty("jadestorage.rest.url");
     private final Client client;
 
     public TiledMicroscopeRestClient() {
-        LOG.info("Using server URL: {}",REMOTE_API_URL);
+
+        LOG.info("Using server URL: {}",remoteApiUrl);
 
         ClientConfig clientConfig =
                 new ClientConfig()
@@ -115,7 +113,7 @@ public class TiledMicroscopeRestClient {
     }
 
     private WebTarget getMouselightEndpoint() {
-        return client.target(REMOTE_API_URL)
+        return client.target(remoteApiUrl)
                 .queryParam("subjectKey", AccessManager.getSubjectKey());
     }
 
@@ -497,7 +495,7 @@ public class TiledMicroscopeRestClient {
             return URI.create(basePath)
                     .resolve(suffixPath);
         } else {
-            return URI.create(REMOTE_API_URL)
+            return URI.create(remoteApiUrl)
                     .resolve("mouselight/")
                     .resolve(suffixPath)
                     .resolve(basePath);
@@ -505,7 +503,7 @@ public class TiledMicroscopeRestClient {
     }
 
     public boolean isServerPathAvailable(String serverPath, boolean directoryOnly) {
-        Response response = client.target(REMOTE_STORAGE_URL)
+        Response response = client.target(remoteStorageUrl)
                 .path("storage_content/storage_path_redirect")
                 .path(serverPath)
                 .queryParam("directoryOnly", directoryOnly)

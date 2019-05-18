@@ -29,14 +29,11 @@ import org.slf4j.LoggerFactory;
 public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
 
     private static final Logger log = LoggerFactory.getLogger(DomainFacadeImpl.class);
-    
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
-    private static final String REMOTE_STORAGE_URL = ConsoleProperties.getInstance().getProperty("jadestorage.rest.url");
 
     private WebTarget service;
 
     public DomainFacadeImpl() {
-        this(REMOTE_API_URL);
+        this(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"));
     }
 
     private DomainFacadeImpl(String serverUrl) {
@@ -217,7 +214,8 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
 
     @Override
     public void removeObjectStorage(List<String> storagePaths) {
-        WebTarget storageService = RestJsonClientManager.getInstance().getTarget(REMOTE_STORAGE_URL, true);
+        String remoteStorageUrl = ConsoleProperties.getInstance().getProperty("jadestorage.rest.url");
+        WebTarget storageService = RestJsonClientManager.getInstance().getTarget(remoteStorageUrl, true);
         for (String storagePath : storagePaths) {
             Response response = storageService.path("storage_content/storage_path_redirect")
                     .path(storagePath)

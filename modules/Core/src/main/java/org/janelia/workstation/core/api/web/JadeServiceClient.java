@@ -26,7 +26,6 @@ import java.util.List;
 public class JadeServiceClient extends RESTClientBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(JadeServiceClient.class);
-    private static final String JADE_BASE_URL = ConsoleProperties.getString("jadestorage.rest.url");
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @JsonAutoDetect(
@@ -49,22 +48,24 @@ public class JadeServiceClient extends RESTClientBase {
         private String storageServiceURL;
     }
 
+    private final String jadeBaseUrl;
     private final ObjectMapper objectMapper;
     private final Client httpClient;
 
     public JadeServiceClient() {
         super(LOG);
-        Preconditions.checkArgument(JADE_BASE_URL != null && JADE_BASE_URL.trim().length() > 0);
-        objectMapper = new ObjectMapper()
+        this.jadeBaseUrl = ConsoleProperties.getString("jadestorage.rest.url");
+        Preconditions.checkArgument(jadeBaseUrl != null && jadeBaseUrl.trim().length() > 0);
+        this.objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false)
                 ;
-        httpClient = createHttpClient(objectMapper);
+        this.httpClient = createHttpClient(objectMapper);
     }
     
     public String findStorageURL(String storagePath) {
         Preconditions.checkArgument(storagePath != null && storagePath.trim().length() > 0);
-        WebTarget target = httpClient.target(JADE_BASE_URL)
+        WebTarget target = httpClient.target(jadeBaseUrl)
                 .path("storage_volumes")
                 .queryParam("dataStoragePath", storagePath);
         Response response = target.request()

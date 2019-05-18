@@ -27,13 +27,11 @@ import org.slf4j.LoggerFactory;
 public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade {
 
     private static final Logger log = LoggerFactory.getLogger(OntologyFacadeImpl.class);
-    
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
-    
+
     private WebTarget service;
     
     public OntologyFacadeImpl() {
-        this(REMOTE_API_URL);
+        this(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"));
     }
 
     public OntologyFacadeImpl(String serverUrl) {

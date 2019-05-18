@@ -30,12 +30,10 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
     private static final Logger LOG = LoggerFactory.getLogger(SubjectFacadeImpl.class);
 
-    private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
-
     private WebTarget service;
     
     public SubjectFacadeImpl() {
-        this(REMOTE_API_URL);
+        this(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"));
     }
 
     public SubjectFacadeImpl(String serverUrl) {
