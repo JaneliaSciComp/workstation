@@ -20,9 +20,6 @@ public class CommonDialogItems {
 
     private final static Logger log = LoggerFactory.getLogger(CommonDialogItems.class);
 
-    private static final String ACTIVE_TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.activetracersgroup").trim();
-    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
-
     /**
      * given a combo model box, populate it with a list of all Subjects (people and groups) from
      * the db, or restrict to the member of the tracers or active tracers group;
@@ -31,14 +28,17 @@ public class CommonDialogItems {
     public static void updateOwnerList(DefaultComboBoxModel comboBoxModel, ChangeNeuronOwnerDialog.UserFilter filter) {
         comboBoxModel.removeAllElements();
 
+        String activeTracersGroup = ConsoleProperties.getInstance().getProperty("console.LVVHorta.activetracersgroup").trim();
+        String tracersGroup = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+
         List<Subject> subjects = new ArrayList<>();
         try {
             if (filter != ChangeNeuronOwnerDialog.UserFilter.NONE) {
                 String group = "";
                 if (filter == ChangeNeuronOwnerDialog.UserFilter.ACTIVE_TRACERS) {
-                    group = ACTIVE_TRACERS_GROUP;
+                    group = activeTracersGroup;
                 } else if (filter == ChangeNeuronOwnerDialog.UserFilter.TRACERS) {
-                    group = TRACERS_GROUP;
+                    group = tracersGroup;
                 }
                 List<User> users = DomainMgr.getDomainMgr().getUsersInGroup(group);
                 subjects = users.stream()
@@ -46,9 +46,9 @@ public class CommonDialogItems {
                     .collect(Collectors.toList());
 
                 // in either case, add back in the tracer group, at the top:
-                Subject tracersGroup = DomainMgr.getDomainMgr().getSubjectFacade().getSubjectByNameOrKey(TRACERS_GROUP);
-                if (tracersGroup != null) {
-                    subjects.add(0, tracersGroup);
+                Subject tracersSubject = DomainMgr.getDomainMgr().getSubjectFacade().getSubjectByNameOrKey(tracersGroup);
+                if (tracersSubject != null) {
+                    subjects.add(0, tracersSubject);
                 }
             } else {
                 // filter = NONE = all users and groups

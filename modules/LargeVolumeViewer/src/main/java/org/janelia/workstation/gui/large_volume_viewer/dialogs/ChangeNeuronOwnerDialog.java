@@ -28,9 +28,6 @@ import java.awt.event.KeyEvent;
  */
 public class ChangeNeuronOwnerDialog extends JDialog {
 
-    private static final String ACTIVE_TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.activetracersgroup").trim();
-    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
-
     public enum UserFilter {NONE, TRACERS, ACTIVE_TRACERS};
     UserFilter userFilter;
 
@@ -69,8 +66,10 @@ public class ChangeNeuronOwnerDialog extends JDialog {
         Subject tracersSubject = null;
         Subject activeTracersSubject = null;
         try {
-            tracersSubject = DomainMgr.getDomainMgr().getSubjectFacade().getSubjectByNameOrKey(TRACERS_GROUP);
-            activeTracersSubject = DomainMgr.getDomainMgr().getSubjectFacade().getSubjectByNameOrKey(ACTIVE_TRACERS_GROUP);
+            String activeTracersGroup = ConsoleProperties.getInstance().getProperty("console.LVVHorta.activetracersgroup").trim();
+            String tracersGroup = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+            tracersSubject = DomainMgr.getDomainMgr().getSubjectFacade().getSubjectByNameOrKey(tracersGroup);
+            activeTracersSubject = DomainMgr.getDomainMgr().getSubjectFacade().getSubjectByNameOrKey(activeTracersGroup);
         }
         catch (Exception e) {
             e.printStackTrace();

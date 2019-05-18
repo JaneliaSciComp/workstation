@@ -26,106 +26,14 @@ import org.slf4j.LoggerFactory;
 
 public class LocalFileTileCacheLoader extends CacheLoader<TileIndex, Optional<TextureData2d>> {
 
-    private static final String CONSOLE_PREFS_DIR = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
-    private static final String LOCAL_CACHE_ROOT = ConsoleProperties.getString("console.localCache.rootDirectory", CONSOLE_PREFS_DIR);
-    private static final String CACHE_DIRECTORY_NAME = ConsoleProperties.getString("console.localCache.name", ".jacs-file-cache");
-    private static final Long MAX_CACHE_SIZE = ConsoleProperties.getLong("console.localCache.maxSizeBytes", 16L * 1024 * 1024 * 1024);
-    private static final Long MAX_CACHE_LENGTH = ConsoleProperties.getLong("console.localCache.maxFiles", 1024L);
     private static final String CACHE_FILE_EXT = ".texture";
     private static final Logger LOG = LoggerFactory.getLogger(LocalFileTileCacheLoader.class);
 
-    private static class LocalCache {
-
-        private final NavigableSet<File> localFilesSet = new TreeSet<>((File o1, File o2) -> {
-            long t1 = o1.lastModified();
-            long t2 = o2.lastModified();
-            if (t1 < t2) {
-                return -1;
-            } else if (t1 == t2) {
-                return o1.compareTo(o2);
-            } else {
-                return 1;
-            }
-        });
-        private long cacheSize = 0;
-
-        private void addPath(Path fp) {
-            addFile(fp.toFile());
-        }
-
-        private void addFile(File f) {
-            if (localFilesSet.add(f)) {
-                cacheSize += f.length();
-            }
-        }
-
-        private void addAll(LocalCache other) {
-            other.localFilesSet.forEach((f) -> {
-                this.addFile(f);
-            });
-        }
-
-        private boolean hasPath(Path fp) {
-            return localFilesSet.contains(fp.toFile());
-        }
-
-        private void makeSpaceFor(File newFile) {
-            long newFileSize = newFile.length();
-            if (localFilesSet.size() + 1 > MAX_CACHE_LENGTH) {
-                // remove until the number of entries is <= 75% of max
-                removeUntil(fc -> fc.localFilesSet.size() > MAX_CACHE_LENGTH * 3 / 4);
-            }
-            if (cacheSize + newFileSize > MAX_CACHE_SIZE) {
-                // remove until the size is <= 75% of max
-                removeUntil(fc -> fc.cacheSize > MAX_CACHE_SIZE * 3 / 4);
-            }
-        }
-
-        private boolean remove(File f) {
-            LOG.debug("Delete {} from cache", f);
-            if (localFilesSet.remove(f)) {
-                cacheSize -= f.length();
-            }
-            try {
-                return Files.deleteIfExists(f.toPath());
-            } catch (IOException e) {
-                LOG.warn("Error removing {}", f, e);
-                return false;
-            }
-        }
-
-        private boolean removeOldest() {
-            if (!localFilesSet.isEmpty()) {
-                File oldestTouched = localFilesSet.first();
-                if (localFilesSet.remove(oldestTouched)) {
-                    cacheSize -= oldestTouched.length();
-                }
-                try {
-                    LOG.debug("Delete {} from cache", oldestTouched);
-                    Files.deleteIfExists(oldestTouched.toPath());
-                } catch (IOException e) {
-                    LOG.warn("Error removing {}", oldestTouched, e);
-                }
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        private void removeUntil(Predicate<LocalCache> fcChecker) {
-            while (fcChecker.test(this)) {
-                if (!removeOldest()) {
-                    return;
-                }
-            }
-        }
-
-        private void touchFile(File f) {
-            f.setLastModified(System.currentTimeMillis());
-            addFile(f);
-        }
-
-    }
+    private final String CONSOLE_PREFS_DIR = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
+    private final String LOCAL_CACHE_ROOT = ConsoleProperties.getString("console.localCache.rootDirectory", CONSOLE_PREFS_DIR);
+    private final String CACHE_DIRECTORY_NAME = ConsoleProperties.getString("console.localCache.name", ".jacs-file-cache");
+    private final Long MAX_CACHE_SIZE = ConsoleProperties.getLong("console.localCache.maxSizeBytes", 16L * 1024 * 1024 * 1024);
+    private final Long MAX_CACHE_LENGTH = ConsoleProperties.getLong("console.localCache.maxFiles", 1024L);
     private final Set<TileIndex> currentlyLoadingTiles;
     private final BlockTiffOctreeLoadAdapter tileLoader;
     private final Path localTilesCacheDir;
@@ -228,4 +136,96 @@ public class LocalFileTileCacheLoader extends CacheLoader<TileIndex, Optional<Te
         return relativeSlice;
     }
 
+    private class LocalCache {
+
+        private final NavigableSet<File> localFilesSet = new TreeSet<>((File o1, File o2) -> {
+            long t1 = o1.lastModified();
+            long t2 = o2.lastModified();
+            if (t1 < t2) {
+                return -1;
+            } else if (t1 == t2) {
+                return o1.compareTo(o2);
+            } else {
+                return 1;
+            }
+        });
+        private long cacheSize = 0;
+
+        private void addPath(Path fp) {
+            addFile(fp.toFile());
+        }
+
+        private void addFile(File f) {
+            if (localFilesSet.add(f)) {
+                cacheSize += f.length();
+            }
+        }
+
+        private void addAll(LocalCache other) {
+            other.localFilesSet.forEach((f) -> {
+                this.addFile(f);
+            });
+        }
+
+        private boolean hasPath(Path fp) {
+            return localFilesSet.contains(fp.toFile());
+        }
+
+        private void makeSpaceFor(File newFile) {
+            long newFileSize = newFile.length();
+            if (localFilesSet.size() + 1 > MAX_CACHE_LENGTH) {
+                // remove until the number of entries is <= 75% of max
+                removeUntil(fc -> fc.localFilesSet.size() > MAX_CACHE_LENGTH * 3 / 4);
+            }
+            if (cacheSize + newFileSize > MAX_CACHE_SIZE) {
+                // remove until the size is <= 75% of max
+                removeUntil(fc -> fc.cacheSize > MAX_CACHE_SIZE * 3 / 4);
+            }
+        }
+
+        private boolean remove(File f) {
+            LOG.debug("Delete {} from cache", f);
+            if (localFilesSet.remove(f)) {
+                cacheSize -= f.length();
+            }
+            try {
+                return Files.deleteIfExists(f.toPath());
+            } catch (IOException e) {
+                LOG.warn("Error removing {}", f, e);
+                return false;
+            }
+        }
+
+        private boolean removeOldest() {
+            if (!localFilesSet.isEmpty()) {
+                File oldestTouched = localFilesSet.first();
+                if (localFilesSet.remove(oldestTouched)) {
+                    cacheSize -= oldestTouched.length();
+                }
+                try {
+                    LOG.debug("Delete {} from cache", oldestTouched);
+                    Files.deleteIfExists(oldestTouched.toPath());
+                } catch (IOException e) {
+                    LOG.warn("Error removing {}", oldestTouched, e);
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        private void removeUntil(Predicate<LocalCache> fcChecker) {
+            while (fcChecker.test(this)) {
+                if (!removeOldest()) {
+                    return;
+                }
+            }
+        }
+
+        private void touchFile(File f) {
+            f.setLastModified(System.currentTimeMillis());
+            addFile(f);
+        }
+
+    }
 }

@@ -33,8 +33,6 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
     private AnnotationModel annModel;
     private NeuronListProvider listProvider;
 
-    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
-
     public BulkChangeNeuronOwnerAction(AnnotationManager annMgr, AnnotationModel annModel, NeuronListProvider listProvider) {
         this.annMgr = annMgr;
         this.annModel = annModel;
@@ -57,6 +55,8 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
             return;
         }
 
+        String tracersGroup = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+
         // check that the user is allowed to change owner for all neurons in list
         boolean allowed = false;
         if (annMgr.isOwnershipAdmin()) {
@@ -64,7 +64,7 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
         } else {
             String username = AccessManager.getAccessManager().getActualSubject().getName();
             for (TmNeuronMetadata neuron: neurons) {
-                if (neuron.getOwnerName().equals(username) || neuron.getOwnerKey().equals(TRACERS_GROUP)) {
+                if (neuron.getOwnerName().equals(username) || neuron.getOwnerKey().equals(tracersGroup)) {
                     allowed = true;
                 } else {
                     // at the first not-allowed, stop
