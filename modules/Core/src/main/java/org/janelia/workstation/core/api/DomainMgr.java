@@ -80,8 +80,6 @@ public class DomainMgr {
         // This initialization must be run on the EDT, because other things in the connection sequence depend
         // on these services, namely the authentication which depends on the AuthServiceClient.
 
-        boolean isRefresh = model != null;
-
         if (listener != null) {
             // In case this is a refresh, we need to remove the existing listener first
             ApplicationOptions.getInstance().removePropertyChangeListener(listener);
@@ -114,10 +112,6 @@ public class DomainMgr {
 
         // Register new listener
         ApplicationOptions.getInstance().addPropertyChangeListener(listener);
-
-        if (isRefresh) {
-            Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent());
-        }
     }
 
     private <T> T getNewInstance(Reflections reflections, Class<T> clazz) {
