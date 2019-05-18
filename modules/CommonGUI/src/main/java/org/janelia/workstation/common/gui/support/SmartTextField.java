@@ -5,8 +5,6 @@ import java.util.List;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
-import javax.swing.event.PopupMenuEvent;
-import javax.swing.event.PopupMenuListener;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -30,26 +28,9 @@ public class SmartTextField extends JComboBox<String> {
     private final String modelPropertyName;
 
     public SmartTextField(String modelPropertyName) {
-
         this.modelPropertyName = modelPropertyName;
-
         setEditable(true);
-
-        addPopupMenuListener(new PopupMenuListener() {
-
-            @Override
-            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
-                loadHistory();
-            }
-
-            @Override
-            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
-            }
-
-            @Override
-            public void popupMenuCanceled(PopupMenuEvent e) {
-            }
-        });
+        loadHistory();
     }
 
     /**
