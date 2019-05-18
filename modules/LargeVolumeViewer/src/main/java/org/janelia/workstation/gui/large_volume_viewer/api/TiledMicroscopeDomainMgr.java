@@ -1,5 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer.api;
 
+import com.google.common.eventbus.Subscribe;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.model.domain.DomainConstants;
@@ -15,6 +16,7 @@ import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,13 +47,17 @@ public class TiledMicroscopeDomainMgr {
         return instance;
     }
 
-    private final TiledMicroscopeRestClient client;
+    private DomainModel model;
+    private TiledMicroscopeRestClient client;
     
     private TiledMicroscopeDomainMgr() {
-        client = new TiledMicroscopeRestClient();
     }
-    
-    private final DomainModel model = DomainMgr.getDomainMgr().getModel();
+
+    @Subscribe
+    public synchronized void propsLoaded(ConsolePropsLoaded event) {
+        this.model = DomainMgr.getDomainMgr().getModel();
+        this.client = new TiledMicroscopeRestClient();
+    }
 
     public List<String> getSamplePaths() throws Exception {
         return client.getTmSamplePaths();
