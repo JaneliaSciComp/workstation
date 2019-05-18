@@ -62,24 +62,14 @@ public class ConnectDialog extends ModalDialog {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
+        cancelButton.addActionListener(e -> setVisible(false));
 
         okButton = new JButton(OK_BUTTON_TEXT);
         okButton.setToolTipText("Connect to the specified server");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                saveAndClose();
-            }
-        });
-                
+        okButton.addActionListener(e -> saveAndClose());
+
         getRootPane().setDefaultButton(okButton);
-                
+
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
         buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));

@@ -1,36 +1,23 @@
 package org.janelia.workstation.common.gui.dialogs;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
+import javax.swing.*;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.exceptions.AuthenticationException;
 import org.janelia.workstation.core.api.exceptions.ServiceException;
-import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.model.LoginErrorType;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.miginfocom.swing.MigLayout;
 
 /**
  * A dialog for entering username and password, with some additional options.
@@ -68,13 +55,23 @@ public class LoginDialog extends ModalDialog {
         setTitle("Login");
         
         mainPanel = new JPanel(new MigLayout("wrap 2"));
-        
+
+        cancelButton = new JButton("Cancel");
+        cancelButton.setToolTipText("Cancel login");
+        cancelButton.addActionListener(e -> setVisible(false));
+
+        okButton = new JButton(OK_BUTTON_TEXT);
+        okButton.setToolTipText("Attempt to authenticate with the given credentials");
+        okButton.addActionListener(e -> saveAndClose());
+
         usernameLabel = new JLabel("User Name");
         usernameField = new JTextField(20);
-        
+        usernameField.addActionListener(e -> okButton.doClick());
+
         passwordLabel = new JLabel("Password");
         passwordField = new JPasswordField(20);
-        
+        passwordField.addActionListener(e -> okButton.doClick());
+
         rememberCheckbox = new JCheckBox("Remember Password");
         rememberCheckbox.setSelected(true);
 
@@ -88,26 +85,6 @@ public class LoginDialog extends ModalDialog {
         mainPanel.add(rememberCheckbox, "span 2");
         mainPanel.add(errorLabel, "span 2, width 350px");
 
-        cancelButton = new JButton("Cancel");
-        cancelButton.setToolTipText("Cancel login");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
-        
-        okButton = new JButton(OK_BUTTON_TEXT);
-        okButton.setToolTipText("Attempt to authenticate with the given credentials");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                saveAndClose();
-            }
-        });
-                
-        getRootPane().setDefaultButton(okButton);
-                
         buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
         buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
