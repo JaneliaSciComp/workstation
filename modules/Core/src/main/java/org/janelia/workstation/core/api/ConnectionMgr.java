@@ -42,6 +42,8 @@ public class ConnectionMgr {
 
     public String getConnectionString() {
         String defaultValue = ConsoleProperties.getString("api.gateway", null);
+        // This is here for only for migration from the older client
+        defaultValue = FrameworkAccess.getModelProperty(CONNECTION_STRING_PREF, defaultValue);
         return FrameworkAccess.getLocalPreferenceValue(ConnectionMgr.class, CONNECTION_STRING_PREF, defaultValue);
     }
 
