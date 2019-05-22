@@ -280,7 +280,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                         @Override
                         public void run() {
                             pathsToExpand = expandedState.getExpandedArrayPaths();
-                            log.info("saving pathsToExpand.size= "+pathsToExpand.size());
+                            log.info("saving pathsToExpand.size={}", pathsToExpand.size());
                             if (AccessManager.loggedIn()) {
                                 loadInitialState();
                             }

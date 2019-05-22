@@ -1,6 +1,15 @@
 package org.janelia.workstation.core.api;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.google.common.eventbus.Subscribe;
+
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Preference;
@@ -19,7 +28,6 @@ import org.janelia.workstation.core.api.web.SageRestClient;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
-import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.PreferenceChangeEvent;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.options.OptionConstants;
@@ -28,14 +36,6 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Singleton for managing the Domain Model and related data access.
