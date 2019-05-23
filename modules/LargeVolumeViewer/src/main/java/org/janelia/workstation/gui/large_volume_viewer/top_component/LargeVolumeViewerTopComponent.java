@@ -6,24 +6,29 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 
+import com.google.common.eventbus.Subscribe;
+
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.Bundle;
-import org.janelia.workstation.core.api.StateMgr;
-import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
-import org.janelia.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
+import org.janelia.workstation.core.events.lifecycle.LoginEvent;
+import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
+import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeRestClient;
+import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
+import org.janelia.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -73,7 +78,10 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     
     private final InstanceContent content = new InstanceContent();
     private final LargeVolumeViewViewer lvvv = new LargeVolumeViewViewer();
-    
+
+    // Initial State
+    private Reference initialObjectReference;
+
     static {
         // So popup menu shows over GLCanvas
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
@@ -119,6 +127,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         setCurrent(domainObject);
         Snapshot3DLauncher.removeStaleViewer();
         getLvvv().loadDomainObject(domainObject);
+        initialObjectReference = Reference.createFor(domainObject);
     }
 
     /**
@@ -151,12 +160,14 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         jPanel1.add(lvvv, BorderLayout.CENTER );
+        Events.getInstance().registerOnEventBus(this);
         Events.getInstance().registerOnEventBus(lvvv);
     }
 
     @Override
     public void componentClosed() {
         jPanel1.remove(lvvv);
+        Events.getInstance().unregisterOnEventBus(this);
         Events.getInstance().unregisterOnEventBus(lvvv);
         closeGroup();
     }
@@ -248,7 +259,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         log.info("Reading state: objectRef={}",objectStrRef);
         
         if (!StringUtils.isEmpty(objectStrRef)) {
-            final Reference ref = Reference.createFor(objectStrRef);
+            initialObjectReference = Reference.createFor(objectStrRef);
 
             String viewFocusStr = p.getProperty("viewFocus");
             log.info("Reading state: viewFocus={}",viewFocusStr);
@@ -261,41 +272,63 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
             if (viewFocus!=null && viewZoom!=null) {
                 getLvvv().setInitialViewFocus(viewFocus, viewZoom);
             }
-            
+
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    log.info("Saving initial reference -> {}", initialObjectReference);
+                    if (AccessManager.loggedIn()) {
+                        loadInitialState();
+                    } else {
+                        // Not logged in yet, wait for a SessionStartEvent
+                    }
+                }
+            });
+        }
+    }
+
+    @Subscribe
+    public void sessionStarted(SessionStartEvent event) {
+        log.debug("Session started, loading initial state");
+        loadInitialState();
+    }
+
+    private synchronized void loadInitialState() {
+        if (initialObjectReference != null) {
+
             SimpleWorker worker = new SimpleWorker() {
                 DomainObject domainObject = null;
-                
+
                 @Override
                 protected void doStuff() throws Exception {
                     TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-                    if (TmSample.class.getSimpleName().equals(ref.getTargetClassName())) {
-                        domainObject = tmDomainMgr.getSample(ref.getTargetId());
-                    }
-                    else if (TmWorkspace.class.getSimpleName().equals(ref.getTargetClassName())) {
-                        domainObject = tmDomainMgr.getWorkspace(ref.getTargetId());
-                    }
-                    else {
-                        log.error("State object is unsupported by the LVV: "+ref);
+                    if (TmSample.class.getSimpleName().equals(initialObjectReference.getTargetClassName())) {
+                        domainObject = tmDomainMgr.getSample(initialObjectReference.getTargetId());
+                    } else if (TmWorkspace.class.getSimpleName().equals(initialObjectReference.getTargetClassName())) {
+                        domainObject = tmDomainMgr.getWorkspace(initialObjectReference.getTargetId());
+                    } else {
+                        log.error("State object is unsupported by the LVV: {}", initialObjectReference);
                     }
                 }
 
                 @Override
                 protected void hadSuccess() {
-                    if (domainObject!=null) {
+                    if (domainObject != null) {
                         openLargeVolumeViewer(domainObject);
                     }
                 }
 
                 @Override
                 protected void hadError(Throwable error) {
-                    // Squelch this error because the user does not need to know this failed. They can just re-open the sample manually. 
-                    log.error("Error loading last open object: "+ref, error);
+                    // Squelch this error because the user does not need to know this failed. They can just re-open the sample manually.
+                    log.error("Error loading last open object: {}", initialObjectReference, error);
                 }
             };
             worker.execute();
         }
     }
-    
+
+
     private Vec3 parseVec3(String vecStr) {
         try {
             if (!StringUtils.isBlank(vecStr)) {

@@ -10,6 +10,7 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -68,7 +69,7 @@ public class LargeVolumeViewViewer extends JPanel {
         revalidate();
         repaint();
     }
-    
+
     public void loadDomainObject(final DomainObject domainObject) {
     	logger.info("loadDomainObject({})", domainObject);
 

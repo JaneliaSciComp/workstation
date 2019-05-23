@@ -1,6 +1,15 @@
 package org.janelia.workstation.gui.large_volume_viewer.api;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import com.google.common.eventbus.Subscribe;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.model.domain.DomainConstants;
@@ -16,17 +25,10 @@ import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Singleton for managing the Tiled Microscope Domain Model and related data access.
@@ -47,16 +49,14 @@ public class TiledMicroscopeDomainMgr {
         return instance;
     }
 
-    private DomainModel model;
     private TiledMicroscopeRestClient client;
     
     private TiledMicroscopeDomainMgr() {
+        this.client = new TiledMicroscopeRestClient();
     }
 
-    @Subscribe
-    public synchronized void propsLoaded(ConsolePropsLoaded event) {
-        this.model = DomainMgr.getDomainMgr().getModel();
-        this.client = new TiledMicroscopeRestClient();
+    private DomainModel getModel() {
+        return DomainMgr.getDomainMgr().getModel();
     }
 
     public List<String> getSamplePaths() throws Exception {
@@ -69,7 +69,7 @@ public class TiledMicroscopeDomainMgr {
     
     public TmSample getSample(Long sampleId) throws Exception {
         LOG.debug("getSample(sampleId={})",sampleId);
-        return model.getDomainObject(TmSample.class, sampleId);
+        return getModel().getDomainObject(TmSample.class, sampleId);
     }
 
     public TmSample getSample(TmWorkspace workspace) throws Exception {
@@ -81,7 +81,7 @@ public class TiledMicroscopeDomainMgr {
         LOG.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
         Map<String,Object> constants = client.getTmSampleConstants(filepath);
         if (constants != null) {
-            TreeNode tmSampleFolder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_SAMPLE_FOLDER, true);
+            TreeNode tmSampleFolder = getModel().getDefaultWorkspaceFolder(DomainConstants.NAME_TM_SAMPLE_FOLDER, true);
 
             TmSample sample = new TmSample();
             sample.setOwnerKey(AccessManager.getSubjectKey());
@@ -110,7 +110,7 @@ public class TiledMicroscopeDomainMgr {
             TmSample persistedSample = save(sample);
 
             // Server should have put the sample in the Samples root folder. Refresh the Samples folder to show it in the explorer.
-            model.invalidate(tmSampleFolder);
+            getModel().invalidate(tmSampleFolder);
 
             return persistedSample;
         } else {
@@ -123,13 +123,13 @@ public class TiledMicroscopeDomainMgr {
         LOG.debug("save({})",sample);
         TmSample canonicalObject;
         synchronized (this) {
-            canonicalObject = model.putOrUpdate(sample.getId()==null ? client.create(sample) : client.update(sample));
+            canonicalObject = getModel().putOrUpdate(sample.getId()==null ? client.create(sample) : client.update(sample));
         }
         if (sample.getId()==null) {
-            model.notifyDomainObjectCreated(canonicalObject);
+            getModel().notifyDomainObjectCreated(canonicalObject);
         }
         else {
-            model.notifyDomainObjectChanged(canonicalObject);
+            getModel().notifyDomainObjectChanged(canonicalObject);
         }
         return canonicalObject;
     }
@@ -137,7 +137,7 @@ public class TiledMicroscopeDomainMgr {
     public void remove(TmSample sample) throws Exception {
         LOG.debug("remove({})",sample);
         client.remove(sample);
-        model.notifyDomainObjectRemoved(sample);
+        getModel().notifyDomainObjectRemoved(sample);
     }
 
     public List<TmWorkspace> getWorkspaces(Long sampleId) throws Exception {
@@ -150,7 +150,7 @@ public class TiledMicroscopeDomainMgr {
 
     public TmWorkspace getWorkspace(Long workspaceId) throws Exception {
         LOG.debug("getWorkspace(workspaceId={})",workspaceId);
-        TmWorkspace workspace = model.getDomainObject(TmWorkspace.class, workspaceId);
+        TmWorkspace workspace = getModel().getDomainObject(TmWorkspace.class, workspaceId);
         if (workspace==null) {
             throw new Exception("Workspace with id="+workspaceId+" does not exist");
         }
@@ -164,7 +164,7 @@ public class TiledMicroscopeDomainMgr {
             throw new IllegalArgumentException("TM sample does not exist: "+sampleId);
         }
 
-        TreeNode defaultWorkspaceFolder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);
+        TreeNode defaultWorkspaceFolder = getModel().getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);
 
         TmWorkspace workspace = new TmWorkspace();
         workspace.setOwnerKey(AccessManager.getSubjectKey());
@@ -173,10 +173,10 @@ public class TiledMicroscopeDomainMgr {
         workspace = save(workspace);
         
         // Server should have put the workspace in the Workspaces root folder. Refresh the Workspaces folder to show it in the explorer.
-        model.invalidate(defaultWorkspaceFolder);
+        getModel().invalidate(defaultWorkspaceFolder);
         
         // Also invalidate the sample, so that the Explorer tree can be updated 
-        model.invalidate(sample);
+        getModel().invalidate(sample);
         
         return workspace;
     }
@@ -188,15 +188,15 @@ public class TiledMicroscopeDomainMgr {
             throw new IllegalArgumentException("TM sample does not exist: "+workspace.getSampleId());
         }
 
-        TreeNode defaultWorkspaceFolder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);
+        TreeNode defaultWorkspaceFolder = getModel().getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);
 
         TmWorkspace workspaceCopy = client.copy(workspace, name, assignOwner);
 
         // Server should have put the new workspace in the Workspaces root folder. Refresh the Workspaces folder to show it in the explorer.
-        model.invalidate(defaultWorkspaceFolder);
+        getModel().invalidate(defaultWorkspaceFolder);
         
         // Also invalidate the sample, so that the Explorer tree can be updated 
-        model.invalidate(sample);
+        getModel().invalidate(sample);
         
         return workspaceCopy;
     }
@@ -205,13 +205,13 @@ public class TiledMicroscopeDomainMgr {
         LOG.debug("save({})", workspace);
         TmWorkspace canonicalObject;
         synchronized (this) {
-            canonicalObject = model.putOrUpdate(workspace.getId()==null ? client.create(workspace) : client.update(workspace));
+            canonicalObject = getModel().putOrUpdate(workspace.getId()==null ? client.create(workspace) : client.update(workspace));
         }
         if (workspace.getId()==null) {
-            model.notifyDomainObjectCreated(canonicalObject);
+            getModel().notifyDomainObjectCreated(canonicalObject);
         }
         else {
-            model.notifyDomainObjectChanged(canonicalObject);
+            getModel().notifyDomainObjectChanged(canonicalObject);
         }
         return canonicalObject;
     }
@@ -219,7 +219,7 @@ public class TiledMicroscopeDomainMgr {
     public void remove(TmWorkspace workspace) throws Exception {
         LOG.debug("remove({})", workspace);
         client.remove(workspace);
-        model.notifyDomainObjectRemoved(workspace);
+        getModel().notifyDomainObjectRemoved(workspace);
     }
     
     public List<TmNeuronMetadata> getWorkspaceNeurons(Long workspaceId) throws Exception {
@@ -241,11 +241,11 @@ public class TiledMicroscopeDomainMgr {
         TmNeuronMetadata savedMetadata;
         if (neuronMetadata.getId()==null) {
             savedMetadata = client.createMetadata(neuronMetadata);
-            model.notifyDomainObjectCreated(savedMetadata);
+            getModel().notifyDomainObjectCreated(savedMetadata);
         }
         else {
             savedMetadata = client.updateMetadata(neuronMetadata);
-            model.notifyDomainObjectChanged(savedMetadata);
+            getModel().notifyDomainObjectChanged(savedMetadata);
         }
         return savedMetadata;
     }
@@ -259,7 +259,7 @@ public class TiledMicroscopeDomainMgr {
         }
         List<TmNeuronMetadata> updatedMetadata = client.updateMetadata(neuronList);
         for(TmNeuronMetadata tmNeuronMetadata : updatedMetadata) {
-            model.notifyDomainObjectChanged(tmNeuronMetadata);
+            getModel().notifyDomainObjectChanged(tmNeuronMetadata);
         }
         return updatedMetadata;
     }
@@ -271,11 +271,11 @@ public class TiledMicroscopeDomainMgr {
         TmNeuronMetadata savedMetadata;
         if (neuronMetadata.getId()==null) {
             savedMetadata = client.create(neuronMetadata, protobufStream);
-            model.notifyDomainObjectCreated(savedMetadata);
+            getModel().notifyDomainObjectCreated(savedMetadata);
         }
         else {
             savedMetadata = client.update(neuronMetadata, protobufStream);
-            model.notifyDomainObjectChanged(savedMetadata);
+            getModel().notifyDomainObjectChanged(savedMetadata);
         }
         // We assume that the neuron data was saved on the server, but it only returns metadata for efficiency. We
         // already have the data, so let's copy it over into the new object.
@@ -290,14 +290,14 @@ public class TiledMicroscopeDomainMgr {
         } else {
             reviewTask = client.update(reviewTask);
         }
-        model.notifyDomainObjectChanged(reviewTask);
+        getModel().notifyDomainObjectChanged(reviewTask);
         return reviewTask;
     }
     
     public void remove(TmReviewTask reviewTask) throws Exception {
         LOG.debug("remove({})", reviewTask);
         client.remove(reviewTask);
-        model.notifyDomainObjectRemoved(reviewTask);
+        getModel().notifyDomainObjectRemoved(reviewTask);
     }
     
     public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate) throws Exception {
@@ -309,12 +309,12 @@ public class TiledMicroscopeDomainMgr {
         TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
         neuronMetadata.setId(tmNeuron.getId());
         client.remove(neuronMetadata);
-        model.notifyDomainObjectRemoved(neuronMetadata);
+        getModel().notifyDomainObjectRemoved(neuronMetadata);
     }
     
     public List<TmReviewTask> getReviewTasks() throws Exception {
         LOG.debug("getReviewTasks()");
-        List<TmReviewTask> reviewTasks = model.getAllDomainObjectsByClass(TmReviewTask.class);
+        List<TmReviewTask> reviewTasks = getModel().getAllDomainObjectsByClass(TmReviewTask.class);
         return reviewTasks;
     }
 
