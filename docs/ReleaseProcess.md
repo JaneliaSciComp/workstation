@@ -31,6 +31,37 @@ git push origin 8.0-RC8
 
 Now you can use this version number to build and deploy the **workstation-site** container with the jacs-cm tools.
 
-## Docker Installation
+## Docker Build
 
 The easiest way to distribute the Workstation is to use the [Docker Container](https://hub.docker.com/r/janeliascicomp/workstation-site). Running this container serves a static website where you can download the Workstation installer, and the Update Center for update distribution. You can build your own customized container by using the [jacs-cm](https://github.com/JaneliaSciComp/jacs-cm) tools. 
+
+## Manual Build
+
+The build can also be done manually, as follows:
+
+Create a file ./modules/Core/src/main/resources/my.properties with the version number you want to display in the client, e.g.
+```
+client.versionNumber=8.0
+```
+
+Create a keystore with a self-signed certificate:
+```
+mkdir private
+keytool -genkey -v -noprompt -validity 360 -storepass <password> -keypass <password> -alias janeliaws \
+    -keystore private/keystore -dname "C=US, ST=VA, L=Ashburn, O=Janelia, CN=localhost"
+```
+Alternatively, you can use an existing certificate by following the steps in the Dockerfile. 
+
+Build all modules:
+```
+mvn --batch-mode -T 8 -Djava.awt.headless=true -Dkeystorepass=<password> clean install
+```
+
+Build installers and update center:
+```
+cd modules/application
+mvn --batch-mode -T 8 -Djava.awt.headless=true -Dkeystorepass=<password> package -P deployment
+```
+
+Once the build is complete, the installers and update center will be available under the **modules/application/target** directory.
+
