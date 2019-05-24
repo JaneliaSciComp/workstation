@@ -2,9 +2,9 @@
 
 [![CircleCI](https://circleci.com/gh/JaneliaSciComp/workstation.svg?style=svg)](https://circleci.com/gh/JaneliaSciComp/workstation)
 
-![Workstation Screenshot](docs/screenshot.png)
+The Janelia Workstation is a neuroscience discovery platform for processing, analysis, annotation, and sharing of large-scale 3d microscopy data.
 
-The Janelia Workstation is a neuroscience discovery platform for processing, analysis, annotation, and sharing of large-scale 3d microscopy data. The Workstation supports the FlyLight and MouseLight team projects at Janelia Research Campus. 
+![Workstation Screenshot](docs/screenshot.png)
 
 The Janelia Workstation currently supports two large-scale team projects at Janelia Research Campus: **FlyLight** and **MouseLight**:
 * The **MouseLight** tools have been fully open sourced and made available here with complete documentation. These tools enable neuron tracing and connectomics on terabyte-scale Mouse brain volumes. 
@@ -30,5 +30,5 @@ The canonical two-server deployment of the MouseLight neuron tracing tools is de
 
 ## For Developers
 
-For information about building this code base, see the [Release Process](ReleaseProcess.md) documentation.
+For information about building this code base, see the [Release Process](docs/ReleaseProcess.md) documentation.
 
