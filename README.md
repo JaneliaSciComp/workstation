@@ -6,9 +6,9 @@ The Janelia Workstation is a neuroscience discovery platform for processing, ana
 
 ![Workstation Screenshot](docs/screenshot.png)
 
-The Janelia Workstation currently supports two large-scale team projects at Janelia Research Campus: **FlyLight** and **MouseLight**:
-* The **MouseLight** tools have been fully open sourced and made available here with complete documentation. These tools enable neuron tracing and connectomics on terabyte-scale Mouse brain volumes. 
-* The **FlyLight** tools have been partially open sourced, and not yet officially supported. At Janelia, these tools will support search, browsing, and annotation of millions of confocal-imaged Fly nervous systems. In the future they will be fully released here.
+The Janelia Workstation currently supports two large-scale team projects at Janelia Research Campus:
+* The [MouseLight](https://www.janelia.org/project-team/mouselight) tools have been fully open sourced and made available here with complete documentation. These tools enable neuron tracing and connectomics on terabyte-scale Mouse brain volumes. 
+* The [FlyLight](https://www.janelia.org/project-team/flylight) tools have been partially open sourced, and not yet officially supported. At Janelia, these tools support search, browsing, and annotation of millions of confocal-imaged Fly nervous systems. In the future they will be fully released here.
 
 ## License and Citation Agreement
 
