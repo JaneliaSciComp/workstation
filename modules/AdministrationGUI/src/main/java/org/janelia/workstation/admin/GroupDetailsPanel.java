@@ -86,18 +86,17 @@ public class GroupDetailsPanel extends JPanel {
     public void editGroupDetails(String groupKey, List<User> userList) throws Exception {
         Set<String> currentUsers = userList.stream().map(user -> user.getKey()).
                 collect(Collectors.toSet());
-        if (AccessManager.getAccessManager().isAdmin()) {
-            groupRolesModel.loadGroupRoles(groupKey, userList);
-            List<Subject> subjectList = DomainMgr.getDomainMgr().getSubjects();
-            for (Subject subject : subjectList) {
-                if (subject instanceof User) {
-                    User user = (User)subject;
-                    if (!currentUsers.contains(user.getKey())) {
-                        addUserBox.addItem(user);
-                    }
+        groupRolesModel.loadGroupRoles(groupKey, userList);
+        List<Subject> subjectList = DomainMgr.getDomainMgr().getSubjects();
+        for (Subject subject : subjectList) {
+            if (subject instanceof User) {
+                User user = (User) subject;
+                if (!currentUsers.contains(user.getKey())) {
+                    addUserBox.addItem(user);
                 }
             }
         }
+
     }
 
     public void addUser() {

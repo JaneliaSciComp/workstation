@@ -48,6 +48,7 @@ public class UserDetailsPanel extends JPanel {
     private User admin;
     private boolean passwordChanged = false;
     private boolean dirtyFlag = false;
+    private boolean canEdit = false;
     private int COLUMN_NAME = 0;
     private int COLUMN_VALUE = 1;
     
@@ -135,7 +136,10 @@ public class UserDetailsPanel extends JPanel {
         Subject rawAdmin = AccessManager.getAccessManager().getActualSubject();
         if (rawAdmin instanceof User && AccessManager.getAccessManager().isAdmin()) {
             admin = (User) rawAdmin;
+            canEdit = true;
         }
+        if (rawAdmin.getKey().equals(user.getKey()))
+            canEdit = true;
 
         // load user details
         userDetailsTableModel.loadUser(user);
@@ -209,7 +213,7 @@ public class UserDetailsPanel extends JPanel {
         @Override
         public boolean isCellEditable(int row, int col) {
             // if not admin return false
-            if (admin==null)
+            if (!canEdit)
                 return false;
             // can't change username if user already exists
             if (user.getKey()!=null && row==0)
@@ -307,7 +311,7 @@ public class UserDetailsPanel extends JPanel {
         @Override
         public boolean isCellEditable(int row, int col) {
             // if not admin return false
-            if (admin==null)
+            if (admin == null)
                 return false;
             if (col!=COLUMN_NAME)
                 return true;
