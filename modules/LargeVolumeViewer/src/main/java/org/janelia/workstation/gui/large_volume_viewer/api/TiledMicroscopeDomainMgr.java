@@ -140,10 +140,12 @@ public class TiledMicroscopeDomainMgr {
         getModel().notifyDomainObjectRemoved(sample);
     }
 
-    public List<TmWorkspace> getWorkspaces(Long sampleId) throws Exception {
+    public List<TmWorkspace> getWorkspacesSortedByCurrentPrincipal(Long sampleId) throws Exception {
         Collection<TmWorkspace> workspaces = client.getTmWorkspacesForSample(sampleId);
         List<TmWorkspace> canonicalObjects = DomainMgr.getDomainMgr().getModel().putOrUpdate(workspaces, false);
-        // TODO: sort these on the server side
+        // Sorting this when the data is queried is a bit tricky
+        // because the DomainObjectComparator returns objects owned by the current principal first
+        // Also I would prefer to make this more obvious in the server call that the sorting is taking place (goinac).
         Collections.sort(canonicalObjects, new DomainObjectComparator(AccessManager.getSubjectKey()));
         return canonicalObjects;
     }

@@ -23,6 +23,7 @@ import org.janelia.it.jacs.shared.solr.SolrJsonResults;
 import org.janelia.it.jacs.shared.solr.SolrParams;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;
@@ -700,7 +701,7 @@ public class DomainModel {
                 log.debug("Getting ontologies from database");
                 this.ontologyCache = new LinkedHashMap<>();
                 StopWatch w = TIMER ? new LoggingStopWatch() : null;
-                Collection<Ontology> ontologies = ontologyFacade.getOntologies();
+                Collection<Ontology> ontologies = ontologyFacade.getOntologiesSortedByCurrentPrincipal();
                 List<Ontology> canonicalObjects = putOrUpdate(ontologies, false);
                 for (Ontology ontology : canonicalObjects) {
                     ontologyCache.put(Reference.createFor(ontology), ontology);

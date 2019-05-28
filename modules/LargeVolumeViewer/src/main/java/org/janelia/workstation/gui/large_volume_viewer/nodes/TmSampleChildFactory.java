@@ -43,7 +43,7 @@ public class TmSampleChildFactory extends ChildFactory<TmWorkspace> {
             log.debug("Creating children keys for {}",sample.getName());
             
             TiledMicroscopeDomainMgr mgr = TiledMicroscopeDomainMgr.getDomainMgr();
-            List<TmWorkspace> children = mgr.getWorkspaces(sample.getId());
+            List<TmWorkspace> children = mgr.getWorkspacesSortedByCurrentPrincipal(sample.getId());
             log.debug("Got children: {}",children);
 
             List<TmWorkspace> temp = new ArrayList<>();

@@ -3,6 +3,7 @@ package org.janelia.workstation.core.api.facade.impl.rest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
@@ -11,16 +12,17 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.shared.utils.DomainQuery;
-import org.janelia.workstation.core.api.facade.interfaces.OntologyFacade;
-import org.janelia.workstation.core.api.http.RESTClientBase;
-import org.janelia.workstation.core.api.http.RestJsonClientManager;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.ontology.OntologyTermReference;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.facade.interfaces.OntologyFacade;
+import org.janelia.workstation.core.api.http.RESTClientBase;
+import org.janelia.workstation.core.api.http.RestJsonClientManager;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,17 +41,21 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
         log.debug("Using server URL: {}",serverUrl);
         this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
     }
-    
+
     @Override
-    public Collection<Ontology> getOntologies() {
+    public List<Ontology> getOntologiesSortedByCurrentPrincipal() {
+        String currentPrincipal = AccessManager.getSubjectKey();
         Response response = service.path("data/ontology")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("subjectKey", currentPrincipal)
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getOntologies from server")) {
             throw new WebApplicationException(response);
         }
-        return response.readEntity(new GenericType<List<Ontology>>() {});
+        return response.readEntity(new GenericType<List<Ontology>>() {})
+                .stream()
+                .sorted(new DomainObjectComparator(currentPrincipal))
+                .collect(Collectors.toList());
     }
 
     @Override
