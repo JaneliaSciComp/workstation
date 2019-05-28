@@ -33,7 +33,7 @@ public class ImportExportColorModelAction extends AbstractAction {
         try {
             
             // check which top component is live
-            JFileChooser chooser = new JFileChooser();
+            JFileChooser chooser = new JFileChooser(sliderMgr.getDefaultColorModelDirectory());
             chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
                 switch (mode) {
                     case IMPORT:

@@ -4,10 +4,8 @@ import java.awt.Insets;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Path;
+import java.util.*;
 
 import javax.swing.AbstractButton;
 import javax.swing.Action;
@@ -292,6 +290,45 @@ public class SliderPanel extends JPanel {
         } catch (Exception e) {
             log.error("Error exporting color model", e);
         }
+    }
+
+    public File getDefaultColorModelDirectory() {
+        // at Janelia, users store their saved color models in a shared, standard
+        //  location; if it's reachable, start the file dialogs in that directory
+        // do a brute force search, similar to AnnotationManager.getDefaultSwcDirectory()
+        String osName = System.getProperty("os.name").toLowerCase();
+        List<Path> prefixesToTry = new Vector<>();
+        if (osName.contains("win")) {
+            for (File fileRoot : File.listRoots()) {
+                prefixesToTry.add(fileRoot.toPath());
+            }
+        } else if (osName.contains("os x")) {
+            // for Mac, it's simpler:
+            prefixesToTry.add(new File("/Volumes").toPath());
+        } else if (osName.contains("lin")) {
+            // Linux
+            prefixesToTry.add(new File("/groups/mousebrainmicro").toPath());
+        }
+        boolean found = false;
+        // java and its "may not have been initialized" errors...
+        File testFile = new File(System.getProperty("user.home"));
+        for (Path prefix: prefixesToTry) {
+            // test with and without the first part
+            testFile = prefix.resolve("shared_tracing/Color_Models").toFile();
+            if (testFile.exists()) {
+                found = true;
+                break;
+            }
+            testFile = prefix.resolve("mousebrainmicro/shared_tracing/Color_Models").toFile();
+            if (testFile.exists()) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            testFile = new File(System.getProperty("user.home"));
+        }
+        return testFile;
     }
 
 }
