@@ -16,10 +16,7 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 
-import org.janelia.model.security.Group;
-import org.janelia.model.security.Subject;
-import org.janelia.model.security.User;
-import org.janelia.model.security.UserGroupRole;
+import org.janelia.model.security.*;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -104,27 +101,49 @@ public class GroupManagementPanel extends JPanel {
 
     private void loadGroups() {
         try {
-            if (AccessManager.getAccessManager().isAdmin()) {
-                List<Subject> rawList = DomainMgr.getDomainMgr().getSubjects();
-                List<Group> groupList = new ArrayList<>();
-                Map<String, Integer> groupTotals = new HashMap<>();
-                for (Subject subject : rawList) {
-                    if (subject instanceof Group)
-                        groupList.add((Group) subject);
-                    else {
-                        User user = (User) subject;
-                        for (UserGroupRole groupRole : user.getUserGroupRoles()) {
-                            String groupKey = groupRole.getGroupKey();
-                            if (groupTotals.containsKey(groupKey))
-                                groupTotals.put(groupKey, groupTotals.get(groupKey) + 1);
-                            else
-                                groupTotals.put(groupKey, 1);
-                        }
+            Map<String, Integer> groupTotals = new HashMap<>();
+            List<Group> groupList = new ArrayList<>();
+            List<Subject> rawList = DomainMgr.getDomainMgr().getSubjects();
+            for (Subject subject : rawList) {
+                if (subject instanceof Group)
+                    groupList.add((Group) subject);
+                else {
+                    User user = (User) subject;
+                    for (UserGroupRole groupRole : user.getUserGroupRoles()) {
+                        String groupKey = groupRole.getGroupKey();
+                        if (groupTotals.containsKey(groupKey))
+                            groupTotals.put(groupKey, groupTotals.get(groupKey) + 1);
+                        else
+                            groupTotals.put(groupKey, 1);
                     }
                 }
-
-                groupManagementTableModel.loadGroups(groupList, groupTotals);
             }
+            if (!AccessManager.getAccessManager().isAdmin()) {
+                // only keep groups where user is an admin or owner
+                User loginUser = (User)AccessManager.getSubjectByNameOrKey(AccessManager.getSubjectKey());
+
+                if (loginUser!=null) {
+                    Map<String, Integer> filterTotals = new HashMap<>();
+                    List<Group> filterList = new ArrayList<>();
+                    for (UserGroupRole groupRole : loginUser.getUserGroupRoles()) {
+                        String groupKey = groupRole.getGroupKey();
+                        if (groupRole.getRole().equals(GroupRole.Admin) ||
+                                groupRole.getRole().equals(GroupRole.Owner)) {
+                            filterTotals.put(groupKey, groupTotals.get(groupKey));
+                            Group group = (Group) AccessManager.getSubjectByNameOrKey(groupRole.getGroupKey());
+                            if (group != null)
+                                filterList.add(group);
+                        }
+                    }
+                    groupList = filterList;
+                    groupTotals = filterTotals;
+                } else {
+                    groupList = new ArrayList<>();
+                    groupTotals = new HashMap<String,Integer>();
+                }
+            }
+
+            groupManagementTableModel.loadGroups(groupList, groupTotals);
         } catch (Exception e) {
             FrameworkAccess.handleException("Problem retrieving group information", e);
         }

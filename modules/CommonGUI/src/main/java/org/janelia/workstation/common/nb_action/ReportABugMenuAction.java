@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
+import org.janelia.workstation.core.logging.LoggingUtils;
 import org.janelia.workstation.core.util.MailDialogueBox;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
@@ -26,10 +27,12 @@ public final class ReportABugMenuAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
 
+        String subject = LoggingUtils.getReportEmailSubject(false)+" -- Bug Report";
+
         MailDialogueBox popup = MailDialogueBox.newDialog(FrameworkAccess.getMainFrame())
                 .withTitle("Create A Ticket")
                 .withPromptText("Problem Description:")
-                .withEmailSubject("Bug Report")
+                .withEmailSubject(subject)
                 .appendStandardPrefix()
                 .append("\n\nMessage:\n");
         

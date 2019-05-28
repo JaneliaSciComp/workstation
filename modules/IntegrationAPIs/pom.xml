@@ -52,6 +52,7 @@
                     <publicPackages>
                         <publicPackage>org.janelia.workstation.integration</publicPackage>
                         <publicPackage>org.janelia.workstation.integration.api</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.spi.actions</publicPackage>
                         <publicPackage>org.janelia.workstation.integration.spi.compression</publicPackage>
                         <publicPackage>org.janelia.workstation.integration.spi.domain</publicPackage>
                         <publicPackage>org.janelia.workstation.integration.spi.nodes</publicPackage>

@@ -8,6 +8,7 @@ following conditions are met:
   disclaimer.
 * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following 
   disclaimer in the documentation and/or other materials provided with the distribution.
+* All studies and publications that use this software must cite https://doi.org/10.25378/janelia.8182256.v1
 * Neither the name of HHMI nor the names of its contributors may be used to endorse or promote products derived from 
   this software without specific prior written permission.
 

@@ -58,11 +58,16 @@ public class UserManagementPanel extends JPanel {
         userManagementTable.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent mouseEvent) {
                 JTable table = (JTable) mouseEvent.getSource();
+                User user = userManagementTableModel.getUserAtRow(userManagementTable.getSelectedRow());
+                if (!AccessManager.getAccessManager().isAdmin() &&
+                        !AccessManager.getSubjectKey().equals(user.getKey()))
+                    return;
                 if (mouseEvent.getClickCount() == 2 && table.getSelectedRow() != -1) {
                     editUser();
                 } else {
-                    if (table.getSelectedRow() != -1)
+                    if (table.getSelectedRow() != -1) {
                         editUserButton.setEnabled(true);
+                    }
                 }
             }
         });
@@ -80,6 +85,8 @@ public class UserManagementPanel extends JPanel {
         editUserButton.setEnabled(false);
         JButton newUserButton = new JButton("New User");
         newUserButton.addActionListener(event -> newUser());
+        if (!AccessManager.getAccessManager().isAdmin())
+             newUserButton.setEnabled(false);
 
         JPanel actionPanel = new ActionPanel();
         actionPanel.add(editUserButton);
@@ -113,15 +120,13 @@ public class UserManagementPanel extends JPanel {
      */
     private void loadUsers () {
         try {
-            if (AccessManager.getAccessManager().isAdmin()) {
-                List<Subject> subjectList = DomainMgr.getDomainMgr().getSubjects();
-                List<User> userList = new ArrayList<>();
-                for (Subject subject : subjectList) {
-                    if (subject instanceof User)
-                        userList.add((User) subject);
-                }
-                userManagementTableModel.addUsers(userList);
+            List<Subject> subjectList = DomainMgr.getDomainMgr().getSubjects();
+            List<User> userList = new ArrayList<>();
+            for (Subject subject : subjectList) {
+                if (subject instanceof User)
+                    userList.add((User) subject);
             }
+            userManagementTableModel.addUsers(userList);
         } catch (Exception e) {
             FrameworkAccess.handleException("Problem retrieving user information", e);
         }

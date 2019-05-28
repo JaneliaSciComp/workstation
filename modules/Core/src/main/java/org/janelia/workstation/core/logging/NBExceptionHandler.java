@@ -13,22 +13,21 @@ import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.exceptions.AuthenticationException;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.util.MailDialogueBox;
-import org.janelia.workstation.core.util.SystemInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Charsets;
 import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.RateLimiter;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.exceptions.AuthenticationException;
+import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.core.util.MailDialogueBox;
+import org.janelia.workstation.core.util.SystemInfo;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Override NetBeans' exception handling to tie into the workstation's error handler.
@@ -228,10 +227,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         try {
             String firstLine = getSummary(stacktrace);
             log.info("Reporting exception: "+firstLine);
-
-            String version = SystemInfo.appVersion;
-            String titleSuffix = " from "+AccessManager.getSubjectName()+" -- "+version+" -- "+firstLine;
-            String subject = (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix;
+            String subject = LoggingUtils.getReportEmailSubject(!askForInput)+" -- "+firstLine;
 
             MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(FrameworkAccess.getMainFrame())
                     .withTitle("Create A Ticket")

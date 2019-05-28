@@ -3,6 +3,7 @@ package org.janelia.workstation.admin;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.beans.PropertyDescriptor;
+import java.util.Set;
 
 import javax.swing.AbstractCellEditor;
 import javax.swing.JButton;
@@ -13,9 +14,7 @@ import javax.swing.JTextField;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellEditor;
 
-import org.janelia.model.security.Group;
-import org.janelia.model.security.Subject;
-import org.janelia.model.security.User;
+import org.janelia.model.security.*;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
@@ -70,18 +69,24 @@ public class NewGroupPanel extends JPanel {
         currentGroup.setKey("group:"+currentGroup.getName());
         log.info(currentGroup.toString());
         parent.createGroup(currentGroup);
+
+        // set the current user as the owner of the group
+        Subject rawAdmin = AccessManager.getAccessManager().getActualSubject();
+        if (rawAdmin instanceof User) {
+            User admin = (User) rawAdmin;
+            Set<UserGroupRole> roles = admin.getUserGroupRoles();
+            UserGroupRole newRole = new UserGroupRole(currentGroup.getKey(), GroupRole.Owner);
+            roles.add(newRole);
+            admin.setUserGroupRoles(roles);
+            parent.saveUserRoles(admin);
+        }
         returnHome();
     }
     
     public void initNewGroup() throws Exception {
         currentGroup = new Group();
-        Subject rawAdmin = AccessManager.getAccessManager().getActualSubject();
-        if (rawAdmin instanceof User) {                
-            User admin = (User) rawAdmin;
-            
-            // load new group
-            newGroupTableModel.loadGroup(currentGroup);                      
-        }
+        // load new group
+        newGroupTableModel.loadGroup(currentGroup);
     }
                 
     public void returnHome() {
