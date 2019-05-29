@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+
+import com.google.common.base.Stopwatch;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -20,6 +22,7 @@ import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.workstation.gui.large_volume_viewer.annotation.NeuronUpdates;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.PredefinedNote;
 import org.janelia.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
@@ -199,6 +202,13 @@ public class NeuronSetAdapter
         return getNeuronForAnnotation(annotation);
     }
 
+    @Override
+    public TmGeoAnnotation getAnnotationForAnchor(NeuronVertex anchor) {
+        if (! (anchor instanceof NeuronVertexAdapter))
+            return null;
+        return ((NeuronVertexAdapter)anchor).getTmGeoAnnotation();
+    }
+    
     @Override
     public NeuronModel createNeuron(String neuronName) {
         TmNeuronMetadata neuron;
@@ -606,6 +616,13 @@ public class NeuronSetAdapter
         annotationModel.setSelectMode(select);
     }
 
+    @Override
+    public void selectVertex(NeuronVertex anchor) {
+        TmGeoAnnotation annotation = getAnnotationForAnchor(anchor);
+        if (annotation!=null)
+            annotationModel.selectPoint(annotation.getNeuronId(), annotation.getId());
+    }
+
     private class NeuronSetBackgroundAnnotationListener implements BackgroundAnnotationListener {
 
         GlobalAnnotationListener global;
@@ -651,6 +668,8 @@ public class NeuronSetAdapter
             LOG.info("Neuron deleted: {}", neuron);
             Collection<NeuronVertex> deletedVertices = new ArrayList<>();
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+            if (neuronModel==null)
+                return;
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 LOG.debug("Removing vertex: {}", neuronVertex);
                 spatialIndex.removeFromIndex(neuronVertex);
@@ -747,6 +766,41 @@ public class NeuronSetAdapter
             getMembershipChangeObservable().setChanged();
             getMembershipChangeObservable().notifyObservers(neuronModel);
             repaintHorta(neuronModel);
+        }
+        
+        @Override
+        public void bulkNeuronsChanged(List<TmNeuronMetadata> addList, List<TmNeuronMetadata> deleteList) {
+
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            LOG.info("Neurons Updates: Adds: {}, Deletes: {}", addList, deleteList);
+            for (TmNeuronMetadata neuron : addList) {
+                NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+                neuronModel.getGeometryChangeObservable().setChanged();                
+                for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                    spatialIndex.addToIndex(neuronVertex);
+                }
+                getMembershipChangeObservable().notifyObservers(neuronModel);
+            }
+            
+            for (TmNeuronMetadata neuron : deleteList) {
+                Collection<NeuronVertex> deletedVertices = new ArrayList<>();
+                NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+                for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+                    LOG.debug("Removing vertex: {}", neuronVertex);
+                    spatialIndex.removeFromIndex(neuronVertex);
+                    deletedVertices.add(neuronVertex);
+                }
+                neuronModel.getVertexesRemovedObservable().setChanged();
+                neuronModel.getVertexesRemovedObservable().notifyObservers(
+                        new VertexCollectionWithNeuron(deletedVertices, neuronModel));
+                neuronModel.getGeometryChangeObservable().setChanged();
+                innerList.removeFromCache(neuron.getId());
+                getMembershipChangeObservable().setChanged();
+                getMembershipChangeObservable().notifyObservers(neuronModel);
+            }
+            repaintHorta();
+            LOG.info("TOTAL HORTA UPDATE: {}",stopwatch.elapsed().toMillis());
+            stopwatch.stop();
         }
 
         @Override

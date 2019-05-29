@@ -96,6 +96,7 @@ public class AnnotationPanel extends JPanel
     private JCheckBoxMenuItem automaticRefinementMenuItem;
     private JCheckBoxMenuItem tempOwnerAdminItem;
     private NeuronExportAllAction exportAllSWCAction;
+    private NeuronFilterAction neuronFilterAction;
     private ImportSWCAction importSWCAction;
     private ImportSWCAction importSWCActionMulti;
     private AbstractAction saveColorModelAction;
@@ -361,6 +362,12 @@ public class AnnotationPanel extends JPanel
         neuronToolMenu.add(bulkExportNeuronAction);
 
         neuronToolMenu.add(new JSeparator());
+
+        neuronFilterAction = new NeuronFilterAction(annotationModel, annotationMgr);
+        neuronFilterAction.putValue(Action.NAME, "Set Neuron Filter Strategy...");
+        neuronFilterAction.putValue(Action.SHORT_DESCRIPTION,
+                "Sets the filtering strategy for neuron fragments");
+        neuronToolMenu.add(new JMenuItem(neuronFilterAction));
 
         neuronToolMenu.add(new WorkspaceInformationAction(annotationModel, workspaceNeuronList));
 

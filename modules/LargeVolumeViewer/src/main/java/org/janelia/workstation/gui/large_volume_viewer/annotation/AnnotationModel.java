@@ -18,6 +18,8 @@ import org.janelia.it.jacs.shared.swc.SWCNode;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainUtils;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
@@ -39,6 +41,7 @@ import org.janelia.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
+import org.janelia.workstation.gui.large_volume_viewer.controller.GlobalNeuronSpatialFilterListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.workstation.gui.large_volume_viewer.controller.TaskReviewListener;
@@ -47,6 +50,7 @@ import org.janelia.workstation.gui.large_volume_viewer.controller.TmGeoAnnotatio
 import org.janelia.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
 import org.janelia.workstation.gui.large_volume_viewer.model_adapter.NeuronManager;
+import org.janelia.workstation.gui.large_volume_viewer.model_adapter.NeuronMessageConstants;
 import org.janelia.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.janelia.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
 import org.janelia.workstation.gui.large_volume_viewer.neuron_api.SpatialFilter;
@@ -122,7 +126,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     private ViewStateListener viewStateListener;
     private NotesUpdateListener notesUpdateListener;
-
+    private NeuronSpatialFilter neuronFilter;
     private final FilteredAnnotationModel filteredAnnotationModel;
     private final NeuronSetAdapter neuronSetAdapter; // For communicating annotations to Horta
 
@@ -131,6 +135,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private final Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
     private final Collection<BackgroundAnnotationListener> backgroundAnnotationListeners = new ArrayList<>();
     private final Collection<TaskReviewListener> taskReviewListeners = new ArrayList<>();
+    private final Collection<GlobalNeuronSpatialFilterListener> neuronSpatialFilterListeners = new ArrayList<>();
 
     private final NeuronManager neuronManager;
 
@@ -138,6 +143,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     private final ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
     private boolean select = true;
+    private boolean applyFilter = false;
 
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
 
@@ -177,7 +183,18 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public Collection<TmNeuronMetadata> getNeuronList() {
-        return neuronManager.getNeurons();
+        if (applyFilter) {
+            Set<Long> filteredIds = neuronFilter.filterNeurons();
+            List<TmNeuronMetadata> neuronList = new ArrayList<>();
+            for (Long id: filteredIds) {
+                TmNeuronMetadata neuron = neuronManager.getNeuronById(id);
+                if (neuron!=null)
+                    neuronList.add(neuron);
+            }
+            return neuronList;
+        }
+        else
+            return neuronManager.getNeurons();
     }
 
     public void addNeuron(TmNeuronMetadata neuron) {
@@ -211,7 +228,15 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public void removeGlobalAnnotationListener(GlobalAnnotationListener listener) {
         globalAnnotationListeners.remove(listener);
     }
-    
+
+    public void addGlobalNeuronSpatialFilterListener(GlobalNeuronSpatialFilterListener listener) {
+        neuronSpatialFilterListeners.add(listener);
+    }
+
+    public void removeGlobalNeuronSpatialFilterListener(GlobalNeuronSpatialFilterListener listener) {
+        neuronSpatialFilterListeners.remove(listener);
+    }
+
     public void addBackgroundAnnotationListener(BackgroundAnnotationListener listener) {
         backgroundAnnotationListeners.add(listener);
     }
@@ -330,10 +355,27 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         log.info("Loading neurons for workspace {}", workspace.getId());
         neuronManager.loadWorkspaceNeurons(workspace);
 
+        // if spatial filter is applied, use it to filter neurons
+        if (applyFilter) {
+            neuronFilter = new NeuronProximitySpatialFilter();
+            neuronFilter.initFilter(neuronManager.getNeurons());
+        }
+        fireNeuronSpatialFilterUpdated(applyFilter, neuronFilter);
+
         // Create the local tag map for cached access to tags
         log.info("Creating tag map for workspace {}", workspace.getId());
         currentTagMap = new TmNeuronTagMap();
-        for(TmNeuronMetadata tmNeuronMetadata : neuronManager.getNeurons()) {
+        Collection<TmNeuronMetadata> neuronList;
+        if (applyFilter) {
+            neuronList = new ArrayList<>();
+            for (Long neuronId : neuronFilter.filterNeurons()) {
+                TmNeuronMetadata neuron = neuronManager.getNeuronById(neuronId);
+                if (neuron != null)
+                    neuronList.add(neuron);
+            }
+        } else
+            neuronList = neuronManager.getNeurons();
+        for (TmNeuronMetadata tmNeuronMetadata : neuronList) {
             for(String tag : tmNeuronMetadata.getTags()) {
                 currentTagMap.addTag(tag, tmNeuronMetadata);
             }
@@ -426,6 +468,75 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         if (getCurrentWorkspace()!=null && neuron!=null) {
             activityLog.logSelectNeuron(getCurrentWorkspace().getId(), neuron.getId());
         }
+    }
+
+    // placeholder for any non listener methods that need to update neuron information
+    // prior to listener methods
+    public void updateNeuronFilter(TmNeuronMetadata neuronMeta, NeuronMessageConstants.MessageType remoteAction) {
+        if (!applyFilter)
+            return;
+        
+        TmNeuronMetadata neuron = neuronManager.getNeuronById(neuronMeta.getId());
+        if (neuron==null)
+            return;
+        
+        String systemUser = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+        if (systemUser==null)
+            return;
+        
+        if (!neuron.getOwnerKey().equals(systemUser)) {                      
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    NeuronUpdates updates = null;
+                    switch (remoteAction) {
+                        case NEURON_CREATE:
+                            updates = neuronFilter.addNeuron(neuron);
+                            break;
+                        case NEURON_DELETE:
+                            updates = neuronFilter.deleteNeuron(neuron);
+                            break;
+                        case NEURON_SAVE_NEURONDATA:
+                        case NEURON_SAVE_METADATA:
+                        case NEURON_OWNERSHIP_DECISION:
+                            updates = neuronFilter.updateNeuron(neuron);
+                            break;
+                    }
+            
+                    if (updates!=null) {
+                        updateFrags(updates);
+                        
+                    }
+                }
+            });
+        }
+            
+        
+    }
+    
+    // purely used for updating the spatial filter for selection-oriented filtering strategies
+    public void selectPoint(Long neuronId, Long annotationId) {
+        TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronId);
+        TmGeoAnnotation annotation = neuron.getGeoAnnotationMap().get(annotationId);
+
+        if (annotation == null) {
+            return;
+        }
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                if (applyFilter) {
+                    Stopwatch stopwatch = Stopwatch.createStarted();
+
+                    NeuronUpdates updates = neuronFilter.selectVertex(annotation);                    
+                    updateFrags(updates);
+                    selectNeuron(neuron);
+                    log.info("TOTAL FRAG UPDATE TIME: {}",stopwatch.elapsed().toMillis());
+                    stopwatch.stop();
+                }
+            }
+        });
     }
 
     // convenience methods
@@ -550,6 +661,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                // if filter, find new fragments that might be affected
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.addNeuron(neuron);
+                    updateFrags(updates);
+                }
+                
                 fireNeuronCreated(neuron);
                 fireNeuronSelected(neuron);
                 activityLog.logCreateNeuron(workspace.getId(), neuron.getId());
@@ -603,6 +720,13 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         // it's now safe to change local object
         neuron.setOwnerKey(newOwner.getKey());
+
+        // if filter, find new fragments that might be affected
+        if (applyFilter && neuron.getOwnerKey().equals(AccessManager.getAccessManager().getActualSubject().getKey())) {
+            NeuronUpdates updates = neuronFilter.addNeuron(neuron);
+            updateFrags(updates);
+        }
+
         log.info("Neuron " + neuron.getName() + " owner changed to  " + newOwner.getKey());
 
         final TmWorkspace workspace = getCurrentWorkspace();
@@ -640,6 +764,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             public void run() {
                 beginTransaction();
                 try {
+                    // if filter, add and remove fragments as necessary
+                    if (applyFilter) {
+                        NeuronUpdates updates = neuronFilter.deleteNeuron(deletedNeuron);
+                        updateFrags(updates);
+                    }
+        
                     fireNeuronSelected(null);
                     fireNeuronDeleted(deletedNeuron);
                 }
@@ -693,6 +823,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             @Override
             public void run() {
                 fireAnnotationAdded(annotation);
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                    updateFrags(updates);
+                    selectPoint(neuron.getId(), annotation.getId());
+                }
                 activityLog.logEndOfOperation(getWsId(), xyz);
             }
         });
@@ -734,6 +869,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             @Override
             public void run() {
                 fireAnnotationAdded(annotation);
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                    updateFrags(updates);
+                    selectPoint(neuron.getId(), annotation.getId());
+                }
                 activityLog.logEndOfOperation(getWsId(), xyz);
             }
         });
@@ -786,6 +926,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 @Override
                 public void run() {
                     fireAnnotationMoved(annotation);
+                    if (applyFilter) {
+                        NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                        updateFrags(updates);
+                        selectPoint(neuron.getId(), annotation.getId());
+                    }
                     activityLog.logEndOfOperation(getWsId(), location);
                 }
             });
@@ -860,6 +1005,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             @Override
             public void run() {
                 fireAnnotationRadiusUpdated(annotation);
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                    updateFrags(updates);
+                }
             }
         });
         
@@ -914,6 +1063,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             @Override
             public void run() {
                 fireNeuronRadiusUpdated(neuron);
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                    updateFrags(updates);
+                }
             }
         });
 
@@ -928,7 +1081,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             final Long sourceNeuronID, final Long sourceAnnotationID, 
             final Long targetNeuronID, final Long targetAnnotationID) throws Exception {
 
-        // start transaction to prevent screen refresh until ownership change, etc. happens
+        // start transaction to prevent screen refresh ownership change, etc. happens
         beginTransaction();
         Stopwatch stopwatch = Stopwatch.createStarted();
 
@@ -993,8 +1146,16 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // If source neuron is now empty, delete it, otherwise save it.
         final boolean sourceDeleted = sourceNeuron.getGeoAnnotationMap().isEmpty();
         if (sourceDeleted) {
-            neuronManager.deleteNeuron(currentWorkspace, sourceNeuron);
+            neuronManager.deleteNeuron(currentWorkspace, sourceNeuron); 
+            if (applyFilter) {
+                NeuronUpdates updates = neuronFilter.deleteNeuron(sourceNeuron);
+                updateFrags(updates);
+            }
             log.info("Source neuron was deleted: "+sourceNeuron);
+        }
+        if (applyFilter) {
+             NeuronUpdates updates = neuronFilter.updateNeuron(targetNeuron);
+             updateFrags(updates);
         }
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -1044,7 +1205,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         neuronManager.moveNeurite(annotation, sourceNeuron, destNeuron);
         neuronManager.saveNeuronData(sourceNeuron);
         neuronManager.saveNeuronData(destNeuron);
-
+        if (applyFilter) {
+            NeuronUpdates updates = neuronFilter.updateNeuron(sourceNeuron);
+            updates = neuronFilter.updateNeuron(destNeuron);
+            updateFrags(updates);
+        }
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -1160,6 +1325,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     fireAnnotationsDeleted(Arrays.asList(link));
                     // Also need to redraw the neurite, because we need the link from the reparenting to appear
                     fireNeuronChanged(neuron);
+
+                    if (applyFilter) {
+                        NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                        updateFrags(updates);
+                    }
                 }
                 finally {
                     endTransaction();
@@ -1235,6 +1405,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                         fireNotesUpdated(ann);
                     }
                     fireAnnotationsDeleted(deleteList);
+                    if (applyFilter) {
+                        NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                        updateFrags(updates);
+                    }
+
                     fireNeuronSelected(neuron);
                 }
                 finally {
@@ -1344,6 +1519,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 try {
                     fireAnnotationAdded(newAnnotation);
                     fireAnnotationReparented(updateAnnotation, neuron.getId());
+                    if (applyFilter) {
+                        NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                        updateFrags(updates);
+                        selectPoint(neuron.getId(), annotation.getId());
+                    }
                 }
                 finally {
                     endTransaction();
@@ -1381,6 +1561,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     fireNotesUpdated(newRoot);
                 }
                 fireNeuronChanged(neuron);
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                    updateFrags(updates);
+                }
                 activityLog.logEndOfOperation(getWsId(), newRoot);
             }
         });
@@ -1417,6 +1601,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     }
                     else {
                         fireAnnotationReparented(newRootAnnotation, neuron.getId());
+                    }
+                    if (applyFilter) {
+                        NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                        updateFrags(updates);
                     }
                     fireNeuronSelected(neuron);
                 }
@@ -1470,6 +1658,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             @Override
             public void run() {
                 fireAnchoredPathAdded(neuronID, path);
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron1);
+                    updateFrags(updates);
+                }
                 activityLog.logAddAnchoredPath(getCurrentWorkspace().getId(), path.getId());
             }
         });
@@ -1975,6 +2167,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     }
                     // now save again, with the note data
                     neuronManager.saveNeuronData(neuron);
+
+                    if (applyFilter) {
+                        NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                        updateFrags(updates);
+                    }
                 }
             }
             
@@ -2306,13 +2503,24 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             l.neuronTagsChanged(neuronList);
         }
     }
+    
+    void fireBulkNeuronsChanged(List<TmNeuronMetadata> addList, List<TmNeuronMetadata> deleteList) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.bulkNeuronsChanged(addList, deleteList);
+        }
+    }
 
     public void fireSpatialIndexReady(TmWorkspace workspace) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.spatialIndexReady(workspace);
         }
     }
-    
+
+    void fireNeuronSpatialFilterUpdated(boolean enabled, NeuronSpatialFilter filter) {
+        for (GlobalNeuronSpatialFilterListener l: neuronSpatialFilterListeners) {
+            l.neuronSpatialFilterUpdated(enabled, filter);
+        }
+    }
         
     public void fireBackgroundNeuronCreated(TmNeuronMetadata neuron) {
         for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
@@ -2419,5 +2627,61 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         this.select = select;
     }
 
+    private void updateFrags(NeuronUpdates updates) {
+        List<TmNeuronMetadata> addList = new ArrayList<>();
+        List<TmNeuronMetadata> deleteList = new ArrayList<>();
+        Iterator<Long> addIter = updates.getAddedNeurons().iterator();
+        while (addIter.hasNext()) {
+            TmNeuronMetadata neuron = getNeuronFromNeuronID(addIter.next());
+            if (neuron != null) {
+                addList.add(neuron);
+            }
+        }
+        Iterator<Long> delIter = updates.getDeletedNeurons().iterator();
+        while (delIter.hasNext()) {
+            TmNeuronMetadata neuron = getNeuronFromNeuronID(delIter.next());
+            if (neuron != null) {
+                deleteList.add(neuron);
+            }
+        }
 
+        fireBulkNeuronsChanged(addList, deleteList);
+    }
+
+    public boolean isFilteringEnabled() {
+        return applyFilter;
+    }
+
+    public void setNeuronFiltering(boolean filtering) {
+        applyFilter = filtering;
+        try {            
+            fireWorkspaceLoaded(currentWorkspace);
+            fireSpatialIndexReady(currentWorkspace);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        fireNeuronSpatialFilterUpdated(applyFilter, getFilterStrategy());
+    }
+
+    public NeuronSpatialFilter getFilterStrategy() {
+        return neuronFilter;
+    }
+
+    public void setFilterStrategy(NeuronSpatialFilter filterStrategy) {
+        neuronFilter = filterStrategy;
+        neuronFilter.initFilter(neuronManager.getNeurons());
+        setNeuronFiltering(true);
+    }
+
+    public int getNumTotalNeurons() {
+        if (isFilteringEnabled()) {
+            if (neuronFilter != null) {
+                return neuronFilter.getNumTotalNeurons();
+            } else {
+                return 0;
+            }
+        } else {
+            return getNeuronManager().getNeurons().size();
+        }
+    }
 }

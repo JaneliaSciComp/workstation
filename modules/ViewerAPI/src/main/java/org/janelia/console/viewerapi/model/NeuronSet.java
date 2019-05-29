@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import org.janelia.console.viewerapi.ObservableInterface;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.openide.awt.UndoRedo;
@@ -29,6 +30,7 @@ public interface NeuronSet extends Collection<NeuronModel>
     NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ);
 
     NeuronModel getNeuronForAnchor(NeuronVertex anchor);
+    TmGeoAnnotation getAnnotationForAnchor(NeuronVertex anchor);
 
     UndoRedo.Manager getUndoRedo(); // Manage edit operations per neuron collection
     // Sometimes there is one anchor selected for edit operations
@@ -48,4 +50,5 @@ public interface NeuronSet extends Collection<NeuronModel>
     void removeObjectMesh(String meshName);    
     void updateObjectMeshName(String oldName, String updatedName);
     void setSelectMode(boolean select);
+    void selectVertex (NeuronVertex anchor);
 }

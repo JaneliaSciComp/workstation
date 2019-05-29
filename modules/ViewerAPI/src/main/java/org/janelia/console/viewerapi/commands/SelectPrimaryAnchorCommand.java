@@ -38,6 +38,7 @@ implements UndoableEdit, Command, Notifier
         if (doesNotify()) {
             workspace.getPrimaryAnchorObservable().notifyObservers();
         }
+        workspace.selectVertex(newPrimary);
         return true;
     }
 

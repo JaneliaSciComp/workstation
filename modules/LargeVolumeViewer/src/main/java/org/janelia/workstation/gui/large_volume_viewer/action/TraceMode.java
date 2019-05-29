@@ -141,6 +141,8 @@ implements MouseMode, KeyListener
             //  a point on top of another, which we don't want)
             if (hoverAnchor != null) {
                 controller.setNextParent(hoverAnchor);
+                LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel()
+                        .selectPoint(hoverAnchor.getNeuronID(), hoverAnchor.getGuid());
             } else {
                 // original behavior: shift-click to annotate; new behavior (2018):
                 //  shift not required to annotate; check preference for which:

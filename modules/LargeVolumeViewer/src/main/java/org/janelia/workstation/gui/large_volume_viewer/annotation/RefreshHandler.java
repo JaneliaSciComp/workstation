@@ -110,16 +110,19 @@ public class RefreshHandler implements MessageHandler {
                     case NEURON_CREATE:
                         log.info("processing remote create: {}", neuron.getName());
                         annotationModel.getNeuronManager().addNeuron(neuron);
+                        updateFilter(neuron, action);
                         annotationModel.fireBackgroundNeuronCreated(neuron);
                         break;
                     case NEURON_SAVE_NEURONDATA:
                     case NEURON_SAVE_METADATA:
                         log.info("processing remote save: {},", neuron.getName());
                         annotationModel.getNeuronManager().addNeuron(neuron);
+                        updateFilter(neuron, action);
                         annotationModel.fireBackgroundNeuronChanged(neuron);
                         break;
                     case NEURON_DELETE:
                         log.info("processing remote delete: {},", neuron.getName());
+                        updateFilter(neuron, action);
                         annotationModel.fireBackgroundNeuronDeleted(neuron);
                         break;
                 }
@@ -238,6 +241,7 @@ public class RefreshHandler implements MessageHandler {
                     origNeuron.setReaders(neuron.getReaders());
                 }
                 annotationModel.getNeuronManager().completeOwnershipRequest(decision);
+                updateFilter(neuron, action);
                 SwingUtilities.invokeLater(() -> {
                     StopWatch stopWatch2 = new StopWatch();
                     annotationModel.fireBackgroundNeuronOwnershipChanged(neuron);
@@ -274,6 +278,7 @@ public class RefreshHandler implements MessageHandler {
                                 case NEURON_DELETE:
                                     if (!user.equals(AccessManager.getSubjectKey())) {
                                         handleNeuronDeleted(neuron, msgBody);
+                                         
                                     }
                                     break;
                             }
@@ -300,6 +305,7 @@ public class RefreshHandler implements MessageHandler {
             TmProtobufExchanger exchanger = new TmProtobufExchanger();
             exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
             neuronAction.accept(neuron);
+			updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE);
             annotationModel.fireBackgroundNeuronCreated(neuron);
         } catch (Exception e) {
             logError("Error handling neuron creation: " + e.getMessage());
@@ -325,11 +331,16 @@ public class RefreshHandler implements MessageHandler {
             log.info("remote processing delete neuron" + neuron.getName());
             TmProtobufExchanger exchanger = new TmProtobufExchanger();
             exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
-            annotationModel.fireBackgroundNeuronDeleted(neuron);
+            updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE);
+			annotationModel.fireBackgroundNeuronDeleted(neuron);
         } catch (Exception e) {
             logError("Error handling neuron change: " + e.getMessage());
             log.error("Error handling neuron changed message for {}", neuron, e);
         }
+    }
+	
+    public void updateFilter(TmNeuronMetadata neuron, NeuronMessageConstants.MessageType action) {
+        annotationModel.updateNeuronFilter(neuron, action);
     }
 
     public void logError(String errorMsg) {

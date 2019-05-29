@@ -26,5 +26,5 @@ public interface GlobalAnnotationListener {
     void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style);
     void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap);
     void neuronTagsChanged(List<TmNeuronMetadata> neuronList);
-    
+    void bulkNeuronsChanged(List<TmNeuronMetadata> addList, List<TmNeuronMetadata> deleteList);
 }

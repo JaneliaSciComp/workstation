@@ -378,6 +378,19 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             skeletonController.skeletonChanged(true);
         }
     }
+    
+    @Override
+    public void bulkNeuronsChanged(List<TmNeuronMetadata> addList, List<TmNeuronMetadata> deleteList) {
+        Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
+        
+        for (TmNeuronMetadata neuron: addList) {
+            this.neuronModelCreated(neuron);
+        }
+        
+        for (TmNeuronMetadata neuron: deleteList) {
+            this.neuronModelDeleted(neuron);
+        }
+    }
 
     @Override
     public void neuronCreated(TmNeuronMetadata neuron) {

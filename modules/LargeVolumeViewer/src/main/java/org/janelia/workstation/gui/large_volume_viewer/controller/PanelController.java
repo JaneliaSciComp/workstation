@@ -9,6 +9,7 @@ import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationMode
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationList;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
+import org.janelia.workstation.gui.large_volume_viewer.annotation.NeuronSpatialFilter;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.WorkspaceInfoPanel;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.WorkspaceNeuronList;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -61,6 +62,7 @@ public class PanelController {
         
         globalListener = new PanelGlobalListener();
         annotationModel.addGlobalAnnotationListener(globalListener);
+        annotationModel.addGlobalNeuronSpatialFilterListener(globalListener);
         
         backgroundListener = new PanelBackgroundAnnotationListener();
         
@@ -95,7 +97,7 @@ public class PanelController {
         this.annotationListener = null;
     }
     
-    private class PanelGlobalListener extends GlobalAnnotationAdapter {
+    private class PanelGlobalListener extends GlobalAnnotationAdapter implements GlobalNeuronSpatialFilterListener {
         @Override
         public void workspaceUnloaded(TmWorkspace workspace) {
             workspaceLoaded(null);
@@ -110,6 +112,19 @@ public class PanelController {
 
         @Override
         public void spatialIndexReady(TmWorkspace workspace) {
+        }
+        
+        @Override
+        public void bulkNeuronsChanged(List<TmNeuronMetadata> addList, List<TmNeuronMetadata> deleteList) {
+            TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
+            for (TmNeuronMetadata neuron : addList) {
+                filteredAnnotationList.loadNeuron(neuron);
+            }
+
+            for (TmNeuronMetadata neuron : deleteList) {
+                wsNeuronList.deleteFromModel(neuron);
+            }
+            wsNeuronList.loadWorkspace(workspace);
         }
         
         @Override
@@ -179,6 +194,11 @@ public class PanelController {
         @Override
         public void neuronTagsChanged(List<TmNeuronMetadata> neuronList) {
             wsNeuronList.neuronTagsChanged(neuronList);
+        }
+
+        @Override
+        public void neuronSpatialFilterUpdated(boolean enabled, NeuronSpatialFilter filter) {
+            wsNeuronList.updateNeuronSpatialFilter(enabled, filter);
         }
 
     }

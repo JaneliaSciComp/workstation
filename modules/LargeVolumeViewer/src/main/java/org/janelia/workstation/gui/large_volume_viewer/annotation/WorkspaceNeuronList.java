@@ -80,6 +80,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private JTextField ignoreField;
     private JComboBox<String> tagModeMenu;
     private JComboBox<String> tagMenu;
+    private JLabel spatialFilterLabel = new JLabel("Disabled");
 
     private AnnotationManager annotationManager;
     private AnnotationModel annotationModel;
@@ -439,6 +440,13 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         // same packing behavior as text filter panel
         add(tagFilterPanel, c3);
 
+        // spatial filter
+        JPanel spatialFilterPanel = new JPanel();
+        spatialFilterPanel.setLayout(new BoxLayout(spatialFilterPanel, BoxLayout.LINE_AXIS));
+        spatialFilterPanel.add(new JLabel("Spatial filter: "));
+        spatialFilterPanel.add(spatialFilterLabel);
+        add(spatialFilterPanel, c3);
+
         loadWorkspace(null);
     }
 
@@ -568,9 +576,20 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     private void updateNeuronLabel() {
-        neuronLabel.setText(String.format("Neurons (showing %s/%s)",
-            neuronTable.getRowCount(), neuronTableModel.getTotalNeuronCount()));
-        
+        int showing = neuronTable.getRowCount();
+        int loaded = neuronTableModel.getTotalNeuronCount();
+        int total = annotationModel.getNumTotalNeurons();
+
+        neuronLabel.setText(String.format("Neurons (%s/%s/%s)", showing, loaded, total));
+        neuronLabel.setToolTipText(String.format("%s in table/%s in memory/%s total", showing, loaded, total));
+    }
+
+    public void updateNeuronSpatialFilter(boolean enabled, NeuronSpatialFilter filter) {
+        if (enabled) {
+            spatialFilterLabel.setText(filter.getLabel());
+        } else {
+            spatialFilterLabel.setText("Disabled");
+        }
     }
 
     /**

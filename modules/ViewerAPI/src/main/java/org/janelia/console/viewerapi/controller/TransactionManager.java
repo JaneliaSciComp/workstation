@@ -67,7 +67,8 @@ public class TransactionManager {
             } else {
                 argList = (List)meta;
             }
-            argList.add(arg);
+            if (arg!=null)
+                argList.add(arg);
             delayedItems.get(observer).put("meta", argList);
         } else {
             delayedItems.put(observer, arguments);
