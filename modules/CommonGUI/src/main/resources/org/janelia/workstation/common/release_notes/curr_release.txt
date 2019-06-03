@@ -12,3 +12,6 @@ Data Browser
 MouseLight Tools
 * Both Horta and LVV were modified to pull data from the JADE storage service, eliminating the previous
   dependency on internal Samba drive mounts. It is no longer necessary to mount external drives to use these tools.
+
+Horta
+* Import/export color model dialogs default to standard folder on shared drive
