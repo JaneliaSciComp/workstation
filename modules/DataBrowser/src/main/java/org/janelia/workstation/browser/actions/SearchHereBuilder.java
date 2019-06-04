@@ -11,6 +11,7 @@ import org.janelia.workstation.browser.gui.components.DomainListViewManager;
 import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
+import org.janelia.workstation.browser.gui.options.BrowserOptions;
 import org.janelia.workstation.common.actions.DomainObjectNodeAction;
 import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
@@ -34,7 +35,8 @@ public class SearchHereBuilder implements ContextualActionBuilder {
     @Override
     public boolean isCompatible(Object obj) {
         // Only show search here if the user enables advanced features
-        return (obj instanceof TreeNode || obj instanceof Filter);
+        return BrowserOptions.getInstance().isShowSearchHere()
+                && (obj instanceof TreeNode || obj instanceof Filter);
     }
 
     @Override

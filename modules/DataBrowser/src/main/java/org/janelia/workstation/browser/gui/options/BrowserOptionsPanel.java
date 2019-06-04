@@ -19,7 +19,8 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
 
     private final BrowserOptionsPanelController controller;
     private final GroupedKeyValuePanel mainPanel;
-    
+
+    private JCheckBox searchHereCheckbox;
     private JCheckBox unloadImagesCheckbox;
     private JCheckBox disableImageDrag;
     private JCheckBox allowDuplicateAnnotations;
@@ -69,6 +70,15 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
         mainPanel.removeAll();
 
         mainPanel.addSeparator("Image Browser");
+
+        // Search here
+
+        searchHereCheckbox = new JCheckBox();
+        searchHereCheckbox.setText("Show right-click Search Here option");
+        searchHereCheckbox.addActionListener(evt -> controller.changed());
+        searchHereCheckbox.setSelected(BrowserOptions.getInstance().isShowSearchHere());
+
+        mainPanel.addItem(searchHereCheckbox);
 
         // Unload Images
 
@@ -123,6 +133,7 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
     }
 
     void store() {
+        BrowserOptions.getInstance().setShowSearchHere(searchHereCheckbox.isSelected());
         BrowserOptions.getInstance().setUnloadImages(unloadImagesCheckbox.isSelected());
         BrowserOptions.getInstance().setDragAndDropDisabled(disableImageDrag.isSelected());
         BrowserOptions.getInstance().setDuplicateAnnotationAllowed(allowDuplicateAnnotations.isSelected());

@@ -19,6 +19,7 @@ public class BrowserOptions {
     public static final String DUPLICATE_ANNOTATIONS_PROPERTY = "SessionMgr.AllowDuplicateAnnotationsProperty";
     public static final String SHOW_ANNOTATION_TABLES_PROPERTY = "SessionMgr.ShowAnnotationTablesProperty";
     public static final String ANNOTATION_TABLES_HEIGHT_PROPERTY = "SessionMgr.AnnotationTablesHeightProperty";
+    public static final String SHOW_SEARCH_HERE = "SessionMgr.ShowSearchHereProperty";
 
     private static BrowserOptions instance;
 
@@ -89,8 +90,15 @@ public class BrowserOptions {
         log.info("Set annotation tables = {}", value);
     }
 
+    public boolean isShowSearchHere() {
+        return FrameworkAccess.getModelProperty(SHOW_SEARCH_HERE, Boolean.FALSE);
+    }
 
-
-
+    public void setShowSearchHere(boolean value) {
+        boolean oldVal = isShowAnnotationTables();
+        if (oldVal == value) return;
+        FrameworkAccess.setModelProperty(SHOW_SEARCH_HERE, value);
+        log.info("Set search here = {}", value);
+    }
 
 }
