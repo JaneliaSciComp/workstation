@@ -17,7 +17,7 @@ import org.openide.util.lookup.ServiceProvider;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ServiceProvider(service = ContextualActionBuilder.class, position = 510)
-public class RerunSamplesBuilder implements ContextualActionBuilder {
+public class MarkSamplesForReprocessingBuilder implements ContextualActionBuilder {
 
     private static final RerunSamplesActionHarness action = new RerunSamplesActionHarness();
 
@@ -33,7 +33,7 @@ public class RerunSamplesBuilder implements ContextualActionBuilder {
 
     public static class RerunSamplesActionHarness extends DomainObjectNodeAction {
 
-        private RerunSamplesAction innerAction;
+        private MarkSamplesForReprocessingAction innerAction;
 
         @Override
         public String getName() {
@@ -43,7 +43,7 @@ public class RerunSamplesBuilder implements ContextualActionBuilder {
         @Override
         public void setViewerContext(ViewerContext viewerContext) {
             Collection<DomainObject> domainObjects = DomainUIUtils.getSelectedDomainObjects(viewerContext);
-            this.innerAction = RerunSamplesAction.createAction(domainObjects);
+            this.innerAction = MarkSamplesForReprocessingAction.createAction(domainObjects);
             if (innerAction!=null) {
                 ContextualActionUtils.setName(this, (String) innerAction.getValue(Action.NAME));
                 ContextualActionUtils.setVisible(this, true);

@@ -42,9 +42,9 @@ import java.util.List;
 /**
  * Created by fosterl on 8/15/2016.
  */
-public class RerunSamplesAction extends AbstractAction {
+public class MarkSamplesForReprocessingAction extends AbstractAction {
 
-    private static final Logger log = LoggerFactory.getLogger(RerunSamplesAction.class);
+    private static final Logger log = LoggerFactory.getLogger(MarkSamplesForReprocessingAction.class);
     
     private static final int MAX_SAMPLE_RERUN_COUNT = 10;
     private final List<Sample> samples;
@@ -56,8 +56,8 @@ public class RerunSamplesAction extends AbstractAction {
      * @param selectedObjects containing 1-10 samples.
      * @return named action or null.
      */
-    public static RerunSamplesAction createAction(Collection<DomainObject> selectedObjects) {
-        RerunSamplesAction action = null;
+    public static MarkSamplesForReprocessingAction createAction(Collection<DomainObject> selectedObjects) {
+        MarkSamplesForReprocessingAction action = null;
         List<Sample> samples = new ArrayList<>();
         for (DomainObject re : selectedObjects) {
             if (re == null) {
@@ -81,7 +81,7 @@ public class RerunSamplesAction extends AbstractAction {
             }
         }
         if (!samples.isEmpty()) {
-            action = new RerunSamplesAction(samples);
+            action = new MarkSamplesForReprocessingAction(samples);
         }
         return action;
     }
@@ -92,7 +92,7 @@ public class RerunSamplesAction extends AbstractAction {
      *
      * @param samples what to re-run.
      */
-    private RerunSamplesAction(List<Sample> samples) {
+    private MarkSamplesForReprocessingAction(List<Sample> samples) {
         super(getName(samples));
         this.samples = samples;
     }
@@ -192,7 +192,7 @@ public class RerunSamplesAction extends AbstractAction {
         
         private boolean returnValue;
         
-        public ReprocessingDialog(String okButtonName) {
+        ReprocessingDialog(String okButtonName) {
             
             setTitle("Reprocess Samples");
             setLayout(new BorderLayout());
@@ -201,18 +201,23 @@ public class RerunSamplesAction extends AbstractAction {
             mainPanel.addSeparator("Reuse existing results");
             
             this.reuseSummaryCheckbox = new JCheckBox();
+            reuseSummaryCheckbox.setSelected(true);
             mainPanel.addItem("LSM Summary", reuseSummaryCheckbox);
             
             this.reuseProcessingCheckbox = new JCheckBox();
+            reuseProcessingCheckbox.setSelected(true);
             mainPanel.addItem("Sample Processing", reuseProcessingCheckbox);
             
             this.reusePostCheckbox = new JCheckBox();
+            reusePostCheckbox.setSelected(true);
             mainPanel.addItem("Post-Processing", reusePostCheckbox);
             
             this.reuseAlignmentCheckbox = new JCheckBox();
+            reuseAlignmentCheckbox.setSelected(true);
             mainPanel.addItem("Alignment", reuseAlignmentCheckbox);
 
             this.reuseSeparationCheckbox = new JCheckBox();
+            reuseSeparationCheckbox.setSelected(true);
             mainPanel.addItem("Separation", reuseSeparationCheckbox);
             
             mainPanel.addSeparator("Other options");
