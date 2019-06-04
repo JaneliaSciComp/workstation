@@ -1,5 +1,11 @@
 package org.janelia.workstation.browser.actions;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.swing.ProgressMonitor;
+
 import com.google.common.collect.Multimap;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.model.domain.DomainObject;
@@ -14,6 +20,7 @@ import org.janelia.model.domain.ontology.OntologyTermReference;
 import org.janelia.model.security.util.PermissionTemplate;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.ontology.AnnotationEditor;
+import org.janelia.workstation.browser.gui.options.BrowserOptions;
 import org.janelia.workstation.browser.nodes.OntologyTermNode;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -27,13 +34,6 @@ import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.ProgressMonitor;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import static org.janelia.workstation.core.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
 
 /**
  * Create an annotation by applying the current ontology term to the 
@@ -186,11 +186,9 @@ public class ApplyAnnotationAction extends NodeAction {
         List<Annotation> createdAnnotations = new ArrayList<>();
         int i = 1;
         for (DomainObject domainObject : domainObjects) {
-            
-            Boolean allowDups = (Boolean) FrameworkAccess.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY);
 
             Annotation existingAnnotation = null;
-            if (allowDups==null || !allowDups) {
+            if (!BrowserOptions.getInstance().isDuplicateAnnotationAllowed()) {
                 
                 Collection<Annotation> annotations = annotationMap.get(domainObject.getId());
                 if (annotations!=null) {

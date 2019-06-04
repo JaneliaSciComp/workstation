@@ -21,6 +21,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
+import org.janelia.workstation.browser.gui.options.BrowserOptions;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.lifecycle.SessionEvent;
@@ -524,11 +525,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         imagesPanel.setImageObjects(objects);
 
         // Update preferences for each button
-        Boolean tagTable = (Boolean) FrameworkAccess.getModelProperty(
-                OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY);
-        if (tagTable == null) {
-            tagTable = false;
-        }
+        boolean tagTable = BrowserOptions.getInstance().isShowAnnotationTables();
 
         imagesPanel.setTagTable(tagTable);
         imagesPanel.setTagVisbility(toolbar.areTagsVisible());
@@ -633,10 +630,10 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     public void prefChange(LocalPreferenceChanged event) {
 
         Object key = event.getKey();
-        if (OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
+        if (BrowserOptions.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
             refresh();
         }
-        else if (OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY.equals(key)) {
+        else if (BrowserOptions.ANNOTATION_TABLES_HEIGHT_PROPERTY.equals(key)) {
             int tableHeight = (Integer) event.getNewValue();
             if (currTableHeight == tableHeight) {
                 return;

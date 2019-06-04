@@ -66,11 +66,6 @@ public class StateMgr {
         log.info("Initializing State Manager");
         this.legacyFacade = new LegacyFacadeImpl();
         try {
-
-            
-            if (FrameworkAccess.getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
-                FrameworkAccess.setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
-            }
     
             if (FrameworkAccess.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D) == null) {
                 FrameworkAccess.setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());

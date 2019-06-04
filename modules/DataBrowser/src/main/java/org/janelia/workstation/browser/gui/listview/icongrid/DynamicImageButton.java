@@ -9,6 +9,7 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
 import loci.formats.FormatException;
+import org.janelia.workstation.browser.gui.options.BrowserOptions;
 import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -191,8 +192,7 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
     }
 
     private boolean isUnloadImages() {
-        Boolean unloadImagesBool = (Boolean) FrameworkAccess.getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY);
-        return unloadImagesBool != null && unloadImagesBool;
+        return BrowserOptions.getInstance().isUnloadImages();
     }
 
     private BufferedImage getMaxSizeImage() {

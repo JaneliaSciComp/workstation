@@ -33,7 +33,8 @@ public class SearchHereBuilder implements ContextualActionBuilder {
 
     @Override
     public boolean isCompatible(Object obj) {
-        return obj instanceof TreeNode || obj instanceof Filter;
+        // Only show search here if the user enables advanced features
+        return (obj instanceof TreeNode || obj instanceof Filter);
     }
 
     @Override

@@ -1,22 +1,13 @@
 package org.janelia.workstation.browser.gui.options;
 
-import static org.janelia.workstation.core.options.OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY;
-import static org.janelia.workstation.core.options.OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY;
-import static org.janelia.workstation.core.options.OptionConstants.DUPLICATE_ANNOTATIONS_PROPERTY;
-import static org.janelia.workstation.core.options.OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY;
-import static org.janelia.workstation.core.options.OptionConstants.UNLOAD_IMAGES_PROPERTY;
-
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import javax.swing.JCheckBox;
 import javax.swing.JSlider;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.listview.icongrid.ImagesPanel;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
 import org.slf4j.Logger;
@@ -83,16 +74,8 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
 
         unloadImagesCheckbox = new JCheckBox();
         unloadImagesCheckbox.setText("Unload images which are not visible on the screen");
-        unloadImagesCheckbox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                controller.changed();
-            }
-        });
-
-        if (FrameworkAccess.getModelProperty(UNLOAD_IMAGES_PROPERTY) == null) {
-            FrameworkAccess.setModelProperty(UNLOAD_IMAGES_PROPERTY, Boolean.FALSE);
-        }
-        unloadImagesCheckbox.setSelected((Boolean) FrameworkAccess.getModelProperty(UNLOAD_IMAGES_PROPERTY));
+        unloadImagesCheckbox.addActionListener(evt -> controller.changed());
+        unloadImagesCheckbox.setSelected(BrowserOptions.getInstance().isUnloadImages());
 
         mainPanel.addItem(unloadImagesCheckbox);
 
@@ -100,16 +83,8 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
         
         disableImageDrag = new JCheckBox();
         disableImageDrag.setText("Disable drag and drop in the image viewer");
-        disableImageDrag.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                controller.changed();
-            }
-        });
-
-        if (FrameworkAccess.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY) == null) {
-            FrameworkAccess.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, Boolean.FALSE);
-        }
-        disableImageDrag.setSelected((Boolean) FrameworkAccess.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY));
+        disableImageDrag.addActionListener(evt -> controller.changed());
+        disableImageDrag.setSelected(BrowserOptions.getInstance().isDragAndDropDisabled());
 
         mainPanel.addItem(disableImageDrag);
 
@@ -117,15 +92,8 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
         
         allowDuplicateAnnotations = new JCheckBox();
         allowDuplicateAnnotations.setText("Allow duplicate annotations on a single item");
-        allowDuplicateAnnotations.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                controller.changed();
-            }
-        });
-        if (FrameworkAccess.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY) == null) {
-            FrameworkAccess.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, Boolean.FALSE);
-        }
-        allowDuplicateAnnotations.setSelected((Boolean) FrameworkAccess.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY));
+        allowDuplicateAnnotations.addActionListener(evt -> controller.changed());
+        allowDuplicateAnnotations.setSelected(BrowserOptions.getInstance().isDuplicateAnnotationAllowed());
      
         mainPanel.addItem(allowDuplicateAnnotations);
         
@@ -136,10 +104,7 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
         showAnnotationTables.addActionListener((e) -> {
             controller.changed();
         });
-        if (FrameworkAccess.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY) == null) {
-            FrameworkAccess.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, Boolean.FALSE);
-        }
-        showAnnotationTables.setSelected((Boolean) FrameworkAccess.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
+        showAnnotationTables.setSelected(BrowserOptions.getInstance().isShowAnnotationTables());
 
         mainPanel.addItem(showAnnotationTables);
 
@@ -152,40 +117,17 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
             controller.changed();
         });
 
-        if (FrameworkAccess.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY) == null) {
-            FrameworkAccess.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
-        }
-        annotationTableHeight.setValue((Integer) FrameworkAccess.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));
+        annotationTableHeight.setValue(BrowserOptions.getInstance().getAnnotationTableHeight());
 
         mainPanel.addItem("Annotation table height", annotationTableHeight);
     }
 
     void store() {
-
-        if (unloadImagesCheckbox.isSelected() != (Boolean) FrameworkAccess.getModelProperty(UNLOAD_IMAGES_PROPERTY)) {
-            log.info("Saving unload images setting: {}", unloadImagesCheckbox.isSelected());
-            FrameworkAccess.setModelProperty(UNLOAD_IMAGES_PROPERTY, unloadImagesCheckbox.isSelected());
-        }
-
-        if (disableImageDrag.isSelected() != (Boolean) FrameworkAccess.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY)) {
-            log.info("Saving disable image drag: {}", disableImageDrag.isSelected());
-            FrameworkAccess.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, disableImageDrag.isSelected());
-        }
-
-        if (allowDuplicateAnnotations.isSelected() != (Boolean) FrameworkAccess.getModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY)) {
-            log.info("Saving allow annotation duplicates: {}", allowDuplicateAnnotations.isSelected());
-            FrameworkAccess.setModelProperty(DUPLICATE_ANNOTATIONS_PROPERTY, allowDuplicateAnnotations.isSelected());
-        }
-        
-        if (showAnnotationTables.isSelected() != (Boolean) FrameworkAccess.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY)) {
-            log.info("Saving show annotation tables: {}", showAnnotationTables.isSelected());
-            FrameworkAccess.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, showAnnotationTables.isSelected());
-        }
-
-        if (annotationTableHeight.getValue() != (Integer) FrameworkAccess.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY)) {
-            log.info("Saving annotation table height: {}", annotationTableHeight.getValue());
-            FrameworkAccess.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, annotationTableHeight.getValue());
-        }
+        BrowserOptions.getInstance().setUnloadImages(unloadImagesCheckbox.isSelected());
+        BrowserOptions.getInstance().setDragAndDropDisabled(disableImageDrag.isSelected());
+        BrowserOptions.getInstance().setDuplicateAnnotationAllowed(allowDuplicateAnnotations.isSelected());
+        BrowserOptions.getInstance().setShowAnnotationTables(showAnnotationTables.isSelected());
+        BrowserOptions.getInstance().setAnnotationTableHeight(annotationTableHeight.getValue());
     }
 
     boolean valid() {
