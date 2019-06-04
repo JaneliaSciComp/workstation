@@ -6,7 +6,9 @@ import java.beans.PropertyDescriptor;
 import java.util.Set;
 
 import javax.swing.AbstractCellEditor;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -44,7 +46,7 @@ public class NewGroupPanel extends JPanel {
 
         setLayout(new BorderLayout());
 
-        JPanel titlePanel = new TitlePanel("User List", "Return To Group List", event -> returnHome());
+        JPanel titlePanel = new TitlePanel("New Group", "Return To Group List", event -> returnHome());
         add(titlePanel, BorderLayout.PAGE_START);
         
         newGroupTableModel = new NewGroupTableModel();
@@ -61,7 +63,13 @@ public class NewGroupPanel extends JPanel {
 
         JPanel actionPanel = new ActionPanel();
         actionPanel.add(saveUserButton);
-        add(actionPanel, BorderLayout.PAGE_END);
+
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.setLayout(new BorderLayout());
+        bottomPanel.add(new JLabel("* Required fields"), BorderLayout.NORTH);
+        bottomPanel.add(actionPanel, BorderLayout.SOUTH);
+
+        add(bottomPanel, BorderLayout.PAGE_END);
     }
     
     public void createGroup () {
@@ -96,8 +104,8 @@ public class NewGroupPanel extends JPanel {
     class NewGroupTableModel extends AbstractTableModel {
         String[] columnNames = {"Property","Value"};
         Group group;
-        String[] editProperties = {"LdapGroupName", "Name", "FullName"};
-        String[] editLabels = {"LdapGroupName", "Name", "FullName"};
+        String[] editProperties = {"Name", "FullName", "LdapGroupName"};
+        String[] editLabels = {"Name *", "Full Name *", "LDAP/AD Group Name"};
         String[] values = new String[editProperties.length];
                 
         @Override
