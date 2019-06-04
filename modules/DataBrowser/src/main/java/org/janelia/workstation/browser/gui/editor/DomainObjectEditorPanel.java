@@ -100,7 +100,9 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T> extends
                     // Restore viewer state
                     getResultsPanel().getViewer().restoreState(state.getListViewerState());
                     // Restore selection
-                    getResultsPanel().getViewer().select(new ArrayList<>(selectedObjects), true, true, false, false);
+                    if (selectedObjects!=null && !selectedObjects.isEmpty()) {
+                        getResultsPanel().getViewer().select(new ArrayList<>(selectedObjects), true, true, false, false);
+                    }
                 }
                 return null;
             }
