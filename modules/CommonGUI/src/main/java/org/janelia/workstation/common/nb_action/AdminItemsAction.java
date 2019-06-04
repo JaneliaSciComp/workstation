@@ -64,7 +64,7 @@ public final class AdminItemsAction extends AbstractAction implements Presenter.
 
                 this.itemCache = new ArrayList<>();
                 Collection<? extends AdminActionBuilder> builders = Lookup.getDefault().lookupAll(AdminActionBuilder.class);
-                log.info("Found {} admin action builders", builders.size());
+                log.debug("Found {} admin action builders", builders.size());
 
                 for (AdminActionBuilder builder : builders) {
 
@@ -76,7 +76,7 @@ public final class AdminItemsAction extends AbstractAction implements Presenter.
                     }
 
                     if (builder.isPrecededBySeparator()) {
-                        log.info("  Adding pre-separator");
+                        log.debug("  Adding pre-separator");
                         itemCache.add(new JSeparator());
                     }
 
@@ -84,25 +84,25 @@ public final class AdminItemsAction extends AbstractAction implements Presenter.
                         // If the action has a popup generator, use that
                         JMenuItem popupPresenter = ((PopupMenuGenerator) action).getPopupPresenter();
                         if (popupPresenter != null) {
-                            log.info("  Adding popup presenter");
+                            log.debug("  Adding popup presenter");
                             itemCache.add(popupPresenter);
                         }
                         else {
-                            log.info("  Popup presenter was null, falling back on wrapping action in menu item");
+                            log.debug("  Popup presenter was null, falling back on wrapping action in menu item");
                             JMenuItem item = new JMenuItem(action);
                             itemCache.add(item);
                         }
                     }
                     else {
                         // Otherwise, just wrap the action
-                        log.info("  Wrapping action in menu item");
+                        log.debug("  Wrapping action in menu item");
                         JMenuItem item = new JMenuItem(action);
                         itemCache.add(item);
                     }
 
 
                     if (builder.isSucceededBySeparator()) {
-                        log.info("  Adding post-separator");
+                        log.debug("  Adding post-separator");
                         itemCache.add(new JSeparator());
                     }
                 }

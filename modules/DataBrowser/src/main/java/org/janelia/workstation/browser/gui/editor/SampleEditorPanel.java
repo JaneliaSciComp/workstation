@@ -406,7 +406,7 @@ public class SampleEditorPanel
         synchronized (this) {
             this.containers = new HashMap<>();
             for (ContainerizedService container : DomainMgr.getDomainMgr().getModel().getContainerizedServices()) {
-                log.info("Found service '{}' ({})", container.getName(), container.getId());
+                log.debug("Found service '{}' ({})", container.getName(), container.getId());
                 containers.put(container.getId(), container);
             }
         }

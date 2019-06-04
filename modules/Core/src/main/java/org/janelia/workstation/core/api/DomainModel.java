@@ -672,7 +672,7 @@ public class DomainModel {
     public List<ContainerizedService> getContainerizedServices() {
         synchronized (modelLock) {
             if (containerCache == null) {
-                log.debug("Getting containerized services from database");
+                log.info("Getting containerized services from database");
                 this.containerCache = new LinkedHashMap<>();
                 StopWatch w = TIMER ? new LoggingStopWatch() : null;
                 try {

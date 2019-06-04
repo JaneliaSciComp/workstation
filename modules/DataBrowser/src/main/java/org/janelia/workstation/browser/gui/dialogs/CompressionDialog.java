@@ -321,20 +321,14 @@ public class CompressionDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
-                try {
-                    HashSet<TaskParameter> taskParameters = new HashSet<>();
-                    taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
-                    taskParameters.add(new TaskParameter("target unaligned compression", targetUnalignedCompression, null));
-                    taskParameters.add(new TaskParameter("target aligned compression", targetAlignedCompression, null));
-                    taskParameters.add(new TaskParameter("target separation compression", targetSeparationCompression, null));
-                    task = StateMgr.getStateMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
-                    if (task==null) {
-                        throw new IllegalStateException("Task could not be submitted");
-                    }
-                }
-                catch (Exception e) {
-                    FrameworkAccess.handleException(e);
-                    return;
+                HashSet<TaskParameter> taskParameters = new HashSet<>();
+                taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
+                taskParameters.add(new TaskParameter("target unaligned compression", targetUnalignedCompression, null));
+                taskParameters.add(new TaskParameter("target aligned compression", targetAlignedCompression, null));
+                taskParameters.add(new TaskParameter("target separation compression", targetSeparationCompression, null));
+                task = StateMgr.getStateMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
+                if (task==null) {
+                    throw new IllegalStateException("Task could not be submitted");
                 }
             }
 
