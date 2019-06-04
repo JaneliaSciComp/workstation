@@ -18,6 +18,7 @@ import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -303,12 +304,28 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 try {
                     CompletableFuture<Boolean> future = annotationModel.getNeuronManager().requestOwnershipChange(neuron);
                     if (future == null) {
+                        presentError("Problem requesting ownership change for neuron " + neuron.getName() +
+                                ".", "Ownership change failed");
                         return false;
                     }
                     Boolean ownershipDecision = future.get(2, TimeUnit.SECONDS);
+                    if (!ownershipDecision) {
+                        presentError("Ownership change request for neuron " + neuron.getName() +
+                                " with current owner " + neuron.getOwnerName() +
+                                " rejected.", "Ownership change failed");
+                    }
                     return ownershipDecision.booleanValue();
+                } catch (TimeoutException e) {
+                    presentError("Ownership change request for neuron " + neuron.getName() +
+                            " apparently timed out. Check to see if operation actually succeeded.", "Ownership change timed out");
+                    String errorMessage = "Roundtrip request for ownership of System-owned neuron timed out";
+                    log.error(errorMessage);
+                    e.printStackTrace();
+                    FrameworkAccess.handleException(e);
                 } catch (Exception e) {
-                    String errorMessage = "Problems handling roundtrip request for ownership of System-owned neuron";
+                    presentError("Ownership change request for neuron " + neuron.getName() +
+                            " had an unknown failure.", "Ownership change failed");
+                    String errorMessage = "Unspecified problems handling roundtrip request for ownership of System-owned neuron";
                     log.error(errorMessage);
                     e.printStackTrace();
                     FrameworkAccess.handleException(e);
