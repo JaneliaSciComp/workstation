@@ -2,15 +2,6 @@
 
 // Imposter shader, from project at https://github.com/cmbruns/swcimposters
 
-/*
- * Copyright 2010 Howard Hughes Medical Institute.
- * All rights reserved.
- * Use is subject to Janelia Farm Research Campus Software Copyright 1.1
- * license terms ( http://license.janelia.org/license/jfrc_copyright_1_1.html ).
- */
-
-
-
 // TODO - parameterize these lighting parameters
 const float specularCoefficient = 0.1; // range 0-1
 const float diffuseCoefficient = 1.0 - specularCoefficient; // range 0-1
