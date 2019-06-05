@@ -1,20 +1,13 @@
 package org.janelia.workstation.gui.large_volume_viewer.launch;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.concurrent.CancellationException;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -25,6 +18,7 @@ import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
 import org.janelia.workstation.core.workers.BackgroundWorker;
+import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeRestClient;
 import org.janelia.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
@@ -71,8 +65,6 @@ public class LoadedWorkspaceCreator extends SimpleActionBuilder {
         final JDialog inputDialog = new JDialog(mainFrame, true);
         final JTextField pathTextField = new JTextField();
         final JCheckBox systemOwnerCheckbox = new JCheckBox();
-        final JLabel errorLabel = new JLabel("   ");
-        errorLabel.setForeground(Color.red);
         pathTextField.addKeyListener(new PathCorrectionKeyListener(pathTextField));
         pathTextField.setToolTipText("Backslashes will be converted to /.");
         final JLabel workspaceNameLabel = new JLabel("Workspace Name");
@@ -99,14 +91,12 @@ public class LoadedWorkspaceCreator extends SimpleActionBuilder {
         });
         buttonPanel.add(cancelButton, SystemInfo.isMac ? BorderLayout.LINE_START : BorderLayout.LINE_END);
         inputDialog.add(buttonPanel);
-        inputDialog.add(errorLabel);
 
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Send path to linux.");
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
-                errorLabel.setText("");
                 String temp = pathTextField.getText().trim().replace("\\", "/");
                 pathTextField.setText(temp); // Show user what we try
                 StringBuilder bldr = new StringBuilder();
@@ -128,7 +118,11 @@ public class LoadedWorkspaceCreator extends SimpleActionBuilder {
                 TiledMicroscopeRestClient cf = new TiledMicroscopeRestClient();
                 String swcFolder = bldr.toString().trim();
                 if (! cf.isServerPathAvailable(swcFolder, true) ) {
-                    errorLabel.setText("'" + swcFolder + "' not found on server. Please Try again.");
+                    JOptionPane.showMessageDialog(
+                            ComponentUtil.getLVVMainWindow(),
+                            swcFolder + " not found on server.",
+                            "Error importing files",
+                            JOptionPane.ERROR_MESSAGE);
                 } else {
                     inputDialog.setVisible(false);
                     String neuronsOwnerKey;
