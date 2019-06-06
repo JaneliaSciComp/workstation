@@ -1,13 +1,15 @@
 // 8.1
   
 In this major release, the Workstation has been refactored to allow for containerized deployment and open source
-distribution. The full source code is now available on GitHub via the Janelia Open Source License:
+distribution. The full source code is now available on GitHub under the Janelia Open Source License:
 https://github.com/JaneliaSciComp/workstation
 
 Data Browser
 * Core browser functionality was refactored into multiple modules for better maintainability and extensibility.
+* The Workstation client is now able to connect to different backend servers (File->Connect)
+* You can show create and manage user groups using the Administration Tool (Window->Core)
 * Improved dependency management, application installers and distribution.
-* Many performance improvements and minor bug fixes
+* Many performance improvements and bug fixes
 
 MouseLight Tools
 * Both Horta and LVV were modified to pull data from the JADE storage service, eliminating the previous
