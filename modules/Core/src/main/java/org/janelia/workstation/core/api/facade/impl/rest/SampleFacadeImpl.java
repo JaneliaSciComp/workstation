@@ -26,23 +26,24 @@ import org.slf4j.LoggerFactory;
 
 public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
-    private static final Logger log = LoggerFactory.getLogger(SampleFacadeImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SampleFacadeImpl.class);
 
-    private WebTarget service;
+    private WebTarget domainService;
+    private WebTarget legacyDomainService;
     
     public SampleFacadeImpl() {
-        this(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"));
+        this(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"), ConsoleProperties.getInstance().getProperty("domain.facade.rest.legacyUrl"));
     }
 
-    public SampleFacadeImpl(String serverUrl) {
-        super(log);
-        log.debug("Using server URL: {}",serverUrl);
-        this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
+    private SampleFacadeImpl(String domainServiceURL, String legacyDomainServiceURL) {
+        super(LOG);
+        this.domainService = RestJsonClientManager.getInstance().getTarget(domainServiceURL, true);
+        this.legacyDomainService = RestJsonClientManager.getInstance().getTarget(legacyDomainServiceURL, true);
     }
     
     @Override
     public Collection<DataSet> getDataSets() throws Exception {
-        Response response = service.path("data/dataset")
+        Response response = getDomainService("data/dataset")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
@@ -57,7 +58,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(dataSet);
-        Response response = service.path("data/dataset")
+        Response response = getDomainService("data/dataset")
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createDataSet from server")) {
@@ -73,11 +74,10 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
         // TODO: this is a hack to allow admins to edit data sets. We need to implement a more comprehensive solution to this.
         if (AccessManager.getAccessManager().isAdmin()) {
             query.setSubjectKey(dataSet.getOwnerKey());
-        }
-        else {
+        } else {
             query.setSubjectKey(AccessManager.getSubjectKey());
         }
-        Response response = service.path("data/dataset")
+        Response response = getDomainService("data/dataset")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request updateDataSet to server: " + dataSet)) {
@@ -88,7 +88,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     @Override
     public void remove(DataSet dataSet) throws Exception {
-        Response response = service.path("data/dataset")
+        Response response = getDomainService("data/dataset")
                 .queryParam("dataSetId", dataSet.getId())
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
@@ -100,7 +100,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     @Override
     public Collection<LSMImage> getLsmsForSample(Long sampleId) throws Exception {
-        Response response = service.path("data/sample/lsms")
+        Response response = getDomainService("data/sample/lsms")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("sampleId", sampleId)
                 .request("application/json")
@@ -113,7 +113,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     @Override
     public List<LineRelease> getLineReleases() throws Exception {
-        Response response = service.path("process/release")
+        Response response = getLegacyDomainService("process/release")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
@@ -135,7 +135,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
         query.setDomainObject(release);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = service.path("process/release")
+        Response response = getLegacyDomainService("process/release")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createLineRelease to server: " + release)) {
@@ -149,7 +149,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(release);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = service.path("process/release")
+        Response response = getLegacyDomainService("process/release")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request updateLineRelease to server: " + release)) {
@@ -160,7 +160,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     @Override
     public void remove(LineRelease release) throws Exception {
-        Response response = service.path("process/release")
+        Response response = getLegacyDomainService("process/release")
                 .queryParam("releaseId", release.getId())
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
@@ -172,7 +172,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     @Override
     public String dispatchSamples(SampleReprocessingRequest request) throws Exception {
-        Response response = service.path("process/sample/reprocess")
+        Response response = getLegacyDomainService("process/sample/reprocess")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .post(Entity.json(request));
@@ -184,7 +184,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     @Override
     public Long dispatchTask(JsonTask task, String processName) throws Exception {
-        Response response = service.path("process/dispatch")
+        Response response = getLegacyDomainService("process/dispatch")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("processName", processName)
                 .request("application/json")
@@ -197,7 +197,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
     
     @Override
     public Collection<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception {
-        Response response = service.path("data/dataset/colordepth")
+        Response response = getDomainService("data/dataset/colordepth")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("alignmentSpace", alignmentSpace)
                 .request("application/json")
@@ -208,4 +208,11 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
         return response.readEntity(new GenericType<List<DataSet>>() {});
     }
 
+    private WebTarget getDomainService(String path) {
+        return domainService.path(path);
+    }
+
+    private WebTarget getLegacyDomainService(String path) {
+        return legacyDomainService.path(path);
+    }
 }

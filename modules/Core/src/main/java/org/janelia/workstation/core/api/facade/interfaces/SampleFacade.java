@@ -21,7 +21,7 @@ public interface SampleFacade {
      * Returns all of the datas ets that the current user owns.
      * @return list of data sets
      */
-    public Collection<DataSet> getDataSets() throws Exception;
+    Collection<DataSet> getDataSets() throws Exception;
 
     /**
      * Create a new data set.
@@ -29,7 +29,7 @@ public interface SampleFacade {
      * @return the saved data set
      * @throws Exception
      */
-    public DataSet create(DataSet dataSet) throws Exception;
+    DataSet create(DataSet dataSet) throws Exception;
 
     /**
      * Update and return the given data set.
@@ -37,26 +37,26 @@ public interface SampleFacade {
      * @return the saved data set
      * @throws Exception
      */
-    public DataSet update(DataSet dataSet) throws Exception;
+    DataSet update(DataSet dataSet) throws Exception;
     
     /**
      * Remove the given domainobject.
      * @param dataSet domainobject to remove
      * @throws Exception something went wrong
      */
-    public void remove(DataSet dataSet) throws Exception;
+    void remove(DataSet dataSet) throws Exception;
     
     /**
      * Returns all of the LSM images for a given sample. 
      * @return list of LSM images
      */
-    public Collection<LSMImage> getLsmsForSample(Long sampleId) throws Exception;
+    Collection<LSMImage> getLsmsForSample(Long sampleId) throws Exception;
 
     /**
      * Returns all the line releases.
      * @return
      */
-    public List<LineRelease> getLineReleases() throws Exception;
+    List<LineRelease> getLineReleases() throws Exception;
 
     /**
      * Creates a new line release.
@@ -67,7 +67,7 @@ public interface SampleFacade {
      * @return the saved line release
      * @throws Exception
      */
-    public LineRelease createLineRelease(String name, Date releaseDate, Integer lagTimeMonths, List<String> dataSets) throws Exception;
+    LineRelease createLineRelease(String name, Date releaseDate, Integer lagTimeMonths, List<String> dataSets) throws Exception;
 
     /**
      * Update and return the given line release.
@@ -75,20 +75,20 @@ public interface SampleFacade {
      * @return the saved line release
      * @throws Exception
      */
-    public LineRelease update(LineRelease release) throws Exception;
+    LineRelease update(LineRelease release) throws Exception;
 
     /**
      * Remove the given line release.
      * @param release a line release object with GUID populated
      * @throws Exception
      */
-    public void remove(LineRelease release) throws Exception;
+    void remove(LineRelease release) throws Exception;
 
     /**
      * Dispatches the given samples for processing.
      * @throws Exception
      */
-    public String dispatchSamples(SampleReprocessingRequest request) throws Exception;
+    String dispatchSamples(SampleReprocessingRequest request) throws Exception;
     
     /**
      * Dispatches the given task using legacy JACSv1.
@@ -97,12 +97,12 @@ public interface SampleFacade {
      * @return
      * @throws Exception
      */
-    public Long dispatchTask(JsonTask task, String processName) throws Exception;
+    Long dispatchTask(JsonTask task, String processName) throws Exception;
     
     /**
      * Returns the list of data sets available for color depth search in a given alignment space.
      * @return
      * @throws Exception
      */
-    public Collection<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception;
+    Collection<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception;
 }
