@@ -113,7 +113,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     @Override
     public List<LineRelease> getLineReleases() throws Exception {
-        Response response = getLegacyDomainService("process/release")
+        Response response = getDomainService("process/release")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
@@ -135,7 +135,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
         query.setDomainObject(release);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = getLegacyDomainService("process/release")
+        Response response = getDomainService("process/release")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createLineRelease to server: " + release)) {
@@ -149,7 +149,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(release);
         query.setSubjectKey(AccessManager.getSubjectKey());
-        Response response = getLegacyDomainService("process/release")
+        Response response = getDomainService("process/release")
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request updateLineRelease to server: " + release)) {
@@ -160,7 +160,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     @Override
     public void remove(LineRelease release) throws Exception {
-        Response response = getLegacyDomainService("process/release")
+        Response response = getDomainService("process/release")
                 .queryParam("releaseId", release.getId())
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
