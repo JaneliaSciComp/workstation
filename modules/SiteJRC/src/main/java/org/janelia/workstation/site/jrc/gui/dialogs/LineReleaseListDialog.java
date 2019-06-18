@@ -113,7 +113,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
                     final LineRelease release = (LineRelease) getRows().get(table.getSelectedRow()).getUserObject();
 
-                    JMenuItem editItem = new JMenuItem("  Edit");
+                    JMenuItem editItem = new JMenuItem("Edit");
                     editItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -122,7 +122,7 @@ public class LineReleaseListDialog extends ModalDialog {
                     });
                     menu.add(editItem);
 
-                    JMenuItem deleteItem = new JMenuItem("  Delete");
+                    JMenuItem deleteItem = new JMenuItem("Delete");
                     deleteItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {

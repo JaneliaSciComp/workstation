@@ -93,7 +93,7 @@ public class GroupContextMenu extends PopupContextMenu {
         
         if (proxyObject instanceof HasFilepath) {
             
-            JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
+            JMenuItem toggleHudMI = new JMenuItem("Show in Lightbox");
             toggleHudMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
             toggleHudMI.addActionListener(new ActionListener() {
                 @Override

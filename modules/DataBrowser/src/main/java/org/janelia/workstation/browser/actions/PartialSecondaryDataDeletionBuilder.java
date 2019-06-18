@@ -114,7 +114,7 @@ public class PartialSecondaryDataDeletionBuilder implements ContextualActionBuil
             JMenuItem rtnVal = null;
             if (samples.size() == 1) {
                 final Sample sample = samples.get(0);
-                rtnVal = new JMenuItem("  " + WHOLE_AA_REMOVAL_MSG);
+                rtnVal = new JMenuItem(WHOLE_AA_REMOVAL_MSG);
                 rtnVal.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent ae) {
                         SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
@@ -135,7 +135,7 @@ public class PartialSecondaryDataDeletionBuilder implements ContextualActionBuil
             JMenuItem rtnVal = null;
             if (samples.size() == 1) {
                 final Sample sample = samples.get(0);
-                rtnVal = new JMenuItem("  " + STITCHED_IMG_REMOVAL_MSG);
+                rtnVal = new JMenuItem( STITCHED_IMG_REMOVAL_MSG);
                 rtnVal.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent ae) {
                         SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
@@ -155,7 +155,7 @@ public class PartialSecondaryDataDeletionBuilder implements ContextualActionBuil
             JMenuItem rtnVal = null;
             if (samples.size() == 1) {
                 final Sample sample = (Sample)samples.get(0);
-                rtnVal = new JMenuItem("  " + NEURON_SEP_REMOVAL_MSG);
+                rtnVal = new JMenuItem(NEURON_SEP_REMOVAL_MSG);
                 rtnVal.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent ae) {
                         SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(

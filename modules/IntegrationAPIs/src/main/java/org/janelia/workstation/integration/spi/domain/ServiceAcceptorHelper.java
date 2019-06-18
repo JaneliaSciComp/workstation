@@ -1,7 +1,9 @@
 package org.janelia.workstation.integration.spi.domain;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.janelia.model.domain.DomainObject;
 import org.openide.util.Lookup;
@@ -28,6 +30,7 @@ public class ServiceAcceptorHelper {
      * @return a compatible handler for the criterion object.
      */
     public static <S, T extends Compatible<S>> Collection<T> findHandler(S criterion, Class<T> clazz) {
+        if (criterion==null || clazz==null) return Collections.emptyList();
         Collection<? extends T> candidates = Lookup.getDefault().lookupAll(clazz);
         Collection<T> rtnVal = new ArrayList<>();
         log.trace("Found {} handlers:", clazz.getSimpleName());

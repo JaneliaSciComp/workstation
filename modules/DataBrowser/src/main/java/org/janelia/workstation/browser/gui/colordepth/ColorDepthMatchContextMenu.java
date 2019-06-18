@@ -162,7 +162,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         if (item!=null) {
             // Override title to include the word "Sample" instead of generic "Item"
             String title = samples.size() > 1 ? "Add " + samples.size() + " Samples To Result Set" : "Add Sample To Result Set";
-            item.setText("  " + title);
+            item.setText(title);
         }
         return item;
     }
@@ -179,7 +179,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         if (item!=null) {
             // Override title to include the word "Sample" instead of generic "Item"
             String title = samples.size() > 1 ? "Add " + samples.size() + " Samples To Folder" : "Add Sample To Folder";
-            item.setText("  " + title);
+            item.setText(title);
         }
         return item;
     }

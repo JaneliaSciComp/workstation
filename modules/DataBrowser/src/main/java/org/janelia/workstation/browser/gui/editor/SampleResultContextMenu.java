@@ -131,7 +131,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
 
     protected JMenuItem getOpenResultsInNewViewerItem() {
         if (!(result instanceof HasFileGroups)) return null;
-        JMenuItem copyMenuItem = new JMenuItem("  Open Results In New Viewer");
+        JMenuItem copyMenuItem = new JMenuItem("Open Results In New Viewer");
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -146,7 +146,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
 
     protected JMenuItem getOpenSeparationInNewViewerItem() {
         if (result.getLatestSeparationResult()==null) return null;
-        JMenuItem copyMenuItem = new JMenuItem("  Open Neuron Separation In New Viewer");
+        JMenuItem copyMenuItem = new JMenuItem("Open Neuron Separation In New Viewer");
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -225,7 +225,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         final Sample sample = objectiveSample.getParent();
         final ArtifactDescriptor descriptor = new ResultArtifactDescriptor(result);
         
-        JMenuItem downloadItem = new JMenuItem("  Download...");
+        JMenuItem downloadItem = new JMenuItem("Download...");
         downloadItem.addActionListener(new DownloadWizardAction(Arrays.asList(sample), descriptor));
         
         if (path==null) {
@@ -241,7 +241,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         final String path = DomainUtils.getFilepath(result,FileType.AlignmentVerificationMovie);
         if (path==null) return null;
         
-        JMenuItem movieItem = new JMenuItem("  View Alignment Verification Movie");
+        JMenuItem movieItem = new JMenuItem("View Alignment Verification Movie");
         movieItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
                 OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(path);
@@ -253,7 +253,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getHudMenuItem() {
-        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
+        JMenuItem toggleHudMI = new JMenuItem("Show in Lightbox");
         toggleHudMI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

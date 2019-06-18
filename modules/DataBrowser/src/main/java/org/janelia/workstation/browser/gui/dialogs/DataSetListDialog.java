@@ -121,26 +121,26 @@ public class DataSetListDialog extends ModalDialog {
 
                     final DataSet dataSet = (DataSet) getRows().get(table.getSelectedRow()).getUserObject();
 
-                    JMenuItem editItem = new JMenuItem("  View Details");
+                    JMenuItem editItem = new JMenuItem("View Details");
                     editItem.addActionListener((e2) -> {
                         dataSetDialog.showForDataSet(dataSet);
                     });
                     menu.add(editItem);
 
-                    JMenuItem permItem = new JMenuItem("  Change Permissions");
+                    JMenuItem permItem = new JMenuItem("Change Permissions");
                     permItem.addActionListener((e2) -> {
                         detailsDialog.showForDomainObject(dataSet, DomainInspectorPanel.TAB_NAME_PERMISSIONS);
                     });
                     
                     menu.add(permItem);
 
-                    JMenuItem compItem = new JMenuItem("  Change Default Compression Strategy");
+                    JMenuItem compItem = new JMenuItem("Change Default Compression Strategy");
                     compItem.addActionListener((e2) -> {
                         compressionDialog.showForDataSet(dataSet);
                     });
                     menu.add(compItem);
                     
-                    JMenuItem deleteItem = new JMenuItem("  Delete");
+                    JMenuItem deleteItem = new JMenuItem("Delete");
                     deleteItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
