@@ -12,7 +12,6 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.workstation.common.actions.ViewerContextAction;
 import org.janelia.workstation.common.gui.util.DomainUIUtils;
-import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;

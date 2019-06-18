@@ -20,7 +20,6 @@ import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;
 import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
-import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

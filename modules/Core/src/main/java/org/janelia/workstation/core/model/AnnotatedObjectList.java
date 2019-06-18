@@ -23,7 +23,7 @@ public interface AnnotatedObjectList<T,S> {
     /**
      * Returns the annotations for the given object identifier. 
      * @param objectId unique identifier for the object
-     * @return anotations 
+     * @return annotations
      */
     public List<Annotation> getAnnotations(S objectId);
     

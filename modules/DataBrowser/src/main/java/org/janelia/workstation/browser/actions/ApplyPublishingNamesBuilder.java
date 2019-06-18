@@ -4,15 +4,12 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.nb_action.ApplyPublishingNamesAction;
 import org.janelia.workstation.common.actions.ViewerContextAction;
 import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;

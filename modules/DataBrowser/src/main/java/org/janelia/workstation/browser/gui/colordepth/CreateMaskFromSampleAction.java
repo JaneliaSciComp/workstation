@@ -41,7 +41,7 @@ public class CreateMaskFromSampleAction extends AbstractAction {
     }
     
     public CreateMaskFromSampleAction(Sample sample, ArtifactDescriptor resultDescriptor, String typeName) {
-        this();
+        this(); // call no-args constructor to set title
         this.sample = sample;
         this.resultDescriptor = resultDescriptor;
         this.typeName = typeName;

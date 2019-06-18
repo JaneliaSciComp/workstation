@@ -95,7 +95,7 @@ public class ColorDepthContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getHudMenuItem() {
-        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
+        JMenuItem toggleHudMI = new JMenuItem("Show in Lightbox");
         toggleHudMI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

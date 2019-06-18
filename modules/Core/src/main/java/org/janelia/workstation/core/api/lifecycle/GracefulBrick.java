@@ -80,7 +80,7 @@ public class GracefulBrick {
       
         String[] buttons = { "Continue" };
         JOptionPane.showOptionDialog(FrameworkAccess.getMainFrame(), html,
-              "Manual Update Required", JOptionPane.YES_NO_OPTION, 0, null, buttons, buttons[0]);
+              "Manual Update Required", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE, null, buttons, buttons[0]);
         
         // Delete any logs to ensure that the install directory is properly cleaned up
         if (uninstaller!=null) {

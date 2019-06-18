@@ -429,8 +429,8 @@ public abstract class PreferenceManager {
 
         if (DEBUG)
             System.out.println("Flushing dirty objects to Master collection: " + dirtyInfoDestination);
-        for (Object o : dirtyInfos.keySet()) {
-            InfoObject tmpObject = (InfoObject) dirtyInfos.get(o);
+        for (String o : dirtyInfos.keySet()) {
+            InfoObject tmpObject = dirtyInfos.get(o);
             tmpObject.setSourceFile(dirtyInfoDestination);
             tmpMap.put(tmpObject.getKeyName(), tmpObject);
         }

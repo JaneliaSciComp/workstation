@@ -652,7 +652,7 @@ public class SharedProgressBarUI extends BasicProgressBarUI {
         // PropertyChangeListener
         public void propertyChange(PropertyChangeEvent e) {
             String prop = e.getPropertyName();
-            if ("indeterminate" == prop) {
+            if ("indeterminate".equals(prop)) {
                 if (progressBar.isIndeterminate()) {
                     initIndeterminateValues();
                 } else {

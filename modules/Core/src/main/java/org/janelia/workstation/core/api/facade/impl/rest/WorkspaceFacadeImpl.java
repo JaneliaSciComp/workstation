@@ -171,13 +171,13 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         query.setDomainObject(node);
         List<Integer> orderList = new ArrayList<>();
         for (int i=0; i<order.length; i++) {
-            orderList.add(new Integer(order[i]));
+            orderList.add(order[i]);
         }
         query.setOrdering(orderList);
         Response response = service.path("data/node/reorder")
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request reorderChildrenInNode to server: " + node + "," + order)) {
+        if (checkBadResponse(response.getStatus(), "problem making request reorderChildrenInNode to server: " + node)) {
             throw new WebApplicationException(response);
         }
         return (T)response.readEntity(node.getClass());

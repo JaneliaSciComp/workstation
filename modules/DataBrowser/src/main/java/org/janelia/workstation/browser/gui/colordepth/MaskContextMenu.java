@@ -78,7 +78,7 @@ public class MaskContextMenu extends PopupContextMenu {
 
     protected JMenuItem getRemoveFromSearchItem() {
 
-        JMenuItem removeItem = new JMenuItem("  Remove mask from this search");
+        JMenuItem removeItem = new JMenuItem("Remove mask from this search");
         removeItem.addActionListener((ActionEvent actionEvent) -> {
 
             ActivityLogHelper.logUserAction("MaskContextMenu.removeFromSearch", mask);
@@ -126,7 +126,7 @@ public class MaskContextMenu extends PopupContextMenu {
 
     protected JMenuItem getHudMenuItem() {
         
-        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
+        JMenuItem toggleHudMI = new JMenuItem("Show in Lightbox");
         toggleHudMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
         toggleHudMI.addActionListener(new ActionListener() {
             @Override

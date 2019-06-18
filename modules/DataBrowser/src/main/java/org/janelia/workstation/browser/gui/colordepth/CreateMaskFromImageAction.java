@@ -35,7 +35,7 @@ public class CreateMaskFromImageAction extends AbstractAction {
     }
     
     public CreateMaskFromImageAction(Image image) {
-        this();
+        this(); // call no-args constructor to set title
         this.image = image;
     }
 

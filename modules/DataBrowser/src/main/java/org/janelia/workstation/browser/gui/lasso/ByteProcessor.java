@@ -14,10 +14,15 @@ import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Code copy and pasted from the ImageJA project. It's not possible to reuse their code as-is because of dependencies on AWT.
  */
 public class ByteProcessor extends ImageProcessor {
+
+	private final static Logger log = LoggerFactory.getLogger(ByteProcessor.class);
 
 	static final int ERODE=10, DILATE=11;
 	protected byte[] pixels;
@@ -37,13 +42,13 @@ public class ByteProcessor extends ImageProcessor {
 		try {
 			pg.grabPixels();
 		} catch (InterruptedException e) {
-			System.err.println(e);
+			log.error("Interrupted while grabbing pixels", e);
 		};
    		cm = pg.getColorModel();
 		if (cm instanceof IndexColorModel)
 			pixels = (byte[])(pg.getPixels());
 		else
-			System.err.println("ByteProcessor: not 8-bit image");
+			log.error("ByteProcessor: not 8-bit image");
 		if (((IndexColorModel)cm).getTransparentPixel()!=-1) {
     		IndexColorModel icm = (IndexColorModel)cm;
 			int mapSize = icm.getMapSize();

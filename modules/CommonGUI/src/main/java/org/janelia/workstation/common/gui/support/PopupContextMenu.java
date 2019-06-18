@@ -55,7 +55,7 @@ public abstract class PopupContextMenu extends JPopupMenu {
         return new JMenuItem(action) {
             @Override
             public String getText() {
-                return "  "+super.getText();
+                return super.getText();
             }
         };
     }

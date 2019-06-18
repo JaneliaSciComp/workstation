@@ -118,7 +118,6 @@ public abstract class SingleSelectionButton<T> extends DropDownButton {
     /**
      * Set the selection for a given value. Called when the user clicks on a menu option.
      * @param value
-     * @param selected
      */
     protected abstract void updateSelection(T value);
     

@@ -22,7 +22,6 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import org.janelia.workstation.browser.gui.options.BrowserOptions;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.lifecycle.SessionEvent;
 import org.janelia.workstation.core.events.prefs.LocalPreferenceChanged;
@@ -35,7 +34,6 @@ import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.core.util.ConcurrentUtils;
 import org.janelia.workstation.core.util.SystemInfo;
-import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.model.domain.ontology.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

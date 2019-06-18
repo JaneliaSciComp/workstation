@@ -36,7 +36,6 @@ import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.common.gui.table.DynamicColumn;
 import org.janelia.workstation.common.gui.table.DynamicTable;
 import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.ontology.Annotation;
 import org.slf4j.Logger;
@@ -256,7 +255,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             titleItem.setEnabled(false);
             popupMenu.add(titleItem);
 
-            JMenuItem copyMenuItem = new JMenuItem("  Copy to Clipboard");
+            JMenuItem copyMenuItem = new JMenuItem("Copy to Clipboard");
             copyMenuItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -267,7 +266,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             popupMenu.add(copyMenuItem);
 
             if (ClientDomainUtils.hasWriteAccess(annotation)) {
-                JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
+                JMenuItem deleteItem = new JMenuItem("Delete Annotation");
                 deleteItem.addActionListener(new ActionListener() {
                 @Override
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -278,7 +277,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             }
 
             if (annotation.getValue() != null) {
-                JMenuItem editItem = new JMenuItem("  Edit Annotation");
+                JMenuItem editItem = new JMenuItem("Edit Annotation");
                 editItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -305,7 +304,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                 popupMenu.add(editItem);
             }
 
-            JMenuItem detailsItem = new JMenuItem("  View Details");
+            JMenuItem detailsItem = new JMenuItem("View Details");
             detailsItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -330,7 +329,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             }
 
             if (!toDeleteList.isEmpty()) {
-                JMenuItem deleteItem = new JMenuItem("  Delete Annotations");
+                JMenuItem deleteItem = new JMenuItem("Delete Annotations");
                 deleteItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent actionEvent) {

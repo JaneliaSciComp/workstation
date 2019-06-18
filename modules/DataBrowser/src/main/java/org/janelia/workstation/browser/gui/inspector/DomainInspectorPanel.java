@@ -220,7 +220,7 @@ public class DomainInspectorPanel extends JPanel {
                     }
                     else if (ClientDomainUtils.isOwner(domainObject)) {
 
-                        JMenuItem editItem = new JMenuItem("  Edit Permission");
+                        JMenuItem editItem = new JMenuItem("Edit Permission");
                         editItem.addActionListener(new ActionListener() {
                             @Override
                             public void actionPerformed(ActionEvent e) {
@@ -229,7 +229,7 @@ public class DomainInspectorPanel extends JPanel {
                         });
                         menu.add(editItem);
 
-                        JMenuItem deleteItem = new JMenuItem("  Delete Permission");
+                        JMenuItem deleteItem = new JMenuItem("Delete Permission");
                         deleteItem.addActionListener(new ActionListener() {
                             @Override
                             public void actionPerformed(ActionEvent e) {

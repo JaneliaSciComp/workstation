@@ -6,7 +6,6 @@ import java.beans.PropertyDescriptor;
 import java.util.Set;
 
 import javax.swing.AbstractCellEditor;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;

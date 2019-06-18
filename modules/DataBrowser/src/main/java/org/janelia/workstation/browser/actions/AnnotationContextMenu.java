@@ -57,8 +57,8 @@ public class AnnotationContextMenu extends PopupContextMenu {
             add(getCopyNameToClipboardItem());
             add(getCopyIdToClipboardItem());
             add(getCopyAnnotationItem());
-            add(getViewDetailsItem());
             addSeparator();
+            add(getViewDetailsItem());
             add(getRemoveAnnotationItem());
             OntologyTerm keyTerm = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(annotation.getKeyTerm());
             if (keyTerm!=null) {
@@ -89,7 +89,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
 
     protected JMenuItem getCopyAnnotationItem() {
         if (multiple) return null;
-        JMenuItem deleteByTermItem = new JMenuItem("  Copy Annotation");
+        JMenuItem deleteByTermItem = new JMenuItem("Copy Annotation");
         deleteByTermItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 ActivityLogHelper.logUserAction("AnnotationContextMenu.copyAnnotation", annotation);
@@ -116,7 +116,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
 
     protected JMenuItem getViewDetailsItem() {
         if (multiple) return null;
-        JMenuItem detailsItem = new JMenuItem("  View Details");
+        JMenuItem detailsItem = new JMenuItem("View Details");
         detailsItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 ActivityLogHelper.logUserAction("AnnotationContextMenu.viewDetails", annotation);
