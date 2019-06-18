@@ -104,8 +104,8 @@ public final class ProgressTopComponent extends TopComponent {
         //String version = p.getProperty("version");
         // TODO read your settings according to their version
     }
-    
-    public static ProgressTopComponent ensureActive() {
+
+    public static ProgressTopComponent ensureActive(boolean makeVisible) {
         ProgressTopComponent tc = (ProgressTopComponent) WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
         if (tc==null) {
             log.debug("Progress panel not found, creating...");
@@ -119,18 +119,21 @@ public final class ProgressTopComponent extends TopComponent {
                 log.warn("No such mode found: "+modeName);
             }
             tc.open();
+            tc.requestActive();
         }
         else {
             log.debug("Found progress panel");
-            if (!tc.isOpened()) {
-                tc.open();
-            }
-            if (!tc.isVisible()) {
-                log.debug("Progress panel is not visible, making active");
-                tc.requestVisible();
+            if (makeVisible) {
+                if (!tc.isOpened()) {
+                    tc.open();
+                }
+                if (!tc.isVisible()) {
+                    log.debug("Progress panel is not visible, making active");
+                    tc.requestVisible();
+                }
+                tc.requestActive();
             }
         }
-        tc.requestActive();
         return tc;
     }
 }
