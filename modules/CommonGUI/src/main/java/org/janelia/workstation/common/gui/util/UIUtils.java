@@ -3,7 +3,6 @@ package org.janelia.workstation.common.gui.util;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.io.FileNotFoundException;
-import java.io.UncheckedIOException;
 import java.net.URL;
 
 import javax.swing.ImageIcon;

@@ -41,7 +41,6 @@ public class CreateMaskFromSampleAction extends AbstractAction {
     }
     
     public CreateMaskFromSampleAction(Sample sample, ArtifactDescriptor resultDescriptor, String typeName) {
-        this();
         this.sample = sample;
         this.resultDescriptor = resultDescriptor;
         this.typeName = typeName;

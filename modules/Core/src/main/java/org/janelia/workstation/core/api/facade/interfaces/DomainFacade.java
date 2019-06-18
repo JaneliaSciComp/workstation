@@ -100,7 +100,7 @@ public interface DomainFacade {
 
     /**
      *
-     * For individual cases, adds support to create a new DomainObject or update an exisiting one
+     * For individual cases, adds support to create a new DomainObject or update an existing one
      * @param  domainObject domain object to update
      * @throws Exception
      */

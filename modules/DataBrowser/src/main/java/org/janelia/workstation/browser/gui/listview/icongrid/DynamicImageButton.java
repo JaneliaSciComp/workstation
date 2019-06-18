@@ -14,9 +14,7 @@ import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.events.selection.SelectionModel;
-import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.core.util.Utils;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

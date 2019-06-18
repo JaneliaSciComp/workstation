@@ -36,7 +36,6 @@ import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.common.gui.table.DynamicColumn;
 import org.janelia.workstation.common.gui.table.DynamicTable;
 import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.ontology.Annotation;
 import org.slf4j.Logger;

@@ -385,7 +385,7 @@ public class CompressionDialog extends ModalDialog {
         
         String[] buttons = { "All Existing and Future Samples", "Only Future Samples", "Cancel" };
         int selectedOption = JOptionPane.showOptionDialog(this, message, 
-                "Apply changes", JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, buttons[0]);
+                "Apply changes", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE, null, buttons, buttons[0]);
 
         boolean applyToExisting;
         

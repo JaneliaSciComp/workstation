@@ -27,7 +27,6 @@ import javax.swing.SwingConstants;
 import javax.swing.TransferHandler;
 
 import org.janelia.workstation.browser.gui.options.BrowserOptions;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
@@ -35,7 +34,6 @@ import org.janelia.workstation.core.events.selection.SelectionModel;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.AnnotationView;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.browser.gui.support.AnnotationTablePanel;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
@@ -131,7 +129,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
 
         editMode = new JCheckBox();
         editMode.setHorizontalAlignment(SwingConstants.LEFT);
-        editMode.setVerticalAlignment(SwingConstants.NORTH);
+        editMode.setVerticalAlignment(SwingConstants.TOP);
         editMode.setVisible(false);
         editMode.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {

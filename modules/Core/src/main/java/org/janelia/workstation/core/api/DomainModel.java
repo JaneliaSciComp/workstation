@@ -23,7 +23,6 @@ import org.janelia.it.jacs.shared.solr.SolrJsonResults;
 import org.janelia.it.jacs.shared.solr.SolrParams;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;

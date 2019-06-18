@@ -136,7 +136,7 @@ public class ToolMgr extends PreferenceManager {
      * objects.
      */
     protected void mergeIntoWorkingCollections(Map<String, InfoObject> targetMasterCollection) {
-        for (Object o : targetMasterCollection.keySet()) {
+        for (String o : targetMasterCollection.keySet()) {
             ToolInfo tmpObject = (ToolInfo)(targetMasterCollection.get(o).clone());
             toolTreeMap.put(tmpObject.getName(), tmpObject);
         }

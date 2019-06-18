@@ -27,7 +27,7 @@ public class ColorDepthSearchResults implements SearchResults<ColorDepthMatch, S
     
     /**
      * Factory method to paginate a list of results already in memory. 
-     * @param domainObjects
+     * @param matches
      * @return 
      */
     public ColorDepthSearchResults(Collection<ColorDepthMatch> matches) {

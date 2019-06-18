@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -32,8 +31,6 @@ import org.janelia.workstation.common.nodes.NodeUtils;
 import org.janelia.workstation.common.nodes.UserViewConfiguration;
 import org.janelia.workstation.common.nodes.UserViewRootNode;
 import org.janelia.workstation.common.nodes.UserViewTreeNodeNode;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
-import org.janelia.workstation.core.actions.PopupMenuGenerator;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;

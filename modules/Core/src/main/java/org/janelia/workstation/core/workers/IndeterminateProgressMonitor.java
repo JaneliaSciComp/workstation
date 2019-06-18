@@ -419,9 +419,9 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
 	 * @throws NullPointerException if the parameter is null.
 	 */ 
 	public void propertyChange(PropertyChangeEvent e) {
-	    if (e.getSource() == noteLabel && e.getPropertyName() == "text") {
-		// the note label text changed
-		firePropertyChange(ACCESSIBLE_TEXT_PROPERTY, null, 0);
+	    if (e.getSource() == noteLabel && "text".equals(e.getPropertyName())) {
+			// the note label text changed
+			firePropertyChange(ACCESSIBLE_TEXT_PROPERTY, null, 0);
 	    } 
 	}
 

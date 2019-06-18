@@ -191,7 +191,7 @@ public class AutoUpdater extends SimpleWorker {
 
             String[] buttons = { "Restart and Update", "Later" };
             int selectedOption = JOptionPane.showOptionDialog(FrameworkAccess.getMainFrame(), html,
-                    "Updates Ready", JOptionPane.YES_NO_OPTION, 0, null, buttons, buttons[0]);
+                    "Updates Ready", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, buttons, buttons[0]);
 
             if (selectedOption == 0) {
                 log.info("Restarting now to complete installation.");

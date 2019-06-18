@@ -35,7 +35,6 @@ public class CreateMaskFromImageAction extends AbstractAction {
     }
     
     public CreateMaskFromImageAction(Image image) {
-        this();
         this.image = image;
     }
 

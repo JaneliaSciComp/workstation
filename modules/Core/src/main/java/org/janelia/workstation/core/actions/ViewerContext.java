@@ -1,7 +1,6 @@
 package org.janelia.workstation.core.actions;
 
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.workstation.core.api.ClientDomainUtils;

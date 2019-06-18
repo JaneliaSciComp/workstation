@@ -384,7 +384,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         return resultsTable.getTableColumnIndex(getColumn(columnName));
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({ "unchecked" })
     public void setSortColumn(String columnName, boolean ascending) {
         if (StringUtils.isEmpty(columnName)) {
             getTable().getRowSorter().setSortKeys(new ArrayList());

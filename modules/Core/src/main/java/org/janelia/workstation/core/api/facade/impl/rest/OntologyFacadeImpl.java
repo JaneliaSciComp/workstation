@@ -135,7 +135,7 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
         Response response = service.path("data/ontology/terms")
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request reorderOntologyTerms to server: " + ontologyId + "," + parentTermId + "," + order)) {
+        if (checkBadResponse(response.getStatus(), "problem making request reorderOntologyTerms to server: " + ontologyId + "," + parentTermId)) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(Ontology.class);
