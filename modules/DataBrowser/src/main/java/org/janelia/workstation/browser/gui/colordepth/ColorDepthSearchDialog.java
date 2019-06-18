@@ -60,7 +60,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
     private final JPanel mainPanel;
     private final GroupedKeyValuePanel attrPanel;
     private final JPanel addPanel;
-    private final SearchOptionsPanel searchOptionsPanel;
+    private final ColorDepthSearchOptionsPanel searchOptionsPanel;
     private final JLabel alignmentSpaceLabel;
     private final JTextField maskNameField;
     private final JRadioButton existingSearchRadioButton;
@@ -123,7 +123,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
         addPanel.add(searchComboPanel, "gapleft 10");
         addPanel.add(searchNameField, "gapleft 10");
         
-        searchOptionsPanel = new SearchOptionsPanel();
+        searchOptionsPanel = new ColorDepthSearchOptionsPanel();
         
         mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));

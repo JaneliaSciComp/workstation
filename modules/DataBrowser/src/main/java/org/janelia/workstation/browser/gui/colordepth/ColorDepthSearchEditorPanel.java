@@ -87,7 +87,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     // UI Components
 //    private final JButton saveButton;
 //    private final JButton saveAsButton;
-    private final SearchOptionsPanel searchOptionsPanel;
+    private final ColorDepthSearchOptionsPanel searchOptionsPanel;
     private final JSplitPane splitPane;
     private final JPanel helpPanel;
     private final JButton searchButton;
@@ -112,7 +112,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         setLayout(new BorderLayout());
         setFocusable(true);
                 
-        searchOptionsPanel = new SearchOptionsPanel();
+        searchOptionsPanel = new ColorDepthSearchOptionsPanel();
         
         searchButton = new JButton("Execute Search");
         searchButton.addActionListener(new ActionListener() {
