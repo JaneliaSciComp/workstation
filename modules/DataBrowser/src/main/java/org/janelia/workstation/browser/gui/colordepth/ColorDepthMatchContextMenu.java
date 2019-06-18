@@ -127,7 +127,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
 
     protected JMenuItem getCheckItem(boolean check) {
         String title = check ? "Check" : "Uncheck";
-        JMenuItem menuItem = new JMenuItem("  "+title+" Selected");
+        JMenuItem menuItem = new JMenuItem(title+" Selected");
         menuItem.addActionListener((e) -> {
             if (check) {
                 editSelectionModel.select(matches, false, true);
@@ -203,7 +203,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     protected JMenuItem getHudMenuItem() {
         if (multiple) return null;
         
-        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
+        JMenuItem toggleHudMI = new JMenuItem("Show in Lightbox");
         toggleHudMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
         toggleHudMI.addActionListener(new ActionListener() {
             @Override

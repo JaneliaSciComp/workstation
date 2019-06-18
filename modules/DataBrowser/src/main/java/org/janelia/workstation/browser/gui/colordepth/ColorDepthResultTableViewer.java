@@ -208,7 +208,7 @@ public class ColorDepthResultTableViewer
                 titleMenuItem.setEnabled(false);
                 popupMenu.add(titleMenuItem);
 
-                JMenuItem copyMenuItem = new JMenuItem("  Copy Value To Clipboard");
+                JMenuItem copyMenuItem = new JMenuItem("Copy Value To Clipboard");
                 copyMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {

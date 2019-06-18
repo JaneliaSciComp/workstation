@@ -1,6 +1,7 @@
 package org.janelia.workstation.browser.gui.lasso;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,6 +15,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,7 +123,13 @@ public class ImageMaskingPanel extends JPanel {
     public void addUI() {
         removeAll();
         if (imagePlus!=null) {
-            add((BufferedImageCanvas)imagePlus.getCanvas(), BorderLayout.CENTER);
+
+            JScrollPane scrollPane = new JScrollPane();
+            scrollPane.setViewportView((BufferedImageCanvas)imagePlus.getCanvas());
+            scrollPane.getHorizontalScrollBar().setUnitIncrement(16); // Increase scroll speed
+            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+            add(scrollPane, BorderLayout.CENTER);
         }
         
         JPanel buttonPanel = new JPanel();
