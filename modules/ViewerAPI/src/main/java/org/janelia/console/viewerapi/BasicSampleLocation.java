@@ -1,9 +1,8 @@
 package org.janelia.console.viewerapi;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import org.janelia.console.viewerapi.model.NeuronModel;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 /**
@@ -26,10 +25,6 @@ public class BasicSampleLocation implements SampleLocation
     private TmSample sample = null;     // Optional
     private float[] rotation;
     private boolean interpolate = false;
-
-    public BasicSampleLocation()
-    {
-    }
 
     @Override
     public URL getSampleUrl()
@@ -192,5 +187,20 @@ public class BasicSampleLocation implements SampleLocation
 
     public void setNeuronVertexId(Long neuronVertex) {
         this.neuronVertexId = neuronVertex;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("sampleUrl", sampleUrl)
+                .append("micrometersPerWindowHeight", micrometersPerWindowHeight)
+                .append("defaultColorChannel", defaultColorChannel)
+                .append("compressed", compressed)
+                .append("neuronId", neuronId)
+                .append("neuronVertexId", neuronVertexId)
+                .append("workspaceId", workspaceId)
+                .append("sampleId", sampleId)
+                .append("sample", sample)
+                .toString();
     }
 }

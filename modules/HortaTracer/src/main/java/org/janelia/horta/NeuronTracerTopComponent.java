@@ -492,7 +492,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         return activeNeuronSet.getUndoRedo();
     }
 
-    public void setVolumeSource(StaticVolumeBrickSource volumeSource) {
+    private void setVolumeSource(StaticVolumeBrickSource volumeSource) {
         this.volumeSource = volumeSource;
         this.volumeCache.setSource(volumeSource);
         // Don't load both ktx and raw tiles...
