@@ -13,11 +13,15 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
+import org.janelia.horta.blocks.FileKtxOctreeBlockTileSource;
+import org.janelia.horta.blocks.JadeKtxOctreeBlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSourceProvider;
 import org.janelia.horta.volume.BrickInfo;
@@ -25,7 +29,17 @@ import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.rendering.CachedRenderedVolumeLoader;
+import org.janelia.rendering.FileBasedRenderedVolumeLocation;
+import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
+import org.janelia.rendering.RenderedVolume;
+import org.janelia.rendering.RenderedVolumeLoader;
+import org.janelia.rendering.RenderedVolumeLoaderImpl;
+import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.scenewindow.SceneWindow;
+import org.janelia.workstation.core.api.web.JadeServiceClient;
+import org.janelia.workstation.core.options.ApplicationOptions;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
@@ -34,17 +48,18 @@ import org.slf4j.LoggerFactory;
 
 public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SampleLocationAcceptor.class);
+    private static final int DEFAULT_VOLUMES_CACHE_SIZE = 2;
+    private static final int DEFAULT_TILES_CACHE_SIZE = 100;
 
     private String currentSource;
     private NeuronTraceLoader loader;
     private NeuronTracerTopComponent nttc;
     private SceneWindow sceneWindow;
 
-    public SampleLocationAcceptor(
-            String currentSource,
-            NeuronTraceLoader loader,
-            NeuronTracerTopComponent nttc,
-            SceneWindow sceneWindow) {
+    SampleLocationAcceptor(String currentSource,
+                           NeuronTraceLoader loader,
+                           NeuronTracerTopComponent nttc,
+                           SceneWindow sceneWindow) {
         this.currentSource = currentSource;
         this.loader = loader;
         this.nttc = nttc;
@@ -127,17 +142,31 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         KtxOctreeBlockTileSource previousSource = nttc.getKtxSource();
         if (previousSource != null) {
             LOG.trace("previousUrl: {}", previousSource.getOriginatingSampleURL());
-            if (Objects.equal(renderedOctreeUrl, previousSource.getOriginatingSampleURL()))
+            if (Objects.equal(renderedOctreeUrl, previousSource.getOriginatingSampleURL())) {
                 return previousSource; // Source did not change
+            }
         }
         return KtxOctreeBlockTileSourceProvider.createKtxOctreeBlockTileSource(sample, renderedOctreeUrl);
     }
 
+//    private StaticVolumeBrickSource createVolumeSource(TmSample sample, URL renderedOctreeUrl) {
+//        Preconditions.checkArgument(sample.getFilepath() != null && sample.getFilepath().trim().length() > 0);
+//        RenderedVolumeLoader renderedVolumeLoader = new CachedRenderedVolumeLoader(new RenderedVolumeLoaderImpl(), DEFAULT_VOLUMES_CACHE_SIZE, DEFAULT_TILES_CACHE_SIZE);
+//        RenderedVolumeLocation renderedVolumeLocation;
+//        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
+//            renderedVolumeLocation = new JADEBasedRenderedVolumeLocation()
+//        } else {
+//            renderedVolumeLocation = new FileBasedRenderedVolumeLocation();
+//        }
+//
+//    }
+
     private StaticVolumeBrickSource setSampleUrl(URL renderedOctreeUrl, ProgressHandle progress) {
         String urlStr = renderedOctreeUrl.toString();
         // Check: if same as current source, no need to change that.
-        if (urlStr.equals(currentSource))
+        if (nttc.getVolumeSource() != null && urlStr.equals(currentSource)) {
             return nttc.getVolumeSource();
+        }
         URI uri;
         // First check whether the yaml file exists at all
         StaticVolumeBrickSource volumeSource = null;

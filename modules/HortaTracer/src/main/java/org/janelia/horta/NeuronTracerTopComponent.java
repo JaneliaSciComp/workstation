@@ -502,13 +502,13 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     /** Tells caller what source we are examining. */
-    public URL getCurrentSourceURL() throws MalformedURLException, URISyntaxException {
+    URL getCurrentSourceURL() throws MalformedURLException, URISyntaxException {
         if (currentSource == null)
             return null;
         return new URI(currentSource).toURL();
     }
 
-    public void playSampleLocations(final List<SampleLocation> locationList, boolean autoRotation, int speed, int stepScale) {
+    void playSampleLocations(final List<SampleLocation> locationList, boolean autoRotation, int speed, int stepScale) {
         // do a quick check to see if
         sceneWindow.setControlsVisibility(true);
         currentSource = locationList.get(0).getSampleUrl().toString();
@@ -517,16 +517,17 @@ public final class NeuronTracerTopComponent extends TopComponent
         playback.reviewPoints(locationList, currentSource, autoRotation, speed, stepScale);
     }
 
-    public void setSampleLocation(SampleLocation sampleLocation) {
+    void setSampleLocation(SampleLocation sampleLocation) {
         try {
             leverageCompressedFiles = sampleLocation.isCompressed();
             playback.clearPlayState();
             Quaternion q = new Quaternion();
             float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
-            if (quaternionRotation != null)
+            if (quaternionRotation != null) {
                 q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
+            }
             ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                    currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
+                    currentSource, loader,this, sceneWindow
             );
 
             // if neuron and neuron vertex passed, select this parent vertex
@@ -567,7 +568,6 @@ public final class NeuronTracerTopComponent extends TopComponent
             currentSource = sampleLocation.getSampleUrl().toString();
             defaultColorChannel = sampleLocation.getDefaultColorChannel();
             volumeCache.setColorChannel(defaultColorChannel);
-
         } catch (Exception ex) {
             throw new RuntimeException(
                     "Failed to load location " + sampleLocation.getSampleUrl().toString() + ", " +
@@ -579,7 +579,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     private List<GL3Actor> tracingActors = new ArrayList<>();
 
     private NeuronMPRenderer setUpActors() {
-
         // TODO - refactor all stages to use multipass renderer, like this
         NeuronMPRenderer neuronMPRenderer0 = new NeuronMPRenderer(
                 sceneWindow.getGLAutoDrawable(),
@@ -660,14 +659,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         imageColorModel.fireColorModelChanged();
     }
 
-    public StaticVolumeBrickSource getVolumeSource() {
+    StaticVolumeBrickSource getVolumeSource() {
         return volumeSource;
     }
 
     @Override
-    public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream,
-            NeuronTraceLoader loader,
-            ProgressHandle progress) throws IOException, ParseException {
+    public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, ProgressHandle progress)
+            throws IOException, ParseException {
         setVolumeSource(new MouseLightYamlBrickSource(sourceYamlStream, leverageCompressedFiles, progress));
         return volumeSource;
     }
@@ -841,9 +839,7 @@ public final class NeuronTracerTopComponent extends TopComponent
      */
     private Vector3 worldXyzForScreenXy(Point2D xy, PerspectiveCamera camera, double depthOffset) {
         // Camera frame coordinates
-        float screenResolution
-                = camera.getVantage().getSceneUnitsPerViewportHeight()
-                / (float) camera.getViewport().getHeightPixels();
+        float screenResolution = camera.getVantage().getSceneUnitsPerViewportHeight() / (float) camera.getViewport().getHeightPixels();
         float cx = 2.0f * ((float) xy.getX() / (float) camera.getViewport().getWidthPixels() - 0.5f);
         cx *= screenResolution * 0.5f * camera.getViewport().getWidthPixels();
         float cy = -2.0f * ((float) xy.getY() / (float) camera.getViewport().getHeightPixels() - 0.5f);
@@ -863,13 +859,10 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new Vector3(worldXyz.get(0), worldXyz.get(1), worldXyz.get(2));
     }
 
-    // TODO: Obsolete brightness model for ImageColorModel
-    // private final ChannelBrightnessModel brightnessModel = new ChannelBrightnessModel();
     private final ImageColorModel imageColorModel = new ImageColorModel(65535, 3);
 
     private void loadStartupPreferences() {
         Preferences prefs = NbPreferences.forModule(getClass());
-        //     final InstanceContent content = new InstanceContent();
 
         // Load brightness and visibility settings for each channel
         for (int cix = 0; cix < imageColorModel.getChannelCount(); ++cix) {

@@ -19,9 +19,7 @@ import java.util.Map;
  *
  * @author Christopher Bruns
  */
-public class MouseLightYamlBrickSource 
-implements StaticVolumeBrickSource
-{
+public class MouseLightYamlBrickSource implements StaticVolumeBrickSource {
     private final Map<Double, BrickInfoSet> resMap = new HashMap<>();
     private final Box3 boundingBox = new Box3();
     
@@ -122,9 +120,4 @@ implements StaticVolumeBrickSource
         return resMap.get(r);
     }
 
-    @Override
-    public Box3 getBoundingBox() {
-        return boundingBox;
-    }
-    
 }

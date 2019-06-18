@@ -19,5 +19,4 @@ public interface StaticVolumeBrickSource
 {
     Collection<Double> getAvailableResolutions();
     BrickInfoSet getAllBrickInfoForResolution(Double resolution);
-    public Box3 getBoundingBox();
 }

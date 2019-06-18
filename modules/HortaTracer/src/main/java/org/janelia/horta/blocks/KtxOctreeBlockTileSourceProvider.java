@@ -15,7 +15,6 @@ public class KtxOctreeBlockTileSourceProvider {
         } else {
             return new FileKtxOctreeBlockTileSource(renderedOctreeUrl).init(sample);
         }
-
     }
 
 }
