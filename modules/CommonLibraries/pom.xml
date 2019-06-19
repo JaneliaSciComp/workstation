@@ -123,6 +123,11 @@
             <version>${janeliaws.jackson.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>${janeliaws.jackson.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.jaxrs</groupId>
             <artifactId>jackson-jaxrs-json-provider</artifactId>
             <version>${janeliaws.jackson.version}</version>
@@ -398,6 +403,7 @@
                         <publicPackage>com.fasterxml.jackson.dataformat.xml.jaxb</publicPackage>
                         <publicPackage>com.fasterxml.jackson.dataformat.xml.ser</publicPackage>
                         <publicPackage>com.fasterxml.jackson.dataformat.xml.util</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.dataformat.yaml</publicPackage>
                         <publicPackage>com.fasterxml.jackson.jaxrs.annotation</publicPackage>
                         <publicPackage>com.fasterxml.jackson.jaxrs.base</publicPackage>
                         <publicPackage>com.fasterxml.jackson.jaxrs.cfg</publicPackage>
@@ -742,6 +748,8 @@
                         <publicPackage>org.janelia.it.jacs.shared.utils.zeiss</publicPackage>
                         <publicPackage>org.janelia.it.jacs.shared.viewer3d</publicPackage>
                         <publicPackage>org.janelia.rendering</publicPackage>
+                        <publicPackage>org.janelia.rendering.utils</publicPackage>
+                        <publicPackage>org.janelia.rendering.ymlrepr</publicPackage>
                         <publicPackage>org.jdesktop.swingx.*</publicPackage>
                         <publicPackage>org.jnp.*</publicPackage>
                         <publicPackage>org.perf4j</publicPackage>

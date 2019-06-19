@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.Optional;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
@@ -24,9 +25,7 @@ import org.janelia.horta.blocks.FileKtxOctreeBlockTileSource;
 import org.janelia.horta.blocks.JadeKtxOctreeBlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSourceProvider;
-import org.janelia.horta.volume.BrickInfo;
-import org.janelia.horta.volume.BrickInfoSet;
-import org.janelia.horta.volume.StaticVolumeBrickSource;
+import org.janelia.horta.volume.*;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.CachedRenderedVolumeLoader;
@@ -37,6 +36,7 @@ import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.scenewindow.SceneWindow;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -101,7 +101,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     setCameraLocation(sampleLocation);
 
                     if (nttc.getKtxSource() == null) { // Use obsolete single channel raw file loading
-                        StaticVolumeBrickSource volumeSource = setSampleUrl(url, progress);
+                        StaticVolumeBrickSource volumeSource = setVolumeBrickSource(new URI(currentSource), sampleLocation.isCompressed(), progress);
                         if (volumeSource == null) {
                             throw new IOException("Loading volume source failed");
                         }
@@ -118,7 +118,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         }
                     }
                     nttc.redrawNow();
-                } catch (final IOException ex) {
+                } catch (final Exception ex) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -149,84 +149,49 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         return KtxOctreeBlockTileSourceProvider.createKtxOctreeBlockTileSource(sample, renderedOctreeUrl);
     }
 
-//    private StaticVolumeBrickSource createVolumeSource(TmSample sample, URL renderedOctreeUrl) {
-//        Preconditions.checkArgument(sample.getFilepath() != null && sample.getFilepath().trim().length() > 0);
-//        RenderedVolumeLoader renderedVolumeLoader = new CachedRenderedVolumeLoader(new RenderedVolumeLoaderImpl(), DEFAULT_VOLUMES_CACHE_SIZE, DEFAULT_TILES_CACHE_SIZE);
-//        RenderedVolumeLocation renderedVolumeLocation;
-//        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
-//            renderedVolumeLocation = new JADEBasedRenderedVolumeLocation()
-//        } else {
-//            renderedVolumeLocation = new FileBasedRenderedVolumeLocation();
-//        }
-//
-//    }
-
-    private StaticVolumeBrickSource setSampleUrl(URL renderedOctreeUrl, ProgressHandle progress) {
-        String urlStr = renderedOctreeUrl.toString();
-        // Check: if same as current source, no need to change that.
-        if (nttc.getVolumeSource() != null && urlStr.equals(currentSource)) {
-            return nttc.getVolumeSource();
-        }
-        URI uri;
-        // First check whether the yaml file exists at all
-        StaticVolumeBrickSource volumeSource = null;
-        progress.setDisplayName("Loading brain specimen (tilebase.cache.yml)...");
-        try {
-            uri = renderedOctreeUrl.toURI();
-            String yamlUrlString = new URL(renderedOctreeUrl, BASE_YML_FILE).getPath();
-            URI yamlUri = new URI(
-                    uri.getScheme(),
-                    uri.getAuthority(),
-                    yamlUrlString,
-                    uri.getFragment()
+    private StaticVolumeBrickSource setVolumeBrickSource(URI renderedOctreeUri, boolean useCompressedFiles, ProgressHandle progress) {
+        StaticVolumeBrickSource volumeBrickSource;
+        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
+            volumeBrickSource = new JadeVolumeBrickSource(
+                    renderedOctreeUri,
+                    AccessManager.getAccessManager().getAppAuthorization(),
+                    DEFAULT_VOLUMES_CACHE_SIZE,
+                    DEFAULT_TILES_CACHE_SIZE,
+                    useCompressedFiles
             );
-            LOG.info("Constructed URI: {}.", uri);
-            URL yamlUrl = yamlUri.toURL();
-            try (InputStream stream1 = yamlUrl.openStream()) {
-                volumeSource = nttc.loadYaml(stream1, loader, progress);
-            } catch (ParseException ex) {
+        } else {
+            try {
+                String yamlUrlString = new URL(renderedOctreeUri.toURL(), BASE_YML_FILE).getPath();
+                URI yamlUri = new URI(
+                        renderedOctreeUri.getScheme(),
+                        renderedOctreeUri.getAuthority(),
+                        yamlUrlString,
+                        renderedOctreeUri.getFragment()
+                );
+                URL yamlUrl = yamlUri.toURL();
+                try (InputStream sourceYamlStream = yamlUrl.openStream()) {
+                    volumeBrickSource = new LocalVolumeBrickSource(sourceYamlStream, useCompressedFiles, () -> Optional.of(progress));
+                } catch (IllegalArgumentException ex) {
+                    JOptionPane.showMessageDialog(nttc,
+                            "Problem Loading Raw Tile Information from " + yamlUrlString +
+                                    "\n  Does the transform contain barycentric coordinates?",
+                            "Tilebase File Problem", JOptionPane.ERROR_MESSAGE);
+                    return null;
+                }
+            } catch (IOException | URISyntaxException ex) {
+                // Something went wrong with loading the Yaml file
                 JOptionPane.showMessageDialog(nttc,
-                        "Problem Loading Raw Tile Information from " + yamlUrlString +
-                                "\n  Does the transform contain barycentric coordinates?",
-                        "Tilebase File Problem", JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (IOException | URISyntaxException ex) {
-            // Something went wrong with loading the Yaml file
-            JOptionPane.showMessageDialog(nttc,
-                    "Problem Loading Raw Tile Information from " + renderedOctreeUrl.getPath() +
-                            "\n  Is the render folder drive mounted?"
-                            + "\n  Does the render folder contain a " + BASE_YML_FILE + " file ?"
-                    ,
-                    "Tilebase File Problem",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-
-        LOG.info("Finished creating volumeSource from yaml file");
-
-        if (null == volumeSource)
-            return volumeSource;
-
-        // Test for location of first tile, as a sanity check
-        if (!HttpDataSource.useHttp()) {
-            Double res = volumeSource.getAvailableResolutions().iterator().next();
-            BrickInfoSet bricks = volumeSource.getAllBrickInfoForResolution(res);
-            BrickInfo b = bricks.iterator().next();
-            BrainTileInfo bti = (BrainTileInfo) b;
-            String path = bti.getParentPath() + "/" + bti.getLocalPath();
-            File brickFolder = new File(bti.getParentPath(), bti.getLocalPath());
-            if (!brickFolder.exists()) {
-                JOptionPane.showMessageDialog(nttc,
-                        "Problem Finding First Raw Tile Folder at " + brickFolder.getAbsolutePath()
-                                + "\n  Is the raw tile folder drive mounted?"
-                                + "\n  Did someone change the folder structure of the raw tiles?"
+                        "Problem Loading Raw Tile Information from " + renderedOctreeUri +
+                                "\n  Is the render folder drive mounted?"
+                                + "\n  Does the render folder contain a " + BASE_YML_FILE + " file ?"
                         ,
-                        "Raw Tile Location Problem",
+                        "Tilebase File Problem",
                         JOptionPane.ERROR_MESSAGE);
-                volumeSource = null; // Don't use this data source
+                return null;
             }
         }
-
-        return volumeSource;
+        nttc.setVolumeSource(volumeBrickSource);
+        return volumeBrickSource;
     }
 
     private boolean setCameraLocation(SampleLocation sampleLocation) {

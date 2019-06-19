@@ -120,7 +120,7 @@ public class NeuronTraceLoader {
     /**
      * Helper method toward automatic tile loading
      */
-    public BrickInfo loadTileAtCurrentFocus(StaticVolumeBrickSource volumeSource, int colorChannel) throws IOException {
+    BrickInfo loadTileAtCurrentFocus(StaticVolumeBrickSource volumeSource, int colorChannel) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
 
         // Remember most recently loaded color channel for next time

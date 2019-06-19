@@ -7,8 +7,7 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
  *
  * @author Christopher Bruns
  */
-public interface SampleLocation
-{
+public interface SampleLocation {
     URL getSampleUrl();
     void setSampleUrl(URL url);
 

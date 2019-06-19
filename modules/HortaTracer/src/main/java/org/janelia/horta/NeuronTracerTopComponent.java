@@ -36,14 +36,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
+import java.util.*;
 import java.util.prefs.Preferences;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
@@ -68,7 +61,7 @@ import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.horta.volume.MouseLightYamlBrickSource;
+import org.janelia.horta.volume.LocalVolumeBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.geometry3d.Matrix4;
@@ -179,7 +172,7 @@ import org.slf4j.LoggerFactory;
     "HINT_NeuronTracerTopComponent=Horta Neuron Tracer window"
 })
 public final class NeuronTracerTopComponent extends TopComponent
-        implements VolumeProjection, YamlStreamLoader {
+        implements VolumeProjection {
 
     public static final String PREFERRED_ID = "NeuronTracerTopComponent";
     public static final String BASE_YML_FILE = "tilebase.cache.yml";
@@ -492,7 +485,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         return activeNeuronSet.getUndoRedo();
     }
 
-    private void setVolumeSource(StaticVolumeBrickSource volumeSource) {
+    void setVolumeSource(StaticVolumeBrickSource volumeSource) {
         this.volumeSource = volumeSource;
         this.volumeCache.setSource(volumeSource);
         // Don't load both ktx and raw tiles...
@@ -660,13 +653,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     StaticVolumeBrickSource getVolumeSource() {
-        return volumeSource;
-    }
-
-    @Override
-    public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, ProgressHandle progress)
-            throws IOException, ParseException {
-        setVolumeSource(new MouseLightYamlBrickSource(sourceYamlStream, leverageCompressedFiles, progress));
         return volumeSource;
     }
 
@@ -984,7 +970,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     private void initialize3DViewer() {
-
         // Insert 3D viewer component
         Vantage vantage = new Vantage(null);
         vantage.setUpInWorld(new Vector3(0, 0, -1));
@@ -1067,12 +1052,10 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         sceneWindow.setBackgroundColor(Color.DARK_GRAY);
         this.add(sceneWindow.getOuterComponent(), BorderLayout.CENTER);
-
     }
 
-    public void loadDroppedYaml(InputStream yamlStream) throws IOException, ParseException {
-        // currentSource = Utilities.toURI(file).toURL().toString();
-        setVolumeSource(loadYaml(yamlStream, loader, null));
+    public void loadDroppedYaml(InputStream yamlStream) throws IOException {
+        setVolumeSource(new LocalVolumeBrickSource(yamlStream, leverageCompressedFiles, Optional::empty));
         loader.loadTileAtCurrentFocus(volumeSource);
     }
 

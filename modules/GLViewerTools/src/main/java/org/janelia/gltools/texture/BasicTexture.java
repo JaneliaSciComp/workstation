@@ -20,11 +20,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Christopher Bruns <brunsc at janelia.hhmi.org>
  */
-public abstract class BasicTexture implements GL3Resource 
-{
-
-    static Logger log= LoggerFactory.getLogger(BasicTexture.class.getName());
-
+public abstract class BasicTexture implements GL3Resource {
     protected int handle;
     
     protected final int border = 0;
@@ -324,7 +320,6 @@ public abstract class BasicTexture implements GL3Resource
             int[] h = {handle};
             gl.glDeleteTextures(1, h, 0);
             handle = 0;
-            // log.trace("deleted texture");
         }
     }
 

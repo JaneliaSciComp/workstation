@@ -1,6 +1,7 @@
 package org.janelia.horta.loader;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.horta.NeuronTracerTopComponent;
@@ -30,16 +31,11 @@ public class TilebaseYamlLoader implements FileTypeLoader
     }
 
     @Override
-    public boolean load(DataSource source, FileHandler handler) throws IOException
-    {
-        try {
-            nttc.loadDroppedYaml(source.getInputStream());
-            source.getInputStream().close();
+    public boolean load(DataSource source, FileHandler handler) throws IOException {
+        try (InputStream yamlStream = source.getInputStream()) {
+            nttc.loadDroppedYaml(yamlStream);
             return true;
-        } catch (ParseException ex) {
-            Exceptions.printStackTrace(ex);
         }
-        return false;
     }
     
 }

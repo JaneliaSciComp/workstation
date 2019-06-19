@@ -4,13 +4,12 @@ package org.janelia.horta;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import Jama.Matrix;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.geometry3d.Box3;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
@@ -29,65 +28,37 @@ import org.slf4j.LoggerFactory;
  * @author Christopher Bruns <brunsc at janelia.hhmi.org>
  */
 public class BrainTileInfo implements BrickInfo {
-    // e.g.
-    //path: /nobackup/mousebrainmicro/data/2014-04-04/Tiling
-    //tiles:
-    //- aabb:
-    //    ori: [84934200, 17379900, 9909023]
-    //    shape: [386670, 532776, 200000]
-    //  path: /2014-04-14/01/01659
-    //  shape:
-    //    dims: [1024, 2048, 201, 2]
-    //    type: u16
-    //  transform: [-377.607422, 0.0, 0.0, 0.0, 85320872.0, 0.0, -260.144531, 0.0, 0.0,
-    //    17912676.0, 0.0, 0.485852, 995.024902, 0.0, 9909023.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-    //    0.0, 0.0, 0.0, 0.0, 1.0]
-    private final int[] bbOriginNanometers = new int[3];
-    private final int[] bbShapeNanometers = new int[3];
-    private String localPath;
-    private String parentPath;
-    private final int[] pixelDims = new int[4]; // includes color channel count
-    private String intensityType;
+    private static final Logger LOG = LoggerFactory.getLogger(BrainTileInfo.class);
+
+    private final String parentPath;
+    private final int[] bbOriginNanometers;
+    private final int[] bbShapeNanometers;
+    private final String localPath;
+    private final int[] pixelDims; // includes color channel count
+    private final int bytesPerIntensity;
     private Matrix transform; // converts voxels to stage coordinates in nanometers
     private Matrix texCoord_X_stageUm; // cached transform inverse; after conversion to micrometers
     
     // TODO  colorChannelIndex is a temporary hack that should be removed when we can show more than one channel at once
     private int colorChannelIndex = 0;
     private boolean leverageCompressedFiles;
-    private Logger log = LoggerFactory.getLogger(BrainTileInfo.class);
-    
-    public BrainTileInfo(Map<String, Object> yamlFragment, String parentPath, boolean leverageCompressedFiles) throws ParseException 
-    {
+
+    public BrainTileInfo(String parentPath,
+                         String localPath,
+                         boolean leverageCompressedFiles,
+                         int[] bbOriginNanometers,
+                         int[] bbShapeNanometers,
+                         int[] pixelDims,
+                         int bytesPerIntensity,
+                         Matrix transform) {
         this.parentPath = parentPath;
+        this.localPath = localPath;
         this.leverageCompressedFiles = leverageCompressedFiles;
-        Map<String, Object> aabb = (Map<String, Object>)yamlFragment.get("aabb");
-        List<Integer> ori = (List<Integer>)aabb.get("ori");
-        List<Integer> bbshape = (List<Integer>)aabb.get("shape");
-        for (int i : new int[]{0,1,2}) {
-            bbOriginNanometers[i] = ori.get(i);
-            bbShapeNanometers[i] = bbshape.get(i);
-        }
-        localPath = (String) yamlFragment.get("path");
-        Map<String, Object> shape = (Map<String, Object>)yamlFragment.get("shape");
-        List<Integer> dims = (List<Integer>)shape.get("dims");
-        for (int i : new int[]{0,1,2,3})
-            pixelDims[i] = dims.get(i);
-        intensityType = (String)shape.get("type");
-        List<Double> td = (List<Double>)yamlFragment.get("transform");
-        if (td==null) {
-            throw new ParseException("Tiles missing transform", 0);
-        }
-        if (td.size() != 25) {
-            throw new ParseException("Unexpected raw tile transform size: "+td.size()+" (should be 25)", 0);
-        }
-        double[][] dd = new double[5][5];
-        for (int i = 0; i < 5; ++i) {
-            for (int j = 0; j < 5; ++j) {
-                dd[i][j] = td.get(5*i + j);
-            }
-        }
-        transform = new Matrix(dd, 5, 5);
-        // transform.print(11, 3);
+        this.bbOriginNanometers = bbOriginNanometers;
+        this.bbShapeNanometers = bbShapeNanometers;
+        this.pixelDims = pixelDims;
+        this.bytesPerIntensity = bytesPerIntensity;
+        this.transform = transform;
     }
     
     public String getLocalPath() {
@@ -136,7 +107,6 @@ public class BrainTileInfo implements BrickInfo {
                 {0, 0, 1.0/pixelDims[2], 0},
                 {0, 0, 0, 1}});
             texCoord_X_stageUm = tc_X_vx.times(voxel_X_stageUm);
-            // texCoord_X_stageUm.print(16, 12);
         }
         return texCoord_X_stageUm;
     }
@@ -197,10 +167,7 @@ public class BrainTileInfo implements BrickInfo {
 
     @Override
     public int getBytesPerIntensity() {
-        if ( intensityType.equals("u16") )
-            return 2;
-        else
-            return 1;
+        return bytesPerIntensity;
     }
 
     @Override
@@ -227,7 +194,7 @@ public class BrainTileInfo implements BrickInfo {
     }
 
     public boolean folderExists() {
-        // OS specific path should have already been translated in MouseLightYamlBrickSource
+        // OS specific path should have already been translated in LocalVolumeBrickSource
         File folderPath = new File(parentPath, localPath);
         return folderPath.exists();
     }
@@ -254,9 +221,8 @@ public class BrainTileInfo implements BrickInfo {
     }
 
     @Override
-    public Texture3d loadBrick(double maxEdgePadWidth) throws IOException
-    {
-        // OS specific path should have already been translated in MouseLightYamlBrickSource
+    public Texture3d loadBrick(double maxEdgePadWidth) throws IOException {
+        // OS specific path should have already been translated in LocalVolumeBrickSource
 
         File folderPath = new File(parentPath, localPath);
         File tileFile = null;
@@ -282,23 +248,23 @@ public class BrainTileInfo implements BrickInfo {
                 if (leverageCompressedFiles && file.getName().contains(imageSuffix) && resolver.canDecompress(file)) {
                     File decompressedName = resolver.getDecompressedNameForFile(file);
                     if (decompressedName != null && decompressedName.getName().endsWith(imageSuffix)) {
-                        log.info("Starting with compressed version of file {}.", file);
+                        LOG.info("Starting with compressed version of file {}.", file);
                         compressedTileFile = file;
                         break;
                     }
                 }
                 // Use the first channel file
                 if (file.getName().endsWith(imageSuffix + ".tif")) {
-                    log.info("Using never-compressed version of file {}.", file);
+                    LOG.info("Using never-compressed version of file {}.", file);
                     tileFile = file;
                     break;
                 }
             }
             if (compressedTileFile != null) {
                 try {
-                    log.info("Decompressing...");
+                    LOG.info("Decompressing...");
                     tileFile = resolver.decompressToFile(compressedTileFile);
-                    log.info("Decompressed as {}.", tileFile);
+                    LOG.info("Decompressed as {}.", tileFile);
                 }
                 catch (Exception ex) {
                     throw new IOException("Decompression step failed for " + compressedTileFile, ex);
@@ -307,13 +273,13 @@ public class BrainTileInfo implements BrickInfo {
             if (tileFile == null){
                 throw new IOException("No channel tiff file found");
             } else {
-                log.debug("loadBrick {}", tileFile.getAbsolutePath());
+                LOG.debug("loadBrick {}", tileFile.getAbsolutePath());
             }
 
         } else {
 
             tileFile=new File(folderPath, "default."+colorChannelIndex);
-            log.debug("loadBrick {}", tileFile.getAbsolutePath());
+            LOG.debug("loadBrick {}", tileFile.getAbsolutePath());
 
             texture.setOptionalFileStreamSource(new FileStreamSource() {
                 @Override
@@ -332,22 +298,25 @@ public class BrainTileInfo implements BrickInfo {
     }
 
     @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 83 * hash + Objects.hashCode(this.localPath);
-        return hash;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BrainTileInfo that = (BrainTileInfo) o;
+
+        return new EqualsBuilder()
+                .append(parentPath, that.parentPath)
+                .append(localPath, that.localPath)
+                .isEquals();
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final BrainTileInfo other = (BrainTileInfo) obj;
-        return Objects.equals(this.localPath, other.localPath);
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(parentPath)
+                .append(localPath)
+                .toHashCode();
     }
 
     @Override

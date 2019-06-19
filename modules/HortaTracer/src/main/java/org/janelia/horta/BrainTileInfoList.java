@@ -21,9 +21,7 @@ import org.yaml.snakeyaml.Yaml;
  *
  * @author Christopher Bruns <brunsc at janelia.hhmi.org>
  */
-public class BrainTileInfoList 
-implements Map<String, BrainTileInfo>, Iterable<BrainTileInfo>
-{
+public class BrainTileInfoList implements Map<String, BrainTileInfo>, Iterable<BrainTileInfo> {
     private final LinkedHashMap<String, BrainTileInfo> map = new LinkedHashMap<>();
     private String tilebasePath;
 
@@ -53,7 +51,7 @@ implements Map<String, BrainTileInfo>, Iterable<BrainTileInfo>
         // Index tiles for easy retrieval
         for (Map<String, Object> tile : tiles) {
             String tilePath = (String) tile.get("path");
-            map.put(tilePath, new BrainTileInfo(tile, tilebasePath, false));
+            map.put(tilePath, BrainTileInfoBuilder.fromYAMLFragment(tilebasePath, false, tile));
         }
     }
     
