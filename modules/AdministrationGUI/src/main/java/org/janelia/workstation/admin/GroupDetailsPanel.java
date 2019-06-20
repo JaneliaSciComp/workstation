@@ -19,8 +19,12 @@ import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;
+import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
 import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.util.Refreshable;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +32,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author schauderd
  */
-public class GroupDetailsPanel extends JPanel {
+public class GroupDetailsPanel extends JPanel implements Refreshable {
     private static final Logger log = LoggerFactory.getLogger(GroupDetailsPanel.class);
 
     private AdministrationTopComponent parent;
@@ -39,17 +43,22 @@ public class GroupDetailsPanel extends JPanel {
     private int COLUMN_NAME = 0;
     private int COLUMN_ROLE = 1;
 
-    public GroupDetailsPanel(AdministrationTopComponent parent, String group) {
+    public GroupDetailsPanel(AdministrationTopComponent parent, String groupKey) {
         this.parent = parent;
-        groupKey = group;
-        setupUI();
+        this.groupKey = groupKey;
+        refresh();
     }
 
-    public void setupUI() {
+    private void setupUI() {
 
         setLayout(new BorderLayout());
+        removeAll();
 
-        JPanel titlePanel = new TitlePanel("Edit Group", "Return To Group List", event -> returnHome());
+        String groupName = SubjectUtils.getSubjectName(groupKey);
+
+        JPanel titlePanel = new TitlePanel("Edit Group "+groupName, "Return To Group List",
+                event -> refresh(),
+                event -> returnHome());
         add(titlePanel, BorderLayout.PAGE_START);
 
         // show group edit table with permissions for that group
@@ -80,25 +89,48 @@ public class GroupDetailsPanel extends JPanel {
         actionPanel.add(removeUserButton);
         actionPanel.add(saveUserButton);
         add(actionPanel, BorderLayout.PAGE_END);
+
+        revalidate();
     }
 
-    public void editGroupDetails(String groupKey, List<User> userList) throws Exception {
-        Set<String> currentUsers = userList.stream().map(user -> user.getKey()).
-                collect(Collectors.toSet());
-        groupRolesModel.loadGroupRoles(groupKey, userList);
-        List<Subject> subjectList = DomainMgr.getDomainMgr().getSubjects();
-        for (Subject subject : subjectList) {
-            if (subject instanceof User) {
-                User user = (User) subject;
-                if (!currentUsers.contains(user.getKey())) {
-                    addUserBox.addItem(user);
-                }
+    private void editGroupDetails() {
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            List<User> userList;
+            List<Subject> subjectList;
+
+            @Override
+            protected void doStuff() throws Exception {
+                userList = DomainMgr.getDomainMgr().getUsersInGroup(groupKey);
+                subjectList = DomainMgr.getDomainMgr().getSubjects();
             }
-        }
 
+            @Override
+            protected void hadSuccess() {
+                Set<String> currentUsers = userList.stream().map(Subject::getKey).collect(Collectors.toSet());
+                groupRolesModel.loadGroupRoles(groupKey, userList);
+                for (Subject subject : subjectList) {
+                    if (subject instanceof User) {
+                        User user = (User) subject;
+                        if (!currentUsers.contains(user.getKey())) {
+                            addUserBox.addItem(user);
+                        }
+                    }
+                }
+                revalidate();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+            }
+        };
+
+        worker.execute();
     }
 
-    public void addUser() {
+    private void addUser() {
         User newUser = (User)addUserBox.getSelectedItem();
         if (newUser!=null) {
             Set<UserGroupRole> roles = newUser.getUserGroupRoles();
@@ -110,20 +142,26 @@ public class GroupDetailsPanel extends JPanel {
         }
     }
     
-    public void removeUser() {
+    private void removeUser() {
         int row = groupRolesTable.getSelectedRow();
         User user = groupRolesModel.getUserAtRow(row);
         groupRolesModel.removeUser(row);
         parent.saveUserRoles(user);
     }
         
-    public void updateUser() {
+    private void updateUser() {
         int row = groupRolesTable.getSelectedRow();
         User user = groupRolesModel.getUserAtRow(row);
         parent.saveUserRoles(user);
     }
 
-    public void returnHome() {
+    @Override
+    public void refresh() {
+        setupUI();
+        editGroupDetails();
+    }
+
+    private void returnHome() {
         parent.viewGroupList();
     }
 

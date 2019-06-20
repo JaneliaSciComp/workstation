@@ -16,9 +16,15 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
 
-import org.janelia.model.security.*;
+import org.janelia.model.security.Group;
+import org.janelia.model.security.GroupRole;
+import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
+import org.janelia.model.security.UserGroupRole;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.util.Refreshable;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +33,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author schauderd
  */
-public class GroupManagementPanel extends JPanel {
+public class GroupManagementPanel extends JPanel implements Refreshable {
     private static final Logger log = LoggerFactory.getLogger(GroupManagementPanel.class);
 
     private AdministrationTopComponent parent;
@@ -40,15 +46,17 @@ public class GroupManagementPanel extends JPanel {
 
     public GroupManagementPanel(AdministrationTopComponent parent) {
         this.parent = parent;
-        setupUI();
-        loadGroups();
+        refresh();
     }
 
     private void setupUI() {
 
         setLayout(new BorderLayout());
+        removeAll();
 
-        JPanel titlePanel = new TitlePanel("Group List", "Return To Top Menu", event -> returnHome());
+        JPanel titlePanel = new TitlePanel("Group List", "Return To Top Menu",
+                event -> refresh(),
+                event -> returnHome());
         add(titlePanel, BorderLayout.PAGE_START);
 
         groupManagementTableModel = new GroupManagementTableModel();
@@ -83,70 +91,95 @@ public class GroupManagementPanel extends JPanel {
         actionPanel.add(newGroupButton);
         actionPanel.add(editGroupButton);
         add(actionPanel, BorderLayout.PAGE_END);
+
+        revalidate();
     }
 
-    public void editGroup() {
+    private void editGroup() {
         int groupRow = groupManagementTable.getSelectedRow();
         Group group = groupManagementTableModel.getGroupAtRow(groupRow);
         parent.viewGroupDetails(group.getKey());
     }
 
-    public void newGroup() {
+    private void newGroup() {
         parent.createNewGroup();
     }
 
-    public void returnHome() {
+    @Override
+    public void refresh() {
+        setupUI();
+        loadGroups();
+    }
+
+    private void returnHome() {
         parent.viewTopMenu();
     }
 
     private void loadGroups() {
-        try {
-            Map<String, Integer> groupTotals = new HashMap<>();
-            List<Group> groupList = new ArrayList<>();
-            List<Subject> rawList = DomainMgr.getDomainMgr().getSubjects();
-            for (Subject subject : rawList) {
-                if (subject instanceof Group)
-                    groupList.add((Group) subject);
-                else {
-                    User user = (User) subject;
-                    for (UserGroupRole groupRole : user.getUserGroupRoles()) {
-                        String groupKey = groupRole.getGroupKey();
-                        if (groupTotals.containsKey(groupKey))
-                            groupTotals.put(groupKey, groupTotals.get(groupKey) + 1);
-                        else
-                            groupTotals.put(groupKey, 1);
-                    }
-                }
-            }
-            if (!AccessManager.getAccessManager().isAdmin()) {
-                // only keep groups where user is an admin or owner
-                User loginUser = (User)AccessManager.getSubjectByNameOrKey(AccessManager.getSubjectKey());
 
-                if (loginUser!=null) {
-                    Map<String, Integer> filterTotals = new HashMap<>();
-                    List<Group> filterList = new ArrayList<>();
-                    for (UserGroupRole groupRole : loginUser.getUserGroupRoles()) {
-                        String groupKey = groupRole.getGroupKey();
-                        if (groupRole.getRole().equals(GroupRole.Admin) ||
-                                groupRole.getRole().equals(GroupRole.Owner)) {
-                            filterTotals.put(groupKey, groupTotals.get(groupKey));
-                            Group group = (Group) AccessManager.getSubjectByNameOrKey(groupRole.getGroupKey());
-                            if (group != null)
-                                filterList.add(group);
+        SimpleWorker worker = new SimpleWorker() {
+
+            Map<String, Integer> groupTotals;
+            List<Group> groupList;
+
+            @Override
+            protected void doStuff() throws Exception {
+                List<Subject> subjects = DomainMgr.getDomainMgr().getSubjects();
+                groupTotals = new HashMap<>();
+                groupList = new ArrayList<>();
+                for (Subject subject : subjects) {
+                    if (subject instanceof Group)
+                        groupList.add((Group) subject);
+                    else {
+                        User user = (User) subject;
+                        for (UserGroupRole groupRole : user.getUserGroupRoles()) {
+                            String groupKey = groupRole.getGroupKey();
+                            if (groupTotals.containsKey(groupKey))
+                                groupTotals.put(groupKey, groupTotals.get(groupKey) + 1);
+                            else
+                                groupTotals.put(groupKey, 1);
                         }
                     }
-                    groupList = filterList;
-                    groupTotals = filterTotals;
-                } else {
-                    groupList = new ArrayList<>();
-                    groupTotals = new HashMap<String,Integer>();
+                }
+                if (!AccessManager.getAccessManager().isAdmin()) {
+                    // only keep groups where user is an admin or owner
+                    User loginUser = (User)AccessManager.getSubjectByNameOrKey(AccessManager.getSubjectKey());
+
+                    if (loginUser!=null) {
+                        Map<String, Integer> filterTotals = new HashMap<>();
+                        List<Group> filterList = new ArrayList<>();
+                        for (UserGroupRole groupRole : loginUser.getUserGroupRoles()) {
+                            String groupKey = groupRole.getGroupKey();
+                            if (groupRole.getRole().equals(GroupRole.Admin) ||
+                                    groupRole.getRole().equals(GroupRole.Owner)) {
+                                filterTotals.put(groupKey, groupTotals.get(groupKey));
+                                Group group = (Group) AccessManager.getSubjectByNameOrKey(groupRole.getGroupKey());
+                                if (group != null)
+                                    filterList.add(group);
+                            }
+                        }
+                        groupList = filterList;
+                        groupTotals = filterTotals;
+                    } else {
+                        groupList = new ArrayList<>();
+                        groupTotals = new HashMap<>();
+                    }
                 }
             }
 
-            groupManagementTableModel.loadGroups(groupList, groupTotals);
-        } catch (Exception e) {
-            FrameworkAccess.handleException("Problem retrieving group information", e);
-        }
+            @Override
+            protected void hadSuccess() {
+                groupManagementTableModel.loadGroups(groupList, groupTotals);
+                revalidate();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+            }
+        };
+
+        worker.execute();
     }
 
     // add a group
