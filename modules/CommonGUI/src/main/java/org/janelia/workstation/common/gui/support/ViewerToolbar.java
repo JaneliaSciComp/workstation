@@ -1,18 +1,12 @@
-package org.janelia.workstation.browser.gui.listview;
+package org.janelia.workstation.common.gui.support;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
-
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.common.gui.support.WrapLayout;
 
 
 /**
@@ -35,12 +29,7 @@ public abstract class ViewerToolbar extends JPanel {
         refreshButton.setIcon(Icons.getRefreshIcon());
         refreshButton.setFocusable(false);
         refreshButton.setToolTipText("Refresh the current view");
-        refreshButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                refresh();
-            }
-        });
+        refreshButton.addActionListener(e -> refresh());
         refreshButton.addMouseListener(new MouseForwarder(this, "RefreshButton->JToolBar"));
         toolbar.add(refreshButton);
 

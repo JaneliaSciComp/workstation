@@ -40,7 +40,7 @@ import com.google.common.collect.ImmutableList;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SearchOptionsPanel extends ConfigPanel {
+public class ColorDepthSearchOptionsPanel extends ConfigPanel {
     
     // Constants
     private static final String THRESHOLD_LABEL_PREFIX = "Data Threshold: ";
@@ -75,7 +75,7 @@ public class SearchOptionsPanel extends ConfigPanel {
     private ColorDepthSearch search;
     private List<DataSet> dataSets; // all possible data sets in the current alignment space
     
-    public SearchOptionsPanel() {
+    public ColorDepthSearchOptionsPanel() {
 
         super(false, true, 15, 10);
         

@@ -145,12 +145,16 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
     }
 
     @Override
-    public void changeUserPassword (AuthenticationRequest message) throws Exception {
+    public User changeUserPassword(String username, String plaintextPassword) throws Exception {
+        AuthenticationRequest message = new AuthenticationRequest();
+        message.setUsername(username);
+        message.setPassword(plaintextPassword);
         Response response = service.path("data/user/password")
                 .request("application/json")
                 .post(Entity.json(message));
         if (checkBadResponse(response.getStatus(), "problem making request to change user password to server")) {
             throw new WebApplicationException(response);
         }
+        return response.readEntity(User.class);
     }
 }
