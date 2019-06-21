@@ -13,6 +13,8 @@ import org.janelia.horta.volume.VoxelIndex;
 import org.janelia.it.jacs.shared.img_3d_loader.FileStreamSource;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.rendering.RawImage;
+import org.janelia.rendering.RenderedVolumeLoader;
+import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.workstation.integration.spi.compression.CompressedFileResolverI;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
@@ -42,7 +44,7 @@ public class BrainTileInfoBuilder {
     //    17912676.0, 0.0, 0.485852, 995.024902, 0.0, 9909023.0, 0.0, 0.0, 0.0, 1.0, 0.0,
     //    0.0, 0.0, 0.0, 0.0, 1.0]
 
-    public static BrainTileInfo fromYAMLFragment(String parentPath, boolean leverageCompressedFiles, Map<String, Object> yamlFragment) {
+    public static BrainTileInfo fromYAMLFragment(RenderedVolumeLoader volumeLoader, RenderedVolumeLocation volumeLocation, String tileBasePath, boolean leverageCompressedFiles, Map<String, Object> yamlFragment) {
         Map<String, Object> aabb = (Map<String, Object>) yamlFragment.get("aabb");
         if (aabb == null) {
             throw new IllegalArgumentException("Field missing for extracting origin and shape coordinates from " + yamlFragment);
@@ -101,7 +103,10 @@ public class BrainTileInfoBuilder {
             }
         }
         Matrix transform = new Matrix(dd, 5, 5);
-        return new BrainTileInfo(parentPath,
+        return new BrainTileInfo(
+                volumeLoader,
+                volumeLocation,
+                tileBasePath,
                 localPath,
                 leverageCompressedFiles,
                 bbOriginNanometers,
@@ -111,7 +116,7 @@ public class BrainTileInfoBuilder {
                 transform);
     }
 
-    public static BrainTileInfo fromRawImage(RawImage rawImage, boolean leverageCompressedFiles) {
+    public static BrainTileInfo fromRawImage(RenderedVolumeLoader volumeLoader, RenderedVolumeLocation volumeLocation, RawImage rawImage, boolean leverageCompressedFiles) {
         double[][] dd = new double[5][5];
         for (int i = 0; i < 5; ++i) {
             for (int j = 0; j < 5; ++j) {
@@ -119,11 +124,14 @@ public class BrainTileInfoBuilder {
             }
         }
         Matrix transform = new Matrix(dd, 5, 5);
-        return new BrainTileInfo(rawImage.getAcquisitionPath(),
+        return new BrainTileInfo(
+                volumeLoader,
+                volumeLocation,
+                rawImage.getAcquisitionPath(),
                 rawImage.getRelativePath(),
                 leverageCompressedFiles,
-                Arrays.stream(rawImage.getOriginInMicros()).mapToInt(Integer::intValue).toArray(),
-                Arrays.stream(rawImage.getDimsInMicros()).mapToInt(Integer::intValue).toArray(),
+                Arrays.stream(rawImage.getOriginInNanos()).mapToInt(Integer::intValue).toArray(),
+                Arrays.stream(rawImage.getDimsInNanos()).mapToInt(Integer::intValue).toArray(),
                 Arrays.stream(rawImage.getTileDims()).mapToInt(Integer::intValue).toArray(),
                 rawImage.getBytesPerIntensity(),
                 transform);

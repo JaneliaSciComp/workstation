@@ -1,55 +1,41 @@
 package org.janelia.horta;
 
-import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.Optional;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
-import org.janelia.horta.blocks.FileKtxOctreeBlockTileSource;
-import org.janelia.horta.blocks.JadeKtxOctreeBlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSourceProvider;
-import org.janelia.horta.volume.*;
-import org.janelia.it.jacs.shared.lvv.HttpDataSource;
+import org.janelia.horta.volume.JadeVolumeBrickSource;
+import org.janelia.horta.volume.LocalVolumeBrickSource;
+import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.CachedRenderedVolumeLoader;
-import org.janelia.rendering.FileBasedRenderedVolumeLocation;
-import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolume;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
-import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.options.ApplicationOptions;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Optional;
+
+import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
+
 public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SampleLocationAcceptor.class);
-    private static final int DEFAULT_VOLUMES_CACHE_SIZE = 2;
-    private static final int DEFAULT_TILES_CACHE_SIZE = 100;
 
     private String currentSource;
     private NeuronTraceLoader loader;
@@ -101,7 +87,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     setCameraLocation(sampleLocation);
 
                     if (nttc.getKtxSource() == null) { // Use obsolete single channel raw file loading
-                        StaticVolumeBrickSource volumeSource = setVolumeBrickSource(new URI(currentSource), sampleLocation.isCompressed(), progress);
+                        StaticVolumeBrickSource volumeSource = setVolumeBrickSource(url.toURI(), sampleLocation.isCompressed(), progress);
                         if (volumeSource == null) {
                             throw new IOException("Loading volume source failed");
                         }
@@ -119,6 +105,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     }
                     nttc.redrawNow();
                 } catch (final Exception ex) {
+                    LOG.error("Error setting up the tile source", ex);
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -153,10 +140,9 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         StaticVolumeBrickSource volumeBrickSource;
         if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
             volumeBrickSource = new JadeVolumeBrickSource(
+                    nttc.getRenderedVolumeLoader(),
                     renderedOctreeUri,
                     AccessManager.getAccessManager().getAppAuthorization(),
-                    DEFAULT_VOLUMES_CACHE_SIZE,
-                    DEFAULT_TILES_CACHE_SIZE,
                     useCompressedFiles
             );
         } else {
@@ -170,7 +156,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 );
                 URL yamlUrl = yamlUri.toURL();
                 try (InputStream sourceYamlStream = yamlUrl.openStream()) {
-                    volumeBrickSource = new LocalVolumeBrickSource(sourceYamlStream, useCompressedFiles, () -> Optional.of(progress));
+                    volumeBrickSource = new LocalVolumeBrickSource(nttc.getRenderedVolumeLoader(), renderedOctreeUri, sourceYamlStream, useCompressedFiles, () -> Optional.of(progress));
                 } catch (IllegalArgumentException ex) {
                     JOptionPane.showMessageDialog(nttc,
                             "Problem Loading Raw Tile Information from " + yamlUrlString +

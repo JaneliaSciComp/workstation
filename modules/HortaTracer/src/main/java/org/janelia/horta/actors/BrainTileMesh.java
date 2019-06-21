@@ -13,9 +13,7 @@ import org.janelia.geometry3d.VolumeTextureMesh;
  * Specialized Mesh for mouse brain tile rendering
  * @author Christopher Bruns
  */
-public class BrainTileMesh extends MeshGeometry
-implements VolumeTextureMesh
-{
+public class BrainTileMesh extends MeshGeometry implements VolumeTextureMesh {
     private final BrickInfo brickInfo;
     private Matrix4 transformWorldToTexCoord;
     
@@ -50,9 +48,8 @@ implements VolumeTextureMesh
     @Override
     public Matrix4 getTransformWorldToTexCoord() {
         if (transformWorldToTexCoord == null) {
-            Matrix m = brickInfo.getTexCoord_X_stageUm();
+            Matrix m = brickInfo.getStageCoordToTexCoord();
             transformWorldToTexCoord = new Matrix4(m);
-            // System.out.println("transformWorldToTexCoord = "+transformWorldToTexCoord);
         }
         return transformWorldToTexCoord;
     }

@@ -75,6 +75,9 @@ import org.janelia.geometry3d.Viewport;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.MultipassRenderer;
 import org.janelia.gltools.material.VolumeMipMaterial;
+import org.janelia.rendering.CachedRenderedVolumeLoader;
+import org.janelia.rendering.RenderedVolumeLoader;
+import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.scenewindow.OrbitPanZoomInteractor;
 import org.janelia.scenewindow.SceneRenderer;
 import org.janelia.scenewindow.SceneRenderer.CameraType;
@@ -174,8 +177,10 @@ import org.slf4j.LoggerFactory;
 public final class NeuronTracerTopComponent extends TopComponent
         implements VolumeProjection {
 
-    public static final String PREFERRED_ID = "NeuronTracerTopComponent";
-    public static final String BASE_YML_FILE = "tilebase.cache.yml";
+    static final String PREFERRED_ID = "NeuronTracerTopComponent";
+    static final String BASE_YML_FILE = "tilebase.cache.yml";
+    private static final int DEFAULT_VOLUMES_CACHE_SIZE = 2;
+    private static final int DEFAULT_TILES_CACHE_SIZE = 100;
 
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor worldInteractor;
@@ -193,6 +198,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     private TracingInteractor tracingInteractor;
 
+    private final RenderedVolumeLoader renderedVolumeLoader;
     // Old way for loading raw tiles
     private StaticVolumeBrickSource volumeSource;
     // New way for loading ktx tiles
@@ -205,7 +211,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private final NeuronMPRenderer neuronMPRenderer;
 
     private String currentSource;
-    private final NeuronTraceLoader loader;
+    private final NeuronTraceLoader neuronTraceLoader;
 
     private boolean leverageCompressedFiles = false;
 
@@ -236,6 +242,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     public NeuronTracerTopComponent() {
+        renderedVolumeLoader = new CachedRenderedVolumeLoader(new RenderedVolumeLoaderImpl(), DEFAULT_VOLUMES_CACHE_SIZE, DEFAULT_TILES_CACHE_SIZE);
+
         // This block is what the wizard created
         initComponents();
         setName(Bundle.CTL_NeuronTracerTopComponent());
@@ -427,11 +435,10 @@ public final class NeuronTracerTopComponent extends TopComponent
             }
         });
 
-        loader = new NeuronTraceLoader(
+        neuronTraceLoader = new NeuronTraceLoader(
                 NeuronTracerTopComponent.this,
                 neuronMPRenderer,
-                sceneWindow
-        );
+                sceneWindow);
 
         // Default to compressed voxels, per user request February 2016
         setCubifyVoxels(true);
@@ -439,7 +446,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         loadStartupPreferences();
 
         metaWorkspace.notifyObservers();
-        playback = new PlayReviewManager(sceneWindow, this, loader);
+        playback = new PlayReviewManager(sceneWindow, this, neuronTraceLoader);
     }
     
     public void stopPlaybackReview() {
@@ -520,7 +527,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
             }
             ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                    currentSource, loader,this, sceneWindow
+                    currentSource, neuronTraceLoader,this, sceneWindow
             );
 
             // if neuron and neuron vertex passed, select this parent vertex
@@ -720,7 +727,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     // logger.info(xyz);
                     previousClickTime = System.nanoTime();
                     PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-                    loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                    neuronTraceLoader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
                 }
             }
 
@@ -1054,9 +1061,9 @@ public final class NeuronTracerTopComponent extends TopComponent
         this.add(sceneWindow.getOuterComponent(), BorderLayout.CENTER);
     }
 
-    public void loadDroppedYaml(InputStream yamlStream) throws IOException {
-        setVolumeSource(new LocalVolumeBrickSource(yamlStream, leverageCompressedFiles, Optional::empty));
-        loader.loadTileAtCurrentFocus(volumeSource);
+    public void loadDroppedYaml(String sourceName, InputStream yamlStream) throws IOException {
+        setVolumeSource(new LocalVolumeBrickSource(renderedVolumeLoader, URI.create(sourceName), yamlStream, leverageCompressedFiles, Optional::empty));
+        neuronTraceLoader.loadTileAtCurrentFocus(volumeSource);
     }
 
     private void setupDragAndDropYml() {
@@ -1188,9 +1195,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 topMenu.add("Options:").setEnabled(false); // TODO should I place title in constructor?
 
                 // SECTION: View options
-                // menu.add(new JPopupMenu.Separator());
-                boolean showLinkToLvv = true;
-                if ((mouseStageLocation != null) && (showLinkToLvv)) {
+                if (mouseStageLocation != null) {
                     // Synchronize with LVV
                     // TODO - is LVV present?
                     // Want to lookup, get URL and get focus.
@@ -1201,7 +1206,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
                     logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
                     ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                            currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
+                            currentSource, neuronTraceLoader, NeuronTracerTopComponent.this, sceneWindow
                     );
                     RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
                     if (locationProviders.size() > 1) {
@@ -1234,7 +1239,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-                            loader.animateToFocusXyz(mouseStageLocation, pCam.getVantage(), 150);
+                            neuronTraceLoader.animateToFocusXyz(mouseStageLocation, pCam.getVantage(), 150);
                         }
                     });
                 }
@@ -1635,7 +1640,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             public void actionPerformed(ActionEvent e) {
                                 PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
                                 Vector3 xyz = new Vector3(interactorContext.getCurrentParentAnchor().getLocation());
-                                loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                                neuronTraceLoader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
                             }
                         });
                     }
@@ -1747,19 +1752,23 @@ public final class NeuronTracerTopComponent extends TopComponent
         });
     }
 
-    public void setUpdateVolumeCache(boolean doUpdate) {
+    RenderedVolumeLoader getRenderedVolumeLoader() {
+        return renderedVolumeLoader;
+    }
+
+    void setUpdateVolumeCache(boolean doUpdate) {
         volumeCache.setUpdateCache(doUpdate);
     }
 
-    public boolean doesUpdateVolumeCache() {
+    boolean doesUpdateVolumeCache() {
         return volumeCache.isUpdateCache();
     }
 
-    public GL3Actor createBrickActor(BrainTileInfo brainTile, int colorChannel) throws IOException {
+    GL3Actor createBrickActor(BrainTileInfo brainTile, int colorChannel) throws IOException {
         return new BrickActor(brainTile, imageColorModel, volumeState, colorChannel);
     }
 
-    public double[] getStageLocation() {
+    double[] getStageLocation() {
         if (mouseStageLocation == null) {
             return null;
         } else {
@@ -2097,7 +2106,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             }
             setKtxSource(source);
         }
-        loader.loadKtxTileAtLocation(ktxSource, location, true);
+        neuronTraceLoader.loadKtxTileAtLocation(ktxSource, location, true);
     }
 
     private KtxOctreeBlockTileSource openTileSource() {

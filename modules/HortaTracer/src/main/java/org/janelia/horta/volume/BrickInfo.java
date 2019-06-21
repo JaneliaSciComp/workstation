@@ -23,6 +23,6 @@ public interface BrickInfo {
     Texture3d loadBrick(double maxEdgePadWidth) throws IOException;
     boolean isSameBrick(BrickInfo other);
 
-    // Matrix that transforms local texture coordinates to world units (e.g. stage micrometers)
-    Matrix getTexCoord_X_stageUm();
+    // Matrix that transforms local texture coordinates to world units (e.g. stage coordinates)
+    Matrix getStageCoordToTexCoord();
 }

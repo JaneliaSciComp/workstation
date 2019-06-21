@@ -37,10 +37,10 @@ public class JadeVolumeBrickSource implements StaticVolumeBrickSource {
     private final Double resolution;
     private final BrickInfoSet brickInfoSet;
 
-    public JadeVolumeBrickSource(URI volumeBaseURI, AppAuthorization appAuthorization, int volumeCacheSize, int tileCacheSize, boolean leverageCompressedFiles) {
+    public JadeVolumeBrickSource(RenderedVolumeLoader renderedVolumeLoader, URI volumeBaseURI, AppAuthorization appAuthorization, boolean leverageCompressedFiles) {
         this.volumeBaseURI = volumeBaseURI;
         this.appAuthorization = appAuthorization;
-        this.renderedVolumeLoader = new CachedRenderedVolumeLoader(new RenderedVolumeLoaderImpl(), volumeCacheSize, tileCacheSize);
+        this.renderedVolumeLoader = renderedVolumeLoader;
         this.objectMapper = (new ObjectMapper()).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         Pair<Double, BrickInfoSet> volumeBricksMetadata = loadVolumeBricksMetadata(leverageCompressedFiles);
         this.resolution = volumeBricksMetadata.getLeft();
@@ -60,7 +60,8 @@ public class JadeVolumeBrickSource implements StaticVolumeBrickSource {
             RenderedVolumeMetadata renderedVolumeMetadata = objectMapper.readValue(getMethod.getResponseBodyAsStream(), RenderedVolumeMetadata.class);
             this.renderedVolume = new RenderedVolume(
                     new JADEBasedRenderedVolumeLocation(
-                            renderedVolumeMetadata.baseURI,
+                            renderedVolumeMetadata.connectionURI,
+                            renderedVolumeMetadata.dataStorageURI,
                             renderedVolumeMetadata.volumeBasePath,
                             this.appAuthorization.getAuthenticationToken(),
                             (String) null,
@@ -85,7 +86,7 @@ public class JadeVolumeBrickSource implements StaticVolumeBrickSource {
             // There is no dynamic loading by resolution at the moment for raw tiles in yaml file
             // so treat all tiles as having the same resolution as the first tile
             return renderedVolumeLoader.loadVolumeRawImageTiles(renderedVolume.getRvl()).stream()
-                    .map(rawImage -> BrainTileInfoBuilder.fromRawImage(rawImage, leverageCompressedFiles))
+                    .map(rawImage -> BrainTileInfoBuilder.fromRawImage(renderedVolumeLoader, renderedVolume.getRvl(), rawImage, leverageCompressedFiles))
                     .reduce(MutablePair.of(null, new BrickInfoSet()),
                             (Pair<Double, BrickInfoSet> res, BrainTileInfo brainTileInfo) -> {
                                 res.getRight().add(brainTileInfo);

@@ -6,7 +6,9 @@ import org.janelia.rendering.TileInfo;
 
 class RenderedVolumeMetadata {
     @JsonProperty
-    String baseURI;
+    String connectionURI;
+    @JsonProperty
+    String dataStorageURI;
     @JsonProperty
     String volumeBasePath;
     @JsonProperty

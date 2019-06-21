@@ -207,7 +207,7 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         // TODO - 32 bit integers...
     }
 
-    public Pair<Raster[], ColorModel> loadStack(RenderedImage[] stack) {
+    private Pair<Raster[], ColorModel> loadStack(RenderedImage[] stack) {
         PerformanceTimer timer = new PerformanceTimer();
 
         depth = stack.length;
