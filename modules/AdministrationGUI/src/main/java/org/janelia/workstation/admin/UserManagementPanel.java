@@ -62,15 +62,17 @@ public class UserManagementPanel extends JPanel implements Refreshable {
         userManagementTable.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent mouseEvent) {
                 JTable table = (JTable) mouseEvent.getSource();
-                User user = userManagementTableModel.getUserAtRow(userManagementTable.getSelectedRow());
-                if (!AccessManager.getAccessManager().isAdmin() &&
-                        !AccessManager.getSubjectKey().equals(user.getKey()))
-                    return;
-                if (mouseEvent.getClickCount() == 2 && table.getSelectedRow() != -1) {
-                    editUser();
-                } else {
-                    if (table.getSelectedRow() != -1) {
-                        editUserButton.setEnabled(true);
+                if (userManagementTable.getSelectedRow()>=0) {
+                    User user = userManagementTableModel.getUserAtRow(userManagementTable.getSelectedRow());
+                    if (!AccessManager.getAccessManager().isAdmin() &&
+                            !AccessManager.getSubjectKey().equals(user.getKey()))
+                        return;
+                    if (mouseEvent.getClickCount() == 2 && table.getSelectedRow() != -1) {
+                        editUser();
+                    } else {
+                        if (table.getSelectedRow() != -1) {
+                            editUserButton.setEnabled(true);
+                        }
                     }
                 }
             }
