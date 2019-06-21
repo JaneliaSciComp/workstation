@@ -9,9 +9,9 @@ import javax.swing.SwingConstants;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.security.Group;
 import org.janelia.model.security.User;
-import org.janelia.model.security.dto.AuthenticationRequest;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.facade.impl.rest.SubjectFacadeImpl;
 import org.janelia.workstation.core.api.facade.interfaces.SubjectFacade;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
@@ -24,6 +24,8 @@ import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
@@ -50,6 +52,9 @@ import org.openide.windows.WindowManager;
         "HINT_AdministrationTopComponent=Administration Tool"
 })
 public final class AdministrationTopComponent extends TopComponent {
+
+    private static final Logger log = LoggerFactory.getLogger(AdministrationTopComponent.class);
+
     public static final String PREFERRED_ID = "AdministrationTopComponent";
     public static final String LABEL_TEXT = "Administration Tool";
 
@@ -172,57 +177,22 @@ public final class AdministrationTopComponent extends TopComponent {
         }
     }
 
-    User createUser(User user) {
+    User saveUser(User user, String plaintextPassword) {
         try {
             SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
-            AuthenticationRequest message = new AuthenticationRequest();
-            message.setUsername(user.getName());
-            message.setPassword(user.getPassword());
-
-            User newUser = subjectFacade.updateUser(user);
-
-            // make sure to change password
-            subjectFacade.changeUserPassword(message);
-
-            // set up a user default directory
-
-            // if mail set up, register the user's email address
-            return newUser;
+            log.info("Saving user {}", user);
+            User updatedUser = subjectFacade.updateUser(user);
+            log.info("Updated user: {}", updatedUser);
+            if (plaintextPassword != null) {
+                updatedUser = subjectFacade.changeUserPassword(user.getName(), plaintextPassword);
+                log.info("Updated user password: {}", updatedUser);
+            }
+            return updatedUser;
         }
         catch (Exception e) {
             FrameworkAccess.handleException(e);
         }
         return null;
-    }
-
-    void saveUser(User user, boolean passwordChange) {
-        try {
-            SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
-            if (user.getId() == null) {
-                // Clear out the plaintext password, so we're not saving it into the database
-                String plaintextPassword = user.getPassword();
-                user.setPassword(null);
-                // Save new user
-                user = subjectFacade.updateUser(user);
-                // Make sure to save the hashed password
-                AuthenticationRequest message = new AuthenticationRequest();
-                message.setUsername(user.getName());
-                message.setPassword(plaintextPassword);
-                subjectFacade.changeUserPassword(message);
-            }
-            else {
-                // FIXME: this saves the plaintext password into the database...
-                subjectFacade.updateUser(user);
-                if (passwordChange) {
-                    AuthenticationRequest message = new AuthenticationRequest();
-                    message.setUsername(user.getName());
-                    message.setPassword(user.getPassword());
-                    subjectFacade.changeUserPassword(message);
-                }
-            }
-        } catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
     }
 
     void createGroup(Group group) {

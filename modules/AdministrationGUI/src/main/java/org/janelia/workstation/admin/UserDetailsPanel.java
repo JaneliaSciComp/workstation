@@ -48,7 +48,7 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
     private JTable groupRolesTable;
     private User currentUser;
     private User admin;
-    private boolean passwordChanged = false;
+    private String newPassword = null;
     private boolean dirtyFlag = false;
     private boolean canEdit = false;
     private int COLUMN_NAME = 0;
@@ -127,15 +127,10 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
     }
     
     private void saveUser () {
-        if (currentUser.getId() == null) {
-            User newUser = parent.createUser(currentUser);
-            if (newUser != null) {
-                currentUser.setId(newUser.getId());
-                currentUser.setKey(newUser.getKey());
-            }
+        currentUser = parent.saveUser(currentUser, newPassword);
+        if (currentUser != null) {
+            parent.saveUserRoles(currentUser);
         }
-        parent.saveUser(currentUser, passwordChanged);
-        parent.saveUserRoles(currentUser);
         parent.viewUserList();
     }
     
@@ -241,7 +236,6 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
     class UserDetailsTableModel extends AbstractTableModel {
         String[] columnNames = {"Property","Value"};
         User user;
-        String password;
         String[] editProperties = {"Name", "FullName", "Email", "Password"};
         String[] editLabels = {"Name", "Full Name", "Email", "Password"};
         String[] values = new String[editProperties.length];
@@ -316,9 +310,7 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
         public void setValueAt(Object value, int row, int col) {
             try {
                 if (editProperties[row].equals("Password")) {
-                    password = (String)value;
-                    user.setPassword(password);
-                    passwordChanged = true;
+                    newPassword = (String)value;
                 } else {
                     new PropertyDescriptor(editProperties[row], User.class).getWriteMethod().invoke(user, (String)value);
                 }

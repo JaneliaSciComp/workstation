@@ -7,7 +7,6 @@ import org.janelia.model.domain.Preference;
 import org.janelia.model.security.Group;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
-import org.janelia.model.security.dto.AuthenticationRequest;
 import org.janelia.model.security.UserGroupRole;
 
 /**
@@ -69,7 +68,8 @@ public interface SubjectFacade {
 
     /**
      * changes the password for a user
-     * @param request
+     * @param username
+     * @param password
      */
-    public void changeUserPassword(AuthenticationRequest request) throws Exception;
+    public User changeUserPassword(String username, String password) throws Exception;
 }
