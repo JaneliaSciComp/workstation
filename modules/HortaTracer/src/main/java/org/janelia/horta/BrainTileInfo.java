@@ -236,10 +236,21 @@ public class BrainTileInfo implements BrickInfo {
 
         InputStream rawImageStream = volumeLocation.readRawTileContent(rawImage, colorChannelIndex);
 
-        if (!texture.loadTiffStack(rawImage.toString(), rawImageStream)) {
-            return null;
+        try {
+            if (!texture.loadTiffStack(rawImage.toString() + "-ch-" + colorChannelIndex, rawImageStream)) {
+                return null;
+            } else {
+                return texture;
+            }
+        } finally {
+            if (rawImageStream != null) {
+                try {
+                    rawImageStream.close();
+                } catch (IOException ignore) {
+                    LOG.info("Exception closing the stream for image {}, channel {}", rawImage, colorChannelIndex, ignore);
+                }
+            }
         }
-        return texture;
     }
 
     @Override

@@ -167,7 +167,7 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         return Pair.of(raster, slice.getColorModel());
     }
 
-    private Texture3d loadStack(Raster[] raster, ColorModel colorModel) {
+    private void loadStack(Raster[] raster, ColorModel colorModel) {
         PerformanceTimer timer = new PerformanceTimer();
 
         bytesPerIntensity = colorModel.getComponentSize(0)/8;
@@ -278,59 +278,6 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         }
         pixels.rewind();
 
-//        int[] pxl = new int[numberOfComponents];
-//        if (bytesPerIntensity < 2) {
-//            pixels.rewind();
-//            for (int z = 0; z < depth; ++z) {
-//                Raster raster = stack[z].getData();
-//                for (int y = 0; y < height; ++y) {
-//                    for (int x = 0; x < width; ++x) {
-//                        raster.getPixel(x, y, pxl);
-//                        for (int c = 0; c < numberOfComponents; ++c) {
-//                            pixels.put((byte)(pxl[c] & 0xFF));
-//                        }
-//                    }
-//                }
-//            }
-//            pixels.flip();
-//        }
-//        else { // 16 bit
-//            shortPixels = pixels.asShortBuffer();
-//            shortPixels.rewind();
-//            // System.out.println("Casting short buffer took "+timer.reportMsAndRestart()+" ms");
-//            Raster[] sliceRasters = new Raster[depth];
-//
-//            // TODO Run this in parallel
-//            for (int z = 0; z < depth; ++z) {
-//                sliceRasters[z] = stack[z].getData(); // slow 35-40 ms per slice
-//            }
-//            System.out.println("Getting Raster data took "+timer.reportMsAndRestart()+" ms");
-//
-//            for (int z = 0; z < depth; ++z) {
-//                final boolean useRawBytes = true;
-//                if (useRawBytes) { // not faster! 12 seconds
-//                    DataBufferUShort dbu = (DataBufferUShort)sliceRasters[z].getDataBuffer();
-//                    // System.out.println("Slice "+z+" getDataBuffer() took "+timer.reportMsAndRestart()+" ms");
-//                    short[] sliceData = dbu.getData();
-//                    // System.out.println("Slice "+z+" getData() [2] took "+timer.reportMsAndRestart()+" ms");
-//                    shortPixels.put(sliceData);
-//                    /// System.out.println("Slice "+z+" put() took "+timer.reportMsAndRestart()+" ms");
-//                }
-//                else { // 12 seconds
-//                    for (int y = 0; y < height; ++y) {
-//                        for (int x = 0; x < width; ++x) {
-//                            sliceRasters[z].getPixel(x, y, pxl);
-//                            for (int c = 0; c < numberOfComponents; ++c) {
-//                                shortPixels.put((short)(pxl[c] & 0xFFFF));
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//            shortPixels.flip();
-//        }
-//        pixels.rewind();
-
         LOG.debug("Getting Raster data and populating texture buffer took {} ms", timer.reportMsAndRestart());
 
         computeMipmaps();
@@ -338,8 +285,6 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         LOG.debug("Computing mipmaps took {} ms", timer.reportMsAndRestart());
 
         needsUpload = true;
-
-        return this;
     }
 
     private static class LoadStackZSlice8bit implements Runnable {
@@ -347,7 +292,7 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         ByteBuffer pixels;
         Raster[] raster;
 
-        public LoadStackZSlice8bit(int zStart, int zCount, ByteBuffer pixels, Raster[] raster, int depth, int height, int width, int numberOfComponents) {
+        LoadStackZSlice8bit(int zStart, int zCount, ByteBuffer pixels, Raster[] raster, int depth, int height, int width, int numberOfComponents) {
             this.zStart=zStart;
             this.zCount=zCount;
             this.pixels=pixels;
@@ -374,7 +319,6 @@ public class Texture3d extends BasicTexture implements GL3Resource {
                 }
             }
         }
-
     }
 
     private static class LoadStackZSlice16bit implements Runnable {
@@ -382,7 +326,7 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         ShortBuffer shortPixels;
         Raster[] raster;
 
-        public LoadStackZSlice16bit(int zStart, int zCount, ShortBuffer shortPixels, Raster[] raster, int depth, int height, int width, int numberOfComponents) {
+        LoadStackZSlice16bit(int zStart, int zCount, ShortBuffer shortPixels, Raster[] raster, int depth, int height, int width, int numberOfComponents) {
             this.zStart=zStart;
             this.zCount=zCount;
             this.shortPixels=shortPixels;
@@ -410,10 +354,9 @@ public class Texture3d extends BasicTexture implements GL3Resource {
                 shortBuffer.put(bufferOffset+i, arr[i]);
             }
         }
-
     }
 
-    protected void computeMipmaps() {
+    private void computeMipmaps() {
         mipmaps.clear();
         PerformanceTimer timer = new PerformanceTimer();
         Texture3d mipmap = createMipmapUsingMaxFilter();
@@ -424,19 +367,11 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         }
     }
 
-    protected void copyParameters(Texture3d rhs) {
+    private void copyParameters(Texture3d rhs) {
         super.copyParameters(rhs);
         height = rhs.height;
         depth = rhs.depth;
     }
-
-    private int largestIntensity(int[] samples, int sampleCount) {
-        int result = samples[0];
-        for (int i = 1; i < sampleCount; ++i)
-            result = Math.max(result, samples[i]);
-        return result;
-    }
-
 
     private static int secondLargestIntensity(int[] samples, int sampleCount) {
         if (sampleCount == 1)
@@ -466,7 +401,7 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         return second;
     }
 
-    public Texture3d createMipmapUsingMaxFilter() {
+    private Texture3d createMipmapUsingMaxFilter() {
         // Check whether smaller mipmap is possible
         if ( (width <= 1) && (height <= 1) && (depth <= 1) )
             return null; // already smallest possible texture
@@ -546,8 +481,7 @@ public class Texture3d extends BasicTexture implements GL3Resource {
                 }
                 try {
                     Thread.sleep(10);
-                }
-                catch (Exception ex) {
+                } catch (Exception ex) {
                 }
                 doneCount = 0;
                 for (Future f : threadList) {
@@ -575,9 +509,9 @@ public class Texture3d extends BasicTexture implements GL3Resource {
 
         int [] samples = new int [8];
 
-        public MipMapMaxFilterZSlice(int z, int zCount, int zh1, int yh1, int xh1, int HWN, int WN, Texture3d result, int depth,
-                                     int width, int height, int numberOfComponents, short[] shortArr, byte[] byteArr,
-                                     int bytesPerIntensity, ShortBuffer shortsOut, ByteBuffer bytesOut) {
+        MipMapMaxFilterZSlice(int z, int zCount, int zh1, int yh1, int xh1, int HWN, int WN, Texture3d result, int depth,
+                              int width, int height, int numberOfComponents, short[] shortArr, byte[] byteArr,
+                              int bytesPerIntensity, ShortBuffer shortsOut, ByteBuffer bytesOut) {
             this.z=z;
             this.zCount=zCount;
             this.zh1=zh1;
