@@ -1,11 +1,6 @@
 
 package org.janelia.horta;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.*;
-
 import Jama.Matrix;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -15,12 +10,18 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.VoxelIndex;
-import org.janelia.it.jacs.shared.img_3d_loader.FileByteSource;
 import org.janelia.rendering.RawImage;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Represents Mouse Brain tile information entry from tilebase.cache.yml file.
@@ -233,23 +234,11 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setTileDims(Arrays.stream(pixelDims).boxed().toArray(Integer[]::new));
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
 
-        byte[] rawImageBytes = volumeLoader.loadRawImageContentFromVoxelCoord(
-                volumeLocation,
-                rawImage,
-                colorChannelIndex,
-                bbShapeNanometers[0] / 2 / pixelDims[0],
-                bbShapeNanometers[1] / 2 / pixelDims[1],
-                bbShapeNanometers[2] / 2 / pixelDims[2],
-                bbShapeNanometers[0] / pixelDims[0],
-                bbShapeNanometers[1] / pixelDims[1],
-                bbShapeNanometers[2] / pixelDims[2]);
+        InputStream rawImageStream = volumeLocation.readRawTileContent(rawImage, colorChannelIndex);
 
-        texture.setOptionalFileByteSource(new FileByteSource() {
-            @Override
-            public byte[] loadBytesForFile(String s) throws Exception {
-                return rawImageBytes;
-            }
-        });
+        if (!texture.loadTiffStack(rawImage.toString(), rawImageStream)) {
+            return null;
+        }
         return texture;
     }
 

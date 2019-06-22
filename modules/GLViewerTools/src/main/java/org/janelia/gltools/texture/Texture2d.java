@@ -138,8 +138,7 @@ public class Texture2d extends BasicTexture implements GL3Resource
         return this;
     }
     
-    // http://netpbm.sourceforge.net/doc/ppm.html
-    public void loadFromPpm(InputStream inputStream) throws IOException 
+    public void loadFromPpm(InputStream inputStream) throws IOException
     {
         PushbackInputStream inStream = new PushbackInputStream(inputStream);
         
@@ -176,13 +175,9 @@ public class Texture2d extends BasicTexture implements GL3Resource
         pixels = ByteBuffer.wrap(pixelBytes);
         int numBytesRead = inStream.read(pixelBytes, 0, byteCount);
         
-        // System.out.println("***:"+width+", "+height+", "+maxVal+":***");
-        // System.out.println("***:"+byteCount+", "+numBytesRead+":***");
-
         pixels.rewind();
         doSwapBytes = true;
         needsUpload = true;
     }
-    
-    
+
 }

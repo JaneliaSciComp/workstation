@@ -1,47 +1,34 @@
 
 package org.janelia.gltools.texture;
 
+import com.google.common.io.ByteStreams;
+import com.sun.media.jai.codec.ByteArraySeekableStream;
+import com.sun.media.jai.codec.ImageCodec;
+import com.sun.media.jai.codec.ImageDecoder;
+import com.sun.media.jai.codec.SeekableStream;
+import org.apache.commons.lang3.tuple.Pair;
+import org.janelia.geometry.util.PerformanceTimer;
+import org.janelia.gltools.GL3Resource;
+import org.janelia.gltools.activity_logging.ActivityLogHelper;
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.media.opengl.GL3;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBufferUShort;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
-import java.io.BufferedInputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
-import java.nio.channels.ClosedByInterruptException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-
-import javax.media.opengl.GL3;
-
-import com.sun.media.jai.codec.ByteArraySeekableStream;
-import com.sun.media.jai.codec.FileCacheSeekableStream;
-import com.sun.media.jai.codec.FileSeekableStream;
-import com.sun.media.jai.codec.ImageCodec;
-import com.sun.media.jai.codec.ImageDecoder;
-import com.sun.media.jai.codec.MemoryCacheSeekableStream;
-import com.sun.media.jai.codec.SeekableStream;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.janelia.geometry.util.PerformanceTimer;
-import org.janelia.gltools.GL3Resource;
-import org.janelia.gltools.activity_logging.ActivityLogHelper;
-import org.janelia.it.jacs.shared.img_3d_loader.FileByteSource;
-import org.janelia.it.jacs.shared.img_3d_loader.FileStreamSource;
-import org.janelia.it.jacs.shared.lvv.HttpDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -57,12 +44,9 @@ public class Texture3d extends BasicTexture implements GL3Resource {
 
     protected int height = 0;
     protected int depth = 0;
-    protected int pixelBufferObject = 0;
-    byte[] pixelBytes;
-    short[] shortBytes;
-    FileByteSource optionalFileByteSource;
-    FileStreamSource optionalFileStreamSource;
-    GetMethod getMethod=null;
+    private int pixelBufferObject = 0;
+    private byte[] pixelBytes;
+    private short[] shortBytes;
 
     public Texture3d() {
         textureTarget = GL3.GL_TEXTURE_3D;
@@ -118,45 +102,25 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         return Math.max(width, Math.max(height, depth));
     }
 
-    // Simple 3D texture for testing
-    public Texture3d loadTestCheckerPattern() {
-        width = 4;
-        height = 4;
-        depth = 4;
-        bytesPerIntensity = 1;
-        type = GL3.GL_UNSIGNED_BYTE;
-        numberOfComponents = 1;
-        int byteCount = numberOfComponents * bytesPerIntensity * width * height * depth;
-        byte[] pixelBytes = new byte[byteCount];
-        pixels = ByteBuffer.wrap(pixelBytes);
-        pixels.rewind();
-        format = internalFormat = GL3.GL_RED;
-        for (int p = 0; p < width*height*depth; ++p) {
-            int z = p / (width*height);
-            int y = (p - z*width*height) / width;
-            int x = p - z*width*height - y*width;
-            if ((x+y+z)%2 == 0) pixels.put((byte)0);
-            else pixels.put((byte)(255 & 0xFF));
-        }
-        pixels.flip();
-        return this;
-    }
-
     /**
      * Loads the given tiff stack into memory and returns true. If the load is not completed for any reason,
      * this method returns false.
-     * @param tiffFile
+     * @param stackName
+     * @param stackStream
      * @return
      * @throws IOException
      */
-    public boolean loadTiffStack(File tiffFile) throws IOException {
+    public boolean loadTiffStack(String stackName, InputStream stackStream) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
-        RenderedImage[] slices = renderedImagesFromTiffStack(tiffFile);
+        if (stackStream == null) {
+            return false;
+        }
+        RenderedImage[] slices = renderedImagesFromTiffStack(stackStream);
         if (slices==null) return false;
 
         long logId = System.currentTimeMillis();
 
-        float t1=timer.reportMsAndRestart();
+        float t1 = timer.reportMsAndRestart();
         LOG.debug("Tiff load to RenderedImages took {} ms", t1);
 
         if (slices.length > 0) {
@@ -164,47 +128,25 @@ public class Texture3d extends BasicTexture implements GL3Resource {
 
             float t2=timer.reportMsAndRestart();
             LOG.debug("Tiff RenderedImages to raster took {} ms", t2);
-            activityLog.logBrickLoadToRendered(logId, tiffFile.getAbsolutePath(), HttpDataSource.useHttp(), t1+t2);
+            activityLog.logBrickLoadToRendered(logId, stackName, HttpDataSource.useHttp(), t1 + t2);
 
             loadStack(slicePair.getLeft(), slicePair.getRight());
 
-            float t3=timer.reportMsAndRestart();
+            float t3 = timer.reportMsAndRestart();
             LOG.debug("Tiff load raster slices to texture buffer took {} ms", t3);
-            LOG.info(">>> loadTiffStack() total time = {} ms", (t1+t2+t3));
+            LOG.info(">>> loadTiffStack() total time = {} ms", (t1 + t2 + t3));
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
-    protected void allocatePixels() {
+    private void allocatePixels() {
         int byteCount = numberOfComponents * bytesPerIntensity * width * height * depth;
         pixelBytes = new byte[byteCount];
         pixels = ByteBuffer.wrap(pixelBytes);
         pixels.order(ByteOrder.nativeOrder());
         pixels.rewind();
-    }
-
-    /**
-     *
-     * @param x
-     * @param y
-     * @param z
-     * @param channel
-     * @return null if raster data are absent
-     */
-    public Integer getIntensity(int x, int y, int z, int channel) {
-        if (pixels == null) return null;
-        int offset = channel
-                + numberOfComponents*x
-                + numberOfComponents*width*y
-                + numberOfComponents*width*height*z;
-        if (bytesPerIntensity == 1)
-            return new Integer(pixels.get(offset));
-        else // if (bytesPerIntensity == 2)
-            return new Integer(shortPixels.get(offset));
-        // TODO - 32 bit integers...
     }
 
     private Pair<Raster[], ColorModel> loadStack(RenderedImage[] stack) {
@@ -225,7 +167,7 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         return Pair.of(raster, slice.getColorModel());
     }
 
-    public Texture3d loadStack(Raster[] raster, ColorModel colorModel) {
+    private Texture3d loadStack(Raster[] raster, ColorModel colorModel) {
         PerformanceTimer timer = new PerformanceTimer();
 
         bytesPerIntensity = colorModel.getComponentSize(0)/8;
@@ -256,10 +198,6 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         allocatePixels();
 
         LOG.debug("Initializing texture buffer took {} ms", timer.reportMsAndRestart());
-
-        if (getMethod!=null) {
-            getMethod.releaseConnection();
-        }
 
         if (bytesPerIntensity<2) { // 8-bit
             pixels.rewind();
@@ -822,145 +760,31 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         }
     }
 
-    public void setOptionalFileByteSource(FileByteSource fileByteSource) {
-        this.optionalFileByteSource=fileByteSource;
-    }
-
-    public void setOptionalFileStreamSource(FileStreamSource fileStreamSource) {
-        this.optionalFileStreamSource=fileStreamSource;
-    }
-
-    private String getHttpPathFromFilePath(String filePath) {
-        int startPosition=0;
-        int colonPosition=filePath.indexOf(":");
-        if (colonPosition>-1) {
-            startPosition=colonPosition+1;
-        }
-        String result=filePath.replaceAll("\\\\","/");
-        return result.substring(startPosition);
-    }
-
-    public final boolean readFully(InputStream in, byte b[]) throws IOException {
-        if (in==null) throw new IOException("Input stream is null");
-        return readFully(in, b, 0, b.length);
-    }
-
-    /**
-     * Copied from DataInputStream, so that we could add a check for interruption.
-     */
-    public final boolean readFully(InputStream in, byte b[], int off, int len) throws IOException {
-        if (len < 0)
-            throw new IndexOutOfBoundsException();
-        int n = 0;
-        while (n < len) {
-            if (Thread.currentThread().isInterrupted()) {
-                LOG.trace("readFully was interrupted");
-                return false;
-            }
-            int count = in.read(b, off + n, len - n);
-            if (count < 0)
-                throw new EOFException();
-            n += count;
-        }
-        return true;
-    }
-
-    private RenderedImage[] renderedImagesFromTiffStack(File tiffFile) throws IOException {
+    private RenderedImage[] renderedImagesFromTiffStack(InputStream stackStream) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
-        // FileSeekableStream is the fastest load method I tested, by far
 
-        ImageDecoder decoder=null;
-
-        // Performance results for various load strategies below. NOTE: ALL STEPS INCLUDING:
-        //   1) Decoder creation (here)
-        //   2) RenderedImage generation (next step)
-        //   3) Raster creation from RenderedImage (2nd next step)
-        //
-        // MUST be considered wrt performance implication of the choice of decoder configuration.
-        // The total timings of these 3 steps is mentioned below (in seconds)
-
-        final boolean useMemoryCache = false;
-        final boolean useFileCache = false;
-        final boolean useFileSS = false;
-        final boolean useFileStream = false;
-
-        final boolean useFilesReadAllBytesAndByteArraySeekableStream = true; // BY FAR THE FASTEST
-
-        if (optionalFileStreamSource!=null) {
-            try {
-                String httpPathFromFilePath=getHttpPathFromFilePath(tiffFile.getAbsolutePath());
-                LOG.debug("renderedImagesFromTiffStack - optionalFileStreamSource - using httpPathFromFilePath={}", httpPathFromFilePath);
-                getMethod = optionalFileStreamSource.getStreamForFile(httpPathFromFilePath);
-
-                // We can now write the stream directly to a buffer, because we know the content length up front.
-                long contentLength = getMethod.getResponseContentLength();
-                byte[] bytes = new byte[(int)contentLength];
-                if (!readFully(getMethod.getResponseBodyAsStream(), bytes)) return null;
-
-                LOG.info("Streaming {} bytes took {} ms", bytes.length, timer.reportMsAndRestart());
-                SeekableStream s = new ByteArraySeekableStream(bytes);
-
-                // Another way is to read the stream as necessary, but with this method we can't compare vs file reads.
-                //SeekableStream s = new MemoryCacheSeekableStream(getMethod.getResponseBodyAsStream());
-
-                decoder = ImageCodec.createImageDecoder("tiff", s, null);
-            }
-            catch (Exception ex) {
-                LOG.error("Error reading HTTP stream", ex);
-                if (getMethod!=null) {
-                    getMethod.releaseConnection();
-                    getMethod = null;
-                }
-            }
-        }
-        else if (useFilesReadAllBytesAndByteArraySeekableStream) { // 6.2, 7.0, 7.9, 6.5 seconds - PLEASE USE THIS ONE
-            try {
-                byte[] bytes = Files.readAllBytes(tiffFile.toPath());
-                LOG.info("Loading {} bytes from file took {} ms", bytes.length, timer.reportMsAndRestart());
-                SeekableStream s = new ByteArraySeekableStream(bytes);
-                decoder = ImageCodec.createImageDecoder("tiff", s, null);
-            }
-            catch (ClosedByInterruptException e) {
-                return null;
-            }
-        }
-        else if (useMemoryCache) { // 18.0, 15.5, 13.0, 13.2 seconds
-            InputStream tiffStream = new BufferedInputStream( new FileInputStream(tiffFile) );
-            SeekableStream s = new MemoryCacheSeekableStream(tiffStream);
-            decoder = ImageCodec.createImageDecoder("tiff", s, null);
-        }
-        else if (useFileCache) { // >65.0 seconds
-            InputStream tiffStream = new BufferedInputStream( new FileInputStream(tiffFile) );
-            SeekableStream s = new FileCacheSeekableStream(tiffStream);
-            decoder = ImageCodec.createImageDecoder("tiff", s, null);
-        }
-        else if (useFileSS) { // 15.3, 16.3, 13.3, 14.6 seconds
-            SeekableStream s = new FileSeekableStream(tiffFile);
-            decoder = ImageCodec.createImageDecoder("tiff", s, null);
-        }
-        else if (useFileStream) { // >68.0 seconds
-            InputStream tiffStream = new BufferedInputStream( new FileInputStream(tiffFile) );
-            decoder = ImageCodec.createImageDecoder("tiff", tiffStream, null); // 55 seconds
-        }
-        else { // 68.0, 37.8 seconds
-            InputStream tiffStream = new BufferedInputStream( new FileInputStream(tiffFile) );
-            byte[] bytes = IOUtils.toByteArray(tiffStream);
-            SeekableStream s = new ByteArraySeekableStream(bytes);
-            decoder = ImageCodec.createImageDecoder("tiff", s, null);
+        SeekableStream tiffStream;
+        if (stackStream instanceof SeekableStream) {
+            tiffStream = (SeekableStream) stackStream;
+        } else {
+            byte[] bytes = ByteStreams.toByteArray(stackStream);
+            LOG.info("Loading {} bytes took {} ms", bytes.length, timer.reportMsAndRestart());
+            tiffStream = new ByteArraySeekableStream(bytes);
         }
 
-        if (decoder!=null) {
+        ImageDecoder decoder = ImageCodec.createImageDecoder("tiff", tiffStream, null);
+        if (decoder != null) {
             LOG.debug("Creating image decoder from tiff file took {} ms", timer.reportMsAndRestart());
-
             int sz = decoder.getNumPages();
             RenderedImage slices[] = new RenderedImage[sz];
-            for (int z = 0; z < sz; ++z)
+            for (int z = 0; z < sz; ++z) {
                 slices[z] = decoder.decodeAsRenderedImage(z);
+            }
             LOG.debug("Creating RenderedImages for all slices took {} ms", timer.reportMsAndRestart());
             return slices;
+        } else {
+            return null;
         }
-        
-        return null;
     }
 
 

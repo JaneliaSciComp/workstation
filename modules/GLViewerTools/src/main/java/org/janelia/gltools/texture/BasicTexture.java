@@ -433,11 +433,6 @@ public abstract class BasicTexture implements GL3Resource {
                 gl.glGenerateMipmap(textureTarget);
             }
         }
-        
-        else {
-            
-        }
-        
     }
 
     protected void uploadTexture(GL3 gl) 
