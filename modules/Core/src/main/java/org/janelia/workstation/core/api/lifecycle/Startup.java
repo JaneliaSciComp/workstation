@@ -153,6 +153,9 @@ public class Startup implements Runnable {
         // Notify listeners that the application is opening
         ConsoleState.setCurrState(ConsoleState.STARTING_SESSION);
         Events.getInstance().postOnEventBus(new ApplicationOpening());
+
+        // Listen for application closing event
+        Events.getInstance().registerOnEventBus(this);
     }
 
     /**
