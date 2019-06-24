@@ -31,7 +31,7 @@ public class RecentlyOpenedItemsNode extends AbstractNode implements HasIdentifi
         
     private final static Logger log = LoggerFactory.getLogger(RecentlyOpenedItemsNode.class);
     
-    private static final long RECENTLY_OPENED_ID = 2L; // This magic number means nothing, it just needs to be unique and different from GUID space.
+    private static final long RECENTLY_OPENED_ID = 20L; // This magic number means nothing, it just needs to be unique and different from GUID space.
     
     private final DomainObjectNodeChildFactory childFactory;
 

@@ -41,6 +41,12 @@
             <artifactId>core</artifactId>
         </dependency>
 
+        <!-- NetBeans Modules -->
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-nodes</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

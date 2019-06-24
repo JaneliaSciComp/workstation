@@ -1,6 +1,7 @@
 package org.janelia.workstation.browser.gui.components;
 
 import static org.janelia.workstation.core.options.OptionConstants.NAVIGATE_ON_CLICK;
+import static org.janelia.workstation.core.options.OptionConstants.SHOW_FLY_LINE_RELEASES;
 import static org.janelia.workstation.core.options.OptionConstants.SHOW_RECENTLY_OPENED_ITEMS;
 
 import java.awt.BorderLayout;
@@ -167,21 +168,17 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         configButton.setToolTipText("Options for the Data Explorer");
 
         final JCheckBoxMenuItem navigateOnClickMenuItem = new JCheckBoxMenuItem("Navigate on click", isNavigateOnClick());
-        navigateOnClickMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                setNavigateOnClick(navigateOnClickMenuItem.isSelected());   
-            }
-        });
+        navigateOnClickMenuItem.addActionListener(e -> setNavigateOnClick(navigateOnClickMenuItem.isSelected()));
         configButton.addMenuItem(navigateOnClickMenuItem);
 
         final JCheckBoxMenuItem showRecentItemsMenuItem = new JCheckBoxMenuItem("Show recently opened items", isShowRecentMenuItems());
-        showRecentItemsMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                setShowRecentMenuItems(showRecentItemsMenuItem.isSelected());
-            }
-        });
+        showRecentItemsMenuItem.addActionListener(e -> setShowRecentMenuItems(showRecentItemsMenuItem.isSelected()));
         configButton.addMenuItem(showRecentItemsMenuItem);
-        
+
+        final JCheckBoxMenuItem showReleasesMenuItem = new JCheckBoxMenuItem("Show fly line releases", isShowFlyLineReleases());
+        showReleasesMenuItem.addActionListener(e -> setShowFlyLineReleases(showReleasesMenuItem.isSelected()));
+        configButton.addMenuItem(showReleasesMenuItem);
+
         toolbar.getJToolBar().add(configButton);
         
         this.treePanel = new JPanel(new BorderLayout());
@@ -676,8 +673,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     public static boolean isNavigateOnClick() {
-        Boolean navigate = (Boolean) FrameworkAccess.getModelProperty(NAVIGATE_ON_CLICK);
-        return navigate==null || navigate;
+        return FrameworkAccess.getModelProperty(NAVIGATE_ON_CLICK, true);
     }
     
     private static void setNavigateOnClick(boolean value) {
@@ -685,11 +681,18 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     public static boolean isShowRecentMenuItems() {
-        Boolean navigate = (Boolean) FrameworkAccess.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS);
-        return navigate==null || navigate;
+        return FrameworkAccess.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS, true);
     }
     
     private static void setShowRecentMenuItems(boolean value) {
         FrameworkAccess.setModelProperty(SHOW_RECENTLY_OPENED_ITEMS, value);
+    }
+
+    public static boolean isShowFlyLineReleases() {
+        return FrameworkAccess.getModelProperty(SHOW_FLY_LINE_RELEASES, false);
+    }
+
+    private static void setShowFlyLineReleases(boolean value) {
+        FrameworkAccess.setModelProperty(SHOW_FLY_LINE_RELEASES, value);
     }
 }
