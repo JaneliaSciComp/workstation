@@ -6,6 +6,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +48,7 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
     private JTable userDetailsTable;
     private GroupRolesModel groupRolesModel;
     private JTable groupRolesTable;
+    private TableFieldEditor cellEditor;
     private User currentUser;
     private User admin;
     private String newPassword = null;
@@ -75,9 +78,10 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
 
         userDetailsTableModel = new UserDetailsTableModel();
         userDetailsTable = new JTable(userDetailsTableModel);
-        TableFieldEditor editor = new TableFieldEditor();
-        userDetailsTable.getColumn("Property").setCellEditor(editor);
+        cellEditor = new TableFieldEditor();
+        userDetailsTable.getColumn("Property").setCellEditor(cellEditor);
         userDetailsTable.setRowHeight(25);
+        userDetailsTable.putClientProperty("terminateEditOnFocusLost", true);
         JScrollPane userTableScroll = new JScrollPane(userDetailsTable);
         mainPanel.add(userTableScroll);
 
