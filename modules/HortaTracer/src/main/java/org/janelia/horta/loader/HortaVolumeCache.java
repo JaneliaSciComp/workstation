@@ -46,11 +46,10 @@ import org.slf4j.LoggerFactory;
  * 
  * @author brunsc
  */
-public class HortaVolumeCache
-{
-    private static final Logger log = LoggerFactory.getLogger(HortaVolumeCache.class);
+public class HortaVolumeCache {
+    private static final Logger LOG = LoggerFactory.getLogger(HortaVolumeCache.class);
 
-    private int ramTileCount = 3; // Three is better than two for tile availability
+    private int ramTileCount = 2; // Three is better than two for tile availability
     private int gpuTileCount = 1;
     private final PerspectiveCamera camera;
     private StaticVolumeBrickSource source = null;
@@ -72,13 +71,12 @@ public class HortaVolumeCache
     private boolean doUpdateCache = true;
     
     // Cache camera data for early termination
-    float cachedFocusX = Float.NaN;
-    float cachedFocusY = Float.NaN;
-    float cachedFocusZ = Float.NaN;
-    float cachedZoom = Float.NaN;
-    
+    private float cachedFocusX = Float.NaN;
+    private float cachedFocusY = Float.NaN;
+    private float cachedFocusZ = Float.NaN;
+    private float cachedZoom = Float.NaN;
+
     private RequestProcessor loadProcessor;
-    // private final ChannelBrightnessModel brightnessModel;
     private final ImageColorModel imageColorModel;
     private final VolumeMipMaterial.VolumeState volumeState;
     private final Collection<TileDisplayObserver> observers = new java.util.concurrent.ConcurrentLinkedQueue<>();
@@ -86,12 +84,10 @@ public class HortaVolumeCache
 
     public HortaVolumeCache(final PerspectiveCamera camera, 
             final ImageColorModel imageColorModel,
-            // final ChannelBrightnessModel brightnessModel,
             final VolumeMipMaterial.VolumeState volumeState,
             int currentColorChannel) 
     {
         this.imageColorModel = imageColorModel;
-        // this.brightnessModel = brightnessModel;
         this.volumeState = volumeState;
         this.currentColorChannel = currentColorChannel;
 
@@ -120,7 +116,7 @@ public class HortaVolumeCache
 
     private void setConcurrentLoads(String preferenceValue) {
         int loadThreads = Integer.parseInt(preferenceValue);
-        log.info("Configuring loadThreads={}", loadThreads);
+        LOG.info("Configuring loadThreads={}", loadThreads);
         if (loadProcessor!=null) {
             loadProcessor.shutdown();
         }
@@ -129,7 +125,7 @@ public class HortaVolumeCache
 
     private void setRamTileCount(String preferenceValue) {
         this.ramTileCount = Integer.parseInt(preferenceValue);
-        log.info("Configuring ramTileCount={}", ramTileCount);
+        LOG.info("Configuring ramTileCount={}", ramTileCount);
     }
 
     public void registerLoneDisplayedTile(BrickActor actor) 
@@ -259,11 +255,11 @@ public class HortaVolumeCache
         for (BrickInfo brick : desiredDisplayTiles) { // These are the tiles we want do display right now.
             BrainTileInfo tile = (BrainTileInfo)brick;
             if (actualDisplayTiles.containsKey(brick)) {// Is it already displayed?
-                log.debug("Already displaying: "+tile.getTileRelativePath());
+                LOG.debug("Already displaying: "+tile.getTileRelativePath());
                 continue; // already loaded
             }
             if (nearVolumeInRam.containsKey(brick)) { // Is the texture ready?
-                log.debug("Already in RAM: "+tile.getTileRelativePath());
+                LOG.debug("Already in RAM: "+tile.getTileRelativePath());
                 uploadToGpu((BrainTileInfo)brick); // then display it!
             }
         }
@@ -278,19 +274,19 @@ public class HortaVolumeCache
             if (nearVolumeInRam.containsKey(brick)) { // Is the texture already loaded in RAM?
                 continue; // already loaded
             }
-            log.debug("Queueing brick with norm priority: "+tile.getTileRelativePath());
+            LOG.debug("Queueing brick with norm priority: "+tile.getTileRelativePath());
             queueLoad(tile, Thread.NORM_PRIORITY);
         }
         for (BrickInfo brick : newBricks) {
             BrainTileInfo tile = (BrainTileInfo)brick;
-            log.debug("Queueing brick with min priority: "+tile.getTileRelativePath());
+            LOG.debug("Queueing brick with min priority: "+tile.getTileRelativePath());
             queueLoad(tile, Thread.MIN_PRIORITY); // Don't worry; duplicates will be skipped
         }
 
         // Begin deleting the old tiles        
         for (BrickInfo brick : obsoleteBricks) {
             BrainTileInfo tile = (BrainTileInfo)brick;
-            log.info("Removing from RAM: "+tile.getTileRelativePath());
+            LOG.info("Removing from RAM: "+tile.getTileRelativePath());
             nearVolumeInRam.remove(brick);
         }
     }
@@ -309,10 +305,10 @@ public class HortaVolumeCache
             @Override
             public void run() {
 
-                log.info("Beginning load for {}", tile.getTileRelativePath());
+                LOG.info("Beginning load for {}", tile.getTileRelativePath());
 
                 if (Thread.currentThread().isInterrupted()) {
-                    log.info("loadTask was interrupted before it began");
+                    LOG.info("loadTask was interrupted before it began");
                     queuedTiles.remove(tile);
                     return;
                 }
@@ -321,7 +317,7 @@ public class HortaVolumeCache
                 synchronized(queuedTiles) {
                     RequestProcessor.Task task = queuedTiles.get(tile);
                     if (task==null) {
-                        log.warn("Tile has no task: "+tile.getTileRelativePath());
+                        LOG.warn("Tile has no task: "+tile.getTileRelativePath());
                         return;
                     }
                     loadingTiles.put(tile, task);
@@ -368,7 +364,7 @@ public class HortaVolumeCache
                         }
                     }
                     else {
-                        log.info("Load was interrupted for: {}", tile.getTileRelativePath());
+                        LOG.info("Load was interrupted for: {}", tile.getTileRelativePath());
                     }
                 }
                 catch (IOException ex) {
@@ -388,12 +384,12 @@ public class HortaVolumeCache
 
         synchronized (queuedTiles) {
             if (priority == Thread.NORM_PRIORITY) {
-                log.debug("Cancelling all current tasks to make room for {}", tile.getTileRelativePath());
+                LOG.debug("Cancelling all current tasks to make room for {}", tile.getTileRelativePath());
                 // Cancel all current tasks so that this one can execute with haste
                 if (expediteTileLoad(queuedTiles, tile)) return;
                 if (expediteTileLoad(loadingTiles, tile)) return;
             }
-            log.info("Queueing brick {} with priority {} (queued={}, loading={})", tile.getTileRelativePath(),priority, queuedTiles.size(), loadingTiles.size());
+            LOG.info("Queueing brick {} with priority {} (queued={}, loading={})", tile.getTileRelativePath(),priority, queuedTiles.size(), loadingTiles.size());
             queuedTiles.put(tile, loadProcessor.post(loadTask, start_lag, priority));
         }
     }
@@ -406,10 +402,10 @@ public class HortaVolumeCache
             RequestProcessor.Task task = entry.getValue();
             if (tileToCancel.equals(wantedTile) && task.getPriority()==Thread.NORM_PRIORITY) {
                 // The tile we want is already loading at the correct priority
-                log.debug("Tile is already in flight: {}", tileToCancel.getTileRelativePath());
+                LOG.debug("Tile is already in flight: {}", tileToCancel.getTileRelativePath());
                 return true;
             }
-            log.info("Cancelling load for {} (priority {})", tileToCancel.getTileRelativePath(), task.getPriority());
+            LOG.info("Cancelling load for {} (priority {})", tileToCancel.getTileRelativePath(), task.getPriority());
             task.cancel();
             iterator.remove();
         }
@@ -426,11 +422,11 @@ public class HortaVolumeCache
         
         Texture3d texture3d = nearVolumeInRam.get(brick);
         if (texture3d == null) {
-            log.error("Volume should be loaded but isn't: "+brick.getTileRelativePath());
+            LOG.error("Volume should be loaded but isn't: "+brick.getTileRelativePath());
             return; // Sorry, that volume is not loaded FIXME: error handling here
         }
 
-        log.info("Loading to GPU: "+brick.getTileRelativePath());
+        LOG.info("Loading to GPU: "+brick.getTileRelativePath());
 
         // System.out.println("I should be displaying tile " + brick.getTileRelativePath() + " now");
         final BrickActor actor = new BrickActor(brick, texture3d, imageColorModel, volumeState);

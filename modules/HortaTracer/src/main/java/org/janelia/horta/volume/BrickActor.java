@@ -16,9 +16,7 @@ import org.janelia.horta.actors.BrainTileMesh;
  *
  * @author Christopher Bruns
  */
-public class BrickActor extends MeshActor
-implements DepthSlabClipper
-{
+public class BrickActor extends MeshActor implements DepthSlabClipper {
     private final BrainTileInfo brainTile;
     private final BrickMaterial brickMaterial;
     
@@ -37,14 +35,13 @@ implements DepthSlabClipper
 
     // Constructor version that uses preloaded Texture3d
     public BrickActor(
-            BrainTileInfo brainTile, 
+            BrainTileInfo brainTile,
             Texture3d texture3d, 
             ImageColorModel brightnessModel, 
             VolumeState volumeState) 
     {
-        super(
-                new BrainTileMesh(brainTile), 
-                new BrickMaterial(brainTile, texture3d, brightnessModel, volumeState),
+        super(new BrainTileMesh(brainTile),
+                new BrickMaterial(texture3d, brightnessModel, volumeState),
                 null);
         this.brainTile = brainTile;
         this.brickMaterial = (BrickMaterial)getMaterial();    }
@@ -66,11 +63,11 @@ implements DepthSlabClipper
 
         private BrickMaterial(
                 BrainTileInfo brainTile, 
-                ImageColorModel brightnessModel,
+                ImageColorModel imageColorModel,
                 VolumeState volumeState,
                 int colorChannel) throws IOException
         {
-            super(safeLoadBrick(brainTile, colorChannel), brightnessModel);
+            super(safeLoadBrick(brainTile, colorChannel), imageColorModel);
             setVolumeState(volumeState);
         }
 
@@ -83,12 +80,11 @@ implements DepthSlabClipper
         }
 
         private BrickMaterial(
-                BrainTileInfo brainTile, 
-                Texture3d texture3d, 
-                ImageColorModel brightnessModel, 
+                Texture3d texture3d,
+                ImageColorModel imageColorModel,
                 VolumeState volumeState) 
         {
-            super(texture3d, brightnessModel);
+            super(texture3d, imageColorModel);
             setVolumeState(volumeState);
         }
         

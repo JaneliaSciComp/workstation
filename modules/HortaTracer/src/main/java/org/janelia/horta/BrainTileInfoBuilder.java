@@ -44,7 +44,7 @@ public class BrainTileInfoBuilder {
     //    17912676.0, 0.0, 0.485852, 995.024902, 0.0, 9909023.0, 0.0, 0.0, 0.0, 1.0, 0.0,
     //    0.0, 0.0, 0.0, 0.0, 1.0]
 
-    public static BrainTileInfo fromYAMLFragment(RenderedVolumeLoader volumeLoader, RenderedVolumeLocation volumeLocation, String tileBasePath, boolean leverageCompressedFiles, Map<String, Object> yamlFragment) {
+    public static BrainTileInfo fromYAMLFragment(RenderedVolumeLocation volumeLocation, String tileBasePath, boolean leverageCompressedFiles, Map<String, Object> yamlFragment) {
         Map<String, Object> aabb = (Map<String, Object>) yamlFragment.get("aabb");
         if (aabb == null) {
             throw new IllegalArgumentException("Field missing for extracting origin and shape coordinates from " + yamlFragment);
@@ -104,7 +104,6 @@ public class BrainTileInfoBuilder {
         }
         Matrix transform = new Matrix(dd, 5, 5);
         return new BrainTileInfo(
-                volumeLoader,
                 volumeLocation,
                 tileBasePath,
                 localPath,
@@ -116,7 +115,7 @@ public class BrainTileInfoBuilder {
                 transform);
     }
 
-    public static BrainTileInfo fromRawImage(RenderedVolumeLoader volumeLoader, RenderedVolumeLocation volumeLocation, RawImage rawImage, boolean leverageCompressedFiles) {
+    public static BrainTileInfo fromRawImage(RenderedVolumeLocation volumeLocation, RawImage rawImage, boolean leverageCompressedFiles) {
         double[][] dd = new double[5][5];
         for (int i = 0; i < 5; ++i) {
             for (int j = 0; j < 5; ++j) {
@@ -125,7 +124,6 @@ public class BrainTileInfoBuilder {
         }
         Matrix transform = new Matrix(dd, 5, 5);
         return new BrainTileInfo(
-                volumeLoader,
                 volumeLocation,
                 rawImage.getAcquisitionPath(),
                 rawImage.getRelativePath(),

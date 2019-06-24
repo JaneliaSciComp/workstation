@@ -46,7 +46,7 @@ public abstract class BasicTexture implements GL3Resource {
     protected List<BasicTexture> mipmaps = new ArrayList<>();
     protected int unpackAlignment = 1;
     protected boolean useImmutableTexture = false;
-    
+
     protected boolean needsUpload = false;
     protected boolean reclaimRamAfterUpload = false;
     

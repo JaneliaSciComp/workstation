@@ -1062,7 +1062,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     public void loadDroppedYaml(String sourceName, InputStream yamlStream) throws IOException {
-        setVolumeSource(new LocalVolumeBrickSource(renderedVolumeLoader, URI.create(sourceName), yamlStream, leverageCompressedFiles, Optional::empty));
+        setVolumeSource(new LocalVolumeBrickSource(URI.create(sourceName), yamlStream, leverageCompressedFiles, Optional::empty));
         neuronTraceLoader.loadTileAtCurrentFocus(volumeSource);
     }
 

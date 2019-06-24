@@ -2,6 +2,7 @@
 package org.janelia.horta;
 
 import Jama.Matrix;
+import com.sun.media.jai.codec.FileSeekableStream;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.geometry3d.Box3;
@@ -19,6 +20,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,7 +35,6 @@ import java.util.List;
 public class BrainTileInfo implements BrickInfo {
     private static final Logger LOG = LoggerFactory.getLogger(BrainTileInfo.class);
 
-    private final RenderedVolumeLoader volumeLoader;
     private final RenderedVolumeLocation volumeLocation;
     private final String basePath;
     private final int[] bbOriginNanometers;
@@ -45,8 +49,7 @@ public class BrainTileInfo implements BrickInfo {
     private int colorChannelIndex = 0;
     private boolean leverageCompressedFiles;
 
-    BrainTileInfo(RenderedVolumeLoader volumeLoader,
-                  RenderedVolumeLocation volumeLocation,
+    BrainTileInfo(RenderedVolumeLocation volumeLocation,
                   String basePath,
                   String tileRelativePath,
                   boolean leverageCompressedFiles,
@@ -55,7 +58,6 @@ public class BrainTileInfo implements BrickInfo {
                   int[] pixelDims,
                   int bytesPerIntensity,
                   Matrix transform) {
-        this.volumeLoader = volumeLoader;
         this.volumeLocation = volumeLocation;
         this.basePath = basePath;
         this.tileRelativePath = tileRelativePath;
@@ -69,10 +71,6 @@ public class BrainTileInfo implements BrickInfo {
     
     public String getTileRelativePath() {
         return tileRelativePath;
-    }
-
-    public String getBasePath() {
-        return basePath;
     }
 
     /**
@@ -108,16 +106,16 @@ public class BrainTileInfo implements BrickInfo {
                 {0, 1.0/pixelDims[1], 0, 0},
                 {0, 0, 1.0/pixelDims[2], 0},
                 {0, 0, 0, 1}});
-            stageCoordToTexCoord = nanosToPixel.times(nanosToMicros).times(stageNanosToVoxel);
+            stageCoordToTexCoord = nanosToPixel.times(stageNanosToVoxel).times(nanosToMicros);
         }
         return stageCoordToTexCoord;
     }
 
     /**
-     * 
+     *
      * @return resolution in nanometers
      */
-    float getMinResolutionNanometers() {
+    private float getMinResolutionNanometers() {
         float resolution = Float.MAX_VALUE;
         for (int xyz = 0; xyz < 3; ++xyz) {
             float res = bbShapeNanometers[xyz] / (float)pixelDims[xyz];
@@ -194,12 +192,6 @@ public class BrainTileInfo implements BrickInfo {
         return result;
     }
 
-    public boolean folderExists() {
-        // OS specific path should have already been translated in LocalVolumeBrickSource
-        File folderPath = new File(basePath, tileRelativePath);
-        return folderPath.exists();
-    }
-
     // TODO - remove this hack after we can show more than one channel at a time
     int getColorChannelIndex() {
         return this.colorChannelIndex;
@@ -235,8 +227,13 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
 
         InputStream rawImageStream = volumeLocation.readRawTileContent(rawImage, colorChannelIndex);
-
+        Path tmpBrickFile = Files.createTempFile(Paths.get(tileRelativePath).getFileName().toString(), "." + colorChannelIndex + ".tif");
         try {
+            if (rawImageStream != null) {
+                Files.copy(rawImageStream, tmpBrickFile, StandardCopyOption.REPLACE_EXISTING);
+                rawImageStream.close();
+                rawImageStream = new FileSeekableStream(tmpBrickFile.toFile());
+            }
             if (!texture.loadTiffStack(rawImage.toString() + "-ch-" + colorChannelIndex, rawImageStream)) {
                 return null;
             } else {
@@ -250,6 +247,7 @@ public class BrainTileInfo implements BrickInfo {
                     LOG.info("Exception closing the stream for image {}, channel {}", rawImage, colorChannelIndex, ignore);
                 }
             }
+            Files.deleteIfExists(tmpBrickFile);
         }
     }
 

@@ -47,9 +47,7 @@ import org.slf4j.LoggerFactory;
  * Multi-pass renderer for Horta volumes and neuron models
  * @author Christopher Bruns
  */
-public class NeuronMPRenderer
-extends MultipassRenderer
-{
+public class NeuronMPRenderer extends MultipassRenderer {
     private final GLAutoDrawable drawable;
     private final BackgroundRenderPass backgroundRenderPass;
     private final OpaqueRenderPass opaqueRenderPass;
@@ -60,26 +58,17 @@ extends MultipassRenderer
     private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
     private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
     
-    private static final Logger log = LoggerFactory.getLogger(NeuronMPRenderer.class);
-    
-    // private final AllSwcActor allSwcActor = new AllSwcActor();
     private final NeuronVboActor allSwcActor = new NeuronVboActor();
     
     private final Collection<GL3Resource> obsoleteGLResources = new java.util.concurrent.ConcurrentLinkedQueue<>();
 
-    // TODO: obsolete brightness model for ImageColorModel
-    // private final ChannelBrightnessModel brightnessModel;
     private final ImageColorModel imageColorModel;
     
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    public NeuronMPRenderer(GLAutoDrawable drawable, 
-            // final ChannelBrightnessModel brightnessModel, 
-            HortaMetaWorkspace workspace, 
+    public NeuronMPRenderer(GLAutoDrawable drawable,
+            HortaMetaWorkspace workspace,
             final ImageColorModel imageColorModel) 
     {
         this.drawable = drawable;
-        // this.brightnessModel = brightnessModel;
         this.imageColorModel = imageColorModel;
         
         this.workspace = workspace;
@@ -122,11 +111,7 @@ extends MultipassRenderer
             private final GL3Actor colorMapActor = new RemapColorActor(
                     volumeRenderPass.getRgbaTexture(), imageColorModel); // for MIP, occluding
             {
-                // addActor(lightingActor); // TODO - use for isosurface
                 addActor(colorMapActor); // Use for MIP and occluding
-                // lightingActor.setVisible(false);
-                // colorMapActor.setVisible(true);
-                // addActor(new BasicScreenBlitActor(volumeRenderPass.getIntensityTexture()));
             }
             
             @Override
@@ -262,20 +247,12 @@ extends MultipassRenderer
         return result;
     }
     
-    // TODO: move to volumeRenderpass
-    private double opacityForScreenXy(Point2D xy, AbstractCamera camera) {
-        double result = valueForScreenXy(xy, volumeRenderPass.getRgbaTexture().getAttachment(), 3);
-        if (result <= 0)
-            result = 0;
-        return result / 255.0; // rescale to range 0-1
-    }
-    
     private boolean isVisibleOpaqueAtScreenXy(Point2D xy) {
         double od = opaqueRenderPass.rawZDepthForScreenXy(xy, drawable);
         if (od >= 1.0) 
             return false; // far clip value means no geometry there
         double opacity = volumeOpacityForScreenXy(xy);
-        // TODO: threshold might need to be tuned
+        // threshold might need more tuning
         // 0.5 seems too small, I want to select that vertex!
         final double opacityThreshold = 0.9; // Always use transparent material, if it's dense enough
         if (opacity >= opacityThreshold)
@@ -323,11 +300,11 @@ extends MultipassRenderer
             opaqueRenderPass.getFlatDepthTarget());
     }
     
-    public float getRelativeZNear() {
+    private float getRelativeZNear() {
         return volumeRenderPass.getRelativeZNear();
     }
 
-    public float getRelativeZFar() {
+    private float getRelativeZFar() {
         return volumeRenderPass.getRelativeZFar();
     }
 

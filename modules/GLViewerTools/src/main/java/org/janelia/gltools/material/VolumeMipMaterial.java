@@ -109,26 +109,6 @@ implements DepthSlabClipper
         gl.glEnable(GL3.GL_CULL_FACE);
         gl.glCullFace(GL3.GL_FRONT);
     }
-    
-    // public void setRelativeSlabThickness(float thickness) {
-    //     relativeSlabThickness = thickness;
-    // }
-    
-    // public float getViewSlabThickness(AbstractCamera camera) {
-    //     return relativeSlabThickness * camera.getVantage().getSceneUnitsPerViewportHeight();
-    // }
-    
-    /*
-    public static float getViewSlabThickness(AbstractCamera camera) {
-        // Clip on slab, to limit depth of rendering
-        float screenResolution = 
-                camera.getVantage().getSceneUnitsPerViewportHeight()
-                / camera.getViewport().getHeightPixels();
-        float slabThickness = 300.0f * screenResolution; // micrometers
-        slabThickness = Math.max(25.0f, slabThickness);
-        return slabThickness;
-    }
-    */
 
     public int getFilteringOrder() {
         return volumeState.filteringOrder;

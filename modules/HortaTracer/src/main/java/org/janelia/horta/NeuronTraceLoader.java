@@ -48,7 +48,7 @@ public class NeuronTraceLoader {
      * @param xyz
      * @param vantage
      */
-    public boolean animateToFocusXyz(Vector3 xyz, Vantage vantage, int milliseconds) {
+    boolean animateToFocusXyz(Vector3 xyz, Vantage vantage, int milliseconds) {
         // Disable auto loading during move
         boolean wasCacheEnabled = nttc.doesUpdateVolumeCache();
         nttc.setUpdateVolumeCache(false);
@@ -75,11 +75,8 @@ public class NeuronTraceLoader {
                 didMove = true;
                 vantage.notifyObservers();
                 sceneWindow.getGLAutoDrawable().display();
-                // sceneWindow.getInnerComponent().repaint();
             }
         }
-        double elapsed = (System.nanoTime() - startTime) * 1e-6;
-        // logger.info("Animation took " + elapsed + " ms");
         // never skip the final frame
         if (vantage.setFocusPosition(endPos)) {
             didMove = true;
@@ -87,14 +84,13 @@ public class NeuronTraceLoader {
         if (didMove) {
             vantage.notifyObservers();
             sceneWindow.getGLAutoDrawable().display();
-            // sceneWindow.getInnerComponent().repaint();
         }
 
         nttc.setUpdateVolumeCache(wasCacheEnabled);
         return didMove;
     }
 
-    public BrickInfo loadTileAtCurrentFocus(StaticVolumeBrickSource volumeSource) throws IOException {
+    BrickInfo loadTileAtCurrentFocus(StaticVolumeBrickSource volumeSource) throws IOException {
         return loadTileAtCurrentFocus(volumeSource, defaultColorChannel);
     }
 
@@ -166,7 +162,7 @@ public class NeuronTraceLoader {
         return brickInfo;
     }
 
-    protected void loadKtxTileAtLocation(KtxOctreeBlockTileSource ktxSource, Vector3 location, final boolean loadPersistent)
+    void loadKtxTileAtLocation(KtxOctreeBlockTileSource ktxSource, Vector3 location, final boolean loadPersistent)
             throws IOException {
         if (ktxSource == null) {
             return;

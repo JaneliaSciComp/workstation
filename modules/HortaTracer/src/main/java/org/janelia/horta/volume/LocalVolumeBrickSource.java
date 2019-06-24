@@ -11,7 +11,6 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Paths;
-import java.text.ParseException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +25,7 @@ public class LocalVolumeBrickSource implements StaticVolumeBrickSource {
     private final Double resolution;
     private final BrickInfoSet brickInfoSet;
 
-    public LocalVolumeBrickSource(RenderedVolumeLoader volumeLoader, URI volumeURI, InputStream yamlStream, boolean leverageCompressedFiles, Supplier<Optional<ProgressHandle>> progressHandleSupplier) {
+    public LocalVolumeBrickSource(URI volumeURI, InputStream yamlStream, boolean leverageCompressedFiles, Supplier<Optional<ProgressHandle>> progressHandleSupplier) {
         Yaml yaml = new Yaml();
         progressHandleSupplier.get()
                 .ifPresent(progress -> {
@@ -59,7 +58,7 @@ public class LocalVolumeBrickSource implements StaticVolumeBrickSource {
         // There is no dynamic loading by resolution at the moment for raw tiles in yaml file
         // so treat all tiles as having the same resolution as the first tile
         for (Map<String, Object> tile : tiles) {
-            BrickInfo tileInfo = BrainTileInfoBuilder.fromYAMLFragment(volumeLoader, new FileBasedRenderedVolumeLocation(Paths.get(volumeURI)), localBasePath, leverageCompressedFiles, tile);
+            BrickInfo tileInfo = BrainTileInfoBuilder.fromYAMLFragment(new FileBasedRenderedVolumeLocation(Paths.get(volumeURI)), localBasePath, leverageCompressedFiles, tile);
             // Compute resolution
             // Jan 2017 CMB - Treat all tiles in YAML file as same resolution as the first tile.
             if (tileResolution == null) {

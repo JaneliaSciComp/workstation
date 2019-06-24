@@ -86,7 +86,7 @@ public class JadeVolumeBrickSource implements StaticVolumeBrickSource {
             // There is no dynamic loading by resolution at the moment for raw tiles in yaml file
             // so treat all tiles as having the same resolution as the first tile
             return renderedVolumeLoader.loadVolumeRawImageTiles(renderedVolume.getRvl()).stream()
-                    .map(rawImage -> BrainTileInfoBuilder.fromRawImage(renderedVolumeLoader, renderedVolume.getRvl(), rawImage, leverageCompressedFiles))
+                    .map(rawImage -> BrainTileInfoBuilder.fromRawImage(renderedVolume.getRvl(), rawImage, leverageCompressedFiles))
                     .reduce(MutablePair.of(null, new BrickInfoSet()),
                             (Pair<Double, BrickInfoSet> res, BrainTileInfo brainTileInfo) -> {
                                 res.getRight().add(brainTileInfo);

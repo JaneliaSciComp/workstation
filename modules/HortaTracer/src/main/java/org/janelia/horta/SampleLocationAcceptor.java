@@ -156,7 +156,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 );
                 URL yamlUrl = yamlUri.toURL();
                 try (InputStream sourceYamlStream = yamlUrl.openStream()) {
-                    volumeBrickSource = new LocalVolumeBrickSource(nttc.getRenderedVolumeLoader(), renderedOctreeUri, sourceYamlStream, useCompressedFiles, () -> Optional.of(progress));
+                    volumeBrickSource = new LocalVolumeBrickSource(renderedOctreeUri, sourceYamlStream, useCompressedFiles, () -> Optional.of(progress));
                 } catch (IllegalArgumentException ex) {
                     JOptionPane.showMessageDialog(nttc,
                             "Problem Loading Raw Tile Information from " + yamlUrlString +

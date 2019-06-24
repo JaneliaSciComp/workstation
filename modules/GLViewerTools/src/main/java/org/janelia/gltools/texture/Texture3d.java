@@ -2,10 +2,7 @@
 package org.janelia.gltools.texture;
 
 import com.google.common.io.ByteStreams;
-import com.sun.media.jai.codec.ByteArraySeekableStream;
-import com.sun.media.jai.codec.ImageCodec;
-import com.sun.media.jai.codec.ImageDecoder;
-import com.sun.media.jai.codec.SeekableStream;
+import com.sun.media.jai.codec.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.gltools.GL3Resource;
@@ -701,9 +698,7 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         if (stackStream instanceof SeekableStream) {
             tiffStream = (SeekableStream) stackStream;
         } else {
-            byte[] bytes = ByteStreams.toByteArray(stackStream);
-            LOG.info("Loading {} bytes took {} ms", bytes.length, timer.reportMsAndRestart());
-            tiffStream = new ByteArraySeekableStream(bytes);
+            tiffStream = new MemoryCacheSeekableStream(stackStream);
         }
 
         ImageDecoder decoder = ImageCodec.createImageDecoder("tiff", tiffStream, null);
