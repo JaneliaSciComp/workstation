@@ -125,6 +125,10 @@ public class SystemInfo {
 
         final String configFile = "config/app.conf";
         File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, "org.janelia.workstation", false);
+        if (sysWideConfig==null) {
+            log.warn("Could not find app.conf. Install dir is unknown.");
+            return null;
+        }
         String cp = sysWideConfig.getAbsolutePath();
         log.debug("Found system config at {}", sysWideConfig);
         

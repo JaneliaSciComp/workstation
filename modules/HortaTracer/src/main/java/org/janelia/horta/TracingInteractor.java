@@ -22,6 +22,7 @@ import java.util.Observer;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.prefs.Preferences;
 
 import javax.swing.JDialog;
@@ -1209,8 +1210,18 @@ public class TracingInteractor extends MouseAdapter
             try {
                 Boolean ownershipDecision = future.get(2, TimeUnit.SECONDS);
                 return ownershipDecision.booleanValue();
+            } catch (TimeoutException e) {
+                String errorMessage = "Request for ownership of System-owned neuron " + neuron.getName() +
+                        " apparently timed out. Check to see if operation actually succeeded.";
+                log.error(errorMessage, e);
+                JOptionPane.showMessageDialog(
+                        volumeProjection.getMouseableComponent(),
+                        errorMessage,
+                        "Ownership change timed out",
+                        JOptionPane.WARNING_MESSAGE);
             } catch (Exception e) {
-                String errorMessage = "Problems handling roundtrip request for ownership of System-owned neuron";
+                String errorMessage = "Request for ownership of neuron " + neuron.getName() +
+                        "had an unspecified roundtrip failure.";
                 log.error(errorMessage, e);
                 JOptionPane.showMessageDialog(
                         volumeProjection.getMouseableComponent(),
