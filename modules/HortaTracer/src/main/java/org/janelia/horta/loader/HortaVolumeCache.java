@@ -80,12 +80,12 @@ public class HortaVolumeCache {
     private final ImageColorModel imageColorModel;
     private final VolumeMipMaterial.VolumeState volumeState;
     private final Collection<TileDisplayObserver> observers = new java.util.concurrent.ConcurrentLinkedQueue<>();
-    private int currentColorChannel = 0;
+    private int currentColorChannel;
 
     public HortaVolumeCache(final PerspectiveCamera camera, 
-            final ImageColorModel imageColorModel,
-            final VolumeMipMaterial.VolumeState volumeState,
-            int currentColorChannel) 
+                            final ImageColorModel imageColorModel,
+                            final VolumeMipMaterial.VolumeState volumeState,
+                            int currentColorChannel)
     {
         this.imageColorModel = imageColorModel;
         this.volumeState = volumeState;
@@ -194,7 +194,7 @@ public class HortaVolumeCache {
         updateLocation(focusXyz, zoom);
     }
     
-    public void updateLocation(float[] xyz, float zoom) 
+    private void updateLocation(float[] xyz, float zoom)
     {
         if (! doUpdateCache)
             return;
@@ -211,8 +211,6 @@ public class HortaVolumeCache {
         cachedFocusY = xyz[1];
         cachedFocusZ = xyz[2];
         cachedZoom = zoom;
-        
-        // System.out.println("HortaVolumeCache location changed");
 
         if (source == null) {
             return;
@@ -428,7 +426,6 @@ public class HortaVolumeCache {
 
         LOG.info("Loading to GPU: "+brick.getTileRelativePath());
 
-        // System.out.println("I should be displaying tile " + brick.getTileRelativePath() + " now");
         final BrickActor actor = new BrickActor(brick, texture3d, imageColorModel, volumeState);
         actualDisplayTiles.put(brick, actor);
         

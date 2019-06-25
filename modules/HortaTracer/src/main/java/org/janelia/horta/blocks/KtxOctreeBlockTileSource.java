@@ -55,7 +55,7 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         return this;
     }
 
-    protected String getKtxSubDir() {
+    String getKtxSubDir() {
         return "ktx/";
     }
     

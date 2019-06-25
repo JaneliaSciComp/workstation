@@ -2098,7 +2098,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         loadPersistentTileAtLocation(focus);
     }
 
-    public void loadPersistentTileAtLocation(Vector3 location) throws IOException {
+    void loadPersistentTileAtLocation(Vector3 location) throws IOException {
         if (ktxSource == null) {
             KtxOctreeBlockTileSource source = openTileSource();
             if (source == null) {

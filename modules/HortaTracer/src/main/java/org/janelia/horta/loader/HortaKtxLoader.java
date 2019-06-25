@@ -1,13 +1,13 @@
 package org.janelia.horta.loader;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Observable;
-import java.util.Observer;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.KtxBlockLoadRunner;
 import org.janelia.horta.render.NeuronMPRenderer;
+
+import java.io.IOException;
+import java.util.Observable;
+import java.util.Observer;
 
 /**
  *

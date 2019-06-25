@@ -148,14 +148,9 @@ implements DepthSlabClipper
             // Use inverse-Kane notation, since opengl matrices, such as Matrix4, are row major
             VolumeTextureMesh mg = (VolumeTextureMesh)mesh.getGeometry();
             Matrix4 world_X_tc = mg.getTransformWorldToTexCoord(); // OK
-            // System.out.println("world_X_tc = "+world_X_tc);
-            // System.out.println("modelViewMatrix = "+modelViewMatrix);
             Matrix4 camera_X_world = modelViewMatrix.inverse();
-            // System.out.println("camera_X_world = "+camera_X_world);
             Matrix4 camera_X_tc = new Matrix4(camera_X_world).multiply(world_X_tc); // OK
-            // System.out.println("camera_X_tc = "+camera_X_tc);
             Vector4 tc_camera = camera_X_tc.multiply( new Vector4(0, 0, 0, 1) );
-            // System.out.println("camera position in texture coordinates = "+tc_camera); // OK
             float[] arr = tc_camera.toArray();
             gl.glUniform3fv(cameraPositionInTextureCoordinatesIndex, 1, arr, 0);
             
