@@ -32,7 +32,6 @@ public class PerspectiveCamera extends AbstractCamera
                 slab.getzNearRelative() * focusDistance,
                 slab.getzFarRelative() * focusDistance );
         projectionMatrixNeedsUpdate = false;
-        // System.out.println("Projection matrix updated");
     }
 
     @Override

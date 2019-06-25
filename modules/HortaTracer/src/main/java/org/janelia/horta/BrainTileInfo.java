@@ -227,13 +227,7 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
 
         InputStream rawImageStream = volumeLocation.readRawTileContent(rawImage, colorChannelIndex);
-        Path tmpBrickFile = Files.createTempFile(Paths.get(tileRelativePath).getFileName().toString(), "." + colorChannelIndex + ".tif");
         try {
-            if (rawImageStream != null) {
-                Files.copy(rawImageStream, tmpBrickFile, StandardCopyOption.REPLACE_EXISTING);
-                rawImageStream.close();
-                rawImageStream = new FileSeekableStream(tmpBrickFile.toFile());
-            }
             if (!texture.loadTiffStack(rawImage.toString() + "-ch-" + colorChannelIndex, rawImageStream)) {
                 return null;
             } else {
@@ -247,7 +241,6 @@ public class BrainTileInfo implements BrickInfo {
                     LOG.info("Exception closing the stream for image {}, channel {}", rawImage, colorChannelIndex, ignore);
                 }
             }
-            Files.deleteIfExists(tmpBrickFile);
         }
     }
 
