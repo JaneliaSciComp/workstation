@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -133,11 +134,9 @@ public class GroupDetailsPanel extends JPanel implements Refreshable {
     private void addUser() {
         User newUser = (User)addUserBox.getSelectedItem();
         if (newUser!=null) {
-            Set<UserGroupRole> roles = newUser.getUserGroupRoles();
-            UserGroupRole newRole = new UserGroupRole(groupKey, GroupRole.Reader);
-            roles.add(newRole);
-            newUser.setUserGroupRoles(roles);
-            parent.saveUserRoles(newUser);
+            Set<UserGroupRole> roles = new HashSet<>(newUser.getUserGroupRoles());
+            roles.add(new UserGroupRole(groupKey, GroupRole.Reader));
+            parent.saveUserRoles(newUser, roles);
             groupRolesModel.addUser(newUser);
         }
     }
@@ -146,13 +145,13 @@ public class GroupDetailsPanel extends JPanel implements Refreshable {
         int row = groupRolesTable.getSelectedRow();
         User user = groupRolesModel.getUserAtRow(row);
         groupRolesModel.removeUser(row);
-        parent.saveUserRoles(user);
+        parent.saveUserRoles(user, user.getUserGroupRoles());
     }
         
     private void updateUser() {
         int row = groupRolesTable.getSelectedRow();
         User user = groupRolesModel.getUserAtRow(row);
-        parent.saveUserRoles(user);
+        parent.saveUserRoles(user, user.getUserGroupRoles());
     }
 
     @Override
@@ -203,7 +202,7 @@ public class GroupDetailsPanel extends JPanel implements Refreshable {
             fireTableRowsInserted(getRowCount()-1, getRowCount()-1);
         }
         
-        public void removeUser (int row) {
+        public void removeUser(int row) {
             User user = data.get(row);
             UserGroupRole roleToRemove = user.getRole(group);
             Set<UserGroupRole> roles = user.getUserGroupRoles();
@@ -226,7 +225,9 @@ public class GroupDetailsPanel extends JPanel implements Refreshable {
                 JComboBox roleSelection = new JComboBox<>(roleOptions);
                 roleSelection.addActionListener(this);
                 roleSelection.putClientProperty("row", row);
-                roleSelection.setSelectedItem(user.getUserGroupRole(group).getLabel());
+                if (user.getUserGroupRole(group)!=null) {
+                    roleSelection.setSelectedItem(user.getUserGroupRole(group).getLabel());
+                }
                 return roleSelection;
             }
         }
