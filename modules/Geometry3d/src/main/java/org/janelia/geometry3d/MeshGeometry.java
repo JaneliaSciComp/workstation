@@ -66,16 +66,12 @@ implements Collection<Vertex>, ObservableInterface
         return addEdge(new Edge(ix1, ix2));
     }
     
-    public int addEdge(Edge edge) {
+    private int addEdge(Edge edge) {
         if (edges.add(edge))
             setChanged();
         return edges.size() - 1;
     }
-    
-//    public int addFace(Integer[] indices) {
-//        return addFace(new Face(indices));
-//    }
-    
+
     public int addFace(int[] indices) {
         return addFace(new Face(indices));
     }

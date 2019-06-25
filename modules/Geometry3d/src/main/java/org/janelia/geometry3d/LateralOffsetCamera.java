@@ -15,9 +15,7 @@ import org.janelia.geometry3d.camera.GeneralCamera;
  * 
  * @author Christopher Bruns <brunsc at janelia.hhmi.org>
  */
-public class LateralOffsetCamera extends PerspectiveCamera 
-implements GeneralCamera
-{
+public class LateralOffsetCamera extends PerspectiveCamera implements GeneralCamera {
     private final PerspectiveCamera parentCamera;
     // private final float offsetPixels;
     private final float relX;
@@ -104,14 +102,9 @@ implements GeneralCamera
         // so specular reflections would adjust correctly
         // pj.translate(new Vector3(eyeShiftScene, 0, 0)); // Do this in view matrix
         projectionMatrix.makeFrustum(
-        // projectionMatrix.makeFrustum(
                 -right + frustumShiftX, right + frustumShiftX,
                 -top + frustumShiftY, top + frustumShiftY,
                 zNear, zFar);
-        // System.out.println("projectionMatrix 1 = "+projectionMatrix);
-        // projectionMatrix.translate(new Vector3(eyeShiftScene, 0, 0));
-        // System.out.println("projectionMatrix 2 = "+projectionMatrix);
-        // System.out.println("eye shift = "+eyeShiftScene);
         projectionMatrixNeedsUpdate = false;
     }
     

@@ -57,13 +57,11 @@ public class SceneWindow implements GLJComponent, Scene {
         
         renderer = new SceneRenderer(vantage, viewport, cameraType);
         glCanvas.getGLAutoDrawable().addGLEventListener(renderer);
-        //
-        
+
         // Repaint window when camera viewpoint changes
         renderer.getCamera().getChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
-                // System.out.println("Camera changed");
                 glCanvas.getInnerComponent().repaint();
             }
         });
