@@ -22,11 +22,10 @@ import org.janelia.geometry3d.camera.ViewportableCamera;
  * 
  * @author Christopher Bruns
  */
-public abstract class AbstractCamera 
-implements ObservableInterface, 
-        VantageableCamera, ViewportableCamera,
-        SlabbableCamera
-{
+public abstract class AbstractCamera implements ObservableInterface, 
+                                                VantageableCamera,
+                                                ViewportableCamera,
+                                                SlabbableCamera {
     protected final Vantage vantage;
     protected final Viewport viewport;
     // viewMatrix transforms points from ground to camera

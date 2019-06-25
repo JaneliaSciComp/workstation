@@ -90,7 +90,7 @@ public class Matrix4 {
         return true;
     }
     
-    public Matrix4 makePerspective(float fovYRadians, float aspect, float zNear, float zFar) {
+    Matrix4 makePerspective(float fovYRadians, float aspect, float zNear, float zFar) {
         // https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man3/gluPerspective.3.html
         float f = 1 / (float)Math.tan(0.5 * fovYRadians);
         setTranspose(
@@ -102,7 +102,7 @@ public class Matrix4 {
         return this;
     }
     
-    public Matrix4 makeFrustum(float left, float right, float bottom, float top,
+    Matrix4 makeFrustum(float left, float right, float bottom, float top,
 			float zNear, float zFar) 
     {
         // http://www.opengl.org/sdk/docs/man2/xhtml/glFrustum.xml
@@ -175,11 +175,10 @@ public class Matrix4 {
         data[15] = e33;
     }
 
-    
     /**
      * Transpose version, to ease transcription from column-major OpenGL specs
      */
-    public Matrix4 setTranspose(
+    private Matrix4 setTranspose(
             float e00,
             float e10,
             float e20,
@@ -220,7 +219,7 @@ public class Matrix4 {
      * @return this matrix
      * Reset this matrix to identity
      */
-    public final Matrix4 identity() {
+    final Matrix4 identity() {
         set(1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
@@ -257,7 +256,7 @@ public class Matrix4 {
         return result;
     }
     
-    public Matrix toJama() {
+    private Matrix toJama() {
         double[][] d = new double[4][4];
         for (int i = 0; i < 4; ++i)
             for (int j = 0; j < 4; ++j)

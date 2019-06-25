@@ -201,13 +201,13 @@ public class NeuronTraceLoader {
         }
     }
 
-    public void loadPersistentKtxTileAtCurrentFocus(KtxOctreeBlockTileSource ktxSource)
+    void loadPersistentKtxTileAtCurrentFocus(KtxOctreeBlockTileSource ktxSource)
             throws IOException {
         Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
         loadKtxTileAtLocation(ktxSource, focus, true);
     }
 
-    public void loadTransientKtxTileAtCurrentFocus(KtxOctreeBlockTileSource ktxSource)
+    void loadTransientKtxTileAtCurrentFocus(KtxOctreeBlockTileSource ktxSource)
             throws IOException {
         Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
         loadKtxTileAtLocation(ktxSource, focus, false);

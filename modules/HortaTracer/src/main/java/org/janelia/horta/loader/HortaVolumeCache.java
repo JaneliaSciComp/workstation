@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 public class HortaVolumeCache {
     private static final Logger LOG = LoggerFactory.getLogger(HortaVolumeCache.class);
 
-    private int ramTileCount = 2; // Three is better than two for tile availability
+    private int ramTileCount = 3; // Three is better than two for tile availability
     private int gpuTileCount = 1;
     private final PerspectiveCamera camera;
     private StaticVolumeBrickSource source = null;

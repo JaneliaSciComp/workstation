@@ -17,7 +17,6 @@ import org.janelia.geometry3d.camera.GeneralCamera;
  */
 public class LateralOffsetCamera extends PerspectiveCamera implements GeneralCamera {
     private final PerspectiveCamera parentCamera;
-    // private final float offsetPixels;
     private final float relX;
     private final float relY;
     private final float relWidth;
@@ -40,7 +39,6 @@ public class LateralOffsetCamera extends PerspectiveCamera implements GeneralCam
     {
         super(parentCamera.getVantage(), new Viewport());
         shiftStack.push(new BasicFrustumShift(offsetPixels, 0));
-        // this.offsetPixels = offsetPixels;
         this.parentCamera = parentCamera;
         this.relX = relX; this.relY = relY;
         this.relWidth = relWidth; this.relHeight = relHeight;
@@ -69,7 +67,6 @@ public class LateralOffsetCamera extends PerspectiveCamera implements GeneralCam
         this.relWidth = 1.0f; this.relHeight = 1.0f;
         this.parentCamera = parentCamera;
         shiftStack.push(new BasicFrustumShift(offsetPixels, 0));
-        // this.offsetPixels = offsetPixels;
         parentCamera.getChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
@@ -83,19 +80,22 @@ public class LateralOffsetCamera extends PerspectiveCamera implements GeneralCam
     protected void updateProjectionMatrix() 
     {
         final ConstFrustumShift shift = shiftStack.peek();
-        final float eyeShiftSceneX = shift.getShiftXPixels() * vantage.getSceneUnitsPerViewportHeight() 
-                / viewport.getHeightPixels();
-        final float eyeShiftSceneY = shift.getShiftYPixels() * vantage.getSceneUnitsPerViewportHeight() 
-                / viewport.getHeightPixels();
+        final float eyeShiftSceneX;
+        final float eyeShiftSceneY;
+        if (viewport.getHeightPixels() == 0) {
+            eyeShiftSceneX = 0;
+            eyeShiftSceneY = 0;
+        } else {
+            eyeShiftSceneX = shift.getShiftXPixels() * vantage.getSceneUnitsPerViewportHeight() / viewport.getHeightPixels();
+            eyeShiftSceneY = shift.getShiftYPixels() * vantage.getSceneUnitsPerViewportHeight() / viewport.getHeightPixels();
+        }
         final ConstViewSlab slab = getEffectiveViewSlab();
         final float focusDistance = getCameraFocusDistance();
         final float zNear = slab.getzNearRelative() * focusDistance;
         final float zFar = slab.getzFarRelative() * focusDistance;
-        final float frustumShiftX = 
-                eyeShiftSceneX * slab.getzNearRelative();
-        final float frustumShiftY = 
-                eyeShiftSceneY * slab.getzFarRelative();
-                // 0.0f;
+        final float frustumShiftX = eyeShiftSceneX * slab.getzNearRelative();
+        final float frustumShiftY = eyeShiftSceneY * slab.getzFarRelative();
+
         final float top = zNear * (float)Math.tan(0.5 * getFovRadians());
         final float right = viewport.getAspect() * top;
         // The centering translation should be on modelview (view) matrix,
@@ -116,10 +116,15 @@ public class LateralOffsetCamera extends PerspectiveCamera implements GeneralCam
         else
             super.updateViewMatrix();
         final ConstFrustumShift shift = shiftStack.peek();
-        float eyeShiftSceneX = shift.getShiftXPixels() * vantage.getSceneUnitsPerViewportHeight() 
-                / viewport.getHeightPixels();
-        float eyeShiftSceneY = shift.getShiftYPixels() * vantage.getSceneUnitsPerViewportHeight() 
-                / viewport.getHeightPixels();
+        float eyeShiftSceneX;
+        float eyeShiftSceneY;
+        if (viewport.getHeightPixels() == 0) {
+            eyeShiftSceneX = 0;
+            eyeShiftSceneY = 0;
+        } else {
+            eyeShiftSceneX = shift.getShiftXPixels() * vantage.getSceneUnitsPerViewportHeight() / viewport.getHeightPixels();
+            eyeShiftSceneY = shift.getShiftYPixels() * vantage.getSceneUnitsPerViewportHeight() / viewport.getHeightPixels();
+        }
         viewMatrix.translate(new Vector3(eyeShiftSceneX, eyeShiftSceneY, 0));
         viewMatrixNeedsUpdate = false;
     }
