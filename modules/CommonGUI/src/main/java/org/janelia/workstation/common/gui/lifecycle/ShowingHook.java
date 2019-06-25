@@ -142,7 +142,7 @@ public class ShowingHook implements Runnable {
 
         // Set the update center URL
         String updateCenterURL = ConsoleProperties.getString("updates.url");
-        if (!StringUtils.isBlank(updateCenterURL)) {
+        if (!StringUtils.isBlank(updateCenterURL) && !SystemInfo.isDev) {
             AutoUpdater.setUpdateCenterURL(updateCenterURL);
         }
 

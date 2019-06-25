@@ -8,7 +8,7 @@ import javax.swing.JButton;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.gui.listview.ViewerToolbar;
+import org.janelia.workstation.common.gui.support.ViewerToolbar;
 
 
 /**

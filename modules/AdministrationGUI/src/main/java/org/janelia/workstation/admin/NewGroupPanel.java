@@ -2,7 +2,9 @@ package org.janelia.workstation.admin;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Set;
 
 import javax.swing.AbstractCellEditor;
@@ -17,6 +19,7 @@ import javax.swing.table.TableCellEditor;
 
 import org.janelia.model.security.*;
 import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.util.Refreshable;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +28,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author schauderd
  */
-public class NewGroupPanel extends JPanel {
+public class NewGroupPanel extends JPanel implements Refreshable {
     private static final Logger log = LoggerFactory.getLogger(NewGroupPanel.class);
     
     private AdministrationTopComponent parent;
@@ -38,14 +41,17 @@ public class NewGroupPanel extends JPanel {
     
     public NewGroupPanel(AdministrationTopComponent parent) {
         this.parent = parent;
-        setupUI();
+        refresh();
     }
     
     public void setupUI() {
 
         setLayout(new BorderLayout());
+        removeAll();
 
-        JPanel titlePanel = new TitlePanel("New Group", "Return To Group List", event -> returnHome());
+        JPanel titlePanel = new TitlePanel("New Group", "Return To Group List",
+                event -> refresh(),
+                event -> returnHome());
         add(titlePanel, BorderLayout.PAGE_START);
         
         newGroupTableModel = new NewGroupTableModel();
@@ -69,9 +75,12 @@ public class NewGroupPanel extends JPanel {
         bottomPanel.add(actionPanel, BorderLayout.SOUTH);
 
         add(bottomPanel, BorderLayout.PAGE_END);
+
+
+        revalidate();
     }
     
-    public void createGroup () {
+    private void createGroup() {
         // create key from name
         currentGroup.setKey("group:"+currentGroup.getName());
         log.info(currentGroup.toString());
@@ -90,13 +99,20 @@ public class NewGroupPanel extends JPanel {
         returnHome();
     }
     
-    public void initNewGroup() throws Exception {
-        currentGroup = new Group();
+    private void initNewGroup() {
+        this.currentGroup = new Group();
         // load new group
         newGroupTableModel.loadGroup(currentGroup);
+        revalidate();
     }
-                
-    public void returnHome() {
+
+    @Override
+    public void refresh() {
+        setupUI();
+        initNewGroup();
+    }
+
+    private void returnHome() {
         parent.viewGroupList();
     }
     
@@ -120,12 +136,17 @@ public class NewGroupPanel extends JPanel {
             return editProperties.length;
         }
         
-        public void loadGroup(Group group) throws Exception {
+        void loadGroup(Group group) {
             this.group = group;
             for (int i=0; i<editProperties.length; i++) {
                 String value;
-                value = (String) new PropertyDescriptor(editProperties[i], Group.class).getReadMethod().invoke(group);
-                values[i] = value;                        
+                String editProperty = editProperties[i];
+                try {
+                    values[i] = (String) new PropertyDescriptor(editProperty, Group.class).getReadMethod().invoke(group);
+                }
+                catch (Exception e) {
+                    throw new IllegalStateException("Error getting "+editProperty+" from "+group, e);
+                }
             }
             fireTableRowsInserted(0, getRowCount()-1);
         }

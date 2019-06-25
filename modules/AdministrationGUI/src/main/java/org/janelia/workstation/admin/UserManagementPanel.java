@@ -22,6 +22,8 @@ import org.janelia.model.security.UserGroupRole;
 import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.util.Refreshable;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +32,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author schauderd
  */
-public class UserManagementPanel extends JPanel {
+public class UserManagementPanel extends JPanel implements Refreshable {
     private static final Logger log = LoggerFactory.getLogger(UserManagementPanel.class);
 
     private AdministrationTopComponent parent;
@@ -40,15 +42,17 @@ public class UserManagementPanel extends JPanel {
 
     public UserManagementPanel(AdministrationTopComponent parent) {
         this.parent = parent;
-        setupUI();
-        loadUsers();
+        refresh();
     }
 
     private void setupUI() {
 
         setLayout(new BorderLayout());
+        removeAll();
     
-        JPanel titlePanel = new TitlePanel("User List", "Return To Top Menu", event -> returnHome());
+        JPanel titlePanel = new TitlePanel("User List", "Return To Top Menu",
+                event -> refresh(),
+                event -> returnHome());
         add(titlePanel, BorderLayout.PAGE_START);
 
         userManagementTableModel = new UserManagementTableModel();
@@ -58,15 +62,17 @@ public class UserManagementPanel extends JPanel {
         userManagementTable.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent mouseEvent) {
                 JTable table = (JTable) mouseEvent.getSource();
-                User user = userManagementTableModel.getUserAtRow(userManagementTable.getSelectedRow());
-                if (!AccessManager.getAccessManager().isAdmin() &&
-                        !AccessManager.getSubjectKey().equals(user.getKey()))
-                    return;
-                if (mouseEvent.getClickCount() == 2 && table.getSelectedRow() != -1) {
-                    editUser();
-                } else {
-                    if (table.getSelectedRow() != -1) {
-                        editUserButton.setEnabled(true);
+                if (userManagementTable.getSelectedRow()>=0) {
+                    User user = userManagementTableModel.getUserAtRow(userManagementTable.getSelectedRow());
+                    if (!AccessManager.getAccessManager().isAdmin() &&
+                            !AccessManager.getSubjectKey().equals(user.getKey()))
+                        return;
+                    if (mouseEvent.getClickCount() == 2 && table.getSelectedRow() != -1) {
+                        editUser();
+                    } else {
+                        if (table.getSelectedRow() != -1) {
+                            editUserButton.setEnabled(true);
+                        }
                     }
                 }
             }
@@ -92,14 +98,16 @@ public class UserManagementPanel extends JPanel {
         actionPanel.add(editUserButton);
         actionPanel.add(newUserButton);
         add(actionPanel, BorderLayout.PAGE_END);
+
+        revalidate();
     }
 
-    public void editUser() {
+    private void editUser() {
         User user = userManagementTableModel.getUserAtRow(userManagementTable.getSelectedRow());
         parent.viewUserDetails(user);
     }
 
-    public void newUser() {
+    private void newUser() {
         User newUser = new User();
         // add the workstation role by default
         Set<UserGroupRole> roles = newUser.getUserGroupRoles();
@@ -109,7 +117,13 @@ public class UserManagementPanel extends JPanel {
         parent.viewUserDetails(newUser);
     }
 
-    public void returnHome() {
+    @Override
+    public void refresh() {
+        setupUI();
+        loadUsers();
+    }
+
+    private void returnHome() {
         parent.viewTopMenu();
     }
 
@@ -118,18 +132,35 @@ public class UserManagementPanel extends JPanel {
      * If you are a workstation admin, you see everybody.
      * Group admins only see users in groups in which they are the owners.
      */
-    private void loadUsers () {
-        try {
-            List<Subject> subjectList = DomainMgr.getDomainMgr().getSubjects();
-            List<User> userList = new ArrayList<>();
-            for (Subject subject : subjectList) {
-                if (subject instanceof User)
-                    userList.add((User) subject);
+    private void loadUsers() {
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            List<Subject> subjectList;
+
+            @Override
+            protected void doStuff() throws Exception {
+                subjectList = DomainMgr.getDomainMgr().getSubjects();
             }
-            userManagementTableModel.addUsers(userList);
-        } catch (Exception e) {
-            FrameworkAccess.handleException("Problem retrieving user information", e);
-        }
+
+            @Override
+            protected void hadSuccess() {
+                List<User> userList = new ArrayList<>();
+                for (Subject subject : subjectList) {
+                    if (subject instanceof User)
+                        userList.add((User) subject);
+                }
+                userManagementTableModel.addUsers(userList);
+                revalidate();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+            }
+        };
+
+        worker.execute();
     }
 
     class UserManagementTableModel extends AbstractTableModel {

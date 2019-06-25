@@ -28,7 +28,7 @@ import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.workstation.browser.gui.listview.ViewerToolbar;
+import org.janelia.workstation.common.gui.support.ViewerToolbar;
 import org.janelia.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.workstation.browser.nb_action.NewFilterActionListener;
 import org.janelia.workstation.common.gui.support.Icons;

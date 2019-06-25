@@ -145,6 +145,8 @@ public class GracefulBrick {
     
     private boolean isBricked() {
         
+        if (SystemInfo.isDev) return false;
+        
         String brickedProp = System.getProperty("brick");
         if ("true".equals(brickedProp)) {
             log.info("Client bricked by system property");

@@ -6,6 +6,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,8 @@ import org.janelia.model.security.UserGroupRole;
 import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.util.Refreshable;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +36,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author schauderd
  */
-public class UserDetailsPanel extends JPanel {
+public class UserDetailsPanel extends JPanel implements Refreshable {
     private static final Logger LOG = LoggerFactory.getLogger(UserDetailsPanel.class);
 
     private AdministrationTopComponent parent;
@@ -44,24 +48,29 @@ public class UserDetailsPanel extends JPanel {
     private JTable userDetailsTable;
     private GroupRolesModel groupRolesModel;
     private JTable groupRolesTable;
+    private TableFieldEditor cellEditor;
     private User currentUser;
     private User admin;
-    private boolean passwordChanged = false;
+    private String newPassword = null;
     private boolean dirtyFlag = false;
     private boolean canEdit = false;
     private int COLUMN_NAME = 0;
     private int COLUMN_VALUE = 1;
     
-    public UserDetailsPanel(AdministrationTopComponent parent) {
+    public UserDetailsPanel(AdministrationTopComponent parent, User user) {
         this.parent = parent;
-        setupUI();
+        this.currentUser = user;
+        refresh();
     }
     
-    public void setupUI() {
+    private void setupUI() {
 
         setLayout(new BorderLayout());
+        removeAll();
 
-        JPanel titlePanel = new TitlePanel("User Details", "Return To User List", event -> returnHome());
+        JPanel titlePanel = new TitlePanel("User Details", "Return To User List",
+                event -> refresh(),
+                event -> returnHome());
         add(titlePanel, BorderLayout.PAGE_START);
 
         JPanel mainPanel = new JPanel();
@@ -69,9 +78,10 @@ public class UserDetailsPanel extends JPanel {
 
         userDetailsTableModel = new UserDetailsTableModel();
         userDetailsTable = new JTable(userDetailsTableModel);
-        TableFieldEditor editor = new TableFieldEditor();
-        userDetailsTable.getColumn("Property").setCellEditor(editor);
+        cellEditor = new TableFieldEditor();
+        userDetailsTable.getColumn("Property").setCellEditor(cellEditor);
         userDetailsTable.setRowHeight(25);
+        userDetailsTable.putClientProperty("terminateEditOnFocusLost", true);
         JScrollPane userTableScroll = new JScrollPane(userDetailsTable);
         mainPanel.add(userTableScroll);
 
@@ -116,35 +126,54 @@ public class UserDetailsPanel extends JPanel {
         actionPanel.add(removeGroupButton);
         actionPanel.add(saveUserButton);
         add(actionPanel, BorderLayout.PAGE_END);
+
+        revalidate();
     }
     
     private void saveUser () {
-        if (currentUser.getId() == null) {
-            User newUser = parent.createUser(currentUser);
-            if (newUser != null) {
-                currentUser.setId(newUser.getId());
-                currentUser.setKey(newUser.getKey());
-            }
+        currentUser = parent.saveUser(currentUser, newPassword);
+        if (currentUser != null) {
+            parent.saveUserRoles(currentUser);
         }
-        parent.saveUser(currentUser, passwordChanged);
-        parent.saveUserRoles(currentUser);
         parent.viewUserList();
     }
     
-    void editUserDetails(User user) throws Exception {
-        currentUser = user;
-        Subject rawAdmin = AccessManager.getAccessManager().getActualSubject();
-        if (rawAdmin instanceof User && AccessManager.getAccessManager().isAdmin()) {
-            admin = (User) rawAdmin;
-            canEdit = true;
-        }
-        if (rawAdmin.getKey().equals(user.getKey()))
-            canEdit = true;
+    private void editUserDetails() {
 
-        // load user details
-        userDetailsTableModel.loadUser(user);
-        groupRolesModel.loadGroupRoles(user);
-        refreshUserGroupsToAdd();
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                if (currentUser.getId() != null) {
+                    // refresh user from database
+                    currentUser = (User) DomainMgr.getDomainMgr().getSubjectFacade().getSubjectByNameOrKey(currentUser.getKey());
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+                Subject rawAdmin = AccessManager.getAccessManager().getActualSubject();
+                if (rawAdmin instanceof User && AccessManager.getAccessManager().isAdmin()) {
+                    admin = (User) rawAdmin;
+                    canEdit = true;
+                }
+                if (rawAdmin.getKey().equals(currentUser.getKey()))
+                    canEdit = true;
+
+                // load user details
+                userDetailsTableModel.loadUser(currentUser);
+                groupRolesModel.loadGroupRoles(currentUser);
+                refreshUserGroupsToAdd();
+                revalidate();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+            }
+        };
+
+        worker.execute();
     }
 
     private void refreshUserGroupsToAdd() {
@@ -198,14 +227,19 @@ public class UserDetailsPanel extends JPanel {
         }
     }
 
-    public void returnHome() {
+    @Override
+    public void refresh() {
+        setupUI();
+        editUserDetails();
+    }
+
+    private void returnHome() {
         parent.viewUserList();         
     }
     
     class UserDetailsTableModel extends AbstractTableModel {
         String[] columnNames = {"Property","Value"};
         User user;
-        String password;
         String[] editProperties = {"Name", "FullName", "Email", "Password"};
         String[] editLabels = {"Name", "Full Name", "Email", "Password"};
         String[] values = new String[editProperties.length];
@@ -232,16 +266,21 @@ public class UserDetailsPanel extends JPanel {
             return editProperties.length;
         }
         
-        public void loadUser(User user) throws Exception {
+        public void loadUser(User user) {
             this.user = user;
             for (int i=0; i<editProperties.length; i++) {
                 String value;
-                if (editProperties[i].equals("Password")) {
-                    value = "**********";
+                String editProperty = editProperties[i];
+                if (editProperty.equals("Password")) {
+                    values[i] ="**********";
                 } else {
-                    value = (String) new PropertyDescriptor(editProperties[i], User.class).getReadMethod().invoke(user);
+                    try {
+                        values[i] =(String) new PropertyDescriptor(editProperty, User.class).getReadMethod().invoke(user);
+                    }
+                    catch (Exception e) {
+                        throw new IllegalStateException("Error getting "+editProperty+" from "+user, e);
+                    }
                 }
-               values[i] = value;                        
             }
             fireTableRowsInserted(0, getRowCount()-1);
         }
@@ -275,9 +314,7 @@ public class UserDetailsPanel extends JPanel {
         public void setValueAt(Object value, int row, int col) {
             try {
                 if (editProperties[row].equals("Password")) {
-                    password = (String)value;
-                    user.setPassword(password);
-                    passwordChanged = true;
+                    newPassword = (String)value;
                 } else {
                     new PropertyDescriptor(editProperties[row], User.class).getWriteMethod().invoke(user, (String)value);
                 }

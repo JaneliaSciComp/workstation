@@ -1,11 +1,22 @@
 package org.janelia.workstation.admin;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+
+import com.google.common.eventbus.Subscribe;
 import org.janelia.model.security.Group;
 import org.janelia.model.security.User;
-import org.janelia.model.security.dto.AuthenticationRequest;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.facade.impl.rest.SubjectFacadeImpl;
 import org.janelia.workstation.core.api.facade.interfaces.SubjectFacade;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
+import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
+import org.janelia.workstation.core.util.Refreshable;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -13,13 +24,8 @@ import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
-
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
@@ -46,19 +52,22 @@ import java.util.List;
         "HINT_AdministrationTopComponent=Administration Tool"
 })
 public final class AdministrationTopComponent extends TopComponent {
+
+    private static final Logger log = LoggerFactory.getLogger(AdministrationTopComponent.class);
+
     public static final String PREFERRED_ID = "AdministrationTopComponent";
     public static final String LABEL_TEXT = "Administration Tool";
 
     private JPanel topMenu;
+    private Refreshable currentView;
 
     public AdministrationTopComponent() {
         setupGUI();
         setName(Bundle.CTL_AdministrationTopComponent());
         setToolTipText(Bundle.HINT_AdministrationTopComponent());
-
     }
 
-    public static final AdministrationTopComponent getInstance() {
+    public static AdministrationTopComponent getInstance() {
         return (AdministrationTopComponent) WindowManager.getDefault().findTopComponent(PREFERRED_ID);
     }
 
@@ -94,126 +103,99 @@ public final class AdministrationTopComponent extends TopComponent {
         revalidate();
     }
 
-    public void viewUserList() {
+    @Subscribe
+    public void sessionStarted(SessionStartEvent event) {
+        if (currentView != null) currentView.refresh();
+    }
+
+    @Subscribe
+    public void objectsInvalidated(DomainObjectInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            if (currentView != null) currentView.refresh();
+        }
+    }
+
+    void viewUserList() {
         UserManagementPanel panel = new UserManagementPanel(this);
         removeAll();
         add(panel);
         revalidate();
         repaint();
+        this.currentView = panel;
     }
 
-    public void viewTopMenu() {
+    void viewTopMenu() {
         removeAll();
         add(topMenu);
         revalidate();
         repaint();
+        this.currentView = null;
     }
 
-    public void viewUserDetails(User user) {
-        try {
-            UserDetailsPanel panel = new UserDetailsPanel(this);
-            panel.editUserDetails(user);
-            removeAll();
-            add(panel);
-            revalidate();
-        } catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
+    void viewUserDetails(User user) {
+        UserDetailsPanel panel = new UserDetailsPanel(this, user);
+        removeAll();
+        add(panel);
+        revalidate();
+        this.currentView = panel;
     }
 
-    public void createNewGroup() {
-        try {
-            NewGroupPanel panel = new NewGroupPanel(this);
-            panel.initNewGroup();
-            removeAll();
-            add(panel);
-            revalidate();
-        } catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
+    void createNewGroup() {
+        NewGroupPanel panel = new NewGroupPanel(this);
+        removeAll();
+        add(panel);
+        revalidate();
+        this.currentView = panel;
     }
 
-    public void viewGroupList() {
+    void viewGroupList() {
         GroupManagementPanel panel = new GroupManagementPanel(this);
         removeAll();
         add(panel);
         revalidate();
+        this.currentView = panel;
     }
 
-    public void viewGroupDetails(String groupKey) {
-        try {
-            GroupDetailsPanel panel = new GroupDetailsPanel(this, groupKey);
-            List<User> users = DomainMgr.getDomainMgr().getUsersInGroup(groupKey);
-            panel.editGroupDetails(groupKey, users);
-            removeAll();
-            add(panel);
-            revalidate();
-        } catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
+    void viewGroupDetails(String groupKey) {
+        GroupDetailsPanel panel = new GroupDetailsPanel(this, groupKey);
+        removeAll();
+        add(panel);
+        revalidate();
+        this.currentView = panel;
     }
 
     /**
      * Persistence section bubbling up from all the panels
      */
-    public void saveUserRoles(User user) {
+    void saveUserRoles(User user) {
         try {
             SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
             subjectFacade.updateUserRoles(user.getKey(), user.getUserGroupRoles());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             FrameworkAccess.handleException(e);
         }
     }
 
-    public User createUser(User user) {
+    User saveUser(User user, String plaintextPassword) {
         try {
             SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
-            AuthenticationRequest message = new AuthenticationRequest();
-            message.setUsername(user.getName());
-            message.setPassword(user.getPassword());
-
-            User newUser = subjectFacade.updateUser(user);
-
-            // make sure to change password
-            subjectFacade.changeUserPassword(message);
-
-            // set up a user default directory
-
-            // if mail set up, register the user's email address
-            return newUser;
-        } catch (Exception e) {
+            log.info("Saving user {}", user);
+            User updatedUser = subjectFacade.updateUser(user);
+            log.info("Updated user: {}", updatedUser);
+            if (plaintextPassword != null) {
+                updatedUser = subjectFacade.changeUserPassword(user.getName(), plaintextPassword);
+                log.info("Updated user password: {}", updatedUser);
+            }
+            return updatedUser;
+        }
+        catch (Exception e) {
             FrameworkAccess.handleException(e);
         }
         return null;
     }
 
-    public void saveUser(User user, boolean passwordChange) {
-        try {
-            SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
-            if (user.getId() == null) {
-                AuthenticationRequest message = new AuthenticationRequest();
-                message.setUsername(user.getName());
-                message.setPassword(user.getPassword());
-
-                user = subjectFacade.updateUser(user);
-
-                // make sure to change password
-                subjectFacade.changeUserPassword(message);
-            } else {
-                subjectFacade.updateUser(user);
-                if (passwordChange) {
-                    AuthenticationRequest message = new AuthenticationRequest();
-                    message.setUsername(user.getName());
-                    message.setPassword(user.getPassword());
-                    subjectFacade.changeUserPassword(message);
-                }
-            }
-        } catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
-    }
-
-    public void createGroup(Group group) {
+    void createGroup(Group group) {
         try {
             SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
             subjectFacade.createGroup(group);
@@ -224,13 +206,13 @@ public final class AdministrationTopComponent extends TopComponent {
 
     @Override
     public void componentOpened() {
-
+        Events.getInstance().registerOnEventBus(this);
     }
 
     @Override
     public void componentClosed() {
+        Events.getInstance().unregisterOnEventBus(this);
     }
-
 
     void writeProperties(java.util.Properties p) {
         p.setProperty("version", "1.0");

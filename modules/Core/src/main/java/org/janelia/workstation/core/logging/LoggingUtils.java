@@ -10,15 +10,26 @@ public class LoggingUtils {
 
     public static String getReportEmailSubject(boolean isAutoReport) {
 
-        String username = AccessManager.getAccessManager().getAuthenticatedSubject().getName();
+        AccessManager accessManager = AccessManager.getAccessManager();
+
+        String username = "anonymous";
+        String runAsUser = null;
+
+        if (AccessManager.getAccessManager().isLoggedIn()) {
+            username = accessManager.getAuthenticatedSubject().getName();
+            if (!username.equals(AccessManager.getSubjectName())) {
+                runAsUser = AccessManager.getSubjectName();
+            }
+        }
+
         String version = SystemInfo.appVersion;
 
         StringBuilder sb = new StringBuilder();
         sb.append(isAutoReport?"Auto-report":"User-report");
         sb.append(" from ");
         sb.append(username);
-        if (!username.equals(AccessManager.getSubjectName())) {
-            sb.append("(running as ").append(AccessManager.getSubjectName()).append(")");
+        if (runAsUser != null) {
+            sb.append("(running as ").append(runAsUser).append(")");
         }
         sb.append(" -- ").append(version);
 
