@@ -30,16 +30,6 @@ public class RESTClientBase {
         this.log = log;
     }
 
-    // TODO: eliminate this method, and use the other one which logs the service URL
-    protected boolean checkBadResponse(int responseStatus, String failureError) {
-        if (responseStatus<200 || responseStatus>=300) {
-            log.error("ERROR RESPONSE: " + responseStatus);
-            log.error(failureError);
-            return true;
-        }
-        return false;
-    }
-    
     protected void checkBadResponse(WebTarget target, Response response) {
         int responseStatus = response.getStatus();
         Response.Status status = Response.Status.fromStatusCode(response.getStatus());

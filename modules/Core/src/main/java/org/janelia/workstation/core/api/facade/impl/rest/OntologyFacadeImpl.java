@@ -45,13 +45,12 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
     @Override
     public List<Ontology> getOntologiesSortedByCurrentPrincipal() {
         String currentPrincipal = AccessManager.getSubjectKey();
-        Response response = service.path("data/ontology")
-                .queryParam("subjectKey", currentPrincipal)
+        WebTarget target = service.path("data/ontology")
+                .queryParam("subjectKey", currentPrincipal);
+        Response response = target
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getOntologies from server")) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<Ontology>>() {})
                 .stream()
                 .sorted(new DomainObjectComparator(currentPrincipal))
@@ -63,23 +62,23 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(ontology);
-        Response response = service.path("data/ontology")
+        WebTarget target = service.path("data/ontology");
+        Response response = target
                 .request("application/json")
                 .put(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request createOntology from server")) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(Ontology.class);
     }
 
     @Override
     public void removeOntology(Long ontologyId) throws Exception {
-        Response response = service.path("data/ontology")
+        WebTarget target = service.path("data/ontology")
                 .queryParam("ontologyId", ontologyId)
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("subjectKey", AccessManager.getSubjectKey());
+        Response response = target
                 .request("application/json")
                 .delete();
-        checkBadResponse(response.getStatus(), "problem making request removeOntology to server: " + ontologyId);
+        checkBadResponse(target, response);
     }
 
     @Override
@@ -94,29 +93,26 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
         List<Integer> ordering = new ArrayList<>();
         ordering.add(index);
         query.setOrdering(ordering);
-        Response response = service.path("data/ontology/terms")
+        WebTarget target = service.path("data/ontology/terms");
+        Response response = target
                 .request("application/json")
                 .put(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request addOntologyTerms to server: " + ontologyId + "," + parentTermId + "," + terms)) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(Ontology.class);
     }
 
     @Override
     public Ontology removeTerm(Long ontologyId, Long parentTermId, Long termId) throws Exception {
-        Response response = service.path("data/ontology/terms")
+        WebTarget target = service.path("data/ontology/terms")
                 .queryParam("ontologyId", ontologyId)
                 .queryParam("parentTermId", parentTermId)
                 .queryParam("termId", termId)
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("subjectKey", AccessManager.getSubjectKey());
+        Response response = target
                 .request("application/json")
                 .delete();
-        if (checkBadResponse(response.getStatus(), "problem making request removeOntologyTerms to server: " + ontologyId + "," + parentTermId + "," + termId)) {
-            throw new WebApplicationException(response);
-        }
-        Ontology newOntology = response.readEntity(Ontology.class);
-        return newOntology;
+        checkBadResponse(target, response);
+        return response.readEntity(Ontology.class);
     }
 
     @Override
@@ -128,16 +124,15 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
         objectIds.add(parentTermId);
         query.setObjectIds(objectIds);
         List<Integer> orderList = new ArrayList<>();
-        for (int i=0; i<order.length; i++) {
-            orderList.add(new Integer(order[i]));
+        for (int i : order) {
+            orderList.add(i);
         }
         query.setOrdering(orderList);
-        Response response = service.path("data/ontology/terms")
+        WebTarget target = service.path("data/ontology/terms");
+        Response response = target
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request reorderOntologyTerms to server: " + ontologyId + "," + parentTermId)) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(Ontology.class);
     }
     
@@ -146,13 +141,11 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setReferences(new ArrayList<>(references));
-
-        Response response = service.path("data/annotation/details")
+        WebTarget target = service.path("data/annotation/details");
+        Response response = target
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request getAnnotations from server: " + references)) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<Annotation>>() {});
     }
     
@@ -167,14 +160,12 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(annotation);
-        Response response = service.path("data/annotation")
+        WebTarget target = service.path("data/annotation");
+        Response response = target
                 .request("application/json")
                 .put(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request createAnnotation from server: " + annotation)) {
-            throw new WebApplicationException(response);
-        }
-        Annotation newAnnotation = response.readEntity(Annotation.class);
-        return newAnnotation;
+        checkBadResponse(target, response);
+        return response.readEntity(Annotation.class);
     }
 
     @Override
@@ -182,25 +173,23 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(annotation);
-        Response response = service.path("data/annotation")
+        WebTarget target = service.path("data/annotation");
+        Response response = target
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request updateAnnotation from server: " + annotation)) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(Annotation.class);
     }
 
     @Override
     public void remove(Annotation annotation) throws Exception {
-        Response response = service.path("data/annotation")
+        WebTarget target = service.path("data/annotation")
                 .queryParam("annotationId", annotation.getId())
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("subjectKey", AccessManager.getSubjectKey());
+        Response response = target
                 .request("application/json")
                 .delete();
-        if (checkBadResponse(response.getStatus(), "problem making request removeAnnotation from server: " + annotation)) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
     }
 
 }
