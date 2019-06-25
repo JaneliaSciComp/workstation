@@ -51,10 +51,9 @@ implements ObservableInterface,
         this.projectionMatrix = new Matrix4();
         this.changeObservable = new ComposableObservable();
         // Vantage affects both view and projection matrices
-        vantage.addObserver(new Observer() {
+        this.vantage.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
-                // System.out.println("Vantage changed");
                 viewMatrixNeedsUpdate = true;
                 projectionMatrixNeedsUpdate = true;
                 changeObservable.setChanged();
@@ -62,10 +61,9 @@ implements ObservableInterface,
             }
         });
         // Viewport affects only projection matrix
-        viewport.getChangeObservable().addObserver(new Observer() {
+        this.viewport.getChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
-                // System.out.println("Viewport changed");
                 projectionMatrixNeedsUpdate = true;
                 changeObservable.setChanged();
                 changeObservable.notifyObservers(); // propagate update()
@@ -185,7 +183,7 @@ implements ObservableInterface,
         internalSlabStack.push(new BasicViewSlab(slab));
     }
 
-    protected ConstViewSlab getEffectiveViewSlab() {
+    ConstViewSlab getEffectiveViewSlab() {
         ConstViewSlab result = this.viewport;
         if (! internalSlabStack.isEmpty())
             result = internalSlabStack.peek();
