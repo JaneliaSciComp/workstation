@@ -5,30 +5,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.shared.utils.DomainQuery;
-import org.janelia.workstation.core.api.facade.interfaces.SubjectFacade;
-import org.janelia.workstation.core.api.http.RESTClientBase;
-import org.janelia.workstation.core.api.http.RestJsonClientManager;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.security.Group;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;
 import org.janelia.model.security.dto.AuthenticationRequest;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.facade.interfaces.SubjectFacade;
+import org.janelia.workstation.core.api.http.RESTClientBase;
+import org.janelia.workstation.core.api.http.RestJsonClientManager;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SubjectFacadeImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(SubjectFacadeImpl.class);
 
     private WebTarget service;
     
@@ -37,8 +36,8 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
     }
 
     public SubjectFacadeImpl(String serverUrl) {
-        super(LOG);
-        LOG.debug("Using server URL: {}",serverUrl);
+        super(log);
+        log.debug("Using server URL: {}",serverUrl);
         this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);
     }
     

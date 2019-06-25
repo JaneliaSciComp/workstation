@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -12,21 +11,21 @@ import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
-import org.janelia.workstation.core.api.facade.interfaces.SampleFacade;
-import org.janelia.workstation.core.api.http.RESTClientBase;
-import org.janelia.workstation.core.api.http.RestJsonClientManager;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.LineRelease;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.facade.interfaces.SampleFacade;
+import org.janelia.workstation.core.api.http.RESTClientBase;
+import org.janelia.workstation.core.api.http.RestJsonClientManager;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SampleFacadeImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(SampleFacadeImpl.class);
 
     private WebTarget domainService;
     private WebTarget legacyDomainService;
@@ -36,7 +35,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
     }
 
     private SampleFacadeImpl(String domainServiceURL, String legacyDomainServiceURL) {
-        super(LOG);
+        super(log);
         this.domainService = RestJsonClientManager.getInstance().getTarget(domainServiceURL, true);
         this.legacyDomainService = RestJsonClientManager.getInstance().getTarget(legacyDomainServiceURL, true);
     }
