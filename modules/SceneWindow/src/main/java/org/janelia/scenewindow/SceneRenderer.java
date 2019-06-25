@@ -1,26 +1,27 @@
 
 package org.janelia.scenewindow;
 
-import org.janelia.scenewindow.fps.FrameTracker;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
 import javax.media.opengl.DebugGL3;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
+
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.LateralOffsetCamera;
 import org.janelia.geometry3d.OrthographicCamera;
-import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.GL3Resource;
 import org.janelia.gltools.MultipassRenderer;
+import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.scenewindow.stereo.AnaglyphRenderer;
 import org.janelia.scenewindow.stereo.LeftEyeRenderer;
 import org.janelia.scenewindow.stereo.MonoscopicRenderer;
@@ -32,9 +33,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author brunsc
  */
-public class SceneRenderer 
-implements GLEventListener
-{
+public class SceneRenderer implements GLEventListener {
 
     public enum CameraType {
         ORTHOGRAPHIC,
@@ -59,12 +58,7 @@ implements GLEventListener
     
     // background color
     private final float[] bgColor = {1,1,1,1};
-    private StereoRenderer stereoRenderer = new 
-            MonoscopicRenderer()
-            // AnaglyphRenderer(false, true, false)
-            // SideBySideRenderer()
-            // HardwareRenderer()
-            ;
+    private StereoRenderer stereoRenderer = new MonoscopicRenderer();
     private boolean doAutoSrgb = true;
     private final FrameTracker frameTracker = new FrameTracker();
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -77,7 +71,6 @@ implements GLEventListener
             case PERSPECTIVE:
             default:
                 this.camera = new LateralOffsetCamera(vantage, viewport);
-                // this.camera = new PerspectiveCamera(vantage, viewport);
                 break;
         }
     }
@@ -95,10 +88,6 @@ implements GLEventListener
     @Override
     public void init(GLAutoDrawable glad) {
         GL3 gl = new DebugGL3(glad.getGL().getGL3());
-        // boolean test = gl.isExtensionAvailable("GL_EXT_geometry_shader4");
-        // test = gl.isExtensionAvailable("GL_EXT_geometry_shader");
-        // test = gl.isExtensionAvailable("GL_VERSION_1_5");
-        // test = gl.isExtensionAvailable("GL_VERSION_3_3");
         if (doAutoSrgb)
             gl.glEnable(GL3.GL_FRAMEBUFFER_SRGB);
         for(GL3Resource actor : resources)
@@ -118,10 +107,10 @@ implements GLEventListener
     }
 
     private long displayEndTime = System.nanoTime();
+
     @Override
     public void display(GLAutoDrawable glad) 
     {
-        // System.out.println("SceneRenderer.display()");
         long displayStartTime = System.nanoTime();
         frameTracker.signalFrameBegin();
         
