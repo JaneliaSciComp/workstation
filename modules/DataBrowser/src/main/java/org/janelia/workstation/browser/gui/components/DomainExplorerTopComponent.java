@@ -371,8 +371,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 }
             }
         }
-        else if (event.getKey().equals(SHOW_RECENTLY_OPENED_ITEMS)) {
-            // Recreate the root node so that it picks up the new preferences
+        else if (event.getKey().equals(SHOW_RECENTLY_OPENED_ITEMS)
+                || event.getKey().equals(SHOW_FLY_LINE_RELEASES)) {
+            // Recreate the root node so that it picks up the new visibility preferences
             refresh(false, true, null); 
         }
     }

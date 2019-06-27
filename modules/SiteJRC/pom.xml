@@ -41,6 +41,12 @@
             <artifactId>core</artifactId>
         </dependency>
 
+        <!-- Data Browser -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>browser</artifactId>
+        </dependency>
+
         <!-- NetBeans Modules -->
         <dependency>
             <groupId>org.netbeans.api</groupId>

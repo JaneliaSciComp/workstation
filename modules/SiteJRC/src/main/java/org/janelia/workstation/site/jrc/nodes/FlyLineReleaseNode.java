@@ -52,8 +52,7 @@ public class FlyLineReleaseNode extends AbstractDomainObjectNode<LineRelease> {
 
     @Override
     public String getExtraLabel() {
-        return "";
-        //return "("+getLineRelease().getNumChildren()+")";
+        return "("+getLineRelease().getNumChildren()+")";
     }
 
     @Override

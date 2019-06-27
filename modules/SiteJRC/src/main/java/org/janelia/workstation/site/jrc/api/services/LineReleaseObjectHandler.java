@@ -1,27 +1,24 @@
-package org.janelia.workstation.browser.api.services;
+package org.janelia.workstation.site.jrc.api.services;
 
-import java.util.Arrays;
-import java.util.Collections;
-
-import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
-import org.janelia.workstation.browser.gui.editor.TreeNodeEditorPanel;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.common.nodes.TreeNodeNode;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.sample.LineRelease;
+import org.janelia.workstation.browser.gui.editor.TreeNodeEditorPanel;
+import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
+import org.janelia.workstation.site.jrc.nodes.FlyLineReleaseNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
- * A helper for working with Nodes and Filters.
+ * A helper for working with TreeNodes and Filters.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ServiceProvider(service = DomainObjectHandler.class)
-public class TreeNodeObjectHandler implements DomainObjectHandler {
+public class LineReleaseObjectHandler implements DomainObjectHandler {
 
     @Override
     public boolean isCompatible(DomainObject domainObject) {
@@ -30,12 +27,12 @@ public class TreeNodeObjectHandler implements DomainObjectHandler {
     
     @Override
     public boolean isCompatible(Class<? extends DomainObject> clazz) {
-        return TreeNode.class.isAssignableFrom(clazz);
+        return LineRelease.class.isAssignableFrom(clazz);
     }
 
     @Override
     public Node getNode(DomainObject domainObject, ChildFactory parentChildFactory) throws Exception {
-        return new TreeNodeNode(parentChildFactory, (TreeNode)domainObject);    
+        return new FlyLineReleaseNode(parentChildFactory, (LineRelease) domainObject);
     }
 
     @Override
@@ -56,7 +53,7 @@ public class TreeNodeObjectHandler implements DomainObjectHandler {
     @Override
     public void remove(DomainObject domainObject) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        model.remove(Collections.singletonList((TreeNode) domainObject));
+        model.remove((LineRelease)domainObject);
     }
 
 }
