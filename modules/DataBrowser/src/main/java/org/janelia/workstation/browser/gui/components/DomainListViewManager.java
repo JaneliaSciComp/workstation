@@ -64,7 +64,7 @@ public class DomainListViewManager implements ViewerManager<DomainListViewTopCom
     }
 
     @Subscribe
-    public void domainObjectSelected(NodeSelectionEvent event) {
+    public void nodeSelected(NodeSelectionEvent event) {
 
         if (!DomainExplorerTopComponent.isNavigateOnClick()) {
             return;
@@ -90,17 +90,12 @@ public class DomainListViewManager implements ViewerManager<DomainListViewTopCom
                 (UIUtils.hasAncestorWithType((Component)event.getSource(),DomainExplorerTopComponent.class) ||
                         DomainObjectContextMenu.class.isAssignableFrom(event.getSource().getClass()))) {
 
-            log.info("domainObjectSelected({})",Reference.createFor(domainObject));
+            log.info("nodeSelected({})",Reference.createFor(domainObject));
             DomainListViewTopComponent targetViewer = ViewerUtils.provisionViewer(DomainListViewManager.getInstance(), "editor");
             DomainObjectNode<?> node = (DomainObjectNode<?>)event.getNode();
 
             log.info("Loading domain object node {} into {}",Reference.createFor(domainObject), targetViewer);
             targetViewer.loadDomainObjectNode(node, false);
-
-            // This isn't done in provisionViewer, because when a component becomes active it selects its currently loaded
-            // object in the Domain Explorer. We need to wait until the current object is updated above.
-            // Only now is it safe to activate the component.
-            targetViewer.requestActive();
         }
         else {
             log.trace("Event source is not domain explorer or context menu: {}",event);
@@ -137,11 +132,6 @@ public class DomainListViewManager implements ViewerManager<DomainListViewTopCom
 
             log.info("Loading domain object {} into {}",Reference.createFor(domainObject), targetViewer);
             targetViewer.loadDomainObject(domainObject, false);
-            
-            // This isn't done in provisionViewer, because when a component becomes active it selects its currently loaded 
-            // object in the Domain Explorer. We need to wait until the current object is updated above. 
-            // Only now is it safe to activate the component.
-            targetViewer.requestActive();
         }
         else {
             log.trace("Event source is not domain explorer or context menu: {}",event);

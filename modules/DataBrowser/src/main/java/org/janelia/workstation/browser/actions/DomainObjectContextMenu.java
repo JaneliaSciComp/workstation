@@ -40,7 +40,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             ChildSelectionModel<DomainObject,Reference> editSelectionModel,
             ImageModel<DomainObject,Reference> imageModel) {
         this.viewerContext = new ViewerContext<>(
-                selectionModel, editSelectionModel, imageModel,null);
+                selectionModel, editSelectionModel, imageModel);
         ActivityLogHelper.logUserAction("DomainObjectContentMenu.create");
     }
 

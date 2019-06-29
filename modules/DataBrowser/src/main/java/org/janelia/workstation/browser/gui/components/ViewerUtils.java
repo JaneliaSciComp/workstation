@@ -18,21 +18,6 @@ public class ViewerUtils {
 
     private final static Logger log = LoggerFactory.getLogger(ViewerUtils.class);
 
-//    public static <T extends TopComponent> T getViewer(ViewerManager<T> manager) {
-//
-//        log.info("Getting viewer: {}",manager.getViewerName());
-//        
-//        T targetViewer = manager.getActiveViewer();
-//        if (targetViewer!=null) {
-//            if (!targetViewer.isOpened()) {
-//                targetViewer.open();
-//            }
-//            targetViewer.requestVisible();
-//        }
-//        
-//        return targetViewer;
-//    }
-
     public static <T extends TopComponent> T getViewer(ViewerManager<T> manager, final String modeName) {
         
         log.info("Getting viewer: {} (mode={})",manager.getViewerName(), modeName);
@@ -91,14 +76,6 @@ public class ViewerUtils {
         log.info("Provisioning viewer: {}",manager.getViewerName());
         
         T tc = manager.getActiveViewer();
-//        if (tc==null) {
-//            log.info("No active viewer, looking up TC by name: {}",manager.getViewerClass().getSimpleName());
-//            tc = (T)WindowManager.getDefault().findTopComponent(manager.getViewerClass().getSimpleName());
-//            if (tc!=null) {
-//                log.info("Found TC, activating");
-//                manager.activate(tc);
-//            }
-//        }
 
         if (tc==null) {
             log.info("Active viewer not found, creating...");

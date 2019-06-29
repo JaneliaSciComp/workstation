@@ -191,4 +191,8 @@ public abstract class SelectionModel<T,S> {
         T object = selectedObjects.get(selectedObjects.size()-1);
         return getId(object);
     }
+
+    public List<T> getObjects() {
+        return selectedObjects;
+    }
 }

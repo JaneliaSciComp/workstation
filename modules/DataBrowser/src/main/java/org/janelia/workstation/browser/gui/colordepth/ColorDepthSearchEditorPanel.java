@@ -30,6 +30,7 @@ import javax.swing.SwingConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.hud.Hud;
@@ -452,7 +453,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     public ChildSelectionModel<ColorDepthMatch,String> getEditSelectionModel() {
         return colorDepthResultPanel.getEditSelectionModel();
     }
-    
+
+    @Override
+    public ViewerContext<ColorDepthMatch, String> getViewerContext() {
+        return new ViewerContext<>(colorDepthResultPanel.getSelectionModel(), colorDepthResultPanel.getEditSelectionModel(),  colorDepthResultPanel.getImageModel());
+    }
+
     private void executeSearch() {
 
         ActivityLogHelper.logUserAction("ColorDepthSearchEditorPanel.executeSearch", search);

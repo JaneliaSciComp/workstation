@@ -2,10 +2,8 @@ package org.janelia.workstation.core.actions;
 
 import java.util.Collection;
 
-import org.janelia.model.domain.interfaces.HasFiles;
-import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
+import org.janelia.workstation.core.model.ImageModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,14 +19,13 @@ public class ViewerContext<T,S> {
     private ChildSelectionModel<T,S> selectionModel;
     private ChildSelectionModel<T,S> editSelectionModel;
     private ImageModel<T,S> imageModel;
-    private HasFiles result;
 
-    public ViewerContext(ChildSelectionModel<T,S> selectionModel, ChildSelectionModel<T,S> editSelectionModel,
-                         ImageModel<T,S> imageModel, HasFiles result) {
+    public ViewerContext(ChildSelectionModel<T,S> selectionModel,
+                         ChildSelectionModel<T,S> editSelectionModel,
+                         ImageModel<T,S> imageModel) {
         this.selectionModel = selectionModel;
         this.editSelectionModel = editSelectionModel;
         this.imageModel = imageModel;
-        this.result = result;
     }
 
     public Object getContextObject() {
@@ -51,15 +48,11 @@ public class ViewerContext<T,S> {
         return selectionModel.getSelectedIds().size() > 1;
     }
 
-    public HasFiles getResult() {
-        return result;
-    }
-
     public T getLastSelectedObject() {
         return imageModel.getImageByUniqueId(selectionModel.getLastSelectedId());
     }
 
     public Collection<T> getSelectedObjects() {
-        return ClientDomainUtils.getObjectsFromModel(selectionModel.getSelectedIds(), imageModel);
+        return selectionModel.getObjects();
     }
 }

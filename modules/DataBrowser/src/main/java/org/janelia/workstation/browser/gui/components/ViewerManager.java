@@ -4,13 +4,13 @@ import org.openide.windows.TopComponent;
 
 public interface ViewerManager<T extends TopComponent> {
 
-    public String getViewerName();
+    String getViewerName();
     
-    public Class<T> getViewerClass();
+    Class<T> getViewerClass();
         
-    public T getActiveViewer();
+    T getActiveViewer();
 
-    public void activate(T viewer);
+    void activate(T viewer);
 
-    public boolean isActive(T viewer);
+    boolean isActive(T viewer);
 }

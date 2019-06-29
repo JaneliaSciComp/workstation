@@ -1,50 +1,68 @@
 package org.janelia.workstation.browser.nb_action;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelectionModel;
+import javax.swing.AbstractAction;
+
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
+import org.janelia.workstation.browser.api.actions.ContextualNodeActionTracker;
+import org.janelia.workstation.browser.api.actions.NodeContext;
+import org.janelia.workstation.browser.api.actions.ContextualNodeAction;
+import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
+import org.openide.util.NbBundle;
 import org.openide.util.NbBundle.Messages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ActionID(
-        category = "File",
+        category = "Actions",
         id = "ViewDetailsAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_ViewDetailsAction"
+        displayName = "#CTL_ViewDetailsAction",
+        lazy = false
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/File", position = 1537, separatorBefore = 1531),
+    @ActionReference(path = "Menu/Actions", position = 300),
     @ActionReference(path = "Shortcuts", name = "D-I")
 })
-
 @Messages("CTL_ViewDetailsAction=View Details")
-public final class ViewDetailsAction implements ActionListener {
+public final class ViewDetailsAction extends AbstractAction implements ContextualNodeAction {
+
+    private static final Logger log = LoggerFactory.getLogger(ViewDetailsAction.class);
+    private static final String NAME = NbBundle.getBundle(ViewDetailsAction.class).getString("CTL_ViewDetailsAction");
+
+    private DomainObject selectedObject;
+
+    public ViewDetailsAction() {
+        super(NAME); // Setting name explicitly is necessary for eager actions
+        setEnabled(false);
+        ContextualNodeActionTracker.getInstance().register(this);
+    }
+
+    @Override
+    public boolean enable(NodeContext nodeSelection) {
+        this.selectedObject = null;
+        if (nodeSelection.isSingleObjectOfType(DomainObject.class)) {
+            this.selectedObject = nodeSelection.getSingleObjectOfType(DomainObject.class);
+            log.debug("enabled for new viewer context: {}", selectedObject);
+            setEnabled(true);
+        }
+        else {
+            log.debug("disabled for new viewer context");
+            setEnabled(false);
+        }
+        return isEnabled();
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        try {
-            DomainModel model = DomainMgr.getDomainMgr().getModel();
-            Reference lastSelected = GlobalDomainObjectSelectionModel.getInstance().getLastSelectedId();
-            if (lastSelected!=null) {
-                DomainObject domainObject = model.getDomainObject(lastSelected);
-                if (domainObject!=null) {
-                    new DomainDetailsDialog().showForDomainObject(domainObject);
-                }
-            }
-        }
-        catch (Exception ex) {
-            FrameworkAccess.handleException(ex);
+        if (selectedObject!=null) {
+            new DomainDetailsDialog().showForDomainObject(selectedObject);
         }
     }
 }

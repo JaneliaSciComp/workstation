@@ -28,7 +28,7 @@ public class FindContextRegistration implements HierarchyListener {
     @Override
     public void hierarchyChanged(HierarchyEvent e) {
         if ((e.getChangeFlags() & HierarchyEvent.PARENT_CHANGED) == HierarchyEvent.PARENT_CHANGED) {
-            log.trace("Changed parents: {}",component.getClass().getName());
+            log.debug("Find context changed parents: {}",component.getClass().getName());
             FindContextActivator activator = UIUtils.getAncestorWithType(component, FindContextActivator.class);
             if (activator!=null) {
                 activator.setFindContext(context);

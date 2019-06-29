@@ -3,13 +3,16 @@ package org.janelia.workstation.common.gui.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
-import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.core.model.ImageModel;
 
 /**
+ * Utility methods for dealing with Domain Objects in context of the UI.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DomainUIUtils {
@@ -40,4 +43,18 @@ public class DomainUIUtils {
         return domainObjects;
     }
 
+    /**
+     * Returns the subset of the given objects which are of a certain class.
+     * @param domainObjects list of domain objects to search
+     * @param clazz class to filter by
+     * @param <T> type of object to return
+     * @return subset of the list
+     */
+    public static <T> Collection<T> getObjectsOfType(List<DomainObject> domainObjects, Class<T> clazz) {
+        return domainObjects
+                .stream()
+                .filter(d -> clazz.isAssignableFrom(d.getClass()))
+                .map(clazz::cast)
+                .collect(Collectors.toList());
+    }
 }

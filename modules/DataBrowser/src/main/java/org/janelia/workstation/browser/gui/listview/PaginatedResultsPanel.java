@@ -537,20 +537,20 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                         TopComponent topComponent = UIUtils.getAncestorWithType(PaginatedResultsPanel.this, TopComponent.class);
                         boolean notifyModel = topComponent==null || topComponent.isVisible();
                     
-                        log.info("updateResultsView complete, restoring selection");
+                        log.debug("updateResultsView complete, restoring selection");
                         if (selectedRefs.isEmpty()) {
                             // If the selection model is empty, just select the first item to make it appear in the inspector
                             List<T> objects = resultPage.getObjects();
                             if (!objects.isEmpty()) {
-                                log.debug("Auto-selecting first object");
-                                resultsView.select(Arrays.asList(objects.get(0)), true, true, true, notifyModel);
+//                                log.info("Auto-selecting first object (notifyModel={})", notifyModel);
+//                                resultsView.select(Arrays.asList(objects.get(0)), true, true, true, notifyModel);
                             }
                         }
                         else {
                             // There's already something in the selection model, so we should attempt to reselect it
-                            log.debug("Reselecting {} objects",selectedRefs.size());
+                            log.info("Reselecting {} objects",selectedRefs.size());
                             List<T> objects = getPageObjects(selectedRefs);
-                            resultsView.select(objects, true, true, false, notifyModel);
+                            resultsView.select(objects, true, true, false, true);
                         }
                             
                         resultsView.refreshEditMode();

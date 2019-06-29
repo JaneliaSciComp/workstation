@@ -11,6 +11,7 @@ import org.janelia.model.domain.DomainObject;
  */
 public interface ParentNodeSelectionEditor<P extends DomainObject, T, S> 
     extends DomainObjectNodeEditor<P,T,S>,
-        ChildSelectionSupport<T,S>,
-        ChildPickingSupport<T,S> {
+        ChildSelectionSupport<T,S>, // TODO: obsolete, replace with calls to ViewerContextProvider
+        ChildPickingSupport<T,S>, // TODO: obsolete, replace with calls to ViewerContextProvider
+        ViewerContextProvider<T,S> {
 }

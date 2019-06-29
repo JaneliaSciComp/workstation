@@ -37,6 +37,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectAttribute;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
@@ -62,6 +63,7 @@ import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.workstation.common.gui.support.SmartTextField;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.common.nodes.FilterNode;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -972,7 +974,12 @@ public class FilterEditorPanel
     public DomainObjectEditSelectionModel getEditSelectionModel() {
         return editSelectionModel;
     }
-    
+
+    @Override
+    public ViewerContext<DomainObject, Reference> getViewerContext() {
+        return new ViewerContext<>(selectionModel, editSelectionModel, resultsPanel.getImageModel());
+    }
+
     @Override
     public Long getCurrentContextId() {
         Object parentObject = getSelectionModel().getParentObject();

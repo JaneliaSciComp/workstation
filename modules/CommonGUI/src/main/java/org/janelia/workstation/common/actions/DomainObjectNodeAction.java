@@ -28,8 +28,8 @@ import org.openide.util.actions.NodeAction;
  * of acting on selected Nodes. This action can then be returned from both getAction and getNodeAction of
  * a ContextualActionBuilder.
  *
- * When you extend this class, just implement getName(), setViewerContext(), and executeAction(). Note that
- * only the domain object list will be populated in the case of the action being invoked via a node context menu.
+ * When you extend this class, just implement getName(), isVisible(), and executeAction(). Note that
+ * domainObjectNodeList will be only populated in the case of the action being invoked via a node context menu.
  *
  * You should not use the NodeAction API to do things like check isEnabled(). Instead, use ContextualActionUtils
  * where possible, as this will produce results that are compatible with both APIs.
@@ -102,6 +102,7 @@ public abstract class DomainObjectNodeAction extends NodeAction implements Viewe
     @Override
     protected boolean enable(Node[] activatedNodes) {
         List<DomainObject> domainObjectList = new ArrayList<>();
+        domainObjectList.clear();
         domainObjectNodeList.clear();
         for(Node node : activatedNodes) {
             if (node instanceof DomainObjectNode) {
@@ -118,7 +119,7 @@ public abstract class DomainObjectNodeAction extends NodeAction implements Viewe
 
         // Inject viewer context
         ViewerContext viewerContext = new ViewerContext<>(selectionModel, null,
-                imageModel, null);
+                imageModel);
         setViewerContext(viewerContext);
 
         // Enable state is determined by the popup presenter

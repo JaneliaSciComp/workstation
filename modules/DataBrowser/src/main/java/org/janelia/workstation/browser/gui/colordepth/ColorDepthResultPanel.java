@@ -679,6 +679,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         return editSelectionModel;
     }
 
+    public ColorDepthResultImageModel getImageModel() {
+        return imageModel;
+    }
+
     @Override
     public Long getCurrentContextId() {
         if (search == null) return null;

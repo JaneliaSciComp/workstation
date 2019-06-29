@@ -25,6 +25,7 @@ import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.workstation.common.nodes.GroupedFolderNode;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -681,6 +682,11 @@ public class GroupedFolderEditorPanel extends JPanel implements
 
     public DomainObjectEditSelectionModel getEditSelectionModel() {
         return editSelectionModel;
+    }
+
+    @Override
+    public ViewerContext<DomainObject, Reference> getViewerContext() {
+        return new ViewerContext<>(selectionModel, editSelectionModel, resultsPanel.getImageModel());
     }
 
     @Override
