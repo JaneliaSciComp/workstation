@@ -3,8 +3,7 @@ package org.janelia.workstation.browser.actions;
 import javax.swing.Action;
 
 import org.janelia.model.domain.DomainObject;
-import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.workstation.common.actions.DomainObjectNodeAction;
+import org.janelia.workstation.browser.nb_action.ViewDetailsAction;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -36,24 +35,5 @@ public class ViewDetailsBuilder implements ContextualActionBuilder {
     @Override
     public Action getNodeAction(Object obj) {
         return action;
-    }
-
-    public static class ViewDetailsAction extends DomainObjectNodeAction {
-
-        @Override
-        public String getName() {
-            return "View Details";
-        }
-
-        @Override
-        protected boolean isVisible() {
-            return domainObjectList.size()==1;
-        }
-
-        @Override
-        protected void executeAction() {
-            DomainObject domainObject = domainObjectList.get(0);
-            new DomainDetailsDialog().showForDomainObject(domainObject);
-        }
     }
 }

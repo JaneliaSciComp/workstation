@@ -16,7 +16,7 @@ import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextActivator;
 import org.janelia.workstation.browser.gui.find.FindContextManager;
-import org.janelia.workstation.browser.nodes.ChildObjectsNode;
+import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.workstation.common.gui.support.MouseForwarder;

@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.model.ImageModel;
+import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,7 @@ public class ViewerContext<T,S> {
     private ChildSelectionModel<T,S> selectionModel;
     private ChildSelectionModel<T,S> editSelectionModel;
     private ImageModel<T,S> imageModel;
+    private NodeContext nodeContext;
 
     public ViewerContext(ChildSelectionModel<T,S> selectionModel,
                          ChildSelectionModel<T,S> editSelectionModel,
@@ -26,6 +28,17 @@ public class ViewerContext<T,S> {
         this.selectionModel = selectionModel;
         this.editSelectionModel = editSelectionModel;
         this.imageModel = imageModel;
+        this.nodeContext = new NodeContext(new ChildObjectsNode(selectionModel.getObjects()));
+    }
+
+    public ViewerContext(ChildSelectionModel<T,S> selectionModel,
+                         ChildSelectionModel<T,S> editSelectionModel,
+                         ImageModel<T,S> imageModel,
+                         NodeContext nodeContext) {
+        this.selectionModel = selectionModel;
+        this.editSelectionModel = editSelectionModel;
+        this.imageModel = imageModel;
+        this.nodeContext = nodeContext;
     }
 
     public Object getContextObject() {
@@ -42,6 +55,10 @@ public class ViewerContext<T,S> {
 
     public ImageModel<T,S> getImageModel() {
         return imageModel;
+    }
+
+    public NodeContext getNodeContext() {
+        return nodeContext;
     }
 
     public boolean isMultiple() {

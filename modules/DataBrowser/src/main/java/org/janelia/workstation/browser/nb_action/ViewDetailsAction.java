@@ -1,14 +1,8 @@
 package org.janelia.workstation.browser.nb_action;
 
-import java.awt.event.ActionEvent;
-
-import javax.swing.AbstractAction;
-
 import org.janelia.model.domain.DomainObject;
-import org.janelia.workstation.browser.api.actions.ContextualNodeActionTracker;
-import org.janelia.workstation.browser.api.actions.NodeContext;
-import org.janelia.workstation.browser.api.actions.ContextualNodeAction;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
+import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -27,11 +21,11 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/Actions", position = 300),
+    @ActionReference(path = "Menu/Actions", position = 100, separatorBefore = 99),
     @ActionReference(path = "Shortcuts", name = "D-I")
 })
 @Messages("CTL_ViewDetailsAction=View Details")
-public final class ViewDetailsAction extends AbstractAction implements ContextualNodeAction {
+public final class ViewDetailsAction extends BaseContextualNodeAction {
 
     private static final Logger log = LoggerFactory.getLogger(ViewDetailsAction.class);
     private static final String NAME = NbBundle.getBundle(ViewDetailsAction.class).getString("CTL_ViewDetailsAction");
@@ -40,27 +34,25 @@ public final class ViewDetailsAction extends AbstractAction implements Contextua
 
     public ViewDetailsAction() {
         super(NAME); // Setting name explicitly is necessary for eager actions
-        setEnabled(false);
-        ContextualNodeActionTracker.getInstance().register(this);
     }
 
     @Override
-    public boolean enable(NodeContext nodeSelection) {
-        this.selectedObject = null;
-        if (nodeSelection.isSingleObjectOfType(DomainObject.class)) {
-            this.selectedObject = nodeSelection.getSingleObjectOfType(DomainObject.class);
-            log.debug("enabled for new viewer context: {}", selectedObject);
+    protected void processContext() {
+        if (getNodeContext().isSingleObjectOfType(DomainObject.class)) {
+            this.selectedObject = getNodeContext().getSingleObjectOfType(DomainObject.class);
+            log.debug("enabled for new viewer context: {}", getNodeContext());
+            setVisible(true);
             setEnabled(true);
         }
         else {
-            log.debug("disabled for new viewer context");
+            log.debug("disabled for new viewer context: {}", getNodeContext());
+            setVisible(false);
             setEnabled(false);
         }
-        return isEnabled();
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
+    public void performAction() {
         if (selectedObject!=null) {
             new DomainDetailsDialog().showForDomainObject(selectedObject);
         }

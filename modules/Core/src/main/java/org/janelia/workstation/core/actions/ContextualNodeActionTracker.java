@@ -1,10 +1,11 @@
-package org.janelia.workstation.browser.api.actions;
+package org.janelia.workstation.core.actions;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.Node;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
@@ -54,10 +55,16 @@ public class ContextualNodeActionTracker implements LookupListener {
     @Override
     public void resultChanged(LookupEvent lookupEvent) {
         Collection<? extends Node> selectedNodes = result.allInstances();
-        NodeContext nodeSelection = new NodeContext(selectedNodes);
-        log.info("New node selection: {}", nodeSelection);
+        NodeContext nodeContext = new NodeContext(selectedNodes);
+        log.info("New node selection: {}", nodeContext);
         for (ContextualNodeAction dependent : dependents) {
-            dependent.enable(nodeSelection);
+            try {
+                dependent.enable(nodeContext);
+            }
+            catch (Throwable t) {
+                // Handle exceptions here so that one bad action doesn't spoil everything
+                log.error("Error encountered while setting node context on "+dependent.getClass().getName(), t);
+            }
         }
     }
 }

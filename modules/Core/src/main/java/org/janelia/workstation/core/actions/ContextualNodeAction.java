@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.api.actions;
+package org.janelia.workstation.core.actions;
 
 /**
  * Similar to NetBeans' NodeAction, this interface allows an action to hear about the current node selection.
@@ -12,8 +12,8 @@ public interface ContextualNodeAction {
 
     /**
      * Given the current node selection, enable or disable the action.
-     * @param currentNodeSelection
+     * @param nodeContext
      * @return
      */
-    boolean enable(NodeContext currentNodeSelection);
+    boolean enable(NodeContext nodeContext);
 }

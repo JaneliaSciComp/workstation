@@ -45,13 +45,13 @@ public class DomainUIUtils {
 
     /**
      * Returns the subset of the given objects which are of a certain class.
-     * @param domainObjects list of domain objects to search
+     * @param objects list of objects to search
      * @param clazz class to filter by
      * @param <T> type of object to return
      * @return subset of the list
      */
-    public static <T> Collection<T> getObjectsOfType(List<DomainObject> domainObjects, Class<T> clazz) {
-        return domainObjects
+    public static <T> Collection<T> getObjectsOfType(Collection<?> objects, Class<T> clazz) {
+        return objects
                 .stream()
                 .filter(d -> clazz.isAssignableFrom(d.getClass()))
                 .map(clazz::cast)

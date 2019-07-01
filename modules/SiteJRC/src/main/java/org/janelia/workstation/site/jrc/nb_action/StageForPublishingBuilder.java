@@ -1,27 +1,26 @@
-package org.janelia.workstation.browser.actions;
+package org.janelia.workstation.site.jrc.nb_action;
 
 import javax.swing.Action;
 
-import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=150)
-public class AddRelatedItemsBuilder implements ContextualActionBuilder {
+@ServiceProvider(service = ContextualActionBuilder.class, position=540)
+public class StageForPublishingBuilder implements ContextualActionBuilder {
 
-    private static AddRelatedItemsAction action = new AddRelatedItemsAction();
+    private static StageForPublishingAction action = new StageForPublishingAction();
 
     @Override
     public boolean isCompatible(Object obj) {
-        return obj instanceof DomainObject;
+        return obj instanceof Sample;
     }
 
     @Override
     public Action getAction(Object obj) {
         return action;
     }
-
 }

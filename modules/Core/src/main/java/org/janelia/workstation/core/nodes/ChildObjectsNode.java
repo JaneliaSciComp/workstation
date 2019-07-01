@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.nodes;
+package org.janelia.workstation.core.nodes;
 
 import java.util.Collection;
 

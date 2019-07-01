@@ -143,7 +143,7 @@ public class DomainObjectAcceptorHelper {
                 buildAction(builder, items, obj, viewerContext);
             }
             catch (Exception e) {
-                log.error("Error processing contextual action builder {}", builder.getClass().getName());
+                log.error("Error processing contextual action builder {}", builder.getClass().getName(), e);
             }
         }
 

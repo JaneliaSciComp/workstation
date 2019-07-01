@@ -59,6 +59,9 @@ public class OpenInNewViewerBuilder implements ContextualActionBuilder {
 
         @Override
         public String getName() {
+            if (objectToLoad==null) {
+                return "Open In New Viewer";
+            }
             return "Open " + objectToLoad.getType() + " In New Viewer";
         }
 

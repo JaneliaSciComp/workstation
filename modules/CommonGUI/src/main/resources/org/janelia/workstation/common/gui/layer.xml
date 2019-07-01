@@ -143,7 +143,8 @@
     <file name="HTTPServer_DUMMY_hidden"/>
     <folder name="Menu">
         <folder name="BuildProject_hidden"/>
-        <folder name="File"> <!-- position 100 -->
+        <folder name="File">
+            <attr name="position" intvalue="100"/>
             <file name="Export_hidden"/>
             <file name="Import_hidden"/>
             <file name="Separator1.instance_hidden"/>
@@ -172,7 +173,8 @@
             <file name="org-openide-actions-SaveAllAction.shadow_hidden"/>
             <file name="org-openide-actions-SaveAsAction.shadow_hidden"/>
         </folder>
-        <folder name="Edit"> <!-- position 200 -->
+        <folder name="Edit">
+            <attr name="position" intvalue="200"/>
             <file name="Separator1.instance_hidden"/>
             <file name="Separator2.instance_hidden"/>
             <file name="WhereUsedAction.shadow_hidden"/>

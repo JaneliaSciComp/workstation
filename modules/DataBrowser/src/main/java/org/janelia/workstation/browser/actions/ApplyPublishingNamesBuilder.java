@@ -18,7 +18,7 @@ import org.openide.util.lookup.ServiceProvider;
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=540)
+@ServiceProvider(service = ContextualActionBuilder.class, position=541)
 public class ApplyPublishingNamesBuilder implements ContextualActionBuilder {
 
     private static ApplyPublishingNamesHarness action = new ApplyPublishingNamesHarness();

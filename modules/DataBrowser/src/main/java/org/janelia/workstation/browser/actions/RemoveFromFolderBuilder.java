@@ -90,7 +90,6 @@ public class RemoveFromFolderBuilder implements ContextualActionBuilder {
             ViewerContext viewerContext = getViewerContext();
             ContextualActionUtils.setVisible(this, false);
             Object contextObject = viewerContext.getContextObject();
-            log.info("RemoveItemsFromFolderAction contextObject="+contextObject);
             if (contextObject instanceof org.janelia.model.domain.workspace.Node) {
                 this.parentTreeNode = (org.janelia.model.domain.workspace.Node) contextObject;
                 this.toRemove = DomainUIUtils.getSelectedDomainObjects(viewerContext);
