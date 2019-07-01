@@ -32,10 +32,6 @@ public class StageForPublishingDialog extends ModalDialog {
     public StageForPublishingDialog(Dialog parent) {
         super(parent);
 
-
-
-
-
         // Buttons
         
         JButton okButton = new JButton("OK");

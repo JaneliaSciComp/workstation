@@ -4,6 +4,7 @@ import javax.swing.Action;
 
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
+import org.openide.util.actions.SystemAction;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -12,8 +13,6 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = ContextualActionBuilder.class, position=540)
 public class StageForPublishingBuilder implements ContextualActionBuilder {
 
-    private static StageForPublishingAction action = new StageForPublishingAction();
-
     @Override
     public boolean isCompatible(Object obj) {
         return obj instanceof Sample;
@@ -21,6 +20,6 @@ public class StageForPublishingBuilder implements ContextualActionBuilder {
 
     @Override
     public Action getAction(Object obj) {
-        return action;
+        return SystemAction.get(StageForPublishingAction.class);
     }
 }

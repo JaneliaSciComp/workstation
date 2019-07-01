@@ -4,6 +4,7 @@ import javax.swing.Action;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
+import org.openide.util.actions.SystemAction;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -12,8 +13,6 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = ContextualActionBuilder.class, position=150)
 public class AddRelatedItemsBuilder implements ContextualActionBuilder {
 
-    private static AddRelatedItemsAction action = new AddRelatedItemsAction();
-
     @Override
     public boolean isCompatible(Object obj) {
         return obj instanceof DomainObject;
@@ -21,7 +20,7 @@ public class AddRelatedItemsBuilder implements ContextualActionBuilder {
 
     @Override
     public Action getAction(Object obj) {
-        return action;
+        return SystemAction.get(AddRelatedItemsAction.class);
     }
 
 }

@@ -5,6 +5,7 @@ import javax.swing.Action;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.browser.nb_action.ViewDetailsAction;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
+import org.openide.util.actions.SystemAction;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -14,8 +15,6 @@ import org.openide.util.lookup.ServiceProvider;
  */
 @ServiceProvider(service = ContextualActionBuilder.class, position=100)
 public class ViewDetailsBuilder implements ContextualActionBuilder {
-
-    private static ViewDetailsAction action = new ViewDetailsAction();
 
     @Override
     public boolean isCompatible(Object obj) {
@@ -29,11 +28,11 @@ public class ViewDetailsBuilder implements ContextualActionBuilder {
 
     @Override
     public Action getAction(Object obj) {
-        return action;
+        return SystemAction.get(ViewDetailsAction.class);
     }
 
     @Override
     public Action getNodeAction(Object obj) {
-        return action;
+        return SystemAction.get(ViewDetailsAction.class);
     }
 }
