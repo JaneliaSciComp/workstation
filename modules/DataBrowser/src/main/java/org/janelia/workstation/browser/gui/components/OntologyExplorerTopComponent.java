@@ -19,7 +19,7 @@ import org.janelia.workstation.browser.gui.find.FindContextManager;
 import org.janelia.workstation.browser.gui.find.FindToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeView;
-import org.janelia.workstation.browser.nb_action.NewOntologyActionListener;
+import org.janelia.workstation.browser.actions.NewOntologyActionListener;
 import org.janelia.workstation.browser.nodes.OntologyNode;
 import org.janelia.workstation.browser.nodes.OntologyRootNode;
 import org.janelia.workstation.browser.nodes.OntologyTermNode;

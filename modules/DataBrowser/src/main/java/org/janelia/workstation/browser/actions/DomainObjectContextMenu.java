@@ -2,9 +2,12 @@ package org.janelia.workstation.browser.actions;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
+import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
+import javax.swing.JSeparator;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
@@ -12,14 +15,15 @@ import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent
 import org.janelia.workstation.browser.gui.components.DomainViewerManager;
 import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
-import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
-import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
+import org.janelia.workstation.core.actions.PopupMenuGenerator;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
+import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
+import org.janelia.workstation.core.model.ImageModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +67,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             if (DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(domainObject.getId()) == null) {
                 // Node could not be found in tree. Try navigating directly.
                 log.info("Node not found in tree: {}", domainObject);
-                Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(domainObject), true, true, true));
+                Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Collections.singletonList(domainObject), true, true, true));
             }
         }
         else {
@@ -75,20 +79,20 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     public void addMenuItems() {
 
-        ChildSelectionModel<DomainObject,Reference> selectionModel = viewerContext.getSelectionModel();
-
-        if (selectionModel.getSelectedIds().isEmpty()) {
-            JMenuItem titleMenuItem = new JMenuItem("Nothing selected");
-            titleMenuItem.setEnabled(false);
-            add(titleMenuItem);
-            return;
-        }
-
-        DomainObject domainObject = viewerContext.getLastSelectedObject();
-        Collection<JComponent> contextMenuItems = DomainObjectAcceptorHelper.getContextMenuItems(domainObject, viewerContext);
-        for (JComponent item : contextMenuItems) {
-            add(item);
+        Collection<Action> contextActions = DomainObjectAcceptorHelper.getCurrentContextActions();
+        for (Action action : contextActions) {
+            if (action==null) {
+                addSeparator();
+            }
+            else if (action instanceof PopupMenuGenerator) {
+                JMenuItem popupPresenter = ((PopupMenuGenerator) action).getPopupPresenter();
+                if (popupPresenter!=null) {
+                    add(popupPresenter);
+                }
+            }
+            else {
+                add(action);
+            }
         }
     }
-
 }

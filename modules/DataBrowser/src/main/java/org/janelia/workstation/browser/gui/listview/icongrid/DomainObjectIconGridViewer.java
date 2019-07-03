@@ -9,7 +9,6 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
-import org.janelia.workstation.browser.actions.AnnotationContextMenu;
 import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.workstation.browser.actions.ExportPickedGUIDs;
 import org.janelia.workstation.browser.actions.ExportPickedLineNames;

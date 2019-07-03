@@ -5,8 +5,6 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JMenuItem;
 
-import org.janelia.workstation.common.actions.CopyGUIDToClipboardActionBuilder;
-import org.janelia.workstation.common.actions.CopyNameToClipboardActionBuilder;
 import org.janelia.workstation.common.actions.PopupLabelActionBuilder;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
@@ -52,8 +50,8 @@ public class ColorDepthContextMenu extends PopupContextMenu {
         }
 
         add((new PopupLabelActionBuilder()).getAction(result));
-        add((new CopyNameToClipboardActionBuilder()).getAction(result));
-        add((new CopyGUIDToClipboardActionBuilder()).getAction(result));
+        add((new CopyToClipboardAction("Name", result.getName())));
+        add((new CopyToClipboardAction("GUID", result.getId().toString())));
         
         setNextAddRequiresSeparator(true);
         add(getCreateColorDepthMaskItem());

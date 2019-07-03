@@ -97,7 +97,7 @@ public final class DownloadWizardAction implements ActionListener {
     private static final int MAX_CONCURRENT_DOWNLOADS = DownloadOptions.getInstance().getNumConcurrentDownloads();
     
     private ArtifactDescriptor defaultResultDescriptor;
-    private List<? extends DomainObject> inputObjects;
+    private Collection<? extends DomainObject> inputObjects;
     private List<DownloadObject> downloadItems = new ArrayList<>();
     private Map<ArtifactDescriptor,Multiset<FileType>> artifactFileCounts;
     private static final Semaphore COPY_SEMAPHORE = new Semaphore(MAX_CONCURRENT_DOWNLOADS);
@@ -110,7 +110,7 @@ public final class DownloadWizardAction implements ActionListener {
         this.inputObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectedIds);
     }
     
-    public DownloadWizardAction(List<? extends DomainObject> domainObjects, ArtifactDescriptor defaultResultDescriptor) {
+    public DownloadWizardAction(Collection<? extends DomainObject> domainObjects, ArtifactDescriptor defaultResultDescriptor) {
         this.inputObjects = domainObjects;
         this.defaultResultDescriptor = defaultResultDescriptor;
     }
@@ -345,7 +345,7 @@ public final class DownloadWizardAction implements ActionListener {
         
         // Setup the initial state
         DownloadWizardState state = new DownloadWizardState();
-        state.setInputObjects(inputObjects);
+        state.setInputObjects(new ArrayList<>(inputObjects));
         state.setDefaultArtifactDescriptor(defaultResultDescriptor);
         state.setDownloadObjects(downloadItems);
         state.setArtifactFileCounts(artifactFileCounts);

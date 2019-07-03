@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.Node;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
@@ -29,7 +28,8 @@ public class ContextualNodeActionTracker implements LookupListener {
     // Singleton
     private static ContextualNodeActionTracker instance;
 
-    private Lookup.Result<Node> result;
+    private Lookup.Result<Node> nodeResult;
+    private Lookup.Result<ViewerContext> viewerContextResult;
 
     public static ContextualNodeActionTracker getInstance() {
         if (instance == null) {
@@ -42,8 +42,9 @@ public class ContextualNodeActionTracker implements LookupListener {
     private ContextualNodeActionTracker() {
         // Listen to the global lookup, which always contains the selected nodes
         // for the currently focused TopComponent
-        result = Utilities.actionsGlobalContext().lookupResult(Node.class);
-        result.addLookupListener(this);
+        nodeResult = Utilities.actionsGlobalContext().lookupResult(Node.class);
+        nodeResult.addLookupListener(this);
+        viewerContextResult = Utilities.actionsGlobalContext().lookupResult(ViewerContext.class);
     }
 
     private List<ContextualNodeAction> dependents = new ArrayList<>();
@@ -54,12 +55,17 @@ public class ContextualNodeActionTracker implements LookupListener {
 
     @Override
     public void resultChanged(LookupEvent lookupEvent) {
-        Collection<? extends Node> selectedNodes = result.allInstances();
+
+        Collection<? extends Node> selectedNodes = nodeResult.allInstances();
         NodeContext nodeContext = new NodeContext(selectedNodes);
         log.info("New node selection: {}", nodeContext);
+
+        Collection<? extends ViewerContext> viewerContexts = viewerContextResult.allInstances();
+        ViewerContext viewerContext = viewerContexts.isEmpty()?null:viewerContexts.iterator().next();
+
         for (ContextualNodeAction dependent : dependents) {
             try {
-                dependent.enable(nodeContext);
+                dependent.enable(nodeContext, viewerContext);
             }
             catch (Throwable t) {
                 // Handle exceptions here so that one bad action doesn't spoil everything

@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
+import javax.swing.text.View;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
@@ -16,6 +17,7 @@ import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextActivator;
 import org.janelia.workstation.browser.gui.find.FindContextManager;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
@@ -146,6 +148,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
         }
         if (editor!=null) {
+            updateContext(editor.getViewerContext());
             updateNodeIfChanged(editor.getSelectionModel().getObjects());
         }
     }
@@ -158,7 +161,8 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         }
         if (editor!=null) {
             // Clear the lookup
-            log.trace("removing ChildObjectsNode cookies");
+            log.trace("removing cookies");
+            getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
             getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
         }
     }
@@ -172,6 +176,13 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             log.trace("Our selection changed, updating cookie because of {}", e);
             updateNodeIfChanged(editor.getSelectionModel().getObjects());
         }
+    }
+
+    private void updateContext(ViewerContext viewerContext) {
+        // Clear all existing nodes
+        getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+        // Add new node
+        content.add(viewerContext);
     }
 
     private void updateNodeIfChanged(Collection objects) {

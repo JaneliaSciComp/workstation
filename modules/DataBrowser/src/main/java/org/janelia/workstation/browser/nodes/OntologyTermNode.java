@@ -224,7 +224,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     
     @Override
     public Action[] getActions(boolean context) {
-        Collection<Action> actions = DomainObjectAcceptorHelper.getNodeContextMenuItems(getObject());
+        Collection<Action> actions = DomainObjectAcceptorHelper.getCurrentContextActions();
         return actions.toArray(new Action[0]);
     }
 

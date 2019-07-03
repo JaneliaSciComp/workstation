@@ -27,7 +27,7 @@ public class NodeContext {
     private Collection<? extends Node> nodes;
     private Collection<Object> objects;
 
-    <T extends Node> NodeContext(T node) {
+    public <T extends Node> NodeContext(T node) {
         this(Collections.singletonList(node));
     }
 
@@ -55,6 +55,15 @@ public class NodeContext {
 
     public Collection<?> getObjects() {
         return objects;
+    }
+
+    public boolean isSingleNodeOfType(Class<?> type) {
+        return nodes.size()==1
+                && type.isAssignableFrom((nodes.iterator().next().getClass()));
+    }
+
+    public <T> T getSingleNodeOfType(Class<T> type) {
+        return (T)nodes.iterator().next();
     }
 
     public boolean isSingleObjectOfType(Class<?> type) {
@@ -105,13 +114,14 @@ public class NodeContext {
     @Override
     public String toString() {
         if (objects.size()==1) {
-            return objects.iterator().next().toString();
+            return nodes.iterator().next().getClass().getSimpleName()
+                    +" containing "+objects.iterator().next();
         }
         else if (objects.isEmpty()) {
-            return "nothing";
+            return nodes.size()+" nodes containing nothing";
         }
         else {
-            return objects.size()+" items";
+            return nodes.size()+" nodes containing "+objects.size()+" objects";
         }
     }
 }

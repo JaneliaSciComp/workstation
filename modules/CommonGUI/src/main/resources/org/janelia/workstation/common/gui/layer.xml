@@ -207,6 +207,9 @@
         </folder>
         <folder name="Actions">
             <attr name="position" intvalue="310"/>
+            <folder name="Samples">
+                <attr name="position" intvalue="500"/>
+            </folder>
         </folder>
         <folder name="View">
             <attr name="position" intvalue="400"/>

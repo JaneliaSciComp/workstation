@@ -9,6 +9,9 @@ import java.util.List;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
+import org.janelia.workstation.core.actions.NodeContext;
+import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.actions.OpenInFinderAction;
@@ -17,7 +20,7 @@ import org.janelia.workstation.browser.gui.components.DomainViewerManager;
 import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.browser.gui.hud.Hud;
-import org.janelia.workstation.browser.actions.AddToFolderAction;
+import org.janelia.workstation.browser.actions.context.AddToFolderAction;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -173,8 +176,8 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         if (samples.isEmpty()) return null;
         
         AddToFolderAction action = AddToFolderAction.get();
-        action.setDomainObjects(samples);
-        
+        action.enable(new NodeContext(new ChildObjectsNode(samples)), null);
+
         JMenuItem item = action.getPopupPresenter();
         if (item!=null) {
             // Override title to include the word "Sample" instead of generic "Item"

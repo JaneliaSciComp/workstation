@@ -199,7 +199,7 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
 
     @Override
     public Action[] getActions(boolean context) {
-        Collection<Action> actions = DomainObjectAcceptorHelper.getNodeContextMenuItems(getDomainObject());
+        Collection<Action> actions = DomainObjectAcceptorHelper.getCurrentContextActions();
         return actions.toArray(new Action[0]);
     }
 

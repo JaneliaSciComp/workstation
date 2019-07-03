@@ -15,5 +15,5 @@ public interface ContextualNodeAction {
      * @param nodeContext
      * @return
      */
-    boolean enable(NodeContext nodeContext);
+    boolean enable(NodeContext nodeContext, ViewerContext viewerContext);
 }

@@ -10,7 +10,6 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
-import org.openide.util.NbBundle;
 import org.openide.util.NbBundle.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,34 +23,24 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/Actions", position = 540)
+    @ActionReference(path = "Menu/Actions/Samples", position = 540)
 })
 @Messages("CTL_StageForPublishingAction=Stage for Publishing")
 public final class StageForPublishingAction extends BaseContextualNodeAction {
 
     private static final Logger log = LoggerFactory.getLogger(StageForPublishingAction.class);
-    private static final String NAME = NbBundle.getBundle(StageForPublishingAction.class).getString("CTL_StageForPublishingAction");
-    private static StageForPublishingAction INSTANCE = new StageForPublishingAction();
 
     private Collection<Sample> samples = new ArrayList<>();
-
-    public StageForPublishingAction() {
-        super(NAME); // Setting name explicitly is necessary for eager actions
-    }
 
     @Override
     protected void processContext() {
         samples.clear();
         if (getNodeContext().isOnlyObjectsOfType(Sample.class)) {
             samples.addAll(getNodeContext().getOnlyObjectsOfType(Sample.class));
-            log.debug("enabled for new viewer context ({} samples)", samples.size());
-            setVisible(true);
-            setEnabled(true);
+            setEnabledAndVisible(true);
         }
         else {
-            log.debug("disabled for new viewer context");
-            setVisible(false);
-            setEnabled(false);
+            setEnabledAndVisible(false);
         }
     }
 

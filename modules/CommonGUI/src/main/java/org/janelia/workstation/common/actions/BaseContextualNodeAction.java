@@ -1,6 +1,7 @@
 package org.janelia.workstation.common.actions;
 
-import javax.swing.AbstractAction;
+import java.util.MissingResourceException;
+
 import javax.swing.JMenuItem;
 
 import org.janelia.workstation.core.actions.ContextualNodeAction;
@@ -8,12 +9,13 @@ import org.janelia.workstation.core.actions.ContextualNodeActionTracker;
 import org.janelia.workstation.core.actions.NodeContext;
 import org.janelia.workstation.core.actions.PopupMenuGenerator;
 import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.actions.ViewerContextReceiver;
 import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.HelpCtx;
+import org.openide.util.NbBundle;
 import org.openide.util.actions.CallableSystemAction;
-import org.openide.util.actions.SystemAction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A class which unifies normal Swing Actions (manipulating domain objects) with the NetBeans NodeAction model
@@ -30,16 +32,17 @@ import org.openide.util.actions.SystemAction;
  */
 public abstract class BaseContextualNodeAction
         extends CallableSystemAction
-        implements ViewerContextReceiver, PopupMenuGenerator, ContextualNodeAction {
+        implements PopupMenuGenerator, ContextualNodeAction {
+
+    private static final Logger log = LoggerFactory.getLogger(BaseContextualNodeAction.class);
 
     private String name;
     private boolean visible = true;
     private ViewerContext viewerContext;
     private NodeContext nodeContext;
 
-    protected BaseContextualNodeAction(String name) {
-        this.name = name;
-        setEnabled(false); // default to disabled, only enable when there is a favorable context
+    protected BaseContextualNodeAction() {
+        setEnabledAndVisible(false); // default to false, only enable when there is a favorable context
         ContextualNodeActionTracker.getInstance().register(this);
     }
 
@@ -48,7 +51,13 @@ public abstract class BaseContextualNodeAction
      * @return default name for this action
      */
     public String getName() {
-        return name;
+        try {
+            return NbBundle.getBundle(getClass()).getString("CTL_"+getClass().getSimpleName());
+        }
+        catch (MissingResourceException e) {
+            log.warn("Problem loading display name", e);
+            return getClass().getSimpleName();
+        }
     }
 
     /**
@@ -62,6 +71,11 @@ public abstract class BaseContextualNodeAction
 
     protected void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    protected void setEnabledAndVisible(boolean visible) {
+        setEnabled(visible);
+        setVisible(visible);
     }
 
     protected ViewerContext getViewerContext() {
@@ -92,22 +106,13 @@ public abstract class BaseContextualNodeAction
     }
 
     @Override
-    public boolean enable(NodeContext nodeContext) {
-        this.viewerContext = null;
+    public boolean enable(NodeContext nodeContext, ViewerContext viewerContext) {
+        this.viewerContext = viewerContext;
         this.nodeContext = nodeContext;
         processContext();
         ContextualActionUtils.setVisible(this, isVisible());
         ContextualActionUtils.setEnabled(this, isEnabled());
         return isEnabled();
-    }
-
-    @Override
-    public void setViewerContext(ViewerContext viewerContext) {
-        this.viewerContext = viewerContext;
-        this.nodeContext = viewerContext.getNodeContext();
-        processContext();
-        ContextualActionUtils.setVisible(this, isVisible());
-        ContextualActionUtils.setEnabled(this, isEnabled());
     }
 
     /**
@@ -116,6 +121,10 @@ public abstract class BaseContextualNodeAction
      * current context.
      */
     protected void processContext() {
+    }
+
+    protected boolean asynchronous() {
+        return false;
     }
 
     @Override

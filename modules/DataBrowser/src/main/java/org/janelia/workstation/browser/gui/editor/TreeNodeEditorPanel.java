@@ -29,6 +29,7 @@ import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.core.model.search.SearchResults;
@@ -314,7 +315,12 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
 
     @Override
     public ViewerContext<DomainObject, Reference> getViewerContext() {
-        return new ViewerContext<>(selectionModel, editSelectionModel, resultsPanel.getImageModel());
+        return new ViewerContext<DomainObject, Reference>(selectionModel, editSelectionModel, null) {
+            @Override
+            public ImageModel getImageModel() {
+                return resultsPanel.getImageModel();
+            }
+        };
     }
 
     @Override

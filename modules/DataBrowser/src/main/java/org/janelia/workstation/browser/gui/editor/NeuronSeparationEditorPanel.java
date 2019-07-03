@@ -13,7 +13,7 @@ import org.janelia.model.domain.sample.NeuronSeparation;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.ExportResultsAction;
-import org.janelia.workstation.browser.actions.OpenInNeuronAnnotatorAction;
+import org.janelia.workstation.browser.actions.OpenInNeuronAnnotatorActionListener;
 import org.janelia.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.workstation.browser.selection.PipelineResultSelectionEvent;
@@ -157,7 +157,7 @@ public class NeuronSeparationEditorPanel
         openInNAButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new OpenInNeuronAnnotatorAction(separation).actionPerformed(e);
+                new OpenInNeuronAnnotatorActionListener(separation).actionPerformed(e);
             }
         });
         

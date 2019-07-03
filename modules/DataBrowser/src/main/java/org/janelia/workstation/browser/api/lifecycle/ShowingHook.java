@@ -1,14 +1,14 @@
 package org.janelia.workstation.browser.api.lifecycle;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.workstation.browser.gui.progress.ProgressMeterMgr;
+import org.janelia.workstation.browser.actions.NavigateBack;
+import org.janelia.workstation.browser.actions.NavigateForward;
+import org.janelia.workstation.browser.actions.StartPageMenuAction;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.browser.gui.progress.ProgressMeterMgr;
-import org.janelia.workstation.browser.nb_action.NavigateBack;
-import org.janelia.workstation.browser.nb_action.NavigateForward;
-import org.janelia.workstation.browser.nb_action.StartPageMenuAction;
 import org.janelia.workstation.core.options.ApplicationOptions;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.actions.CallableSystemAction;
 import org.openide.windows.OnShowing;
 import org.slf4j.Logger;
@@ -38,6 +38,7 @@ public class ShowingHook implements Runnable {
         // Instantiate singletons so that they register on the event bus
         ProgressMeterMgr.getProgressMeterMgr();
     }
+
 
     @Subscribe
     public void propsLoaded(ConsolePropsLoaded event) {

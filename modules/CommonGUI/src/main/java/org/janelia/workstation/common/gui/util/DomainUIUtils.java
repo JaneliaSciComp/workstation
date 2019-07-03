@@ -18,14 +18,16 @@ import org.janelia.workstation.core.model.ImageModel;
 public class DomainUIUtils {
 
     public static DomainObjectImageModel getDomainObjectImageModel(ViewerContext viewerContext) {
+        if (viewerContext==null) return null;
         ImageModel imageModel = viewerContext.getImageModel();
-        if (!viewerContext.isMultiple() && imageModel instanceof DomainObjectImageModel) {
+        if (imageModel instanceof DomainObjectImageModel) {
             return (DomainObjectImageModel) imageModel;
         }
         return null;
     }
 
     public static DomainObject getLastSelectedDomainObject(ViewerContext viewerContext) {
+        if (viewerContext==null) return null;
         if (viewerContext.getLastSelectedObject() instanceof DomainObject) {
             return ((DomainObject) viewerContext.getLastSelectedObject());
         }
@@ -33,6 +35,7 @@ public class DomainUIUtils {
     }
 
     public static Collection<DomainObject> getSelectedDomainObjects(ViewerContext viewerContext) {
+        if (viewerContext==null) return null;
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Object obj : viewerContext.getSelectedObjects()) {
             if (obj instanceof DomainObject) {

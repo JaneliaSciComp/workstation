@@ -1,7 +1,10 @@
 package org.janelia.workstation.common.gui.support;
 
 import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -52,12 +55,16 @@ public abstract class PopupContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getNamedActionItem(Action action) {
-        return new JMenuItem(action) {
+        return new JMenuItem(action);
+    }
+
+    protected JMenuItem getNamedActionItem(String name, ActionListener action) {
+        return new JMenuItem(new AbstractAction(name) {
             @Override
-            public String getText() {
-                return super.getText();
+            public void actionPerformed(ActionEvent e) {
+                action.actionPerformed(e);
             }
-        };
+        });
     }
 
     protected JMenuItem getActionItem(final Action action) {
