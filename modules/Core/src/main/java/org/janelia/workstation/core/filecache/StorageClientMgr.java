@@ -31,6 +31,7 @@ public class StorageClientMgr {
     private static final Logger LOG = LoggerFactory.getLogger(StorageClientMgr.class);
     
     private static final Cache<String, AgentStorageClient> STORAGE_WORKERS_CACHE = CacheBuilder.newBuilder()
+            .concurrencyLevel(4)
             .maximumSize(256)
             .build();
     private static final Consumer<Throwable> NOOP_ERROR_CONN_HANDLER = (t) -> {};
@@ -56,15 +57,16 @@ public class StorageClientMgr {
     }
 
     private AgentStorageClient getStorageClientForStandardPath(String standardPathName) throws FileNotFoundException {
-        Path standardPath = Paths.get(standardPathName.replaceFirst("^jade:\\/\\/", ""));
-        int nPathComponents = standardPath.getNameCount();
+        String standardLocation = standardPathName.replaceFirst("^jade:\\/\\/", "").replace('\\', '/');
+        Path lookupPath = Paths.get(standardLocation);
+        int nPathComponents = lookupPath.getNameCount();
         List<String> storagePathPrefixCandidates = new LinkedList<>();
         IntStream.range(1, nPathComponents)
                 .mapToObj(pathIndex -> {
-                    if (standardPath.getRoot() == null) {
-                        return standardPath.subpath(0, pathIndex).toString();
+                    if (lookupPath.getRoot() == null) {
+                        return lookupPath.subpath(0, pathIndex).toString();
                     } else {
-                        return standardPath.getRoot().resolve(standardPath.subpath(0, pathIndex)).toString();
+                        return lookupPath.getRoot().resolve(lookupPath.subpath(0, pathIndex)).toString();
                     }
                 })
                 .forEach(p -> storagePathPrefixCandidates.add(0, p));
@@ -78,18 +80,22 @@ public class StorageClientMgr {
                     return storageClient;
                 }
             }
+            LOG.info("Lookup storage client for {}", standardPathName);
             WebDavStorage storage = masterStorageClient.findStorage(standardPathName);
             String storageBindName = storage.getStorageBindName();
             String storageRootDir = storage.getStorageRootDir();
+            LOG.info("Found WEBDAV storage for {}: {}, {}, {}",
+                    standardPathName, storage.getRemoteFileUrl(), storageBindName, storageRootDir);
+
             String storageKey;
             Consumer<Throwable> agentErrorHandler;
-            if  (storageBindName != null && standardPath.startsWith(storageBindName)) {
+            if  (storageBindName != null && standardLocation.startsWith(storageBindName)) {
                 storageKey = storageBindName;
                 agentErrorHandler = t -> {
                     LOG.info("Invalidate storage client for {} because of an error", storageKey, t);
                     STORAGE_WORKERS_CACHE.invalidate(storageKey);
                 };
-            } else if (storageRootDir != null && standardPath.startsWith(storageRootDir)) {
+            } else if (storageRootDir != null && standardLocation.startsWith(storageRootDir)) {
                 storageKey = storageRootDir;
                 agentErrorHandler = t -> {
                     LOG.info("Invalidate storage client for {} because of an error", storageKey, t);
