@@ -10,6 +10,7 @@ import com.google.common.eventbus.Subscribe;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
 import org.janelia.filecacheutils.LocalFileCacheStorage;
@@ -34,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public class FileMgr {
 
-    private static final Logger log = LoggerFactory.getLogger(FileMgr.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FileMgr.class);
 
     // Singleton
     private static FileMgr instance;
@@ -51,6 +52,7 @@ public class FileMgr {
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
 
     private String consolePrefsDir;
+    private String localCacheRoot;
     private String webdavBaseUrl;
     private int webdavMaxConnsPerHost;
     private int webdavMaxTotalConnections;
@@ -66,12 +68,13 @@ public class FileMgr {
     public void propsLoaded(ConsolePropsLoaded event) {
         SimpleWorker.runInBackground(() -> {
             synchronized (FileMgr.this) {
-                log.info("Initializing File Manager");
+                LOG.info("Initializing File Manager");
                 this.consolePrefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
+                this.localCacheRoot = ConsoleProperties.getString("console.localCache.rootDirectory", StringUtils.appendIfMissing(consolePrefsDir, "/") + ".jacs-file-cache");
                 this.webdavBaseUrl = ConsoleProperties.getString("console.webDavClient.baseUrl", null);
                 this.webdavMaxConnsPerHost = ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100);
                 this.webdavMaxTotalConnections = ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100);
-                log.info("Using WebDAV server: {}", webdavBaseUrl);
+                LOG.info("Using WebDAV server: {}", webdavBaseUrl);
 
                 MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
                 HttpConnectionManagerParams managerParams = mgr.getParams();
@@ -113,14 +116,12 @@ public class FileMgr {
         LocalPreferenceMgr.getInstance().setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
 
         if (isDisabled) {
-            log.warn("disabling local cache");
+            LOG.warn("disabling local cache");
             webdavLocalFileCache = null;
             localFileCacheStorage = null;
         } else {
             try {
-                final String localCacheRoot = ConsoleProperties.getString("console.localCache.rootDirectory", consolePrefsDir);
                 final long kilobyteCapacity = getFileCacheGigabyteCapacity() * 1024 * 1024;
-
                 localFileCacheStorage = new LocalFileCacheStorage(Paths.get(localCacheRoot), kilobyteCapacity);
                 webdavLocalFileCache = new LocalFileCache<>(
                         localFileCacheStorage,
@@ -129,7 +130,7 @@ public class FileMgr {
             } catch (IllegalStateException e) {
                 webdavLocalFileCache = null;
                 localFileCacheStorage = null;
-                log.error("disabling local cache after initialization failure", e);
+                LOG.error("disabling local cache after initialization failure", e);
             }
         }
     }

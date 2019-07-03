@@ -1,6 +1,7 @@
 package org.janelia.workstation.browser.gui.listview.icongrid;
 
 import java.awt.image.BufferedImage;
+import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -78,20 +79,20 @@ public abstract class LoadImageWorker extends SimpleWorker {
 
         if (useCacheBehind) {
             // Async cache-behind
-            log.trace("Async cache-behind loading: {}",imageFilename);
-            log.info("Loading image from {}", imageFilename);
-            maxSizeImage = Utils.readImageFromInputStream(
-                    FileMgr.getFileMgr().getFile(imageFilename, true).getContentStream(),
-                    FilenameUtils.getExtension(imageFilename));
+            try (InputStream imageStream = FileMgr.getFileMgr().getFile(imageFilename, true).getContentStream()) {
+                log.trace("Async cache-behind loading: {}",imageFilename);
+                log.info("Loading image from {}", imageFilename);
+                maxSizeImage = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFilename));
+            }
             if (maxSizeImage != null && imageCache != null) {
                 imageCache.put(imageFilename, maxSizeImage);
             }
         } else {
             // Sync cache-ahead
-            log.trace("Cache-ahead loading: {}",imageFilename);
-            maxSizeImage = Utils.readImageFromInputStream(
-                    FileMgr.getFileMgr().getFile(imageFilename, false).getContentStream(),
-                    FilenameUtils.getExtension(imageFilename));
+            try (InputStream imageStream = FileMgr.getFileMgr().getFile(imageFilename, false).getContentStream()) {
+                log.trace("Cache-ahead loading: {}", imageFilename);
+                maxSizeImage = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFilename));
+            }
         }
 
         if (maxSizeImage != null) {

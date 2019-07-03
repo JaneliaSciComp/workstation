@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -61,7 +62,9 @@ public final class NewMaskActionListener implements ActionListener {
                 protected void doStuff() throws Exception {
                     uploadPath = MaskUtils.uploadMask(localFile);
                     FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(uploadPath, false);
-                    this.image = Utils.readImageFromInputStream(imageFileProxy.getContentStream(), FilenameUtils.getExtension(imageFileProxy.getFileId()));
+                    try (InputStream imageStream = imageFileProxy.getContentStream()) {
+                        this.image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFileProxy.getFileId()));
+                    }
                     alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();
                 }
 

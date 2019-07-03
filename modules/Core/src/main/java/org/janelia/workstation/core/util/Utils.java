@@ -163,10 +163,21 @@ public class Utils {
         RendererType2D renderer = RendererType2D.valueOf(selectedRenderer);
         BufferedImage image;
         if (renderer == RendererType2D.IMAGE_IO) {
+            InputStream imageStream;
             try {
-                image = readWithImageIOFromInputStream(new FileInputStream(localFilePath));
+                imageStream = new FileInputStream(localFilePath);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Cannot open local image file " + localFilePath, e);
+            }
+            try {
+                image = readWithImageIOFromInputStream(imageStream);
             } catch (IOException e) {
                 throw new IllegalArgumentException("Invalid local image file " + localFilePath, e);
+            } finally {
+                try {
+                    imageStream.close();
+                } catch (IOException ignore) {
+                }
             }
         } else {
             image = readWithLociReaderFromStreamId(localFilePath, format);

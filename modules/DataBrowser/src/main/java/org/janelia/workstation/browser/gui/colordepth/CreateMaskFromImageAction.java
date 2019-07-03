@@ -2,6 +2,7 @@ package org.janelia.workstation.browser.gui.colordepth;
 
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
+import java.io.InputStream;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -64,7 +65,9 @@ public class CreateMaskFromImageAction extends AbstractAction {
             @Override
             protected void doStuff() throws Exception {
                 FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(imagePath, false);
-                this.image = Utils.readImageFromInputStream(imageFileProxy.getContentStream(), FilenameUtils.getExtension(imageFileProxy.getFileId()));
+                try (InputStream imageStream = imageFileProxy.getContentStream()) {
+                    this.image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFileProxy.getFileId()));
+                }
                 alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();
             }
 

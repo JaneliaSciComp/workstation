@@ -19,6 +19,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -84,7 +85,9 @@ public class CreateMaskFromSampleAction extends AbstractAction {
             
             @Override
             protected void doStuff() throws Exception {
-                this.image = Utils.readImageFromInputStream(FileMgr.getFileMgr().getFileInputStream(imagePath, false), FilenameUtils.getExtension(imagePath));
+                try (InputStream imageStream = FileMgr.getFileMgr().getFileInputStream(imagePath, false)) {
+                    this.image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imagePath));
+                }
                 alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();
             }
 
