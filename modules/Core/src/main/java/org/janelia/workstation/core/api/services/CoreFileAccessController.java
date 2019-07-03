@@ -11,7 +11,7 @@ public class CoreFileAccessController implements FileAccessController {
 
     @Override
     public File getCachedFile(String standardPath, boolean forceRefresh) {
-        return FileMgr.getFileMgr().getFile(standardPath, forceRefresh);
+        return FileMgr.getFileMgr().getFile(standardPath, forceRefresh).getLocalFile();
     }
     
 }

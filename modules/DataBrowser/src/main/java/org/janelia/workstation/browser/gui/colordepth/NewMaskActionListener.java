@@ -12,14 +12,15 @@ import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.apache.commons.io.FilenameUtils;
+import org.janelia.filecacheutils.FileProxy;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.util.Utils;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.filecache.URLProxy;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,16 +60,8 @@ public final class NewMaskActionListener implements ActionListener {
                 @Override
                 protected void doStuff() throws Exception {
                     uploadPath = MaskUtils.uploadMask(localFile);
-                    File file = FileMgr.getFileMgr().getFile(uploadPath, false);
-                    if (file==null) {
-                        // Cache is probably disabled, just fetch remotely
-                        URLProxy imageFileURL = FileMgr.getFileMgr().getURL(uploadPath, false);
-                        this.image = Utils.readImage(imageFileURL);
-                    }
-                    else {
-                        this.image = Utils.readImage(file.getAbsolutePath());
-                    }
-                    
+                    FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(uploadPath, false);
+                    this.image = Utils.readImageFromInputStream(imageFileProxy.getContentStream(), FilenameUtils.getExtension(imageFileProxy.getFileId()));
                     alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();
                 }
 

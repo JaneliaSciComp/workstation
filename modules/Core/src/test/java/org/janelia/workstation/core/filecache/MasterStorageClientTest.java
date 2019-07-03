@@ -25,7 +25,7 @@ import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import static org.junit.Assert.*;
 
 /**
- * Tests the {@link WebDavClient} class.
+ * Tests the {@link MasterStorageClient} class.
  *
  * @author Eric Trautman
  */

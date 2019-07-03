@@ -56,7 +56,6 @@ public class ActivityLogHelper {
         }
         Long ramTotalInfo = SystemInfo.getTotalSystemMemory();
         String consoleVersion = SystemInfo.appVersion;
-        // user/totalRAM/allocatedRAM/JavaInfo/RuntimeJavaInfo/OSInfo/ConsoleVersion
         activityLogging.logToolEvent(TOOL_STRING, USER_INFO_CTG, buildAction(authenticatedSubject.getName(), ramTotalInfo, ramAllocatedInfo, javaInfo, runtimeJavaInfo, osInfo, consoleVersion));
     }
 

@@ -1,6 +1,7 @@
 package org.janelia.workstation.core.filecache;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.http.HttpStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.property.DavProperty;
@@ -109,16 +110,12 @@ class AbstractWebDav {
     /**
      * @return the number of kilobytes in file.
      */
-    long getKilobytes() {
-        long kilobytes = 0;
+    Long getSizeInBytes() {
         if (contentLength != null) {
-            final long len = contentLength;
-            kilobytes = len / ONE_KILOBYTE;
-            if ((len % ONE_KILOBYTE) > 0) {
-                kilobytes++; // round up to nearest kb
-            }
+            return contentLength;
+        } else {
+            return null;
         }
-        return kilobytes;
     }
 
     String getStorageRootDir() {
@@ -131,10 +128,14 @@ class AbstractWebDav {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{webdavFileKey='" + webdavFileKey + '\'' +
-                ", isDirectory=" + isDirectory +
-                ", contentLength=" + contentLength +
-                '}';
+        return new ToStringBuilder(this)
+                .append("remoteFileUrl", remoteFileUrl)
+                .append("webdavFileKey", webdavFileKey)
+                .append("isDirectory", isDirectory)
+                .append("contentLength", contentLength)
+                .append("storageRootDir", storageRootDir)
+                .append("storageBindName", storageBindName)
+                .toString();
     }
 
     private static final long ONE_KILOBYTE = 1024;

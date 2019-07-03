@@ -11,7 +11,7 @@ import org.janelia.workstation.gui.viewer3d.VolumeDataAcceptor;
  * Implement this to make a class capable of pushing data into a volume data acceptor.
  */
 public interface VolumeLoaderI {
-    public enum FileType{
+    enum FileType{
         TIF, LSM, V3DMASK, V3DSIGNAL, MP4, H264, H265, UNKNOWN
     }
 

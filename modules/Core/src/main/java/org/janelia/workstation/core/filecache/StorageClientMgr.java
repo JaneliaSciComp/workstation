@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
+import org.janelia.filecacheutils.FileProxy;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.slf4j.Logger;
@@ -53,11 +54,6 @@ public class StorageClientMgr {
         this.objectMapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.masterStorageClient = new MasterStorageClient(baseUrl, httpClient, objectMapper);
-    }
-
-    public URLProxy getDownloadFileURL(String standardPathName) throws FileNotFoundException {
-        AgentStorageClient storageClient = getStorageClientForStandardPath(standardPathName);
-        return storageClient.getDownloadFileURL(standardPathName);
     }
 
     private AgentStorageClient getStorageClientForStandardPath(String standardPathName) throws FileNotFoundException {

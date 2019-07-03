@@ -1,6 +1,17 @@
 package org.janelia.horta;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Optional;
+
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import com.google.common.base.Objects;
+
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -12,9 +23,6 @@ import org.janelia.horta.volume.JadeVolumeBrickSource;
 import org.janelia.horta.volume.LocalVolumeBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.rendering.CachedRenderedVolumeLoader;
-import org.janelia.rendering.RenderedVolumeLoader;
-import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.options.ApplicationOptions;
@@ -23,14 +31,6 @@ import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Optional;
 
 import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
 

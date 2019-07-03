@@ -1,6 +1,8 @@
 package org.janelia.workstation.core.filecache;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.janelia.filecacheutils.FileProxy;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.janelia.workstation.core.filecache.AbstractStorageClient;
 import org.janelia.workstation.core.filecache.AgentStorageClient;
@@ -24,7 +26,7 @@ import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import static org.junit.Assert.*;
 
 /**
- * Tests the {@link WebDavClient} class.
+ * Tests the {@link AgentStorageClient} class.
  *
  * @author Eric Trautman
  */
@@ -43,12 +45,6 @@ public class AgentStorageClientTest {
         httpClient = Mockito.mock(HttpClientProxy.class);
         objectMapper = new ObjectMapper();
         testWebDavClient = new AgentStorageClient(BASE_WEBDAV_URL, httpClient, objectMapper, (t) -> {});
-    }
-
-    @Test
-    public void downloadURL() throws Exception {
-        String testPath = "/p1/p2/c1/c2";
-        assertEquals(new URL(BASE_WEBDAV_URL + "/storage_path/data_content/" + testPath), testWebDavClient.getDownloadFileURL(testPath));
     }
 
     @Test

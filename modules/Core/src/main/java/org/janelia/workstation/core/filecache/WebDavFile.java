@@ -32,15 +32,8 @@ class WebDavFile extends AbstractWebDav {
         this.connectionErrorHandler = connectionErrorHandler;
     }
 
-    /**
-     * @return remote href as extracted from the multiresponse
-     */
-    URLProxy getRemoteFileURLProxy() {
-        try {
-            return new URLProxy(new URL(getRemoteFileUrl()), connectionErrorHandler);
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException(e);
-        }
+    void handleError(Throwable e) {
+        this.connectionErrorHandler.accept(e);
     }
 
 }

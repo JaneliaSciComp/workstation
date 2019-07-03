@@ -1,4 +1,5 @@
 package org.janelia.workstation.core.web;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,9 +13,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.util.WorkstationFile;
+import org.janelia.filecacheutils.FileProxy;
+import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.util.Utils;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +30,7 @@ public class FileProxyService extends AbstractHandler {
     private static final Logger log = LoggerFactory.getLogger(FileProxyService.class);
     
     private static final int BUFFER_SIZE = 1024;
-    
+
     public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
 
@@ -39,7 +41,7 @@ public class FileProxyService extends AbstractHandler {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             return;
         }
-        
+
         String proxyType = matcher.group(1);
         String standardPath = matcher.group(2);
 
@@ -48,8 +50,7 @@ public class FileProxyService extends AbstractHandler {
         
         if (proxyType.equals("webdav")) {
             stream(request.getMethod(), response, standardPath);
-        }
-        else {
+        } else {
             log.warn("Client requested bad proxy type: "+proxyType);
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.setContentType("text/plain");
@@ -65,61 +66,40 @@ public class FileProxyService extends AbstractHandler {
             return;
         }
         
-        WorkstationFile wfile = null;
+        FileProxy fileProxy;
         OutputStream output = null;
-        
         try {
-            wfile = new WorkstationFile(standardPath);
-            
-            // Read from WebDav
-            wfile.get("HEAD".equals(method), true);
-            if (wfile.getStatusCode()!=null) {
-                response.setStatus(wfile.getStatusCode());
+            fileProxy = FileMgr.getFileMgr().getFile(standardPath, false);
+            log.info("Proxying {} for: {}", method, fileProxy.getFileId());
+            response.setContentType("application/octet-stream");
+            if (fileProxy.getSizeInBytes() != null) {
+                response.addHeader("Content-length", fileProxy.getSizeInBytes().toString());
             }
-            else {
-                response.setStatus(500);
-            }
-            
-            log.info("Proxying {} ({}) for: {}",method,response.getStatus(), wfile.getEffectiveURL());
-            
-            if (wfile.getContentType() != null) {
-                response.setContentType(wfile.getContentType());
-            }
-            if (wfile.getLength() != null) {
-                response.addHeader("Content-length", wfile.getLength().toString());
-            }
+            response.setStatus(200);
 
             if ("HEAD".equals(method)) {
                 // This method is supported, but there is nothing more to do
-            }
-            else if ("GET".equals(method)) {
-                log.debug("Writing {} bytes", wfile.getLength());
-                InputStream input = wfile.getStream();
+            } else if ("GET".equals(method)) {
+                log.debug("Writing {} bytes", fileProxy.getSizeInBytes());
+                InputStream input = fileProxy.getContentStream();
                 output = response.getOutputStream();
                 Utils.copyNio(input, output, BUFFER_SIZE);
-            }
-            else {
+            } else {
                 throw new IllegalStateException("Unsupported method for Workstation file proxy service: "+method);
             }
-        } 
-        catch (FileNotFoundException e) {
+        }  catch (FileNotFoundException e) {
             log.error("File not found: "+standardPath);
             response.setContentType("text/plain");
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().print("File not found\n");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error proxying file: "+standardPath,e);
             response.setContentType("text/plain");
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().print("Error proxying file\n");
             e.printStackTrace(response.getWriter());
             FrameworkAccess.handleExceptionQuietly(e);
-        } 
-        finally {
-            if (wfile != null) {
-                wfile.close();
-            }
+        } finally {
             if (output != null) {
                 try {
                     output.close();
@@ -131,4 +111,3 @@ public class FileProxyService extends AbstractHandler {
         }
     }
 }
-      

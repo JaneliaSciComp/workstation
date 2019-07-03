@@ -1,23 +1,29 @@
 package org.janelia.workstation.core.api;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Paths;
+import java.util.concurrent.Executors;
 
 import com.google.common.eventbus.Subscribe;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
+import org.janelia.filecacheutils.FileProxy;
+import org.janelia.filecacheutils.LocalFileCache;
+import org.janelia.filecacheutils.LocalFileCacheStorage;
+import org.janelia.filecacheutils.LocalFileProxy;
+import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.api.http.HttpClientProxy;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.filecache.LocalFileCache;
-import org.janelia.workstation.core.filecache.URLProxy;
 import org.janelia.workstation.core.filecache.StorageClientMgr;
+import org.janelia.workstation.core.filecache.WebDavRemoteFileRetriever;
 import org.janelia.workstation.core.filecache.WebDavUploader;
+import org.janelia.workstation.core.filecache.WebdavCachedFileKey;
 import org.janelia.workstation.core.options.OptionConstants;
+import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +56,8 @@ public class FileMgr {
     private int webdavMaxTotalConnections;
     private HttpClientProxy httpClient;
     private StorageClientMgr storageClientMgr;
-    private LocalFileCache localFileCache;
+    private LocalFileCacheStorage localFileCacheStorage;
+    private LocalFileCache<WebdavCachedFileKey> webdavLocalFileCache;
 
     private FileMgr() {
     }
@@ -72,7 +79,6 @@ public class FileMgr {
                 managerParams.setMaxTotalConnections(webdavMaxTotalConnections);
                 httpClient = new HttpClientProxy(new HttpClient(mgr));
                 storageClientMgr = new StorageClientMgr(webdavBaseUrl, httpClient);
-
                 setFileCacheGigabyteCapacity((Integer)
                         LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
                 setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
@@ -93,7 +99,7 @@ public class FileMgr {
      * @return true if a local file cache is available for this session; otherwise false.
      */
     public boolean isFileCacheAvailable() {
-        return (localFileCache != null);
+        return (webdavLocalFileCache != null);
     }
 
     /**
@@ -108,16 +114,21 @@ public class FileMgr {
 
         if (isDisabled) {
             log.warn("disabling local cache");
-            localFileCache = null;
+            webdavLocalFileCache = null;
+            localFileCacheStorage = null;
         } else {
             try {
                 final String localCacheRoot = ConsoleProperties.getString("console.localCache.rootDirectory", consolePrefsDir);
                 final long kilobyteCapacity = getFileCacheGigabyteCapacity() * 1024 * 1024;
 
-                localFileCache = new LocalFileCache(new File(localCacheRoot), kilobyteCapacity, null, httpClient, storageClientMgr);
-            }
-            catch (IllegalStateException e) {
-                localFileCache = null;
+                localFileCacheStorage = new LocalFileCacheStorage(Paths.get(localCacheRoot), kilobyteCapacity);
+                webdavLocalFileCache = new LocalFileCache<>(
+                        localFileCacheStorage,
+                        new WebDavRemoteFileRetriever(httpClient, storageClientMgr),
+                        Executors.newFixedThreadPool(4));
+            } catch (IllegalStateException e) {
+                webdavLocalFileCache = null;
+                localFileCacheStorage = null;
                 log.error("disabling local cache after initialization failure", e);
             }
         }
@@ -136,7 +147,6 @@ public class FileMgr {
      * @param gigabyteCapacity cache capacity in gigabytes.
      */
     public final void setFileCacheGigabyteCapacity(Integer gigabyteCapacity) {
-
         if (gigabyteCapacity == null) {
             gigabyteCapacity = DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY;
         }
@@ -150,11 +160,14 @@ public class FileMgr {
         LocalPreferenceMgr.getInstance().setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
                 gigabyteCapacity);
 
-        if (isFileCacheAvailable()) {
-            final long kilobyteCapacity = gigabyteCapacity * 1024 * 1024;
-            if (kilobyteCapacity != localFileCache.getKilobyteCapacity()) {
-                localFileCache.setKilobyteCapacity(kilobyteCapacity);
-            }
+        if (localFileCacheStorage != null) {
+            updateLocalCacheStorageCapacity(gigabyteCapacity * 1024 * 1024);
+        }
+    }
+
+    private void updateLocalCacheStorageCapacity(long capacityInKB) {
+        if (capacityInKB > 0 && capacityInKB != localFileCacheStorage.getCapacityInKB()) {
+            localFileCacheStorage.setCapacityInKB(capacityInKB);
         }
     }
 
@@ -163,8 +176,8 @@ public class FileMgr {
      */
     public double getFileCacheGigabyteUsage() {
         double usage = 0.0;
-        if (isFileCacheAvailable()) {
-            final long kilobyteUsage = localFileCache.getNumberOfKilobytes();
+        if (localFileCacheStorage != null) {
+            final long kilobyteUsage = localFileCacheStorage.getCurrentSizeInKB();
             usage = kilobyteUsage / (1024.0 * 1024.0);
         }
         return usage;
@@ -174,8 +187,8 @@ public class FileMgr {
      * Removes all locally cached files.
      */
     public void clearFileCache() {
-        if (isFileCacheAvailable()) {
-            localFileCache.clear();
+        if (localFileCacheStorage != null) {
+            localFileCacheStorage.clear();
         }
     }
 
@@ -194,42 +207,28 @@ public class FileMgr {
      * @return an accessible file for the specified path or
      * null if caching is disabled or the file cannot be cached.
      */
-    public File getFile(String standardPath, boolean forceRefresh) {
-        File file = null;
+    public FileProxy getFile(String standardPath, boolean forceRefresh) {
         if (isFileCacheAvailable()) {
-            try {
-                file = localFileCache.getFile(standardPath, forceRefresh);
-            } catch (FileNotFoundException e) {
-                log.warn("File does not exist: " + standardPath, e);
-            } catch (Exception e) {
-                if ("No space left on device".equals(e.getMessage())) {
-                    FrameworkAccess.handleException("No space left on disk", e);
-                } else {
-                    log.error("Failed to retrieve " + standardPath + " from local cache", e);
-                }
-            }
+            return webdavLocalFileCache.getCachedFileEntry(new WebdavCachedFileKey(standardPath), forceRefresh);
         } else {
-            log.warn("Local file cache is not available");
+            // return this as a local file
+            return new LocalFileProxy(standardPath);
         }
-
-        return file;
     }
 
     /**
-     * Get the URL for a standard path. It may be a local URL, if the file has
-     * been cached, or a remote URL on the WebDAV server. It might even be a
-     * mounted location, if WebDAV is disabled.
+     * Open an input stream for the specified standard path.
      *
      * @param standardPathName
      *            a standard system path
-     * @param cacheAsync flag to cache the file if caching is available
+     * @param forceRefresh indicates if any existing cached file should be forcibly refreshed before
+     *            being returned. In most cases, this should be set to false.
      *
-     * @return an accessible URL for the specified path
+     * @return an input stream to read the content identified by standardPathName
      */
-    public URLProxy getURL(String standardPathName, boolean cacheAsync) throws FileNotFoundException {
-        return isFileCacheAvailable()
-                ? localFileCache.getEffectiveUrl(standardPathName, cacheAsync)
-                : storageClientMgr.getDownloadFileURL(standardPathName);
+    public InputStream getFileInputStream(String standardPathName, boolean forceRefresh) throws IOException {
+        FileProxy fileProxy = getFile(standardPathName, forceRefresh);
+        return fileProxy.getContentStream();
     }
 
 }
