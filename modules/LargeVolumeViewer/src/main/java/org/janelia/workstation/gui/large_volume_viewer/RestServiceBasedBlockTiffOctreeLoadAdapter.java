@@ -50,11 +50,11 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
     private final RenderedVolumeLoader renderedVolumeLoader;
     private RenderedVolume renderedVolume;
 
-    public RestServiceBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat,
-                                                      URI volumeBaseURI,
-                                                      AppAuthorization appAuthorization,
-                                                      int volumeCacheSize,
-                                                      int tileCacheSize) {
+    RestServiceBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat,
+                                               URI volumeBaseURI,
+                                               AppAuthorization appAuthorization,
+                                               int volumeCacheSize,
+                                               int tileCacheSize) {
         super(tileFormat, volumeBaseURI);
         this.appAuthorization = appAuthorization;
         this.objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

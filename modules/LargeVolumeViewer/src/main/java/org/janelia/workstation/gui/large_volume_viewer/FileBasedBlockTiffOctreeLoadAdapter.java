@@ -39,7 +39,7 @@ public class FileBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdap
     // Metadata: file location required for local system as mount point.
     private final File baseFolder;
 
-    public FileBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat, URI volumeBaseURI) {
+    FileBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat, URI volumeBaseURI) {
         super(tileFormat, volumeBaseURI);
         this.baseFolder = new File(volumeBaseURI);
     }
