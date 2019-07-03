@@ -181,6 +181,13 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
+	<repository>
+            <id>jboss-repository</id>
+            <url>https://repository.jboss.org/nexus/content/repositories/releases/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+	</repository>
         <!-- Workstation repo for libraries not found in any public Maven repository -->
         <repository>
             <id>janelia-repo</id>

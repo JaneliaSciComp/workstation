@@ -123,9 +123,9 @@
 
         <!-- For communication with JACSv1 -->
         <dependency>
-            <groupId>jboss</groupId>
+            <groupId>org.jboss.client</groupId>
             <artifactId>jbossall-client</artifactId>
-            <version>4.2.2.GA</version>
+            <version>4.2.3.GA</version>
         </dependency>
 
         <!-- Test dependencies -->
