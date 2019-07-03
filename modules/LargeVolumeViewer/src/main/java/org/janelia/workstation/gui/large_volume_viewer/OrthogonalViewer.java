@@ -1,10 +1,30 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.geom.Point2D;
+import java.util.List;
+import java.util.Vector;
+
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLCapabilitiesChooser;
+import javax.media.opengl.GLContext;
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.KeyStroke;
+
 import org.apache.commons.lang.SystemUtils;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.gui.camera.Camera3d;
@@ -26,26 +46,6 @@ import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLCapabilitiesChooser;
-import javax.media.opengl.GLContext;
-import javax.swing.AbstractAction;
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.KeyStroke;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.geom.Point2D;
-import java.util.List;
-import java.util.Vector;
 
 /**
  * Intended replacement class for LargeVolumeViewer, generalized for X,Y,Z

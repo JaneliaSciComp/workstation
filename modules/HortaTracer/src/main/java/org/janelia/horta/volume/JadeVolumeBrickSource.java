@@ -8,14 +8,16 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.collect.ImmutableSet;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.horta.BrainTileInfo;
 import org.janelia.horta.BrainTileInfoBuilder;
 import org.janelia.it.jacs.shared.utils.HttpClientHelper;
 import org.janelia.model.security.AppAuthorization;
-import org.janelia.rendering.*;
+import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
+import org.janelia.rendering.RenderedVolume;
+import org.janelia.rendering.RenderedVolumeLoader;
+import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.rendering.utils.HttpClientProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,9 +62,9 @@ public class JadeVolumeBrickSource implements StaticVolumeBrickSource {
             RenderedVolumeMetadata renderedVolumeMetadata = objectMapper.readValue(getMethod.getResponseBodyAsStream(), RenderedVolumeMetadata.class);
             this.renderedVolume = new RenderedVolume(
                     new JADEBasedRenderedVolumeLocation(
-                            renderedVolumeMetadata.connectionURI,
-                            renderedVolumeMetadata.dataStorageURI,
-                            renderedVolumeMetadata.volumeBasePath,
+                            renderedVolumeMetadata.getConnectionURI(),
+                            renderedVolumeMetadata.getDataStorageURI(),
+                            renderedVolumeMetadata.getVolumeBasePath(),
                             this.appAuthorization.getAuthenticationToken(),
                             (String) null,
                             new HttpClientProvider() {
@@ -75,14 +77,14 @@ public class JadeVolumeBrickSource implements StaticVolumeBrickSource {
                                     return client;
                                 }
                             }),
-                    renderedVolumeMetadata.renderingType,
-                    renderedVolumeMetadata.originVoxel,
-                    renderedVolumeMetadata.volumeSizeInVoxels,
-                    renderedVolumeMetadata.micromsPerVoxel,
-                    renderedVolumeMetadata.numZoomLevels,
-                    renderedVolumeMetadata.xyTileInfo,
-                    renderedVolumeMetadata.yzTileInfo,
-                    renderedVolumeMetadata.zxTileInfo);
+                    renderedVolumeMetadata.getRenderingType(),
+                    renderedVolumeMetadata.getOriginVoxel(),
+                    renderedVolumeMetadata.getVolumeSizeInVoxels(),
+                    renderedVolumeMetadata.getMicromsPerVoxel(),
+                    renderedVolumeMetadata.getNumZoomLevels(),
+                    renderedVolumeMetadata.getXyTileInfo(),
+                    renderedVolumeMetadata.getYzTileInfo(),
+                    renderedVolumeMetadata.getZxTileInfo());
             // There is no dynamic loading by resolution at the moment for raw tiles in yaml file
             // so treat all tiles as having the same resolution as the first tile
             return renderedVolumeLoader.loadVolumeRawImageTiles(renderedVolume.getRvl()).stream()

@@ -1,17 +1,6 @@
 
 package org.janelia.gltools.texture;
 
-import com.google.common.io.ByteStreams;
-import com.sun.media.jai.codec.*;
-import org.apache.commons.lang3.tuple.Pair;
-import org.janelia.geometry.util.PerformanceTimer;
-import org.janelia.gltools.GL3Resource;
-import org.janelia.gltools.activity_logging.ActivityLogHelper;
-import org.janelia.it.jacs.shared.lvv.HttpDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.media.opengl.GL3;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBufferUShort;
 import java.awt.image.Raster;
@@ -26,6 +15,22 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+
+import javax.media.opengl.GL3;
+
+import com.sun.media.jai.codec.ImageCodec;
+import com.sun.media.jai.codec.ImageDecoder;
+import com.sun.media.jai.codec.MemoryCacheSeekableStream;
+import com.sun.media.jai.codec.SeekableStream;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.janelia.geometry.util.PerformanceTimer;
+import org.janelia.gltools.GL3Resource;
+import org.janelia.gltools.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.options.ApplicationOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  *
@@ -125,7 +130,7 @@ public class Texture3d extends BasicTexture implements GL3Resource {
 
             float t2=timer.reportMsAndRestart();
             LOG.debug("Tiff RenderedImages to raster took {} ms", t2);
-            activityLog.logBrickLoadToRendered(logId, stackName, HttpDataSource.useHttp(), t1 + t2);
+            activityLog.logBrickLoadToRendered(logId, stackName, ApplicationOptions.getInstance().isUseHTTPForTileAccess(), t1 + t2);
 
             loadStack(slicePair.getLeft(), slicePair.getRight());
 

@@ -39,8 +39,6 @@ import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.HttpDataSource;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
@@ -855,32 +853,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         JButton gotoLocationButton = new JButton("New button");
         gotoLocationButton.setAction(goToLocationAction);
         buttonsPanel.add(gotoLocationButton);
-
-        final JCheckBox useHttpCheckbox = new JCheckBox("Use Http");
-        if (HttpDataSource.useHttp()) {
-            HttpDataSource.setRestServer(
-                    ConsoleProperties.getInstance().getProperty("mouselight.rest.url"),
-                    AccessManager.getAccessManager().getAppAuthorization());
-            useHttpCheckbox.setSelected(true);
-        } else {
-            useHttpCheckbox.setSelected(false);
-        }
-        useHttpCheckbox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.DESELECTED) {
-                    useHttpCheckbox.setSelected(false);
-                    HttpDataSource.setUseHttp(false);
-                } else if (e.getStateChange() == ItemEvent.SELECTED) {
-                    HttpDataSource.setRestServer(
-                            ConsoleProperties.getInstance().getProperty("mouselight.rest.url"),
-                            AccessManager.getAccessManager().getAppAuthorization());
-                    useHttpCheckbox.setSelected(true);
-                    HttpDataSource.setUseHttp(true);
-                }
-            }
-        });
-        buttonsPanel.add(useHttpCheckbox);
 
         JButton loadUpdatesButton = new JButton("Refresh Updates");
         loadUpdatesButton.setAction(refreshSharedUpdatesAction);

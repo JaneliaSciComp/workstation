@@ -5,8 +5,6 @@ import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.jacs.shared.lvv.ChannelBrightnessStats;
-import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;

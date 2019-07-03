@@ -1,8 +1,8 @@
 package org.janelia.workstation.gui.large_volume_viewer.generator;
 
-import org.janelia.it.jacs.shared.lvv.TileIndex;
-
 import java.util.Iterator;
+
+import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
 
 /**
  * Generate positive offset slice indices, as part of UmbrellaZGenerator

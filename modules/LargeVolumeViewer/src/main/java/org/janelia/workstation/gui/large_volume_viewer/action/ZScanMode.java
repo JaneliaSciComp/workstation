@@ -1,12 +1,12 @@
 package org.janelia.workstation.gui.large_volume_viewer.action;
 
+import java.awt.event.MouseWheelEvent;
+
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.MouseModalWidget;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
-
-import java.awt.event.MouseWheelEvent;
 
 public class ZScanMode 
 implements WheelMode

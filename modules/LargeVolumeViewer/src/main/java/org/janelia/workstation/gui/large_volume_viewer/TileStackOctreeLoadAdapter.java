@@ -1,12 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
 import java.net.URI;
-import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.FileBasedBlockTiffOctreeLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.RestServiceBasedBlockTiffOctreeLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.TextureData2d;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 

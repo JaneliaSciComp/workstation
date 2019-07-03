@@ -14,12 +14,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter.MissingTileException;
-import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter.TileLoadError;
-import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.FileBasedOctreeMetadataSniffer;
-import org.janelia.it.jacs.shared.lvv.TextureData2d;
-import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,7 +90,7 @@ public class LocalFileTileCacheLoader extends CacheLoader<TileIndex, Optional<Te
                     return Optional.empty();
                 }
             }
-        } catch (TileLoadError | MissingTileException e) {
+        } catch (AbstractTextureLoadAdapter.TileLoadError | AbstractTextureLoadAdapter.MissingTileException e) {
             LOG.error("Error loading tile {}", tileIndex, e);
         } finally {
             currentlyLoadingTiles.remove(tileIndex);

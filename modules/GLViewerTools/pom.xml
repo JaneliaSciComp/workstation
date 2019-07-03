@@ -17,6 +17,12 @@
 
     <dependencies>
         
+        <!-- Core --> 
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+
         <!-- ConsoleWrapper --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>

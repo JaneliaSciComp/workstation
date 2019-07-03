@@ -1,30 +1,15 @@
 
 package org.janelia.horta;
 
-import Jama.Matrix;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.lang3.StringUtils;
-import org.janelia.geometry3d.Box3;
-import org.janelia.geometry3d.ConstVector3;
-import org.janelia.geometry3d.Vector3;
-import org.janelia.gltools.texture.Texture3d;
-import org.janelia.horta.volume.BrickInfo;
-import org.janelia.horta.volume.VoxelIndex;
-import org.janelia.it.jacs.shared.img_3d_loader.FileStreamSource;
-import org.janelia.it.jacs.shared.lvv.HttpDataSource;
-import org.janelia.rendering.RawImage;
-import org.janelia.rendering.RenderedVolumeLoader;
-import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.workstation.integration.spi.compression.CompressedFileResolverI;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
+
+import Jama.Matrix;
+import org.apache.commons.lang3.StringUtils;
+import org.janelia.rendering.RawImage;
+import org.janelia.rendering.RenderedVolumeLocation;
 
 /**
  * BrainTileInfo factory.

@@ -4,11 +4,11 @@ import java.awt.BorderLayout;
 
 import javax.swing.JPanel;
 
-import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.workstation.common.gui.support.WindowLocator;
 import org.janelia.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonPanel;
 import org.janelia.workstation.gui.large_volume_viewer.QuadViewUi;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;

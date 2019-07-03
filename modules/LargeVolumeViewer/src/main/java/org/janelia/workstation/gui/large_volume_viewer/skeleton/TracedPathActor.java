@@ -2,8 +2,8 @@ package org.janelia.workstation.gui.large_volume_viewer.skeleton;
 
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.workstation.tracing.SegmentIndex;

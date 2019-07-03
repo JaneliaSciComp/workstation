@@ -1,22 +1,5 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.jacs.model.util.ThreadUtils;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.TileBoundingBox;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.lvv.TileIndex;
-import org.janelia.it.jacs.shared.lvv.ViewBoundingBox;
-import org.janelia.it.jacs.shared.octree.ZoomLevel;
-import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;
-import org.janelia.workstation.raster.VoxelIndex;
-import org.janelia.workstation.tracing.VoxelPosition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
@@ -38,6 +21,18 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
+import org.janelia.it.jacs.model.util.ThreadUtils;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.octree.ZoomLevel;
+import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.workstation.raster.VoxelIndex;
+import org.janelia.workstation.tracing.VoxelPosition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Subvolume {
 

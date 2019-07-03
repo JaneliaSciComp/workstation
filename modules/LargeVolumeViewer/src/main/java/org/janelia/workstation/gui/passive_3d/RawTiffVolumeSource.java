@@ -2,9 +2,9 @@ package org.janelia.workstation.gui.passive_3d;
 
 import javax.media.opengl.GL2;
 import org.janelia.it.jacs.shared.img_3d_loader.ByteArrayLoader;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.workstation.gui.camera.Camera3d;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.workstation.gui.viewer3d.loader.TifTextureBuilder;

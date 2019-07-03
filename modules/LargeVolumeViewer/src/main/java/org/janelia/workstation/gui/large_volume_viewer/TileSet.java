@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.janelia.it.jacs.shared.lvv.TileIndex;
 
 /**
  * A group of Tile2d that together form a complete image on the
