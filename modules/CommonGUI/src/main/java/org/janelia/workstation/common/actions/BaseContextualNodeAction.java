@@ -9,8 +9,6 @@ import org.janelia.workstation.core.actions.ContextualNodeActionTracker;
 import org.janelia.workstation.core.actions.NodeContext;
 import org.janelia.workstation.core.actions.PopupMenuGenerator;
 import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.HelpCtx;
 import org.openide.util.NbBundle;
 import org.openide.util.actions.CallableSystemAction;
@@ -50,6 +48,7 @@ public abstract class BaseContextualNodeAction
      * Provides a default name for the action, if ContextualActionUtils.getName returns null.
      * @return default name for this action
      */
+    @Override
     public String getName() {
         try {
             return NbBundle.getBundle(getClass()).getString("CTL_"+getClass().getSimpleName());
@@ -88,20 +87,11 @@ public abstract class BaseContextualNodeAction
 
     @Override
     public JMenuItem getPopupPresenter() {
-        if (!ContextualActionUtils.isVisible(this)) {
+        if (!isVisible()) {
             return null;
         }
-        String name = ContextualActionUtils.getName(this);
-        if (name == null) name = getName();
-        JMenuItem item = ContextualActionUtils.getNamedActionItem(name, actionEvent -> {
-            try {
-                performAction();
-            }
-            catch (Exception e) {
-                FrameworkAccess.handleException(e);
-            }
-        });
-        item.setEnabled(ContextualActionUtils.isEnabled(this));
+        JMenuItem item = new JMenuItem(this);
+        item.setEnabled(isEnabled());
         return item;
     }
 
@@ -110,8 +100,6 @@ public abstract class BaseContextualNodeAction
         this.viewerContext = viewerContext;
         this.nodeContext = nodeContext;
         processContext();
-        ContextualActionUtils.setVisible(this, isVisible());
-        ContextualActionUtils.setEnabled(this, isEnabled());
         return isEnabled();
     }
 

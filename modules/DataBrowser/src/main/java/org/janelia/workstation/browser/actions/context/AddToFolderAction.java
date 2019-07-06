@@ -92,7 +92,11 @@ public class AddToFolderAction extends BaseContextualNodeAction {
 
     @Override
     public JMenuItem getPopupPresenter() {
-        
+
+        if (!isVisible()) {
+            return null;
+        }
+
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
@@ -101,62 +105,52 @@ public class AddToFolderAction extends BaseContextualNodeAction {
 
         JMenuItem createNewItem = new JMenuItem("Create New Folder...");
         
-        Consumer<Long[]> success = new Consumer<Long[]>() {
-            @Override
-            public void accept(Long[] idPath) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        explorer.expand(idPath);
-                        explorer.selectNodeByPath(idPath);
-                    }
-                });
-            }
-        };
+        Consumer<Long[]> success = idPath -> SwingUtilities.invokeLater(() -> {
+            explorer.expand(idPath);
+            explorer.selectNodeByPath(idPath);
+        });
         
-        createNewItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
+        createNewItem.addActionListener(actionEvent -> {
 
-                ActivityLogHelper.logUserAction("AddToFolderAction.createNewFolder");
+            ActivityLogHelper.logUserAction("AddToFolderAction.createNewFolder");
 
-                // Add button clicked
-                final String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Folder Name:\n",
-                        "Create new folder in workspace", JOptionPane.PLAIN_MESSAGE, null, null, null);
-                if ((folderName == null) || (folderName.length() <= 0)) {
-                    return;
+            // Add button clicked
+            final String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Folder Name:\n",
+                    "Create new folder in workspace", JOptionPane.PLAIN_MESSAGE, null, null, null);
+            if ((folderName == null) || (folderName.length() <= 0)) {
+                return;
+            }
+
+            SimpleWorker worker = new SimpleWorker() {
+
+                private TreeNode folder;
+                private Long[] idPath;
+
+                @Override
+                protected void doStuff() throws Exception {
+                    folder = new TreeNode();
+                    folder.setName(folderName);
+                    folder = model.create(folder);
+                    log.info("Created new folder: {}", folder);
+                    Workspace workspace = model.getDefaultWorkspace();
+                    idPath = NodeUtils.createIdPath(workspace, folder);
+                    workspace = model.addChild(workspace, folder);
+                    log.info("Added new folder to {}", workspace);
                 }
 
-                SimpleWorker worker = new SimpleWorker() {
-                    
-                    private TreeNode folder;
-                    private Long[] idPath;
+                @Override
+                protected void hadSuccess() {
+                    addUniqueItemsToFolder(folder, idPath, success);
+                }
 
-                    @Override
-                    protected void doStuff() throws Exception {
-                        folder = new TreeNode();
-                        folder.setName(folderName);
-                        folder = model.create(folder);
-                        log.info("Created new folder: {}", folder);
-                        Workspace workspace = model.getDefaultWorkspace();
-                        idPath = NodeUtils.createIdPath(workspace, folder);
-                        workspace = model.addChild(workspace, folder);
-                        log.info("Added new folder to {}", workspace);
-                    }
+                @Override
+                protected void hadError(Throwable error) {
+                    FrameworkAccess.handleException(error);
+                }
+            };
 
-                    @Override
-                    protected void hadSuccess() {
-                        addUniqueItemsToFolder(folder, idPath, success);
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        FrameworkAccess.handleException(error);
-                    }
-                };
-                
-                worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating folder...", ""));
-                worker.execute();
-            }
+            worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating folder...", ""));
+            worker.execute();
         });
 
         newFolderMenu.add(createNewItem);
@@ -214,6 +208,7 @@ public class AddToFolderAction extends BaseContextualNodeAction {
             }
         }
 
+        newFolderMenu.setEnabled(isEnabled());
         return newFolderMenu;
     }
 

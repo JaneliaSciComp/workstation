@@ -13,10 +13,12 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ActionID(
         category = "Actions",
-        id = "LightboxToggleAction"
+        id = "ShowInLightboxAction"
 )
 @ActionRegistration(
         displayName = "#CTL_LightboxToggleAction",
@@ -27,8 +29,9 @@ import org.openide.util.NbBundle;
         @ActionReference(path = "Shortcuts", name = "SPACE")
 })
 @NbBundle.Messages("CTL_LightboxToggleAction=Show in Lightbox")
-public class LightboxToggleAction extends BaseContextualNodeAction {
+public class ShowInLightboxAction extends BaseContextualNodeAction {
 
+    private static final Logger log = LoggerFactory.getLogger(ShowInLightboxAction.class);
     private DomainObject domainObject;
     private ArtifactDescriptor resultDescriptor;
     private String typeName;

@@ -99,7 +99,7 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
             viewer.loadDomainObject(domainObject, false);
         }
         else {
-            log.warn("No active viewer available");
+            log.debug("No active viewer available");
         }
     }
 
