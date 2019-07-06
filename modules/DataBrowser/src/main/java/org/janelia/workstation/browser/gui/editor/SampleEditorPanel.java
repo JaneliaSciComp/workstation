@@ -54,6 +54,7 @@ import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.core.model.DomainModelViewUtils;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
@@ -244,6 +245,9 @@ public class SampleEditorPanel
             @Override
             public Reference getId(DomainObject object) {
                 return Reference.createFor(object);
+            }
+            @Override
+            protected void editModeChanged(boolean editMode) {
             }
         };
 

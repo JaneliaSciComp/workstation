@@ -45,6 +45,7 @@ public class ContextualNodeActionTracker implements LookupListener {
         nodeResult = Utilities.actionsGlobalContext().lookupResult(Node.class);
         nodeResult.addLookupListener(this);
         viewerContextResult = Utilities.actionsGlobalContext().lookupResult(ViewerContext.class);
+        viewerContextResult.addLookupListener(this);
     }
 
     private List<ContextualNodeAction> dependents = new ArrayList<>();

@@ -73,7 +73,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel {
     // For drag and drop functionality
     protected DragSource source = new DragSource();
     protected boolean dragEnabled = false;
-    protected DomainObjectTransferHandler transferHandler;
+    protected TransferHandler transferHandler;
     protected DragGestureListener dragGestureListener = new DragGestureListener() {
         @Override
         public void dragGestureRecognized(DragGestureEvent dge) {

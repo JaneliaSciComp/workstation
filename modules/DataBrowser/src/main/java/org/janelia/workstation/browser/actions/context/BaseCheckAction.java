@@ -31,16 +31,12 @@ public class BaseCheckAction extends BaseContextualNodeAction {
     @Override
     protected void processContext() {
         domainObjects.clear();
-
-        log.info("getViewerContext()="+getViewerContext());
-        log.info("DomainUIUtils.getDomainObjectImageModel(getViewerContext())="+DomainUIUtils.getDomainObjectImageModel(getViewerContext()));
-
         if (DomainUIUtils.getDomainObjectImageModel(getViewerContext()) != null
                 && getNodeContext().isOnlyObjectsOfType(DomainObject.class)) {
             domainObjects.addAll(getNodeContext().getOnlyObjectsOfType(DomainObject.class));
             // This implicit cast is fine, because we know the viewer context has a domain object image model
             this.editSelectionModel = getViewerContext().getEditSelectionModel();
-            setEnabledAndVisible(true);
+            setEnabledAndVisible(editSelectionModel != null);
         }
         else {
             setEnabledAndVisible(false);

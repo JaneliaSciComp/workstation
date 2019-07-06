@@ -70,9 +70,10 @@ public class RemoveFromFolderAction extends BaseContextualNodeAction {
         this.parentTreeNode = null;
         this.toRemove.clear();
 
+        setEnabledAndVisible(false);
+
         for (Object object : getNodeContext().getObjects()) {
             if (object instanceof Ontology || object instanceof Workspace) {
-                setEnabledAndVisible(false);
                 return;
             }
         }
@@ -80,15 +81,14 @@ public class RemoveFromFolderAction extends BaseContextualNodeAction {
         if (getNodeContext().isSingleNodeOfType(ChildObjectsNode.class)) {
             // Viewer selection
             ViewerContext viewerContext = getViewerContext();
-            Object contextObject = viewerContext.getContextObject();
-            if (contextObject instanceof org.janelia.model.domain.workspace.Node) {
-                this.parentTreeNode = (org.janelia.model.domain.workspace.Node) contextObject;
-                this.toRemove.addAll(DomainUIUtils.getSelectedDomainObjects(viewerContext));
-                setVisible(true);
-                setEnabled(ClientDomainUtils.hasWriteAccess(parentTreeNode));
-            }
-            else {
-                setEnabledAndVisible(false);
+            if (viewerContext!=null) {
+                Object contextObject = viewerContext.getContextObject();
+                if (contextObject instanceof org.janelia.model.domain.workspace.Node) {
+                    this.parentTreeNode = (org.janelia.model.domain.workspace.Node) contextObject;
+                    this.toRemove.addAll(DomainUIUtils.getSelectedDomainObjects(viewerContext));
+                    setVisible(true);
+                    setEnabled(ClientDomainUtils.hasWriteAccess(parentTreeNode));
+                }
             }
         }
         else {

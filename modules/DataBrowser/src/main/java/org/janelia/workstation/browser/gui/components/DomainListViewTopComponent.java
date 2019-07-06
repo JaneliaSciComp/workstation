@@ -18,6 +18,7 @@ import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextActivator;
 import org.janelia.workstation.browser.gui.find.FindContextManager;
 import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
@@ -178,6 +179,17 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         }
     }
 
+    @Subscribe
+    public void contextChanged(ViewerContextChangeEvent e) {
+        // Make sure this selection comes from one of our children, otherwise there's no point in updating anything
+        TopComponent topComponent = UIUtils.getAncestorWithType(
+                (Component)e.getSourceComponent(), TopComponent.class);
+        if (topComponent==this && editor!=null) {
+            log.trace("Viewer context changed, updating cookie because of {}", e);
+            updateContext(editor.getViewerContext());
+        }
+    }
+
     private void updateContext(ViewerContext viewerContext) {
         // Clear all existing nodes
         getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
@@ -194,7 +206,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
         List<Object> newObjects = new ArrayList<>(objects);
         if (!currentObjects.equals(newObjects)) {
-            log.info("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
+            log.trace("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
             // Clear all existing nodes
             getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
             // Add new node

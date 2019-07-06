@@ -343,6 +343,10 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     public void deactivate() {
     }
 
+    @Override
+    public boolean isEditMode() {
+        return false;
+    }
 
     @Override
     public void toggleEditMode(boolean editMode) {

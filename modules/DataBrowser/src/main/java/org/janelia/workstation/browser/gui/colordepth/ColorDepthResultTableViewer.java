@@ -295,6 +295,11 @@ public class ColorDepthResultTableViewer
     }
 
     @Override
+    public boolean isEditMode() {
+        return false;
+    }
+
+    @Override
     public void toggleEditMode(boolean editMode) {
 
     }

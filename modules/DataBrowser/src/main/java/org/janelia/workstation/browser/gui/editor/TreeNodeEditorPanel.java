@@ -24,11 +24,14 @@ import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.model.search.ResultPage;
@@ -78,6 +81,10 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
             @Override
             public Reference getId(DomainObject object) {
                 return Reference.createFor(object);
+            }
+            @Override
+            protected void editModeChanged(boolean editMode) {
+                Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->TreeNodeEditorPanel"));
@@ -315,9 +322,19 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
 
     @Override
     public ViewerContext<DomainObject, Reference> getViewerContext() {
-        return new ViewerContext<DomainObject, Reference>(selectionModel, editSelectionModel, null) {
+        return new ViewerContext<DomainObject, Reference>() {
             @Override
-            public ImageModel getImageModel() {
+            public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+                return selectionModel;
+            }
+
+            @Override
+            public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
+                return resultsPanel.isEditMode() ? editSelectionModel : null;
+            }
+
+            @Override
+            public ImageModel<DomainObject, Reference> getImageModel() {
                 return resultsPanel.getImageModel();
             }
         };

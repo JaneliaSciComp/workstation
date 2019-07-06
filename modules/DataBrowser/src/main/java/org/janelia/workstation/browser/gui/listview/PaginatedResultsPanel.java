@@ -94,7 +94,6 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     protected PreferenceSupport preferenceSupport;
     protected SearchProvider searchProvider;
     protected List<? extends ListViewerClassProvider> validViewerTypes;
-    protected ImageModel<T, S> imageModel;
     
     public PaginatedResultsPanel(
             ChildSelectionModel<T,S> selectionModel,
@@ -102,23 +101,12 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             PreferenceSupport preferenceSupport, 
             SearchProvider searchProvider, 
             List<? extends ListViewerClassProvider> validViewerTypes) {
-        this(selectionModel, editSelectionModel, preferenceSupport, searchProvider, validViewerTypes, null);
-    }
-    
-    public PaginatedResultsPanel(
-            ChildSelectionModel<T,S> selectionModel, 
-            ChildSelectionModel<T,S> editSelectionModel,
-            PreferenceSupport preferenceSupport, 
-            SearchProvider searchProvider, 
-            List<? extends ListViewerClassProvider> validViewerTypes,
-            ImageModel<T, S> imageModel) {
                
         this.selectionModel = selectionModel;
         this.editSelectionModel = editSelectionModel;
         this.preferenceSupport = preferenceSupport;
         this.searchProvider = searchProvider;
         this.validViewerTypes = validViewerTypes;
-        this.imageModel = imageModel;
         
         if (validViewerTypes==null || validViewerTypes.isEmpty()) {
             throw new IllegalArgumentException("PaginatedResultsPanel needs at least one valid viewer type");
@@ -297,27 +285,38 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                 public void visibleObjectsChanged() {
                     updateStatusBar();
                 }
+                @Override
+                public void editModeChanged(boolean editMode) {
+                    PaginatedResultsPanel.this.editModeChanged(editMode);
+                }
             });
             Events.getInstance().registerOnEventBus(resultsView);
             resultsView.setSelectionModel(selectionModel);
             resultsView.setEditSelectionModel(editSelectionModel);
             resultsView.setPreferenceSupport(preferenceSupport);
             resultsView.setSearchProvider(searchProvider);
-            if (imageModel != null) {
-                resultsView.setImageModel(imageModel);
+            if (getImageModel() != null) {
+                // TODO: does this make any sense?
+                resultsView.setImageModel(getImageModel());
             }
         }
     }
 
-    public ImageModel<T, S> getImageModel() {
-        return imageModel;
-    }
-
     public void setImageModel(ImageModel<T, S> imageModel) {
-        this.imageModel = imageModel;
         if (resultsView != null) {
             resultsView.setImageModel(imageModel);
         }
+    }
+
+    public ImageModel<T, S> getImageModel() {
+        if (resultsView != null) {
+            return resultsView.getImageModel();
+        }
+        return null;
+    }
+
+    public boolean isEditMode() {
+        return resultsView != null && resultsView.isEditMode();
     }
 
     private void loadAndSelectAll() {
@@ -393,6 +392,9 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             statusLabel.setText(status);
             selectionButtonContainer.setVisible(numItemsSelected==numItemsVisible && tn>pn);
         }
+    }
+
+    protected void editModeChanged(boolean editMode) {
     }
 
     public void setCurrPage(int currPage) {
@@ -648,7 +650,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
             @Override
             protected void doStuff() throws Exception {
-                System.currentTimeMillis();
+
                 T startObject = null;
                 S lastSelectedRef = selectionModel.getLastSelectedId();
                 log.info("lastSelectedId={}", lastSelectedRef);

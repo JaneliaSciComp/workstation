@@ -9,6 +9,8 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.model.ImageModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility methods for dealing with Domain Objects in context of the UI.
@@ -16,6 +18,8 @@ import org.janelia.workstation.core.model.ImageModel;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DomainUIUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(DomainUIUtils.class);
 
     public static DomainObjectImageModel getDomainObjectImageModel(ViewerContext viewerContext) {
         if (viewerContext==null) return null;

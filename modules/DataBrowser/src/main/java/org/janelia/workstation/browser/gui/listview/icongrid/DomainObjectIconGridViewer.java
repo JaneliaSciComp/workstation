@@ -298,6 +298,11 @@ public class DomainObjectIconGridViewer
     }
 
     @Override
+    public boolean isEditMode() {
+        return editMode;
+    }
+
+    @Override
     public void toggleEditMode(boolean editMode) {
         this.editMode = editMode;
         imagesPanel.setEditMode(editMode);
@@ -306,6 +311,7 @@ public class DomainObjectIconGridViewer
         }
         editModeButton.setSelected(editMode);
         editOkButton.setVisible(editMode);
+        listener.editModeChanged(editMode);
     }
     
     @Override

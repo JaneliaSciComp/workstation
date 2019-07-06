@@ -181,7 +181,16 @@ public abstract class SelectionModel<T,S> {
     public final boolean isObjectSelected(T object) {
         return selected.containsValue(object);
     }
-    
+
+    /**
+     * Returns the last item that was selected, not null if nothing is currently selected.
+     * @return
+     */
+    public final T getLastSelectedObject() {
+        if (selected.isEmpty()) return null;
+        return selectedObjects.get(selectedObjects.size() - 1);
+    }
+
     /**
      * Returns the last item that was selected, not null if nothing is currently selected.
      * @return

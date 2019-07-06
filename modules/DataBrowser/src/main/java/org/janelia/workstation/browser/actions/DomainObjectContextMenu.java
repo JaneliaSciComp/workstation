@@ -36,23 +36,20 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
 
-    // Current selection
-    private ViewerContext<DomainObject,Reference> viewerContext;
+    private ChildSelectionModel<DomainObject,Reference> selectionModel;
 
     public DomainObjectContextMenu(
             ChildSelectionModel<DomainObject,Reference> selectionModel,
             ChildSelectionModel<DomainObject,Reference> editSelectionModel,
             ImageModel<DomainObject,Reference> imageModel) {
-        this.viewerContext = new ViewerContext<>(
-                selectionModel, editSelectionModel, imageModel);
         ActivityLogHelper.logUserAction("DomainObjectContentMenu.create");
     }
 
     // TODO: this should be made into a SPI
     public void runDefaultAction() {
-        if (viewerContext.isMultiple()) return;
-        DomainObject domainObject = viewerContext.getLastSelectedObject();
-        DomainObject contextObject = (DomainObject)viewerContext.getContextObject();
+        if (selectionModel.getObjects().size()>1) return;
+        DomainObject domainObject = selectionModel.getLastSelectedObject();
+        DomainObject contextObject = (DomainObject)selectionModel.getParentObject();
         if (DomainViewerTopComponent.isSupported(domainObject)) {
             DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
             if (viewer == null || !viewer.isCurrent(domainObject)) {

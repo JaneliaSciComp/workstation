@@ -68,11 +68,14 @@ import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.model.search.ResultPage;
@@ -93,7 +96,7 @@ import static org.janelia.workstation.core.api.DomainMgr.getDomainMgr;
  * The Filter Editor is the main search GUI in the Workstation. Users can create, save, and load filters 
  * into this panel. The filter is executed every time it changes, and shows results in an embedded 
  * PaginatedResultsPanel. 
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class FilterEditorPanel 
@@ -295,6 +298,10 @@ public class FilterEditorPanel
             @Override
             public Reference getId(DomainObject object) {
                 return Reference.createFor(object);
+            }
+            @Override
+            protected void editModeChanged(boolean editMode) {
+                Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->FilterEditorPanel"));
@@ -978,9 +985,19 @@ public class FilterEditorPanel
 
     @Override
     public ViewerContext<DomainObject, Reference> getViewerContext() {
-        return new ViewerContext<DomainObject, Reference>(selectionModel, editSelectionModel, null) {
+        return new ViewerContext<DomainObject, Reference>() {
             @Override
-            public ImageModel getImageModel() {
+            public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+                return selectionModel;
+            }
+
+            @Override
+            public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
+                return resultsPanel.isEditMode() ? editSelectionModel : null;
+            }
+
+            @Override
+            public ImageModel<DomainObject, Reference> getImageModel() {
                 return resultsPanel.getImageModel();
             }
         };
