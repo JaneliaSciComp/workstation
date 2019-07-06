@@ -94,7 +94,7 @@ public final class DomainViewerTopComponent extends TopComponent {
     
     @Override
     public void componentOpened() {
-        DomainViewerManager.getInstance().activate(this);
+        log.debug("componentOpened - {}", this.getName());
         Events.getInstance().registerOnEventBus(this);
     }
 
@@ -103,10 +103,21 @@ public final class DomainViewerTopComponent extends TopComponent {
         clearEditor();
         Events.getInstance().unregisterOnEventBus(this);
     }
-    
+
+    @Override
+    protected void componentShowing() {
+        log.debug("componentShowing - {}", this.getName());
+        DomainViewerManager.getInstance().activate(this);
+    }
+
+    @Override
+    protected void componentHidden() {
+        log.debug("componentHidden - {}", this.getName());
+    }
+
     @Override
     protected void componentActivated() {
-        log.info("Activating domain viewer");
+        log.debug("componentActivated - {}", this.getName());
         DomainViewerManager.getInstance().activate(this);
         if (editor!=null) {
             editor.activate();
@@ -250,6 +261,7 @@ public final class DomainViewerTopComponent extends TopComponent {
     public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
         try {
             domainObject = DomainViewerManager.getObjectToLoad(domainObject);
+            log.info("loadDomainObject({}, isUserDriven={})", domainObject, isUserDriven);
             if (domainObject==null) return;
             
             final Class<? extends DomainObjectEditor<?>> editorClass = getEditorClass(domainObject);
@@ -260,6 +272,7 @@ public final class DomainViewerTopComponent extends TopComponent {
 
             // Do we already have the given node loaded?
             if (!setCurrent(domainObject)) {
+                log.warn("Already current: {}", domainObject);
                 return;
             }
 

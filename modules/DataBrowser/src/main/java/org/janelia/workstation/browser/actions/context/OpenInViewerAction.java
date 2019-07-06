@@ -15,6 +15,8 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -22,17 +24,19 @@ import org.openide.util.NbBundle;
 
 @ActionID(
         category = "Actions",
-        id = "OpenInViewerBuilder"
+        id = "OpenInViewerAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_OpenInViewerBuilder",
+        displayName = "#CTL_OpenInViewerAction",
         lazy = false
 )
 @ActionReferences({
         @ActionReference(path = "Menu/Actions", position = 50, separatorBefore = 49)
 })
-@NbBundle.Messages("CTL_OpenInViewerBuilder=Open In Viewer")
-public class OpenInViewerBuilder extends BaseContextualNodeAction {
+@NbBundle.Messages("CTL_OpenInViewerAction=Open In Viewer")
+public class OpenInViewerAction extends BaseContextualNodeAction {
+
+    private static final Logger log = LoggerFactory.getLogger(OpenInViewerAction.class);
 
     private DomainObject objectToLoad;
     private AbstractDomainObjectNode nodeToLoad;
@@ -43,12 +47,14 @@ public class OpenInViewerBuilder extends BaseContextualNodeAction {
         this.nodeToLoad = null;
         if (getNodeContext().isSingleNodeOfType(AbstractDomainObjectNode.class)) {
             this.nodeToLoad = getNodeContext().getSingleNodeOfType(AbstractDomainObjectNode.class);
-            setEnabledAndVisible(DomainViewerTopComponent.isSupported(nodeToLoad.getDomainObject()));
+            setVisible(true);
+            setEnabled(DomainListViewTopComponent.isSupported(nodeToLoad.getDomainObject()));
         }
         else if (getNodeContext().isSingleObjectOfType(DomainObject.class)) {
             DomainObject domainObject = getNodeContext().getSingleObjectOfType(DomainObject.class);
             this.objectToLoad = DomainViewerManager.getObjectToLoad(domainObject);
-            setEnabledAndVisible(DomainViewerTopComponent.isSupported(domainObject));
+            setVisible(true);
+            setEnabled(DomainViewerTopComponent.isSupported(domainObject));
         }
         else {
             setEnabledAndVisible(false);
@@ -65,16 +71,19 @@ public class OpenInViewerBuilder extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
+        // We need to save off the instance objects, because when the viewer is provisioned it may overwrite them
+        DomainObject objectToLoad = this.objectToLoad;
+        AbstractDomainObjectNode nodeToLoad = this.nodeToLoad;
         try {
-            if (objectToLoad != null) {
-                ActivityLogHelper.logUserAction("OpenInViewerBuilder.actionPerformed", objectToLoad);
-                DomainViewerTopComponent viewer = ViewerUtils.provisionViewer(DomainViewerManager.getInstance(), "editor");
-                viewer.loadDomainObject(objectToLoad, true);
-
-            } else if (nodeToLoad != null) {
-                ActivityLogHelper.logUserAction("OpenInNewViewerAction.actionPerformed", nodeToLoad);
+            if (nodeToLoad != null) {
+                ActivityLogHelper.logUserAction("OpenInViewerAction.actionPerformed", nodeToLoad);
                 DomainListViewTopComponent viewer = ViewerUtils.provisionViewer(DomainListViewManager.getInstance(), "editor");
                 viewer.loadDomainObjectNode(nodeToLoad, true);
+            }
+            else if (objectToLoad != null) {
+                ActivityLogHelper.logUserAction("OpenInViewerAction.actionPerformed", objectToLoad);
+                DomainViewerTopComponent viewer = ViewerUtils.provisionViewer(DomainViewerManager.getInstance(), "editor2");
+                viewer.loadDomainObject(objectToLoad, true);
             }
 
         } catch (Exception ex) {

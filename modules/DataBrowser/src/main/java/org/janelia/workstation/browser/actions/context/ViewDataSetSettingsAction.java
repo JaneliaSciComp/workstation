@@ -37,14 +37,12 @@ public class ViewDataSetSettingsAction extends BaseContextualNodeAction {
 
     @Override
     protected void processContext() {
+        setEnabledAndVisible(false);
         if (getNodeContext().isSingleObjectOfType(Sample.class)) {
             this.sample = getNodeContext().getSingleObjectOfType(Sample.class);
             if (sample != null) {
                 setVisible(true);
                 setEnabled(ClientDomainUtils.hasWriteAccess(sample));
-            }
-            else {
-                setEnabledAndVisible(false);
             }
         }
     }

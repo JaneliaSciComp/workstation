@@ -98,6 +98,9 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
             // If we are reacting to a selection event in another viewer, then this load is not user driven.
             viewer.loadDomainObject(domainObject, false);
         }
+        else {
+            log.warn("No active viewer available");
+        }
     }
 
     @Subscribe

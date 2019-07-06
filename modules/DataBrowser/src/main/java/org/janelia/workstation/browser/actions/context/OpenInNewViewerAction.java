@@ -36,8 +36,6 @@ import org.slf4j.LoggerFactory;
 @NbBundle.Messages("CTL_OpenInNewViewerAction=Open in New Viewer")
 public class OpenInNewViewerAction extends BaseContextualNodeAction {
 
-    private static final Logger log = LoggerFactory.getLogger(org.janelia.workstation.browser.actions.context.OpenInNewViewerAction.class);
-
     private DomainObject objectToLoad;
     private AbstractDomainObjectNode nodeToLoad;
 
@@ -47,12 +45,14 @@ public class OpenInNewViewerAction extends BaseContextualNodeAction {
         this.nodeToLoad = null;
         if (getNodeContext().isSingleNodeOfType(AbstractDomainObjectNode.class)) {
             this.nodeToLoad = getNodeContext().getSingleNodeOfType(AbstractDomainObjectNode.class);
-            setEnabledAndVisible(DomainViewerTopComponent.isSupported(nodeToLoad.getDomainObject()));
+            setVisible(true);
+            setEnabled(DomainListViewTopComponent.isSupported(nodeToLoad.getDomainObject()));
         }
         else if (getNodeContext().isSingleObjectOfType(DomainObject.class)) {
             DomainObject domainObject = getNodeContext().getSingleObjectOfType(DomainObject.class);
             this.objectToLoad = DomainViewerManager.getObjectToLoad(domainObject);
-            setEnabledAndVisible(DomainViewerTopComponent.isSupported(domainObject));
+            setVisible(true);
+            setEnabled(DomainViewerTopComponent.isSupported(domainObject));
         }
         else {
             setEnabledAndVisible(false);
@@ -69,19 +69,21 @@ public class OpenInNewViewerAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
+        // We need to save off the instance objects, because when the viewer is provisioned it may overwrite them
+        DomainObject objectToLoad = this.objectToLoad;
+        AbstractDomainObjectNode nodeToLoad = this.nodeToLoad;
         try {
-            if (objectToLoad != null) {
-                ActivityLogHelper.logUserAction("OpenInNewViewerAction.actionPerformed", objectToLoad);
-                DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
-                viewer.requestActive();
-                viewer.loadDomainObject(objectToLoad, true);
-
-            }
-            else if (nodeToLoad != null) {
+            if (nodeToLoad != null) {
                 ActivityLogHelper.logUserAction("OpenInNewViewerAction.actionPerformed", nodeToLoad);
                 DomainListViewTopComponent viewer = ViewerUtils.createNewViewer(DomainListViewManager.getInstance(), "editor");
                 viewer.requestActive();
                 viewer.loadDomainObjectNode(nodeToLoad, true);
+            }
+            else if (objectToLoad != null) {
+                ActivityLogHelper.logUserAction("OpenInNewViewerAction.actionPerformed", objectToLoad);
+                DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
+                viewer.requestActive();
+                viewer.loadDomainObject(objectToLoad, true);
             }
 
         }

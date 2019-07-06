@@ -129,7 +129,7 @@ public class RemoveFromFolderAction extends BaseContextualNodeAction {
                 }
             }
 
-            setEnabledAndVisible(toRemove.size()==selected.size());
+            setEnabledAndVisible(!toRemove.isEmpty() && toRemove.size()==selected.size());
         }
     }
 

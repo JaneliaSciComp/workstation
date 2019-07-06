@@ -82,6 +82,7 @@ public class AddRelatedItemsAction extends BaseContextualNodeAction {
 
     @Override
     public JMenuItem getPopupPresenter() {
+        if (domainObjects==null || mappableTypes==null) return null;
         return getPopupPresenter(domainObjects, mappableTypes);
     }
 

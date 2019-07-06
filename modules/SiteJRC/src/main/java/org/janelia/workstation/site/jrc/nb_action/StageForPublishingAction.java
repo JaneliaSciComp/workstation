@@ -45,6 +45,14 @@ public final class StageForPublishingAction extends BaseContextualNodeAction {
     }
 
     @Override
+    public String getName() {
+        if (samples!=null && samples.size()>1) {
+            return "Stage "+samples.size()+" Samples for Publishing";
+        }
+        return super.getName();
+    }
+
+    @Override
     public void performAction() {
         new StageForPublishingDialog().showForSamples(samples);
     }
