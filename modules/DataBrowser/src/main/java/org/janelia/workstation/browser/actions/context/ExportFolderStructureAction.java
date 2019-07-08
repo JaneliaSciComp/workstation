@@ -42,9 +42,9 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 405, separatorAfter = 410)
+        @ActionReference(path = "Menu/Actions", position = 405, separatorAfter = 499)
 })
-@NbBundle.Messages("CTL_ExportFolderStructureAction=Export Folder Structure...")
+@NbBundle.Messages("CTL_ExportFolderStructureAction=Export Folder Structure")
 public class ExportFolderStructureAction extends BaseContextualNodeAction {
 
     private static final String DEFAULT_EXPORT_DIR = System.getProperty("user.home");

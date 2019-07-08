@@ -1,11 +1,10 @@
 package org.janelia.workstation.browser.actions.context;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.swing.JMenu;
+import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.shared.utils.domain.DataReporter;
@@ -14,9 +13,8 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.workstation.common.actions.BaseContextualNodeAction;
+import org.janelia.workstation.common.actions.BaseContextualPopupAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.SimpleListenableFuture;
@@ -45,7 +43,7 @@ import org.slf4j.LoggerFactory;
         @ActionReference(path = "Menu/Actions/Sample", position = 500, separatorBefore = 499)
 })
 @NbBundle.Messages("CTL_ReportProblemAction=Report A Problem With This Data")
-public class ReportProblemAction extends BaseContextualNodeAction {
+public class ReportProblemAction extends BaseContextualPopupAction {
 
     private static final Logger log = LoggerFactory.getLogger(ReportProblemAction.class);
 
@@ -63,52 +61,43 @@ public class ReportProblemAction extends BaseContextualNodeAction {
     }
 
     @Override
-    public void performAction() {
-        // Implemented by popup menu
-    }
-
-    @Override
-    public JMenuItem getPopupPresenter() {
-
-        if (!isVisible()) return null;
+    protected List<JComponent> getItems() {
+        List<JComponent> items = new ArrayList<>();
 
         DomainObject domainObject = selectedObject;
-        JMenu errorMenu = new JMenu(getName());
 
         OntologyTerm errorOntology = StateMgr.getStateMgr().getErrorOntology();
-        if (errorOntology==null) return null;
+        if (errorOntology==null) return items;
 
         for (final OntologyTerm term : errorOntology.getTerms()) {
-            errorMenu.add(new JMenuItem(term.getName())).addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
+            JMenuItem item = new JMenuItem(term.getName());
+            item.addActionListener(e -> {
 
-                    ActivityLogHelper.logUserAction("DomainObjectContentMenu.reportAProblemWithThisData", domainObject);
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.reportAProblemWithThisData", domainObject);
 
-                    final ApplyAnnotationAction action = ApplyAnnotationAction.get();
-                    SimpleListenableFuture<List<Annotation>> future =
-                            action.annotateReferences(term, Collections.singletonList(Reference.createFor(domainObject)));
+                final ApplyAnnotationAction action = ApplyAnnotationAction.get();
+                SimpleListenableFuture<List<Annotation>> future =
+                        action.annotateReferences(term, Collections.singletonList(Reference.createFor(domainObject)));
 
-                    if (future!=null) {
-                        future.addListener(() -> {
-                            try {
-                                List<Annotation> annotations = future.get();
-                                if (annotations!=null && !annotations.isEmpty()) {
-                                    reportData(domainObject, annotations.get(0));
-                                }
+                if (future!=null) {
+                    future.addListener(() -> {
+                        try {
+                            List<Annotation> annotations = future.get();
+                            if (annotations!=null && !annotations.isEmpty()) {
+                                reportData(domainObject, annotations.get(0));
                             }
-                            catch (Exception ex) {
-                                FrameworkAccess.handleException(ex);
-                            }
-                        });
-                    }
+                        }
+                        catch (Exception ex) {
+                            FrameworkAccess.handleException(ex);
+                        }
+                    });
                 }
             });
+            items.add(item);
 
         }
 
-        errorMenu.setEnabled(isEnabled());
-        return errorMenu;
+        return items;
     }
 
     private void reportData(DomainObject domainObject, Annotation annotation) {

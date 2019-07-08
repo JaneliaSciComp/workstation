@@ -9,7 +9,6 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
-import javax.swing.text.View;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
@@ -17,18 +16,18 @@ import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextActivator;
 import org.janelia.workstation.browser.gui.find.FindContextManager;
-import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
-import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
+import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
@@ -162,9 +161,9 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         }
         if (editor!=null) {
             // Clear the lookup
-            log.trace("removing cookies");
-            getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
-            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
+//            log.trace("removing cookies");
+//            getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+//            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
         }
     }
 

@@ -1,5 +1,6 @@
 package org.janelia.workstation.browser.gui.editor;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collections;
@@ -31,6 +32,7 @@ import org.janelia.workstation.browser.tools.ToolMgr;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.common.actions.PopupLabelActionBuilder;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
+import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
@@ -47,8 +49,6 @@ public class SampleResultContextMenu extends PopupContextMenu {
     private final PipelineResult result;
 
     public SampleResultContextMenu(PipelineResult result) {
-//        this.viewerContext = new ViewerContext<>(
-//                selectionModel, editSelectionModel, imageModel, result);
         this.result = result;
     }
     
@@ -60,12 +60,6 @@ public class SampleResultContextMenu extends PopupContextMenu {
             add(titleMenuItem);
             return;
         }
-
-//        DomainObject domainObject = viewerContext.getLastSelectedObject();
-//        Collection<JComponent> contextMenuItems = DomainObjectAcceptorHelper.getContextMenuItems(domainObject, viewerContext);
-//        for (JComponent item : contextMenuItems) {
-//            add(item);
-//        }
 
         add((new PopupLabelActionBuilder()).getAction(result));
         add((new CopyToClipboardAction("Name", result.getName())));
@@ -90,13 +84,14 @@ public class SampleResultContextMenu extends PopupContextMenu {
         
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-    }
 
-//    private Collection<JComponent> getContextMenuItems() {
-//        ViewerContext viewerContext = new ViewerContext(
-//                contextObject, domainObjectList, resultDescriptor, typeName, editSelectionModel);
-//        return DomainObjectAcceptorHelper.getContextMenuItems(domainObject, viewerContext);
-//    }
+        addSeparator();
+        addSeparator();
+
+        for (Component currentContextMenuItem : DomainObjectAcceptorHelper.getCurrentContextMenuItems()) {
+            add(currentContextMenuItem);
+        }
+    }
 
     public void runDefaultAction() {
         if (result.getLatestSeparationResult()!=null || result instanceof HasFileGroups) {

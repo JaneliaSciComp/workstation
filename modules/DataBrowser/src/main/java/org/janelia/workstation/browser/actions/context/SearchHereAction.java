@@ -21,20 +21,23 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 
 /**
+ * This is disabled for now, because it was confusing to users. We need to find a different way to
+ * make it available.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ActionID(
-        category = "Actions",
-        id = "SearchHereAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_SearchHereAction",
-        lazy = false
-)
-@ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 450, separatorBefore = 449)
-})
-@NbBundle.Messages("CTL_SearchHereAction=Search Here")
+//@ActionID(
+//        category = "Actions",
+//        id = "SearchHereAction"
+//)
+//@ActionRegistration(
+//        displayName = "#CTL_SearchHereAction",
+//        lazy = false
+//)
+//@ActionReferences({
+//        @ActionReference(path = "Menu/Actions", position = 450, separatorAfter = 499)
+//})
+//@NbBundle.Messages("CTL_SearchHereAction=Search Here")
 public class SearchHereAction extends BaseContextualNodeAction {
 
     private DomainObject domainObject;

@@ -1,15 +1,15 @@
 package org.janelia.workstation.browser.actions.context;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.swing.JMenu;
+import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.shared.utils.Constants;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog;
-import org.janelia.workstation.common.actions.BaseContextualNodeAction;
+import org.janelia.workstation.common.actions.BaseContextualPopupAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -34,7 +34,7 @@ import org.openide.util.NbBundle;
         @ActionReference(path = "Menu/Actions/Sample", position = 531)
 })
 @NbBundle.Messages("CTL_RemoveSecondaryDataAction=Remove Secondary Data")
-public class RemoveSecondaryDataAction extends BaseContextualNodeAction {
+public class RemoveSecondaryDataAction extends BaseContextualPopupAction {
 
     private static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
     private static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
@@ -56,25 +56,19 @@ public class RemoveSecondaryDataAction extends BaseContextualNodeAction {
     }
 
     @Override
-    public void performAction() {
-    }
+    protected List<JComponent> getItems() {
 
-    @Override
-    public JMenuItem getPopupPresenter() {
+        List<JComponent> items = new ArrayList<>();
 
-        if (!isVisible()) return null;
-
-        JMenu secondaryDeletionMenu = new JMenu(getName());
-        secondaryDeletionMenu.add(getPartialSecondaryDataDeletionItem());
-        secondaryDeletionMenu.add(getStitchedImageDeletionItem());
+        items.add(getPartialSecondaryDataDeletionItem());
+        items.add(getStitchedImageDeletionItem());
 
         /* Removing this feature until such time as this level of flexibility has user demand. */
         if (Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI) {
-            secondaryDeletionMenu.add(getNeuronSeparationDeletionItem());
+            items.add(getNeuronSeparationDeletionItem());
         }
 
-        secondaryDeletionMenu.setEnabled(isEnabled());
-        return secondaryDeletionMenu;
+        return items;
     }
 
     private JMenuItem getPartialSecondaryDataDeletionItem() {

@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -25,6 +26,7 @@ import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.browser.gui.support.TreeNodeChooser;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
+import org.janelia.workstation.common.actions.BaseContextualPopupAction;
 import org.janelia.workstation.common.nodes.NodeUtils;
 import org.janelia.workstation.common.nodes.UserViewConfiguration;
 import org.janelia.workstation.common.nodes.UserViewRootNode;
@@ -58,7 +60,7 @@ import org.slf4j.LoggerFactory;
         @ActionReference(path = "Menu/Actions", position = 150),
 })
 @NbBundle.Messages("CTL_AddRelatedItemsAction=Add Related Items To Folder")
-public class AddRelatedItemsAction extends BaseContextualNodeAction {
+public class AddRelatedItemsAction extends BaseContextualPopupAction {
 
     private final static Logger log = LoggerFactory.getLogger(AddRelatedItemsAction.class);
     private final static String LATEST = "Latest";
@@ -74,28 +76,19 @@ public class AddRelatedItemsAction extends BaseContextualNodeAction {
         this.mappableTypes = mapper.getMappableTypes();
         setEnabledAndVisible(!mappableTypes.isEmpty());
     }
-
     @Override
-    public void performAction() {
-        // Actions are performed by the popup
-    }
+    protected List<JComponent> getItems() {
 
-    @Override
-    public JMenuItem getPopupPresenter() {
-        if (!isVisible()) return null;
-        if (domainObjects==null || mappableTypes==null) return null;
-        return getPopupPresenter(domainObjects, mappableTypes);
-    }
+        List<JComponent> items = new ArrayList<>();
 
-    private JMenuItem getPopupPresenter(Collection<DomainObject> domainObjects, Collection<MappingType> mappableTypes) {
-        JMenu getRelatedMenu = new JMenu(getName());
+        if (!isVisible()) return items;
+        if (domainObjects==null || mappableTypes==null) return items;
 
         for (final MappingType targetType : mappableTypes) {
-            getRelatedMenu.add(createClassMenu(domainObjects, targetType));
+            items.add(createClassMenu(domainObjects, targetType));
         }
 
-        getRelatedMenu.setEnabled(isEnabled());
-        return getRelatedMenu;
+        return items;
     }
 
     private JMenu createClassMenu(Collection<DomainObject> domainObjects, MappingType targetType) {

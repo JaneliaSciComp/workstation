@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Ontology", position = 650, separatorBefore = 599)
+        @ActionReference(path = "Menu/Actions/Ontology", position = 650, separatorBefore = 649)
 })
 @NbBundle.Messages("CTL_ApplyAnnotationAction=Apply To Selected Objects")
 public class ApplyAnnotationAction extends BaseContextualNodeAction {

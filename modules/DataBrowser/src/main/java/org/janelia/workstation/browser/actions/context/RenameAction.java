@@ -7,6 +7,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.gui.search.Filter;
+import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.domain.workspace.TreeNode;
@@ -41,7 +42,7 @@ public class RenameAction extends BaseContextualNodeAction {
         if (getNodeContext().isSingleObjectOfType(DomainObject.class)) {
             this.domainObject = getNodeContext().getSingleObjectOfType(DomainObject.class);
             setVisible(userCanRename(domainObject));
-            setEnabled(ClientDomainUtils.hasWriteAccess(domainObject));
+            setEnabled(isVisible() && ClientDomainUtils.hasWriteAccess(domainObject));
         }
         else {
             setEnabledAndVisible(false);
@@ -62,7 +63,8 @@ public class RenameAction extends BaseContextualNodeAction {
                 || domainObject instanceof TmSample
                 || domainObject instanceof ColorDepthMask
                 || domainObject instanceof ColorDepthSearch
-                || domainObject instanceof Filter);
+                || domainObject instanceof Filter
+                || domainObject instanceof Ontology);
     }
 
     private void renameObject(DomainObject domainObject) {

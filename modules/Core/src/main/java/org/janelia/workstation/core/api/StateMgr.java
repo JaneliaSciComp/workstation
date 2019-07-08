@@ -142,6 +142,7 @@ public class StateMgr {
     }
     
     public OntologyTerm getErrorOntology() {
+        if (DomainMgr.getDomainMgr().getModel()==null) return null;
         // TODO: use DomainDAO.getErrorOntologyCategory
         if (errorOntology == null) {
             try {

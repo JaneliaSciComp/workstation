@@ -1,8 +1,9 @@
 package org.janelia.workstation.browser.actions.context;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JMenu;
+import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
@@ -11,7 +12,7 @@ import org.janelia.workstation.browser.gui.components.OntologyExplorerTopCompone
 import org.janelia.workstation.browser.gui.support.NodeChooser;
 import org.janelia.workstation.browser.nodes.OntologyNode;
 import org.janelia.workstation.browser.nodes.OntologyTermNode;
-import org.janelia.workstation.common.actions.BaseContextualNodeAction;
+import org.janelia.workstation.common.actions.BaseContextualPopupAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -41,8 +42,8 @@ import org.slf4j.LoggerFactory;
 @ActionReferences({
         @ActionReference(path = "Menu/Actions/Ontology", position = 145)
 })
-@NbBundle.Messages("CTL_OntologyAddTermAction=Add")
-public class OntologyAddTermAction extends BaseContextualNodeAction {
+@NbBundle.Messages("CTL_OntologyAddTermAction=Add Item")
+public class OntologyAddTermAction extends BaseContextualPopupAction {
 
     private final static Logger log = LoggerFactory.getLogger(OntologyAddTermAction.class);
 
@@ -61,25 +62,19 @@ public class OntologyAddTermAction extends BaseContextualNodeAction {
         }
     }
 
-    @Override
-    public void performAction() {
-    }
-
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public JMenuItem getPopupPresenter() {
+    protected List<JComponent> getItems() {
 
-        if (!isVisible()) return null;
-
+        List<JComponent> items = new ArrayList<>();
         final OntologyTerm term = selectedTerm;
-        final Ontology ontology = selectedTerm.getOntology();
-
-        JMenu addMenuPopup = new JMenu("Add");
+        if (selectedTerm==null) return items;
+        
         if (term instanceof org.janelia.model.domain.ontology.Enum) {
             // Alternative "Add" menu for enumeration nodes
             JMenuItem smi = new JMenuItem("Item");
             smi.addActionListener(e -> createTerm(term, EnumItem.class));
-            addMenuPopup.add(smi);
+            items.add(smi);
         }
         else if (term.allowsChildren() || term instanceof Tag) {
 
@@ -88,7 +83,7 @@ public class OntologyAddTermAction extends BaseContextualNodeAction {
                 try {
                     JMenuItem smi = new JMenuItem(nodeType.newInstance().getTypeName());
                     smi.addActionListener(e -> createTerm(term, nodeType));
-                    addMenuPopup.add(smi);
+                    items.add(smi);
                 }
                 catch (Exception ex) {
                     FrameworkAccess.handleException(ex);
@@ -96,8 +91,7 @@ public class OntologyAddTermAction extends BaseContextualNodeAction {
             }
         }
 
-        addMenuPopup.setEnabled(isEnabled());
-        return addMenuPopup;
+        return items;
     }
 
     private void createTerm(final OntologyTerm parentTerm, Class<? extends OntologyTerm> termClass) {

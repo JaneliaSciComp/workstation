@@ -40,22 +40,21 @@ import org.openide.util.NbBundle;
 @NbBundle.Messages("CTL_CreateColorDepthMaskAction=Create Color Depth Mask")
 public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
 
-    private DomainObject selectedObject;
     private Action innerAction;
 
     @Override
     protected void processContext() {
 
-        selectedObject = null;
+        DomainObject selectedObject = null;
         if (getNodeContext().isSingleObjectOfType(Sample.class)) {
-            this.selectedObject = getNodeContext().getSingleObjectOfType(Sample.class);
+            selectedObject = getNodeContext().getSingleObjectOfType(Sample.class);
         }
         else if (getNodeContext().isSingleObjectOfType(Image.class)) {
-            this.selectedObject = getNodeContext().getSingleObjectOfType(Image.class);
+            selectedObject = getNodeContext().getSingleObjectOfType(Image.class);
         }
 
         setEnabledAndVisible(false);
-        if (selectedObject!=null) {
+        if (selectedObject !=null) {
 
             ViewerContext viewerContext = getViewerContext();
             DomainObjectImageModel doim = DomainUIUtils.getDomainObjectImageModel(viewerContext);

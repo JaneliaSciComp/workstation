@@ -7,13 +7,20 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.PipelineError;
+import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.editor.SampleEditorPanel;
+import org.janelia.workstation.browser.selection.PipelineErrorSelectionEvent;
+import org.janelia.workstation.browser.selection.PipelineResultSelectionEvent;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
+import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
+import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -28,6 +35,12 @@ import org.slf4j.LoggerFactory;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Top component which displays domain object viewers. 
@@ -130,7 +143,50 @@ public final class DomainViewerTopComponent extends TopComponent {
             editor.deactivate();
         }
     }
-    
+
+    @Subscribe
+    public void resultSelected(PipelineResultSelectionEvent e) {
+        TopComponent topComponent = UIUtils.getAncestorWithType(
+                (Component)e.getSourceComponent(), TopComponent.class);
+        if (topComponent==this && editor!=null) {
+            PipelineResult result = e.getPipelineResult();
+            updateNodeIfChanged(result);
+        }
+    }
+
+    @Subscribe
+    public void errorSelected(PipelineErrorSelectionEvent e) {
+        TopComponent topComponent = UIUtils.getAncestorWithType(
+                (Component)e.getSourceComponent(), TopComponent.class);
+        if (topComponent==this && editor!=null) {
+            PipelineError result = e.getPipelineError();
+            updateNodeIfChanged(result);
+        }
+    }
+
+    private void updateContext(ViewerContext viewerContext) {
+        // Clear all existing nodes
+        getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+        // Add new node
+        content.add(viewerContext);
+    }
+
+    private void updateNodeIfChanged(Object object) {
+
+        List<Object> currentObjects = new ArrayList<>();
+        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
+            currentObjects.addAll(childObjectsNode.getObjects());
+        }
+
+        if (currentObjects.size()!=1 || currentObjects.get(0)!=object) {
+            log.trace("Updating ChildObjectsNode (current={}, new=1)", currentObjects.size());
+            // Clear all existing nodes
+            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
+            // Add new node
+            content.add(new ChildObjectsNode(Collections.singletonList(object)));
+        }
+    }
+
     void writeProperties(java.util.Properties p) {
         if (p==null) return;
         p.setProperty("version", TC_VERSION);

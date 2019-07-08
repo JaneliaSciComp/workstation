@@ -1,21 +1,21 @@
 package org.janelia.workstation.browser.actions.context;
 
-import javax.swing.JMenu;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
 import org.janelia.workstation.browser.actions.NewFilterActionListener;
 import org.janelia.workstation.browser.actions.NewFolderActionListener;
-import org.janelia.workstation.common.actions.BaseContextualNodeAction;
+import org.janelia.workstation.common.actions.BaseContextualPopupAction;
 import org.janelia.workstation.common.nodes.TreeNodeNode;
 import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This action allows the user to create new domain objects underneath an
@@ -36,9 +36,8 @@ import org.slf4j.LoggerFactory;
         @ActionReference(path = "Menu/Actions", position = 130)
 })
 @NbBundle.Messages("CTL_NewDomainObjectAction=New")
-public class NewDomainObjectAction extends BaseContextualNodeAction {
+public class NewDomainObjectAction extends BaseContextualPopupAction {
 
-    private static final Logger log = LoggerFactory.getLogger(NewDomainObjectAction.class);
     private TreeNodeNode parentNode;
 
     @Override
@@ -46,7 +45,6 @@ public class NewDomainObjectAction extends BaseContextualNodeAction {
         this.parentNode = null;
         if (getNodeContext().isSingleNodeOfType(TreeNodeNode.class)) {
             this.parentNode = getNodeContext().getSingleNodeOfType(TreeNodeNode.class);
-            log.info("getSingleNodeOfType(TreeNodeNode) = "+parentNode);
             setVisible(true);
             setEnabled(ClientDomainUtils.hasWriteAccess(parentNode.getNode()));
         }
@@ -56,27 +54,20 @@ public class NewDomainObjectAction extends BaseContextualNodeAction {
     }
 
     @Override
-    public JMenuItem getPopupPresenter() {
+    protected List<JComponent> getItems() {
 
-        if (!isVisible()) return null;
+        List<JComponent> items = new ArrayList<>();
 
         TreeNodeNode node = parentNode;
 
-        JMenu newMenu = new JMenu("New");
-
         JMenuItem newFolderItem = new JMenuItem("Folder");
         newFolderItem.addActionListener(new NewFolderActionListener(node));
-        newMenu.add(newFolderItem);
+        items.add(newFolderItem);
 
         JMenuItem newFilterItem = new JMenuItem("Filter");
         newFilterItem.addActionListener(new NewFilterActionListener(node));
-        newMenu.add(newFilterItem);
+        items.add(newFilterItem);
 
-        newMenu.setEnabled(isEnabled());
-        return newMenu;
-    }
-
-    @Override
-    public void performAction() {
+        return items;
     }
 }

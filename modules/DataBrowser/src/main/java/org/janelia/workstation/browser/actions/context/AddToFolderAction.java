@@ -8,9 +8,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
-import javax.swing.JMenu;
+import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
 
 import org.janelia.model.domain.DomainObject;
@@ -20,7 +21,7 @@ import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.browser.gui.support.TreeNodeChooser;
-import org.janelia.workstation.common.actions.BaseContextualNodeAction;
+import org.janelia.workstation.common.actions.BaseContextualPopupAction;
 import org.janelia.workstation.common.nodes.NodeUtils;
 import org.janelia.workstation.common.nodes.UserViewConfiguration;
 import org.janelia.workstation.common.nodes.UserViewRootNode;
@@ -58,7 +59,7 @@ import org.slf4j.LoggerFactory;
         @ActionReference(path = "Menu/Actions", position = 140)
 })
 @NbBundle.Messages("CTL_AddToFolderAction=Add to Folder")
-public class AddToFolderAction extends BaseContextualNodeAction {
+public class AddToFolderAction extends BaseContextualPopupAction {
 
     private final static Logger log = LoggerFactory.getLogger(AddToFolderAction.class);
     private final Component mainFrame = FrameworkAccess.getMainFrame();
@@ -83,20 +84,16 @@ public class AddToFolderAction extends BaseContextualNodeAction {
     }
 
     @Override
-    public void performAction() {
-        // Actions are performed by the popup
+    public String getName() {
+        return domainObjects.size() > 1 ? "Add " + domainObjects.size() + " Items To Folder" : "Add To Folder";
     }
 
     @Override
-    public JMenuItem getPopupPresenter() {
-
-        if (!isVisible()) return null;
+    protected List<JComponent> getItems() {
+        List<JComponent> items = new ArrayList<>();
 
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
-
-        String name = domainObjects.size() > 1 ? "Add " + domainObjects.size() + " Items To Folder" : "Add To Folder";
-        JMenu newFolderMenu = new JMenu(name);
 
         JMenuItem createNewItem = new JMenuItem("Create New Folder...");
         
@@ -148,37 +145,35 @@ public class AddToFolderAction extends BaseContextualNodeAction {
             worker.execute();
         });
 
-        newFolderMenu.add(createNewItem);
+        items.add(createNewItem);
 
         JMenuItem chooseItem = new JMenuItem("Choose Folder...");
 
-        chooseItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
+        chooseItem.addActionListener(actionEvent -> {
 
-                ActivityLogHelper.logUserAction("AddToFolderAction.chooseFolder");
+            ActivityLogHelper.logUserAction("AddToFolderAction.chooseFolder");
 
-                TreeNodeChooser nodeChooser = new TreeNodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class)), "Choose folder to add to", true);
-                nodeChooser.setRootVisible(false);
-                
-                int returnVal = nodeChooser.showDialog(explorer);
-                if (returnVal != TreeNodeChooser.CHOOSE_OPTION) return;
-                if (nodeChooser.getChosenElements().isEmpty()) return;
-                final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
-                final TreeNode folder = selectedNode.getTreeNode();
-                
-                addUniqueItemsToFolder(folder, NodeUtils.createIdPath(selectedNode), success);
-            }
+            TreeNodeChooser nodeChooser = new TreeNodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class)), "Choose folder to add to", true);
+            nodeChooser.setRootVisible(false);
+
+            int returnVal = nodeChooser.showDialog(explorer);
+            if (returnVal != TreeNodeChooser.CHOOSE_OPTION) return;
+            if (nodeChooser.getChosenElements().isEmpty()) return;
+            final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
+            final TreeNode folder = selectedNode.getTreeNode();
+
+            addUniqueItemsToFolder(folder, NodeUtils.createIdPath(selectedNode), success);
         });
 
-        newFolderMenu.add(chooseItem);
-        newFolderMenu.addSeparator();
+        items.add(chooseItem);
+        items.add(new JSeparator());
 
         List<RecentFolder> addHistory = DataBrowserMgr.getDataBrowserMgr().getAddToFolderHistory();
         if (addHistory!=null && !addHistory.isEmpty()) {
 
             JMenuItem item = new JMenuItem("Recent:");
             item.setEnabled(false);
-            newFolderMenu.add(item);
+            items.add(item);
 
             for (RecentFolder recentFolder : addHistory) {
 
@@ -199,12 +194,11 @@ public class AddToFolderAction extends BaseContextualNodeAction {
                     }
                 });
 
-                newFolderMenu.add(commonRootItem);
+                items.add(commonRootItem);
             }
         }
 
-        newFolderMenu.setEnabled(isEnabled());
-        return newFolderMenu;
+        return items;
     }
 
     private void addUniqueItemsToFolder(Long folderId, Long[] idPath, Consumer<Long[]> success) {

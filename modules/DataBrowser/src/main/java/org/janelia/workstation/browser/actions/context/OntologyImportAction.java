@@ -45,7 +45,7 @@ import org.yaml.snakeyaml.Yaml;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Ontology", position = 600, separatorBefore = 599)
+        @ActionReference(path = "Menu/Actions/Ontology", position = 601, separatorBefore = 599)
 })
 @NbBundle.Messages("CTL_OntologyImportAction=Import Ontology Here...")
 public class OntologyImportAction extends BaseContextualNodeAction {

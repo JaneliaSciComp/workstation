@@ -263,18 +263,16 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 if (!button.isSelected()) {
                     buttonSelection(button, false, false);
                 }
-                else {
-                    // Important: we have to consume the event BEFORE queueing on the EDT. The AWTEventMulticaster
-                    // may issue the same event again in the meantime, and if we process it twice, we'll get a
-                    // flickering popup menu.
-                    e.consume();
-                    SwingUtilities.invokeLater(() -> {
-                        JPopupMenu popupMenu = getContextualPopupMenu();
-                        if (popupMenu != null) {
-                            popupMenu.show(e.getComponent(), e.getX(), e.getY());
-                        }
-                    });
-                }
+                // Important: we have to consume the event BEFORE queueing on the EDT. The AWTEventMulticaster
+                // may issue the same event again in the meantime, and if we process it twice, we'll get a
+                // flickering popup menu.
+                e.consume();
+                SwingUtilities.invokeLater(() -> {
+                    JPopupMenu popupMenu = getContextualPopupMenu();
+                    if (popupMenu != null) {
+                        popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                    }
+                });
             }
         }
 

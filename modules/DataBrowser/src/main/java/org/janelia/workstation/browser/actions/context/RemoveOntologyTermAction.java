@@ -53,6 +53,7 @@ public class RemoveOntologyTermAction extends BaseContextualNodeAction {
 
     @Override
     public String getName() {
+        if (selectedTerm==null) return super.getName();
         return "Delete "+selectedTerm.getTypeName();
     }
 
