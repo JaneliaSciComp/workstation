@@ -11,6 +11,7 @@ import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -64,7 +65,9 @@ public class RenameAction extends BaseContextualNodeAction {
                 || domainObject instanceof ColorDepthMask
                 || domainObject instanceof ColorDepthSearch
                 || domainObject instanceof Filter
-                || domainObject instanceof Ontology);
+                || domainObject instanceof Ontology)
+                &&
+                !(domainObject instanceof Workspace);
     }
 
     private void renameObject(DomainObject domainObject) {

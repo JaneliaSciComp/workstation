@@ -69,15 +69,8 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JScrollPane;
-import javax.swing.UIManager;
+import javax.swing.*;
+
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -280,6 +273,11 @@ public class SampleEditorPanel
             
             @Override
             protected void popupTriggered(MouseEvent e, SelectablePanel resultPanel) {
+                if (e.isConsumed()) {
+                    return;
+                }
+                // TODO: refactor this in the style of the IconGridViewerPanel's popupTriggered
+
                 if (resultPanel instanceof PipelineResultPanel) {
                     SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
                     popupMenu.addMenuItems();

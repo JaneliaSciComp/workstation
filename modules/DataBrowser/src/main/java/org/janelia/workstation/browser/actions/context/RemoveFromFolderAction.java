@@ -136,14 +136,10 @@ public class RemoveFromFolderAction extends BaseContextualNodeAction {
     @Override
     public String getName() {
         if (parentTreeNode==null) {
-            return toRemove.size() > 1 ? "Delete " + toRemove.size() + " Items" : "Delete This Item";
+            return "Delete " + toRemove.size() + " Items";
         }
-        if (parentTreeNode.getName()==null) {
-            return toRemove.size() > 1 ? "Remove " + toRemove.size() + " Items From Folder" : "Remove This Item From Folder";
-        }
-        return toRemove.size() > 1 ? "Remove " + toRemove.size() + " Items From Folder '"+parentTreeNode.getName()+"'" : "Remove This Item From Folder '"+parentTreeNode.getName()+"'";
+        return "Remove "+toRemove.size()+" Items";
     }
-
 
     @Override
     public void performAction() {

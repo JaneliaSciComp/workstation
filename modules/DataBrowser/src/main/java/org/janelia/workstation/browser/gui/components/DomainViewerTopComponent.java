@@ -144,48 +144,50 @@ public final class DomainViewerTopComponent extends TopComponent {
         }
     }
 
-    @Subscribe
-    public void resultSelected(PipelineResultSelectionEvent e) {
-        TopComponent topComponent = UIUtils.getAncestorWithType(
-                (Component)e.getSourceComponent(), TopComponent.class);
-        if (topComponent==this && editor!=null) {
-            PipelineResult result = e.getPipelineResult();
-            updateNodeIfChanged(result);
-        }
-    }
+    // TODO: complete this refactoring so that context menus can be unified
 
-    @Subscribe
-    public void errorSelected(PipelineErrorSelectionEvent e) {
-        TopComponent topComponent = UIUtils.getAncestorWithType(
-                (Component)e.getSourceComponent(), TopComponent.class);
-        if (topComponent==this && editor!=null) {
-            PipelineError result = e.getPipelineError();
-            updateNodeIfChanged(result);
-        }
-    }
-
-    private void updateContext(ViewerContext viewerContext) {
-        // Clear all existing nodes
-        getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
-        // Add new node
-        content.add(viewerContext);
-    }
-
-    private void updateNodeIfChanged(Object object) {
-
-        List<Object> currentObjects = new ArrayList<>();
-        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
-            currentObjects.addAll(childObjectsNode.getObjects());
-        }
-
-        if (currentObjects.size()!=1 || currentObjects.get(0)!=object) {
-            log.trace("Updating ChildObjectsNode (current={}, new=1)", currentObjects.size());
-            // Clear all existing nodes
-            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
-            // Add new node
-            content.add(new ChildObjectsNode(Collections.singletonList(object)));
-        }
-    }
+//    @Subscribe
+//    public void resultSelected(PipelineResultSelectionEvent e) {
+//        TopComponent topComponent = UIUtils.getAncestorWithType(
+//                (Component)e.getSourceComponent(), TopComponent.class);
+//        if (topComponent==this && editor!=null) {
+//            PipelineResult result = e.getPipelineResult();
+//            updateNodeIfChanged(result);
+//        }
+//    }
+//
+//    @Subscribe
+//    public void errorSelected(PipelineErrorSelectionEvent e) {
+//        TopComponent topComponent = UIUtils.getAncestorWithType(
+//                (Component)e.getSourceComponent(), TopComponent.class);
+//        if (topComponent==this && editor!=null) {
+//            PipelineError result = e.getPipelineError();
+//            updateNodeIfChanged(result);
+//        }
+//    }
+//
+//    private void updateContext(ViewerContext viewerContext) {
+//        // Clear all existing nodes
+//        getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+//        // Add new node
+//        content.add(viewerContext);
+//    }
+//
+//    private void updateNodeIfChanged(Object object) {
+//
+//        List<Object> currentObjects = new ArrayList<>();
+//        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
+//            currentObjects.addAll(childObjectsNode.getObjects());
+//        }
+//
+//        if (currentObjects.size()!=1 || currentObjects.get(0)!=object) {
+//            log.trace("Updating ChildObjectsNode (current={}, new=1)", currentObjects.size());
+//            // Clear all existing nodes
+//            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
+//            // Add new node
+//            content.add(new ChildObjectsNode(Collections.singletonList(object)));
+//        }
+//    }
 
     void writeProperties(java.util.Properties p) {
         if (p==null) return;

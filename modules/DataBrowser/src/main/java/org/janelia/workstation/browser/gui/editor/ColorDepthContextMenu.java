@@ -3,24 +3,26 @@ package org.janelia.workstation.browser.gui.editor;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
+import java.util.Collections;
 
 import javax.swing.JMenuItem;
 
-import org.janelia.workstation.common.actions.PopupLabelActionBuilder;
-import org.janelia.workstation.common.gui.support.PopupContextMenu;
-import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
-import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
-import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
-import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
-import org.janelia.workstation.common.actions.CopyToClipboardAction;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
-import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleAlignmentResult;
+import org.janelia.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
+import org.janelia.workstation.browser.gui.hud.Hud;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.actions.PopupLabelAction;
+import org.janelia.workstation.common.gui.support.PopupContextMenu;
+import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
+import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
+import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
 
 /**
  * Right-click context menu for color depth images presented in the Sample Editor. 
@@ -51,7 +53,7 @@ public class ColorDepthContextMenu extends PopupContextMenu {
             return;
         }
 
-        add((new PopupLabelActionBuilder()).getAction(result));
+        add(new PopupLabelAction(Collections.singletonList(result)));
         add((new CopyToClipboardAction("Name", result.getName())));
         add((new CopyToClipboardAction("GUID", result.getId().toString())));
         

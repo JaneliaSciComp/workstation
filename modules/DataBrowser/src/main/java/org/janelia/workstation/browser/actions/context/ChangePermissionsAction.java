@@ -31,8 +31,8 @@ public class ChangePermissionsAction extends BaseContextualNodeAction {
     protected void processContext() {
         if (getNodeContext().isSingleObjectOfType(DomainObject.class)) {
             this.selectedObject = getNodeContext().getSingleObjectOfType(DomainObject.class);
+            setVisible(true);
             setEnabled(ClientDomainUtils.isOwner(selectedObject));
-            setEnabledAndVisible(true);
         }
         else {
             setEnabledAndVisible(false);

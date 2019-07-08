@@ -19,7 +19,6 @@ import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
-import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -103,7 +102,7 @@ public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
 
     @Override
     public String getName() {
-        return innerAction==null?super.getName():ContextualActionUtils.getName(innerAction);
+        return innerAction==null?super.getName():(String)innerAction.getValue(Action.NAME);
     }
 
     @Override

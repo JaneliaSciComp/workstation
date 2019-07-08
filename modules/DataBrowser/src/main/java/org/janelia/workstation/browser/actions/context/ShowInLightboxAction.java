@@ -1,6 +1,8 @@
 package org.janelia.workstation.browser.actions.context;
 
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
@@ -51,12 +53,16 @@ public class ShowInLightboxAction extends BaseContextualNodeAction {
                 this.domainObject = DomainUIUtils.getLastSelectedDomainObject(viewerContext);
                 this.resultDescriptor = doim.getArtifactDescriptor();
                 this.typeName = doim.getImageTypeName();
-                setEnabledAndVisible(domainObject!=null
-                        && resultDescriptor!=null
-                        && typeName!=null
+                setEnabledAndVisible(isSupported(domainObject)
+                        && resultDescriptor != null
+                        && typeName != null
                         && !viewerContext.isMultiple());
             }
         }
+    }
+
+    private boolean isSupported(DomainObject domainObject) {
+        return domainObject instanceof Sample || domainObject instanceof HasFiles;
     }
 
     @Override

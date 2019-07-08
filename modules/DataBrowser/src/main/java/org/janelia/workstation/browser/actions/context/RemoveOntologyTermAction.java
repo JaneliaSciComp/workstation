@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 @ActionReferences({
         @ActionReference(path = "Menu/Actions/Ontology", position = 160, separatorAfter = 199)
 })
-@NbBundle.Messages("CTL_RemoveOntologyTermAction=Delete")
+@NbBundle.Messages("CTL_RemoveOntologyTermAction=Delete Item")
 public class RemoveOntologyTermAction extends BaseContextualNodeAction {
 
     private final static Logger log = LoggerFactory.getLogger(RemoveOntologyTermAction.class);
@@ -53,8 +53,8 @@ public class RemoveOntologyTermAction extends BaseContextualNodeAction {
 
     @Override
     public String getName() {
-        if (selectedTerm==null) return super.getName();
-        return "Delete "+selectedTerm.getTypeName();
+        if (selectedTerm instanceof Ontology) return "Delete Ontology";
+        return super.getName();
     }
 
     @Override

@@ -1,6 +1,5 @@
 package org.janelia.workstation.browser.gui.editor;
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collections;
@@ -30,9 +29,8 @@ import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.workstation.browser.tools.ToolMgr;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
-import org.janelia.workstation.common.actions.PopupLabelActionBuilder;
+import org.janelia.workstation.common.actions.PopupLabelAction;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
-import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
@@ -60,8 +58,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
             add(titleMenuItem);
             return;
         }
-
-        add((new PopupLabelActionBuilder()).getAction(result));
+        add(new PopupLabelAction(Collections.singletonList(result)));
         add((new CopyToClipboardAction("Name", result.getName())));
         add((new CopyToClipboardAction("GUID", result.getId().toString())));
 
@@ -85,12 +82,12 @@ public class SampleResultContextMenu extends PopupContextMenu {
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
 
-        addSeparator();
-        addSeparator();
-
-        for (Component currentContextMenuItem : DomainObjectAcceptorHelper.getCurrentContextMenuItems()) {
-            add(currentContextMenuItem);
-        }
+//        addSeparator();
+//        addSeparator();
+//
+//        for (Component currentContextMenuItem : DomainObjectAcceptorHelper.getCurrentContextMenuItems()) {
+//            add(currentContextMenuItem);
+//        }
     }
 
     public void runDefaultAction() {

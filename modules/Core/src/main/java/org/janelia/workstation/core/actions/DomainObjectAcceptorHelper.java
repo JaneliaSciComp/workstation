@@ -13,7 +13,6 @@ import javax.swing.JSeparator;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
@@ -77,14 +76,11 @@ public class DomainObjectAcceptorHelper {
     }
 
     private static Action getAction(ContextualActionBuilder acceptor, Object obj) {
-
         Action action = acceptor.getNodeAction(obj);
         if (action == null) {
             // No node action is defined, try the regular action
             action = acceptor.getAction(obj);
         }
-
-        action.setEnabled(ContextualActionUtils.isEnabled(action));
         return action;
     }
 
@@ -127,12 +123,6 @@ public class DomainObjectAcceptorHelper {
                     if (SystemAction.class.isAssignableFrom(data.instanceClass())) {
                         Class<? extends SystemAction> clazz = (Class<? extends SystemAction>) data.instanceClass();
                         SystemAction action = SystemAction.get(clazz);
-
-                        if (!ContextualActionUtils.isVisible(action)) {
-                            log.trace("  Action is not visible");
-                            continue;
-                        }
-
                         actions.add(action);
                         log.debug("  {}", action);
                     }
@@ -189,6 +179,11 @@ public class DomainObjectAcceptorHelper {
                 log.info("  "+action);
                 sep = false;
             }
+        }
+
+        // Remove any trailing separators
+        if (components.get(components.size()-1) instanceof JSeparator) {
+            components.remove(components.size()-1);
         }
 
         return components;
