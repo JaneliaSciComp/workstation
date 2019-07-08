@@ -27,6 +27,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.text.DefaultFormatter;
 
+import org.janelia.workstation.core.api.LocalPreferenceMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.FileMgr;
@@ -178,9 +179,9 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
 
         // ---------------------
         fileCacheSpinner = new JSpinner(
-            new SpinnerNumberModel(FileMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY,
-                    FileMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY,
-                    FileMgr.MAX_FILE_CACHE_GIGABYTE_CAPACITY,
+            new SpinnerNumberModel(LocalPreferenceMgr.DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY,
+                    LocalPreferenceMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY,
+                    LocalPreferenceMgr.MAX_FILE_CACHE_GIGABYTE_CAPACITY,
                     1));
         fileCacheSpinner.setMaximumSize(new Dimension(200, 100));
         fileCacheSpinner.addChangeListener(new ChangeListener() {
@@ -240,7 +241,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
     
     private void updateFileCacheComponents(final boolean waitForReload) {
 
-        final int capacity = FileMgr.getFileMgr().getFileCacheGigabyteCapacity();
+        final int capacity = LocalPreferenceMgr.getInstance().getFileCacheGigabyteCapacity();
 
         fileCacheSpinner.setValue(capacity);
 
@@ -355,11 +356,10 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
             FileMgr.getFileMgr().setFileCacheDisabled(cacheDisabled);
         }
         
-        final boolean cacheCapacityChanged =
-                ! cacheCapacity.equals(FileMgr.getFileMgr().getFileCacheGigabyteCapacity());
+        final boolean cacheCapacityChanged = ! cacheCapacity.equals(LocalPreferenceMgr.getInstance().getFileCacheGigabyteCapacity());
         if (cacheCapacityChanged) {
             log.info("Saving cache capacity setting: "+cacheCapacity);
-            FileMgr.getFileMgr().setFileCacheGigabyteCapacity(cacheCapacity);
+            LocalPreferenceMgr.getInstance().setFileCacheGigabyteCapacity(cacheCapacity);
         }
         
         if (cacheDisabledChanged || cacheCapacityChanged) {

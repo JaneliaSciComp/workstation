@@ -68,7 +68,7 @@ public class WebDavFileProxy implements FileProxy {
     }
 
     @Override
-    public boolean delete() {
+    public boolean deleteProxy() {
         return false;
     }
 }

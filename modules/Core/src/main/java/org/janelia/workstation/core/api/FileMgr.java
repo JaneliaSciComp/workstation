@@ -2,7 +2,6 @@ package org.janelia.workstation.core.api;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
 import java.util.concurrent.Executors;
 
 import com.google.common.eventbus.Subscribe;
@@ -10,7 +9,6 @@ import com.google.common.eventbus.Subscribe;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
 import org.janelia.filecacheutils.LocalFileCacheStorage;
@@ -19,7 +17,7 @@ import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
 import org.janelia.workstation.core.filecache.StorageClientMgr;
-import org.janelia.workstation.core.filecache.WebDavRemoteFileRetriever;
+import org.janelia.workstation.core.filecache.WebDavFileKeyProxySupplier;
 import org.janelia.workstation.core.filecache.WebDavUploader;
 import org.janelia.workstation.core.filecache.WebdavCachedFileKey;
 import org.janelia.workstation.core.options.OptionConstants;
@@ -47,12 +45,6 @@ public class FileMgr {
         return instance;
     }
 
-    public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 10;
-    public static final int DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY = 50;
-    public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
-
-    private String consolePrefsDir;
-    private String localCacheRoot;
     private String webdavBaseUrl;
     private int webdavMaxConnsPerHost;
     private int webdavMaxTotalConnections;
@@ -69,8 +61,6 @@ public class FileMgr {
         SimpleWorker.runInBackground(() -> {
             synchronized (FileMgr.this) {
                 LOG.info("Initializing File Manager");
-                this.consolePrefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
-                this.localCacheRoot = ConsoleProperties.getString("console.localCache.rootDirectory", StringUtils.appendIfMissing(consolePrefsDir, "/") + ".jacs-file-cache");
                 this.webdavBaseUrl = ConsoleProperties.getString("console.webDavClient.baseUrl", null);
                 this.webdavMaxConnsPerHost = ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100);
                 this.webdavMaxTotalConnections = ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100);
@@ -82,10 +72,7 @@ public class FileMgr {
                 managerParams.setMaxTotalConnections(webdavMaxTotalConnections);
                 httpClient = new HttpClientProxy(new HttpClient(mgr));
                 storageClientMgr = new StorageClientMgr(webdavBaseUrl, httpClient);
-                setFileCacheGigabyteCapacity((Integer)
-                        LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
-                setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
-                        LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
+                setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
             }
         });
     }
@@ -112,7 +99,7 @@ public class FileMgr {
      * @param isDisabled if true, cache will be disabled;
      * otherwise cache will be enabled.
      */
-    public final void setFileCacheDisabled(boolean isDisabled) {
+    public void setFileCacheDisabled(boolean isDisabled) {
         LocalPreferenceMgr.getInstance().setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
 
         if (isDisabled) {
@@ -121,54 +108,16 @@ public class FileMgr {
             localFileCacheStorage = null;
         } else {
             try {
-                final long kilobyteCapacity = getFileCacheGigabyteCapacity() * 1024 * 1024;
-                localFileCacheStorage = new LocalFileCacheStorage(Paths.get(localCacheRoot), kilobyteCapacity);
+                localFileCacheStorage = LocalPreferenceMgr.getInstance().getLocalFileCacheStorage();
                 webdavLocalFileCache = new LocalFileCache<>(
                         localFileCacheStorage,
-                        new WebDavRemoteFileRetriever(httpClient, storageClientMgr),
+                        new WebDavFileKeyProxySupplier(httpClient, storageClientMgr),
                         Executors.newFixedThreadPool(4));
             } catch (IllegalStateException e) {
                 webdavLocalFileCache = null;
                 localFileCacheStorage = null;
                 LOG.error("disabling local cache after initialization failure", e);
             }
-        }
-    }
-
-    /**
-     * @return the maximum number of gigabytes to store in the local file cache.
-     */
-    public int getFileCacheGigabyteCapacity() {
-        return (Integer) LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
-    }
-
-    /**
-     * Sets the local file cache capacity and saves the setting as a session preference.
-     *
-     * @param gigabyteCapacity cache capacity in gigabytes.
-     */
-    public final void setFileCacheGigabyteCapacity(Integer gigabyteCapacity) {
-        if (gigabyteCapacity == null) {
-            gigabyteCapacity = DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY;
-        }
-        else if (gigabyteCapacity < MIN_FILE_CACHE_GIGABYTE_CAPACITY) {
-            gigabyteCapacity = MIN_FILE_CACHE_GIGABYTE_CAPACITY;
-        }
-        else if (gigabyteCapacity > MAX_FILE_CACHE_GIGABYTE_CAPACITY) {
-            gigabyteCapacity = MAX_FILE_CACHE_GIGABYTE_CAPACITY;
-        }
-
-        LocalPreferenceMgr.getInstance().setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
-                gigabyteCapacity);
-
-        if (localFileCacheStorage != null) {
-            updateLocalCacheStorageCapacity(gigabyteCapacity * 1024 * 1024);
-        }
-    }
-
-    private void updateLocalCacheStorageCapacity(long capacityInKB) {
-        if (capacityInKB > 0 && capacityInKB != localFileCacheStorage.getCapacityInKB()) {
-            localFileCacheStorage.setCapacityInKB(capacityInKB);
         }
     }
 

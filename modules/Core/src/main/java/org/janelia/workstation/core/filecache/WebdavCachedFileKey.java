@@ -18,8 +18,7 @@ public class WebdavCachedFileKey implements FileKey {
         return localFileCacheStorage.getLocalFileCacheDir().resolve(getCachedFileName());
     }
 
-    @Override
-    public String getRemoteFileName() {
+    String getRemoteFileName() {
         return remoteFileName;
     }
 

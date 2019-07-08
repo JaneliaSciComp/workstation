@@ -93,6 +93,7 @@
         <janeliaws.test.reportsDirectory>${project.build.directory}/surefire-reports/plain</janeliaws.test.reportsDirectory>
         <janeliaws.test.failureIgnore>${testFailureIgnore}</janeliaws.test.failureIgnore>
 
+        <janeliaws.debug.args></janeliaws.debug.args>
         <!-- Mac OS X bundle settings -->
         <janeliaws.appbundle.name>Janelia Workstation</janeliaws.appbundle.name>
 
@@ -181,13 +182,13 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-	<repository>
+        <repository>
             <id>jboss-repository</id>
             <url>https://repository.jboss.org/nexus/content/repositories/releases/</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
-	</repository>
+        </repository>
         <!-- Workstation repo for libraries not found in any public Maven repository -->
         <repository>
             <id>janelia-repo</id>

@@ -15,6 +15,7 @@ import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
 import org.janelia.it.jacs.shared.utils.HttpClientHelper;
 import org.janelia.model.security.AppAuthorization;
 import org.janelia.rendering.CachedRenderedVolumeLoader;
@@ -22,11 +23,14 @@ import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolume;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
+import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.rendering.RenderingType;
 import org.janelia.rendering.TileInfo;
 import org.janelia.rendering.TileKey;
 import org.janelia.rendering.utils.HttpClientProvider;
+import org.janelia.workstation.core.api.LocalPreferenceMgr;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,24 +80,28 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
             }
             String strData = getMethod.getResponseBodyAsString();
             RenderedVolumeMetadata renderedVolumeMetadata = objectMapper.readValue(strData, RenderedVolumeMetadata.class);
-            this.renderedVolume = new RenderedVolume(
+            RenderedVolumeLocation rvl = new CachedRenderedVolumeLocation(
                     new JADEBasedRenderedVolumeLocation(
                             renderedVolumeMetadata.getConnectionURI(),
                             renderedVolumeMetadata.getDataStorageURI(),
                             renderedVolumeMetadata.getVolumeBasePath(),
-                            appAuthorization.getAuthenticationToken(), 
+                            appAuthorization.getAuthenticationToken(),
                             null,
                             new HttpClientProvider() {
                                 public Client getClient() {
                                     Client client = ClientBuilder.newClient();
                                     JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
-                                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                                        .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+                                            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                                            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
                                     client.register(provider);
                                     return client;
                                 }
                             }
                     ),
+                    LocalPreferenceMgr.getInstance().getLocalFileCacheStorage());
+
+            this.renderedVolume = new RenderedVolume(
+                    rvl,
                     renderedVolumeMetadata.getRenderingType(),
                     renderedVolumeMetadata.getOriginVoxel(),
                     renderedVolumeMetadata.getVolumeSizeInVoxels(),

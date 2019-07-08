@@ -1,33 +1,35 @@
 package org.janelia.workstation.core.filecache;
 
+import java.util.function.Supplier;
+
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.janelia.filecacheutils.FileKeyToProxySupplier;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.HttpFileProxy;
 import org.janelia.filecacheutils.LocalFileProxy;
-import org.janelia.filecacheutils.RemoteFileRetriever;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WebDavRemoteFileRetriever implements RemoteFileRetriever<WebdavCachedFileKey> {
+public class WebDavFileKeyProxySupplier implements FileKeyToProxySupplier<WebdavCachedFileKey> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(WebDavRemoteFileRetriever.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WebDavFileKeyProxySupplier.class);
 
     private final HttpClientProxy httpClient;
     private final StorageClientMgr storageClientMgr;
 
-    public WebDavRemoteFileRetriever(HttpClientProxy httpClient, StorageClientMgr storageClientMgr) {
+    public WebDavFileKeyProxySupplier(HttpClientProxy httpClient, StorageClientMgr storageClientMgr) {
         this.httpClient = httpClient;
         this.storageClientMgr = storageClientMgr;
     }
 
     @Override
-    public FileProxy retrieve(WebdavCachedFileKey fileKey) {
+    public Supplier<FileProxy> getProxyFromKey(WebdavCachedFileKey fileKey) {
         switch(fileKey.getRemoteFileScheme()) {
             case "file":
-                return new LocalFileProxy(fileKey.getRemoteFileName());
+                return () -> new LocalFileProxy(fileKey.getRemoteFileName());
             case "http":
-                return new HttpFileProxy(
+                return () -> new HttpFileProxy(
                     fileKey.getRemoteFileName(),
                     (String url) -> {
                         try {
@@ -47,7 +49,7 @@ public class WebDavRemoteFileRetriever implements RemoteFileRetriever<WebdavCach
         }
     }
 
-    private FileProxy getWebDavFileProxy(String remoteFileName) {
+    private Supplier<FileProxy> getWebDavFileProxy(String remoteFileName) {
         WebDavFile webDavFile;
         try {
             webDavFile = storageClientMgr.findFile(remoteFileName);
@@ -58,7 +60,7 @@ public class WebDavRemoteFileRetriever implements RemoteFileRetriever<WebdavCach
             throw new IllegalArgumentException(
                     "Requested load of directory " + webDavFile.getRemoteFileUrl() + ".  Only files may be requested.");
         }
-        return new WebDavFileProxy(httpClient, webDavFile);
+        return () -> new WebDavFileProxy(httpClient, webDavFile);
     }
 
 }
