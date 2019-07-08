@@ -58,7 +58,12 @@ public class Startup implements Runnable {
          *  300  FINEST      "trace"
          *       ALL
          */
-        System.setProperty("org.janelia.it.level", "INFO");
+        System.setProperty("org.janelia.level", "INFO");
+
+        /*
+         * Reduce logging level for this class to avoid WARNING spam about null popups from node actions.
+         */
+        System.setProperty("org.openide.util.Utilities.level", "SEVERE");
         
         try {
             // Re-read the configuration to parse the system properties we just defined

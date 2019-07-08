@@ -2,41 +2,52 @@ package org.janelia.workstation.gui.large_volume_viewer.launch;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.workstation.common.actions.SimpleActionBuilder;
+import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.util.lookup.ServiceProvider;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.awt.ActionRegistration;
+import org.openide.util.NbBundle;
 
 /**
  * Right-click context menu that allows user to edit a TmSample file path.
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=1520)
-public class EditSamplePath extends SimpleActionBuilder {
+@ActionID(
+        category = "Actions",
+        id = "EditSamplePathAction"
+)
+@ActionRegistration(
+        displayName = "#CTL_EditSamplePathAction",
+        lazy = false
+)
+@ActionReferences({
+        @ActionReference(path = "Menu/Actions/Large Volume", position = 1520)
+})
+@NbBundle.Messages("CTL_EditSamplePathAction=Edit Sample Path")
+public class EditSamplePathAction extends BaseContextualNodeAction {
+
+    private TmSample sample;
 
     @Override
-    protected String getName() {
-        return "Edit Sample Path";
+    protected void processContext() {
+        if (getNodeContext().isSingleObjectOfType(TmSample.class)) {
+            sample = getNodeContext().getSingleObjectOfType(TmSample.class);
+            setVisible(true);
+            setEnabled(ClientDomainUtils.hasWriteAccess(sample));
+        }
+        else {
+            sample = null;
+            setEnabledAndVisible(false);
+        }
     }
 
     @Override
-    public boolean isCompatible(Object obj) {
-        return obj instanceof TmSample;
-    }
-
-    @Override
-    public boolean isEnabled(Object obj) {
-        return obj != null && ClientDomainUtils.hasWriteAccess((DomainObject)obj);
-    }
-
-    @Override
-    protected void performAction(Object obj) {
-
-        final TmSample sample = (TmSample)obj;
+    public void performAction() {
 
         final String editedPath = (String) JOptionPane.showInputDialog(
                 FrameworkAccess.getMainFrame(),

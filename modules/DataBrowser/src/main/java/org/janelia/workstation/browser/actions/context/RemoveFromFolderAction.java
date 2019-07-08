@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 160, separatorAfter = 200)
+        @ActionReference(path = "Menu/Actions", position = 160, separatorAfter = 199)
 })
 @NbBundle.Messages("CTL_RemoveFromFolderAction=Remove Items From Folder")
 public class RemoveFromFolderAction extends BaseContextualNodeAction {

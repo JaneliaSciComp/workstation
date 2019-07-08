@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.actions;
+package org.janelia.workstation.browser.actions.context;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,7 +21,7 @@ import org.janelia.model.security.util.PermissionTemplate;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.ontology.AnnotationEditor;
 import org.janelia.workstation.browser.gui.options.BrowserOptions;
-import org.janelia.workstation.browser.nodes.OntologyTermNode;
+import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -29,9 +29,12 @@ import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelection
 import org.janelia.workstation.core.workers.ResultWorker;
 import org.janelia.workstation.core.workers.SimpleListenableFuture;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.nodes.Node;
-import org.openide.util.HelpCtx;
-import org.openide.util.actions.NodeAction;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.awt.ActionRegistration;
+import org.openide.util.NbBundle;
+import org.openide.util.actions.SystemAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,61 +44,53 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ApplyAnnotationAction extends NodeAction {
+@ActionID(
+        category = "Actions",
+        id = "ApplyAnnotationAction"
+)
+@ActionRegistration(
+        displayName = "#CTL_ApplyAnnotationAction",
+        lazy = false
+)
+@ActionReferences({
+        @ActionReference(path = "Menu/Actions/Ontology", position = 650, separatorBefore = 599)
+})
+@NbBundle.Messages("CTL_ApplyAnnotationAction=Apply To Selected Objects")
+public class ApplyAnnotationAction extends BaseContextualNodeAction {
 
     private final static Logger log = LoggerFactory.getLogger(ApplyAnnotationAction.class);
-    
-    private final static ApplyAnnotationAction singleton = new ApplyAnnotationAction();
+
     public static ApplyAnnotationAction get() {
-        return singleton;
-    }
-    
-    private final List<OntologyTermNode> selected = new ArrayList<>();
-    
-    private ApplyAnnotationAction() {
-    }
-    
-    @Override
-    public String getName() {
-        return "Apply To Selected Objects";
-    }
-    
-    @Override
-    public HelpCtx getHelpCtx() {
-        return new HelpCtx("");
+        return SystemAction.get(ApplyAnnotationAction.class);
     }
 
+    private Collection<OntologyTerm> selected = new ArrayList<>();
+
     @Override
-    protected boolean asynchronous() {
-        return true;
-    }
-    
-    @Override
-    protected boolean enable(Node[] activatedNodes) {
+    protected void processContext() {
         selected.clear();
-        for(Node node : activatedNodes) {
-            if (node instanceof OntologyTermNode) {
-                
-                OntologyTermNode termNode = (OntologyTermNode)node;
-                OntologyTerm term = termNode.getOntologyTerm();
+        if (getNodeContext().isOnlyObjectsOfType(OntologyTerm.class)) {
+
+            for (OntologyTerm term : getNodeContext().getOnlyObjectsOfType(OntologyTerm.class)) {
                 if (term instanceof Category || term instanceof Ontology || term instanceof org.janelia.model.domain.ontology.Enum) {
                     // Can't apply these as an annotation
                     continue;
                 }
-                
-                selected.add((OntologyTermNode)node);
+                selected.add(term);
             }
+
+            setEnabledAndVisible(selected.size()>0);
         }
-        // Enable state if at least one ontology term is selected
-        return selected.size()>0;
+        else {
+            setEnabledAndVisible(false);
+        }
     }
-    
+
     @Override
-    protected void performAction(Node[] activatedNodes) {
-        if (!enable(activatedNodes)) return;
+    public void performAction() {
         ActivityLogHelper.logUserAction("ApplyAnnotationAction.performAction");
-        for(OntologyTermNode node : selected) {
-            performAction(node.getOntologyTerm());
+        for(OntologyTerm ontologyTerm : selected) {
+            performAction(ontologyTerm);
         }
     }
 
@@ -130,7 +125,6 @@ public class ApplyAnnotationAction extends NodeAction {
         }
     }
     
-    
     public SimpleListenableFuture<List<Annotation>> annotateReferences(final OntologyTerm ontologyTerm, final List<Reference> references) {
             Ontology ontology = ontologyTerm.getOntology();
 
@@ -147,8 +141,7 @@ public class ApplyAnnotationAction extends NodeAction {
 
                 @Override
                 protected List<Annotation> createResult() throws Exception {
-                    List<Annotation> annotations = setReferenceAnnotations(references, ontologyTerm, finalValue, this);
-                    return annotations;
+                    return setReferenceAnnotations(references, ontologyTerm, finalValue, this);
                 }
                 
                 @Override

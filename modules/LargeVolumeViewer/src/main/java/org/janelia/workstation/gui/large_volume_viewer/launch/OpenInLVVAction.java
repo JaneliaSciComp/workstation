@@ -1,19 +1,20 @@
 package org.janelia.workstation.gui.large_volume_viewer.launch;
 
-import java.util.List;
-
 import javax.swing.JOptionPane;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
-import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.common.actions.SimpleActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.util.lookup.ServiceProvider;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.awt.ActionRegistration;
+import org.openide.util.NbBundle;
 import org.openide.windows.TopComponent;
 import org.openide.windows.TopComponentGroup;
 import org.openide.windows.WindowManager;
@@ -21,29 +22,41 @@ import org.openide.windows.WindowManager;
 /**
  * Launches the Data Viewer from a context-menu.
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=1510)
-public class LVVLauncherBuilder extends SimpleActionBuilder {
+@ActionID(
+        category = "Actions",
+        id = "OpenInLVVAction"
+)
+@ActionRegistration(
+        displayName = "#CTL_OpenInLVVAction",
+        lazy = false
+)
+@ActionReferences({
+        @ActionReference(path = "Menu/Actions/Large Volume", position = 1510, separatorBefore = 1499)
+})
+@NbBundle.Messages("CTL_OpenInLVVAction=Open In Large Volume Viewer")
+public class OpenInLVVAction extends BaseContextualNodeAction {
+
+    private DomainObject domainObject;
 
     @Override
-    protected String getName() {
-        return "Open In Large Volume Viewer";
+    protected void processContext() {
+        if (getNodeContext().isSingleObjectOfType(TmSample.class)) {
+            domainObject = getNodeContext().getSingleObjectOfType(TmSample.class);
+            setEnabledAndVisible(true);
+        }
+        else if (getNodeContext().isSingleObjectOfType(TmWorkspace.class)) {
+            domainObject = getNodeContext().getSingleObjectOfType(TmWorkspace.class);
+            setEnabledAndVisible(true);
+        }
+        else {
+            domainObject = null;
+            setEnabledAndVisible(false);
+        }
     }
 
     @Override
-    public boolean isCompatible(Object obj) {
-        return (obj instanceof TmWorkspace) || (obj instanceof TmSample);
-    }
+    public void performAction() {
 
-    @Override
-    public boolean isPrecededBySeparator() {
-        return true;
-    }
-
-    @Override
-    protected void performAction(Object obj) {
-        
-        DomainObject domainObject = (DomainObject)obj;
-        
         LargeVolumeViewerTopComponent.setRestoreStateOnOpen(false);
         
         TopComponentGroup group = 

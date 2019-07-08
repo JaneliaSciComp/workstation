@@ -86,10 +86,13 @@ public abstract class BaseContextualNodeAction
     }
 
     @Override
+    public JMenuItem getMenuPresenter() {
+        return getPopupPresenter();
+    }
+
+    @Override
     public JMenuItem getPopupPresenter() {
-        if (!isVisible()) {
-            return null;
-        }
+        if (!isVisible()) return null;
         JMenuItem item = new JMenuItem(this);
         item.setEnabled(isEnabled());
         return item;

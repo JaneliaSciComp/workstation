@@ -1,42 +1,65 @@
-package org.janelia.workstation.browser.actions;
+package org.janelia.workstation.browser.actions.context;
 
 import javax.swing.JOptionPane;
 
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.nodes.NodeUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.common.actions.SimpleActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.util.lookup.ServiceProvider;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.awt.ActionRegistration;
+import org.openide.util.NbBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=160)
-public class RemoveOntologyTermBuilder extends SimpleActionBuilder {
+@ActionID(
+        category = "Actions",
+        id = "RemoveOntologyTermAction"
+)
+@ActionRegistration(
+        displayName = "#CTL_RemoveOntologyTermAction",
+        lazy = false
+)
+@ActionReferences({
+        @ActionReference(path = "Menu/Actions/Ontology", position = 160, separatorAfter = 199)
+})
+@NbBundle.Messages("CTL_RemoveOntologyTermAction=Delete")
+public class RemoveOntologyTermAction extends BaseContextualNodeAction {
 
-    private final static Logger log = LoggerFactory.getLogger(RemoveOntologyTermBuilder.class);
+    private final static Logger log = LoggerFactory.getLogger(RemoveOntologyTermAction.class);
+
+    private OntologyTerm selectedTerm;
 
     @Override
-    protected String getName() {
-        return "Remove";
+    protected void processContext() {
+        if (getNodeContext().isSingleObjectOfType(OntologyTerm.class)) {
+            selectedTerm = getNodeContext().getSingleObjectOfType(OntologyTerm.class);
+            setEnabledAndVisible(true);
+        }
+        else {
+            selectedTerm = null;
+            setEnabledAndVisible(false);
+        }
     }
 
     @Override
-    public boolean isCompatible(Object obj) {
-        return obj instanceof OntologyTerm;
+    public String getName() {
+        return "Delete "+selectedTerm.getTypeName();
     }
 
     @Override
-    protected void performAction(Object contextObject) {
+    public void performAction() {
 
-        OntologyTerm ontologyTerm = (OntologyTerm)contextObject;
+        OntologyTerm ontologyTerm = selectedTerm;
 
         String title;
         String msg;

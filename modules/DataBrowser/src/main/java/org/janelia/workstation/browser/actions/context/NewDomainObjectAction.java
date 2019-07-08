@@ -43,9 +43,10 @@ public class NewDomainObjectAction extends BaseContextualNodeAction {
 
     @Override
     protected void processContext() {
-        parentNode = null;
+        this.parentNode = null;
         if (getNodeContext().isSingleNodeOfType(TreeNodeNode.class)) {
-            parentNode = getNodeContext().getSingleNodeOfType(TreeNodeNode.class);
+            this.parentNode = getNodeContext().getSingleNodeOfType(TreeNodeNode.class);
+            log.info("getSingleNodeOfType(TreeNodeNode) = "+parentNode);
             setVisible(true);
             setEnabled(ClientDomainUtils.hasWriteAccess(parentNode.getNode()));
         }
@@ -57,9 +58,7 @@ public class NewDomainObjectAction extends BaseContextualNodeAction {
     @Override
     public JMenuItem getPopupPresenter() {
 
-        if (!ContextualActionUtils.isVisible(this)) {
-            return null;
-        }
+        if (!isVisible()) return null;
 
         TreeNodeNode node = parentNode;
 
@@ -73,8 +72,7 @@ public class NewDomainObjectAction extends BaseContextualNodeAction {
         newFilterItem.addActionListener(new NewFilterActionListener(node));
         newMenu.add(newFilterItem);
 
-        newMenu.setEnabled(ContextualActionUtils.isEnabled(this));
-
+        newMenu.setEnabled(isEnabled());
         return newMenu;
     }
 

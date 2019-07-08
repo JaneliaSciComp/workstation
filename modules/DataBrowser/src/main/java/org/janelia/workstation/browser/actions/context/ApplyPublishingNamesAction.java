@@ -33,7 +33,6 @@ import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
-import org.janelia.workstation.browser.actions.ApplyAnnotationAction;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -66,7 +65,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Samples", position = 541),
+        @ActionReference(path = "Menu/Actions/Sample", position = 541),
         @ActionReference(path = "Shortcuts", name = "S-D-P")
 })
 @Messages("CTL_ApplyPublishingNamesAction=Apply Line Publishing Names")

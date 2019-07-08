@@ -24,4 +24,17 @@
             </file>
         </folder>
     </folder>
+    <folder name="Menu">
+        <folder name="Actions">
+            <folder name="Sample">
+                <attr name="position" intvalue="500"/>
+            </folder>
+            <folder name="Ontology">
+                <attr name="position" intvalue="600"/>
+            </folder>
+            <folder name="Large Volume">
+                <attr name="position" intvalue="700"/>
+            </folder>
+        </folder>
+    </folder>
 </filesystem>

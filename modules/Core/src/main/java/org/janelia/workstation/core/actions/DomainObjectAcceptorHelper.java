@@ -1,10 +1,13 @@
 package org.janelia.workstation.core.actions;
 
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
@@ -132,13 +135,15 @@ public class DomainObjectAcceptorHelper {
 
                         actions.add(action);
                         log.debug("  {}", action);
-                    } else if (JSeparator.class.isAssignableFrom(data.instanceClass())) {
+                    }
+                    else if (JSeparator.class.isAssignableFrom(data.instanceClass())) {
                         // Don't add two separators in a row
-                        if (actions.size() > 1 && actions.get(actions.size() - 1) != null) {
+                        if (actions.size() > 1 && actions.get(actions.size()-1) != null) {
                             actions.add(null);
                             log.debug("-----");
                         }
-                    } else {
+                    }
+                    else {
                         log.warn("Unsupported action class: " + data.instanceClass());
                     }
                 }
@@ -147,5 +152,45 @@ public class DomainObjectAcceptorHelper {
                 log.warn("Could not process action "+child, e);
             }
         }
+    }
+
+    public static List<Component> getCurrentContextMenuItems() {
+
+        List<Component> components = new ArrayList<>();
+
+        boolean sep = true;
+        Collection<Action> contextActions = DomainObjectAcceptorHelper.getCurrentContextActions();
+        for (Action action : contextActions) {
+            if (action==null) {
+                if (!sep) {
+                    components.add(new JPopupMenu.Separator());
+                    log.debug("-----");
+                    sep = true;
+                }
+            }
+            else if (action instanceof PopupMenuGenerator) {
+                try {
+                    JMenuItem popupPresenter = ((PopupMenuGenerator) action).getPopupPresenter();
+                    if (popupPresenter != null) {
+                        components.add(popupPresenter);
+                        log.debug("  PopupMenuGenerator for {}", action);
+                        sep = false;
+                    }
+                }
+                catch (Exception e) {
+                    log.debug("Error getting popup presenter from {}", action, e);
+                }
+            }
+            else {
+                JMenuItem mi = new JMenuItem(action);
+                mi.setHorizontalTextPosition(JButton.TRAILING);
+                mi.setVerticalTextPosition(JButton.CENTER);
+                components.add(mi);
+                log.info("  "+action);
+                sep = false;
+            }
+        }
+
+        return components;
     }
 }

@@ -24,6 +24,7 @@ import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.Node;
+import org.openide.util.actions.SystemAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +50,8 @@ public class AddToResultsAction extends NodePresenterAction {
 
     protected final Component mainFrame = FrameworkAccess.getMainFrame();
 
-    private final static AddToResultsAction singleton = new AddToResultsAction();
     public static AddToResultsAction get() {
-        return singleton;
+        return SystemAction.get(AddToResultsAction.class);
     }
 
     protected AddToResultsAction() {
@@ -71,7 +71,7 @@ public class AddToResultsAction extends NodePresenterAction {
 
     @Override
     public JMenuItem getPopupPresenter() {
-        
+
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
@@ -199,6 +199,7 @@ public class AddToResultsAction extends NodePresenterAction {
             }
         }
 
+        newFolderMenu.setEnabled(isEnabled());
         return newFolderMenu;
     }
 

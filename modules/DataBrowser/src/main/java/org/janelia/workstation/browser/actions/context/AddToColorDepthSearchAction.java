@@ -22,7 +22,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Samples", position = 580)
+        @ActionReference(path = "Menu/Actions/Sample", position = 580)
 })
 @NbBundle.Messages("CTL_AddToColorDepthSearchAction=Add Mask to Color Depth Search...")
 public class AddToColorDepthSearchAction extends BaseContextualNodeAction {

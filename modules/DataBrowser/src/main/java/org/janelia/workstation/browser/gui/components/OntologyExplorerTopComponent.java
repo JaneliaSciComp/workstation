@@ -8,7 +8,7 @@ import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.util.PermissionTemplate;
-import org.janelia.workstation.browser.actions.ApplyAnnotationAction;
+import org.janelia.workstation.browser.actions.context.ApplyAnnotationAction;
 import org.janelia.workstation.browser.actions.OntologyElementAction;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.dialogs.AutoAnnotationPermissionDialog;

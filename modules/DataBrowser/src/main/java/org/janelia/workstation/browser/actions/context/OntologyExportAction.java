@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.actions;
+package org.janelia.workstation.browser.actions.context;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -14,12 +14,15 @@ import javax.swing.filechooser.FileFilter;
 import org.janelia.model.domain.ontology.EnumText;
 import org.janelia.model.domain.ontology.Interval;
 import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.gui.support.YamlFileFilter;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.common.actions.SimpleActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.util.lookup.ServiceProvider;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.awt.ActionRegistration;
+import org.openide.util.NbBundle;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -28,34 +31,44 @@ import org.yaml.snakeyaml.Yaml;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=601)
-public class OntologyExportBuilder extends SimpleActionBuilder {
+@ActionID(
+        category = "Actions",
+        id = "OntologyExportAction"
+)
+@ActionRegistration(
+        displayName = "#CTL_OntologyExportAction",
+        lazy = false
+)
+@ActionReferences({
+        @ActionReference(path = "Menu/Actions/Ontology", position = 601, separatorAfter = 605)
+})
+@NbBundle.Messages("CTL_OntologyExportAction=Export Ontology...")
+public class OntologyExportAction extends BaseContextualNodeAction {
 
     private static final String SAVE_FILE_EXTENSION = "yaml";
 
+    private OntologyTerm selectedTerm;
+
     @Override
-    protected String getName() {
-        return "Export Ontology...";
+    protected void processContext() {
+        if (getNodeContext().isSingleObjectOfType(OntologyTerm.class)) {
+            selectedTerm = getNodeContext().getSingleObjectOfType(OntologyTerm.class);
+            setEnabledAndVisible(true);
+        }
+        else {
+            selectedTerm = null;
+            setEnabledAndVisible(false);
+        }
     }
 
     @Override
-    public boolean isCompatible(Object obj) {
-        return obj instanceof OntologyTerm;
-    }
-
-    @Override
-    public boolean isSucceededBySeparator() {
-        return true;
-    }
-
-    @Override
-    protected void performAction(Object obj) {
-        exportOntology((OntologyTerm)obj);
+    public void performAction() {
+        exportOntology(selectedTerm);
     }
 
     private void exportOntology(OntologyTerm ontologyTerm) {
 
-        ActivityLogHelper.logUserAction("OntologyExportBuilder.exportOntology");
+        ActivityLogHelper.logUserAction("OntologyExportAction.exportOntology");
 
         String defaultSaveFilename = ontologyTerm.getName().replaceAll("\\s+", "_") + "." + SAVE_FILE_EXTENSION;
 

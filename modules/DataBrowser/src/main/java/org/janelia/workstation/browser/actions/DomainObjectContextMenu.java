@@ -1,5 +1,6 @@
 package org.janelia.workstation.browser.actions;
 
+import java.awt.Component;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -72,21 +73,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
 
     public void addMenuItems() {
-
-        Collection<Action> contextActions = DomainObjectAcceptorHelper.getCurrentContextActions();
-        for (Action action : contextActions) {
-            if (action==null) {
-                addSeparator();
-            }
-            else if (action instanceof PopupMenuGenerator) {
-                JMenuItem popupPresenter = ((PopupMenuGenerator) action).getPopupPresenter();
-                if (popupPresenter!=null) {
-                    add(popupPresenter);
-                }
-            }
-            else {
-                add(action);
-            }
+        for (Component currentContextMenuItem : DomainObjectAcceptorHelper.getCurrentContextMenuItems()) {
+            add(currentContextMenuItem);
         }
     }
 }

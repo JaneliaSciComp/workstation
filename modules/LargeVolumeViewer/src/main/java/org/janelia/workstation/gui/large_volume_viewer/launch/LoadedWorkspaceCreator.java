@@ -7,12 +7,20 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.concurrent.CancellationException;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.api.web.AsyncServiceClient;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.SystemInfo;
@@ -22,10 +30,12 @@ import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeRestClient;
 import org.janelia.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
-import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.common.actions.SimpleActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.util.lookup.ServiceProvider;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.awt.ActionRegistration;
+import org.openide.util.NbBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,25 +44,39 @@ import org.slf4j.LoggerFactory;
  * 
  * @author fosterl
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=1530)
-public class LoadedWorkspaceCreator extends SimpleActionBuilder {
+@ActionID(
+        category = "Actions",
+        id = "LoadedWorkspaceCreator"
+)
+@ActionRegistration(
+        displayName = "#CTL_LoadedWorkspaceCreator",
+        lazy = false
+)
+@ActionReferences({
+        @ActionReference(path = "Menu/Actions/Large Volume", position = 1530)
+})
+@NbBundle.Messages("CTL_LoadedWorkspaceCreator=Load Linux SWC Folder into New Workspace on Sample")
+public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
     
     private static final Logger LOG = LoggerFactory.getLogger(LoadedWorkspaceCreator.class);
 
+    private TmSample sample;
+
     @Override
-    protected String getName() {
-        return "Load Linux SWC Folder into New Workspace on Sample";
+    protected void processContext() {
+        if (getNodeContext().isSingleObjectOfType(TmSample.class)) {
+            sample = getNodeContext().getSingleObjectOfType(TmSample.class);
+            setEnabledAndVisible(true);
+        }
+        else {
+            sample = null;
+            setEnabledAndVisible(false);
+        }
     }
 
     @Override
-    public boolean isCompatible(Object obj) {
-        return obj instanceof TmSample;
-    }
+    public void performAction() {
 
-    @Override
-    protected void performAction(Object obj) {
-
-        TmSample sample = (TmSample) obj;
         JFrame mainFrame = FrameworkAccess.getMainFrame();
 
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();

@@ -37,12 +37,11 @@ import org.openide.util.NbBundle;
 @NbBundle.Messages("CTL_SearchHereAction=Search Here")
 public class SearchHereAction extends BaseContextualNodeAction {
 
-    private static final String ACTION_NAME = "Search Here";
-
     private DomainObject domainObject;
 
     @Override
     protected void processContext() {
+        setEnabledAndVisible(false);
         if (getNodeContext().isSingleObjectOfType(DomainObject.class)) {
             this.domainObject = getNodeContext().getSingleObjectOfType(DomainObject.class);
             if (domainObject != null) {
@@ -50,9 +49,6 @@ public class SearchHereAction extends BaseContextualNodeAction {
                 boolean visible = BrowserOptions.getInstance().isShowSearchHere()
                         && (domainObject instanceof TreeNode || domainObject instanceof Filter);
                 setEnabledAndVisible(visible);
-            }
-            else {
-                setEnabledAndVisible(false);
             }
         }
     }

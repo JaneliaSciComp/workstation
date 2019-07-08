@@ -14,7 +14,7 @@ import javax.swing.Action;
 
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.*;
-import org.janelia.workstation.browser.actions.ApplyAnnotationAction;
+import org.janelia.workstation.browser.actions.context.ApplyAnnotationAction;
 import org.janelia.workstation.browser.actions.OntologyElementAction;
 import org.janelia.workstation.common.flavors.OntologyTermFlavor;
 import org.janelia.workstation.common.flavors.OntologyTermNodeFlavor;

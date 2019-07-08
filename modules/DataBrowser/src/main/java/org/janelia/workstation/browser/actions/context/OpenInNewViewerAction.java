@@ -15,13 +15,10 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-
 @ActionID(
         category = "Actions",
         id = "OpenInNewViewerAction"
@@ -31,7 +28,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 51)
+        @ActionReference(path = "Menu/Actions", position = 51, separatorBefore = 49)
 })
 @NbBundle.Messages("CTL_OpenInNewViewerAction=Open in New Viewer")
 public class OpenInNewViewerAction extends BaseContextualNodeAction {
@@ -45,14 +42,12 @@ public class OpenInNewViewerAction extends BaseContextualNodeAction {
         this.nodeToLoad = null;
         if (getNodeContext().isSingleNodeOfType(AbstractDomainObjectNode.class)) {
             this.nodeToLoad = getNodeContext().getSingleNodeOfType(AbstractDomainObjectNode.class);
-            setVisible(true);
-            setEnabled(DomainListViewTopComponent.isSupported(nodeToLoad.getDomainObject()));
+            setEnabledAndVisible(DomainListViewTopComponent.isSupported(nodeToLoad.getDomainObject()));
         }
         else if (getNodeContext().isSingleObjectOfType(DomainObject.class)) {
             DomainObject domainObject = getNodeContext().getSingleObjectOfType(DomainObject.class);
             this.objectToLoad = DomainViewerManager.getObjectToLoad(domainObject);
-            setVisible(true);
-            setEnabled(DomainViewerTopComponent.isSupported(domainObject));
+            setEnabledAndVisible(DomainViewerTopComponent.isSupported(domainObject));
         }
         else {
             setEnabledAndVisible(false);

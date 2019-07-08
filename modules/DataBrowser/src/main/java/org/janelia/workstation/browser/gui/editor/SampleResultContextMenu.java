@@ -1,5 +1,12 @@
 package org.janelia.workstation.browser.gui.editor;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Collections;
+import java.util.List;
+
+import javax.swing.JMenuItem;
+
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
@@ -24,20 +31,10 @@ import org.janelia.workstation.browser.tools.ToolMgr;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.common.actions.PopupLabelActionBuilder;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
-import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.model.SampleImage;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
-
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Right-click context menu for sample results presented in the Sample Editor. 
@@ -93,22 +90,6 @@ public class SampleResultContextMenu extends PopupContextMenu {
         
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-
-//        for (JComponent item : getOpenObjectItems()) {
-//            add(item);
-//        }
-//
-//        for (JMenuItem item: getWrapObjectItems()) {
-//            add(item);
-//        }
-//
-//        for (JMenuItem item: getAppendObjectItems()) {
-//            add(item);
-//        }
-
-//        for (JComponent item : getContextMenuItems()) {
-//            add(item);
-//        }
     }
 
 //    private Collection<JComponent> getContextMenuItems() {

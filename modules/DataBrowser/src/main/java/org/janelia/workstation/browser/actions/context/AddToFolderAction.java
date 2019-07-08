@@ -14,6 +14,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
@@ -71,7 +72,8 @@ public class AddToFolderAction extends BaseContextualNodeAction {
     @Override
     protected void processContext() {
         domainObjects.clear();
-        if (getNodeContext().isOnlyObjectsOfType(DomainObject.class)) {
+        if (getNodeContext().isOnlyObjectsOfType(DomainObject.class)
+                && !getNodeContext().isSingleObjectOfType(Ontology.class)) { // exclude ontologies from being added to folders
             domainObjects.addAll(getNodeContext().getOnlyObjectsOfType(DomainObject.class));
             setEnabledAndVisible(true);
         }
@@ -86,16 +88,9 @@ public class AddToFolderAction extends BaseContextualNodeAction {
     }
 
     @Override
-    public JMenuItem getMenuPresenter() {
-        return getPopupPresenter();
-    }
-
-    @Override
     public JMenuItem getPopupPresenter() {
 
-        if (!isVisible()) {
-            return null;
-        }
+        if (!isVisible()) return null;
 
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
         final DomainModel model = DomainMgr.getDomainMgr().getModel();

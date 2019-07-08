@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.actions;
+package org.janelia.workstation.browser.actions.context;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,14 +16,17 @@ import org.janelia.model.domain.ontology.Interval;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyElementType;
 import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.gui.support.YamlFileFilter;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.common.actions.SimpleActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.util.lookup.ServiceProvider;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.awt.ActionRegistration;
+import org.openide.util.NbBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -33,34 +36,44 @@ import org.yaml.snakeyaml.Yaml;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=600)
-public class OntologyImportBuilder extends SimpleActionBuilder {
+@ActionID(
+        category = "Actions",
+        id = "OntologyImportAction"
+)
+@ActionRegistration(
+        displayName = "#CTL_OntologyImportAction",
+        lazy = false
+)
+@ActionReferences({
+        @ActionReference(path = "Menu/Actions/Ontology", position = 600, separatorBefore = 599)
+})
+@NbBundle.Messages("CTL_OntologyImportAction=Import Ontology Here...")
+public class OntologyImportAction extends BaseContextualNodeAction {
 
-    private final static Logger log = LoggerFactory.getLogger(OntologyImportBuilder.class);
+    private final static Logger log = LoggerFactory.getLogger(OntologyImportAction.class);
+
+    private OntologyTerm selectedTerm;
 
     @Override
-    protected String getName() {
-        return "Import Ontology Here...";
+    protected void processContext() {
+        if (getNodeContext().isSingleObjectOfType(OntologyTerm.class)) {
+            selectedTerm = getNodeContext().getSingleObjectOfType(OntologyTerm.class);
+            setEnabledAndVisible(true);
+        }
+        else {
+            selectedTerm = null;
+            setEnabledAndVisible(false);
+        }
     }
 
     @Override
-    public boolean isCompatible(Object obj) {
-        return obj instanceof OntologyTerm;
-    }
-
-    @Override
-    public boolean isPrecededBySeparator() {
-        return true;
-    }
-
-    @Override
-    protected void performAction(Object obj) {
-        importOntology((OntologyTerm)obj);
+    public void performAction() {
+        importOntology(selectedTerm);
     }
 
     private void importOntology(final OntologyTerm ontologyTerm) {
 
-        ActivityLogHelper.logUserAction("OntologyImportBuilder.importOntology");
+        ActivityLogHelper.logUserAction("OntologyImportAction.importOntology");
 
         final Ontology ontology = ontologyTerm.getOntology();
         final JFileChooser fc = new JFileChooser();

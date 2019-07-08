@@ -13,7 +13,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.OntologyTerm;
-import org.janelia.workstation.browser.actions.ApplyAnnotationAction;
+import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -42,24 +42,23 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 500, separatorBefore = 499)
+        @ActionReference(path = "Menu/Actions/Sample", position = 500, separatorBefore = 499)
 })
 @NbBundle.Messages("CTL_ReportProblemAction=Report A Problem With This Data")
 public class ReportProblemAction extends BaseContextualNodeAction {
 
     private static final Logger log = LoggerFactory.getLogger(ReportProblemAction.class);
 
-    private DomainObject selectedObject;
+    private Sample selectedObject;
 
     @Override
     protected void processContext() {
-        setEnabledAndVisible(false);
-        if (getNodeContext().isSingleObjectOfType(DomainObject.class)) {
-            this.selectedObject = getNodeContext().getSingleObjectOfType(DomainObject.class);
-            if (!(selectedObject instanceof OntologyTerm)) {
-                setEnabled(ClientDomainUtils.isOwner(selectedObject));
-                setVisible(true);
-            }
+        if (getNodeContext().isSingleObjectOfType(Sample.class)) {
+            this.selectedObject = getNodeContext().getSingleObjectOfType(Sample.class);
+            setEnabledAndVisible(true);
+        }
+        else {
+            setEnabledAndVisible(false);
         }
     }
 
@@ -70,6 +69,8 @@ public class ReportProblemAction extends BaseContextualNodeAction {
 
     @Override
     public JMenuItem getPopupPresenter() {
+
+        if (!isVisible()) return null;
 
         DomainObject domainObject = selectedObject;
         JMenu errorMenu = new JMenu(getName());
@@ -106,6 +107,7 @@ public class ReportProblemAction extends BaseContextualNodeAction {
 
         }
 
+        errorMenu.setEnabled(isEnabled());
         return errorMenu;
     }
 

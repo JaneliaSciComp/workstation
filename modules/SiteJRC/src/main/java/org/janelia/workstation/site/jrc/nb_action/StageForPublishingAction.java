@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/Actions/Samples", position = 540)
+    @ActionReference(path = "Menu/Actions/Sample", position = 540)
 })
 @Messages("CTL_StageForPublishingAction=Stage for Publishing")
 public final class StageForPublishingAction extends BaseContextualNodeAction {

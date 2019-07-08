@@ -1,5 +1,6 @@
 package org.janelia.workstation.browser.gui.editor;
 
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -7,6 +8,7 @@ import javax.swing.JMenuItem;
 
 import org.janelia.workstation.common.actions.PopupLabelActionBuilder;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
+import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
@@ -58,6 +60,13 @@ public class ColorDepthContextMenu extends PopupContextMenu {
         
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
+        setNextAddRequiresSeparator(true);
+        setNextAddRequiresSeparator(true);
+
+        for (Component currentContextMenuItem : DomainObjectAcceptorHelper.getCurrentContextMenuItems()) {
+            add(currentContextMenuItem);
+        }
+
         
     }
     
