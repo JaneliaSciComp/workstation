@@ -100,11 +100,21 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                     }
                 });
         FileProxy f = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
-        try {
-            InputStream contentStream = f.getContentStream();
-            return contentStream != null ? ByteStreams.toByteArray(f.getContentStream()) : null;
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
+        InputStream contentStream = f.getContentStream();
+        if (contentStream != null) {
+            try {
+                return ByteStreams.toByteArray(contentStream);
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            } finally {
+                try {
+                    contentStream.close();
+                } catch (IOException ignore) {
+                }
+            }
+
+        } else {
+            return null;
         }
    }
 
