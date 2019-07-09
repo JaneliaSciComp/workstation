@@ -24,6 +24,7 @@ public abstract class BackgroundWorker extends SimpleWorker {
     
     private String status;
     private Callable<Void> success;
+    private boolean emitEvents = false;
 
     public BackgroundWorker() {
     }
@@ -58,7 +59,9 @@ public abstract class BackgroundWorker extends SimpleWorker {
     @Override
     protected void done() {
         super.done();
-        Events.getInstance().postOnEventBus(new WorkerEndedEvent(this));
+        if (emitEvents) {
+            Events.getInstance().postOnEventBus(new WorkerEndedEvent(this));
+        }
     }
 
     public abstract String getName();
@@ -67,7 +70,9 @@ public abstract class BackgroundWorker extends SimpleWorker {
         if (StringUtils.areEqual(status, this.status)) return;
         this.status = status;
         log.debug("Worker '{}' changed status to: {}", getName(), status);
-        Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
+        if (emitEvents) {
+            Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
+        }
     }
 
     public void setFinalStatus(String status) {
@@ -78,7 +83,9 @@ public abstract class BackgroundWorker extends SimpleWorker {
     @Override
     public void propertyChange(PropertyChangeEvent e) {
         super.propertyChange(e);
-        Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
+        if (emitEvents) {
+            Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
+        }
     }
     
     public String getStatus() {
@@ -106,6 +113,7 @@ public abstract class BackgroundWorker extends SimpleWorker {
      * Same as execute(), except throws events on the EventBus.
      */
     public void executeWithEvents() {
+        emitEvents = true;
         Events.getInstance().postOnEventBus(new WorkerStartedEvent(this));
         execute();
     }
