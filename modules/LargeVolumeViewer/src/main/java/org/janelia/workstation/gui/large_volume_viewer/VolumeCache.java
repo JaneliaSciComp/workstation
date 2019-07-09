@@ -11,7 +11,7 @@ public class VolumeCache {
         return volumeCache;
     }
 
-    public static void setVolumeCache(boolean volumeCache) {
+    static void setVolumeCache(boolean volumeCache) {
         VolumeCache.volumeCache=volumeCache;
     }
 

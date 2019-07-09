@@ -16,13 +16,13 @@ public abstract class BlockTiffOctreeLoadAdapter extends AbstractTextureLoadAdap
 
     private final URI volumeBaseURI;
 
-    public BlockTiffOctreeLoadAdapter(TileFormat tileFormat, URI volumeBaseURI) {
+    BlockTiffOctreeLoadAdapter(TileFormat tileFormat, URI volumeBaseURI) {
         super(tileFormat);
         this.volumeBaseURI = volumeBaseURI;
         tileFormat.setIndexStyle(TileIndex.IndexStyle.OCTREE);
     }
 
-    public URI getVolumeBaseURI() {
+    URI getVolumeBaseURI() {
         return volumeBaseURI;
     }
 

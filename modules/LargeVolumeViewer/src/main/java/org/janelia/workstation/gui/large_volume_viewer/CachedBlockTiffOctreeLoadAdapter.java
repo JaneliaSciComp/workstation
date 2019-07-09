@@ -28,7 +28,7 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
     private final ScheduledThreadPoolExecutor tileLoadThreadPool;
     private final LoadingCache<TileIndex, Optional<TextureData2d>> tileCache;
 
-    private final LocalFileTileCacheLoader tileCacheLoader;
+    private final TextureData2dCacheLoader tileCacheLoader;
     private final BlockTiffOctreeLoadAdapter tileLoader;
     // holds the coord of the loading tiles relative to the current focus
     // this is only for display purposes
@@ -41,7 +41,7 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
     public CachedBlockTiffOctreeLoadAdapter(BlockTiffOctreeLoadAdapter tileLoader) {
         super(tileLoader.getTileFormat(), tileLoader.getVolumeBaseURI());
         this.tileLoader = tileLoader;
-        this.tileCacheLoader = new LocalFileTileCacheLoader(tileLoader);
+        this.tileCacheLoader = new TextureData2dCacheLoader(tileLoader);
         this.tileCache = CacheBuilder.newBuilder()
                 .maximumSize(MAX_CACHE_SIZE)
                 .build(tileCacheLoader);
@@ -166,8 +166,6 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                     Optional<TextureData2d> tile = tileCache.getIfPresent(tileKey);
                     if (tile != null) {
                         status = tile.map(td -> 2).orElse(0);
-                    } else if (tileCacheLoader.isCachedLocally(tileKey)) {
-                        status = 1;
                     } else if (tileCacheLoader.isLoading(tileKey)) {
                         status = 1;
                     } else {

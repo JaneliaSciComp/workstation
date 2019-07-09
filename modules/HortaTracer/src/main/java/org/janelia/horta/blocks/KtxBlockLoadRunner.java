@@ -49,8 +49,7 @@ public class KtxBlockLoadRunner
     private void loadFromBlockSource() {
         try (InputStream is = ktxBlockTileSource.streamKeyBlock(ktxOctreeBlockTileKey)) {
             URI sourceURI = ktxBlockTileSource.getKeyBlockPathURI(ktxOctreeBlockTileKey);
-            loadStream(StringUtils.defaultIfBlank(ktxBlockTileSource.sourceServerURL + sourceURI.toString(),
-                    ktxBlockTileSource.getOriginatingSampleURL().toString() + sourceURI.toString()), is);
+            loadStream(ktxBlockTileSource.getDataServerURI().toString() + sourceURI.toString(), is);
         } catch (IOException ex) {
             LOG.warn("IOException loading tile {} from block source", ktxOctreeBlockTileKey);
             state = State.FAILED;

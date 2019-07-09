@@ -27,14 +27,12 @@ import org.slf4j.LoggerFactory;
 })
 @Messages("CTL_LoadHortaTileAtFocusAction=Load Horta Tile At Focus")
 
-public final class LoadHortaTileAtFocusAction 
-implements ActionListener
-{
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+public final class LoadHortaTileAtFocusAction implements ActionListener {
+    private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        logger.info("Load Horta Central Tile Action invoked");
+        LOG.info("Load Horta Central Tile Action invoked");
         NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
         if (nttc == null)
             return;
@@ -42,7 +40,7 @@ implements ActionListener
             nttc.loadPersistentTileAtFocus();
         } catch (IOException ex) {
             // Exceptions.printStackTrace(ex);
-            logger.info("Tile load failed");
+            LOG.info("Tile load failed");
         }
     }
 }

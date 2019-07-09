@@ -1,30 +1,44 @@
 package org.janelia.horta;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Optional;
+import java.nio.file.Paths;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.base.Objects;
 
+import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
-import org.janelia.horta.blocks.KtxOctreeBlockTileSourceProvider;
-import org.janelia.horta.volume.JadeVolumeBrickSource;
-import org.janelia.horta.volume.LocalVolumeBrickSource;
+import org.janelia.horta.blocks.RenderedVolumeKtxOctreeBlockTileSource;
+import org.janelia.horta.volume.RenderedVolumeBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
+import org.janelia.it.jacs.shared.utils.HttpClientHelper;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.security.AppAuthorization;
+import org.janelia.rendering.FileBasedRenderedVolumeLocation;
+import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
+import org.janelia.rendering.RenderedVolume;
+import org.janelia.rendering.RenderedVolumeLocation;
+import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.LocalPreferenceMgr;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -32,15 +46,16 @@ import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
-
 public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SampleLocationAcceptor.class);
+    private static final HttpClientHelper HTTP_HELPER = new HttpClientHelper();
 
     private String currentSource;
-    private NeuronTraceLoader loader;
-    private NeuronTracerTopComponent nttc;
-    private SceneWindow sceneWindow;
+    private final NeuronTraceLoader loader;
+    private final NeuronTracerTopComponent nttc;
+    private final SceneWindow sceneWindow;
+    private final ObjectMapper objectMapper;
+
 
     SampleLocationAcceptor(String currentSource,
                            NeuronTraceLoader loader,
@@ -50,6 +65,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         this.loader = loader;
         this.nttc = nttc;
         this.sceneWindow = sceneWindow;
+        this.objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
@@ -74,27 +90,16 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                                 + sampleLocation.getFocusYUm() + ", "
                                 + sampleLocation.getFocusZUm());
                     }
-
-                    // First check to see if ktx tiles are available
-                    if (nttc.isPreferKtx()) {
-                        KtxOctreeBlockTileSource ktxSource = loadKtxSource(sample, url, progress);
-                        nttc.setKtxSource(ktxSource);
-                    } else {
-                        nttc.setKtxSource(null);
-                    }
+                    RenderedVolume renderedVolume = getVolumeInfo(url.toURI());
 
                     progress.setDisplayName("Centering on location...");
                     setCameraLocation(sampleLocation);
 
-                    if (nttc.getKtxSource() == null) { // Use obsolete single channel raw file loading
-                        StaticVolumeBrickSource volumeSource = setVolumeBrickSource(url.toURI(), sampleLocation.isCompressed(), progress);
-                        if (volumeSource == null) {
-                            throw new IOException("Loading volume source failed");
-                        }
-                        progress.switchToIndeterminate(); // TODO - enhance tile loading with a progress listener
-                        progress.setDisplayName("Loading brain tile image...");
-                        loader.loadTileAtCurrentFocus(volumeSource, sampleLocation.getDefaultColorChannel());
-                    } else { // Load ktx files here
+                    if (nttc.isPreferKtx()) {
+                        // use ktx tiles
+                        KtxOctreeBlockTileSource ktxSource = createKtxSource(renderedVolume, url, sample);
+                        nttc.setKtxSource(ktxSource);
+                        // start loading ktx tiles
                         progress.switchToIndeterminate(); // TODO: enhance tile loading with a progress listener
                         progress.setDisplayName("Loading KTX brain tile image...");
                         if (nttc.doesUpdateVolumeCache()) {
@@ -102,6 +107,15 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         } else {
                             loader.loadPersistentKtxTileAtCurrentFocus(nttc.getKtxSource());
                         }
+
+                    } else {
+                        // use raw tiles, which are handled by the StaticVolumeBrickSource
+                        StaticVolumeBrickSource volumeBrickSource = createStaticVolumeBrickSource(renderedVolume, sampleLocation.isCompressed(), progress);
+                        nttc.setVolumeSource(volumeBrickSource);
+                        // start loading raw tiles
+                        progress.switchToIndeterminate();
+                        progress.setDisplayName("Loading brain tile image...");
+                        loader.loadTileAtCurrentFocus(volumeBrickSource, sampleLocation.getDefaultColorChannel());
                     }
                     nttc.redrawNow();
                 } catch (final Exception ex) {
@@ -124,8 +138,50 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         RequestProcessor.getDefault().post(task);
     }
 
-    private KtxOctreeBlockTileSource loadKtxSource(TmSample sample, URL renderedOctreeUrl, ProgressHandle progress) {
-        progress.setDisplayName("Checking for ktx rendered tiles");
+    private RenderedVolume getVolumeInfo(URI renderedOctreeUri) {
+        RenderedVolumeLocation renderedVolumeLocation;
+        RenderedVolumeMetadata renderedVolumeMetadata;
+        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
+            String url = renderedOctreeUri.resolve("volume_info").toString();
+            LOG.trace("Getting volume metadata from: {}", url);
+            GetMethod getMethod = new GetMethod(url);
+            getMethod.getParams().setParameter("http.method.retry-handler", new DefaultHttpMethodRetryHandler(3, false));
+            AppAuthorization appAuthorization = AccessManager.getAccessManager().getAppAuthorization();
+            try {
+                int statusCode = HTTP_HELPER.executeMethod(getMethod, appAuthorization);
+                if (statusCode != 200) {
+                    throw new IllegalStateException("HTTP status " + statusCode + " (not OK) from url " + url);
+                }
+                renderedVolumeMetadata = objectMapper.readValue(getMethod.getResponseBodyAsStream(), RenderedVolumeMetadata.class);
+                renderedVolumeLocation = new JADEBasedRenderedVolumeLocation(
+                        renderedVolumeMetadata.getConnectionURI(),
+                        renderedVolumeMetadata.getDataStorageURI(),
+                        renderedVolumeMetadata.getVolumeBasePath(),
+                        appAuthorization.getAuthenticationToken(),
+                        null,
+                        () -> {
+                            Client client = ClientBuilder.newClient();
+                            JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
+                                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                                    .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+                            client.register(provider);
+                            return client;
+                        }
+                );
+            } catch (Exception e) {
+                LOG.error("Error getting sample volume info from {}", url, e);
+                throw new IllegalStateException(e);
+            } finally {
+                getMethod.releaseConnection();
+            }
+        } else {
+            renderedVolumeLocation = new FileBasedRenderedVolumeLocation(Paths.get(renderedOctreeUri));
+            renderedVolumeMetadata = nttc.getRenderedVolumeLoader().loadVolume(renderedVolumeLocation).orElseThrow(() -> new IllegalStateException("No rendering information found for " + renderedVolumeLocation.getDataStorageURI()));
+        }
+        return new RenderedVolume(new CachedRenderedVolumeLocation(renderedVolumeLocation, LocalPreferenceMgr.getInstance().getLocalFileCacheStorage()), renderedVolumeMetadata);
+    }
+
+    private KtxOctreeBlockTileSource createKtxSource(RenderedVolume renderedVolume, URL renderedOctreeUrl, TmSample sample) {
         KtxOctreeBlockTileSource previousSource = nttc.getKtxSource();
         if (previousSource != null) {
             LOG.trace("previousUrl: {}", previousSource.getOriginatingSampleURL());
@@ -133,56 +189,16 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 return previousSource; // Source did not change
             }
         }
-        return KtxOctreeBlockTileSourceProvider.createKtxOctreeBlockTileSource(sample, renderedOctreeUrl);
+        return new RenderedVolumeKtxOctreeBlockTileSource(renderedVolume.getVolumeLocation(), renderedOctreeUrl).init(sample);
     }
 
-    private StaticVolumeBrickSource setVolumeBrickSource(URI renderedOctreeUri, boolean useCompressedFiles, ProgressHandle progress) {
-        StaticVolumeBrickSource volumeBrickSource;
-        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
-            volumeBrickSource = new JadeVolumeBrickSource(
-                    nttc.getRenderedVolumeLoader(),
-                    renderedOctreeUri,
-                    AccessManager.getAccessManager().getAppAuthorization(),
-                    useCompressedFiles
-            );
-        } else {
-            try {
-                String yamlUrlString = new URL(renderedOctreeUri.toURL(), BASE_YML_FILE).getPath();
-                URI yamlUri = new URI(
-                        renderedOctreeUri.getScheme(),
-                        renderedOctreeUri.getAuthority(),
-                        yamlUrlString,
-                        renderedOctreeUri.getFragment()
-                );
-                URL yamlUrl = yamlUri.toURL();
-                try (InputStream sourceYamlStream = yamlUrl.openStream()) {
-                    volumeBrickSource = new LocalVolumeBrickSource(renderedOctreeUri, sourceYamlStream, useCompressedFiles, () -> Optional.of(progress));
-                } catch (IllegalArgumentException ex) {
-                    JOptionPane.showMessageDialog(nttc,
-                            "Problem Loading Raw Tile Information from " + yamlUrlString +
-                                    "\n  Does the transform contain barycentric coordinates?",
-                            "Tilebase File Problem", JOptionPane.ERROR_MESSAGE);
-                    return null;
-                }
-            } catch (IOException | URISyntaxException ex) {
-                // Something went wrong with loading the Yaml file
-                JOptionPane.showMessageDialog(nttc,
-                        "Problem Loading Raw Tile Information from " + renderedOctreeUri +
-                                "\n  Is the render folder drive mounted?"
-                                + "\n  Does the render folder contain a " + BASE_YML_FILE + " file ?"
-                        ,
-                        "Tilebase File Problem",
-                        JOptionPane.ERROR_MESSAGE);
-                return null;
-            }
-        }
-        nttc.setVolumeSource(volumeBrickSource);
-        return volumeBrickSource;
+    private StaticVolumeBrickSource createStaticVolumeBrickSource(RenderedVolume renderedVolume, boolean useCompression, ProgressHandle progress) {
+        progress.switchToDeterminate(100);
+        return new RenderedVolumeBrickSource(nttc.getRenderedVolumeLoader(), renderedVolume, useCompression, progress::progress);
     }
 
     private boolean setCameraLocation(SampleLocation sampleLocation) {
-        // Now, position this component over other component's
-        // focus.
+        // Now, position this component over other component's focus.
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
         Vantage v = pCam.getVantage();
         Vector3 focusVector3 = new Vector3(
