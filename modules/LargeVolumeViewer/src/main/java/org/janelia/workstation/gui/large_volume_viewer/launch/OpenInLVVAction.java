@@ -18,6 +18,8 @@ import org.openide.util.NbBundle;
 import org.openide.windows.TopComponent;
 import org.openide.windows.TopComponentGroup;
 import org.openide.windows.WindowManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Launches the Data Viewer from a context-menu.
@@ -36,6 +38,7 @@ import org.openide.windows.WindowManager;
 @NbBundle.Messages("CTL_OpenInLVVAction=Open In Large Volume Viewer")
 public class OpenInLVVAction extends BaseContextualNodeAction {
 
+    private static final Logger log = LoggerFactory.getLogger(OpenInLVVAction.class);
     private DomainObject domainObject;
 
     @Override
@@ -57,6 +60,12 @@ public class OpenInLVVAction extends BaseContextualNodeAction {
     @Override
     public void performAction() {
 
+        DomainObject objectToOpen = domainObject;
+        if (objectToOpen==null) {
+            log.warn("Action performed with null domain object");
+            return;
+        }
+
         LargeVolumeViewerTopComponent.setRestoreStateOnOpen(false);
         
         TopComponentGroup group = 
@@ -77,21 +86,22 @@ public class OpenInLVVAction extends BaseContextualNodeAction {
             // Make the editor one active.  This one is not allowed to be
             // arbitrarily left closed at user whim.
             final LargeVolumeViewerTopComponent win = (LargeVolumeViewerTopComponent)WindowManager.getDefault().findTopComponent(LargeVolumeViewerTopComponent.LVV_PREFERRED_ID);
-            if ( win != null ) {
-                if ( ! win.isOpened() ) {
+            if (win != null) {
+                if (!win.isOpened()) {
                     win.open();
                 }
                 if (win.isOpened()) {
                     win.requestActive();
                 }
                 try {
-                    win.openLargeVolumeViewer(domainObject);
-                } catch ( Exception ex ) {
+                    win.openLargeVolumeViewer(objectToOpen);
+                }
+                catch (Exception ex) {
                     FrameworkAccess.handleException( ex );
                 }
             }
 
-            FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor(domainObject));
+            FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor(objectToOpen));
         }
         else {
             JOptionPane.showMessageDialog(WindowManager.getDefault().getMainWindow(), "Failed to open window group for plugin.");
