@@ -11,15 +11,7 @@ import org.janelia.model.util.TmNeuronUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -273,17 +265,20 @@ public class NeuronManager {
         Map<TmAnchoredPathEndpoints, TmAnchoredPath> oldNeuronAnchoredPathMap = oldTmNeuronMetadata.getAnchoredPathMap();
         Map<TmAnchoredPathEndpoints,TmAnchoredPath> newNeuronAnchoredPathMap = newTmNeuronMetadata.getAnchoredPathMap();
 
-        Iterator<TmAnchoredPathEndpoints> iter = oldNeuronAnchoredPathMap.keySet().iterator();
-        while(iter.hasNext()) {
-            TmAnchoredPathEndpoints endpoints = iter.next();
-            // both endpoints are necessarily in the same neurite, so only need
-            //  to test one:
+        // the usual "remove items from collection you're iterating over" idiom doesn't
+        //  work here because the Map is really a Mongo-backed thing with weird internal
+        //  state; so, do it explicitly in multiple loops:
+
+        Set<TmAnchoredPathEndpoints> moveSet = new HashSet<>();
+        for (TmAnchoredPathEndpoints endpoints: oldNeuronAnchoredPathMap.keySet()) {
             if (movedAnnotationIDs.containsKey(endpoints.getFirstAnnotationID())) {
-                TmAnchoredPath anchoredPath = oldNeuronAnchoredPathMap.get(endpoints);
-                iter.remove();
-                // TmAnchoredPath anchoredPath = oldNeuronAnchoredPathMap.remove(endpoints);
-                newNeuronAnchoredPathMap.put(endpoints, anchoredPath);
+                moveSet.add(endpoints);
             }
+        }
+
+        for (TmAnchoredPathEndpoints endpoints: moveSet) {
+            TmAnchoredPath anchoredPath = oldNeuronAnchoredPathMap.get(endpoints);
+            newNeuronAnchoredPathMap.put(endpoints, anchoredPath);
         }
 
 

@@ -1119,12 +1119,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         setCurrentNeuron(targetNeuron);
 
-        // trace new path:
-        if (automatedTracingEnabled()) {
-            // log.info("Tracing paths.");
-            viewStateListener.pathTraceRequested(sourceNeuronID, sourceAnnotationID);
-        }
-
         // see note in addChildAnnotations re: predef notes
         // for merge, two linked annotations are affected; fortunately, the
         //  neuron has just been refreshed
@@ -1142,7 +1136,15 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         //      from one neuron to another isn't atomic like it should be
         neuronManager.saveNeuronData(sourceNeuron);
         neuronManager.saveNeuronData(targetNeuron);
-        
+
+        // trace new path; must be done after neuron save, so the path tracer
+        //  can grab the new neuron data; also note that the source annotation
+        //  is now in the target neuron
+        if (automatedTracingEnabled()) {
+            // log.info("Tracing paths.");
+            viewStateListener.pathTraceRequested(targetNeuronID, sourceAnnotationID);
+        }
+
         // If source neuron is now empty, delete it, otherwise save it.
         final boolean sourceDeleted = sourceNeuron.getGeoAnnotationMap().isEmpty();
         if (sourceDeleted) {
