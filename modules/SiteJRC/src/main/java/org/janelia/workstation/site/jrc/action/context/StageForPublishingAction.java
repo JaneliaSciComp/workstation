@@ -1,4 +1,4 @@
-package org.janelia.workstation.site.jrc.nb_action;
+package org.janelia.workstation.site.jrc.action.context;
 
 import java.util.ArrayList;
 import java.util.Collection;

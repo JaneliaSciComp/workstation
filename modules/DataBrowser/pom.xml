@@ -166,6 +166,7 @@
                 <configuration>
                     <publicPackages>
                         <publicPackage>org.janelia.workstation.browser.actions</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.actions.context</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.api</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.api.state</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.components</publicPackage>

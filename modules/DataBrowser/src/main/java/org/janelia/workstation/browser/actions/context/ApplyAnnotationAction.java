@@ -64,10 +64,12 @@ public class ApplyAnnotationAction extends BaseContextualNodeAction {
         return SystemAction.get(ApplyAnnotationAction.class);
     }
 
+    private boolean isDuplicateAnnotationAllowed;
     private Collection<OntologyTerm> selected = new ArrayList<>();
 
     @Override
     protected void processContext() {
+        this.isDuplicateAnnotationAllowed = BrowserOptions.getInstance().isDuplicateAnnotationAllowed();
         selected.clear();
         if (getNodeContext().isOnlyObjectsOfType(OntologyTerm.class)) {
 
@@ -84,6 +86,10 @@ public class ApplyAnnotationAction extends BaseContextualNodeAction {
         else {
             setEnabledAndVisible(false);
         }
+    }
+
+    public void setDuplicateAnnotationAllowed(boolean duplicateAnnotationAllowed) {
+        this.isDuplicateAnnotationAllowed = duplicateAnnotationAllowed;
     }
 
     @Override
@@ -181,7 +187,7 @@ public class ApplyAnnotationAction extends BaseContextualNodeAction {
         for (DomainObject domainObject : domainObjects) {
 
             Annotation existingAnnotation = null;
-            if (!BrowserOptions.getInstance().isDuplicateAnnotationAllowed()) {
+            if (!isDuplicateAnnotationAllowed) {
                 
                 Collection<Annotation> annotations = annotationMap.get(domainObject.getId());
                 if (annotations!=null) {
@@ -212,7 +218,7 @@ public class ApplyAnnotationAction extends BaseContextualNodeAction {
                 progress.setProgress(i++, domainObjects.size());
             }
         }
-        
+
         return createdAnnotations;
     }
 

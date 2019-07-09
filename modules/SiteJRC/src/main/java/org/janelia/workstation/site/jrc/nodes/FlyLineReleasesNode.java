@@ -3,7 +3,6 @@ package org.janelia.workstation.site.jrc.nodes;
 import java.awt.Image;
 import java.util.List;
 
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -25,7 +24,7 @@ public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
 
     private final static Logger log = LoggerFactory.getLogger(FlyLineReleasesNode.class);
 
-    private static final long RECENTLY_OPENED_ID = 30L; // This magic number means nothing, it just needs to be unique and different from GUID space.
+    public static final long NODE_ID = 30L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final LineReleaseNodeChildFactory childFactory;
 
@@ -40,7 +39,7 @@ public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
 
     @Override
     public Long getId() {
-        return RECENTLY_OPENED_ID;
+        return NODE_ID;
     }
 
     @Override

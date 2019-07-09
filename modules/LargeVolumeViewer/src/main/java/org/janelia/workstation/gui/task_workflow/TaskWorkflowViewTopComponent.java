@@ -1023,7 +1023,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 String ref = task.getWorkspaceRef();
                 ref = ref.replace("TmWorkspace#","");
                 // cheat since I didn't want to update the model for a patch
-                if (Long.parseLong(ref) == annManager.getCurrentWorkspace().getId()) {
+                if (annManager.getCurrentWorkspace() != null && Long.parseLong(ref) == annManager.getCurrentWorkspace().getId()) {
                     tableModel.addReviewTask(task);
                 }
             }

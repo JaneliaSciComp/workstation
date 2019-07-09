@@ -1,14 +1,12 @@
-package org.janelia.workstation.browser.actions.context;
+package org.janelia.workstation.site.jrc.action.context;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,7 +19,6 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -33,117 +30,84 @@ import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
-import org.janelia.workstation.common.actions.BaseContextualNodeAction;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.browser.actions.context.ApplyAnnotationAction;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.api.web.SageRestClient;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.model.domain.sample.Sample;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
-import org.openide.awt.ActionRegistration;
-import org.openide.util.NbBundle.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Allows the user to bind the "apply publishing names" action to a key or toolbar button.
- * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ActionID(
-        category = "Actions",
-        id = "ApplyPublishingNamesAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_ApplyPublishingNamesAction",
-        lazy = false
-)
-@ActionReferences({
-        @ActionReference(path = "Menu/Actions/Sample", position = 541),
-        @ActionReference(path = "Shortcuts", name = "S-D-P")
-})
-@Messages("CTL_ApplyPublishingNamesAction=Apply Line Publishing Names")
-public class ApplyPublishingNamesAction extends BaseContextualNodeAction {
+public class ApplyPublishingNamesActionListener implements ActionListener {
 
     private final static Logger log = LoggerFactory.getLogger(ApplyPublishingNamesAction.class);
     private static final String PUBLICATION_OWNER = "group:workstation_users";
     private static final String PUBLICATION_ONTOLOGY_NAME = "Publication";
     private static final String ANNOTATION_PUBLISHING_NAME = "PublishingName";
 
-    private Collection<Sample> samples = new ArrayList<>();
     private final DomainModel model = DomainMgr.getDomainMgr().getModel();
-    private Multimap<String,Sample> sampleByLine = ArrayListMultimap.create();
-    private Queue<String> manualAnnotationNecessary = new LinkedList<>();
+    private final Multimap<String,Sample> sampleByLine = ArrayListMultimap.create();
+    private final Queue<String> manualAnnotationNecessary = new LinkedList<>();
+    private final Collection<Sample> samples;
+    private final boolean async;
+    private final boolean userInteraction;
+    private int numPublishingNamesApplied = 0;
 
-    @Override
-    protected void processContext() {
-        samples.clear();
-        if (getNodeContext().isOnlyObjectsOfType(Sample.class)) {
-            samples.addAll(getNodeContext().getOnlyObjectsOfType(Sample.class));
-            setEnabledAndVisible(true);
-        }
-        else {
-            setEnabledAndVisible(false);
-        }
+    public ApplyPublishingNamesActionListener(Collection<Sample> samples, boolean async, boolean userInteraction) {
+        this.samples = samples;
+        this.async = async;
+        this.userInteraction = userInteraction;
+    }
+
+    public int getNumPublishingNamesApplied() {
+        return numPublishingNamesApplied;
     }
 
     @Override
-    public String getName() {
-        if (samples!=null) {
-            if (samples.size()>1) {
-                return "Apply Line Publishing Names on "+samples.size()+" Samples";
-            }
-        }
-        return super.getName();
-    }
-    
-    @Override
-    public void performAction() {
-
-        if (samples==null || samples.isEmpty()) {
-            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                    "In order to annotate the published line name, first select some Samples.");
-            return;
-        }
-
-        try {
-            ActivityLogHelper.logUserAction("ApplyPublishingNamesAction.actionPerformed");
+    public void actionPerformed(ActionEvent e) {
 
             // Group by line
             for(Sample sample : samples) {
                 sampleByLine.put(sample.getLine(), sample);
             }
 
-            SimpleWorker worker = new SimpleWorker() {
+            if (async) {
+                SimpleWorker worker = new SimpleWorker() {
 
-                @Override
-                protected void doStuff() throws Exception {
-                    autoAnnotateWherePossible();
-                }
+                    @Override
+                    protected void doStuff() throws Exception {
+                        autoAnnotateWherePossible();
+                    }
 
-                @Override
-                protected void hadSuccess() {
+                    @Override
+                    protected void hadSuccess() {
+                        if (userInteraction) {
+                            continueWithManualAnnotation();
+                        }
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        FrameworkAccess.handleException(error);
+                    }
+                };
+
+                worker.execute();
+            }
+            else {
+                autoAnnotateWherePossible();
+                if (userInteraction) {
                     continueWithManualAnnotation();
                 }
+            }
 
-                @Override
-                protected void hadError(Throwable error) {
-                    FrameworkAccess.handleException(error);
-                }
-            };
-
-            worker.execute();
-
-        }
-        catch (Exception ex) {
-            FrameworkAccess.handleException("Problem setting publishing name", ex);
-        }
     }
 
     private void autoAnnotateWherePossible() {
@@ -156,7 +120,7 @@ public class ApplyPublishingNamesAction extends BaseContextualNodeAction {
                 Collection<String> possibleNames = sageClient.getPublishingNames(lineName);
 
                 if (possibleNames.isEmpty()) {
-                    log.info("No pulishing names available for '{}'", lineName);
+                    log.info("No publishing names available for '{}'", lineName);
                 }
                 else if (possibleNames.size() == 1) {
                     annotatePublishedName((List<Sample>)sampleByLine.get(lineName), possibleNames.iterator().next());
@@ -210,7 +174,10 @@ public class ApplyPublishingNamesAction extends BaseContextualNodeAction {
         Ontology publicationOntology = getPublicationOntology();
         OntologyTerm publishingNameTerm = getPublishedTerm(publicationOntology, ANNOTATION_PUBLISHING_NAME);
         ApplyAnnotationAction action = ApplyAnnotationAction.get();
-        action.setObjectAnnotations(samples, publishingNameTerm, publishedName, null);
+        List<Annotation> annotations = action.setObjectAnnotations(samples, publishingNameTerm, publishedName, null);
+        if (annotations != null) {
+            this.numPublishingNamesApplied += annotations.size();
+        }
     }
 
     private class PublishingNameDialog extends ModalDialog {
@@ -223,7 +190,7 @@ public class ApplyPublishingNamesAction extends BaseContextualNodeAction {
         private Collection<Sample> samples;
         private String returnValue;
 
-        public PublishingNameDialog(String lineName, Collection<Sample> samples) {
+        PublishingNameDialog(String lineName, Collection<Sample> samples) {
 
             this.lineName = lineName;
             this.samples = samples;
@@ -237,14 +204,11 @@ public class ApplyPublishingNamesAction extends BaseContextualNodeAction {
             this.comboBox = new JComboBox<>();
             comboBox.setEditable(false);
             comboBox.setToolTipText("Choose a publishing name for this line");
-            comboBox.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    if (e.getStateChange()==ItemEvent.SELECTED) {
-                        String value = (String)comboBox.getSelectedItem();
-                        if (!StringUtils.isEmpty(value)) {
-                            returnValue = value;
-                        }
+            comboBox.addItemListener(e -> {
+                if (e.getStateChange()==ItemEvent.SELECTED) {
+                    String value = (String)comboBox.getSelectedItem();
+                    if (!StringUtils.isEmpty(value)) {
+                        returnValue = value;
                     }
                 }
             });
@@ -253,21 +217,13 @@ public class ApplyPublishingNamesAction extends BaseContextualNodeAction {
 
             JButton okButton = new JButton("Apply To "+samples.size()+" Samples");
             okButton.setToolTipText("Apply changes and close");
-            okButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    setVisible(false);
-                }
-            });
+            okButton.addActionListener(e -> setVisible(false));
 
             JButton cancelButton = new JButton("Cancel");
             cancelButton.setToolTipText("Close without saving changes");
-            cancelButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    returnValue = null;
-                    setVisible(false);
-                }
+            cancelButton.addActionListener(e -> {
+                returnValue = null;
+                setVisible(false);
             });
 
             JPanel buttonPane = new JPanel();
@@ -400,4 +356,5 @@ public class ApplyPublishingNamesAction extends BaseContextualNodeAction {
 
         return publishedTerm;
     }
+
 }

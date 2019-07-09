@@ -1,4 +1,4 @@
-package org.janelia.workstation.site.jrc.nb_action;
+package org.janelia.workstation.site.jrc.action;
 
 import java.awt.event.ActionEvent;
 

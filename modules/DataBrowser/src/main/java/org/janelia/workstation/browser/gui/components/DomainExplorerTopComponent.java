@@ -21,8 +21,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
+import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.common.nodes.RecentlyOpenedItemsNode;
+import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
 import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
@@ -357,18 +359,22 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         
         worker.execute();
     }
-    
+
+    private void updateRecentlyOpenedNode() {
+        for(Node child : root.getChildren().getNodes()) {
+            if (child instanceof RecentlyOpenedItemsNode) {
+                RecentlyOpenedItemsNode node = (RecentlyOpenedItemsNode)child;
+                node.refreshChildren();
+            }
+        }
+    }
+
     @Subscribe
     public void prefChanged(LocalPreferenceChanged event) {
         if (event.getKey().equals(DataBrowserMgr.RECENTLY_OPENED_HISTORY)) {
             // Something was added to the history, so we need to update the node's children
             if (root!=null) {
-                for(Node child : root.getChildren().getNodes()) {
-                    if (child instanceof RecentlyOpenedItemsNode) {
-                        RecentlyOpenedItemsNode node = (RecentlyOpenedItemsNode)child;
-                        node.refreshChildren();
-                    }
-                }
+                updateRecentlyOpenedNode();
             }
         }
         else if (event.getKey().equals(SHOW_RECENTLY_OPENED_ITEMS)
@@ -398,12 +404,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             }
         }
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                beanTreeView.expand(expanded);
-            }
-        });
+        SwingUtilities.invokeLater(() -> beanTreeView.expand(expanded));
     }
     
     @Subscribe
