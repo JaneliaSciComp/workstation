@@ -7,6 +7,8 @@ import org.janelia.it.jacs.shared.octree.ZoomLevel;
 import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.model.util.MatrixUtilities;
+import org.janelia.rendering.RenderedVolumeMetadata;
+import org.janelia.rendering.TileInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +45,34 @@ public class TileFormat {
     }
 
     // new methods to help convert between TileIndex and xyz micrometer coordinates
+
+    void initializeFromRenderedVolumeMetadata(RenderedVolumeMetadata renderedVolumeMetadata) {
+        setDefaultParameters();
+        setZoomLevelCount(renderedVolumeMetadata.getNumZoomLevels());
+        setVolumeSize(renderedVolumeMetadata.getVolumeSizeInVoxels());
+        setVoxelMicrometers(renderedVolumeMetadata.getMicromsPerVoxel());
+        setOrigin(renderedVolumeMetadata.getOriginVoxel());
+        if (renderedVolumeMetadata.getYzTileInfo() != null) {
+            setHasXSlices(true);
+            updateTileFormatFromTileInfo(renderedVolumeMetadata.getYzTileInfo());
+        }
+        if (renderedVolumeMetadata.getZxTileInfo() != null) {
+            setHasYSlices(true);
+            updateTileFormatFromTileInfo(renderedVolumeMetadata.getZxTileInfo());
+        }
+        if (renderedVolumeMetadata.getXyTileInfo() != null) {
+            setHasZSlices(true);
+            updateTileFormatFromTileInfo(renderedVolumeMetadata.getXyTileInfo());
+        }
+    }
+
+    private void updateTileFormatFromTileInfo(TileInfo tileInfo) {
+        setChannelCount(tileInfo.getChannelCount());
+        setTileSize(tileInfo.getVolumeSize());
+        setSrgb(tileInfo.isSrgb());
+        setBitDepth(tileInfo.getBitDepth());
+        setIntensityMax((int) Math.pow(2, tileInfo.getBitDepth()) - 1);
+    }
 
     /**
      * NOTE - it is possible for tileIndexForXyz to return
@@ -107,7 +137,7 @@ public class TileFormat {
         return zoom;
     }
 
-    public TileBoundingBox viewBoundsToTileBounds(int[] xyzFromWhd, ViewBoundingBox screenBounds0, int zoom) {
+    TileBoundingBox viewBoundsToTileBounds(int[] xyzFromWhd, ViewBoundingBox screenBounds0, int zoom) {
 
         double zoomFactor = Math.pow(2.0, zoom);
         // get tile pixel size 1024 from loadAdapter
@@ -136,8 +166,6 @@ public class TileFormat {
             double temp = yMinViewUnit;
             yMinViewUnit = bottomY - yMaxViewUnit;
             yMaxViewUnit = bottomY - temp;
-        } else {
-            // TODO - invert slice axis? (already inverted above)
         }
 
         int wMin = (int) Math.floor(xMinViewUnit / tileWidth);
@@ -170,9 +198,7 @@ public class TileFormat {
      * @param xyzFromWhd        indirection for axial sequence numbers.
      * @return min/max-delimiting box.
      */
-    public ViewBoundingBox findViewBounds(
-            int viewWidth, int viewHeight, Vec3 focus, double pixelsPerViewUnit, int[] xyzFromWhd
-    ) {
+    ViewBoundingBox findViewBounds(int viewWidth, int viewHeight, Vec3 focus, double pixelsPerViewUnit, int[] xyzFromWhd) {
         BoundingBox3d bb = calcBoundingBox();
         // bb = originAdjustBoundingBox(bb, xyzFromWhd);
         // focus = originAdjustCameraFocus(focus, xyzFromWhd);
@@ -220,7 +246,7 @@ public class TileFormat {
         return indexStyle;
     }
 
-    public void setIndexStyle(TileIndex.IndexStyle indexStyle) {
+    void setIndexStyle(TileIndex.IndexStyle indexStyle) {
         this.indexStyle = indexStyle;
     }
 

@@ -20,17 +20,14 @@ import org.janelia.it.jacs.shared.utils.HttpClientHelper;
 import org.janelia.model.security.AppAuthorization;
 import org.janelia.rendering.CachedRenderedVolumeLoader;
 import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolume;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeMetadata;
-import org.janelia.rendering.RenderingType;
 import org.janelia.rendering.TileInfo;
 import org.janelia.rendering.TileKey;
 import org.janelia.rendering.utils.HttpClientProvider;
 import org.janelia.workstation.core.api.LocalPreferenceMgr;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +49,8 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
     private final ObjectMapper objectMapper;
     private final AppAuthorization appAuthorization;
     private final RenderedVolumeLoader renderedVolumeLoader;
-    private RenderedVolume renderedVolume;
+    private RenderedVolumeLocation renderedVolumeLocation;
+    private RenderedVolumeMetadata renderedVolumeMetadata;
 
     RestServiceBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat,
                                                URI volumeBaseURI,
@@ -79,8 +77,8 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
                 throw new IllegalStateException("HTTP status " + statusCode + " (not OK) from url " + url);
             }
             String strData = getMethod.getResponseBodyAsString();
-            RenderedVolumeMetadata renderedVolumeMetadata = objectMapper.readValue(strData, RenderedVolumeMetadata.class);
-            RenderedVolumeLocation rvl = new CachedRenderedVolumeLocation(
+            renderedVolumeMetadata = objectMapper.readValue(strData, RenderedVolumeMetadata.class);
+            renderedVolumeLocation = new CachedRenderedVolumeLocation(
                     new JADEBasedRenderedVolumeLocation(
                             renderedVolumeMetadata.getConnectionURI(),
                             renderedVolumeMetadata.getDataStorageURI(),
@@ -99,50 +97,13 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
                             }
                     ),
                     LocalPreferenceMgr.getInstance().getLocalFileCacheStorage());
-
-            this.renderedVolume = new RenderedVolume(
-                    rvl,
-                    renderedVolumeMetadata.getRenderingType(),
-                    renderedVolumeMetadata.getOriginVoxel(),
-                    renderedVolumeMetadata.getVolumeSizeInVoxels(),
-                    renderedVolumeMetadata.getMicromsPerVoxel(),
-                    renderedVolumeMetadata.getNumZoomLevels(),
-                    renderedVolumeMetadata.getXyTileInfo(),
-                    renderedVolumeMetadata.getYzTileInfo(),
-                    renderedVolumeMetadata.getZxTileInfo()
-            );
-
-            getTileFormat().setDefaultParameters();
-            getTileFormat().setZoomLevelCount(renderedVolumeMetadata.getNumZoomLevels());
-            getTileFormat().setVolumeSize(renderedVolumeMetadata.getVolumeSizeInVoxels());
-            getTileFormat().setVoxelMicrometers(renderedVolumeMetadata.getMicromsPerVoxel());
-            getTileFormat().setOrigin(renderedVolumeMetadata.getOriginVoxel());
-            if (renderedVolumeMetadata.getYzTileInfo() != null) {
-                getTileFormat().setHasXSlices(true);
-                updateTileFormatFromTileInfo(renderedVolumeMetadata.getYzTileInfo());
-            }
-            if (renderedVolumeMetadata.getZxTileInfo() != null) {
-                getTileFormat().setHasYSlices(true);
-                updateTileFormatFromTileInfo(renderedVolumeMetadata.getZxTileInfo());
-            }
-            if (renderedVolumeMetadata.getXyTileInfo() != null) {
-                getTileFormat().setHasZSlices(true);
-                updateTileFormatFromTileInfo(renderedVolumeMetadata.getXyTileInfo());
-            }
+            getTileFormat().initializeFromRenderedVolumeMetadata(renderedVolumeMetadata);
         } catch (Exception ex) {
             LOG.error("Error getting sample 2d tile from {}", url, ex);
             throw new IllegalStateException(ex);
         } finally {
             getMethod.releaseConnection();
         }
-    }
-
-    private void updateTileFormatFromTileInfo(TileInfo tileInfo) {
-        getTileFormat().setChannelCount(tileInfo.getChannelCount());
-        getTileFormat().setTileSize(tileInfo.getVolumeSize());
-        getTileFormat().setSrgb(tileInfo.isSrgb());
-        getTileFormat().setBitDepth(tileInfo.getBitDepth());
-        getTileFormat().setIntensityMax((int) Math.pow(2, tileInfo.getBitDepth()) - 1);
     }
 
     @Override
@@ -155,11 +116,11 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
                     tileInfo.getSliceAxis(),
                     tileInfo);
             LOG.debug("Load tile {} using key {}", tileIndex, tileKey);
-            return renderedVolumeLoader.loadSlice(this.renderedVolume, tileKey)
+            return renderedVolumeLoader.loadSlice(renderedVolumeLocation, renderedVolumeMetadata, tileKey)
                     .map(TextureData2d::new)
                     .orElse(null);
         } catch (Exception ex) {
-            LOG.error("Error getting sample 2d tile from {}", this.renderedVolume.getDataStorageURI(), ex);
+            LOG.error("Error getting sample 2d tile from {}", renderedVolumeMetadata.getDataStorageURI(), ex);
             throw new TileLoadError(ex);
         }
     }
@@ -167,11 +128,11 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
     private TileInfo getTileInfo(TileIndex tileIndex) {
         switch (tileIndex.getSliceAxis()) {
             case X:
-                return this.renderedVolume.getYzTileInfo();
+                return renderedVolumeMetadata.getYzTileInfo();
             case Y:
-                return this.renderedVolume.getZxTileInfo();
+                return renderedVolumeMetadata.getZxTileInfo();
             case Z:
-                return this.renderedVolume.getXyTileInfo();
+                return renderedVolumeMetadata.getXyTileInfo();
             default:
                 throw new IllegalArgumentException("Unknown slice axis in " + tileIndex);
         }

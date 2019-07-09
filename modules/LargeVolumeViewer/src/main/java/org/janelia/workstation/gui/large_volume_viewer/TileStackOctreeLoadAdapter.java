@@ -20,13 +20,11 @@ public class TileStackOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter {
     TileStackOctreeLoadAdapter(TileFormat tileFormat, URI baseURI) {
         super(tileFormat, baseURI);
         if (baseURI.getScheme().startsWith("file")) {
-            blockTiffOctreeLoadAdapter = new FileBasedBlockTiffOctreeLoadAdapter(tileFormat, baseURI);
+            blockTiffOctreeLoadAdapter = new FileBasedBlockTiffOctreeLoadAdapter(tileFormat, baseURI,
+                    VOLUMES_CACHE_SIZE, TILES_CACHE_SIZE);
         } else if (baseURI.getScheme().startsWith("http")) {
-            blockTiffOctreeLoadAdapter = new RestServiceBasedBlockTiffOctreeLoadAdapter(tileFormat, 
-                    baseURI,
-                    AccessManager.getAccessManager().getAppAuthorization(),
-                    VOLUMES_CACHE_SIZE,
-                    TILES_CACHE_SIZE
+            blockTiffOctreeLoadAdapter = new RestServiceBasedBlockTiffOctreeLoadAdapter(tileFormat, baseURI, AccessManager.getAccessManager().getAppAuthorization(),
+                    VOLUMES_CACHE_SIZE, TILES_CACHE_SIZE
             );
         } else {
             throw new IllegalArgumentException("Don't know how to load " + baseURI);

@@ -1,31 +1,35 @@
 package org.janelia.horta.volume;
 
+import java.net.URI;
+import java.util.Collection;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.collect.ImmutableSet;
+
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
 import org.janelia.horta.BrainTileInfo;
 import org.janelia.horta.BrainTileInfoBuilder;
 import org.janelia.it.jacs.shared.utils.HttpClientHelper;
 import org.janelia.model.security.AppAuthorization;
 import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolume;
 import org.janelia.rendering.RenderedVolumeLoader;
+import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.rendering.utils.HttpClientProvider;
+import org.janelia.workstation.core.api.LocalPreferenceMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import java.net.URI;
-import java.util.Collection;
 
 public class JadeVolumeBrickSource implements StaticVolumeBrickSource {
     private static final Logger LOG = LoggerFactory.getLogger(JadeVolumeBrickSource.class);
@@ -35,7 +39,7 @@ public class JadeVolumeBrickSource implements StaticVolumeBrickSource {
     private final AppAuthorization appAuthorization;
     private final RenderedVolumeLoader renderedVolumeLoader;
     private final ObjectMapper objectMapper;
-    private RenderedVolume renderedVolume;
+    private RenderedVolumeLocation renderedVolumeLocation;
     private final Double resolution;
     private final BrickInfoSet brickInfoSet;
 
@@ -60,7 +64,7 @@ public class JadeVolumeBrickSource implements StaticVolumeBrickSource {
                 throw new IllegalStateException("HTTP status " + statusCode + " (not OK) from url " + url);
             }
             RenderedVolumeMetadata renderedVolumeMetadata = objectMapper.readValue(getMethod.getResponseBodyAsStream(), RenderedVolumeMetadata.class);
-            this.renderedVolume = new RenderedVolume(
+            renderedVolumeLocation = new CachedRenderedVolumeLocation(
                     new JADEBasedRenderedVolumeLocation(
                             renderedVolumeMetadata.getConnectionURI(),
                             renderedVolumeMetadata.getDataStorageURI(),
@@ -77,18 +81,11 @@ public class JadeVolumeBrickSource implements StaticVolumeBrickSource {
                                     return client;
                                 }
                             }),
-                    renderedVolumeMetadata.getRenderingType(),
-                    renderedVolumeMetadata.getOriginVoxel(),
-                    renderedVolumeMetadata.getVolumeSizeInVoxels(),
-                    renderedVolumeMetadata.getMicromsPerVoxel(),
-                    renderedVolumeMetadata.getNumZoomLevels(),
-                    renderedVolumeMetadata.getXyTileInfo(),
-                    renderedVolumeMetadata.getYzTileInfo(),
-                    renderedVolumeMetadata.getZxTileInfo());
+                    LocalPreferenceMgr.getInstance().getLocalFileCacheStorage());
             // There is no dynamic loading by resolution at the moment for raw tiles in yaml file
             // so treat all tiles as having the same resolution as the first tile
-            return renderedVolumeLoader.loadVolumeRawImageTiles(renderedVolume.getRvl()).stream()
-                    .map(rawImage -> BrainTileInfoBuilder.fromRawImage(renderedVolume.getRvl(), rawImage, leverageCompressedFiles))
+            return renderedVolumeLoader.loadVolumeRawImageTiles(renderedVolumeLocation).stream()
+                    .map(rawImage -> BrainTileInfoBuilder.fromRawImage(renderedVolumeLocation, rawImage, leverageCompressedFiles))
                     .reduce(MutablePair.of(null, new BrickInfoSet()),
                             (Pair<Double, BrickInfoSet> res, BrainTileInfo brainTileInfo) -> {
                                 res.getRight().add(brainTileInfo);
