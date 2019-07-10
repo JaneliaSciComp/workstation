@@ -114,7 +114,7 @@ import java.util.concurrent.Callable;
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = true, position = 500)
 @ActionID(category = "Window", id = "org.janelia.workstation.browser.components.OntologyExplorerTopComponent")
-@ActionReference(path = "Menu/Window/Core", position = 4)
+@ActionReference(path = "Menu/Window/Core", position = 40)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_OntologyExplorerAction",
         preferredID = OntologyExplorerTopComponent.TC_NAME

@@ -14,7 +14,6 @@ import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.facade.impl.rest.SubjectFacadeImpl;
 import org.janelia.workstation.core.api.facade.interfaces.SubjectFacade;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
@@ -44,7 +43,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.workstation.admin.AdministrationTopComponent")
-@ActionReference(path = "Menu/Window/Core", position = 300)
+@ActionReference(path = "Menu/Window/Core", position = 10)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AdministrationTopComponentAction",
         preferredID = AdministrationTopComponent.PREFERRED_ID

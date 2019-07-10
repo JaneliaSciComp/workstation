@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false, position = 0) // We do our own "openAtStartup" in the ShowingHook module.
 @ActionID(category = "Window", id = "org.janelia.workstation.browser.components.StartPageTopComponent")
-@ActionReference(path = "Menu/Window/Core", position = 40)
+@ActionReference(path = "Menu/Window/Core", position = 50)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_StartPageAction",
         preferredID = StartPageTopComponent.TC_NAME

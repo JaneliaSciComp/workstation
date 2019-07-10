@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = true, position = 20)
 @ActionID(category = "Window", id = "org.janelia.workstation.browser.components.DomainInspectorTopComponent")
-@ActionReference(path = "Menu/Window/Core", position = 2)
+@ActionReference(path = "Menu/Window/Core", position = 30)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_DomainInspectorAction",
         preferredID = DomainInspectorTopComponent.TC_NAME

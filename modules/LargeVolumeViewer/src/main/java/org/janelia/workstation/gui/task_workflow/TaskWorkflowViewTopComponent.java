@@ -70,11 +70,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Top component which displays something.
- */
-
-
 @ConvertAsProperties(
         dtd = "-//org.janelia.workstation.gui.task_workflow//TaskWorkflowViewTopComponent//EN",
         autostore = false
@@ -86,7 +81,7 @@ import java.util.Map;
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponentTopComponent")
-@ActionReference(path = "Menu/Window/Large Volume Viewer" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Large Volume Viewer", position = 103)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_TaskWorkflowViewTopComponentAction",
         preferredID = TaskWorkflowViewTopComponent.PREFERRED_ID

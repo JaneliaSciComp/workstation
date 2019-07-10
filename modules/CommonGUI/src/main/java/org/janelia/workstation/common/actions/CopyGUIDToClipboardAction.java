@@ -26,7 +26,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 3, separatorAfter = 4)
+        @ActionReference(path = "Menu/Actions", position = 3, separatorAfter = 5)
 })
 @NbBundle.Messages("CTL_CopyGUIDToClipboardAction=Copy GUID To Clipboard")
 public class CopyGUIDToClipboardAction extends BaseContextualNodeAction {

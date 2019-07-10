@@ -89,7 +89,7 @@ import static org.janelia.workstation.core.options.OptionConstants.SHOW_RECENTLY
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = true, position = 500)
 @ActionID(category = "Window", id = "org.janelia.workstation.browser.components.DomainExplorerTopComponent")
-@ActionReference(path = "Menu/Window/Core", position = 1)
+@ActionReference(path = "Menu/Window/Core", position = 20)
 @TopComponent.OpenActionRegistration(   
         displayName = "#CTL_DomainExplorerAction",
         preferredID = DomainExplorerTopComponent.TC_NAME

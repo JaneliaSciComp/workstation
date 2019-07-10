@@ -7,7 +7,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 
 import com.google.common.eventbus.Subscribe;
-
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -17,16 +16,12 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
-import org.janelia.workstation.core.events.lifecycle.LoginEvent;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeRestClient;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -41,9 +36,6 @@ import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Top component which displays the Large Volume Viewer.
- */
 @ConvertAsProperties(
         dtd = "-//org.janelia.workstation.gui.large_volume_viewer.top_component//LargeVolumeViewer//EN",
         autostore = false

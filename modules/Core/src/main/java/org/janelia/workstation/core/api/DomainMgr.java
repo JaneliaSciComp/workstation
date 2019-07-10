@@ -197,9 +197,9 @@ public class DomainMgr {
                 .collect(Collectors.toList());
     }
 
-    private void loadPreferences() throws Exception {
+    private synchronized void loadPreferences() throws Exception {
         if (preferenceMap == null) {
-            preferenceMap = new HashMap<>();
+            this.preferenceMap = new HashMap<>();
             for (Preference preference : subjectFacade.getPreferences()) {
                 log.debug("Loaded preference: {}", preference);
                 preferenceMap.put(getPreferenceMapKey(preference), preference);
