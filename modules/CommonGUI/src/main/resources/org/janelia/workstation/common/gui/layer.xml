@@ -172,6 +172,12 @@
             <file name="org-openide-actions-SaveAction.shadow_hidden"/>
             <file name="org-openide-actions-SaveAllAction.shadow_hidden"/>
             <file name="org-openide-actions-SaveAsAction.shadow_hidden"/>
+            <folder name="New">
+                <attr name="position" intvalue="100"/>
+            </folder>
+            <folder name="Upload">
+                <attr name="position" intvalue="200"/>
+            </folder>
         </folder>
         <folder name="Edit">
             <attr name="position" intvalue="200"/>

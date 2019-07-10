@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.workstation.admin.AdministrationTopComponent")
-@ActionReference(path = "Menu/Window/Core" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Core", position = 300)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AdministrationTopComponentAction",
         preferredID = AdministrationTopComponent.PREFERRED_ID

@@ -78,18 +78,6 @@ import com.google.common.collect.Multiset;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ActionID(
-        category = "Core",
-        id = "org.janelia.workstation.browser.gui.dialogs.download.DownloadWizardAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_DownloadWizardAction"
-)
-@ActionReferences({
-    @ActionReference(path = "Menu/File", position = 750, separatorAfter = 775),
-    @ActionReference(path = "Shortcuts", name = "D-D")
-})
-@Messages("CTL_DownloadWizardAction=Download...")
 public final class DownloadWizardAction implements ActionListener {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadWizardAction.class);

@@ -60,13 +60,13 @@ public class NewDomainObjectAction extends BaseContextualPopupAction {
 
         List<JComponent> items = new ArrayList<>();
 
+        JMenuItem newFilterItem = new JMenuItem("Search");
+        newFilterItem.addActionListener(new NewFilterActionListener(node));
+        items.add(newFilterItem);
+
         JMenuItem newFolderItem = new JMenuItem("Folder");
         newFolderItem.addActionListener(new NewFolderActionListener(node));
         items.add(newFolderItem);
-
-        JMenuItem newFilterItem = new JMenuItem("Filter");
-        newFilterItem.addActionListener(new NewFilterActionListener(node));
-        items.add(newFilterItem);
 
         return items;
     }

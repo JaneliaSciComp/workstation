@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/View", position = 1400),
+    @ActionReference(path = "Menu/View", position = 1410),
     @ActionReference(path = "Shortcuts", name = "D-R")
 })
 @Messages("CTL_ResetHortaRotation=Reset Horta Rotation")
