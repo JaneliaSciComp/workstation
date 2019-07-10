@@ -56,9 +56,9 @@ public class NewDomainObjectAction extends BaseContextualPopupAction {
     @Override
     protected List<JComponent> getItems() {
 
-        List<JComponent> items = new ArrayList<>();
-
         TreeNodeNode node = parentNode;
+
+        List<JComponent> items = new ArrayList<>();
 
         JMenuItem newFolderItem = new JMenuItem("Folder");
         newFolderItem.addActionListener(new NewFolderActionListener(node));

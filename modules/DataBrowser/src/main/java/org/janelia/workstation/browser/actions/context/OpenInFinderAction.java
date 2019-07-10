@@ -47,6 +47,7 @@ public class OpenInFinderAction extends BaseOpenExternallyAction {
 
     @Override
     public void performAction() {
+        String filepath = this.filepath;
         try {
             ActivityLogHelper.logUserAction("OpenInFinderAction.doAction", filepath);
             Utils.processStandardFilepath(filepath, new FileCallable() {

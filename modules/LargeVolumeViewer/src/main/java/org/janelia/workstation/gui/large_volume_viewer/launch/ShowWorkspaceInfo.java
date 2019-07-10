@@ -54,6 +54,7 @@ public class ShowWorkspaceInfo extends BaseContextualNodeAction {
     @Override
     public void performAction() {
 
+        TmWorkspace workspace = this.workspace;
         TmSample sample = null;
         try {
         	sample = DomainMgr.getDomainMgr().getModel().getDomainObject(workspace.getSampleRef());

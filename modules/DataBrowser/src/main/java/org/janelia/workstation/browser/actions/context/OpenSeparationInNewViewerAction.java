@@ -55,6 +55,9 @@ public class OpenSeparationInNewViewerAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
+
+        NeuronFragment neuronFragment = this.neuronFragment;
+
         ActivityLogHelper.logUserAction("DomainObjectContentMenu.openSeparationInNewEditorItem", neuronFragment);
         final SampleResultViewerTopComponent viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
 

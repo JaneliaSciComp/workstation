@@ -66,9 +66,10 @@ public class OntologyAddTermAction extends BaseContextualPopupAction {
     @Override
     protected List<JComponent> getItems() {
 
-        List<JComponent> items = new ArrayList<>();
         final OntologyTerm term = selectedTerm;
-        if (selectedTerm==null) return items;
+
+        List<JComponent> items = new ArrayList<>();
+        if (term==null) return items;
         
         if (term instanceof org.janelia.model.domain.ontology.Enum) {
             // Alternative "Add" menu for enumeration nodes

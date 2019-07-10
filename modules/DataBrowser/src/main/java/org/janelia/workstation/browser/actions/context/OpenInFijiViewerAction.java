@@ -32,6 +32,7 @@ public class OpenInFijiViewerAction extends BaseOpenExternallyAction {
 
     @Override
     public void performAction() {
+        String filepath = this.filepath;
         OpenInToolAction action = new OpenInToolAction(ToolMgr.TOOL_FIJI, filepath, null);
         action.actionPerformed(null);
     }

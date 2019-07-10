@@ -51,6 +51,7 @@ public class DownloadAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
+        Collection<DomainObject> domainObjects = new ArrayList<>(this.domainObjects);
         new DownloadWizardAction(domainObjects, null).actionPerformed(null);
     }
 }

@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Ontology;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
@@ -61,7 +62,7 @@ public class RemoveFromFolderAction extends BaseContextualNodeAction {
 
     private final static Logger log = LoggerFactory.getLogger(RemoveFromFolderAction.class);
 
-    private org.janelia.model.domain.workspace.Node parentTreeNode;
+    private Node parentTreeNode;
     private Collection<DomainObject> toRemove = new ArrayList<>();
 
     @Override
@@ -83,8 +84,8 @@ public class RemoveFromFolderAction extends BaseContextualNodeAction {
             ViewerContext viewerContext = getViewerContext();
             if (viewerContext!=null) {
                 Object contextObject = viewerContext.getContextObject();
-                if (contextObject instanceof org.janelia.model.domain.workspace.Node) {
-                    this.parentTreeNode = (org.janelia.model.domain.workspace.Node) contextObject;
+                if (contextObject instanceof Node) {
+                    this.parentTreeNode = (Node)contextObject;
                     this.toRemove.addAll(DomainUIUtils.getSelectedDomainObjects(viewerContext));
                     setVisible(true);
                     setEnabled(ClientDomainUtils.hasWriteAccess(parentTreeNode));
@@ -106,7 +107,7 @@ public class RemoveFromFolderAction extends BaseContextualNodeAction {
 
                 if (parentNode instanceof TreeNodeNode) {
                     TreeNodeNode parentTreeNodeNode = (TreeNodeNode)parentNode;
-                    org.janelia.model.domain.workspace.Node parentTreeNode = parentTreeNodeNode.getNode();
+                    Node parentTreeNode = parentTreeNodeNode.getNode();
                     if (this.parentTreeNode==null) {
                         this.parentTreeNode = parentTreeNode;
                     }
@@ -143,15 +144,17 @@ public class RemoveFromFolderAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
+        Node parentTreeNode = this.parentTreeNode;
+        Collection<DomainObject> toRemove = new ArrayList<>(this.toRemove);
         actionPerformed(parentTreeNode, toRemove);
     }
 
-    private void actionPerformed(org.janelia.model.domain.workspace.Node node, Collection<DomainObject> domainObjects) {
+    private void actionPerformed(Node node, Collection<DomainObject> domainObjects) {
 
         ActivityLogHelper.logUserAction("RemoveItemsFromFolderAction.doAction", node);
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
-        final Multimap<org.janelia.model.domain.workspace.Node,DomainObject> removeFromFolders = ArrayListMultimap.create();
+        final Multimap<Node,DomainObject> removeFromFolders = ArrayListMultimap.create();
         final List<DomainObject> listToDelete = new ArrayList<>();
 
         for(DomainObject domainObject : domainObjects) {
@@ -233,7 +236,7 @@ public class RemoveFromFolderAction extends BaseContextualNodeAction {
                 }
 
                 // Delete references
-                for (org.janelia.model.domain.workspace.Node node : removeFromFolders.keySet()) {
+                for (Node node : removeFromFolders.keySet()) {
                     Collection<DomainObject> items = removeFromFolders.get(node);
                     log.info("Removing {} items from {}", items.size(), node);
                     model.removeChildren(node, items);

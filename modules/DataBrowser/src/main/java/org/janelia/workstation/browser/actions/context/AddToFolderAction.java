@@ -90,6 +90,9 @@ public class AddToFolderAction extends BaseContextualPopupAction {
 
     @Override
     protected List<JComponent> getItems() {
+
+        Collection<DomainObject> domainObjects = new ArrayList<>(this.domainObjects);
+
         List<JComponent> items = new ArrayList<>();
 
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
@@ -132,7 +135,7 @@ public class AddToFolderAction extends BaseContextualPopupAction {
 
                 @Override
                 protected void hadSuccess() {
-                    addUniqueItemsToFolder(folder, idPath, success);
+                    addUniqueItemsToFolder(domainObjects, folder, idPath, success);
                 }
 
                 @Override
@@ -162,7 +165,7 @@ public class AddToFolderAction extends BaseContextualPopupAction {
             final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
             final TreeNode folder = selectedNode.getTreeNode();
 
-            addUniqueItemsToFolder(folder, NodeUtils.createIdPath(selectedNode), success);
+            addUniqueItemsToFolder(domainObjects, folder, NodeUtils.createIdPath(selectedNode), success);
         });
 
         items.add(chooseItem);
@@ -190,7 +193,7 @@ public class AddToFolderAction extends BaseContextualPopupAction {
                 commonRootItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
                         ActivityLogHelper.logUserAction("AddToFolderAction.recentFolder", folderId);
-                        addUniqueItemsToFolder(folderId, idPath, success);
+                        addUniqueItemsToFolder(domainObjects, folderId, idPath, success);
                     }
                 });
 
@@ -201,7 +204,7 @@ public class AddToFolderAction extends BaseContextualPopupAction {
         return items;
     }
 
-    private void addUniqueItemsToFolder(Long folderId, Long[] idPath, Consumer<Long[]> success) {
+    private void addUniqueItemsToFolder(Collection<DomainObject> domainObjects, Long folderId, Long[] idPath, Consumer<Long[]> success) {
 
         SimpleWorker worker = new SimpleWorker() {
             
@@ -220,7 +223,7 @@ public class AddToFolderAction extends BaseContextualPopupAction {
                     JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "This folder no longer exists.", "Folder no longer exists", JOptionPane.ERROR_MESSAGE);
                 }
                 else {
-                    addUniqueItemsToFolder(treeNode, idPath, success);
+                    addUniqueItemsToFolder(domainObjects, treeNode, idPath, success);
                 }
             }
 
@@ -234,7 +237,7 @@ public class AddToFolderAction extends BaseContextualPopupAction {
         
     }
     
-    private void addUniqueItemsToFolder(TreeNode treeNode, Long[] idPath, Consumer<Long[]> success) {
+    private void addUniqueItemsToFolder(Collection<DomainObject> domainObjects, TreeNode treeNode, Long[] idPath, Consumer<Long[]> success) {
 
         int existing = 0;
         for(DomainObject domainObject : domainObjects) {
@@ -263,7 +266,7 @@ public class AddToFolderAction extends BaseContextualPopupAction {
         SimpleWorker worker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                addItemsToFolder(treeNode, idPath);
+                addItemsToFolder(domainObjects, treeNode, idPath);
             }
 
             @Override
@@ -288,7 +291,7 @@ public class AddToFolderAction extends BaseContextualPopupAction {
         worker.execute();
     }
 
-    protected void addItemsToFolder(final TreeNode treeNode, final Long[] idPath) throws Exception {
+    protected void addItemsToFolder(Collection<DomainObject> domainObjects, TreeNode treeNode, Long[] idPath) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
 
         // Add them to the given folder

@@ -77,6 +77,8 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
     @Override
     public void performAction() {
 
+        TmSample sample = this.sample;
+
         JFrame mainFrame = FrameworkAccess.getMainFrame();
 
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();

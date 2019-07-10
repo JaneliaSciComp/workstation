@@ -67,6 +67,8 @@ public class MergeSelectedNeuronsAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
+        Set<NeuronFragment> fragments = new HashSet<>(this.fragments);
+
         ActivityLogHelper.logUserAction("MergeSelectedNeuronsAction.performAction");
         BackgroundWorker executeWorker = new TaskMonitoringWorker() {
 

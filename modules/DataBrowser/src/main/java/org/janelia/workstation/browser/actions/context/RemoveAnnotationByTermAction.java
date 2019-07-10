@@ -72,6 +72,8 @@ public class RemoveAnnotationByTermAction extends BaseContextualNodeAction {
     @Override
     public void performAction() {
 
+        Collection<OntologyTerm> ontologyTerms = new ArrayList<>(this.selected);
+
         ActivityLogHelper.logUserAction("RemoveAnnotationByTermAction.performAction");
 
         final List<Reference> selectedIds = GlobalDomainObjectSelectionModel.getInstance().getSelectedIds();
@@ -94,7 +96,7 @@ public class RemoveAnnotationByTermAction extends BaseContextualNodeAction {
                 for (Annotation annotation : annotations) {
                     
                     OntologyTermReference keyTerm = annotation.getKeyTerm();
-                    for(OntologyTerm ontologyTerm : selected) {
+                    for(OntologyTerm ontologyTerm : ontologyTerms) {
                         if (keyTerm.getOntologyId().equals(ontologyTerm.getOntology().getId())
                                 && keyTerm.getOntologyTermId().equals(ontologyTerm.getId())) {
                             log.info("Removing matching annotation: {}", annotation);

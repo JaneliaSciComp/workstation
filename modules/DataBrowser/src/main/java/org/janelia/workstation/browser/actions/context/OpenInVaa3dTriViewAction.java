@@ -32,6 +32,7 @@ public class OpenInVaa3dTriViewAction extends BaseOpenExternallyAction {
 
     @Override
     public void performAction() {
+        String filepath = this.filepath;
         OpenInToolAction action = new OpenInToolAction(ToolMgr.TOOL_VAA3D, filepath, null);
         action.actionPerformed(null);
     }

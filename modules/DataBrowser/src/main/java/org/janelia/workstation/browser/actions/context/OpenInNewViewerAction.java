@@ -64,7 +64,6 @@ public class OpenInNewViewerAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
-        // We need to save off the instance objects, because when the viewer is provisioned it may overwrite them
         DomainObject objectToLoad = this.objectToLoad;
         AbstractDomainObjectNode nodeToLoad = this.nodeToLoad;
         try {

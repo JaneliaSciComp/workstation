@@ -53,6 +53,7 @@ public class OpenInVvdViewerAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
+        String filepath = this.filepath;
         OpenInToolAction action = new OpenInToolAction(ToolMgr.TOOL_VVD, filepath, null);
         action.actionPerformed(null);
     }

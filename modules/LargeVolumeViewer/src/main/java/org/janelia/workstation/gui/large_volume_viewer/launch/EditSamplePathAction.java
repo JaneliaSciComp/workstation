@@ -49,6 +49,8 @@ public class EditSamplePathAction extends BaseContextualNodeAction {
     @Override
     public void performAction() {
 
+        TmSample sample = this.sample;
+
         final String editedPath = (String) JOptionPane.showInputDialog(
                 FrameworkAccess.getMainFrame(),
                 "New Linux path to sample:",

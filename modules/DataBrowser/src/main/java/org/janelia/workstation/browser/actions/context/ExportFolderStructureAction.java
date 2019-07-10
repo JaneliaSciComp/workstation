@@ -67,6 +67,7 @@ public class ExportFolderStructureAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
+        Collection<Node> nodes = new ArrayList<>(this.nodes);
         exportFolders(nodes);
     }
 

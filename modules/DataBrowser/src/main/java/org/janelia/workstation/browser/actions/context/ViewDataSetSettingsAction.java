@@ -55,6 +55,8 @@ public class ViewDataSetSettingsAction extends BaseContextualNodeAction {
     @Override
     public void performAction() {
 
+        Sample sample = this.sample;
+
         SimpleWorker simpleWorker = new SimpleWorker() {
             private DataSet dataSet;
 

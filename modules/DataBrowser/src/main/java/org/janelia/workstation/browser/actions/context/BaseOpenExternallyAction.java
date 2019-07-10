@@ -9,6 +9,8 @@ import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.util.SystemInfo;
 
 /**
+ * Base class for actions which want to open a stack with an external tool.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class BaseOpenExternallyAction extends BaseContextualNodeAction {

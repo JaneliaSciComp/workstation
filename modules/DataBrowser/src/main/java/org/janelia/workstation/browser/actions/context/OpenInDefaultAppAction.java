@@ -34,6 +34,7 @@ public class OpenInDefaultAppAction extends BaseOpenExternallyAction {
 
     @Override
     public void performAction() {
+        String filepath = this.filepath;
         try {
             if (filepath == null) {
                 throw new Exception("Entity has no file path");

@@ -94,8 +94,9 @@ public class ApplyAnnotationAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
+        Collection<OntologyTerm> ontologyTerms = new ArrayList<>(this.selected);
         ActivityLogHelper.logUserAction("ApplyAnnotationAction.performAction");
-        for(OntologyTerm ontologyTerm : selected) {
+        for(OntologyTerm ontologyTerm : ontologyTerms) {
             performAction(ontologyTerm);
         }
     }

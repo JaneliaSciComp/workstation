@@ -93,7 +93,9 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
-        
+
+        Collection<Sample> samples = new ArrayList<>(this.samples);
+
         if (samples.size() > MAX_SAMPLE_RERUN_COUNT && !AccessManager.authenticatedSubjectIsInGroup(SubjectRole.Admin)) {
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "You cannot submit more than "+MAX_SAMPLE_RERUN_COUNT+" samples for reprocessing at a time.",

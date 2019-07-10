@@ -58,20 +58,22 @@ public class RemoveSecondaryDataAction extends BaseContextualPopupAction {
     @Override
     protected List<JComponent> getItems() {
 
+        Sample sample = this.sample;
+
         List<JComponent> items = new ArrayList<>();
 
-        items.add(getPartialSecondaryDataDeletionItem());
-        items.add(getStitchedImageDeletionItem());
+        items.add(getPartialSecondaryDataDeletionItem(sample));
+        items.add(getStitchedImageDeletionItem(sample));
 
         /* Removing this feature until such time as this level of flexibility has user demand. */
         if (Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI) {
-            items.add(getNeuronSeparationDeletionItem());
+            items.add(getNeuronSeparationDeletionItem(sample));
         }
 
         return items;
     }
 
-    private JMenuItem getPartialSecondaryDataDeletionItem() {
+    private JMenuItem getPartialSecondaryDataDeletionItem(Sample sample) {
         JMenuItem rtnVal = new JMenuItem(WHOLE_AA_REMOVAL_MSG);
             rtnVal.addActionListener(ae -> {
                 SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
@@ -86,7 +88,7 @@ public class RemoveSecondaryDataAction extends BaseContextualPopupAction {
         return rtnVal;
     }
 
-    private JMenuItem getStitchedImageDeletionItem() {
+    private JMenuItem getStitchedImageDeletionItem(Sample sample) {
         JMenuItem rtnVal = new JMenuItem( STITCHED_IMG_REMOVAL_MSG);
         rtnVal.addActionListener(ae -> {
             SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
@@ -100,7 +102,7 @@ public class RemoveSecondaryDataAction extends BaseContextualPopupAction {
         return rtnVal;
     }
 
-    private JMenuItem getNeuronSeparationDeletionItem() {
+    private JMenuItem getNeuronSeparationDeletionItem(Sample sample) {
         JMenuItem rtnVal = new JMenuItem(NEURON_SEP_REMOVAL_MSG);
         rtnVal.addActionListener(ae -> {
             SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(

@@ -45,6 +45,8 @@ public class BaseCheckAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
+        List<DomainObject> domainObjects = new ArrayList<>(this.domainObjects);
+        ChildSelectionModel<DomainObject, Reference> editSelectionModel = this.editSelectionModel;
         if (check) {
             editSelectionModel.select(domainObjects, false, true);
         }

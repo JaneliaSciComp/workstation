@@ -69,6 +69,8 @@ public class PurgeAndBlockAction extends BaseContextualNodeAction {
     @Override
     public void performAction() {
 
+        Collection<Sample> samples = new ArrayList<>(this.samples);
+
         ActivityLogHelper.logUserAction("ProcessingBlockAction.actionPerformed");
 
         int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),

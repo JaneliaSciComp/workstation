@@ -60,6 +60,8 @@ public class PasteAnnotationTermAction extends BaseContextualNodeAction {
     @Override
     public void performAction() {
 
+        Collection<DomainObject> domainObjects = new ArrayList<>(this.domainObjects);
+
         ActivityLogHelper.logUserAction("PasteAnnotationTermAction.doAction");
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
