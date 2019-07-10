@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -227,22 +228,25 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setTileDims(Arrays.stream(pixelDims).boxed().toArray(Integer[]::new));
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
 
-        StreamableContent streamableRawImage = volumeLocation.readRawTileContent(rawImage, colorChannelIndex);
-        try {
-            if (streamableRawImage == null || !texture.loadTiffStack(rawImage.toString() + "-ch-" + colorChannelIndex, streamableRawImage.getStream())) {
-                return null;
-            } else {
-                return texture;
-            }
-        } finally {
-            if (streamableRawImage != null) {
-                try {
-                    streamableRawImage.close();
-                } catch (IOException ignore) {
-                    LOG.info("Exception closing the stream for image {}, channel {}", rawImage, colorChannelIndex, ignore);
-                }
-            }
-        }
+        return volumeLocation.getRawTileContent(rawImage, colorChannelIndex)
+                .map(streamableRawImage -> {
+                    try {
+                        if (!texture.loadTiffStack(rawImage.toString() + "-ch-" + colorChannelIndex, streamableRawImage.getStream())) {
+                            return null;
+                        } else {
+                            return texture;
+                        }
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    } finally {
+                        try {
+                            streamableRawImage.close();
+                        } catch (IOException ignore) {
+                            LOG.info("Exception closing the stream for image {}, channel {}", rawImage, colorChannelIndex, ignore);
+                        }
+                    }
+                })
+                .orElse(null);
     }
 
     @Override

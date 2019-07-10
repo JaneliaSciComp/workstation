@@ -24,8 +24,9 @@ public class RenderedVolumeKtxOctreeBlockTileSource extends KtxOctreeBlockTileSo
     @Override
     protected InputStream streamKeyBlock(KtxOctreeBlockTileKey octreeKey) {
         String octreeKeyBlockRelativePath = getKeyBlockRelativePathURI(octreeKey).toString();
-        StreamableContent streamableOctreeBlock = renderedVolumeLocation.streamContentFromRelativePath(octreeKeyBlockRelativePath);
-        return streamableOctreeBlock != null ? streamableOctreeBlock.getStream() : null;
+        return renderedVolumeLocation.getContentFromRelativePath(octreeKeyBlockRelativePath)
+                .map(StreamableContent::getStream)
+                .orElse(null);
     }
 
 }
