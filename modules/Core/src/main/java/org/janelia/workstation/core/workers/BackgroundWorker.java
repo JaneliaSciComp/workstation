@@ -21,19 +21,20 @@ import org.slf4j.LoggerFactory;
 public abstract class BackgroundWorker extends SimpleWorker {
 
     private static final Logger log = LoggerFactory.getLogger(BackgroundWorker.class);
-    
-    private String status;
-    private Callable<Void> success;
-    private boolean emitEvents = false;
+
+    protected String status;
+    protected Callable<Void> success;
+    protected boolean emitEvents = false;
+    protected boolean showProgressMonitor = true;
 
     public BackgroundWorker() {
     }
-    
+
     /**
-     * The success callback is not something that is run automatically when the worker completes. 
+     * The success callback is not something that is run automatically when the worker completes.
      * Instead, it's something that can be triggered by the user if the worker was successful.
-     * When the user triggers the callback (e.g. via a button press), the client should call 
-     * runSuccessCallback() to invoke it. 
+     * When the user triggers the callback (e.g. via a button press), the client should call
+     * runSuccessCallback() to invoke it.
      * @param success
      */
     public BackgroundWorker(Callable<Void> success) {
@@ -60,7 +61,7 @@ public abstract class BackgroundWorker extends SimpleWorker {
     protected void done() {
         super.done();
         if (emitEvents) {
-            Events.getInstance().postOnEventBus(new WorkerEndedEvent(this));
+            Events.getInstance().postOnEventBus(new WorkerEndedEvent(this, showProgressMonitor));
         }
     }
 
@@ -91,7 +92,15 @@ public abstract class BackgroundWorker extends SimpleWorker {
     public String getStatus() {
         return status;
     }
-    
+
+    public boolean isEmitEvents() {
+        return emitEvents;
+    }
+
+    public boolean isShowProgressMonitor() {
+        return showProgressMonitor;
+    }
+
     public Callable<Void> getSuccessCallback() {
         return success;
     }
@@ -108,13 +117,23 @@ public abstract class BackgroundWorker extends SimpleWorker {
             FrameworkAccess.handleException("Problem invoking success callback", e);
         }
     }
-    
+
     /**
      * Same as execute(), except throws events on the EventBus.
      */
     public void executeWithEvents() {
-        emitEvents = true;
-        Events.getInstance().postOnEventBus(new WorkerStartedEvent(this));
+        executeWithEvents(true);
+    }
+
+    /**
+     * Same as execute(), except throws events on the EventBus.
+     * @param showProgressMonitor when the worker is started and finished, should the progress meter panel popup to the
+     *                            user, so that they have a visual indication of the task progress?
+     */
+    public void executeWithEvents(boolean showProgressMonitor) {
+        this.emitEvents = true;
+        this.showProgressMonitor = showProgressMonitor;
+        Events.getInstance().postOnEventBus(new WorkerStartedEvent(this, showProgressMonitor));
         execute();
     }
 }

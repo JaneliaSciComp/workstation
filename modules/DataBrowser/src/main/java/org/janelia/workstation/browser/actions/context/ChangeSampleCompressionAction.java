@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.workstation.browser.gui.dialogs.CompressionDialog;
+import org.janelia.workstation.browser.gui.dialogs.ChangeSampleCompressionDialog;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.openide.awt.ActionID;
@@ -49,7 +49,8 @@ public class ChangeSampleCompressionAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
-        CompressionDialog dialog = new CompressionDialog();
+        Collection<Sample> samples = new ArrayList<>(this.samples);
+        ChangeSampleCompressionDialog dialog = new ChangeSampleCompressionDialog();
         dialog.showForSamples(samples);
     }
 

@@ -140,8 +140,8 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
     }
 
     @Override
-    public void executeWithEvents() {
-        Events.getInstance().postOnEventBus(new WorkerStartedEvent(this));
+    public void executeWithEvents(boolean showProgressMonitor) {
+        Events.getInstance().postOnEventBus(new WorkerStartedEvent(this, showProgressMonitor));
         getWorkersExecutorService().execute(this);
     }
 

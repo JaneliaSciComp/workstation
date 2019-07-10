@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Dialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
@@ -42,9 +43,9 @@ import net.miginfocom.swing.MigLayout;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class CompressionDialog extends ModalDialog {
+public class ChangeSampleCompressionDialog extends ModalDialog {
 
-    private final static Logger log = LoggerFactory.getLogger(CompressionDialog.class);
+    private final static Logger log = LoggerFactory.getLogger(ChangeSampleCompressionDialog.class);
     
     private JPanel attrPanel;
 
@@ -58,11 +59,11 @@ public class CompressionDialog extends ModalDialog {
     private Collection<Sample> samples;
     private DataSet dataSet;
 
-    public CompressionDialog() {
+    public ChangeSampleCompressionDialog() {
         init();
     }
      
-    public CompressionDialog(Dialog parent) {
+    public ChangeSampleCompressionDialog(Dialog parent) {
         super(parent);
         init();
     }
@@ -220,7 +221,7 @@ public class CompressionDialog extends ModalDialog {
             sepVLCheckbox.setSelected(true);
         }
 
-        ActivityLogHelper.logUserAction("CompressionDialog.showForSample");
+        ActivityLogHelper.logUserAction("ChangeSampleCompressionDialog.showForSample");
         packAndShow();
     }
 
@@ -252,13 +253,13 @@ public class CompressionDialog extends ModalDialog {
             sepVLCheckbox.setSelected(true);
         }
 
-        ActivityLogHelper.logUserAction("CompressionDialog.showForDataSet");
+        ActivityLogHelper.logUserAction("ChangeSampleCompressionDialog.showForDataSet");
         packAndShow();
     }
     
     private void saveAndClose() {
 
-        ActivityLogHelper.logUserAction("CompressionDialog.saveAndClose");
+        ActivityLogHelper.logUserAction("ChangeSampleCompressionDialog.saveAndClose");
 
         if (samples != null) {
             if (!saveSamples()) {
