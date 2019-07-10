@@ -17,6 +17,7 @@ import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.enums.Objective;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
@@ -166,7 +167,6 @@ public class StageForPublishingDialog extends ModalDialog {
         this.samples = samples;
         setTitle("Stage "+samples.size()+" Samples for Publishing");
         Component mainFrame = FrameworkAccess.getMainFrame();
-        //setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.4),(int)(mainFrame.getHeight()*0.6)));
 
         ActivityLogHelper.logUserAction("StageForPublishingDialog.showForSamples");
 
@@ -180,6 +180,9 @@ public class StageForPublishingDialog extends ModalDialog {
 
         for (String objective : objectiveSet) {
             JCheckBox checkbox = new JCheckBox(objective, true);
+            if (!objective.equals(Objective.OBJECTIVE_20X.getName()) && !objective.equals(Objective.OBJECTIVE_63X.getName())) {
+                checkbox.setEnabled(false);
+            }
             objectiveCheckboxMap.put(objective, checkbox);
             objectivesPanel.add(checkbox);
         }
@@ -270,6 +273,13 @@ public class StageForPublishingDialog extends ModalDialog {
             if (objectiveCheckboxMap.get(objective).isSelected()) {
                 objectives.add(objective);
             }
+        }
+
+        if (objectives.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "You must select at least one objective",
+                    "No objectives selected", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
         SimpleWorker worker = new SimpleWorker() {
