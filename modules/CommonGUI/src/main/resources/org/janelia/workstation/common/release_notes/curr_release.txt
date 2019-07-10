@@ -7,9 +7,11 @@ https://github.com/JaneliaSciComp/workstation
 Data Browser
 * Core browser functionality was refactored into multiple modules for better maintainability and extensibility.
 * The Workstation client is now able to connect to different backend servers (File->Connect)
-* You can show create and manage user groups using the Administration Tool (Window->Core)
+* You can now create and manage user groups using the Administration Tool (Window->Core)
 * Added scrolling to the color depth mask creation dialog
-* Improved dependency management, application installers and distribution.
+* All context menu items are now also found in the main menu under Actions
+* Streamlined publishing workflow (right-click and choose Stage for Publishing)
+* Improved dependency management, application installers and distribution
 * Many performance improvements and bug fixes
 
 MouseLight Tools

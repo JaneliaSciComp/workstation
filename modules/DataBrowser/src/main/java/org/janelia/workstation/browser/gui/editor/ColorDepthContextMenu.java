@@ -62,13 +62,13 @@ public class ColorDepthContextMenu extends PopupContextMenu {
         
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-        addSeparator();
-        addSeparator();
-
-        for (Component currentContextMenuItem : DomainObjectAcceptorHelper.getCurrentContextMenuItems()) {
-            add(currentContextMenuItem);
-        }
-        
+//        addSeparator();
+//        addSeparator();
+//
+//        for (Component currentContextMenuItem : DomainObjectAcceptorHelper.getCurrentContextMenuItems()) {
+//            add(currentContextMenuItem);
+//        }
+//
     }
     
     public void runDefaultAction() {
