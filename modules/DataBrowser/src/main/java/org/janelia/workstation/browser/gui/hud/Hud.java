@@ -11,6 +11,7 @@ import org.janelia.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.MissingIcon;
 import org.janelia.workstation.core.api.FileMgr;
+import org.janelia.workstation.core.keybind.KeymapUtil;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.util.ImageCache;
@@ -42,6 +43,8 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -173,6 +176,26 @@ public class Hud extends ModalDialog {
         scrollPane.getViewport().addMouseListener(mouseAdapter);
         
         add(scrollPane, BorderLayout.CENTER);
+
+        // Default key listener should close this win   dow
+        setKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+                if (KeymapUtil.isModifier(e)) {
+                    return;
+                }
+
+                if (e.getID() != KeyEvent.KEY_PRESSED) {
+                    return;
+                }
+
+                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    hideDialog();
+                    e.consume();
+                }
+            }
+        });
 
         init3dGui();
 
