@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 import javax.annotation.Nullable;
 
 import com.google.common.io.ByteStreams;
+import com.google.common.io.CountingInputStream;
 
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
@@ -68,6 +69,8 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                 .withChannelImageNames(channelImageNames)
                 .withPageNumber(pageNumber)
                 .build(() -> new FileProxy() {
+                    private long size = Integer.MAX_VALUE;
+
                     @Override
                     public String getFileId() {
                         return tileRelativePath + "." + pageNumber;
@@ -76,7 +79,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                     @Nullable
                     @Override
                     public Long getSizeInBytes() {
-                        return null;
+                        return size;
                     }
 
                     @Override
@@ -85,6 +88,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                         if (textureBytes == null) {
                             return null;
                         } else {
+                            size = textureBytes.length;
                             return new ByteArrayInputStream(textureBytes);
                         }
                     }
@@ -130,6 +134,8 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
                 .withRelativePath(relativePath)
                 .build(() -> new FileProxy() {
+                    private CountingInputStream contentStream = null;
+
                     @Override
                     public String getFileId() {
                         return getRenderedVolumePath() + relativePath;
@@ -138,12 +144,17 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                     @Nullable
                     @Override
                     public Long getSizeInBytes() {
-                        return null;
+                        if (contentStream != null) {
+                            return contentStream.getCount();
+                        } else {
+                            return (long) Integer.MAX_VALUE;
+                        }
                     }
 
                     @Override
                     public InputStream getContentStream() {
-                        return delegate.streamContentFromRelativePath(relativePath);
+                        contentStream = new CountingInputStream(delegate.streamContentFromRelativePath(relativePath));
+                        return contentStream;
                     }
 
                     @Override
@@ -166,6 +177,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
                 .withAbsolutePath(absolutePath)
                 .build(() -> new FileProxy() {
+                    private CountingInputStream contentStream = null;
 
                     @Override
                     public String getFileId() {
@@ -175,12 +187,17 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                     @Nullable
                     @Override
                     public Long getSizeInBytes() {
-                        return null;
+                        if (contentStream != null) {
+                            return contentStream.getCount();
+                        } else {
+                            return (long) Integer.MAX_VALUE;
+                        }
                     }
 
                     @Override
                     public InputStream getContentStream() {
-                        return delegate.streamContentFromAbsolutePath(absolutePath);
+                        contentStream = new CountingInputStream(delegate.streamContentFromAbsolutePath(absolutePath));
+                        return contentStream;
                     }
 
                     @Override

@@ -5,8 +5,6 @@ import java.net.URI;
 import java.net.URL;
 
 import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.workstation.core.api.web.JadeServiceClient;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 public class RenderedVolumeKtxOctreeBlockTileSource extends KtxOctreeBlockTileSource {
 
