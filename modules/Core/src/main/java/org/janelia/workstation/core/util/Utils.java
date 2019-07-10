@@ -497,7 +497,7 @@ public class Utils {
             } else {
                 input = fileProxyStream;
                 estimatedCompressionFactor = 1;
-                length = fileProxy.getSizeInBytes();
+                length = fileProxy.estimateSizeInBytes().orElse(null);
             }
         } catch (Exception e) {
             IOUtils.closeQuietly(fileProxyStream);

@@ -14,6 +14,7 @@ import org.janelia.horta.volume.VoxelIndex;
 import org.janelia.rendering.RawImage;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLocation;
+import org.janelia.rendering.StreamableContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -226,17 +227,17 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setTileDims(Arrays.stream(pixelDims).boxed().toArray(Integer[]::new));
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
 
-        InputStream rawImageStream = volumeLocation.readRawTileContent(rawImage, colorChannelIndex);
+        StreamableContent streamableRawImage = volumeLocation.readRawTileContent(rawImage, colorChannelIndex);
         try {
-            if (!texture.loadTiffStack(rawImage.toString() + "-ch-" + colorChannelIndex, rawImageStream)) {
+            if (streamableRawImage == null || !texture.loadTiffStack(rawImage.toString() + "-ch-" + colorChannelIndex, streamableRawImage.getStream())) {
                 return null;
             } else {
                 return texture;
             }
         } finally {
-            if (rawImageStream != null) {
+            if (streamableRawImage != null) {
                 try {
-                    rawImageStream.close();
+                    streamableRawImage.close();
                 } catch (IOException ignore) {
                     LOG.info("Exception closing the stream for image {}, channel {}", rawImage, colorChannelIndex, ignore);
                 }

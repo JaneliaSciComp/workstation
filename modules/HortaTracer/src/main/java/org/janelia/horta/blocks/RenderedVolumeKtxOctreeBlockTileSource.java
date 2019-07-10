@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URL;
 
 import org.janelia.rendering.RenderedVolumeLocation;
+import org.janelia.rendering.StreamableContent;
 
 public class RenderedVolumeKtxOctreeBlockTileSource extends KtxOctreeBlockTileSource {
 
@@ -23,7 +24,8 @@ public class RenderedVolumeKtxOctreeBlockTileSource extends KtxOctreeBlockTileSo
     @Override
     protected InputStream streamKeyBlock(KtxOctreeBlockTileKey octreeKey) {
         String octreeKeyBlockRelativePath = getKeyBlockRelativePathURI(octreeKey).toString();
-        return renderedVolumeLocation.streamContentFromRelativePath(octreeKeyBlockRelativePath);
+        StreamableContent streamableOctreeBlock = renderedVolumeLocation.streamContentFromRelativePath(octreeKeyBlockRelativePath);
+        return streamableOctreeBlock != null ? streamableOctreeBlock.getStream() : null;
     }
 
 }

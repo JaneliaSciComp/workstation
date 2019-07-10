@@ -72,15 +72,16 @@ public class FileProxyService extends AbstractHandler {
             fileProxy = FileMgr.getFileMgr().getFile(standardPath, false);
             log.info("Proxying {} for: {}", method, fileProxy.getFileId());
             response.setContentType("application/octet-stream");
-            if (fileProxy.getSizeInBytes() != null) {
-                response.addHeader("Content-length", fileProxy.getSizeInBytes().toString());
+            Long nbytes = fileProxy.estimateSizeInBytes().orElse(null);
+            if (nbytes != null) {
+                response.addHeader("Content-length", nbytes.toString());
             }
             response.setStatus(200);
 
             if ("HEAD".equals(method)) {
                 // This method is supported, but there is nothing more to do
             } else if ("GET".equals(method)) {
-                log.debug("Writing {} bytes", fileProxy.getSizeInBytes());
+                log.debug("Writing {} bytes", nbytes);
                 InputStream input = fileProxy.getContentStream();
                 output = response.getOutputStream();
                 Utils.copyNio(input, output, BUFFER_SIZE);

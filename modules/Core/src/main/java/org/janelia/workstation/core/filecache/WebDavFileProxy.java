@@ -2,8 +2,8 @@ package org.janelia.workstation.core.filecache;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Optional;
 
-import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -28,10 +28,9 @@ public class WebDavFileProxy implements FileProxy {
         return webDavFile.getWebdavFileKey();
     }
 
-    @Nullable
     @Override
-    public Long getSizeInBytes() {
-        return webDavFile.getSizeInBytes();
+    public Optional<Long> estimateSizeInBytes() {
+        return Optional.of(webDavFile.getSizeInBytes());
     }
 
     @Override

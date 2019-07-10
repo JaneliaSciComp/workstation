@@ -5,14 +5,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
 
 import com.google.common.io.ByteStreams;
-import com.google.common.io.CountingInputStream;
 
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
@@ -20,6 +19,7 @@ import org.janelia.filecacheutils.LocalFileCacheStorage;
 import org.janelia.rendering.RawImage;
 import org.janelia.rendering.RenderedImageInfo;
 import org.janelia.rendering.RenderedVolumeLocation;
+import org.janelia.rendering.StreamableContent;
 
 public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
 
@@ -69,26 +69,26 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                 .withChannelImageNames(channelImageNames)
                 .withPageNumber(pageNumber)
                 .build(() -> new FileProxy() {
-                    private long size = Integer.MAX_VALUE;
+                    private Long size = null;
 
                     @Override
                     public String getFileId() {
                         return tileRelativePath + "." + pageNumber;
                     }
 
-                    @Nullable
                     @Override
-                    public Long getSizeInBytes() {
-                        return size;
+                    public Optional<Long> estimateSizeInBytes() {
+                        return size != null ? Optional.of(size) : Optional.empty();
                     }
 
                     @Override
                     public InputStream getContentStream() {
                         byte[] textureBytes = delegate.readTileImagePageAsTexturedBytes(tileRelativePath, channelImageNames, pageNumber);
                         if (textureBytes == null) {
+                            size = 0L;
                             return null;
                         } else {
-                            size = textureBytes.length;
+                            size = (long) textureBytes.length;
                             return new ByteArrayInputStream(textureBytes);
                         }
                     }
@@ -104,7 +104,12 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                     }
                 });
         FileProxy f = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
-        InputStream contentStream = f.getContentStream();
+        InputStream contentStream;
+        if (f != null) {
+            contentStream = f.getContentStream();
+        } else {
+            contentStream = null;
+        }
         if (contentStream != null) {
             try {
                 return ByteStreams.toByteArray(contentStream);
@@ -116,7 +121,6 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                 } catch (IOException ignore) {
                 }
             }
-
         } else {
             return null;
         }
@@ -130,31 +134,35 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
 
     @Nullable
     @Override
-    public InputStream streamContentFromRelativePath(String relativePath) {
+    public StreamableContent streamContentFromRelativePath(String relativePath) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
                 .withRelativePath(relativePath)
                 .build(() -> new FileProxy() {
-                    private CountingInputStream contentStream = null;
+                    private StreamableContent streamableContent = null;
 
                     @Override
                     public String getFileId() {
                         return getRenderedVolumePath() + relativePath;
                     }
 
-                    @Nullable
                     @Override
-                    public Long getSizeInBytes() {
-                        if (contentStream != null) {
-                            return contentStream.getCount();
+                    public Optional<Long> estimateSizeInBytes() {
+                        if (streamableContent != null) {
+                            return Optional.of(streamableContent.getSize());
                         } else {
-                            return (long) Integer.MAX_VALUE;
+                            return Optional.empty();
                         }
                     }
 
+                    @Nullable
                     @Override
                     public InputStream getContentStream() {
-                        contentStream = new CountingInputStream(delegate.streamContentFromRelativePath(relativePath));
-                        return contentStream;
+                        streamableContent = delegate.streamContentFromRelativePath(relativePath);
+                        if (streamableContent != null) {
+                            return streamableContent.getStream();
+                        } else {
+                            return null;
+                        }
                     }
 
                     @Override
@@ -167,37 +175,40 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                         return false;
                     }
                 });
-        FileProxy f = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
-        return f.getContentStream();
+        return streamableFromFileProxy(renderedVolumeFileCache.getCachedFileEntry(fileKey, false));
     }
 
     @Nullable
     @Override
-    public InputStream streamContentFromAbsolutePath(String absolutePath) {
+    public StreamableContent streamContentFromAbsolutePath(String absolutePath) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
                 .withAbsolutePath(absolutePath)
                 .build(() -> new FileProxy() {
-                    private CountingInputStream contentStream = null;
+                    private StreamableContent streamableContent = null;
 
                     @Override
                     public String getFileId() {
                         return getRenderedVolumePath() + absolutePath;
                     }
 
-                    @Nullable
                     @Override
-                    public Long getSizeInBytes() {
-                        if (contentStream != null) {
-                            return contentStream.getCount();
+                    public Optional<Long> estimateSizeInBytes() {
+                        if (streamableContent != null) {
+                            return Optional.of(streamableContent.getSize());
                         } else {
-                            return (long) Integer.MAX_VALUE;
+                            return Optional.empty();
                         }
                     }
 
+                    @Nullable
                     @Override
                     public InputStream getContentStream() {
-                        contentStream = new CountingInputStream(delegate.streamContentFromAbsolutePath(absolutePath));
-                        return contentStream;
+                        streamableContent = delegate.streamContentFromAbsolutePath(absolutePath);
+                        if (streamableContent != null) {
+                            return streamableContent.getStream();
+                        } else {
+                            return null;
+                        }
                     }
 
                     @Override
@@ -210,7 +221,14 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                         return false;
                     }
                 });
-        FileProxy f = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
-        return f.getContentStream();
+        return streamableFromFileProxy(renderedVolumeFileCache.getCachedFileEntry(fileKey, false));
+    }
+
+    private StreamableContent streamableFromFileProxy(FileProxy f) {
+        if (f == null) {
+            return null;
+        } else {
+            return new StreamableContent(f.estimateSizeInBytes().orElse(-1L), f.getContentStream());
+        }
     }
 }
