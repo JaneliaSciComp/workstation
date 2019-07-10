@@ -143,7 +143,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
 
                     @Override
                     public InputStream getContentStream() {
-                        return delegate.streamContentFromAbsolutePath(relativePath);
+                        return delegate.streamContentFromRelativePath(relativePath);
                     }
 
                     @Override

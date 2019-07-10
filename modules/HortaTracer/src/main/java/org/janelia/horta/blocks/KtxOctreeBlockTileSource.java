@@ -65,20 +65,20 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         }
     }
 
-    URI getKeyBlockPathURI(KtxOctreeBlockTileKey key) {
-        return URI.create(sampleKtxTilesBaseDir)
+    URI getKeyBlockRelativePathURI(KtxOctreeBlockTileKey key) {
+        return URI.create(getKtxSubDir())
                 .resolve(key.getKeyPath())
                 .resolve(key.getKeyBlockName("_8_xy_"))
                 ;
     }
 
     private KtxHeader loadKtxHeader(KtxOctreeBlockTileKey octreeRootKey) {
-        try {
-            KtxHeader ktxHeader = new KtxHeader();
-            ktxHeader.loadStream(streamKeyBlock(octreeRootKey));
+        KtxHeader ktxHeader = new KtxHeader();
+        try (InputStream blockStream = streamKeyBlock(octreeRootKey)) {
+            ktxHeader.loadStream(blockStream);
             return ktxHeader;
         } catch (IOException e) {
-            LOG.error("Error loading KTX header for {}({}) from {}", octreeRootKey, getKeyBlockPathURI(octreeRootKey), originatingSampleURL);
+            LOG.error("Error loading KTX header for {}({}) from {}", octreeRootKey, getKeyBlockRelativePathURI(octreeRootKey), originatingSampleURL);
             throw new IllegalStateException(e);
         }
     }
@@ -235,9 +235,9 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
 
     @Override
     public BlockTileData loadBlock(KtxOctreeBlockTileKey key) throws IOException, InterruptedException {
-        try (InputStream stream = streamKeyBlock(key)) {
+        try (InputStream blockStream = streamKeyBlock(key)) {
             KtxOctreeBlockTileData data = new KtxOctreeBlockTileData();
-            data.loadStreamInterruptably(stream);
+            data.loadStreamInterruptably(blockStream);
             return data;
         }
     }
