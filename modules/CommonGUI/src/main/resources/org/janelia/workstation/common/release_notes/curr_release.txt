@@ -18,5 +18,9 @@ MouseLight Tools
 * Both Horta and LVV were modified to pull data from the JADE storage service, eliminating the previous
   dependency on internal Samba drive mounts. It is no longer necessary to mount external drives to use these tools.
 
+Large Volume Viewer
+* Fixed bug: merge and split should work when autotracing is on
+* Added "unique" predefined note
+
 Horta
 * Import/export color model dialogs default to standard folder on shared drive

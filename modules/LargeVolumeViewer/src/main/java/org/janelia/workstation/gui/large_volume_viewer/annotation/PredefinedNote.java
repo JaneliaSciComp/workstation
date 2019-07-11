@@ -29,7 +29,10 @@ public enum PredefinedNote {
 
     // end of branch that can't be traced further but
     //  is clearly not complete (biologically)
-    PROBLEM_END     ("problem end")
+    PROBLEM_END     ("problem end"),
+
+    // requested for new workflow in July 2019
+    UNIQUE          ("unique")
     ;
 
     private final String noteText;
