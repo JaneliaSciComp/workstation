@@ -834,7 +834,7 @@ public class Utils {
      *
      * @return gigs being requested at launch.
      */
-    public static Integer getMemoryAllocation() throws IOException {
+    public static Integer getMemoryAllocation() {
         return BrandingConfig.getBrandingConfig().getMemoryAllocationGB();
     }
 

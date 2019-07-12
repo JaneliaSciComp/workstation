@@ -310,12 +310,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         showStartPageOnStartup.setSelected(options.isShowStartPageOnStartup());
         useRunAsUserPreferences.setSelected(options.isUseRunAsUserPreferences());
         useHTTPForTileAccess.setSelected(options.isUseHTTPForTileAccess());
-        try {
-            memoryPanel.setMemorySetting(Utils.getMemoryAllocation());
-        }
-        catch (IOException e) {
-            FrameworkAccess.handleException(e);
-        }
+        memoryPanel.setMemorySetting(Utils.getMemoryAllocation());
         
         updateFileCacheComponents(false);
     }
