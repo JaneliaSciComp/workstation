@@ -3,12 +3,12 @@ package org.janelia.workstation.browser.gui.components;
 import java.awt.BorderLayout;
 import java.util.Map;
 
-import org.janelia.workstation.browser.gui.components.Bundle;
-import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.common.gui.support.WindowLocator;
-import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
-import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.workstation.common.gui.support.WindowLocator;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -16,8 +16,6 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * Top component for the Data Inspector, which shows details about a single domain object, 
@@ -36,7 +34,7 @@ import com.google.common.eventbus.Subscribe;
 )
 @TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = true, position = 20)
 @ActionID(category = "Window", id = "org.janelia.workstation.browser.components.DomainInspectorTopComponent")
-@ActionReference(path = "Menu/Window/Core", position = 2)
+@ActionReference(path = "Menu/Window/Core", position = 30)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_DomainInspectorAction",
         preferredID = DomainInspectorTopComponent.TC_NAME

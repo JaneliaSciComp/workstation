@@ -124,10 +124,12 @@ public final class AdminItemsAction extends AbstractAction implements Presenter.
             return pm;
         }
 
+        @Override
         public JComponent[] getMenuPresenters() {
             return new JComponent[] { this };
         }
 
+        @Override
         public JComponent[] synchMenuPresenters(JComponent[] items) {
             getPopupMenu();
             return items;

@@ -8,7 +8,7 @@ import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.util.PermissionTemplate;
-import org.janelia.workstation.browser.actions.ApplyAnnotationAction;
+import org.janelia.workstation.browser.actions.context.ApplyAnnotationAction;
 import org.janelia.workstation.browser.actions.OntologyElementAction;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.dialogs.AutoAnnotationPermissionDialog;
@@ -19,7 +19,7 @@ import org.janelia.workstation.browser.gui.find.FindContextManager;
 import org.janelia.workstation.browser.gui.find.FindToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeView;
-import org.janelia.workstation.browser.nb_action.NewOntologyActionListener;
+import org.janelia.workstation.browser.actions.NewOntologyActionListener;
 import org.janelia.workstation.browser.nodes.OntologyNode;
 import org.janelia.workstation.browser.nodes.OntologyRootNode;
 import org.janelia.workstation.browser.nodes.OntologyTermNode;
@@ -114,7 +114,7 @@ import java.util.concurrent.Callable;
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = true, position = 500)
 @ActionID(category = "Window", id = "org.janelia.workstation.browser.components.OntologyExplorerTopComponent")
-@ActionReference(path = "Menu/Window/Core", position = 4)
+@ActionReference(path = "Menu/Window/Core", position = 40)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_OntologyExplorerAction",
         preferredID = OntologyExplorerTopComponent.TC_NAME

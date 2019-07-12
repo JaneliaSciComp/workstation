@@ -36,7 +36,7 @@ public class ProgressMeterMgr {
 
     @Subscribe
     public void processEvent(WorkerStartedEvent e) {
-        ProgressTopComponent tc = ProgressTopComponent.ensureActive(true);
+        ProgressTopComponent tc = ProgressTopComponent.ensureActive(e.isShowProgressMonitor());
         tc.workerStarted(e.getWorker());
         workerSet.add(e.getWorker());
     }
@@ -49,7 +49,7 @@ public class ProgressMeterMgr {
 
     @Subscribe
     public void processEvent(WorkerEndedEvent e) {
-        ProgressTopComponent tc = ProgressTopComponent.ensureActive(true);
+        ProgressTopComponent tc = ProgressTopComponent.ensureActive(e.isShowProgressMonitor());
         tc.workerEnded(e.getWorker());
         workerSet.remove(e.getWorker());
     }

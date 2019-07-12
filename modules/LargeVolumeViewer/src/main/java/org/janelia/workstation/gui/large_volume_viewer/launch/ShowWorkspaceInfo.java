@@ -5,37 +5,56 @@ import javax.swing.JTextArea;
 
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.common.actions.BaseContextualNodeAction;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.common.actions.SimpleActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.util.lookup.ServiceProvider;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.awt.ActionRegistration;
+import org.openide.util.NbBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * right-click on workspace in Data Explorer, get info on its sample
  */
-@ServiceProvider(service = ContextualActionBuilder.class, position=1530)
-public class ShowWorkspaceInfo extends SimpleActionBuilder {
+@ActionID(
+        category = "Actions",
+        id = "ShowWorkspaceInfo"
+)
+@ActionRegistration(
+        displayName = "#CTL_ShowWorkspaceInfo",
+        lazy = false
+)
+@ActionReferences({
+        @ActionReference(path = "Menu/Actions/Large Volume", position = 1530)
+})
+@NbBundle.Messages("CTL_ShowWorkspaceInfo=Show Sample Info")
+public class ShowWorkspaceInfo extends BaseContextualNodeAction {
 
     private static final Logger log = LoggerFactory.getLogger(ShowWorkspaceInfo.class);
 
+    private TmWorkspace workspace;
+
     @Override
-    protected String getName() {
-        return "Show Sample Info";
+    protected void processContext() {
+        if (getNodeContext().isSingleObjectOfType(TmWorkspace.class)) {
+            workspace = getNodeContext().getSingleObjectOfType(TmWorkspace.class);
+            setVisible(true);
+            setEnabled(ClientDomainUtils.hasWriteAccess(workspace));
+        }
+        else {
+            workspace = null;
+            setEnabledAndVisible(false);
+        }
     }
 
     @Override
-    public boolean isCompatible(Object obj) {
-        return obj instanceof TmWorkspace;
-    }
+    public void performAction() {
 
-    @Override
-    protected void performAction(Object obj) {
-    	
-    	TmWorkspace workspace = (TmWorkspace)obj;
-    	
+        TmWorkspace workspace = this.workspace;
         TmSample sample = null;
         try {
         	sample = DomainMgr.getDomainMgr().getModel().getDomainObject(workspace.getSampleRef());

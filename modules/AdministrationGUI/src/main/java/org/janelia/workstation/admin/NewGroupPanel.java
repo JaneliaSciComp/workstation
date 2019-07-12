@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.AbstractCellEditor;
@@ -90,12 +91,14 @@ public class NewGroupPanel extends JPanel implements Refreshable {
         Subject rawAdmin = AccessManager.getAccessManager().getActualSubject();
         if (rawAdmin instanceof User) {
             User admin = (User) rawAdmin;
-            Set<UserGroupRole> roles = admin.getUserGroupRoles();
-            UserGroupRole newRole = new UserGroupRole(currentGroup.getKey(), GroupRole.Owner);
-            roles.add(newRole);
-            admin.setUserGroupRoles(roles);
-            parent.saveUserRoles(admin);
+            Set<UserGroupRole> roles = new HashSet<>(admin.getUserGroupRoles());
+            roles.add(new UserGroupRole(currentGroup.getKey(), GroupRole.Owner));
+            parent.saveUserRoles(admin, roles);
         }
+        else {
+            log.warn("Cannot set group {} as owner of another group", rawAdmin);
+        }
+
         returnHome();
     }
     

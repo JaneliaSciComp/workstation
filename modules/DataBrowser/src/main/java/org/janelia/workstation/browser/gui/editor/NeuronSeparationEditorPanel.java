@@ -13,7 +13,7 @@ import org.janelia.model.domain.sample.NeuronSeparation;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.ExportResultsAction;
-import org.janelia.workstation.browser.actions.OpenInNeuronAnnotatorAction;
+import org.janelia.workstation.browser.actions.OpenInNeuronAnnotatorActionListener;
 import org.janelia.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.workstation.browser.selection.PipelineResultSelectionEvent;
@@ -32,6 +32,7 @@ import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.selection.ChildPickingSupport;
 import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.model.DomainModelViewUtils;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.model.search.ResultPage;
@@ -157,7 +158,7 @@ public class NeuronSeparationEditorPanel
         openInNAButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new OpenInNeuronAnnotatorAction(separation).actionPerformed(e);
+                new OpenInNeuronAnnotatorActionListener(separation).actionPerformed(e);
             }
         });
         
@@ -182,6 +183,9 @@ public class NeuronSeparationEditorPanel
             @Override
             public Reference getId(DomainObject object) {
                 return Reference.createFor(object);
+            }
+            @Override
+            protected void viewerContextChanged() {
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->NeuronSeparationEditorPanel"));

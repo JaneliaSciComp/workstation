@@ -54,13 +54,13 @@ public interface ListViewer<T,S> {
      * @return
      */
     ImageModel<T, S> getImageModel();
-    
+
     /**
      * Configure the image model to use for showing objects in the list viewer.
      * @param imageModel
      */
     void setImageModel(ImageModel<T,S> imageModel);
-    
+
     /**
      * Set a listener for actions from this list viewer.
      * @param listener
@@ -136,6 +136,12 @@ public interface ListViewer<T,S> {
     void restoreState(ListViewerState viewerState);
 
     /**
+     * Returns true if the viewer is in edit mode.
+     * @return
+     */
+    boolean isEditMode();
+
+    /**
      * Configure the edit selection model to use in the viewer.
      * @param editSelectionModel selection model
      */
@@ -146,7 +152,7 @@ public interface ListViewer<T,S> {
      * @return selection model
      */
     ChildSelectionModel<T, S> getEditSelectionModel();
-    
+
     /**
      * Enable or disable edit mode, which allows a user to select items using checkboxes instead of 
      * button selection. This uses the editSelectionModel.

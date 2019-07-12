@@ -1,6 +1,10 @@
 package org.janelia.workstation.browser.gui.components;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
@@ -15,10 +19,15 @@ import org.janelia.workstation.browser.gui.find.FindContextManager;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
+import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
+import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
+import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
@@ -49,7 +58,6 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.workstation.browser.components.DomainListViewTopComponent")
-//@ActionReference(path = "Menu/Window/Core", position = 3)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_DomainListViewAction",
         preferredID = DomainListViewTopComponent.TC_NAME
@@ -72,9 +80,8 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     @SuppressWarnings("rawtypes")
     private ParentNodeSelectionEditor editor;
     private FindContext findContext;
-    private boolean active = false;
     private String intialState;
-    
+
     public DomainListViewTopComponent() {
         initComponents();
         setName(Bundle.CTL_DomainListViewTopComponent());
@@ -100,20 +107,24 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
     @Override
     public void componentOpened() {
-        log.debug("componentOpened");
+        log.info("componentOpened - {}", this.getName());
         // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
+        // Listen for events
         Events.getInstance().registerOnEventBus(this);
         if (editor!=null) {
+            // Activate the child editor
             editor.activate();
         }
     }
     
     @Override
     public void componentClosed() {
-        log.debug("componentClosed");
+        log.debug("componentClosed - {}", this.getName());
+        // Stop listening for events
         Events.getInstance().unregisterOnEventBus(this);
         if (editor!=null) {
+            // Deactivate the child editor
             editor.deactivate();
         }
         clearEditor();
@@ -121,8 +132,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
     @Override
     protected void componentActivated() {
-        log.debug("componentActivated");
-        this.active = true;
+        log.info("componentActivated - {}", this.getName());
         // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
         // Take control of the history navigation buttons
@@ -136,14 +146,69 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (DomainExplorerTopComponent.getInstance()!=null && domainObject!=null) {
             DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
         }
+        if (editor!=null) {
+            updateContext(editor.getViewerContext());
+            updateNodeIfChanged(editor.getSelectionModel().getObjects());
+        }
     }
     
     @Override
     protected void componentDeactivated() {
-        log.debug("componentDeactivated");
-        this.active = false;
+        log.debug("componentDeactivated - {}", this.getName());
         if (findContext!=null) {
             FindContextManager.getInstance().deactivateContext(findContext);
+        }
+        if (editor!=null) {
+            // Clear the lookup
+//            log.trace("removing cookies");
+//            getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+//            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
+        }
+    }
+
+    @Subscribe
+    public void selectedChanged(DomainObjectSelectionEvent e) {
+        // Make sure this selection comes from one of our children, otherwise there's no point in updating anything
+        TopComponent topComponent = UIUtils.getAncestorWithType(
+                (Component)e.getSourceComponent(), TopComponent.class);
+        if (topComponent==this && editor!=null) {
+            log.trace("Our selection changed, updating cookie because of {}", e);
+            updateNodeIfChanged(editor.getSelectionModel().getObjects());
+        }
+    }
+
+    @Subscribe
+    public void contextChanged(ViewerContextChangeEvent e) {
+        // Make sure this selection comes from one of our children, otherwise there's no point in updating anything
+        TopComponent topComponent = UIUtils.getAncestorWithType(
+                (Component)e.getSourceComponent(), TopComponent.class);
+        if (topComponent==this && editor!=null) {
+            log.trace("Viewer context changed, updating cookie because of {}", e);
+            updateContext(editor.getViewerContext());
+        }
+    }
+
+    private void updateContext(ViewerContext viewerContext) {
+        // Clear all existing nodes
+        getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+        // Add new node
+        content.add(viewerContext);
+    }
+
+    private void updateNodeIfChanged(Collection objects) {
+
+        List<Object> currentObjects = new ArrayList<>();
+        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
+            currentObjects.addAll(childObjectsNode.getObjects());
+        }
+
+        List<Object> newObjects = new ArrayList<>(objects);
+        if (!currentObjects.equals(newObjects)) {
+            log.trace("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
+            // Clear all existing nodes
+            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
+            // Add new node
+            content.add(new ChildObjectsNode(newObjects));
         }
     }
 
@@ -240,7 +305,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     @Override
     public void setFindContext(FindContext findContext) {
         this.findContext = findContext; 
-        if (active) {
+        if (DomainListViewManager.getInstance().isActive(this)) {
             FindContextManager.getInstance().activateContext(findContext);
         }
     }
@@ -355,6 +420,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
         // Do we already have the given node loaded?
         if (!setCurrent(domainObject)) {
+            log.info("Domain object already loaded");
             return false;
         }
 

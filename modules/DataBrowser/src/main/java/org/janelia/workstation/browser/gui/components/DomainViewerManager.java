@@ -98,6 +98,9 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
             // If we are reacting to a selection event in another viewer, then this load is not user driven.
             viewer.loadDomainObject(domainObject, false);
         }
+        else {
+            log.debug("No active viewer available");
+        }
     }
 
     @Subscribe
@@ -157,20 +160,24 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
         worker.execute();   
     }
     
-    public static DomainObject getObjectToLoad(DomainObject domainObject) throws Exception {
-        if (domainObject instanceof NeuronFragment) {
-            NeuronFragment fragment = (NeuronFragment) domainObject;
-            return DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
-        }
-        else if (domainObject instanceof LSMImage) {
-            LSMImage lsmImage = (LSMImage) domainObject;
-            Reference sampleRef = lsmImage.getSample();
-            if (sampleRef!=null) {
-                return DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
+    public static DomainObject getObjectToLoad(DomainObject domainObject) {
+        try {
+            if (domainObject instanceof NeuronFragment) {
+                NeuronFragment fragment = (NeuronFragment) domainObject;
+                    return DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
             }
-            else {
-                return null;
+            else if (domainObject instanceof LSMImage) {
+                LSMImage lsmImage = (LSMImage) domainObject;
+                Reference sampleRef = lsmImage.getSample();
+                if (sampleRef!=null) {
+                    return DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
+                }
+                else {
+                    return null;
+                }
             }
+        } catch (Exception e) {
+            FrameworkAccess.handleException(e);
         }
         return domainObject;
     }

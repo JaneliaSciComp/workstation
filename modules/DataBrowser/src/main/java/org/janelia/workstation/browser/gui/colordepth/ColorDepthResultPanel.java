@@ -27,6 +27,7 @@ import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.api.web.SageRestClient;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.model.DomainModelViewUtils;
 import org.janelia.workstation.core.model.SplitTypeInfo;
 import org.janelia.workstation.core.model.search.ResultPage;
@@ -243,11 +244,19 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             public String getId(ColorDepthMatch object) {
                 return object.getFilepath();
             }
+
+            @Override
+            public void viewerContextChanged() {
+                ColorDepthResultPanel.this.viewerContextChanged();
+            }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->ColorDepthResultPanel"));
         resultsPanel.getViewer().setEditSelectionModel(editSelectionModel);
         
         setLayout(new BorderLayout());
+    }
+
+    protected void viewerContextChanged() {
     }
 
     @Subscribe
@@ -679,6 +688,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         return editSelectionModel;
     }
 
+    public ColorDepthResultImageModel getImageModel() {
+        return imageModel;
+    }
+
     @Override
     public Long getCurrentContextId() {
         if (search == null) return null;
@@ -697,7 +710,11 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     public PaginatedResultsPanel<ColorDepthMatch, String> getResultPanel() {
         return resultsPanel;
     }
-    
+
+    public boolean isEditMode() {
+        return resultsPanel.isEditMode();
+    }
+
     public void refreshView() {
         showCurrSearchResult(true);
     }

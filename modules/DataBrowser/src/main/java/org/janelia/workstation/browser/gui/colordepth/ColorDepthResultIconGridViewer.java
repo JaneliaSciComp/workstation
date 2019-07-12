@@ -258,6 +258,11 @@ public class ColorDepthResultIconGridViewer
     }
 
     @Override
+    public boolean isEditMode() {
+        return editMode;
+    }
+
+    @Override
     public void toggleEditMode(boolean editMode) {
         this.editMode = editMode;
         imagesPanel.setEditMode(editMode);

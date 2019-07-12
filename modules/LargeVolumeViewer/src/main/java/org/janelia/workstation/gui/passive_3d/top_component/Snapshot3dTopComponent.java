@@ -1,18 +1,15 @@
 package org.janelia.workstation.gui.passive_3d.top_component;
 
 import java.awt.BorderLayout;
+
 import javax.swing.JComponent;
 
-import org.janelia.workstation.gui.passive_3d.top_component.Bundle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponent;
 
-/**
- * Top component which displays something.
- */
 @ConvertAsProperties(
         dtd = "-//org.janelia.workstation.gui.passive_3d.top_component//Snapshot3d//EN",
         autostore = false

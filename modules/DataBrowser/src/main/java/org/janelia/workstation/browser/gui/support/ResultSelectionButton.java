@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,42 +39,55 @@ import com.google.common.collect.Ordering;
 public class ResultSelectionButton extends DropDownButton {
     
     private static final int MAX_TITLE_LENGTH = 30;
-    
+
+    private final List<ArtifactDescriptor> descriptors = new ArrayList<>();
     private ArtifactDescriptor currResult;
     private boolean showTitle;
+    private boolean showCounts;
+    private boolean showOnly3dItems;
 
     private ButtonGroup group;
 
     public ResultSelectionButton() {
         this(true);
     }
-    
+
     public ResultSelectionButton(boolean showTitle) {
+        this(showTitle, true, true, false);
+    }
+
+    public ResultSelectionButton(boolean showTitle, boolean showIcon, boolean showCounts, boolean showOnly3dItems) {
         this.showTitle = showTitle;
-        setIcon(Icons.getIcon("folder_open_page.png"));
+        this.showCounts = showCounts;
+        this.showOnly3dItems = showOnly3dItems;
         setToolTipText("Select the result to display");
+        if (showIcon) {
+            setIcon(Icons.getIcon("folder_open_page.png"));
+        }
         reset();
     }
 
     public void reset() {
-        setResultDescriptor(ArtifactDescriptor.LATEST);
+        ArtifactDescriptor defaultDescriptor = descriptors.isEmpty() ? null : descriptors.get(0);
+        setResultDescriptor(defaultDescriptor);
     }
 
     public void setResultDescriptor(ArtifactDescriptor descriptor) {
-        this.currResult = descriptor == null ? ArtifactDescriptor.LATEST : descriptor;
-        if (showTitle) {
+        this.currResult = descriptor;
+        if (currResult!=null && showTitle) {
             String title = StringUtils.abbreviate(currResult.toString(), MAX_TITLE_LENGTH);
             setText(title);
         }
     }
 
     public void populate(DomainObject domainObject) {
-        populate(Arrays.asList(domainObject));
+        populate(Collections.singletonList(domainObject));
     }
     
     public synchronized void populate(Collection<DomainObject> domainObjects) {
 
         // Reset state
+        this.descriptors.clear();
         this.group = new ButtonGroup();
         removeAll();
         
@@ -87,29 +101,28 @@ public class ResultSelectionButton extends DropDownButton {
         List<ResultArtifactDescriptor> sortedResults = countedArtifacts.elementSet().stream()
                 .filter(artifact -> artifact instanceof ResultArtifactDescriptor)
                 .map(artifact -> (ResultArtifactDescriptor)artifact)
-                .sorted(new Comparator<ArtifactDescriptor>() {
-                    @Override
-                    public int compare(ArtifactDescriptor o1, ArtifactDescriptor o2) {
+                .sorted((Comparator<ArtifactDescriptor>) (o1, o2) -> {
 
-                        ResultArtifactDescriptor r1 = (ResultArtifactDescriptor)o1;
-                        ResultArtifactDescriptor r2 = (ResultArtifactDescriptor)o2;
-                        boolean r1Post = r1.getResultName()!=null && r1.getResultName().startsWith("Post");
-                        boolean r2Post = r2.getResultName()!=null && r2.getResultName().startsWith("Post");
-                        
-                        return ComparisonChain.start()
-                                .compare(r1.getObjective(), r2.getObjective(), Ordering.natural().nullsLast())
-                                .compare(r1.getArea(), r2.getArea(), Ordering.natural().nullsFirst())
-                                .compare(r1Post, r2Post, Ordering.natural())
-                                .compare(r1.toString(), r2.toString(), Ordering.natural())
-                                .result();
-                    }
+                    ResultArtifactDescriptor r1 = (ResultArtifactDescriptor)o1;
+                    ResultArtifactDescriptor r2 = (ResultArtifactDescriptor)o2;
+                    boolean r1Post = r1.getResultName()!=null && r1.getResultName().startsWith("Post");
+                    boolean r2Post = r2.getResultName()!=null && r2.getResultName().startsWith("Post");
+
+                    return ComparisonChain.start()
+                            .compare(r1.getObjective(), r2.getObjective(), Ordering.natural().nullsLast())
+                            .compare(r1.getArea(), r2.getArea(), Ordering.natural().nullsFirst())
+                            .compare(r1Post, r2Post, Ordering.natural())
+                            .compare(r1.toString(), r2.toString(), Ordering.natural())
+                            .result();
                 })
                 .collect(Collectors.toList());
         
-        List<ArtifactDescriptor> genericDescriptors = new ArrayList<>();  
-        genericDescriptors.add(ArtifactDescriptor.LATEST);      
-        genericDescriptors.add(ArtifactDescriptor.LATEST_UNALIGNED);
-        genericDescriptors.add(ArtifactDescriptor.LATEST_ALIGNED);
+        List<ArtifactDescriptor> genericDescriptors = new ArrayList<>();
+        if (!showOnly3dItems) {
+            genericDescriptors.add(ArtifactDescriptor.LATEST);
+            genericDescriptors.add(ArtifactDescriptor.LATEST_UNALIGNED);
+            genericDescriptors.add(ArtifactDescriptor.LATEST_ALIGNED);
+        }
 
         List<ArtifactDescriptor> unalignedDescriptors = new ArrayList<>();  
         List<ArtifactDescriptor> postDescriptors = new ArrayList<>();  
@@ -134,7 +147,10 @@ public class ResultSelectionButton extends DropDownButton {
         }
 
         if (!unalignedDescriptors.isEmpty()) {
-            addMenuItem(createLabelItem(""));
+            if (!genericDescriptors.isEmpty()) {
+                // If there are items above, we need a space first
+                addMenuItem(createLabelItem(""));
+            }
             addMenuItem(createLabelItem(ResultCategory.PROCESSED.getLabel()));
             for (ArtifactDescriptor descriptor : unalignedDescriptors) {
                 int count = countedArtifacts.count(descriptor);
@@ -142,15 +158,17 @@ public class ResultSelectionButton extends DropDownButton {
             }
         }
 
-        if (!postDescriptors.isEmpty()) {
-            addMenuItem(createLabelItem(""));
-            addMenuItem(createLabelItem(ResultCategory.POST_PROCESSED.getLabel()));
-            for (ArtifactDescriptor descriptor : postDescriptors) {
-                int count = countedArtifacts.count(descriptor);
-                addMenuItem(createMenuItem(descriptor, count));
+        if (!showOnly3dItems) {
+            if (!postDescriptors.isEmpty()) {
+                addMenuItem(createLabelItem(""));
+                addMenuItem(createLabelItem(ResultCategory.POST_PROCESSED.getLabel()));
+                for (ArtifactDescriptor descriptor : postDescriptors) {
+                    int count = countedArtifacts.count(descriptor);
+                    addMenuItem(createMenuItem(descriptor, count));
+                }
             }
         }
-        
+
         if (!alignedDescriptors.isEmpty()) {
             addMenuItem(createLabelItem(""));
             addMenuItem(createLabelItem(ResultCategory.ALIGNED.getLabel()));
@@ -162,28 +180,35 @@ public class ResultSelectionButton extends DropDownButton {
         
         // Hide the button if there are no artifacts
         setVisible(!countedArtifacts.isEmpty());
+        if (currResult==null) {
+            reset();
+        }
     }
-    
-    private JMenuItem createLabelItem(String text) {
+
+    protected JMenuItem createLabelItem(String text) {
         JMenuItem menuItem = new JMenuItem(text);
         menuItem.setEnabled(false);
         return menuItem;
     }
-    
+
     private JMenuItem createMenuItem(final ArtifactDescriptor descriptor, int count) {
 
+        descriptors.add(descriptor);
+
         String resultName = descriptor.toString();
-        if (count > 0) resultName += " (" + count + " items)";
-        JMenuItem menuItem = new JRadioButtonMenuItem(resultName, descriptor.equals(currResult));
-        menuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                setResultDescriptor(descriptor);
-                resultChanged(currResult);
-                ActivityLogHelper.logUserAction("ResultSelectionButton.resultChanged", descriptor.toString());
-            }
+        if (showCounts && count > 0) resultName += " (" + count + " items)";
+        JMenuItem menuItem = createMenuItem(resultName, descriptor.equals(currResult));
+        menuItem.addActionListener(e -> {
+            setResultDescriptor(descriptor);
+            resultChanged(descriptor);
+            ActivityLogHelper.logUserAction("ResultSelectionButton.resultChanged", descriptor.toString());
         });
         group.add(menuItem);
         return menuItem;
+    }
+
+    protected JMenuItem createMenuItem(String text, boolean selected) {
+        return new JRadioButtonMenuItem(text, selected);
     }
     
     protected void resultChanged(ArtifactDescriptor resultDescriptor) {}

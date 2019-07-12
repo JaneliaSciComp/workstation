@@ -14,7 +14,7 @@ import javax.swing.Action;
 
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.*;
-import org.janelia.workstation.browser.actions.ApplyAnnotationAction;
+import org.janelia.workstation.browser.actions.context.ApplyAnnotationAction;
 import org.janelia.workstation.browser.actions.OntologyElementAction;
 import org.janelia.workstation.common.flavors.OntologyTermFlavor;
 import org.janelia.workstation.common.flavors.OntologyTermNodeFlavor;
@@ -224,7 +224,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     
     @Override
     public Action[] getActions(boolean context) {
-        Collection<Action> actions = DomainObjectAcceptorHelper.getNodeContextMenuItems(getObject());
+        Collection<Action> actions = DomainObjectAcceptorHelper.getCurrentContextActions();
         return actions.toArray(new Action[0]);
     }
 

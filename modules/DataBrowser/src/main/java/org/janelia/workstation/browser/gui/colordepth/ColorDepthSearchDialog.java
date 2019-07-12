@@ -135,30 +135,15 @@ public class ColorDepthSearchDialog extends ModalDialog {
         
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
+        cancelButton.addActionListener(e -> setVisible(false));
 
         JButton saveButton = new JButton("Save");
         saveButton.setToolTipText("Add mask");
-        saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                processSave(false);
-            }
-        });
+        saveButton.addActionListener(e -> processSave(false));
         
         JButton saveAndSearchButton = new JButton("Save and Execute Search");
         saveAndSearchButton.setToolTipText("Add mask");
-        saveAndSearchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                processSave(true);
-            }
-        });
+        saveAndSearchButton.addActionListener(e -> processSave(true));
         
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));

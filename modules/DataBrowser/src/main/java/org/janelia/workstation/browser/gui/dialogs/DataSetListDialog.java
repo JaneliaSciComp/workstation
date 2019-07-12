@@ -60,14 +60,14 @@ public class DataSetListDialog extends ModalDialog {
     private final DynamicTable dynamicTable;
     private final DataSetDialog dataSetDialog;
     private final DomainDetailsDialog detailsDialog;
-    private final CompressionDialog compressionDialog;
+    private final ChangeSampleCompressionDialog compressionDialog;
     
     public DataSetListDialog() {
         setTitle("Data Sets");
 
         dataSetDialog = new DataSetDialog(this);
         detailsDialog = new DomainDetailsDialog(this);
-        compressionDialog = new CompressionDialog(this);
+        compressionDialog = new ChangeSampleCompressionDialog(this);
         
         loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);

@@ -13,7 +13,7 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 /**
  * Action to copy a named string to the clipboard.
  *
- * @deprecated use one of CopyGUIDToClipboardActionBuilder/CopyNameToClipboardActionBuilder
+ * @deprecated use one of CopyGUIDToClipboardAction/CopyNameToClipboardAction
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

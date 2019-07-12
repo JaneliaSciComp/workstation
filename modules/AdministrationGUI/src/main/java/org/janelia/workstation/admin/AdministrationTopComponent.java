@@ -1,5 +1,7 @@
 package org.janelia.workstation.admin;
 
+import java.util.Set;
+
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -9,9 +11,9 @@ import javax.swing.SwingConstants;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.security.Group;
 import org.janelia.model.security.User;
+import org.janelia.model.security.UserGroupRole;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.facade.impl.rest.SubjectFacadeImpl;
 import org.janelia.workstation.core.api.facade.interfaces.SubjectFacade;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
@@ -41,7 +43,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.workstation.admin.AdministrationTopComponent")
-@ActionReference(path = "Menu/Window/Core" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Core", position = 10)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AdministrationTopComponentAction",
         preferredID = AdministrationTopComponent.PREFERRED_ID
@@ -167,10 +169,11 @@ public final class AdministrationTopComponent extends TopComponent {
     /**
      * Persistence section bubbling up from all the panels
      */
-    void saveUserRoles(User user) {
+    void saveUserRoles(User user, Set<UserGroupRole> userGroupRoles) {
         try {
+            log.info("Saving user roles for "+user);
             SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
-            subjectFacade.updateUserRoles(user.getKey(), user.getUserGroupRoles());
+            subjectFacade.updateUserRoles(user.getKey(), userGroupRoles);
         }
         catch (Exception e) {
             FrameworkAccess.handleException(e);

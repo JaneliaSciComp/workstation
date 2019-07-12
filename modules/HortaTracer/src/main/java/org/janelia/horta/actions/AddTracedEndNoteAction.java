@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/View", position = 1400),
+    @ActionReference(path = "Menu/View", position = 1405),
     @ActionReference(path = "Shortcuts", name = "D-E")
 })
 @Messages("CTL_AddTracedEndNote=Add Traced End Note")

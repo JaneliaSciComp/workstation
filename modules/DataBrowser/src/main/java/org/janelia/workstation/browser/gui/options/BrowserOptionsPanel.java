@@ -78,7 +78,8 @@ final class BrowserOptionsPanel extends javax.swing.JPanel {
         searchHereCheckbox.addActionListener(evt -> controller.changed());
         searchHereCheckbox.setSelected(BrowserOptions.getInstance().isShowSearchHere());
 
-        mainPanel.addItem(searchHereCheckbox);
+        // This is intentionally disabled for now. See SearchHereAction.
+        //mainPanel.addItem(searchHereCheckbox);
 
         // Unload Images
 

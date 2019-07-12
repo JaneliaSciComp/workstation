@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * @author schauderd
  */
 public class UserDetailsPanel extends JPanel implements Refreshable {
-    private static final Logger LOG = LoggerFactory.getLogger(UserDetailsPanel.class);
+    private static final Logger log = LoggerFactory.getLogger(UserDetailsPanel.class);
 
     private AdministrationTopComponent parent;
     private JComboBox newGroupSelector;
@@ -130,10 +130,11 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
         revalidate();
     }
     
-    private void saveUser () {
+    private void saveUser() {
+        Set<UserGroupRole> userGroupRoles = currentUser.getUserGroupRoles();
         currentUser = parent.saveUser(currentUser, newPassword);
         if (currentUser != null) {
-            parent.saveUserRoles(currentUser);
+            parent.saveUserRoles(currentUser, userGroupRoles);
         }
         parent.viewUserList();
     }
@@ -196,11 +197,11 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
                         .filter(s -> s instanceof Group)
                         .map(s -> s.getKey());
             } catch (Exception e) {
-                LOG.error("Error retrieving group subjects for setting user groups", e);
+                log.error("Error retrieving group subjects for setting user groups", e);
                 selectionSource = Stream.of();
             }
         } else {
-            LOG.debug("Populate user groups from the current list");
+            log.debug("Populate user groups from the current list");
             selectionSource = currentUser.getUserGroupRoles().stream()
                     .map(ug -> ug.getGroupKey());
         }

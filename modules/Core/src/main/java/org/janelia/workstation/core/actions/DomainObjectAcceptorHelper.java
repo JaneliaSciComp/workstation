@@ -1,19 +1,25 @@
 package org.janelia.workstation.core.actions;
 
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import javax.swing.Action;
-import javax.swing.JComponent;
+import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.integration.spi.domain.ContextualActionBuilder;
-import org.janelia.workstation.integration.spi.domain.ContextualActionUtils;
 import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
+import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileUtil;
+import org.openide.loaders.DataFolder;
+import org.openide.loaders.DataObject;
+import org.openide.loaders.InstanceDataObject;
+import org.openide.util.actions.SystemAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +27,7 @@ import org.slf4j.LoggerFactory;
  * Helps link up Domain Objects with services from providers.
  *
  * @author fosterl
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DomainObjectAcceptorHelper {
 
@@ -69,198 +76,116 @@ public class DomainObjectAcceptorHelper {
     }
 
     private static Action getAction(ContextualActionBuilder acceptor, Object obj) {
-
         Action action = acceptor.getNodeAction(obj);
         if (action == null) {
             // No node action is defined, try the regular action
             action = acceptor.getAction(obj);
         }
-
-        action.setEnabled(ContextualActionUtils.isEnabled(action));
         return action;
     }
 
-    /**
-     * Makes the item for showing the object in its own viewer iff the object
-     * type is correct.
-     */
-    public static Collection<Action> getOpenForContextActions(final Object obj) {
-
-        Collection<ContextualActionBuilder> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(obj);
+    public static Collection<Action> getCurrentContextActions() {
 
         List<Action> actions = new ArrayList<>();
-
-        int i = 0;
-        for (final ContextualActionBuilder builder : domainObjectAcceptors) {
-
-            if (builder.isPrecededBySeparator()) {
-                if (!actions.isEmpty() && actions.get(actions.size()-1) != null) {
-                    actions.add(null);
-                }
-            }
-
-            Action action = getAction(builder, obj);
-            actions.add(action);
-
-            if (builder.isSucceededBySeparator()) {
-                actions.add(null);
-            }
+        try {
+            FileObject actionsFile = FileUtil.getConfigFile("Menu/Actions");
+            DataObject actionsObject = DataObject.find(actionsFile);
+            DataFolder actionsFolder = actionsObject.getLookup().lookup(DataFolder.class);
+            walkActionTree(actionsFolder, actions);
+        }
+        catch (Exception e) {
+            log.error("Error getting current context actions", e);
         }
 
-        if (!actions.isEmpty() && actions.get(actions.size()-1) == null) {
-            // Remove trailing nulls
+        // Remove any trailing null actions
+        if (actions.get(actions.size()-1)==null) {
             actions.remove(actions.size()-1);
         }
 
         return actions;
     }
 
-    public static Collection<JComponent> getOpenForContextItems(final Object obj) {
-        List<JComponent> components = new ArrayList<>();
-        for (Action action : getOpenForContextActions(obj)) {
-            if (action == null) {
-                components.add(new JSeparator());
-            }
-            else {
-                components.add(new JMenuItem(action));
-            }
-        }
-        return components;
-    }
+    private static void walkActionTree(DataFolder actionsFolder, List<Action> actions) {
 
-    /**
-     * Builds a context menu for the given object in the specified viewer context.
-     * @param obj context object
-     * @param viewerContext viewer context
-     * @return context menu of JMenuItems and JSeparators
-     */
-    public static Collection<JComponent> getContextMenuItems(Object obj, ViewerContext viewerContext) {
-
-        List<JComponent> items = new ArrayList<>();
-
-        for (final ContextualActionBuilder builder : ServiceAcceptorHelper.findAcceptors(obj)) {
+        for (DataObject child : actionsFolder.getChildren()) {
             try {
-                buildAction(builder, items, obj, viewerContext);
+                if (child instanceof DataFolder) {
+                    DataFolder childFolder = (DataFolder) child;
+                    walkActionTree(childFolder, actions);
+                }
+                else {
+                    InstanceDataObject data = child.getLookup().lookup(InstanceDataObject.class);
+                    if (data == null) {
+                        log.warn("Got null instance from " + child);
+                        continue;
+                    }
+
+                    if (SystemAction.class.isAssignableFrom(data.instanceClass())) {
+                        Class<? extends SystemAction> clazz = (Class<? extends SystemAction>) data.instanceClass();
+                        SystemAction action = SystemAction.get(clazz);
+                        actions.add(action);
+                        log.debug("  {}", action);
+                    }
+                    else if (JSeparator.class.isAssignableFrom(data.instanceClass())) {
+                        // Don't add two separators in a row
+                        if (actions.size() > 1 && actions.get(actions.size()-1) != null) {
+                            actions.add(null);
+                            log.debug("-----");
+                        }
+                    }
+                    else {
+                        log.warn("Unsupported action class: " + data.instanceClass());
+                    }
+                }
             }
             catch (Exception e) {
-                log.error("Error processing contextual action builder {}", builder.getClass().getName());
+                log.warn("Could not process action "+child, e);
             }
-        }
-
-        if (!items.isEmpty() && items.get(items.size()-1) instanceof JSeparator) {
-            // Remove trailing separators
-            items.remove(items.size()-1);
-        }
-
-        return items;
-    }
-
-    private static void buildAction(ContextualActionBuilder builder, List<JComponent> items, Object obj, ViewerContext viewerContext) {
-
-        log.trace("Using builder {}", builder.getClass().getSimpleName());
-
-        Action action = builder.getAction(obj);
-        if (action == null) {
-            log.trace("  Action builder accepted object but returned null Action");
-            return;
-        }
-
-        if (action instanceof ViewerContextReceiver) {
-            // Inject the context
-            log.trace("  Injecting viewer context: {}", viewerContext);
-            ((ViewerContextReceiver)action).setViewerContext(viewerContext);
-        }
-
-        if (!ContextualActionUtils.isVisible(action)) {
-            log.trace("  Action is not visible");
-            return;
-        }
-
-        // Add pre-separator
-        if (builder.isPrecededBySeparator()) {
-            if (!items.isEmpty() && !(items.get(items.size()-1) instanceof JSeparator)) {
-                log.trace("  Adding pre-separator");
-                items.add(new JSeparator());
-            }
-        }
-
-        if (action instanceof PopupMenuGenerator) {
-            // If the action has a popup generator, use that
-            JMenuItem popupPresenter = ((PopupMenuGenerator) action).getPopupPresenter();
-            if (popupPresenter != null) {
-                log.trace("  Adding popup presenter");
-                items.add(popupPresenter);
-            }
-            else {
-                log.trace("  Popup presenter was null, falling back on wrapping action in menu item");
-                JMenuItem item = new JMenuItem(action);
-                items.add(item);
-            }
-        }
-        else {
-            // Otherwise, just wrap the action
-            log.trace("  Wrapping action in menu item");
-            JMenuItem item = new JMenuItem(action);
-            items.add(item);
-        }
-
-        // Add post-separator
-        if (builder.isSucceededBySeparator()) {
-            log.trace("  Adding post-separator");
-            items.add(new JSeparator());
         }
     }
 
-    /**
-     * Builds the node actions which should be shown for the given object.
-     * @param obj context object
-     * @return Ordered collection of actions. Null actions represent separators.
-     */
-    public static Collection<Action> getNodeContextMenuItems(Object obj) {
+    public static List<Component> getCurrentContextMenuItems() {
 
-        Collection<ContextualActionBuilder> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(obj);
-        List<Action> actions = new ArrayList<>();
+        List<Component> components = new ArrayList<>();
 
-        int i = 0;
-        for (final ContextualActionBuilder builder : domainObjectAcceptors) {
-
-            log.trace("Using builder {}", builder.getClass().getSimpleName());
-
-            Action action = builder.getNodeAction(obj);
-            if (action == null) {
-                log.trace("Action builder accepted object but returned null NodeAction: {}",
-                        builder.getClass().getName());
-                continue;
-            }
-
-            if (!ContextualActionUtils.isVisible(action)) {
-                log.trace("  Action is not visible");
-                continue;
-            }
-
-            // Add pre-separator
-            if (builder.isPrecededBySeparator()) {
-                if (!actions.isEmpty() && actions.get(actions.size()-1) != null) {
-                    log.trace("  Adding pre-separator");
-                    actions.add(null);
+        boolean sep = true;
+        Collection<Action> contextActions = DomainObjectAcceptorHelper.getCurrentContextActions();
+        for (Action action : contextActions) {
+            if (action==null) {
+                if (!sep) {
+                    components.add(new JPopupMenu.Separator());
+                    log.debug("-----");
+                    sep = true;
                 }
             }
-
-            log.trace("  Adding action");
-            actions.add(action);
-
-            if (builder.isSucceededBySeparator()) {
-                log.trace("  Adding post-separator");
-                actions.add(null);
+            else if (action instanceof PopupMenuGenerator) {
+                try {
+                    JMenuItem popupPresenter = ((PopupMenuGenerator) action).getPopupPresenter();
+                    if (popupPresenter != null) {
+                        components.add(popupPresenter);
+                        log.debug("  PopupMenuGenerator for {}", action);
+                        sep = false;
+                    }
+                }
+                catch (Exception e) {
+                    log.debug("Error getting popup presenter from {}", action, e);
+                }
+            }
+            else {
+                JMenuItem mi = new JMenuItem(action);
+                mi.setHorizontalTextPosition(JButton.TRAILING);
+                mi.setVerticalTextPosition(JButton.CENTER);
+                components.add(mi);
+                log.info("  "+action);
+                sep = false;
             }
         }
 
-        // Add post-separator
-        if (!actions.isEmpty() && actions.get(actions.size()-1) == null) {
-            // Remove trailing nulls
-            actions.remove(actions.size()-1);
+        // Remove any trailing separators
+        if (components.get(components.size()-1) instanceof JSeparator) {
+            components.remove(components.size()-1);
         }
 
-        return actions;
+        return components;
     }
 }

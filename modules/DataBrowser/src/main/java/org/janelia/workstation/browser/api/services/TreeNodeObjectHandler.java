@@ -1,6 +1,7 @@
 package org.janelia.workstation.browser.api.services;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
 import org.janelia.workstation.browser.gui.editor.TreeNodeEditorPanel;
@@ -15,7 +16,7 @@ import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
- * A helper for working with TreeNodes and Filters.
+ * A helper for working with Nodes and Filters.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -29,10 +30,7 @@ public class TreeNodeObjectHandler implements DomainObjectHandler {
     
     @Override
     public boolean isCompatible(Class<? extends DomainObject> clazz) {
-        if (TreeNode.class.isAssignableFrom(clazz)) {
-            return true;
-        }
-        return false;
+        return TreeNode.class.isAssignableFrom(clazz);
     }
 
     @Override
@@ -58,7 +56,7 @@ public class TreeNodeObjectHandler implements DomainObjectHandler {
     @Override
     public void remove(DomainObject domainObject) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        model.remove(Arrays.asList((TreeNode)domainObject));
+        model.remove(Collections.singletonList((TreeNode) domainObject));
     }
 
 }

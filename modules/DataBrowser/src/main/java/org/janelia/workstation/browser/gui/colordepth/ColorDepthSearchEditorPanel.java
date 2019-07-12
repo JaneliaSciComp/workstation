@@ -30,6 +30,9 @@ import javax.swing.SwingConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.hud.Hud;
@@ -169,7 +172,12 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         executionErrorLabel.setVisible(false);
         executionErrorLabel.setForeground(Color.red);
         
-        colorDepthResultPanel = new ColorDepthResultPanel();
+        colorDepthResultPanel = new ColorDepthResultPanel() {
+            @Override
+            protected void viewerContextChanged() {
+                Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
+            }
+        };
         
         maskListPanel = new SelectablePanelListPanel() {
 
@@ -452,7 +460,27 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
     public ChildSelectionModel<ColorDepthMatch,String> getEditSelectionModel() {
         return colorDepthResultPanel.getEditSelectionModel();
     }
-    
+
+    @Override
+    public ViewerContext<ColorDepthMatch, String> getViewerContext() {
+        return new ViewerContext<ColorDepthMatch, String>() {
+            @Override
+            public ChildSelectionModel<ColorDepthMatch, String> getSelectionModel() {
+                return colorDepthResultPanel.getSelectionModel();
+            }
+
+            @Override
+            public ChildSelectionModel<ColorDepthMatch, String> getEditSelectionModel() {
+                return colorDepthResultPanel.isEditMode() ? colorDepthResultPanel.getEditSelectionModel() : null;
+            }
+
+            @Override
+            public ImageModel<ColorDepthMatch, String> getImageModel() {
+                return colorDepthResultPanel.getImageModel();
+            }
+        };
+    }
+
     private void executeSearch() {
 
         ActivityLogHelper.logUserAction("ColorDepthSearchEditorPanel.executeSearch", search);

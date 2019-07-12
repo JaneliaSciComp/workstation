@@ -4,7 +4,7 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
 import org.janelia.workstation.core.model.search.SearchConfiguration;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
-import org.janelia.workstation.browser.nb_action.NewFilterActionListener;
+import org.janelia.workstation.browser.actions.NewFilterActionListener;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.sample.Sample;
 import org.netbeans.spi.quicksearch.SearchProvider;

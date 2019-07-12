@@ -1,5 +1,9 @@
 package org.janelia.workstation.browser.gui.editor;
 
+import java.awt.BorderLayout;
+import java.util.List;
+import java.util.concurrent.Callable;
+
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainConstants;
@@ -16,15 +20,19 @@ import org.janelia.workstation.common.gui.support.Debouncer;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
-import org.janelia.workstation.common.nodes.TreeNodeNode;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.core.model.search.SearchResults;
@@ -34,10 +42,6 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.awt.BorderLayout;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Simple editor panel for viewing folders. In the future it may support drag and drop editing of folders.
@@ -58,7 +62,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     // State
     private DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     private DomainObjectEditSelectionModel editSelectionModel = new DomainObjectEditSelectionModel();
-    private TreeNodeNode treeNodeNode;
+    private DomainObjectNode<Node> nodeNode;
     private Node node;
     
     // Results
@@ -78,33 +82,37 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
             public Reference getId(DomainObject object) {
                 return Reference.createFor(object);
             }
+            @Override
+            protected void viewerContextChanged() {
+                Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
+            }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->TreeNodeEditorPanel"));
         add(resultsPanel, BorderLayout.CENTER);
     }
 
     @Override
-    public void loadDomainObjectNode(DomainObjectNode<Node> treeNodeNode, boolean isUserDriven, Callable<Void> success) {
-        this.treeNodeNode = (TreeNodeNode)treeNodeNode;
-        loadDomainObject(treeNodeNode.getDomainObject(), isUserDriven, success);
+    public void loadDomainObjectNode(DomainObjectNode<Node> nodeNode, boolean isUserDriven, Callable<Void> success) {
+        this.nodeNode = nodeNode;
+        loadDomainObject(nodeNode.getDomainObject(), isUserDriven, success);
     }
 
     @Override
-    public void loadDomainObject(final Node treeNode, final boolean isUserDriven, final Callable<Void> success) {
+    public void loadDomainObject(final Node node, final boolean isUserDriven, final Callable<Void> success) {
 
-        if (treeNode==null) return;
+        if (node==null) return;
         
         if (!debouncer.queue(success)) {
             log.info("Skipping load, since there is one already in progress");
             return;
         }
 
-        log.info("loadDomainObject(TreeNode:{})",treeNode.getName());
+        log.info("loadDomainObject({})",node.getName());
         final StopWatch w = new StopWatch();
         resultsPanel.showLoadingIndicator();
 
-        this.node = treeNode;
-        getSelectionModel().setParentObject(treeNode);
+        this.node = node;
+        getSelectionModel().setParentObject(node);
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -114,7 +122,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                children = model.getDomainObjects(treeNode.getChildren());
+                children = model.getDomainObjects(node.getChildren());
                 annotations = model.getAnnotations(DomainUtils.getReferences(children));
                 loadPreferences();
                 DomainUtils.sortDomainObjects(children, sortCriteria);
@@ -128,7 +136,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
                     @Override
                     public Void call() throws Exception {
                         debouncer.success();
-                        ActivityLogHelper.logElapsed("TreeNodeEditorPanel.loadDomainObject", treeNode, w);
+                        ActivityLogHelper.logElapsed("TreeNodeEditorPanel.loadDomainObject", node, w);
                         return null;
                     }
                 });
@@ -178,12 +186,13 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
             return;
         }
         
-        Node updatedTreeNode = DomainMgr.getDomainMgr().getModel().getDomainObject(node.getClass(), node.getId());
-        if (updatedTreeNode!=null) {
-            if (treeNodeNode!=null && !treeNodeNode.getNode().equals(updatedTreeNode)) {
-                treeNodeNode.update(updatedTreeNode);
+        Node updatedNode = DomainMgr.getDomainMgr().getModel().getDomainObject(node.getClass(), node.getId());
+        log.info("Got updated node: {}", updatedNode);
+        if (updatedNode!=null) {
+            if (nodeNode != null && !nodeNode.getDomainObject().equals(updatedNode)) {
+                nodeNode.update(updatedNode);
             }
-            this.node = updatedTreeNode;
+            this.node = updatedNode;
             restoreState(saveState());
         }
         else {
@@ -215,7 +224,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
 
     @Override
     protected DomainObjectNode<Node> getDomainObjectNode() {
-        return treeNodeNode;
+        return nodeNode;
     }
     
     @Override
@@ -258,11 +267,11 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
 
     @Override
     public void search() {
-        if (treeNodeNode==null) {
+        if (nodeNode ==null) {
             loadDomainObject(node, false, null);
         }
         else {
-            loadDomainObjectNode(treeNodeNode, false, null);
+            loadDomainObjectNode(nodeNode, false, null);
         }
     }
 
@@ -309,6 +318,26 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     @Override
     public DomainObjectEditSelectionModel getEditSelectionModel() {
         return editSelectionModel;
+    }
+
+    @Override
+    public ViewerContext<DomainObject, Reference> getViewerContext() {
+        return new ViewerContext<DomainObject, Reference>() {
+            @Override
+            public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+                return selectionModel;
+            }
+
+            @Override
+            public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
+                return resultsPanel.isEditMode() ? editSelectionModel : null;
+            }
+
+            @Override
+            public ImageModel<DomainObject, Reference> getImageModel() {
+                return resultsPanel.getImageModel();
+            }
+        };
     }
 
     @Override

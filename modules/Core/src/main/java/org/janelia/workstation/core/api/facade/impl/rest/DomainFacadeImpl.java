@@ -6,23 +6,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.shared.utils.DomainQuery;
-import org.janelia.workstation.core.api.facade.interfaces.DomainFacade;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.http.RESTClientBase;
-import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;
 import org.janelia.model.domain.report.DatabaseSummary;
 import org.janelia.model.domain.report.DiskUsageSummary;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.facade.interfaces.DomainFacade;
+import org.janelia.workstation.core.api.http.RESTClientBase;
+import org.janelia.workstation.core.api.http.RestJsonClientManager;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,17 +54,15 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
 
     @Override
     public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) throws Exception {
-        Response response = service.path("data/domainobject/name")
+        WebTarget target = service.path("data/domainobject/name")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("name", name)
-                .queryParam("domainClass", domainClass.getName())
+                .queryParam("domainClass", domainClass.getName());
+        Response response = target
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server using name: " + name)) {
-            throw new WebApplicationException(response);
-        }
-        List<T> domainObjs = response.readEntity(new GenericType<List<T>>() {});
-        return domainObjs;
+        checkBadResponse(target, response);
+        return response.readEntity(new GenericType<List<T>>() {});
     }
     
     @SuppressWarnings("unchecked")
@@ -85,28 +82,26 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setReferences(refList);
-        Response response = service.path("data/domainobject/details")
+        WebTarget target = service.path("data/domainobject/details");
+        Response response = target
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server: " + refList)) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<DomainObject>>() {});
     }
     
     @Override
     public List<DomainObject> getDomainObjects(ReverseReference reference) throws Exception {
-        Response response = service.path("data/domainobject/reverseLookup")
+        WebTarget target = service.path("data/domainobject/reverseLookup")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("referenceId", reference.getReferenceId())
                 .queryParam("referenceAttr", reference.getReferenceAttr())
                 .queryParam("count", reference.getCount())
-                .queryParam("referenceClass", reference.getReferringClassName())
+                .queryParam("referenceClass", reference.getReferringClassName());
+        Response response = target
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server using reverser reference: " + reference)) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<DomainObject>>() {});
     }
 
@@ -117,13 +112,11 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setObjectType(className);
         query.setObjectIds(new ArrayList<>(ids));
-
-        Response response = service.path("data/domainobject/details")
+        WebTarget target = service.path("data/domainobject/details");
+        Response response = target
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request getDomainObjects from server: " + ids)) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<T>>() {});
     }
 
@@ -133,15 +126,13 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         // Not using a subject key: these are universal collections.
         query.setObjectType(className);
         query.setSubjectKey(AccessManager.getSubjectKey());
-
-        Response response = service.path("data/domainobject/class")
+        WebTarget target = service.path("data/domainobject/class");
+        Response response = target
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("domainClass", className)
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getAllDomainObjectsByClass from server: " + className)) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<DomainObject>>() {});
     }
 
@@ -149,13 +140,11 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(domainObject);
-
-        Response response = service.path("data/domainobject")
+        WebTarget target = service.path("data/domainobject");
+        Response response = target
                 .request("application/json")
                 .put(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request to save domainObject on server: " + domainObject.getId())) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(DomainObject.class);
     }
 
@@ -173,12 +162,11 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         if (!(propValue instanceof String)) throw new UnsupportedOperationException("This method needs to be fixed to support non-strings");
         
         query.setPropertyValue(propValue.toString());
-        Response response = service.path("data/domainobject")
+        WebTarget target = service.path("data/domainobject");
+        Response response = target
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request updateProperty from server: " + propName + "," + propValue)) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(DomainObject.class);
     }
 
@@ -190,12 +178,11 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         params.put("targetId", domainObject.getId());
         params.put("granteeKey", granteeKey);
         params.put("rights", rights);
-        Response response = service.path("data/user/permissions")
+        WebTarget target = service.path("data/user/permissions");
+        Response response = target
                 .request("application/json")
                 .put(Entity.json(params));
-        if (checkBadResponse(response.getStatus(), "problem making request changePermissions to server: " + domainObject + "," + granteeKey + "," + rights)) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return getDomainObject(Reference.createFor(domainObject));
     }
 
@@ -204,12 +191,11 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setReferences(deleteObjectRefs);
-        Response response = service.path("data/domainobject/remove")
+        WebTarget target = service.path("data/domainobject/remove");
+        Response response = target
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request to remove objectList: " + deleteObjectRefs)) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
     }
 
     @Override
@@ -217,36 +203,40 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         String remoteStorageUrl = ConsoleProperties.getInstance().getProperty("jadestorage.rest.url");
         WebTarget storageService = RestJsonClientManager.getInstance().getTarget(remoteStorageUrl, true);
         for (String storagePath : storagePaths) {
-            Response response = storageService.path("storage_content/storage_path_redirect")
-                    .path(storagePath)
+            WebTarget target = storageService.path("storage_content/storage_path_redirect")
+                    .path(storagePath);
+            Response response = target
                     .request("application/json")
                     .delete();
+
             // check and log but don't fail
-            checkBadResponse(response.getStatus(), "problem making request to remove " + storagePath);
+            int responseStatus = response.getStatus();
+            Response.Status status = Response.Status.fromStatusCode(response.getStatus());
+            if (responseStatus<200 || responseStatus>=300) {
+                log.error("Request for {} returned {} {}", target.getUri(), responseStatus, status);
+            }
         }
     }
 
     @Override
     public DatabaseSummary getDatabaseSummary() throws Exception {
-        Response response = service.path("data/summary/database")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        WebTarget target = service.path("data/summary/database")
+                .queryParam("subjectKey", AccessManager.getSubjectKey());
+        Response response = target
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request to remove getDatabaseSummary")) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(DatabaseSummary.class);
     }
     
     @Override
     public DiskUsageSummary getDiskUsageSummary() throws Exception {
-        Response response = service.path("data/summary/disk")
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
+        WebTarget target = service.path("data/summary/disk")
+                .queryParam("subjectKey", AccessManager.getSubjectKey());
+        Response response = target
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request to remove getDiskUsageSummary")) {
-            throw new WebApplicationException(response);
-        }
+        checkBadResponse(target, response);
         return response.readEntity(DiskUsageSummary.class);
     }
 }

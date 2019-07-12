@@ -153,9 +153,14 @@ public class TaskMonitoringWorker extends NamedBackgroundWorker {
         return executorService;
     }
 
+    /**
+     * Overridden to use our own executor service.
+     */
     @Override
-    public void executeWithEvents() {
-        Events.getInstance().postOnEventBus(new WorkerStartedEvent(this));
+    public void executeWithEvents(boolean showProgressMonitor) {
+        this.emitEvents = true;
+        this.showProgressMonitor = showProgressMonitor;
+        Events.getInstance().postOnEventBus(new WorkerStartedEvent(this, showProgressMonitor));
         getWorkersExecutorService().execute(this);
     }
 }

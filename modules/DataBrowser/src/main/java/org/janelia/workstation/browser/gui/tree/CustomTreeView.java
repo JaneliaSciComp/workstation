@@ -1,7 +1,9 @@
 package org.janelia.workstation.browser.gui.tree;
 
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.beans.PropertyVetoException;
 import java.util.ArrayList;
@@ -12,6 +14,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.swing.Action;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 import javax.swing.text.Position;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
@@ -19,11 +24,15 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import org.janelia.workstation.common.nodes.NodeUtils;
+import org.openide.awt.MouseUtils;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerManager.Provider;
 import org.openide.explorer.view.BeanTreeView;
+import org.openide.explorer.view.TreeView;
 import org.openide.explorer.view.Visualizer;
 import org.openide.nodes.Node;
+import org.openide.nodes.NodeOp;
+import org.openide.util.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,11 +47,12 @@ public class CustomTreeView extends BeanTreeView {
     private final static Logger log = LoggerFactory.getLogger(CustomTreeView.class);
     
     private final ExplorerManager.Provider explorerManagerProvider;
+    private final ExplorerManager manager;
     
     public CustomTreeView(ExplorerManager.Provider explorerManagerProvider) {
         this.explorerManagerProvider = explorerManagerProvider;
+        this.manager = explorerManagerProvider.getExplorerManager();
         setQuickSearchAllowed(false);
-        
         tree.setScrollsOnExpand(false);
     }
         
@@ -281,6 +291,92 @@ public class CustomTreeView extends BeanTreeView {
         tree.grabFocus();
         if (getCurrentNode() == null) {
             selectTopNode();
+        }
+    }
+
+    /**
+     * The rest of this code is copy and pasted from the super class, to fix a minor but annoying bug:
+     * when the tree view is not focused, and a node is right-clicked, it should resolve all of the selection events
+     * before displaying the popup menu. This is accomplished through the addition of SwingUtilities.invokeLater.
+     */
+    private transient PopupAdapter popupListener;
+
+    @Override
+    public boolean isPopupAllowed() {
+        return popupListener != null && isShowing() && isDisplayable();
+    }
+
+    @Override
+    public void setPopupAllowed(boolean value) {
+        if ((popupListener == null) && value) {
+            // on
+            popupListener = new PopupAdapter();
+            tree.addMouseListener(popupListener);
+            return;
+        }
+
+        if ((popupListener != null) && !value) {
+            // off
+            tree.removeMouseListener(popupListener);
+            popupListener = null;
+            return;
+        }
+    }
+
+    class PopupAdapter extends MouseUtils.PopupMouseAdapter {
+        PopupAdapter() {
+        }
+
+        @Override
+        protected void showPopup(MouseEvent e) {
+            tree.cancelEditing();
+            int selRow = tree.getRowForLocation(e.getX(), e.getY());
+
+            if ((selRow == -1) && !isRootVisible()) {
+                // clear selection
+                try {
+                    manager.setSelectedNodes(new Node[]{});
+                } catch (PropertyVetoException exc) {
+                    assert false : exc; // not permitted to be thrown
+                }
+            } else if (!tree.isRowSelected(selRow)) {
+                // This will set ExplorerManager selection as well.
+                // If selRow == -1 the selection will be cleared.
+                tree.setSelectionRow(selRow);
+            }
+
+            if ((selRow != -1) || !isRootVisible()) {
+                // Only change here:
+                SwingUtilities.invokeLater(() -> {
+                    Point p = SwingUtilities.convertPoint(e.getComponent(), e.getX(), e.getY(), CustomTreeView.this);
+                    createPopup((int) p.getX(), (int) p.getY());
+                });
+            }
+        }
+    }
+
+    private void createPopup(int xpos, int ypos) {
+        // bugfix #23932, don't create if it's disabled
+        if (isPopupAllowed()) {
+            Node[] selNodes = manager.getSelectedNodes();
+
+            if (selNodes.length > 0) {
+                Action[] actions = NodeOp.findActions(selNodes);
+                if (actions.length > 0) {
+                    createPopup(xpos, ypos, Utilities.actionsToPopup(actions, this));
+                }
+            } else if (manager.getRootContext() != null) {
+                JPopupMenu popup = manager.getRootContext().getContextMenu();
+                if (popup != null) {
+                    createPopup(xpos, ypos, popup);
+                }
+            }
+        }
+    }
+
+    private void createPopup(int xpos, int ypos, JPopupMenu popup) {
+        if (popup.getSubElements().length > 0) {
+            popup.show(CustomTreeView.this, xpos, ypos);
         }
     }
 }

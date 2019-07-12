@@ -19,7 +19,7 @@ public class PipelineResultSelectionEvent {
         this.isUserDriven = isUserDriven;
     }
 
-    public Object getSource() {
+    public Object getSourceComponent() {
         return source;
     }
     

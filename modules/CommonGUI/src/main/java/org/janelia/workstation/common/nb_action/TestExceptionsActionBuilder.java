@@ -124,6 +124,7 @@ public final class TestExceptionsActionBuilder implements AdminActionBuilder {
                 });
                 subMenu.add(nbExceptionItem);
             }
+            subMenu.setEnabled(isEnabled());
             return subMenu;
         }
 

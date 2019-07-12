@@ -100,6 +100,10 @@
         </dependency>
         <dependency>
             <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-loaders</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-nodes</artifactId>
         </dependency>
         <dependency>
@@ -162,6 +166,7 @@
                 <configuration>
                     <publicPackages>
                         <publicPackage>org.janelia.workstation.browser.actions</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.actions.context</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.api</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.api.state</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.components</publicPackage>
@@ -180,7 +185,6 @@
                         <publicPackage>org.janelia.workstation.browser.gui.progress</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.gui.support</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.gui.tree</publicPackage>
-                        <publicPackage>org.janelia.workstation.browser.nb_action</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.nodes</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.selection</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.tools</publicPackage>

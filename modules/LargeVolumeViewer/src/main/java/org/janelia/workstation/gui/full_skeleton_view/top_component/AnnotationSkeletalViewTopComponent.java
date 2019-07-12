@@ -1,16 +1,11 @@
 package org.janelia.workstation.gui.full_skeleton_view.top_component;
 
-import org.janelia.workstation.gui.full_skeleton_view.top_component.Bundle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponent;
 
-/**
- * Top component for landmark annotations.  Used for rapid, "random access"
- * of regions of the volume.
- */
 @ConvertAsProperties(
         dtd = "-//org.janelia.workstation.gui.full_skeleton_view.top_component//AnnotationSkeletalView//EN",
         autostore = false
@@ -22,7 +17,7 @@ import org.openide.util.NbBundle.Messages;
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = false)
 @ActionID(category = "Window", id = "AnnotationSkeletalViewTopComponent")
-@ActionReference(path = "Menu/Window/Large Volume Viewer" , position = 101)
+@ActionReference(path = "Menu/Window/Large Volume Viewer", position = 101)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AnnotationSkeletalViewAction",
         preferredID = AnnotationSkeletalViewTopComponent.PREFERRED_ID

@@ -1,14 +1,16 @@
 package org.janelia.workstation.browser.api.lifecycle;
 
+import javax.swing.SwingUtilities;
+
 import com.google.common.eventbus.Subscribe;
+import org.janelia.workstation.browser.gui.progress.ProgressMeterMgr;
+import org.janelia.workstation.browser.actions.NavigateBack;
+import org.janelia.workstation.browser.actions.NavigateForward;
+import org.janelia.workstation.browser.actions.StartPageMenuAction;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.browser.gui.progress.ProgressMeterMgr;
-import org.janelia.workstation.browser.nb_action.NavigateBack;
-import org.janelia.workstation.browser.nb_action.NavigateForward;
-import org.janelia.workstation.browser.nb_action.StartPageMenuAction;
 import org.janelia.workstation.core.options.ApplicationOptions;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.actions.CallableSystemAction;
 import org.openide.windows.OnShowing;
 import org.slf4j.Logger;
@@ -39,19 +41,22 @@ public class ShowingHook implements Runnable {
         ProgressMeterMgr.getProgressMeterMgr();
     }
 
+
     @Subscribe
     public void propsLoaded(ConsolePropsLoaded event) {
 
         // Open the start page, if necessary
-        try {
-            if (ApplicationOptions.getInstance().isShowStartPageOnStartup()) {
-                StartPageMenuAction action = new StartPageMenuAction();
-                action.actionPerformed(null);
+        SwingUtilities.invokeLater(() -> {
+            try {
+                if (ApplicationOptions.getInstance().isShowStartPageOnStartup()) {
+                    StartPageMenuAction action = new StartPageMenuAction();
+                    action.actionPerformed(null);
+                }
             }
-        }
-        catch (Throwable e) {
-            FrameworkAccess.handleExceptionQuietly(e);
-        }
+            catch (Throwable e) {
+                FrameworkAccess.handleExceptionQuietly(e);
+            }
+        });
 
         // This is only at start up, no need to listen after the first one
         Events.getInstance().unregisterOnEventBus(this);

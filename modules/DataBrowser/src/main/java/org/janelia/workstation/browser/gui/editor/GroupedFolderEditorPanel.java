@@ -25,6 +25,7 @@ import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.workstation.common.nodes.GroupedFolderNode;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -32,9 +33,12 @@ import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.core.model.search.SearchResults;
@@ -168,6 +172,10 @@ public class GroupedFolderEditorPanel extends JPanel implements
             @Override
             public Reference getId(DomainObject object) {
                 return Reference.createFor(object);
+            }
+            @Override
+            protected void viewerContextChanged() {
+                Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->TreeNodeEditorPanel"));
@@ -681,6 +689,26 @@ public class GroupedFolderEditorPanel extends JPanel implements
 
     public DomainObjectEditSelectionModel getEditSelectionModel() {
         return editSelectionModel;
+    }
+
+    @Override
+    public ViewerContext<DomainObject, Reference> getViewerContext() {
+        return new ViewerContext<DomainObject, Reference>() {
+            @Override
+            public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+                return selectionModel;
+            }
+
+            @Override
+            public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
+                return resultsPanel.isEditMode() ? editSelectionModel : null;
+            }
+
+            @Override
+            public ImageModel<DomainObject, Reference> getImageModel() {
+                return resultsPanel.getImageModel();
+            }
+        };
     }
 
     @Override

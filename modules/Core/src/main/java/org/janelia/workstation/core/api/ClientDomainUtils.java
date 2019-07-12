@@ -82,6 +82,12 @@ public class ClientDomainUtils {
     }
 
     public static <T,S> Collection<T> getObjectsFromModel(Collection<S> ids, ImageModel<T,S> imageModel) {
+        if (ids==null) {
+            throw new IllegalArgumentException("Argument ids cannot be null");
+        }
+        if (imageModel==null) {
+            throw new IllegalArgumentException("Argument imageModel cannot be null");
+        }
         return ids.stream().map(imageModel::getImageByUniqueId).collect(Collectors.toList());
     }
 }

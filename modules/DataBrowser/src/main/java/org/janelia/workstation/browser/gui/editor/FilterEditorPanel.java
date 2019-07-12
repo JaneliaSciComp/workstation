@@ -37,6 +37,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectAttribute;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
@@ -62,15 +63,20 @@ import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.workstation.common.gui.support.SmartTextField;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.common.nodes.FilterNode;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.core.model.search.SearchConfiguration;
@@ -90,7 +96,7 @@ import static org.janelia.workstation.core.api.DomainMgr.getDomainMgr;
  * The Filter Editor is the main search GUI in the Workstation. Users can create, save, and load filters 
  * into this panel. The filter is executed every time it changes, and shows results in an embedded 
  * PaginatedResultsPanel. 
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class FilterEditorPanel 
@@ -292,6 +298,10 @@ public class FilterEditorPanel
             @Override
             public Reference getId(DomainObject object) {
                 return Reference.createFor(object);
+            }
+            @Override
+            protected void viewerContextChanged() {
+                Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->FilterEditorPanel"));
@@ -972,7 +982,27 @@ public class FilterEditorPanel
     public DomainObjectEditSelectionModel getEditSelectionModel() {
         return editSelectionModel;
     }
-    
+
+    @Override
+    public ViewerContext<DomainObject, Reference> getViewerContext() {
+        return new ViewerContext<DomainObject, Reference>() {
+            @Override
+            public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+                return selectionModel;
+            }
+
+            @Override
+            public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
+                return resultsPanel.isEditMode() ? editSelectionModel : null;
+            }
+
+            @Override
+            public ImageModel<DomainObject, Reference> getImageModel() {
+                return resultsPanel.getImageModel();
+            }
+        };
+    }
+
     @Override
     public Long getCurrentContextId() {
         Object parentObject = getSelectionModel().getParentObject();

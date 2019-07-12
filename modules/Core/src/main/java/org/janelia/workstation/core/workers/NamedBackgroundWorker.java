@@ -9,7 +9,9 @@ public abstract class NamedBackgroundWorker extends BackgroundWorker {
 
     public void setName(String name) {
         this.name = name;
-        Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
+        if (isEmitEvents()) {
+            Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
+        }
     }
     
     @Override

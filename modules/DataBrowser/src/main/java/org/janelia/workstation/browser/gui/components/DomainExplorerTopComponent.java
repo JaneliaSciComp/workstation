@@ -1,11 +1,6 @@
 package org.janelia.workstation.browser.gui.components;
 
-import static org.janelia.workstation.core.options.OptionConstants.NAVIGATE_ON_CLICK;
-import static org.janelia.workstation.core.options.OptionConstants.SHOW_RECENTLY_OPENED_ITEMS;
-
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -20,16 +15,26 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.eventbus.Subscribe;
+import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
-import org.janelia.workstation.common.nodes.RecentlyOpenedItemsNode;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
-import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextManager;
 import org.janelia.workstation.browser.gui.find.FindToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeView;
+import org.janelia.workstation.common.gui.support.Debouncer;
+import org.janelia.workstation.common.gui.support.ExpandedTreeState;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.WindowLocator;
+import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
+import org.janelia.workstation.common.nodes.ExplorerRootNode;
+import org.janelia.workstation.common.nodes.NodeUtils;
+import org.janelia.workstation.common.nodes.RecentlyOpenedItemsNode;
+import org.janelia.workstation.common.nodes.WorkspaceNode;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -38,23 +43,15 @@ import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
 import org.janelia.workstation.core.events.prefs.LocalPreferenceChanged;
-import org.janelia.workstation.common.gui.support.Debouncer;
-import org.janelia.workstation.common.gui.support.ExpandedTreeState;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.WindowLocator;
-import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
-import org.janelia.workstation.core.util.ConcurrentUtils;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelectionModel;
-import org.janelia.workstation.core.nodes.IdentifiableNodeSelectionModel;
-import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
-import org.janelia.workstation.common.nodes.ExplorerRootNode;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
+import org.janelia.workstation.core.nodes.IdentifiableNodeSelectionModel;
 import org.janelia.workstation.core.nodes.NodeTracker;
-import org.janelia.workstation.common.nodes.NodeUtils;
-import org.janelia.workstation.common.nodes.WorkspaceNode;
+import org.janelia.workstation.core.util.ConcurrentUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.domain.DomainObject;
+import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -70,8 +67,9 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.eventbus.Subscribe;
+import static org.janelia.workstation.core.options.OptionConstants.NAVIGATE_ON_CLICK;
+import static org.janelia.workstation.core.options.OptionConstants.SHOW_FLY_LINE_RELEASES;
+import static org.janelia.workstation.core.options.OptionConstants.SHOW_RECENTLY_OPENED_ITEMS;
 
 
 /**
@@ -91,7 +89,7 @@ import com.google.common.eventbus.Subscribe;
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = true, position = 500)
 @ActionID(category = "Window", id = "org.janelia.workstation.browser.components.DomainExplorerTopComponent")
-@ActionReference(path = "Menu/Window/Core", position = 1)
+@ActionReference(path = "Menu/Window/Core", position = 20)
 @TopComponent.OpenActionRegistration(   
         displayName = "#CTL_DomainExplorerAction",
         preferredID = DomainExplorerTopComponent.TC_NAME
@@ -167,21 +165,17 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         configButton.setToolTipText("Options for the Data Explorer");
 
         final JCheckBoxMenuItem navigateOnClickMenuItem = new JCheckBoxMenuItem("Navigate on click", isNavigateOnClick());
-        navigateOnClickMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                setNavigateOnClick(navigateOnClickMenuItem.isSelected());   
-            }
-        });
+        navigateOnClickMenuItem.addActionListener(e -> setNavigateOnClick(navigateOnClickMenuItem.isSelected()));
         configButton.addMenuItem(navigateOnClickMenuItem);
 
         final JCheckBoxMenuItem showRecentItemsMenuItem = new JCheckBoxMenuItem("Show recently opened items", isShowRecentMenuItems());
-        showRecentItemsMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                setShowRecentMenuItems(showRecentItemsMenuItem.isSelected());
-            }
-        });
+        showRecentItemsMenuItem.addActionListener(e -> setShowRecentMenuItems(showRecentItemsMenuItem.isSelected()));
         configButton.addMenuItem(showRecentItemsMenuItem);
-        
+
+        final JCheckBoxMenuItem showReleasesMenuItem = new JCheckBoxMenuItem("Show fly line releases", isShowFlyLineReleases());
+        showReleasesMenuItem.addActionListener(e -> setShowFlyLineReleases(showReleasesMenuItem.isSelected()));
+        configButton.addMenuItem(showReleasesMenuItem);
+
         toolbar.getJToolBar().add(configButton);
         
         this.treePanel = new JPanel(new BorderLayout());
@@ -360,22 +354,27 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         
         worker.execute();
     }
-    
+
+    private void updateRecentlyOpenedNode() {
+        for(Node child : root.getChildren().getNodes()) {
+            if (child instanceof RecentlyOpenedItemsNode) {
+                RecentlyOpenedItemsNode node = (RecentlyOpenedItemsNode)child;
+                node.refreshChildren();
+            }
+        }
+    }
+
     @Subscribe
     public void prefChanged(LocalPreferenceChanged event) {
         if (event.getKey().equals(DataBrowserMgr.RECENTLY_OPENED_HISTORY)) {
             // Something was added to the history, so we need to update the node's children
             if (root!=null) {
-                for(Node child : root.getChildren().getNodes()) {
-                    if (child instanceof RecentlyOpenedItemsNode) {
-                        RecentlyOpenedItemsNode node = (RecentlyOpenedItemsNode)child;
-                        node.refreshChildren();
-                    }
-                }
+                updateRecentlyOpenedNode();
             }
         }
-        else if (event.getKey().equals(SHOW_RECENTLY_OPENED_ITEMS)) {
-            // Recreate the root node so that it picks up the new preferences
+        else if (event.getKey().equals(SHOW_RECENTLY_OPENED_ITEMS)
+                || event.getKey().equals(SHOW_FLY_LINE_RELEASES)) {
+            // Recreate the root node so that it picks up the new visibility preferences
             refresh(false, true, null); 
         }
     }
@@ -400,12 +399,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             }
         }
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                beanTreeView.expand(expanded);
-            }
-        });
+        SwingUtilities.invokeLater(() -> beanTreeView.expand(expanded));
     }
     
     @Subscribe
@@ -676,8 +670,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
     
     public static boolean isNavigateOnClick() {
-        Boolean navigate = (Boolean) FrameworkAccess.getModelProperty(NAVIGATE_ON_CLICK);
-        return navigate==null || navigate;
+        return FrameworkAccess.getModelProperty(NAVIGATE_ON_CLICK, true);
     }
     
     private static void setNavigateOnClick(boolean value) {
@@ -685,11 +678,18 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     public static boolean isShowRecentMenuItems() {
-        Boolean navigate = (Boolean) FrameworkAccess.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS);
-        return navigate==null || navigate;
+        return FrameworkAccess.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS, true);
     }
     
     private static void setShowRecentMenuItems(boolean value) {
         FrameworkAccess.setModelProperty(SHOW_RECENTLY_OPENED_ITEMS, value);
+    }
+
+    public static boolean isShowFlyLineReleases() {
+        return FrameworkAccess.getModelProperty(SHOW_FLY_LINE_RELEASES, false);
+    }
+
+    private static void setShowFlyLineReleases(boolean value) {
+        FrameworkAccess.setModelProperty(SHOW_FLY_LINE_RELEASES, value);
     }
 }
