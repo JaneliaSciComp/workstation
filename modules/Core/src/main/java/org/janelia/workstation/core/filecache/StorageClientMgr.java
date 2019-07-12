@@ -106,7 +106,7 @@ public class StorageClientMgr {
             );
             if (storageKey != null) {
                 STORAGE_WORKERS_CACHE.put(storageKey, storageClient);
-                LOG.info("Created storage client for {}", storageKey);
+                LOG.info("Created storage client for {} using {}", storageKey, storageClient.baseUrl);
             } else {
                 LOG.warn("No storage agent cached for {}", standardPathName);
             }
