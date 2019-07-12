@@ -12,16 +12,16 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.core.api.http.HttpClientProxy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.workstation.core.api.http.HttpClientProxy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link AbstractStorageClient} manager.
@@ -31,9 +31,10 @@ public class StorageClientMgr {
     private static final Logger LOG = LoggerFactory.getLogger(StorageClientMgr.class);
     
     private static final Cache<String, AgentStorageClient> STORAGE_WORKERS_CACHE = CacheBuilder.newBuilder()
-            .maximumSize(100)
+            .concurrencyLevel(4)
+            .maximumSize(256)
             .build();
-    private static Consumer<Throwable> NOOP_ERROR_CONN_HANDLER = (t) -> {};
+    private static final Consumer<Throwable> NOOP_ERROR_CONN_HANDLER = (t) -> {};
 
     private final HttpClientProxy httpClient;
     private final MasterStorageClient masterStorageClient;
@@ -61,17 +62,19 @@ public class StorageClientMgr {
     }
 
     private AgentStorageClient getStorageClientForStandardPath(String standardPathName) throws FileNotFoundException {
-        Path standardPath = Paths.get(standardPathName.replaceFirst("^jade:\\/\\/", ""));
-        int nPathComponents = standardPath.getNameCount();
+        String standardLocation = standardPathName.replaceFirst("^jade:\\/\\/", "").replace('\\', '/');
+        Path lookupPath = Paths.get(standardLocation);
+        int nPathComponents = lookupPath.getNameCount();
         List<String> storagePathPrefixCandidates = new LinkedList<>();
         IntStream.range(1, nPathComponents)
                 .mapToObj(pathIndex -> {
-                    if (standardPath.getRoot() == null) {
-                        return standardPath.subpath(0, pathIndex).toString();
+                    if (lookupPath.getRoot() == null) {
+                        return lookupPath.subpath(0, pathIndex);
                     } else {
-                        return standardPath.getRoot().resolve(standardPath.subpath(0, pathIndex)).toString();
+                        return lookupPath.getRoot().resolve(lookupPath.subpath(0, pathIndex));
                     }
                 })
+                .map(p -> p.toString().replace('\\', '/'))
                 .forEach(p -> storagePathPrefixCandidates.add(0, p));
         LOG.debug("storagePathPrefixCandidates={}", storagePathPrefixCandidates);
         AgentStorageClient storageClient;
@@ -79,24 +82,34 @@ public class StorageClientMgr {
             for (String pathPrefix : storagePathPrefixCandidates) {
                 storageClient = STORAGE_WORKERS_CACHE.getIfPresent(pathPrefix);
                 if (storageClient != null) {
-                    LOG.debug("Found storage client for {} in cache", pathPrefix);
+                    LOG.debug("Found storage client {} for {} in cache", storageClient.baseUrl, pathPrefix);
                     return storageClient;
                 }
             }
+            LOG.info("Lookup storage client for {}", standardPathName);
             WebDavStorage storage = masterStorageClient.findStorage(standardPathName);
             String storageBindName = storage.getStorageBindName();
             String storageRootDir = storage.getStorageRootDir();
+            LOG.info("Found WEBDAV storage for {}: {}, {}, {}",
+                    standardPathName, storage.getRemoteFileUrl(), storageBindName, storageRootDir);
+
             String storageKey;
             Consumer<Throwable> agentErrorHandler;
-            if  (storageBindName != null && standardPath.startsWith(storageBindName)) {
+            if  (storageBindName != null && standardLocation.startsWith(storageBindName)) {
                 storageKey = storageBindName;
-                agentErrorHandler = t -> STORAGE_WORKERS_CACHE.invalidate(storageKey);
-            } else if (storageRootDir != null && standardPath.startsWith(storageRootDir)) {
+                agentErrorHandler = t -> {
+                    LOG.info("Invalidate storage client for {} because of an error", storageKey, t);
+                    STORAGE_WORKERS_CACHE.invalidate(storageKey);
+                };
+            } else if (storageRootDir != null && standardLocation.startsWith(storageRootDir)) {
                 storageKey = storageRootDir;
-                agentErrorHandler = t -> STORAGE_WORKERS_CACHE.invalidate(storageKey);
+                agentErrorHandler = t -> {
+                    LOG.info("Invalidate storage client for {} because of an error", storageKey, t);
+                    STORAGE_WORKERS_CACHE.invalidate(storageKey);
+                };
             } else {
                 storageKey = null;
-                agentErrorHandler = t -> {};
+                agentErrorHandler = NOOP_ERROR_CONN_HANDLER;
             }
             storageClient = new AgentStorageClient(
                     storage.getRemoteFileUrl(),
@@ -106,7 +119,7 @@ public class StorageClientMgr {
             );
             if (storageKey != null) {
                 STORAGE_WORKERS_CACHE.put(storageKey, storageClient);
-                LOG.info("Created storage client for {} using {}", storageKey, storageClient.baseUrl);
+                LOG.info("Created storage client {} for {}", storageClient.baseUrl, storageKey);
             } else {
                 LOG.warn("No storage agent cached for {}", standardPathName);
             }
