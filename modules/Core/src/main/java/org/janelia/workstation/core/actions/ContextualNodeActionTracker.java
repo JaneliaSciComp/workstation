@@ -3,6 +3,8 @@ package org.janelia.workstation.core.actions;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.janelia.workstation.core.events.Events;
 import org.openide.nodes.Node;
@@ -48,7 +50,7 @@ public class ContextualNodeActionTracker implements LookupListener {
         viewerContextResult.addLookupListener(this);
     }
 
-    private List<ContextualNodeAction> dependents = new ArrayList<>();
+    private Queue<ContextualNodeAction> dependents = new ConcurrentLinkedQueue<>();
 
     public void register(ContextualNodeAction dependent) {
         dependents.add(dependent);
