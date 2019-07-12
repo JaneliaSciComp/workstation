@@ -50,18 +50,15 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SampleLocationAcceptor.class);
     private static final HttpClientHelper HTTP_HELPER = new HttpClientHelper();
 
-    private String currentSource;
     private final NeuronTraceLoader loader;
     private final NeuronTracerTopComponent nttc;
     private final SceneWindow sceneWindow;
     private final ObjectMapper objectMapper;
 
 
-    SampleLocationAcceptor(String currentSource,
-                           NeuronTraceLoader loader,
+    SampleLocationAcceptor(NeuronTraceLoader loader,
                            NeuronTracerTopComponent nttc,
                            SceneWindow sceneWindow) {
-        this.currentSource = currentSource;
         this.loader = loader;
         this.nttc = nttc;
         this.sceneWindow = sceneWindow;
@@ -107,9 +104,9 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         } else {
                             loader.loadPersistentKtxTileAtCurrentFocus(nttc.getKtxSource());
                         }
-
                     } else {
                         // use raw tiles, which are handled by the StaticVolumeBrickSource
+                        nttc.setKtxSource(null);
                         StaticVolumeBrickSource volumeBrickSource = createStaticVolumeBrickSource(renderedVolume, sampleLocation.isCompressed(), progress);
                         nttc.setVolumeSource(volumeBrickSource);
                         // start loading raw tiles

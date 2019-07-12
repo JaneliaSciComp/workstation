@@ -532,7 +532,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
             }
             ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                    currentSource, neuronTraceLoader,this, sceneWindow
+                    neuronTraceLoader,this, sceneWindow
             );
 
             // if neuron and neuron vertex passed, select this parent vertex
@@ -891,7 +891,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         Viewport viewport = sceneWindow.getCamera().getViewport();
         viewport.setzNearRelative(prefs.getFloat("slabNear", viewport.getzNearRelative()));
         viewport.setzFarRelative(prefs.getFloat("slabFar", viewport.getzFarRelative()));
-        // 
+
         volumeState.projectionMode =
                 prefs.getInt("startupProjectionMode", volumeState.projectionMode);
         volumeState.filteringOrder =
@@ -1211,7 +1211,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
                     logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
                     ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                            currentSource, neuronTraceLoader, NeuronTracerTopComponent.this, sceneWindow
+                            neuronTraceLoader, NeuronTracerTopComponent.this, sceneWindow
                     );
                     RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
                     if (locationProviders.size() > 1) {
@@ -2109,7 +2109,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         return ktxBlockMenuBuilder.isPreferKtx();
     }
 
-    void setPreferKtx(boolean doPreferKtx) {
+    private void setPreferKtx(boolean doPreferKtx) {
         ktxBlockMenuBuilder.setPreferKtx(doPreferKtx);
     }
 }
