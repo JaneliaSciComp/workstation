@@ -176,9 +176,9 @@ public class FileMgr {
      *
      * @return an input stream to read the content identified by standardPathName
      */
-    public InputStream getFileInputStream(String standardPathName, boolean forceRefresh) throws IOException {
+    public InputStream openFileInputStream(String standardPathName, boolean forceRefresh) throws IOException {
         FileProxy fileProxy = getFile(standardPathName, forceRefresh);
-        return fileProxy.getContentStream();
+        return fileProxy.openContentStream();
     }
 
 }

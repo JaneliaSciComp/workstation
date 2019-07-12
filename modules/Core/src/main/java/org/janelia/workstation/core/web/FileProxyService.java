@@ -82,7 +82,7 @@ public class FileProxyService extends AbstractHandler {
                 // This method is supported, but there is nothing more to do
             } else if ("GET".equals(method)) {
                 log.debug("Writing {} bytes", nbytes);
-                InputStream input = fileProxy.getContentStream();
+                InputStream input = fileProxy.openContentStream();
                 output = response.getOutputStream();
                 Utils.copyNio(input, output, BUFFER_SIZE);
             } else {

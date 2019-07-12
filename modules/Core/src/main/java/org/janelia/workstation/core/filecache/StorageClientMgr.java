@@ -64,11 +64,12 @@ public class StorageClientMgr {
         IntStream.range(1, nPathComponents)
                 .mapToObj(pathIndex -> {
                     if (lookupPath.getRoot() == null) {
-                        return lookupPath.subpath(0, pathIndex).toString();
+                        return lookupPath.subpath(0, pathIndex);
                     } else {
-                        return lookupPath.getRoot().resolve(lookupPath.subpath(0, pathIndex)).toString();
+                        return lookupPath.getRoot().resolve(lookupPath.subpath(0, pathIndex));
                     }
                 })
+                .map(p -> p.toString().replace('\\', '/'))
                 .forEach(p -> storagePathPrefixCandidates.add(0, p));
         LOG.debug("storagePathPrefixCandidates={}", storagePathPrefixCandidates);
         AgentStorageClient storageClient;

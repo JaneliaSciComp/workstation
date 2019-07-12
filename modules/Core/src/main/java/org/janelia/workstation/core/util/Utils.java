@@ -487,7 +487,7 @@ public class Utils {
         log.info("copyURLToFile {} to {}", standardPath, destination);
 
         int estimatedCompressionFactor;
-        InputStream fileProxyStream = fileProxy.getContentStream();
+        InputStream fileProxyStream = fileProxy.openContentStream();
         try {
             if (standardPath.endsWith(EXTENSION_BZ2) &&
                     (!destination.getName().endsWith(EXTENSION_BZ2))) {

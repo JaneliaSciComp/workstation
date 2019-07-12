@@ -330,7 +330,7 @@ public class Hud extends ModalDialog {
                     // Ensure we have an image and that it is cached.
                     if (image == null) {
                         log.debug("Must load image.");
-                        try (InputStream imageStream = FileMgr.getFileMgr().getFile(filepath, false).getContentStream()) {
+                        try (InputStream imageStream = FileMgr.getFileMgr().getFile(filepath, false).openContentStream()) {
                             image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(filepath));
                         }
                         if (ic != null) {

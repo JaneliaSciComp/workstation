@@ -85,7 +85,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                     }
 
                     @Override
-                    public InputStream getContentStream() {
+                    public InputStream openContentStream() {
                         fetchContent();
                         if (textureBytes == null) {
                             return null;
@@ -118,7 +118,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         FileProxy f = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
         InputStream contentStream;
         if (f != null) {
-            contentStream = f.getContentStream();
+            contentStream = f.openContentStream();
         } else {
             contentStream = null;
         }
@@ -164,7 +164,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
 
                     @Nullable
                     @Override
-                    public InputStream getContentStream() {
+                    public InputStream openContentStream() {
                         fetchContent();
                         return streamableContent.getStream();
                     }
@@ -209,7 +209,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
 
                     @Nullable
                     @Override
-                    public InputStream getContentStream() {
+                    public InputStream openContentStream() {
                         fetchContent();
                         return streamableContent.getStream();
                     }
@@ -235,10 +235,10 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
     }
 
     private Optional<StreamableContent> streamableContentFromFileProxy(FileProxy f) {
-        if (f == null || f.getContentStream() == null) {
+        if (f == null) {
             return Optional.empty();
         } else {
-            return Optional.of(new StreamableContent(f.estimateSizeInBytes().orElse(-1L), f.getContentStream()));
+            return Optional.of(new StreamableContent(f.estimateSizeInBytes().orElse(-1L), f.openContentStream()));
         }
     }
 }

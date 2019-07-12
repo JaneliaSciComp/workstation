@@ -42,7 +42,7 @@ class StorageClientResponseHelper {
                 throw new WebDavException(responseCode + " response code returned for " + href, responseCode);
             }
             else if (responseCode == HttpStatus.SC_NOT_FOUND) {
-                throw new FileNotFoundException("Resource " + href + "not found (" + responseCode + ")");
+                throw new FileNotFoundException("Resource " + href + " not found (" + responseCode + ")");
             }
             else {
                 throw new WebDavException(responseCode + " response code returned for " + href, responseCode);

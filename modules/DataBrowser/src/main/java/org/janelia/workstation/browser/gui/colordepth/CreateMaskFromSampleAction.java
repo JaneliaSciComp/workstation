@@ -85,7 +85,7 @@ public class CreateMaskFromSampleAction extends AbstractAction {
             
             @Override
             protected void doStuff() throws Exception {
-                try (InputStream imageStream = FileMgr.getFileMgr().getFileInputStream(imagePath, false)) {
+                try (InputStream imageStream = FileMgr.getFileMgr().openFileInputStream(imagePath, false)) {
                     this.image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imagePath));
                 }
                 alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();

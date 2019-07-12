@@ -34,7 +34,7 @@ public class WebDavFileProxy implements FileProxy {
     }
 
     @Override
-    public InputStream getContentStream() {
+    public InputStream openContentStream() {
         GetMethod httpGet;
         try {
             httpGet = new GetMethod(webDavFile.getRemoteFileUrl());
