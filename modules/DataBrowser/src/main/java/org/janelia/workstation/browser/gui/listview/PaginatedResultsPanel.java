@@ -286,8 +286,8 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                     updateStatusBar();
                 }
                 @Override
-                public void editModeChanged(boolean editMode) {
-                    PaginatedResultsPanel.this.editModeChanged(editMode);
+                public void viewerContextChanged() {
+                    PaginatedResultsPanel.this.viewerContextChanged();
                 }
             });
             Events.getInstance().registerOnEventBus(resultsView);
@@ -394,7 +394,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
         }
     }
 
-    protected void editModeChanged(boolean editMode) {
+    protected void viewerContextChanged() {
     }
 
     public void setCurrPage(int currPage) {

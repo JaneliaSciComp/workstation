@@ -4,10 +4,7 @@ import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.workstation.browser.actions.OpenInToolAction;
-import org.janelia.workstation.browser.gui.support.SampleUIUtils;
 import org.janelia.workstation.browser.tools.ToolMgr;
-import org.janelia.workstation.common.actions.BaseContextualNodeAction;
-import org.janelia.workstation.core.actions.ViewerContext;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -29,9 +26,7 @@ import org.openide.util.NbBundle;
         @ActionReference(path = "Menu/Actions", position = 240)
 })
 @NbBundle.Messages("CTL_OpenInVvdViewerAction=Open With VVD Viewer")
-public class OpenInVvdViewerAction extends BaseContextualNodeAction {
-
-    private String filepath;
+public class OpenInVvdViewerAction extends BaseOpenExternallyAction {
 
     @Override
     public String getName() {
@@ -39,21 +34,16 @@ public class OpenInVvdViewerAction extends BaseContextualNodeAction {
     }
 
     @Override
-    protected void processContext() {
-        this.filepath = null;
-        ViewerContext viewerContext = getViewerContext();
-        if (viewerContext != null && !viewerContext.isMultiple()) {
-            HasFiles fileProvider = SampleUIUtils.getSingle3dResult(viewerContext);
-            if (fileProvider != null) {
-                this.filepath = DomainUtils.getFilepath(fileProvider, FileType.VisuallyLosslessStack);
-            }
-        }
-        setEnabledAndVisible(filepath != null);
+    protected String getFilepath(HasFiles fileProvider) {
+        // VVD can only open H5J files, not V3DRAW or V3DPBD, so we can't use FirstAvailable3D
+        // TODO: this can be better customized to allow TIFF files and other things supported by VVD
+        return DomainUtils.getFilepath(fileProvider, FileType.VisuallyLosslessStack);
     }
 
     @Override
     public void performAction() {
-        String filepath = this.filepath;
+        String filepath = getFilepath();
+        if (filepath == null) return;
         OpenInToolAction action = new OpenInToolAction(ToolMgr.TOOL_VVD, filepath, null);
         action.actionPerformed(null);
     }

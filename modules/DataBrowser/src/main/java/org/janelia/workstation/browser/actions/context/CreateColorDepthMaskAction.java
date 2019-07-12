@@ -74,7 +74,7 @@ public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
                     }
                 }
 
-                if (samples.size() == selectedObjects.size()) {
+                if (!samples.isEmpty() && samples.size() == selectedObjects.size()) {
                     if (resultDescriptor.isAligned()) {
                         setVisible(true);
 
@@ -92,7 +92,7 @@ public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
                             }
                         }
                     }
-                } else if (images.size() == selectedObjects.size()) {
+                } else if (!images.isEmpty() && images.size() == selectedObjects.size()) {
                     this.innerAction = new CreateMaskFromImageAction(images.get(0));
                     setEnabledAndVisible(true);
                 }

@@ -34,11 +34,9 @@ public class OpenInDefaultAppAction extends BaseOpenExternallyAction {
 
     @Override
     public void performAction() {
-        String filepath = this.filepath;
+        String filepath = getFilepath();
+        if (filepath == null) return;
         try {
-            if (filepath == null) {
-                throw new Exception("Entity has no file path");
-            }
             ActivityLogHelper.logUserAction("OpenInFinderAction.doAction", filepath);
             Utils.processStandardFilepath(filepath, new FileCallable() {
                 @Override

@@ -185,7 +185,7 @@ public class NeuronSeparationEditorPanel
                 return Reference.createFor(object);
             }
             @Override
-            protected void editModeChanged(boolean editMode) {
+            protected void viewerContextChanged() {
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->NeuronSeparationEditorPanel"));

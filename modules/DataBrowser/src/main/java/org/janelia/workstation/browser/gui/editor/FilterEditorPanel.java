@@ -300,7 +300,7 @@ public class FilterEditorPanel
                 return Reference.createFor(object);
             }
             @Override
-            protected void editModeChanged(boolean editMode) {
+            protected void viewerContextChanged() {
                 Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
             }
         };

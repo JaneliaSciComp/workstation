@@ -246,8 +246,8 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             }
 
             @Override
-            public void editModeChanged(boolean editMode) {
-                ColorDepthResultPanel.this.editModeChanged(editMode);
+            public void viewerContextChanged() {
+                ColorDepthResultPanel.this.viewerContextChanged();
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->ColorDepthResultPanel"));
@@ -256,7 +256,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         setLayout(new BorderLayout());
     }
 
-    protected void editModeChanged(boolean editMode) {
+    protected void viewerContextChanged() {
     }
 
     @Subscribe

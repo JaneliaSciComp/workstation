@@ -83,7 +83,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
                 return Reference.createFor(object);
             }
             @Override
-            protected void editModeChanged(boolean editMode) {
+            protected void viewerContextChanged() {
                 Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
             }
         };

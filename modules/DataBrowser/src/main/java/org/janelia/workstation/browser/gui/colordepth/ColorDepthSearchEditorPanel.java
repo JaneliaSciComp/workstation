@@ -174,7 +174,7 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         
         colorDepthResultPanel = new ColorDepthResultPanel() {
             @Override
-            protected void editModeChanged(boolean editMode) {
+            protected void viewerContextChanged() {
                 Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
             }
         };

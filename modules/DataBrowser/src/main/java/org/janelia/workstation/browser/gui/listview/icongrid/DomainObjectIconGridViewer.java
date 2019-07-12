@@ -138,7 +138,7 @@ public class DomainObjectIconGridViewer
                 try {
                     preferenceSupport.setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, 
                             DescriptorUtils.serialize(resultDescriptor))
-                            .addListener(() -> refreshView(null));
+                            .addListener(() -> refreshView());
                 }
                 catch (Exception e) {
                     log.error("Error serializing sample result preference: "+resultDescriptor,e);
@@ -151,7 +151,7 @@ public class DomainObjectIconGridViewer
                 log.info("Setting image type preference: "+fileType);
                 preferenceSupport.setPreferenceAsync(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, 
                         fileType.name())
-                        .addListener(() -> refreshView(null));
+                        .addListener(() -> refreshView());
             }
         };
 
@@ -311,7 +311,7 @@ public class DomainObjectIconGridViewer
         }
         editModeButton.setSelected(editMode);
         editOkButton.setVisible(editMode);
-        listener.editModeChanged(editMode);
+        listener.viewerContextChanged();
     }
     
     @Override
@@ -378,6 +378,9 @@ public class DomainObjectIconGridViewer
                 if (preference!=null) {
                     try {
                         ArtifactDescriptor resultDescriptor = DescriptorUtils.deserialize(preference);
+                        if (resultDescriptor == null) {
+                            resultDescriptor = ArtifactDescriptor.LATEST;
+                        }
                         resultButton.setResultDescriptor(resultDescriptor);
                     }
                     catch (Exception e) {
@@ -491,9 +494,15 @@ public class DomainObjectIconGridViewer
         refreshObject(domainObject);
     }
 
-    public void refreshView(Callable<Void> success) {
-        selectionModel.reset();
-        show(domainObjectList, success);
+    private void refreshView() {
+        //selectionModel.reset();
+        show(domainObjectList, () -> {
+            // Reselect previously selected items
+            select(selectionModel.getObjects(), true, true, false, false);
+            // Tell our listeners that things may have changed
+            listener.viewerContextChanged();
+            return null;
+        });
     }
     
     @Override
@@ -575,7 +584,7 @@ public class DomainObjectIconGridViewer
     protected void setMustHaveImage(boolean mustHaveImage) {
         try {
             FrameworkAccess.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, mustHaveImage);
-            refreshView(null);
+            refreshView();
         }
         catch (Exception e) {
             FrameworkAccess.handleException(e);
@@ -643,20 +652,18 @@ public class DomainObjectIconGridViewer
     public void restoreState(ListViewerState viewerState) {
         if (viewerState instanceof IconGridViewerState) {
             final IconGridViewerState tableViewerState = (IconGridViewerState) viewerState;
-            SwingUtilities.invokeLater(new Runnable() {
-                   public void run() {
-                       int maxImageWidth = tableViewerState.getMaxImageWidth();
-                       log.debug("Restoring maxImageWidth={}",maxImageWidth);
-                       getToolbar().getImageSizeSlider().setValue(maxImageWidth);
-                       // Wait until slider resizes images, then fix scroll:
-                       SwingUtilities.invokeLater(new Runnable() {
-                           @Override
-                           public void run() {
-                               scrollSelectedObjectsToCenter();
-                           }
-                       });
-                   }
-               }
+            SwingUtilities.invokeLater(() -> {
+                int maxImageWidth = tableViewerState.getMaxImageWidth();
+                log.debug("Restoring maxImageWidth={}",maxImageWidth);
+                getToolbar().getImageSizeSlider().setValue(maxImageWidth);
+                // Wait until slider resizes images, then fix scroll:
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        scrollSelectedObjectsToCenter();
+                    }
+                });
+            }
             );
         }
         else {
