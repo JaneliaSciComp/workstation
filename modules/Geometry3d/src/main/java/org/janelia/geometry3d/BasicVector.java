@@ -10,7 +10,7 @@ public class BasicVector implements ConstVector
 {
     protected final float[] data;
     
-    public BasicVector(int size) {
+    BasicVector(int size) {
         data = new float[size];
     }
 
@@ -18,11 +18,11 @@ public class BasicVector implements ConstVector
      * Copy constructor, to avoid broken Java clone() approach.
      * @param cloned 
      */
-    public BasicVector(BasicVector cloned) {
+    private BasicVector(BasicVector cloned) {
         data = cloned.data.clone();
     }
     
-    public BasicVector(ConstVector cloned) {
+    BasicVector(ConstVector cloned) {
         data = new float[cloned.size()];
         for (int i = 0; i < data.length; ++i)
             data[i] += cloned.get(i);

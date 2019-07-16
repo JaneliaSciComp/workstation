@@ -71,7 +71,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             @Override
             public void run() {
                 ProgressHandle progress
-                        = ProgressHandleFactory.createHandle("Loading View in Horta...");
+                        = ProgressHandleFactory.createHandle("Loading View in Horta...", null, null);
                 progress.start();
                 try {
                     progress.setDisplayName("Loading brain specimen...");
@@ -89,9 +89,6 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     }
                     RenderedVolume renderedVolume = getVolumeInfo(url.toURI());
 
-                    progress.setDisplayName("Centering on location...");
-                    setCameraLocation(sampleLocation);
-
                     if (nttc.isPreferKtx()) {
                         // use ktx tiles
                         KtxOctreeBlockTileSource ktxSource = createKtxSource(renderedVolume, url, sample);
@@ -106,7 +103,6 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         }
                     } else {
                         // use raw tiles, which are handled by the StaticVolumeBrickSource
-                        nttc.setKtxSource(null);
                         StaticVolumeBrickSource volumeBrickSource = createStaticVolumeBrickSource(renderedVolume, sampleLocation.isCompressed(), progress);
                         nttc.setVolumeSource(volumeBrickSource);
                         // start loading raw tiles
@@ -114,6 +110,10 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         progress.setDisplayName("Loading brain tile image...");
                         loader.loadTileAtCurrentFocus(volumeBrickSource, sampleLocation.getDefaultColorChannel());
                     }
+
+                    progress.setDisplayName("Centering on location...");
+                    setCameraLocation(sampleLocation);
+
                     nttc.redrawNow();
                 } catch (final Exception ex) {
                     LOG.error("Error setting up the tile source", ex);
@@ -194,7 +194,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         return new RenderedVolumeBrickSource(nttc.getRenderedVolumeLoader(), renderedVolume, useCompression, progress::progress);
     }
 
-    private boolean setCameraLocation(SampleLocation sampleLocation) {
+    private void setCameraLocation(SampleLocation sampleLocation) {
         // Now, position this component over other component's focus.
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
         Vantage v = pCam.getVantage();
@@ -211,12 +211,10 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         double zoom = sampleLocation.getMicrometersPerWindowHeight();
         if (zoom > 0) {
             v.setSceneUnitsPerViewportHeight((float) zoom);
-            // logger.info("Set micrometers per view height to " + zoom);
             v.setDefaultSceneUnitsPerViewportHeight((float) zoom);
         }
 
         v.notifyObservers();
-        return true;
     }
 
 }

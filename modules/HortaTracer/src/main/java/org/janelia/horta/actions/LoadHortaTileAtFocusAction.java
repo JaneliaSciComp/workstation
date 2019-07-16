@@ -39,8 +39,7 @@ public final class LoadHortaTileAtFocusAction implements ActionListener {
         try {
             nttc.loadPersistentTileAtFocus();
         } catch (IOException ex) {
-            // Exceptions.printStackTrace(ex);
-            LOG.info("Tile load failed");
+            LOG.info("Tile load failed", ex);
         }
     }
 }

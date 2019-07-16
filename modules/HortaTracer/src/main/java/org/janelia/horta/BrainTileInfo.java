@@ -2,7 +2,6 @@
 package org.janelia.horta;
 
 import Jama.Matrix;
-import com.sun.media.jai.codec.FileSeekableStream;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.geometry3d.Box3;
@@ -12,20 +11,12 @@ import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.VoxelIndex;
 import org.janelia.rendering.RawImage;
-import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.rendering.StreamableContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

@@ -51,7 +51,7 @@ public class KtxBlockLoadRunner
             URI sourceURI = ktxBlockTileSource.getKeyBlockRelativePathURI(ktxOctreeBlockTileKey);
             loadStream(ktxBlockTileSource.getDataServerURI().toString() + sourceURI.toString(), blockStream);
         } catch (IOException ex) {
-            LOG.warn("IOException loading tile {} from block source", ktxOctreeBlockTileKey);
+            LOG.warn("IOException loading tile {} from block source", ktxOctreeBlockTileKey, ex);
             state = State.FAILED;
         }
     }
@@ -74,17 +74,13 @@ public class KtxBlockLoadRunner
             blockDescription = ktxOctreeBlockTileKey.toString();
         }
         try {
-            ktxData.loadStreamInterruptably(stream);
+            ktxData.loadStream(stream);
             if (ktxOctreeBlockTileKey == null) {
                 blockDescription = ktxData.header.keyValueMetadata.get("octree_path");
             }
         } catch (IOException ex) {
             state = State.FAILED;
-            LOG.warn("IOException loading tile {} from stream", blockDescription);
-            return;
-        } catch (InterruptedException ex) {
-            LOG.info("loading tile {} was interrupted", blockDescription);
-            state = State.INTERRUPTED;
+            LOG.warn("IOException loading tile {} from stream", blockDescription, ex);
             return;
         }
         TetVolumeActor parentActor = TetVolumeActor.getInstance();

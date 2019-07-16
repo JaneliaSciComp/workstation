@@ -26,12 +26,10 @@ import org.janelia.scenewindow.SceneWindow;
 public class PlayReviewManager {
     private PlayState playState;
     private boolean pausePlayback;
-    private Vantage vantage;
     private SceneWindow sceneWindow;
     private FPSAnimator fpsAnimator;  
     private NeuronTraceLoader loader;
     private NeuronTracerTopComponent neuronTracer;
-    private String currentSource;
     private boolean autoRotation;
     private int fps;
     private int stepScale;
@@ -41,11 +39,10 @@ public class PlayReviewManager {
     };
     private int DEFAULT_REVIEW_PLAYBACK_INTERVAL = 20;
 
-    public PlayReviewManager(SceneWindow sceneWindow, NeuronTracerTopComponent tracer, NeuronTraceLoader loader) {
+    PlayReviewManager(SceneWindow sceneWindow, NeuronTracerTopComponent tracer, NeuronTraceLoader loader) {
         this.sceneWindow = sceneWindow;        
         this.neuronTracer = tracer;
         this.loader = loader;
-        this.vantage = sceneWindow.getVantage();
         fpsAnimator = new FPSAnimator(sceneWindow.getGLAutoDrawable(), DEFAULT_REVIEW_PLAYBACK_INTERVAL, true);
         this.sceneWindow.addPauseListener(new ActionListener() {
             @Override
@@ -67,15 +64,13 @@ public class PlayReviewManager {
         });
     }
 
-    public void reviewPoints(final List<SampleLocation> locationList, final String currentSource, final boolean autoRotation,
-                             final int speed, final int stepScale) {
+    void reviewPoints(final List<SampleLocation> locationList, final boolean autoRotation, final int speed, final int stepScale) {
         clearPlayState();          
         playState.setPlayList(locationList);
         setPausePlayback(false);
         this.fps = speed;
         this.fpsAnimator.setFPS(speed);
         this.stepScale = stepScale;
-        this.currentSource = currentSource;
         this.autoRotation = autoRotation;
         SimpleWorker scrollWorker = new SimpleWorker() {
             @Override
@@ -88,7 +83,7 @@ public class PlayReviewManager {
                     q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
                 }
                 ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                        currentSource, loader, neuronTracer, sceneWindow
+                        loader, neuronTracer, sceneWindow
                 );
                 acceptor.acceptLocation(sampleLocation);
                 Vantage vantage = sceneWindow.getVantage();
@@ -104,7 +99,7 @@ public class PlayReviewManager {
                         q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
                     }
                     acceptor = new SampleLocationAcceptor(
-                            currentSource, loader, neuronTracer, sceneWindow
+                            loader, neuronTracer, sceneWindow
                     );
 
                     // figure out number of steps
@@ -140,7 +135,7 @@ public class PlayReviewManager {
 
     }
 
-    public void resumePlaythrough(final PlayDirection direction) {
+    void resumePlaythrough(final PlayDirection direction) {
         if (playState.getPlayList()==null)
             return;
         setPausePlayback(false);
@@ -151,10 +146,6 @@ public class PlayReviewManager {
                 sceneWindow.setControlsVisibility(true);
                 List<SampleLocation> locationList = playState.getPlayList();
                 SampleLocation sampleLocation;
-                Quaternion q;
-                float[] quaternionRotation = new float[4];
-                ViewerLocationAcceptor acceptor;
-                Vantage vantage;
                 fpsAnimator.setFPS(playState.getFps());
                 fpsAnimator.start();
                 boolean interrupt;
@@ -220,7 +211,7 @@ public class PlayReviewManager {
             q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
         }
         ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                currentSource, loader, neuronTracer, sceneWindow
+                loader, neuronTracer, sceneWindow
         );
 
         // figure out number of steps
@@ -288,18 +279,18 @@ public class PlayReviewManager {
     /**
      * @return the pausePlayback
      */
-    public boolean isPausePlayback() {
+    boolean isPausePlayback() {
         return this.pausePlayback;
     }
 
     /**
      * @param pausePlayback the pausePlayback to set
      */
-    public void setPausePlayback(boolean pause) {
+    void setPausePlayback(boolean pause) {
         this.pausePlayback = pause;
     }
 
-    public void updateSpeed(boolean increase) {
+    void updateSpeed(boolean increase) {
         if (increase)
             this.fps++;
         else 
@@ -309,7 +300,7 @@ public class PlayReviewManager {
         this.fpsAnimator.start();
     }
     
-    public void clearPlayState() {
+    void clearPlayState() {
         playState = new PlayState();
         playState.setCurrentStep(0);
         playState.setCurrentNode(0);  

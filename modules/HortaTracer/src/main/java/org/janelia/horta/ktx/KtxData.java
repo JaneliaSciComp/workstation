@@ -19,33 +19,15 @@ public class KtxData {
     private final ByteBuffer sizeBuf = ByteBuffer.allocate(4); // to hold binary representation of image size
 
     public KtxData loadStream(InputStream stream) throws IOException {
-        header.loadStream(stream);
-        sizeBuf.order(header.byteOrder);
-        mipmaps.clear();
-        for (int m = 0; m < header.numberOfMipmapLevels; ++m) {
-            mipmaps.add(loadOneMipmap(stream, m));
+        if (stream != null) {
+            header.loadStream(stream);
+            sizeBuf.order(header.byteOrder);
+            mipmaps.clear();
+            for (int m = 0; m < header.numberOfMipmapLevels; ++m) {
+                mipmaps.add(loadOneMipmap(stream, m));
+            }
         }
         return this;
-    }
-
-    // Version of loadStream that allows fine-grained interruptions of the load process
-    public void loadStreamInterruptably(InputStream stream) throws IOException, InterruptedException {
-        if (Thread.interrupted()) {
-            throw new InterruptedException();
-        }
-        header.loadStream(stream);
-        sizeBuf.order(header.byteOrder);
-        mipmaps.clear();
-        for (int m = 0; m < header.numberOfMipmapLevels; ++m) {
-            // Check for interruption before loading only the first/largest mipmaps
-            if ((m < 3) && Thread.interrupted()) {
-                throw new InterruptedException();
-            }
-            mipmaps.add(loadOneMipmap(stream, m));
-        }
-        if (Thread.interrupted()) {
-            throw new InterruptedException();
-        }
     }
 
     private ByteBuffer loadOneMipmap(InputStream stream, int mipmapLevel) throws IOException {

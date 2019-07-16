@@ -1,14 +1,10 @@
-
 package org.janelia.geometry3d;
 
 /**
  *
  * @author brunsc
  */
-public class Vector3 extends BasicVector 
-implements ConstVector3 
-{
-    // private final float[] data; // provided by base class
+public class Vector3 extends BasicVector implements ConstVector3 {
 
     public Vector3(float x, float y, float z) {
         super(3);

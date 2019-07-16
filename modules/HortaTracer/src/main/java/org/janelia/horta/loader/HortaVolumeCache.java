@@ -2,6 +2,7 @@ package org.janelia.horta.loader;
 
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.PerspectiveCamera;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.BrainTileInfo;
@@ -46,9 +47,20 @@ public class HortaVolumeCache {
     private int gpuTileCount = 1;
     private final PerspectiveCamera camera;
     private StaticVolumeBrickSource source = null;
-    
+
     // Lightweight metadata
-    private final Collection<BrickInfo> nearVolumeMetadata = new ConcurrentSkipListSet<>();
+    private final Collection<BrickInfo> nearVolumeMetadata = new ConcurrentSkipListSet<>((t1, t2) -> {
+        // dummmy comparator that simply looks at the X coordinate of the centroid
+        Vector3 c1 = t1.getBoundingBox().getCentroid();
+        Vector3 c2 = t2.getBoundingBox().getCentroid();
+        if (c1.getX() < c2.getX()) {
+            return -1;
+        } else if (c1.getX() > c2.getX()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    });
 
     // Large in-memory cache
     private final Map<BrickInfo, Texture3d> nearVolumeInRam = new ConcurrentHashMap<>();
@@ -58,7 +70,18 @@ public class HortaVolumeCache {
 
     // Fewer on GPU cache
     private final Map<BrickInfo, BrickActor> actualDisplayTiles = new ConcurrentHashMap<>();
-    private final Collection<BrickInfo> desiredDisplayTiles = new ConcurrentSkipListSet<>();
+    private final Collection<BrickInfo> desiredDisplayTiles = new ConcurrentSkipListSet<>((t1, t2) -> {
+        // dummmy comparator that simply looks at the X coordinate of the centroid
+        Vector3 c1 = t1.getBoundingBox().getCentroid();
+        Vector3 c2 = t2.getBoundingBox().getCentroid();
+        if (c1.getX() < c2.getX()) {
+            return -1;
+        } else if (c1.getX() > c2.getX()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    });
     
     // To enable/disable loading
     private boolean doUpdateCache = true;

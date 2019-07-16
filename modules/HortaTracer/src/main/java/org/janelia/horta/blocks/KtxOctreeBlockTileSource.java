@@ -237,7 +237,7 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
     public BlockTileData loadBlock(KtxOctreeBlockTileKey key) throws IOException, InterruptedException {
         try (InputStream blockStream = streamKeyBlock(key)) {
             KtxOctreeBlockTileData data = new KtxOctreeBlockTileData();
-            data.loadStreamInterruptably(blockStream);
+            data.loadStream(blockStream);
             return data;
         }
     }

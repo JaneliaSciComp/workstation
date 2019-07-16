@@ -519,7 +519,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         currentSource = locationList.get(0).getSampleUrl().toString();
         defaultColorChannel = locationList.get(0).getDefaultColorChannel();
         volumeCache.setColorChannel(defaultColorChannel);        
-        playback.reviewPoints(locationList, currentSource, autoRotation, speed, stepScale);
+        playback.reviewPoints(locationList, autoRotation, speed, stepScale);
     }
 
     void setSampleLocation(SampleLocation sampleLocation) {
@@ -1825,11 +1825,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public Vector3 worldXyzForScreenXy(Point2D xy) {
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
         double depthOffset = neuronMPRenderer.depthOffsetForScreenXy(xy, pCam);
-        Vector3 xyz = worldXyzForScreenXy(
-                xy,
-                pCam,
-                depthOffset);
-        return xyz;
+        return worldXyzForScreenXy(xy, pCam, depthOffset);
     }
 
     @Override
@@ -1850,7 +1846,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         return viewport.getHeightPixels() / vantage.getSceneUnitsPerViewportHeight();
     }
 
-    public boolean setCubifyVoxels(boolean cubify) {
+    private boolean setCubifyVoxels(boolean cubify) {
         if (cubify == doCubifyVoxels)
             return false; // no change
         doCubifyVoxels = cubify;
@@ -1909,7 +1905,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         setBackgroundColor(topColor, bottomColor);
     }
 
-    public void setBackgroundColor(Color topColor, Color bottomColor) {
+    private void setBackgroundColor(Color topColor, Color bottomColor) {
         neuronMPRenderer.setBackgroundColor(topColor, bottomColor);
         float[] bf = bottomColor.getColorComponents(new float[3]);
         double bottomLuma = 0.30 * bf[0] + 0.59 * bf[1] + 0.11 * bf[2];
@@ -1931,9 +1927,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     @Override
     public void componentOpened() {
-        // logger.info("Horta opened");
         neuronEditDispatcher.onOpened();
-        // loadStartupPreferences();
     }
 
     // NOTE: componentClosed() is only called when just the Horta window is closed, not
