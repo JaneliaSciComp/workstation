@@ -29,7 +29,7 @@ public class LoggingUtils {
         sb.append(" from ");
         sb.append(username);
         if (runAsUser != null) {
-            sb.append("(running as ").append(runAsUser).append(")");
+            sb.append(" (running as ").append(runAsUser).append(")");
         }
         sb.append(" -- ").append(version);
 

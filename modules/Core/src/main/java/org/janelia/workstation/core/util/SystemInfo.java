@@ -166,6 +166,16 @@ public class SystemInfo {
         }
     }
 
+    public static int getSystemMemoryUsagePercent() {
+        Long total = getTotalSystemMemory();
+        Long free = getFreeSystemMemory();
+        if (total != null && free != null) {
+            Long used = total - free;
+            return (int)((used.floatValue() / total.floatValue()) * 100);
+        }
+        return -1;
+    }
+
     public static String getOSInfo() {
         StringBuilder sb = new StringBuilder();
         sb.append(OS_NAME).append(" ").append(OS_VERSION).append(" (").append(OS_ARCH).append(")");
@@ -182,5 +192,13 @@ public class SystemInfo {
         StringBuilder sb = new StringBuilder();
         sb.append(JAVA_RUNTIME_NAME).append(" ").append(JAVA_RUNTIME_VERSION);
         return sb.toString();
+    }
+
+    public static String getJVMMemory() {
+        double gb = (1024.0 * 1024.0 * 1024.0);
+        double max = Runtime.getRuntime().maxMemory() / gb;
+        double total = Runtime.getRuntime().totalMemory() / gb;
+        double free = Runtime.getRuntime().freeMemory() / gb;
+        return String.format("%.2fGB / %.2fGB", total, max);
     }
 }

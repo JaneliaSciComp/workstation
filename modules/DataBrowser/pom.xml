@@ -169,8 +169,8 @@
                         <publicPackage>org.janelia.workstation.browser.actions.context</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.api</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.api.state</publicPackage>
-                        <publicPackage>org.janelia.workstation.browser.components</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.gui.colordepth</publicPackage>
+                        <publicPackage>org.janelia.workstation.browser.gui.components</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.gui.dialogs</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.gui.editor</publicPackage>
                         <publicPackage>org.janelia.workstation.browser.gui.find</publicPackage>
