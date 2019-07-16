@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -16,6 +17,7 @@ import java.util.TreeSet;
 import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.Objective;
 import org.janelia.model.domain.ontology.Annotation;
@@ -33,6 +35,7 @@ import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.model.PreferenceConstants;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -55,7 +58,6 @@ public class StageForPublishingDialog extends ModalDialog {
     private static final String ANNOTATION_PUBLISH_OBJECTIVE = "Publish%sToWeb";
 
     private final JLabel loadingLabel = new JLabel(Icons.getLoadingIcon());
-    private final JPanel mainPanel;
     private final GroupedKeyValuePanel attrPanel;
     private final JPanel addPanel;
     private final JRadioButton existingReleaseRadioButton;
@@ -103,25 +105,19 @@ public class StageForPublishingDialog extends ModalDialog {
         this.newReleaseLabel = new JLabel("Release name");
         this.releaseNameField = new JTextField(25);
 
-        this.addPanel = new JPanel();
-        addPanel.setLayout(new MigLayout("wrap 2, ins 10, fillx", "[grow 0]20[grow 1]"));
-        addPanel.add(existingReleaseRadioButton, "");
-        addPanel.add(newReleaseRadioButton, "");
-        addPanel.add(releaseComboPanel, "gapleft 10");
-        addPanel.add(releaseNameField, "gapleft 10");
-
-        mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
-        mainPanel.add(attrPanel);
-        mainPanel.add(addPanel);
-
         objectivesPanel = new JPanel();
         objectivesPanel.setLayout(new BoxLayout(objectivesPanel, BoxLayout.PAGE_AXIS));
 
-        mainPanel.add(new JLabel("Stage images for these microscope objectives:"));
-        mainPanel.add(objectivesPanel);
+        this.addPanel = new JPanel();
+        addPanel.setLayout(new MigLayout("wrap 2, ins 20, fillx", "[grow 0]20[grow 1]"));
+        addPanel.add(existingReleaseRadioButton, "");
+        addPanel.add(newReleaseRadioButton, "");
+        addPanel.add(releaseComboPanel, "");
+        addPanel.add(releaseNameField, "");
+        addPanel.add(new JLabel("Stage images for these microscope objectives:"), "span 2");
+        addPanel.add(objectivesPanel, "span 2");
 
-        add(mainPanel, BorderLayout.CENTER);
+        add(addPanel, BorderLayout.CENTER);
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
@@ -201,9 +197,13 @@ public class StageForPublishingDialog extends ModalDialog {
         SimpleWorker worker = new SimpleWorker() {
 
             private List<LineRelease> releases = new ArrayList<>();
+            private String lastSelectedRelease;
+            private Collection<String> lastSelectedObjectives;
 
             @Override
             protected void doStuff() throws Exception {
+                lastSelectedRelease = getLastSelectedRelease();
+                lastSelectedObjectives = getLastSelectedObjectives();
                 for (LineRelease lineRelease : DomainMgr.getDomainMgr().getModel().getLineReleases()) {
                     if (ClientDomainUtils.hasWriteAccess(lineRelease)) {
                         releases.add(lineRelease);
@@ -217,27 +217,48 @@ public class StageForPublishingDialog extends ModalDialog {
                 releaseComboPanel.removeAll();
                 releaseComboPanel.add(releaseComboBox);
 
+                newReleaseRadioButton.setSelected(true);
                 if (releases.isEmpty()) {
-                    newReleaseRadioButton.setSelected(true);
                     existingReleaseRadioButton.setEnabled(false);
                     releaseComboBox.setEnabled(false);
                 }
                 else {
-                    existingReleaseRadioButton.setSelected(true);
+                    existingReleaseRadioButton.setEnabled(true);
+                    releaseComboBox.setEnabled(true);
                     DefaultComboBoxModel<ReleaseWrapper> model =
                             (DefaultComboBoxModel<ReleaseWrapper>) releaseComboBox.getModel();
-                    ReleaseWrapper wrapper = null;
+                    ReleaseWrapper last = null;
+                    ReleaseWrapper toSelect = null;
                     for(LineRelease release : releases) {
-                        wrapper = new ReleaseWrapper(release);
-                        model.addElement(wrapper);
+                        last = new ReleaseWrapper(release);
+                        model.addElement(last);
+                        if (release.getName().equals(lastSelectedRelease)) {
+                            toSelect = last;
+                        }
                     }
-                    if (wrapper!=null) {
-                        model.setSelectedItem(wrapper); // select the last item by default
+                    if (lastSelectedRelease!=null) {
+                        model.setSelectedItem(toSelect);
+                        newReleaseRadioButton.setSelected(false);
+                        existingReleaseRadioButton.setEnabled(true);
+                    }
+                    else if (last!=null) {
+                        model.setSelectedItem(last); // select the last item by default
                     }
                 }
 
                 revalidate();
                 pack();
+
+                log.info("WTF "+newReleaseRadioButton.isSelected());
+                SwingUtilities.invokeLater(() -> {
+                    log.info("WTF2 "+newReleaseRadioButton.isSelected());
+                    // Focus the name field so the user can start typing
+                    if (newReleaseRadioButton.isSelected()) {
+                        log.info("SELECTING");
+                        releaseNameField.requestFocus();
+                    }
+                });
+
             }
 
             @Override
@@ -328,6 +349,8 @@ public class StageForPublishingDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
+                setLastSelectedRelease(lineRelease.getName());
+                setLastSelectedObjectives(objectives);
                 setVisible(false);
                 ActivityLogHelper.logUserAction("StageForPublishingDialog.processSave", lineRelease.getId());
 
@@ -427,4 +450,41 @@ public class StageForPublishingDialog extends ModalDialog {
         }
     }
 
+    private String getLastSelectedRelease() {
+        try {
+            return FrameworkAccess.getRemotePreferenceValue(PreferenceConstants.CATEGORY_PREVIOUS_VALUE, PreferenceConstants.KEY_PREVIOUS_VALUE_RELEASE_NAME, null);
+        } catch (Exception e) {
+            log.error("Error getting last selected release", e);
+            return null;
+        }
+    }
+
+    private void setLastSelectedRelease(String selectedRelease) {
+        try {
+            FrameworkAccess.setRemotePreferenceValue(PreferenceConstants.CATEGORY_PREVIOUS_VALUE, PreferenceConstants.KEY_PREVIOUS_VALUE_RELEASE_NAME, selectedRelease);
+        }
+        catch (Exception e) {
+            log.error("Error setting last selected release", e);
+        }
+    }
+
+    private Collection<String> getLastSelectedObjectives() {
+        try {
+            String serializedObjectives = FrameworkAccess.getRemotePreferenceValue(PreferenceConstants.CATEGORY_PREVIOUS_VALUE, PreferenceConstants.KEY_PREVIOUS_VALUE_RELEASE_OBJECTIVES, null);
+            return Arrays.asList(StringUtils.split(","));
+        }
+        catch (Exception e) {
+            log.error("Error getting last selected objectives", e);
+            return null;
+        }
+    }
+
+    private void setLastSelectedObjectives(Collection<String> objectives) {
+        try {
+            FrameworkAccess.setRemotePreferenceValue(PreferenceConstants.CATEGORY_PREVIOUS_VALUE, PreferenceConstants.KEY_PREVIOUS_VALUE_RELEASE_OBJECTIVES, StringUtils.join(objectives));
+        }
+        catch (Exception e) {
+            log.error("Error setting last selected objectives", e);
+        }
+    }
 }
