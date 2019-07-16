@@ -133,6 +133,13 @@ public class FileMgr {
         return usage;
     }
 
+    public int getFileCacheGigabyteUsagePercent() {
+        int capacity = FileMgr.getFileMgr().getFileCacheGigabyteCapacity();
+        double usage = FileMgr.getFileMgr().getFileCacheGigabyteUsage();
+        double percent = (usage / (double)capacity) * 100.0;
+        return (int)percent;
+    }
+
     /**
      * Removes all locally cached files.
      */

@@ -11,6 +11,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.ConnectionMgr;
+import org.janelia.workstation.core.api.FileMgr;
 import org.openide.modules.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,11 +70,21 @@ public class MailDialogueBox {
     }
     
     public MailDialogueBox appendStandardPrefix() {
-        append("\nSubject Key: ").append(AccessManager.getSubjectKey());
+        append("\nSubject: ").append(AccessManager.getSubjectKey());
         append("\nApplication: ").append(SystemInfo.appName).append(" v").append(SystemInfo.appVersion);
+        append("\nServer: ").append(ConnectionMgr.getConnectionMgr().getConnectionString());
         append("\nOperating System: ").append(SystemInfo.getOSInfo());
-        append("\nJava: ").append(SystemInfo.getJavaInfo());
-        append("\nRuntime: ").append(SystemInfo.getRuntimeJavaInfo());
+        append("\nJava: ").append(SystemInfo.getRuntimeJavaInfo());
+        append("\nDisk Cache Usage: ").append(FileMgr.getFileMgr().getFileCacheGigabyteUsagePercent()+"%");
+        append("\nSystem Memory Usage: ").append(SystemInfo.getSystemMemoryUsagePercent()+"%");
+        append("\nJVM Memory: ").append(SystemInfo.getJVMMemory());
+        append("\nMemory Setting: ");
+        if (Utils.getMemoryAllocation()==null) {
+            append("default");
+        }
+        else {
+            append(""+Utils.getMemoryAllocation());
+        }
         return this;
     }
 
