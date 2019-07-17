@@ -72,13 +72,18 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     public synchronized NeuronUpdates deleteNeuron(TmNeuronMetadata neuron) {
         userNeuronIds.remove(neuron.getId());        
         fragments.remove(neuron.getId());
-        return new NeuronUpdates();
+        index.removeFromIndex(neuron);
+        Set<Long> delSet = new HashSet<>();
+        delSet.add(neuron.getId());
+        NeuronUpdates updates = new NeuronUpdates();
+        updates.setDeletedNeurons(delSet);
+        return updates;
     }
 
     @Override
-    // calculate single bounding box and return fragments in vicinity
     public synchronized NeuronUpdates addNeuron(TmNeuronMetadata neuron) {
         userNeuronIds.add(neuron.getId());
+        fragments.remove(neuron.getId());
         return new NeuronUpdates();
     }
 
@@ -86,6 +91,7 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     public synchronized NeuronUpdates updateNeuron(TmNeuronMetadata neuron) {
         userNeuronIds.add(neuron.getId());
         fragments.remove(neuron.getId());
+        index.removeFromIndex(neuron);
         return new NeuronUpdates();
     }
 
@@ -106,7 +112,7 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
         fragments = newFrags;
         while (oldFragIter.hasNext()) {
             Long frag = oldFragIter.next();
-            if (!fragments.contains(frag))
+            if (!fragments.contains(frag) && !userNeuronIds.contains(frag))
                 delSet.add(frag);
         }
 

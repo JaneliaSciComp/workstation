@@ -21,6 +21,7 @@ import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.NeuronUpdates;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.PredefinedNote;
@@ -785,6 +786,8 @@ public class NeuronSetAdapter
             for (TmNeuronMetadata neuron : deleteList) {
                 Collection<NeuronVertex> deletedVertices = new ArrayList<>();
                 NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
+                if (neuron.getOwnerKey().equals(AccessManager.getSubjectKey()))
+                    continue;
                 for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                     LOG.debug("Removing vertex: {}", neuronVertex);
                     spatialIndex.removeFromIndex(neuronVertex);
