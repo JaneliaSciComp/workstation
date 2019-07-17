@@ -40,28 +40,30 @@ public class SampleUIUtils {
         ImageModel imageModel = viewerContext.getImageModel();
         if (imageModel instanceof DomainObjectImageModel) {
             DomainObjectImageModel doim = (DomainObjectImageModel) imageModel;
-            ArtifactDescriptor rd = doim.getArtifactDescriptor();
             Object lastSelectedObject = viewerContext.getLastSelectedObject();
             if (lastSelectedObject instanceof DomainObject) {
                 DomainObject domainObject = (DomainObject) lastSelectedObject;
-                log.trace("getSingle3dResult({}, descriptor={})", domainObject, rd);
-
-                if (rd instanceof ResultArtifactDescriptor) {
-                    ResultArtifactDescriptor rad = (ResultArtifactDescriptor) rd;
-                    // For post-processing results, open the corresponding processing result,
-                    if (SamplePostProcessingResult.class.getName().equals(rad.getResultClass())) {
-                        rd = new ResultArtifactDescriptor(rd.getObjective(), rd.getArea(),
-                                SampleProcessingResult.class.getName(), null, false);
-                        log.trace("getSingle3dResult - using descriptor: {}", rd);
-                    }
-                }
 
                 HasFiles result = null;
                 if (domainObject instanceof Sample) {
-                    Sample sample = (Sample) domainObject;
-                    result = DescriptorUtils.getResult(sample, rd);
+                    ArtifactDescriptor rd = doim.getArtifactDescriptor();
+                    if (rd != null) {
+                        log.trace("getSingle3dResult({}, descriptor={})", domainObject, rd);
+                        if (rd instanceof ResultArtifactDescriptor) {
+                            ResultArtifactDescriptor rad = (ResultArtifactDescriptor) rd;
+                            // For post-processing results, open the corresponding processing result,
+                            if (SamplePostProcessingResult.class.getName().equals(rad.getResultClass())) {
+                                rd = new ResultArtifactDescriptor(rd.getObjective(), rd.getArea(),
+                                        SampleProcessingResult.class.getName(), null, false);
+                                log.trace("getSingle3dResult - using descriptor: {}", rd);
+                            }
+                        }
+                        Sample sample = (Sample) domainObject;
+                        result = DescriptorUtils.getResult(sample, rd);
+                    }
                 }
                 else if (domainObject instanceof HasFiles) {
+                    log.trace("getSingle3dResult({})", domainObject);
                     result = (HasFiles) domainObject;
                 }
                 if (result!=null) {
