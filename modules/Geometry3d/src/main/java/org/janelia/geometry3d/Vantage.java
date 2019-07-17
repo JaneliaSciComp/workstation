@@ -31,6 +31,7 @@ implements CompositeObject3d, ObservableInterface, VantageInterface, ConstVantag
     private final Vector3 upInWorld = new Vector3(0, 1, 0);
     // per-axis scale factors to meet Mouse Light customer requirement
     private final Vector3 worldScaleHack = new Vector3(1, 1, 1);
+    private float maxSize;
 
     public Vantage(Object3d parent) {
         this.object3D = new BasicObject3D(parent);
@@ -57,10 +58,14 @@ implements CompositeObject3d, ObservableInterface, VantageInterface, ConstVantag
     public void setDefaultBoundingBox(Box3 boundingBox) {
         setDefaultFocus(boundingBox.getCentroid());
         Vector3 vscale = new Vector3(boundingBox.max).sub(boundingBox.min);
-        float maxSize = Math.max(vscale.getX(), vscale.getY());
+        maxSize = Math.max(vscale.getX(), vscale.getY());
         maxSize = Math.max(maxSize, vscale.getZ());
         maxSize = Math.max(maxSize, 0.01f);
         setDefaultSceneUnitsPerViewportHeight(maxSize);        
+    }
+
+    public float getMaxSize() {
+        return maxSize;
     }
     
     public Vector3 getDefaultFocus() {

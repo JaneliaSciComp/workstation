@@ -8,6 +8,8 @@ import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * BlockDisplayUpdater listens to the camera location, and signals an updated
@@ -17,6 +19,7 @@ import org.janelia.geometry3d.Vector3;
  */
 public class BlockDisplayUpdater<BTK extends BlockTileKey, BTS extends BlockTileSource<BTK>> {
 
+    private static final Logger LOG = LoggerFactory.getLogger(BlockDisplayUpdater.class);
     private final CameraObserver cameraObserver = new CameraObserver();
     private final ObservableInterface displayChangeObservable = new ComposableObservable();
     private Vantage vantage;
@@ -71,7 +74,7 @@ public class BlockDisplayUpdater<BTK extends BlockTileKey, BTS extends BlockTile
         }
         ConstVector3 previousFocus = cachedFocus;
         cachedFocus = new Vector3(focus);
-        List<BTK> desiredBlocks = blockChooser.chooseBlocks(blockTileSource, focus, previousFocus);
+        List<BTK> desiredBlocks = blockChooser.chooseBlocks(blockTileSource, focus, previousFocus, vantage);
         if (desiredBlocks.equals(cachedDesiredBlocks)) {
             return; // no change in desired set
         }

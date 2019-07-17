@@ -5,7 +5,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import org.janelia.geometry3d.ConstVector3;
+import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generate sorted list of up to eight max resolution blocks near current focus
@@ -14,15 +17,32 @@ import org.janelia.geometry3d.Vector3;
  */
 public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> {
 
+    private static final Logger LOG = LoggerFactory.getLogger(Finest8DisplayBlockChooser.class);
     /*
      Choose the eight closest maximum resolution blocks to the current focus point.
      */
     @Override
-    public List<KtxOctreeBlockTileKey> chooseBlocks(KtxOctreeBlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus) {
+    public List<KtxOctreeBlockTileKey> chooseBlocks(KtxOctreeBlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus,
+                                                    Vantage vantage) {
         // Find up to eight closest blocks adjacent to focus
-        BlockTileResolution maxResolution = source.getMaximumResolution();
+        int zoomLevel = 0;
+        if (vantage.getSceneUnitsPerViewportHeight()<200) {
+            zoomLevel = 6;
+        } else if (vantage.getSceneUnitsPerViewportHeight()<400) {
+            zoomLevel = 5;
+        } else if (vantage.getSceneUnitsPerViewportHeight()<1000) {
+            zoomLevel = 4;
+        } else if (vantage.getSceneUnitsPerViewportHeight()<2000) {
+            zoomLevel = 3;
+        } else if (vantage.getSceneUnitsPerViewportHeight()<5000) {
+            zoomLevel = 2;
+        }
 
-        ConstVector3 blockSize = source.getMaximumResolutionBlockSize();
+        LOG.info("ZOOM LEVEL  IS {}",zoomLevel);
+        BlockTileResolution blockResoluion = new KtxOctreeResolution(zoomLevel);
+        //         ConstVector3 blockSize = source.getMaximumResolutionBlockSize();
+        ConstVector3 blockSize = source.getBlockSize(new KtxOctreeResolution(zoomLevel));
+
         float dxa[] = new float[]{
             0f,
             -blockSize.getX(),
@@ -43,7 +63,7 @@ public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTi
             for (float dy : dya) {
                 for (float dz : dza) {
                     ConstVector3 location = focus.plus(new Vector3(dx, dy, dz));
-                    KtxOctreeBlockTileKey tileKey = source.getBlockKeyAt(location, maxResolution);
+                    KtxOctreeBlockTileKey tileKey = source.getBlockKeyAt(location, blockResoluion);
                     if (tileKey == null) {
                         continue;
                     }
@@ -51,6 +71,7 @@ public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTi
                 }
             }
         }
+        LOG.info("number of possible tiles  IS {}",neighboringBlocks.size());
         // Sort the blocks strictly by distance to focus
         Collections.sort(neighboringBlocks, new BlockComparator(focus));
 

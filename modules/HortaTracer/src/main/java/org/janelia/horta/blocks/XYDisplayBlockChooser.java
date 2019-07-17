@@ -3,6 +3,7 @@ package org.janelia.horta.blocks;
 import java.util.ArrayList;
 import java.util.List;
 import org.janelia.geometry3d.ConstVector3;
+import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 
 /**
@@ -12,7 +13,8 @@ import org.janelia.geometry3d.Vector3;
 public class XYDisplayBlockChooser implements BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> {
 
     @Override
-    public List<KtxOctreeBlockTileKey> chooseBlocks(KtxOctreeBlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus) {
+    public List<KtxOctreeBlockTileKey> chooseBlocks(KtxOctreeBlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus,
+                                                    Vantage vantage) {
         BlockTileResolution resolution = source.getMaximumResolution();
 
         ConstVector3 blockSize = source.getMaximumResolutionBlockSize();

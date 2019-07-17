@@ -155,7 +155,7 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         return rootBlockSize.multiplyScalar(1.0f / scale);
     }
 
-    private ConstVector3 getBlockSize(KtxOctreeResolution resolution) {
+    public ConstVector3 getBlockSize(KtxOctreeResolution resolution) {
         Vector3 rootBlockSize = outerCorner.minus(origin);
         float scale = (float) Math.pow(2.0, resolution.getResolution());
         return rootBlockSize.multiplyScalar(1.0f / scale);
