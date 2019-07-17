@@ -15,7 +15,7 @@ public class TileStackOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter {
     private static final int VOLUMES_CACHE_SIZE = ConsoleProperties.getInt("console.lvv.volumes.cache.size", 2);
     private static final int TILES_CACHE_SIZE = ConsoleProperties.getInt("console.lvv.tiles.cache.size", 100);
 
-    BlockTiffOctreeLoadAdapter blockTiffOctreeLoadAdapter;
+    private final BlockTiffOctreeLoadAdapter blockTiffOctreeLoadAdapter;
 
     TileStackOctreeLoadAdapter(TileFormat tileFormat, URI baseURI) {
         super(tileFormat, baseURI);
