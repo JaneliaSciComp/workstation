@@ -164,11 +164,10 @@
     </properties>
 
     <repositories>
-        <!-- For NetBeans modules -->
+        <!-- Janelia repo contains NetBeans 8.2, and other things which are not found in Maven Central -->
         <repository>
-            <id>netbeans</id>
-            <name>NetBeans</name>
-            <url>http://bits.netbeans.org/nexus/content/groups/netbeans/</url>
+            <id>janelia-releases</id>
+            <url>https://nexus.janelia.org/repository/maven-releases/</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
@@ -176,32 +175,17 @@
         <!-- for BioFormats -->
         <repository>
             <id>imagej-repository</id>
-            <url>http://maven.imagej.net/content/repositories/ome-releases/</url>
+            <url>https://maven.scijava.org/content/repositories/ome-releases/</url>
             <snapshots>
                 <enabled>false</enabled>
-            </snapshots>
-        </repository>
-	    <repository>
-            <id>jboss-repository</id>
-            <url>https://repository.jboss.org/nexus/content/repositories/releases/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-	    </repository>
-        <!-- Workstation repo for libraries not found in any public Maven repository -->
-        <repository>
-            <id>janelia-repo</id>
-            <url>https://nexus.janelia.org/repository/maven-releases/</url>
-            <snapshots>
-                <enabled>true</enabled>
             </snapshots>
         </repository>
     </repositories>
 
     <distributionManagement>
         <snapshotRepository>
-            <id>janelia-nexus</id>
-            <url>https://nexus.janelia.org/repository/maven-snapshots/</url>
+            <id>janelia-releases</id>
+            <url>https://nexus.janelia.org/repository/maven-releases/</url>
         </snapshotRepository>
     </distributionManagement>
 
