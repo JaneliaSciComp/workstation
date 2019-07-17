@@ -20,9 +20,9 @@ jobs:
 
       - restore_cache:
           keys:
-            - v1-dependencies-c1-{{ checksum "pom.xml" }}
+            - v1-dependencies-c2-{{ checksum "pom.xml" }}
             # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-c1-
+            - v1-dependencies-c2-
 
       # this doesn't work because of internal dependencies in the multimodule project
       #- run: mvn --batch-mode -Djava.awt.headless=true dependency:go-offline
@@ -36,7 +36,7 @@ jobs:
       - save_cache:
           paths:
             - ~/.m2
-          key: v1-dependencies-c1-{{ checksum "pom.xml" }}
+          key: v1-dependencies-c2-{{ checksum "pom.xml" }}
       
       - run: cd modules/application && mvn --batch-mode -Djava.awt.headless=true -Dkeystorepass=$KEYSTORE_PASSWORD package -P deployment
 
