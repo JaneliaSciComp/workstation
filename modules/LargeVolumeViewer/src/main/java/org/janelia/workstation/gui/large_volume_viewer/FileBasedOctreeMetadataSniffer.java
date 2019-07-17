@@ -43,7 +43,7 @@ public class FileBasedOctreeMetadataSniffer {
     /**
      * Return path components to tiff file containing a particular slice
      */
-    public static List<String> getOctreePath(TileIndex tileIndex, TileFormat tileFormat) {
+    private static List<String> getOctreePath(TileIndex tileIndex, TileFormat tileFormat) {
         int axIx = tileIndex.getSliceAxis().index();
 
         List<String> pathComps = new ArrayList<>();
