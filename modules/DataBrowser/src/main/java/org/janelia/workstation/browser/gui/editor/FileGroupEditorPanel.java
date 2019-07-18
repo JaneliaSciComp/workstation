@@ -1,5 +1,17 @@
 package org.janelia.workstation.browser.gui.editor;
 
+import java.awt.BorderLayout;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
@@ -11,6 +23,7 @@ import org.janelia.model.domain.sample.FileGroup;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
 import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.workstation.browser.selection.FileGroupSelectionModel;
@@ -19,10 +32,13 @@ import org.janelia.workstation.common.gui.support.Debouncer;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.selection.SelectionModel;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.util.Utils;
@@ -31,17 +47,6 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.BorderFactory;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import java.awt.BorderLayout;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * An editor which can display the file groups for a given sample result.
@@ -133,17 +138,16 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             typeButton.populate(hasFileGroups.getGroups());
 
             List<FileGroup> sortedGroups = new ArrayList<>(hasFileGroups.getGroups());
-            Collections.sort(sortedGroups, new Comparator<FileGroup>() {
-                @Override
-                public int compare(FileGroup o1, FileGroup o2) {
-                    return o1.getKey().compareTo(o2.getKey());
-                }
-            });
+            Collections.sort(sortedGroups, Comparator.comparing(FileGroup::getKey));
 
             log.info("Showing "+hasFileGroups.getGroupKeys().size()+" file groups");
             resultsPanel.showObjects(sortedGroups, success);
             showResults(isUserDriven);
-        }  catch (Exception e) {
+
+            Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
+
+        }
+        catch (Exception e) {
             FrameworkAccess.handleException(e);
         }
     }
@@ -203,6 +207,26 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
                 }
             }
         }
+    }
+
+    @Override
+    public ViewerContext<FileGroup,String> getViewerContext() {
+        return new ViewerContext<FileGroup,String>() {
+            @Override
+            public FileGroupSelectionModel getSelectionModel() {
+                return selectionModel;
+            }
+
+            @Override
+            public FileGroupSelectionModel getEditSelectionModel() {
+                return null;
+            }
+
+            @Override
+            public ImageModel<FileGroup,String> getImageModel() {
+                return resultsPanel.getImageModel();
+            }
+        };
     }
 
     private void refreshResult() {
@@ -290,7 +314,13 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
         @Override
         protected JPopupMenu getContextualPopupMenu() {
-            return null;
+            return getPopupMenu(selectionModel.getObjects());
+        }
+
+        private FileGroupContextMenu getPopupMenu(List<FileGroup> selectObjects) {
+            FileGroupContextMenu popupMenu = new FileGroupContextMenu();
+            popupMenu.addMenuItems();
+            return popupMenu;
         }
 
         @Override
@@ -304,7 +334,6 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
         @Override
         protected void customizeTitlesPressed() {
-
         }
 
         @Override

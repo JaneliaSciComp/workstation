@@ -458,7 +458,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             return;
         }
 
-        log.info("refresh(invalidateCache={},restoreState={})",invalidateCache,restoreState);
+        log.info("refresh(invalidateCache={}, restoreState={})",invalidateCache,restoreState);
         final StopWatch w = new StopWatch();
         
         final List<Long[]> expanded = root!=null && restoreState ? beanTreeView.getExpandedPaths() : null;

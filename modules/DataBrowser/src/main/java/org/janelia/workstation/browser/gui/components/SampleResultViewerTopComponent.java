@@ -1,10 +1,21 @@
 package org.janelia.workstation.browser.gui.components;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
+import com.google.common.eventbus.Subscribe;
+import org.janelia.workstation.browser.selection.FileGroupSelectionEvent;
+import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
+import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.editor.FileGroupEditorPanel;
@@ -91,17 +102,31 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
+        log.info("componentOpened - {}", this.getName());
         SampleResultViewerManager.getInstance().activate(this);
+        // Listen for events
+        Events.getInstance().registerOnEventBus(this);
+        if (editor!=null) {
+            // Activate the child editor
+            editor.activate();
+        }
     }
 
     @Override
     public void componentClosed() {
+        log.debug("componentClosed - {}", this.getName());
+        // Stop listening for events
+        Events.getInstance().unregisterOnEventBus(this);
+        if (editor!=null) {
+            // Deactivate the child editor
+            editor.deactivate();
+        }
         clearEditor();
     }
     
     @Override
     protected void componentActivated() {
-        log.info("Activating sample result viewer");
+        log.info("componentActivated - {}", this.getName());
         this.active = true;
         // Make this the active sample result viewer
         SampleResultViewerManager.getInstance().activate(this);
@@ -110,18 +135,76 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
             FindContextManager.getInstance().activateContext(findContext);
         }
         if (editor!=null) {
-            editor.activate();
+            updateContext(editor.getViewerContext());
+            updateNodeIfChanged(editor.getSelectionModel().getObjects());
         }
     }
     
     @Override
     protected void componentDeactivated() {
+        log.debug("componentDeactivated - {}", this.getName());
         this.active = false;
         if (findContext!=null) {
             FindContextManager.getInstance().deactivateContext(findContext);
         }
-        if (editor!=null) {
-            editor.deactivate();
+    }
+
+    @Subscribe
+    public void selectedChanged(DomainObjectSelectionEvent e) {
+        // Make sure this selection comes from one of our children, otherwise there's no point in updating anything
+        TopComponent topComponent = UIUtils.getAncestorWithType(
+                (Component)e.getSourceComponent(), TopComponent.class);
+        if (topComponent==this && editor!=null) {
+            log.trace("Our selection changed, updating cookie because of {}", e);
+            updateNodeIfChanged(editor.getSelectionModel().getObjects());
+        }
+    }
+
+    @Subscribe
+    public void selectedChanged(FileGroupSelectionEvent e) {
+        // Make sure this selection comes from one of our children, otherwise there's no point in updating anything
+        TopComponent topComponent = UIUtils.getAncestorWithType(
+                (Component)e.getSourceComponent(), TopComponent.class);
+        if (topComponent==this && editor!=null) {
+            log.trace("Our selection changed, updating cookie because of {}", e);
+            updateNodeIfChanged(editor.getSelectionModel().getObjects());
+        }
+    }
+
+    @Subscribe
+    public void contextChanged(ViewerContextChangeEvent e) {
+        // Make sure this selection comes from one of our children, otherwise there's no point in updating anything
+        TopComponent topComponent = UIUtils.getAncestorWithType(
+                (Component)e.getSourceComponent(), TopComponent.class);
+        if (topComponent==this && editor!=null) {
+            log.trace("Viewer context changed, updating cookie because of {}", e);
+            updateContext(editor.getViewerContext());
+        }
+    }
+
+    private void updateContext(ViewerContext viewerContext) {
+        // Clear all existing nodes
+        getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+        if (viewerContext!=null) {
+            // Add new node
+            content.add(viewerContext);
+        }
+    }
+
+    private void updateNodeIfChanged(Collection objects) {
+
+        List<Object> currentObjects = new ArrayList<>();
+        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
+            currentObjects.addAll(childObjectsNode.getObjects());
+        }
+
+        List<Object> newObjects = new ArrayList<>(objects);
+        if (!currentObjects.equals(newObjects)) {
+            log.trace("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
+            // Clear all existing nodes
+            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
+            // Add new node
+            content.add(new ChildObjectsNode(newObjects));
         }
     }
 
@@ -174,7 +257,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
             Events.getInstance().registerOnEventBus(editor);
             
             JComponent editorComponent = (JComponent)editor;
-            editorComponent.addMouseListener(new MouseForwarder(this, "DomainObjectSelectionEditor->DomainListViewTopComponent"));
+            editorComponent.addMouseListener(new MouseForwarder(this, "ParentNodeSelectionEditor->DomainListViewTopComponent"));
             add(editorComponent, BorderLayout.CENTER);
             
         }

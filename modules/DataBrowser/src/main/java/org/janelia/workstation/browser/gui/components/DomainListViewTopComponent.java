@@ -158,12 +158,6 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (findContext!=null) {
             FindContextManager.getInstance().deactivateContext(findContext);
         }
-        if (editor!=null) {
-            // Clear the lookup
-//            log.trace("removing cookies");
-//            getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
-//            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
-        }
     }
 
     @Subscribe
@@ -192,7 +186,9 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         // Clear all existing nodes
         getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
         // Add new node
-        content.add(viewerContext);
+        if (viewerContext!=null) {
+            content.add(viewerContext);
+        }
     }
 
     private void updateNodeIfChanged(Collection objects) {
@@ -347,7 +343,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             Events.getInstance().registerOnEventBus(editor);
             
             JComponent editorComponent = (JComponent)editor;
-            editorComponent.addMouseListener(new MouseForwarder(this, "DomainObjectSelectionEditor->DomainListViewTopComponent"));
+            editorComponent.addMouseListener(new MouseForwarder(this, "ParentNodeSelectionEditor->DomainListViewTopComponent"));
             add(editorComponent, BorderLayout.CENTER);
         }
         catch (InstantiationException | IllegalAccessException e) {
