@@ -1,4 +1,4 @@
-package org.janelia.workstation.site.jrc.nodes;
+package org.janelia.workstation.browser.nodes;
 
 import java.util.Collections;
 import java.util.List;
@@ -9,21 +9,21 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;
 
-import static org.janelia.workstation.core.options.OptionConstants.SHOW_FLY_LINE_RELEASES;
+import static org.janelia.workstation.core.options.OptionConstants.SHOW_DATA_SETS;
 
 /**
- * Adds the fly line releases node to the Data Explorer.
+ * Adds the data sets node to the Data Explorer.
  */
 @ServiceProvider(service = NodeProvider.class, path=NodeProvider.LOOKUP_PATH)
-public class FlyLineReleasesNodeProvider implements NodeProvider  {
+public class DataSetsNodeProvider implements NodeProvider  {
 
-    private static final int NODE_ORDER = 30;
+    private static final int NODE_ORDER = 20;
 
-    public FlyLineReleasesNodeProvider() {
+    public DataSetsNodeProvider() {
     }
 
     public List<NodeGenerator> getNodeGenerators() {
-        if (!isShow()) return Collections.emptyList();
+        if (!isShowRecentMenuItems()) return Collections.emptyList(); 
         return Collections.singletonList(new NodeGenerator() {
 
             @Override
@@ -33,13 +33,13 @@ public class FlyLineReleasesNodeProvider implements NodeProvider  {
 
             @Override
             public Node createNode() {
-                return new FlyLineReleasesNode();
+                return new DataSetsNode();
             }
         });
     }
     
-    public static boolean isShow() {
-        return FrameworkAccess.getModelProperty(SHOW_FLY_LINE_RELEASES, true);
+    public static boolean isShowRecentMenuItems() {
+        return FrameworkAccess.getModelProperty(SHOW_DATA_SETS, true);
     }
     
 }

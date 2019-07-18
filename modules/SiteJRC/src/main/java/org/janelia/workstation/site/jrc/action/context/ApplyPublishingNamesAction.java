@@ -31,6 +31,7 @@ import org.openide.util.NbBundle.Messages;
 @ActionReferences({
         @ActionReference(path = "Menu/Actions/Sample", position = 541),
         @ActionReference(path = "Shortcuts", name = "S-D-P")
+
 })
 @Messages("CTL_ApplyPublishingNamesAction=Apply Line Publishing Names")
 public class ApplyPublishingNamesAction extends BaseContextualNodeAction {

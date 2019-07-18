@@ -1,11 +1,8 @@
-package org.janelia.workstation.browser.api.services;
-
-import java.util.Arrays;
+package org.janelia.workstation.browser.nodes;
 
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.gui.search.Filtering;
+import org.janelia.model.domain.sample.DataSet;
 import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
-import org.janelia.workstation.common.nodes.FilterNode;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -15,12 +12,12 @@ import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
- * A helper for Filters.
+ * A helper for working with Data Sets.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = DomainObjectHandler.class, position = 999)
-public class FilterObjectHandler implements DomainObjectHandler {
+@ServiceProvider(service = DomainObjectHandler.class, position = 200)
+public class DataSetObjectHandler implements DomainObjectHandler {
 
     @Override
     public boolean isCompatible(DomainObject domainObject) {
@@ -29,12 +26,12 @@ public class FilterObjectHandler implements DomainObjectHandler {
     
     @Override
     public boolean isCompatible(Class<? extends DomainObject> clazz) {
-        return Filtering.class.isAssignableFrom(clazz);
+        return DataSet.class.isAssignableFrom(clazz);
     }
 
     @Override
     public Node getNode(DomainObject domainObject, ChildFactory parentChildFactory) throws Exception {
-        return new FilterNode(parentChildFactory, (Filtering)domainObject);
+        return new DataSetNode(parentChildFactory, (DataSet) domainObject);
     }
 
     @Override
@@ -44,7 +41,7 @@ public class FilterObjectHandler implements DomainObjectHandler {
     
     @Override   
     public String getLargeIcon(DomainObject domainObject) {
-        return "search_large.png";
+        return "folder_large.png";
     }
 
     @Override
@@ -55,6 +52,7 @@ public class FilterObjectHandler implements DomainObjectHandler {
     @Override
     public void remove(DomainObject domainObject) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        model.remove(Arrays.asList(((Filtering)domainObject)));
+        model.remove((DataSet)domainObject);
     }
+
 }

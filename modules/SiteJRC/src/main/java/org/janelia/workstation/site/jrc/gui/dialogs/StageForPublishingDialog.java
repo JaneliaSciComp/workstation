@@ -95,15 +95,16 @@ public class StageForPublishingDialog extends ModalDialog {
         releaseComboPanel.add(existingReleaseLabel, BorderLayout.WEST);
         releaseComboPanel.add(loadingLabel, BorderLayout.CENTER);
 
+        this.newReleaseLabel = new JLabel("Release name");
+        this.releaseNameField = new JTextField(25);
+
         this.newReleaseRadioButton = new JRadioButton("Create a new release:");
         newReleaseRadioButton.setSelected(true);
         group.add(newReleaseRadioButton);
         newReleaseRadioButton.addActionListener((ActionEvent e) -> {
+            releaseNameField.requestFocus();
             updateState();
         });
-
-        this.newReleaseLabel = new JLabel("Release name");
-        this.releaseNameField = new JTextField(25);
 
         objectivesPanel = new JPanel();
         objectivesPanel.setLayout(new BoxLayout(objectivesPanel, BoxLayout.PAGE_AXIS));
@@ -114,7 +115,7 @@ public class StageForPublishingDialog extends ModalDialog {
         addPanel.add(newReleaseRadioButton, "");
         addPanel.add(releaseComboPanel, "");
         addPanel.add(releaseNameField, "");
-        addPanel.add(new JLabel("Stage images for these microscope objectives:"), "span 2");
+        addPanel.add(new JLabel("Stage images for these microscope objectives:"), "span 2, gaptop 10px");
         addPanel.add(objectivesPanel, "span 2");
 
         add(addPanel, BorderLayout.CENTER);
@@ -249,12 +250,9 @@ public class StageForPublishingDialog extends ModalDialog {
                 revalidate();
                 pack();
 
-                log.info("WTF "+newReleaseRadioButton.isSelected());
                 SwingUtilities.invokeLater(() -> {
-                    log.info("WTF2 "+newReleaseRadioButton.isSelected());
                     // Focus the name field so the user can start typing
                     if (newReleaseRadioButton.isSelected()) {
-                        log.info("SELECTING");
                         releaseNameField.requestFocus();
                     }
                 });
@@ -306,6 +304,8 @@ public class StageForPublishingDialog extends ModalDialog {
         SimpleWorker worker = new SimpleWorker() {
 
             private LineRelease lineRelease;
+            private int numExpectedAnnotations;
+            private int numExpectedPublishingNames;
             private int numAnnotations;
             private int numPublishingNames;
             private boolean hadProblems = false;
@@ -325,25 +325,26 @@ public class StageForPublishingDialog extends ModalDialog {
                     log.info("Using existing release {}", lineRelease);
                 }
 
-                List<Reference> oldChildren = lineRelease.getChildren();
-                Set<Reference> children = new LinkedHashSet<>(oldChildren);
-                for (Sample sample : samples) {
-                    children.add(Reference.createFor(sample));
-                }
-                lineRelease.setChildren(new ArrayList<>(children));
                 lineRelease.setSageSync(true);
                 model.save(lineRelease);
 
-                // TODO: use this method instead once the server-side has been generified to work with all Nodes
-                //lineRelease = model.addChildren(this.lineRelease, samples);
-                log.info("Added {} samples to release", lineRelease.getChildren().size()-oldChildren.size());
+                List<Reference> oldChildren = lineRelease.getChildren();
+                Set<Reference> children = new LinkedHashSet<>();
+                for (Sample sample : samples) {
+                    children.add(Reference.createFor(sample));
+                }
+
+                lineRelease = model.addChildren(this.lineRelease, samples);
+                log.info("Added {} new samples to release", lineRelease.getChildren().size()-oldChildren.size());
 
                 numAnnotations = annotatePublishObjective(samples, objectives);
-                hadProblems |= numAnnotations != samples.size()*objectives.size();
-                log.info("Annotated samples for release");
+                numExpectedAnnotations = samples.size()*objectives.size();
+                hadProblems |= numAnnotations != numExpectedAnnotations;
+                log.info("Added {} release annotations", numAnnotations);
 
                 numPublishingNames = annotatePublishNames(samples);
-                hadProblems |= numPublishingNames != samples.size();
+                numExpectedPublishingNames = samples.size();
+                hadProblems |= numPublishingNames != numExpectedPublishingNames;
                 log.info("Added {} line publishing names", numPublishingNames);
             }
 
@@ -356,8 +357,14 @@ public class StageForPublishingDialog extends ModalDialog {
 
                 if (hadProblems) {
                     log.warn("Some problems were encountered");
-                    // TODO: complete this when we have synchronous releasing
-                    // show all problems in a dialog popup
+
+                    StringBuilder sb = new StringBuilder();
+
+
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                            "Some problems were encountered while staging samples for publishing: ",
+                            "Problems Staging Samples for Publishing",
+                            JOptionPane.WARNING_MESSAGE);
                 }
 
                 DomainExplorerTopComponent.getInstance().refresh(() -> {

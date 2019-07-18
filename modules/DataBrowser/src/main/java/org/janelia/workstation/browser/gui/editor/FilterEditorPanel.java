@@ -785,7 +785,7 @@ public class FilterEditorPanel
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
-                    if (searchConfig.getSearchClass().isAssignableFrom(domainObject.getClass())) {
+                    if (searchConfig!=null && searchConfig.getSearchClass()!=null && searchConfig.getSearchClass().isAssignableFrom(domainObject.getClass())) {
                         log.info("Object with search class invalidated, reloading...");
                         reload();
                         break;

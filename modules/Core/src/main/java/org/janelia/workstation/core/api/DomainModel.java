@@ -700,7 +700,7 @@ public class DomainModel {
                 log.debug("Getting ontologies from database");
                 this.ontologyCache = new LinkedHashMap<>();
                 StopWatch w = TIMER ? new LoggingStopWatch() : null;
-                Collection<Ontology> ontologies = ontologyFacade.getOntologiesSortedByCurrentPrincipal();
+                Collection<Ontology> ontologies = ontologyFacade.getOntologies();
                 List<Ontology> canonicalObjects = putOrUpdate(ontologies, false);
                 for (Ontology ontology : canonicalObjects) {
                     ontologyCache.put(Reference.createFor(ontology), ontology);

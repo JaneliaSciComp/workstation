@@ -3,6 +3,7 @@ package org.janelia.workstation.core.api.facade.impl.rest;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -11,7 +12,9 @@ import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
+import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
+import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.LineRelease;
@@ -42,13 +45,17 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
     
     @Override
     public Collection<DataSet> getDataSets() throws Exception {
+        String currentPrincipal = AccessManager.getSubjectKey();
         WebTarget target = getDomainService("data/dataset")
-                .queryParam("subjectKey", AccessManager.getSubjectKey());
+                .queryParam("subjectKey", currentPrincipal);
         Response response = target
                 .request("application/json")
                 .get();
         checkBadResponse(target, response);
-        return response.readEntity(new GenericType<List<DataSet>>() {});
+        return response.readEntity(new GenericType<List<DataSet>>() {})
+                .stream()
+                .sorted(new DomainObjectComparator(currentPrincipal))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -107,13 +114,17 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
     @Override
     public List<LineRelease> getLineReleases() throws Exception {
+        String currentPrincipal = AccessManager.getSubjectKey();
         WebTarget target = getDomainService("process/release")
-                .queryParam("subjectKey", AccessManager.getSubjectKey());
+                .queryParam("subjectKey", currentPrincipal);
         Response response = target
                 .request("application/json")
                 .get();
         checkBadResponse(target, response);
-        return response.readEntity((new GenericType<List<LineRelease>>() {}));
+        return response.readEntity(new GenericType<List<LineRelease>>() {})
+                .stream()
+                .sorted(new DomainObjectComparator(currentPrincipal))
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -1,10 +1,10 @@
-package org.janelia.workstation.site.jrc.nodes;
+package org.janelia.workstation.browser.nodes;
 
 import java.awt.Image;
 import java.util.List;
 
 import org.janelia.model.domain.interfaces.HasIdentifier;
-import org.janelia.model.domain.sample.LineRelease;
+import org.janelia.model.domain.sample.DataSet;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -20,31 +20,31 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
+public class DataSetsNode extends AbstractNode implements HasIdentifier {
 
-    private final static Logger log = LoggerFactory.getLogger(FlyLineReleasesNode.class);
+    private final static Logger log = LoggerFactory.getLogger(DataSetsNode.class);
 
-    public static final long NODE_ID = 30L; // This magic number means nothing, it just needs to be unique and different from GUID space.
+    private static final long DATA_SETS_NODE_ID = 20L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
-    private final LineReleaseNodeChildFactory childFactory;
+    private final DataSetNodeChildFactory childFactory;
 
-    public FlyLineReleasesNode() {
-        this(new LineReleaseNodeChildFactory());
+    public DataSetsNode() {
+        this(new DataSetNodeChildFactory());
     }
 
-    private FlyLineReleasesNode(LineReleaseNodeChildFactory childFactory) {
+    private DataSetsNode(DataSetNodeChildFactory childFactory) {
         super(Children.create(childFactory, false));
         this.childFactory = childFactory;
     }
 
     @Override
     public Long getId() {
-        return NODE_ID;
+        return DATA_SETS_NODE_ID;
     }
 
     @Override
     public String getDisplayName() {
-        return "Fly Line Releases";
+        return "Data Sets";
     }
 
     @Override
@@ -61,7 +61,7 @@ public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
     
     @Override
     public Image getIcon(int type) {
-        return Icons.getIcon("folder_image.png").getImage();
+        return Icons.getIcon("folder-white-icon.png").getImage();
     }
 
     @Override
@@ -78,14 +78,14 @@ public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
         childFactory.refresh();
     }   
 
-    private static class LineReleaseNodeChildFactory extends ChildFactory<LineRelease> {
-        
+    private static class DataSetNodeChildFactory extends ChildFactory<DataSet> {
+
         @Override
-        protected boolean createKeys(List<LineRelease> list) {
+        protected boolean createKeys(List<DataSet> list) {
             try {
                 log.debug("Creating children keys for FlyLineReleasesNode");
-                list.addAll(DomainMgr.getDomainMgr().getModel().getLineReleases());
-            } 
+                list.addAll(DomainMgr.getDomainMgr().getModel().getDataSets());
+            }
             catch (Exception ex) {
                 FrameworkAccess.handleException(ex);
             }
@@ -93,16 +93,16 @@ public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
         }
 
         @Override
-        protected Node createNodeForKey(LineRelease key) {
+        protected Node createNodeForKey(DataSet key) {
             try {
-                return new FlyLineReleaseNode(this, key);
+                return new DataSetNode(this, key);
             }
             catch (Exception e) {
                 log.error("Error creating node for key " + key, e);
             }
             return null;
         }
-        
+
         public void refresh() {
             log.debug("Refreshing child factory for "+getClass().getSimpleName());
             refresh(true);

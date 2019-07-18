@@ -36,12 +36,7 @@ public class ExplorerRootNodeChildFactory extends ChildFactory<NodeGenerator> {
                 allGenerators.addAll(generators);
             }
             
-            Collections.sort(allGenerators, new Comparator<NodeGenerator>() {
-                @Override
-                public int compare(NodeGenerator o1, NodeGenerator o2) {
-                    return o1.getIndex().compareTo(o2.getIndex());
-                }
-            });
+            Collections.sort(allGenerators, Comparator.comparing(NodeGenerator::getIndex));
             
             list.addAll(allGenerators);
             

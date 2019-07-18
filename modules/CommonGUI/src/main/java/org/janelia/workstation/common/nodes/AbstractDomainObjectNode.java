@@ -113,7 +113,7 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
     }
 
     public String getPrimaryLabel() {
-        return getDomainObject().getId().toString();
+        return getName();
     }
 
     public String getSecondaryLabel() {
