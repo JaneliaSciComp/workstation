@@ -359,10 +359,16 @@ public class StageForPublishingDialog extends ModalDialog {
                     log.warn("Some problems were encountered");
 
                     StringBuilder sb = new StringBuilder();
-
+                    sb.append("Some problems were encountered while staging samples for publishing: ");
+                    if (numAnnotations != numExpectedAnnotations) {
+                        sb.append("Expected ").append(numExpectedAnnotations).append(" annotations, but created ").append(numAnnotations).append(". ");
+                    }
+                    if (numPublishingNames != numExpectedPublishingNames) {
+                        sb.append("Expected ").append(numExpectedPublishingNames).append(" publishing names, but set ").append(numPublishingNames).append(". ");
+                    }
 
                     JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                            "Some problems were encountered while staging samples for publishing: ",
+                            sb.toString(),
                             "Problems Staging Samples for Publishing",
                             JOptionPane.WARNING_MESSAGE);
                 }
