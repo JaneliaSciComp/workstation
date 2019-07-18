@@ -56,6 +56,7 @@ public class MergeSelectedNeuronsAction extends BaseContextualNodeAction {
 
     @Override
     protected void processContext() {
+        fragments.clear();
         if (getNodeContext().isOnlyObjectsOfType(NeuronFragment.class)) {
             fragments.addAll(getNodeContext().getOnlyObjectsOfType(NeuronFragment.class));
             setEnabledAndVisible(fragments.size()>=2);
