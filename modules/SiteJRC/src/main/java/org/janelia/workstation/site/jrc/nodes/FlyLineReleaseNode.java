@@ -64,7 +64,6 @@ public class FlyLineReleaseNode extends AbstractDomainObjectNode<LineRelease> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public PasteType getDropType(final Transferable t, int action, final int index) {
         return new PasteType() {
             @Override

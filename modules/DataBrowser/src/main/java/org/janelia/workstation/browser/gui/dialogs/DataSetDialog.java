@@ -69,6 +69,10 @@ public class DataSetDialog extends ModalDialog {
 
     private DataSet dataSet;
 
+    public DataSetDialog() {
+        this(null);
+    }
+
     public DataSetDialog(DataSetListDialog parentDialog) {
 
         super(parentDialog);

@@ -1,6 +1,9 @@
 package org.janelia.workstation.browser.nodes;
 
+import java.awt.Image;
+
 import org.janelia.model.domain.sample.DataSet;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.nodes.FilterNode;
 import org.openide.nodes.ChildFactory;
 
@@ -32,5 +35,10 @@ public class DataSetNode extends FilterNode<DataSet> {
     @Override
     public String getExtraLabel() {
         return null;
+    }
+
+    @Override
+    public Image getIcon(int type) {
+        return Icons.getIcon("database.png").getImage();
     }
 }

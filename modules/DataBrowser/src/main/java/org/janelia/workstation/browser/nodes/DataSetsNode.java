@@ -1,10 +1,17 @@
 package org.janelia.workstation.browser.nodes;
 
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.sample.DataSet;
+import org.janelia.workstation.browser.gui.dialogs.DataSetDialog;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -61,7 +68,7 @@ public class DataSetsNode extends AbstractNode implements HasIdentifier {
     
     @Override
     public Image getIcon(int type) {
-        return Icons.getIcon("folder-white-icon.png").getImage();
+        return Icons.getIcon("folder_database.png").getImage();
     }
 
     @Override
@@ -76,7 +83,44 @@ public class DataSetsNode extends AbstractNode implements HasIdentifier {
 
     public void refreshChildren() {
         childFactory.refresh();
-    }   
+    }
+
+    @Override
+    public Action[] getActions(boolean context) {
+        Collection<Action> actions = new ArrayList<>();
+        actions.add(new PopupLabelAction());
+        actions.add(new CreateNewDataSetAction());
+        return actions.toArray(new Action[0]);
+    }
+
+    protected final class PopupLabelAction extends AbstractAction {
+
+        PopupLabelAction() {
+            putValue(NAME, getDisplayName());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return false;
+        }
+    }
+
+    protected final class CreateNewDataSetAction extends AbstractAction {
+
+        CreateNewDataSetAction() {
+            putValue(NAME, "Create New Data Set...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            DataSetDialog dataSetDialog = new DataSetDialog();
+            dataSetDialog.showForNewDataSet();
+        }
+    }
 
     private static class DataSetNodeChildFactory extends ChildFactory<DataSet> {
 

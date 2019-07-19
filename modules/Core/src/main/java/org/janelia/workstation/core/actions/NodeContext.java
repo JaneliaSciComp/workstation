@@ -43,9 +43,6 @@ public class NodeContext {
                 Collection objects = ((ChildObjectsNode) node).getObjects();
                 this.objects.addAll(objects);
             }
-            else {
-                log.warn("Unrecognized node type: {}", node.getClass().getName());
-            }
         }
     }
 

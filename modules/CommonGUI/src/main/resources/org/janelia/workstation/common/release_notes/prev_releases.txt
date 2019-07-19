@@ -1,3 +1,32 @@
+// 8.1
+
+Data Browser
+* The Workstation client is now able to connect to different backend servers (File->Connect)
+* Added scrolling to the color depth mask creation dialog
+
+Large Volume Viewer
+* Fixed bug: merge and split should work when autotracing is on
+* Added "unique" predefined note
+
+Horta
+* Import/export color model dialogs default to standard folder on shared drive
+
+// 8.0
+
+In this major release, the Workstation has been refactored to allow for containerized deployment and open source
+distribution. The full source code is now available on GitHub under the Janelia Open Source License:
+https://github.com/JaneliaSciComp/workstation
+
+MouseLight Tools
+* Both Horta and LVV were modified to pull data from the JADE storage service, eliminating the previous
+  dependency on internal Samba drive mounts. It is no longer necessary to mount external drives to use these tools.
+
+Data Browser
+* You can now create and manage user groups using the Administration Tool (Window->Core)
+* Core browser functionality was refactored into multiple modules for better maintainability and extensibility
+* Improved dependency management, application installers and distribution
+* Many performance improvements and bug fixes
+
 // 7.28
 
 Data Browser

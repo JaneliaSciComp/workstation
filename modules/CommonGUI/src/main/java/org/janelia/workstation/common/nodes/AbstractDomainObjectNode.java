@@ -205,6 +205,7 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
 
     @Override
     public SystemAction[] getActions() {
+        super.getActions();
         return null;
     }
     

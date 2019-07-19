@@ -1,17 +1,26 @@
 package org.janelia.workstation.site.jrc.nodes;
 
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JOptionPane;
 
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
+import org.openide.util.actions.SystemAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +85,48 @@ public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
 
     public void refreshChildren() {
         childFactory.refresh();
-    }   
+    }
+
+    @Override
+    public Action[] getActions(boolean context) {
+        Collection<Action> actions = new ArrayList<>();
+        actions.add(new PopupLabelAction());
+        actions.add(new CreateNewReleaseAction());
+        return actions.toArray(new Action[0]);
+    }
+
+    protected final class PopupLabelAction extends AbstractAction {
+
+        PopupLabelAction() {
+            putValue(NAME, getDisplayName());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return false;
+        }
+    }
+
+    protected final class CreateNewReleaseAction extends AbstractAction {
+
+        CreateNewReleaseAction() {
+            putValue(NAME, "Create New Fly Line Release...");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                    "<html>Creating a <b>Fly Line Release</b> will allow you to publish your data to Janelia's external Split-GAL4 website.<br><br>" +
+                                   "To create a new Fly Line Release, select one or more Samples that you would like to publish, <br>" +
+                                   "right-click one of them, and choose the '<b>Stage Samples for Publishing</b>' option.</html>",
+                    "How to create a new Fly Line Release",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
 
     private static class LineReleaseNodeChildFactory extends ChildFactory<LineRelease> {
         
