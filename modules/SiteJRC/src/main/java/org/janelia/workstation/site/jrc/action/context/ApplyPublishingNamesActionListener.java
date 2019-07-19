@@ -12,14 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
+import javax.swing.border.Border;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -54,6 +48,7 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
 
     private final DomainModel model = DomainMgr.getDomainMgr().getModel();
     private final Multimap<String,Sample> sampleByLine = ArrayListMultimap.create();
+    private final Queue<String> noPublishingNamesFound = new LinkedList<>();
     private final Queue<String> manualAnnotationNecessary = new LinkedList<>();
     private final Collection<Sample> samples;
     private final boolean async;
@@ -120,7 +115,8 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
                 Collection<String> possibleNames = sageClient.getPublishingNames(lineName);
 
                 if (possibleNames.isEmpty()) {
-                    log.info("No publishing names available for '{}'", lineName);
+                    log.warn("No publishing names available for '{}'", lineName);
+                    noPublishingNamesFound.add(lineName);
                 }
                 else if (possibleNames.size() == 1) {
                     annotatePublishedName((List<Sample>)sampleByLine.get(lineName), possibleNames.iterator().next());
@@ -138,7 +134,31 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
 
     private void continueWithManualAnnotation() {
 
-        if (manualAnnotationNecessary.isEmpty()) return;
+        if (manualAnnotationNecessary.isEmpty()) {
+            // Finished with manual annotation, now show the lines that could not be annotated
+
+            if (!noPublishingNamesFound.isEmpty()) {
+                String lineNameStr = org.apache.commons.lang3.StringUtils.join(noPublishingNamesFound, ",");
+
+                JPanel panel = new JPanel();
+                panel.setLayout(new BorderLayout());
+                panel.add(new JLabel("<html>Some line names have no publishing names available in FlyCore.<br>" +
+                        "Please contact FlyCore to add publishing names for these lines:</html>"), BorderLayout.CENTER);
+
+                JTextField lineField = new JTextField();
+                lineField.setText(lineNameStr);
+                lineField.setEditable(false);
+                panel.add(lineField, BorderLayout.SOUTH);
+
+                JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
+                        panel,
+                        "Publishing names not available",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.PLAIN_MESSAGE);
+            }
+
+            return;
+        }
 
         String lineName = manualAnnotationNecessary.remove();
         List<Sample> lineSamples = (List<Sample>)sampleByLine.get(lineName);
