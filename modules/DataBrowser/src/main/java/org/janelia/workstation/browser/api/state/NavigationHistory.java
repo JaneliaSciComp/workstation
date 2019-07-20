@@ -3,6 +3,7 @@ package org.janelia.workstation.browser.api.state;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
@@ -87,7 +88,7 @@ public class NavigationHistory {
         if (!history.isEmpty()) {
             DomainObjectEditorState<?,?,?> currState = history.get(historyPosition);
             if (currState!=null) {
-                if (currState.getDomainObject()!=null && state.getDomainObject().getId().equals(currState.getDomainObject().getId())) {
+                if (currState.getDomainObject()==state.getDomainObject()) {
                     log.warn("We already have this state. This shouldn't happen.");
                 }
             }
