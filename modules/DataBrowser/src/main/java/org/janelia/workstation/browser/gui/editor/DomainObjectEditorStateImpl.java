@@ -92,6 +92,10 @@ public class DomainObjectEditorStateImpl<P extends DomainObject, T> implements D
             builder.append(topComponent.getClass().getSimpleName());
         }
         if (domainObjectNode != null) {
+            builder.append("\n  domainObjectNode: ");
+            builder.append(domainObjectNode.getId());
+        }
+        if (domainObject != null) {
             builder.append("\n  domainObject: ");
             builder.append(domainObject.getName());
             builder.append(" (");
