@@ -134,7 +134,7 @@ public class FileMgr {
     }
 
     public int getFileCacheGigabyteUsagePercent() {
-        int capacity = FileMgr.getFileMgr().getFileCacheGigabyteCapacity();
+        int capacity = LocalPreferenceMgr.getInstance().getFileCacheGigabyteCapacity();
         double usage = FileMgr.getFileMgr().getFileCacheGigabyteUsage();
         double percent = (usage / (double)capacity) * 100.0;
         return (int)percent;
