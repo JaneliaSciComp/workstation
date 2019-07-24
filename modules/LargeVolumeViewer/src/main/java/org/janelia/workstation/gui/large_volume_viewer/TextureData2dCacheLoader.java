@@ -39,6 +39,7 @@ public class TextureData2dCacheLoader extends CacheLoader<TileIndex, Optional<Te
             return Optional.empty();
         } finally {
             currentlyLoadingTiles.remove(tileIndex);
+            LOG.debug("Finished loading tile {}", tileIndex);
         }
     }
 

@@ -63,7 +63,7 @@ public class FileBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdap
                     tileIndex.getZoom(),
                     tileInfo.getSliceAxis(),
                     tileInfo);
-            LOG.debug("Load tile {} using key {}", tileIndex, tileKey);
+            LOG.debug("Load tile {} using key {} -> {}", tileIndex, tileKey, renderedVolumeMetadata.getRelativeTilePath(tileKey));
             return renderedVolumeLoader.loadSlice(renderedVolumeLocation, renderedVolumeMetadata, tileKey)
                     .map(TextureData2d::new)
                     .orElse(null);

@@ -220,7 +220,7 @@ public class SliceActor implements GLActor {
         }
     }
 
-    public void setImageColorModel(ImageColorModel imageColorModel) {
+    void setImageColorModel(ImageColorModel imageColorModel) {
         this.imageColorModel = imageColorModel;
         shader.setImageColorModel(imageColorModel);
         numeralShader.setImageColorModel(imageColorModel);

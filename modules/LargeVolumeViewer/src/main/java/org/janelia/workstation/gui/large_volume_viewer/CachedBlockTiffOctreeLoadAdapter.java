@@ -1,18 +1,18 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.LoadingCache;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.LoadingCache;
+
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -33,12 +33,11 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
     // holds the coord of the loading tiles relative to the current focus
     // this is only for display purposes
     private final Map<TileIndex, int[]> tileCachingMap;
-    private final Set<TileIndex> neighborhoodTiles;
 
     private Double zoom;
     private Vec3 focus;
 
-    public CachedBlockTiffOctreeLoadAdapter(BlockTiffOctreeLoadAdapter tileLoader) {
+    CachedBlockTiffOctreeLoadAdapter(BlockTiffOctreeLoadAdapter tileLoader) {
         super(tileLoader.getTileFormat(), tileLoader.getVolumeBaseURI());
         this.tileLoader = tileLoader;
         this.tileCacheLoader = new TextureData2dCacheLoader(tileLoader);
@@ -47,7 +46,6 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                 .build(tileCacheLoader);
         this.tileCachingMap = new LinkedHashMap<>();
         this.tileLoadThreadPool = new ScheduledThreadPoolExecutor(4);
-        this.neighborhoodTiles = new HashSet<>();
     }
 
     @Override
@@ -104,7 +102,6 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                     tileLoader.getTileFormat().getIndexStyle(),
                     CoordinateAxis.Z
             );
-            neighborhoodTiles.clear();
             tileLoadThreadPool.getQueue().clear();
             tileCache.getUnchecked(focusTileIndex);
             tileCachingMap.clear();
@@ -124,21 +121,18 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                         TileIndex ti = tileWithOffsets.getLeft();
                         int[] offsets = tileWithOffsets.getRight();
                         tileCachingMap.put(ti, offsets);
-                        neighborhoodTiles.add(ti);
                         submitCacheTileRequest(ti);
                     });    
         }
     }
 
     private void submitCacheTileRequest(TileIndex tileIndex) {
-       tileLoadThreadPool.schedule(() -> {
-           return tileCache.getUnchecked(tileIndex);
-       }, 100, TimeUnit.MILLISECONDS);
+       tileLoadThreadPool.schedule(() -> tileCache.getUnchecked(tileIndex), 100, TimeUnit.MILLISECONDS);
     }
 
     private Stream<int[]> generateOffsets(int from, int to, int zOffset) {
         return IntStream.rangeClosed(from, to)
-                .mapToObj(yOffset -> yOffset)
+                .boxed()
                 .flatMap(yOffset -> IntStream.rangeClosed(from, to).mapToObj(xOffset -> new int[]{xOffset, yOffset, zOffset}));
     }
 
@@ -154,7 +148,6 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
                 tile.getIndexStyle(),
                 tile.getSliceAxis()
         );
-        
     }
 
     Collection<int[]> getCachingMap() {
