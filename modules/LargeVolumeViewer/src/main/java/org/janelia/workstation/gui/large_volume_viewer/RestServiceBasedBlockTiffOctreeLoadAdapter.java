@@ -28,6 +28,7 @@ import org.janelia.rendering.TileInfo;
 import org.janelia.rendering.TileKey;
 import org.janelia.rendering.utils.HttpClientProvider;
 import org.janelia.workstation.core.api.LocalPreferenceMgr;
+import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,16 +86,7 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
                             renderedVolumeMetadata.getVolumeBasePath(),
                             appAuthorization.getAuthenticationToken(),
                             null,
-                            new HttpClientProvider() {
-                                public Client getClient() {
-                                    Client client = ClientBuilder.newClient();
-                                    JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
-                                            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                                            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-                                    client.register(provider);
-                                    return client;
-                                }
-                            }
+                            () -> RestJsonClientManager.getInstance().getHttpClient(true)
                     ),
                     LocalPreferenceMgr.getInstance().getLocalFileCacheStorage());
             getTileFormat().initializeFromRenderedVolumeMetadata(renderedVolumeMetadata);

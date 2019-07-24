@@ -39,6 +39,7 @@ import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.LocalPreferenceMgr;
+import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -156,14 +157,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         renderedVolumeMetadata.getVolumeBasePath(),
                         appAuthorization.getAuthenticationToken(),
                         null,
-                        () -> {
-                            Client client = ClientBuilder.newClient();
-                            JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
-                                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                                    .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-                            client.register(provider);
-                            return client;
-                        }
+                        () -> RestJsonClientManager.getInstance().getHttpClient(true)
                 );
             } catch (Exception e) {
                 LOG.error("Error getting sample volume info from {}", url, e);
