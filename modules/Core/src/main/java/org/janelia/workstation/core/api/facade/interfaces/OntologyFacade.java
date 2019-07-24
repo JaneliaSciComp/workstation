@@ -20,7 +20,7 @@ public interface OntologyFacade {
      * Returns all of the ontologies that the current user can access. 
      * @return list of ontologies
      */
-    List<Ontology> getOntologiesSortedByCurrentPrincipal();
+    List<Ontology> getOntologies();
 
     /**
      * Creates and returns a new ontology, owned by the current user.

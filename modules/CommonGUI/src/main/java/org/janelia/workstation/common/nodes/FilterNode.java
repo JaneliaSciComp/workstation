@@ -8,13 +8,13 @@ import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 
-public class FilterNode extends AbstractDomainObjectNode<Filtering> {
+public class FilterNode<T extends Filtering> extends AbstractDomainObjectNode<T> {
         
-    public FilterNode(ChildFactory<?> parentChildFactory, Filtering filter) throws Exception {
+    public FilterNode(ChildFactory<?> parentChildFactory, T filter) throws Exception {
         super(parentChildFactory, Children.LEAF, filter);
     }
     
-    public Filtering getFilter() {
+    public T getFilter() {
         return getDomainObject();
     }
     

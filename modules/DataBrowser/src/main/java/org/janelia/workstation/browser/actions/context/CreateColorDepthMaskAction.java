@@ -75,7 +75,7 @@ public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
                 }
 
                 if (!samples.isEmpty() && samples.size() == selectedObjects.size()) {
-                    if (resultDescriptor.isAligned()) {
+                    if (resultDescriptor!=null && resultDescriptor.isAligned()) {
                         setVisible(true);
 
                         Sample sample = samples.get(0);

@@ -1,11 +1,7 @@
 package org.janelia.workstation.browser.actions;
 
 import java.awt.Component;
-import java.util.Collection;
 import java.util.Collections;
-
-import javax.swing.Action;
-import javax.swing.JMenuItem;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
@@ -15,7 +11,6 @@ import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
-import org.janelia.workstation.core.actions.PopupMenuGenerator;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;

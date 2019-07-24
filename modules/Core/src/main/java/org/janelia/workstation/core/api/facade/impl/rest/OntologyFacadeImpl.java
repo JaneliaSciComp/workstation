@@ -42,7 +42,7 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
     }
 
     @Override
-    public List<Ontology> getOntologiesSortedByCurrentPrincipal() {
+    public List<Ontology> getOntologies() {
         String currentPrincipal = AccessManager.getSubjectKey();
         WebTarget target = service.path("data/ontology")
                 .queryParam("subjectKey", currentPrincipal);

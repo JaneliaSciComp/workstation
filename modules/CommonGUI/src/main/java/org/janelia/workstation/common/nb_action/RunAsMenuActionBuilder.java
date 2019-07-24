@@ -3,6 +3,7 @@ package org.janelia.workstation.common.nb_action;
 import javax.swing.Action;
 
 import org.janelia.workstation.integration.spi.actions.AdminActionBuilder;
+import org.openide.util.actions.SystemAction;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -13,10 +14,8 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = AdminActionBuilder.class, position=1)
 public final class RunAsMenuActionBuilder implements AdminActionBuilder {
 
-    private static final Action ACTION = new RunAsMenuAction();
-
     @Override
     public Action getAction() {
-        return ACTION;
+        return SystemAction.get(RunAsMenuAction.class);
     }
 }

@@ -355,9 +355,18 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         log.info("Loading neurons for workspace {}", workspace.getId());
         neuronManager.loadWorkspaceNeurons(workspace);
 
+        // if workspace contains any fragments, enable filter
+        String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+        for (TmNeuronMetadata neuron: neuronManager.getNeurons()) {
+            if (neuron.getOwnerKey().equals(systemNeuron)) {
+                applyFilter = true;
+                break;
+            }
+        }
+
         // if spatial filter is applied, use it to filter neurons
         if (applyFilter) {
-            neuronFilter = new NeuronProximitySpatialFilter();
+            neuronFilter = new NeuronSelectionSpatialFilter();
             neuronFilter.initFilter(neuronManager.getNeurons());
         }
         fireNeuronSpatialFilterUpdated(applyFilter, neuronFilter);

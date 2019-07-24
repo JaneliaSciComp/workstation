@@ -16,7 +16,7 @@
     <packaging>nbm</packaging>
 
     <properties>
-        <jaxrs.jersey.version>2.27</jaxrs.jersey.version>
+        <jaxrs.jersey.version>2.21</jaxrs.jersey.version>
     </properties>
     <dependencies>
 
@@ -238,11 +238,13 @@
             <artifactId>jersey-media-json-jackson</artifactId>
             <version>${jaxrs.jersey.version}</version>
         </dependency>
+        <!--
         <dependency>
 	    <groupId>org.glassfish.jersey.inject</groupId>
 	    <artifactId>jersey-hk2</artifactId>
             <version>${jaxrs.jersey.version}</version>
         </dependency>
+        -->
         <dependency>
             <groupId>gov.nist.math</groupId>
             <artifactId>jama</artifactId>

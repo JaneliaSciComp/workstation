@@ -10,7 +10,7 @@ import org.janelia.model.domain.sample.PipelineResult;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public interface SampleResultEditor extends Editor {
+public interface SampleResultEditor extends Editor, ViewerContextProvider {
     
     void loadSampleResult(PipelineResult pipelineResult, boolean isUserDriven, Callable<Void> success);
 

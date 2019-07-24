@@ -83,8 +83,7 @@ public class Icons {
 	    	return icon;
     	} 
     	catch (Exception e) {
-            log.error("Error loading icon from classpath: "+filename, e);
-    		return null;
+            throw new RuntimeException("Error loading icon from classpath: "+filename, e);
     	}
     }
     
@@ -98,8 +97,7 @@ public class Icons {
             return image;
         }
         catch (IOException e) {
-            log.error("Error loading image from classpath: "+filename, e);
-            return null;
+            throw new RuntimeException("Error loading image from classpath: "+filename, e);
         }
     }
 }

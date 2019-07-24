@@ -3,6 +3,7 @@ package org.janelia.workstation.core.api.facade.impl.rest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -13,6 +14,7 @@ import org.janelia.it.jacs.shared.solr.SolrJsonResults;
 import org.janelia.it.jacs.shared.solr.SolrParams;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.workspace.Node;
@@ -71,14 +73,17 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
 
     @Override
     public Collection<Workspace> getWorkspaces() throws Exception {
-        String currentSubjectKey = AccessManager.getSubjectKey();
+        String currentPrincipal = AccessManager.getSubjectKey();
         WebTarget target = service.path("data/workspaces");
         Response response = target
-                .queryParam("subjectKey", currentSubjectKey)
+                .queryParam("subjectKey", currentPrincipal)
                 .request("application/json")
                 .get();
         checkBadResponse(target, response);
-        return response.readEntity(new GenericType<List<Workspace>>() {});
+        return response.readEntity(new GenericType<List<Workspace>>() {})
+                .stream()
+                .sorted(new DomainObjectComparator(currentPrincipal))
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -24,16 +24,19 @@ import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.selection.ChildPickingSupport;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.model.DomainModelViewUtils;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.core.model.search.SearchResults;
@@ -68,8 +71,8 @@ public class NeuronSeparationEditorPanel
         extends JPanel 
         implements SampleResultEditor, SearchProvider, PreferenceSupport, ChildPickingSupport<DomainObject, Reference> {
 
+    // Constants
     private final static Logger log = LoggerFactory.getLogger(NeuronSeparationEditorPanel.class);
-
     private final static String PREFERENCE_KEY = "NeuronSeparationEditor";
     private final static String DEFAULT_SORT_CRITERIA = "number";
     
@@ -112,55 +115,30 @@ public class NeuronSeparationEditorPanel
         editModeButton.setIcon(Icons.getIcon("page_white_edit.png"));
         editModeButton.setFocusable(false);
         editModeButton.setToolTipText("Edit the visibility of the neuron fragments in the current separation");
-        editModeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                enterEditMode();
-            }
-        });
+        editModeButton.addActionListener(e -> enterEditMode());
         editOkButton = new JButton();
         editOkButton.setIcon(Icons.getIcon("button_ok_16x16.png"));
         editOkButton.setFocusable(false);
         editOkButton.setVisible(false);
         editOkButton.setToolTipText("Save your visibility preferences");
-        editOkButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                saveVisibilities();
-            }
-        });
+        editOkButton.addActionListener(e -> saveVisibilities());
         editCancelButton = new JButton();
         editCancelButton.setIcon(Icons.getIcon("cancel.png"));
         editCancelButton.setVisible(false);
         editCancelButton.setToolTipText("Save your visibility preferences");
-        editCancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cancelEditMode();
-            }
-        });
+        editCancelButton.addActionListener(e -> cancelEditMode());
         
         fragmentSortButton = new JButton();
         fragmentSortButton.setIcon(Icons.getIcon("sort_descending.png"));
         fragmentSortButton.setFocusable(false);
         fragmentSortButton.setToolTipText("Sort the neuron fragments by voxel weight (largest->first)");
-        fragmentSortButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                sortByFragmentWeight();
-            }
-        });
+        fragmentSortButton.addActionListener(e -> sortByFragmentWeight());
 
         openInNAButton = new JButton();
         openInNAButton.setIcon(Icons.getIcon("v3d_16x16x32.png"));
         openInNAButton.setFocusable(false);
         openInNAButton.setToolTipText("Open the current separation in Neuron Annotator");
-        openInNAButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new OpenInNeuronAnnotatorActionListener(separation).actionPerformed(e);
-            }
-        });
+        openInNAButton.addActionListener(e -> new OpenInNeuronAnnotatorActionListener(separation).actionPerformed(e));
         
         configPanel = new ConfigPanel(true) {
             @Override
@@ -186,6 +164,7 @@ public class NeuronSeparationEditorPanel
             }
             @Override
             protected void viewerContextChanged() {
+                Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->NeuronSeparationEditorPanel"));
@@ -225,11 +204,7 @@ public class NeuronSeparationEditorPanel
                 if (result instanceof NeuronSeparation) {
                     final NeuronSeparation separation = (NeuronSeparation)result;
                     JMenuItem viewItem = new JMenuItem(getLabel(separation));
-                    viewItem.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent actionEvent) {
-                            setResult(separation, true, null);
-                        }
-                    });
+                    viewItem.addActionListener(actionEvent -> setResult(separation, true, null));
                     button.addMenuItem(viewItem);
                 }
             }
@@ -560,7 +535,27 @@ public class NeuronSeparationEditorPanel
             }
         });
     }
-    
+
+    @Override
+    public ViewerContext<DomainObject, Reference> getViewerContext() {
+        return new ViewerContext<DomainObject, Reference>() {
+            @Override
+            public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+                return selectionModel;
+            }
+
+            @Override
+            public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
+                return resultsPanel.isEditMode() ? resultsPanel.getViewer().getEditSelectionModel() : null;
+            }
+
+            @Override
+            public ImageModel<DomainObject, Reference> getImageModel() {
+                return resultsPanel.getImageModel();
+            }
+        };
+    }
+
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {

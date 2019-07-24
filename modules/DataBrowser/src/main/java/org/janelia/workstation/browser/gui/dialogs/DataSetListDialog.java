@@ -252,21 +252,11 @@ public class DataSetListDialog extends ModalDialog {
 
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new data set definition");
-        addButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dataSetDialog.showForNewDataSet();
-            }
-        });
+        addButton.addActionListener(e -> dataSetDialog.showForNewDataSet());
 
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close this dialog");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
+        okButton.addActionListener(e -> setVisible(false));
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));

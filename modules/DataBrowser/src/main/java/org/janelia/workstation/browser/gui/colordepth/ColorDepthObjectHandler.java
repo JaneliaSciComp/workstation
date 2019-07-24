@@ -2,13 +2,13 @@ package org.janelia.workstation.browser.gui.colordepth;
 
 import java.util.Arrays;
 
-import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;
@@ -39,10 +39,7 @@ public class ColorDepthObjectHandler implements DomainObjectHandler {
 
     @Override
     public Node getNode(DomainObject domainObject, ChildFactory parentChildFactory) throws Exception {
-        if (ColorDepthMask.class.isAssignableFrom(domainObject.getClass())) {
-            return new ColorDepthMaskNode(parentChildFactory, (ColorDepthMask)domainObject);
-        }
-        else if (ColorDepthSearch.class.isAssignableFrom(domainObject.getClass())) {
+        if (ColorDepthSearch.class.isAssignableFrom(domainObject.getClass())) {
             return new ColorDepthSearchNode(parentChildFactory, (ColorDepthSearch)domainObject);
         }
         else {

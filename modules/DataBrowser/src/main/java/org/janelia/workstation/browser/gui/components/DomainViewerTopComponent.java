@@ -20,6 +20,8 @@ import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
+import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -113,6 +115,7 @@ public final class DomainViewerTopComponent extends TopComponent {
 
     @Override
     public void componentClosed() {
+        log.debug("componentClosed - {}", this.getName());
         clearEditor();
         Events.getInstance().unregisterOnEventBus(this);
     }
@@ -134,19 +137,37 @@ public final class DomainViewerTopComponent extends TopComponent {
         DomainViewerManager.getInstance().activate(this);
         if (editor!=null) {
             editor.activate();
+            updateContext(editor.getViewerContext());
+            if (editor.getViewerContext()!=null) {
+                updateNodeIfChanged(editor.getViewerContext().getSelectionModel().getObjects());
+            }
         }
     }
     
     @Override
     protected void componentDeactivated() {
+        log.debug("componentDeactivated - {}", this.getName());
         if (editor!=null) {
             editor.deactivate();
         }
     }
 
+    @Subscribe
+    public void selectedChanged(DomainObjectSelectionEvent e) {
+        // Make sure this selection comes from one of our children, otherwise there's no point in updating anything
+        TopComponent topComponent = UIUtils.getAncestorWithType(
+                (Component)e.getSourceComponent(), TopComponent.class);
+        if (topComponent==this && editor!=null) {
+            log.info("Our selection changed, updating cookie because of {}", e);
+            if (editor.getViewerContext()!=null) {
+                updateNodeIfChanged(editor.getViewerContext().getSelectionModel().getObjects());
+            }
+        }
+    }
+
     // TODO: complete this refactoring so that context menus can be unified
 
-//    @Subscribe
+    //    @Subscribe
 //    public void resultSelected(PipelineResultSelectionEvent e) {
 //        TopComponent topComponent = UIUtils.getAncestorWithType(
 //                (Component)e.getSourceComponent(), TopComponent.class);
@@ -165,29 +186,43 @@ public final class DomainViewerTopComponent extends TopComponent {
 //            updateNodeIfChanged(result);
 //        }
 //    }
-//
-//    private void updateContext(ViewerContext viewerContext) {
-//        // Clear all existing nodes
-//        getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
-//        // Add new node
-//        content.add(viewerContext);
-//    }
-//
-//    private void updateNodeIfChanged(Object object) {
-//
-//        List<Object> currentObjects = new ArrayList<>();
-//        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
-//            currentObjects.addAll(childObjectsNode.getObjects());
-//        }
-//
-//        if (currentObjects.size()!=1 || currentObjects.get(0)!=object) {
-//            log.trace("Updating ChildObjectsNode (current={}, new=1)", currentObjects.size());
-//            // Clear all existing nodes
-//            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
-//            // Add new node
-//            content.add(new ChildObjectsNode(Collections.singletonList(object)));
-//        }
-//    }
+
+    @Subscribe
+    public void contextChanged(ViewerContextChangeEvent e) {
+        // Make sure this selection comes from one of our children, otherwise there's no point in updating anything
+        TopComponent topComponent = UIUtils.getAncestorWithType(
+                (Component)e.getSourceComponent(), TopComponent.class);
+        if (topComponent==this && editor!=null) {
+            log.info("Viewer context changed, updating cookie because of {}", e);
+            updateContext(editor.getViewerContext());
+        }
+    }
+
+    private void updateContext(ViewerContext viewerContext) {
+        // Clear all existing nodes
+        getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+        if (viewerContext!=null) {
+            // Add new node
+            content.add(viewerContext);
+        }
+    }
+
+    private void updateNodeIfChanged(Collection objects) {
+
+        List<Object> currentObjects = new ArrayList<>();
+        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
+            currentObjects.addAll(childObjectsNode.getObjects());
+        }
+
+        List<Object> newObjects = new ArrayList<>(objects);
+        if (!currentObjects.equals(newObjects)) {
+            log.info("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
+            // Clear all existing nodes
+            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
+            // Add new node
+            content.add(new ChildObjectsNode(newObjects));
+        }
+    }
 
     void writeProperties(java.util.Properties p) {
         if (p==null) return;

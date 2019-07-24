@@ -32,22 +32,8 @@ public class FlyLineReleaseNode extends AbstractDomainObjectNode<LineRelease> {
         super(parentChildFactory, Children.LEAF, lineRelease);
     }
 
-    /**
-     * This method should be called whenever the underlying domain object changes. It updates the UI to reflect the new object state.
-     */
-    @Override
-    public void update(LineRelease lineRelease) {
-        log.debug("Refreshing node@{} -> {}",System.identityHashCode(this),getDisplayName());
-        super.update(lineRelease);
-    }
-
     public LineRelease getLineRelease() {
         return getDomainObject();
-    }
-
-    @Override
-    public String getPrimaryLabel() {
-        return getLineRelease().getName();
     }
 
     @Override
@@ -78,7 +64,6 @@ public class FlyLineReleaseNode extends AbstractDomainObjectNode<LineRelease> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public PasteType getDropType(final Transferable t, int action, final int index) {
         return new PasteType() {
             @Override

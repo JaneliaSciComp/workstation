@@ -9,8 +9,8 @@ import org.janelia.model.domain.DomainObject;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public interface DomainObjectEditor<T extends DomainObject> extends Editor {
+public interface DomainObjectEditor<P extends DomainObject> extends Editor, ViewerContextProvider {
     
-    void loadDomainObject(T domainObject, final boolean isUserDriven, final Callable<Void> success);
-    
+    void loadDomainObject(P domainObject, final boolean isUserDriven, final Callable<Void> success);
+
 }

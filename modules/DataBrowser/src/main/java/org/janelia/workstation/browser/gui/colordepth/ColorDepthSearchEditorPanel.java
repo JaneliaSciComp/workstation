@@ -30,38 +30,7 @@ import javax.swing.SwingConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
-import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
-import org.janelia.workstation.core.model.ImageModel;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.browser.gui.hud.Hud;
-import org.janelia.workstation.browser.gui.progress.ProgressMeterMgr;
-import org.janelia.workstation.browser.gui.support.SelectablePanel;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.core.api.web.AsyncServiceClient;
-import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
-import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
-import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
-import org.janelia.workstation.core.events.selection.ChildSelectionModel;
-import org.janelia.workstation.core.events.workers.WorkerEndedEvent;
-import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
-import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
-import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
-import org.janelia.workstation.common.gui.support.Debouncer;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.core.nodes.DomainObjectNode;
-import org.janelia.workstation.core.util.HelpTextUtils;
-import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
-import org.janelia.workstation.browser.gui.support.LoadedImagePanel;
-import org.janelia.workstation.browser.gui.support.SelectablePanelListPanel;
-import org.janelia.workstation.core.workers.BackgroundWorker;
-import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
@@ -70,6 +39,37 @@ import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
 import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.browser.gui.hud.Hud;
+import org.janelia.workstation.browser.gui.progress.ProgressMeterMgr;
+import org.janelia.workstation.browser.gui.support.LoadedImagePanel;
+import org.janelia.workstation.browser.gui.support.SelectablePanel;
+import org.janelia.workstation.browser.gui.support.SelectablePanelListPanel;
+import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
+import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
+import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
+import org.janelia.workstation.common.gui.support.Debouncer;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.MouseForwarder;
+import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.api.web.AsyncServiceClient;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
+import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
+import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
+import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
+import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
+import org.janelia.workstation.core.events.workers.WorkerEndedEvent;
+import org.janelia.workstation.core.model.ImageModel;
+import org.janelia.workstation.core.nodes.DomainObjectNode;
+import org.janelia.workstation.core.util.HelpTextUtils;
+import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
+import org.janelia.workstation.core.workers.BackgroundWorker;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +79,10 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectEditor<ColorDepthSearch>, ParentNodeSelectionEditor<ColorDepthSearch, ColorDepthMatch, String> {
+public class ColorDepthSearchEditorPanel
+        extends JPanel
+        implements DomainObjectEditor<ColorDepthSearch>,
+                   ParentNodeSelectionEditor<ColorDepthSearch, ColorDepthMatch, String> {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchEditorPanel.class);
 
@@ -493,13 +496,10 @@ public class ColorDepthSearchEditorPanel extends JPanel implements DomainObjectE
         AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(search, serviceId) {
             @Override
             public Callable<Void> getSuccessCallback() {
-                return new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        // Refresh and load the search which is completed
-                        forceInvalidate();
-                        return null;
-                    }
+                return () -> {
+                    // Refresh and load the search which is completed
+                    forceInvalidate();
+                    return null;
                 };
             }
         };

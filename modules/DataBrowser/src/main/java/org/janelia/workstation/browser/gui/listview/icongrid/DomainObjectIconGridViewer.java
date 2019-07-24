@@ -632,7 +632,7 @@ public class DomainObjectIconGridViewer
     
     private List<DomainObject> getSelectedObjects() {
         try {
-            return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+            return selectionModel.getObjects();
         }
         catch (Exception e) {
             FrameworkAccess.handleException(e);

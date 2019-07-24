@@ -37,6 +37,7 @@ import org.janelia.workstation.browser.gui.support.SelectablePanelListPanel;
 import org.janelia.workstation.browser.selection.PipelineErrorSelectionEvent;
 import org.janelia.workstation.browser.selection.PipelineResultSelectionEvent;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
+import org.janelia.workstation.common.gui.editor.ViewerContextProvider;
 import org.janelia.workstation.common.gui.listview.ListViewerState;
 import org.janelia.workstation.common.gui.support.Debouncer;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -44,6 +45,7 @@ import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -52,11 +54,13 @@ import org.janelia.workstation.core.events.model.DomainObjectAnnotationChangeEve
 import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.core.model.DomainModelViewUtils;
+import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
@@ -241,6 +245,7 @@ public class SampleEditorPanel
             }
             @Override
             protected void viewerContextChanged() {
+                Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
             }
         };
 
@@ -334,7 +339,33 @@ public class SampleEditorPanel
             }
         });
     }
-    
+
+    @Override
+    public ViewerContext<DomainObject, Reference> getViewerContext() {
+        if (MODE_LSMS.equals(currMode)) {
+            return new ViewerContext<DomainObject, Reference>() {
+                @Override
+                public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
+                    return selectionModel;
+                }
+
+                @Override
+                public ChildSelectionModel<DomainObject, Reference> getEditSelectionModel() {
+                    return lsmPanel.isEditMode() ? lsmPanel.getViewer().getEditSelectionModel() : null;
+                }
+
+                @Override
+                public ImageModel<DomainObject, Reference> getImageModel() {
+                    return lsmPanel.getImageModel();
+                }
+            };
+        }
+        else {
+            // TODO: implement viewer contexts for the other modes
+            return null;
+        }
+    }
+
     @Override
     public String getSortField() {
         return sortCriteria;
@@ -487,6 +518,7 @@ public class SampleEditorPanel
                 
                 ConcurrentUtils.invokeAndHandleExceptions(success);
                 debouncer.success();
+                Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(lsmPanel, getViewerContext()));
                 ActivityLogHelper.logElapsed("SampleEditorPanel.loadDomainObject", sample, w);
             }
             
