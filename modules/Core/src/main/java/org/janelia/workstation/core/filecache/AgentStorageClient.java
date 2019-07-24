@@ -68,7 +68,7 @@ class AgentStorageClient extends AbstractStorageClient {
                 DavConstants.DEPTH_0,
                 0
         );
-        return new WebDavFile(remoteFileName, multiStatusResponses[0], connectionErrorHandler);
+        return new WebDavFile(remoteFileName, multiStatusResponses, connectionErrorHandler);
     }
 
     /**

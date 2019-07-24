@@ -53,7 +53,7 @@ class MasterStorageClient extends AbstractStorageClient {
                 DavConstants.DEPTH_0,
                 0
         );
-        return new WebDavStorage(storagePath, multiStatusResponses[0]);
+        return new WebDavStorage(storagePath, multiStatusResponses);
     }
 
     String createStorage(String storageName, String storageContext, String storageTags) {

@@ -21,14 +21,14 @@ class WebDavFile extends AbstractWebDav {
      * populate this file's attributes.
      *
      * @param  webdavFileKey        the webdav file key
-     * @param  multiStatusResponse  the PROPFIND response for the file.
+     * @param  multiStatusResponses  the PROPFIND response for the file.
      *
      * @throws IllegalArgumentException
      *   if a file specific URL cannot be constructed.
      */
-    WebDavFile(String webdavFileKey, MultiStatusResponse multiStatusResponse, Consumer<Throwable> connectionErrorHandler)
+    WebDavFile(String webdavFileKey, MultiStatusResponse[] multiStatusResponses, Consumer<Throwable> connectionErrorHandler)
             throws IllegalArgumentException {
-        super(webdavFileKey, multiStatusResponse);
+        super(webdavFileKey, multiStatusResponses);
         this.connectionErrorHandler = connectionErrorHandler;
     }
 
