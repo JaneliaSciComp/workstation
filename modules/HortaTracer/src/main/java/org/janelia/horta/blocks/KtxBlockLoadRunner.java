@@ -3,7 +3,7 @@ package org.janelia.horta.blocks;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import org.apache.commons.lang3.StringUtils;
+
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.actors.TetVolumeMeshActor;
@@ -66,6 +66,10 @@ public class KtxBlockLoadRunner
     }
 
     private void loadStream(String sourceName, InputStream stream) {
+        if (stream == null) {
+            // no ktx data is available
+            return;
+        }
         long start = System.nanoTime();
         state = State.LOADING;
         KtxData ktxData = new KtxData();

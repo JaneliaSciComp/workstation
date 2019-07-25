@@ -229,7 +229,7 @@ implements SortableBlockActor, SortableBlockActorSource
 
     private static class TetVolumeMeshGeometry extends MeshGeometry {
 
-        public TetVolumeMeshGeometry(KtxData ktxData)
+        TetVolumeMeshGeometry(KtxData ktxData)
         {
             // Parse spatial transformation matrix from block metadata
             String xformString = ktxData.header.keyValueMetadata.get("xyz_from_texcoord_xform");
@@ -260,7 +260,6 @@ implements SortableBlockActor, SortableBlockActorSource
                         Vertex vertex = new Vertex(v);
                         vertex.setAttribute("texCoord", t);
                         add(vertex);
-                        // logger.info(v.toString());
                     }
                 }
             }
