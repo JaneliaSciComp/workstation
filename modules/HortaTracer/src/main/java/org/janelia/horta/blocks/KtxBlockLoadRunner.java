@@ -87,7 +87,7 @@ public class KtxBlockLoadRunner
             LOG.warn("IOException loading tile {} from stream", blockDescription, ex);
             return;
         } catch (InterruptedException ex) {
-            LOG.info("loading tile {} was interrupted", blockDescription, ex);
+            LOG.info("loading tile {} was interrupted", blockDescription);
             state = State.INTERRUPTED;
             return;
         }
