@@ -1,21 +1,8 @@
 package org.janelia.horta;
 
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Paths;
-
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.base.Objects;
-
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
@@ -31,11 +18,7 @@ import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.it.jacs.shared.utils.HttpClientHelper;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.security.AppAuthorization;
-import org.janelia.rendering.FileBasedRenderedVolumeLocation;
-import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolume;
-import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolumeMetadata;
+import org.janelia.rendering.*;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.LocalPreferenceMgr;
@@ -46,6 +29,11 @@ import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Paths;
 
 public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SampleLocationAcceptor.class);
@@ -91,6 +79,9 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     RenderedVolume renderedVolume = getVolumeInfo(url.toURI());
 
                     if (nttc.isPreferKtx()) {
+                        // for KTX tile the camera must be set before the tiles are loaded in order for them to be displayed first time
+                        progress.setDisplayName("Centering on location...");
+                        setCameraLocation(sampleLocation);
                         // use ktx tiles
                         KtxOctreeBlockTileSource ktxSource = createKtxSource(renderedVolume, url, sample);
                         nttc.setKtxSource(ktxSource);
@@ -110,10 +101,10 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         progress.switchToIndeterminate();
                         progress.setDisplayName("Loading brain tile image...");
                         loader.loadTileAtCurrentFocus(volumeBrickSource, sampleLocation.getDefaultColorChannel());
+                        // for raw tiles the camera needs to be set after the tile began loading in order to trigger the display
+                        progress.setDisplayName("Centering on location...");
+                        setCameraLocation(sampleLocation);
                     }
-
-                    progress.setDisplayName("Centering on location...");
-                    setCameraLocation(sampleLocation);
 
                     nttc.redrawNow();
                 } catch (final Exception ex) {
