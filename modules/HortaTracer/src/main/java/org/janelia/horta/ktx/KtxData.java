@@ -18,7 +18,7 @@ public class KtxData {
     private final byte[] unused = new byte[4]; // for bulk reading of unused padding bytes
     private final ByteBuffer sizeBuf = ByteBuffer.allocate(4); // to hold binary representation of image size
 
-    public KtxData loadStream(InputStream stream) throws IOException {
+    public void loadStream(InputStream stream) throws IOException, InterruptedException {
         if (stream != null) {
             header.loadStream(stream);
             sizeBuf.order(header.byteOrder);
@@ -27,10 +27,9 @@ public class KtxData {
                 mipmaps.add(loadOneMipmap(stream, m));
             }
         }
-        return this;
     }
 
-    private ByteBuffer loadOneMipmap(InputStream stream, int mipmapLevel) throws IOException {
+    private ByteBuffer loadOneMipmap(InputStream stream, int mipmapLevel) throws IOException, InterruptedException {
         stream.read(sizeBuf.array());
         sizeBuf.rewind();
         int imageSize = (int) ((long) sizeBuf.getInt() & 0xffffffffL);
@@ -38,7 +37,12 @@ public class KtxData {
         // For now, copy into the direct buffer
         byte[] b = new byte[imageSize];
         int bytesRead = 0;
-        bytesRead = stream.read(b, bytesRead, imageSize - bytesRead);
+        try {
+            bytesRead = stream.read(b, bytesRead, imageSize - bytesRead);
+        } catch (IOException e) {
+            // this exception most likely occurred because of an interruption
+            throw new InterruptedException("Interrupted the loading of mipmap level " + (mipmapLevel + 1));
+        }
         if (bytesRead < 1) {
             throw new IOException("Error reading bytes for mipmap level " + (mipmapLevel + 1));
         }

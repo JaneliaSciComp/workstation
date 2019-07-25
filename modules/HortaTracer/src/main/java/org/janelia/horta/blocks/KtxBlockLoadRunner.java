@@ -86,6 +86,10 @@ public class KtxBlockLoadRunner
             state = State.FAILED;
             LOG.warn("IOException loading tile {} from stream", blockDescription, ex);
             return;
+        } catch (InterruptedException ex) {
+            LOG.info("loading tile {} was interrupted", blockDescription, ex);
+            state = State.INTERRUPTED;
+            return;
         }
         TetVolumeActor parentActor = TetVolumeActor.getInstance();
         blockActor = new TetVolumeMeshActor(ktxData, parentActor);
