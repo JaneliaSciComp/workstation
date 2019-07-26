@@ -24,7 +24,7 @@ import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.WrapLayout;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
 import org.janelia.model.domain.sample.Sample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

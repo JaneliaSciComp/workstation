@@ -2,6 +2,7 @@ package org.janelia.workstation.browser.gui.colordepth;
 
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.sample.AlignedImage2d;
 import org.janelia.model.domain.sample.Image;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
@@ -27,14 +28,14 @@ public class CreateMaskFromImageAction extends AbstractAction {
 
     private static final Logger log = LoggerFactory.getLogger(CreateMaskFromImageAction.class);
 
-    private Image image;
+    private AlignedImage2d image;
     private String imagePath;
 
     public CreateMaskFromImageAction() {
         super("Create Mask for Color Depth Search...");
     }
     
-    public CreateMaskFromImageAction(Image image) {
+    public CreateMaskFromImageAction(AlignedImage2d image) {
         this(); // call no-args constructor to set title
         this.image = image;
     }

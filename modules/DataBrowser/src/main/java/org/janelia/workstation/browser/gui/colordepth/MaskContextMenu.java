@@ -18,8 +18,8 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 
 /**
  * Right-click context menu for masks in the color depth search editor.

@@ -3,7 +3,7 @@ package org.janelia.workstation.browser.gui.colordepth;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 
 public class SearchMonitoringWorker extends AsyncServiceMonitoringWorker {
     

@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.colordepth;
 
 import java.awt.Image;
 
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.core.api.ClientDomainUtils;

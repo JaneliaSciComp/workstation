@@ -1,12 +1,27 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+import javax.swing.table.TableModel;
+
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectAttribute;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.DynamicDomainObjectProxy;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
-import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.workstation.browser.gui.hud.Hud;
@@ -27,36 +42,14 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.RowSorter;
-import javax.swing.SortOrder;
-import javax.swing.SwingUtilities;
-import javax.swing.table.TableModel;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-
 /**
  * A table viewer for domain objects.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ColorDepthResultTableViewer 
-        extends TableViewerPanel<ColorDepthMatch,String> 
-        implements ListViewer<ColorDepthMatch, String> {
+        extends TableViewerPanel<ColorDepthMatch,Reference>
+        implements ListViewer<ColorDepthMatch,Reference> {
 
     private static final Logger log = LoggerFactory.getLogger(ColorDepthResultTableViewer.class);
     
@@ -71,8 +64,8 @@ public class ColorDepthResultTableViewer
 
     // State
     private PreferenceSupport preferenceSupport;
-    private AnnotatedObjectList<ColorDepthMatch, String> matchList;
-    private ChildSelectionModel<ColorDepthMatch, String> selectionModel;
+    private AnnotatedObjectList<ColorDepthMatch,Reference> matchList;
+    private ChildSelectionModel<ColorDepthMatch,Reference> selectionModel;
     private SearchProvider searchProvider;
     private List<DomainObjectAttribute> attrs;
 
@@ -94,13 +87,13 @@ public class ColorDepthResultTableViewer
     }
 
     @Override
-    public void setSelectionModel(ChildSelectionModel<ColorDepthMatch, String> selectionModel) {
+    public void setSelectionModel(ChildSelectionModel<ColorDepthMatch,Reference> selectionModel) {
         super.setSelectionModel(selectionModel);
         this.selectionModel = selectionModel;
     }
 
     @Override
-    public ChildSelectionModel<ColorDepthMatch, String> getSelectionModel() {
+    public ChildSelectionModel<ColorDepthMatch,Reference> getSelectionModel() {
         return selectionModel;
     }
 
@@ -141,7 +134,7 @@ public class ColorDepthResultTableViewer
     }
 
     @Override
-    public void show(final AnnotatedObjectList<ColorDepthMatch, String> matchList, final Callable<Void> success) {
+    public void show(final AnnotatedObjectList<ColorDepthMatch,Reference> matchList, final Callable<Void> success) {
 
         try {
             this.config = TableViewerConfiguration.loadConfig();
@@ -309,11 +302,11 @@ public class ColorDepthResultTableViewer
     }
 
     @Override
-    public void setEditSelectionModel(ChildSelectionModel<ColorDepthMatch, String> editSelectionModel) {
+    public void setEditSelectionModel(ChildSelectionModel<ColorDepthMatch,Reference> editSelectionModel) {
     }
 
     @Override
-    public ChildSelectionModel<ColorDepthMatch, String> getEditSelectionModel() {
+    public ChildSelectionModel<ColorDepthMatch,Reference> getEditSelectionModel() {
         return null;
     }
 
@@ -322,21 +315,21 @@ public class ColorDepthResultTableViewer
     }
 
     @Override
-    public AnnotatedObjectList<ColorDepthMatch, String> getObjectList() {
+    public AnnotatedObjectList<ColorDepthMatch,Reference> getObjectList() {
         return matchList;
     }
    
     @Override
-    public boolean matches(ResultPage<ColorDepthMatch, String> resultPage, ColorDepthMatch object, String text) {
+    public boolean matches(ResultPage<ColorDepthMatch,Reference> resultPage, ColorDepthMatch object, String text) {
         
-        log.trace("Searching {} for {}",object.getFilepath(),text);
+        log.trace("Searching {} for {}",object.getImageRef(),text);
 
         String tupper = text.toUpperCase();
-
         String titleUpper = getImageModel().getImageTitle(object).toUpperCase();
-        
+        String imageFilepath = getImageModel().getImageFilepath(object);
+
         // Matches on filename or title always work, no matter if they're visible or not
-        if (object.getFilepath().toString().contains(text) || titleUpper.contains(tupper)) {
+        if (imageFilepath.contains(text) || titleUpper.contains(tupper)) {
             return true;
         }
 
@@ -358,7 +351,8 @@ public class ColorDepthResultTableViewer
         return false;
     }
 
-    public Object getValue(AnnotatedObjectList<ColorDepthMatch, String> domainObjectList, ColorDepthMatch match, String columnName) {
+    public Object getValue(AnnotatedObjectList<ColorDepthMatch,Reference> domainObjectList, ColorDepthMatch match, String columnName) {
+        ColorDepthResultImageModel model = (ColorDepthResultImageModel)getImageModel();
         if (ATTR_SCORE.getName().equals(columnName)) {
             return match.getScore();
         }
@@ -366,24 +360,22 @@ public class ColorDepthResultTableViewer
             return MaskUtils.getFormattedScorePct(match);
         }
         else if (ATTR_FILENAME.getName().equals(columnName)) {
-            return match.getFile().getName();
+            return model.getImage(match).getFile().getName();
         }
         if (ATTR_CHANNEL.getName().equals(columnName)) {
-            return match.getChannelNumber();
+            return model.getImage(match).getChannelNumber();
         }
         else {
             DomainObjectAttribute attr = attributeMap.get(columnName);
             if (attr==null) {
                 throw new IllegalStateException("No attribute found for column: "+columnName);
             }
-            
-            if (match.getSample()==null) {
+
+            Sample sample = model.getSample(match);
+            if (sample==null) {
                 return null;
             }
             else {
-                ColorDepthResultImageModel model = (ColorDepthResultImageModel)getImageModel();
-                Sample sample = model.getSample(match);
-                if (sample == null) return null;
                 DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(sample);
                 return proxy.get(attr.getLabel());
             }
@@ -414,7 +406,7 @@ public class ColorDepthResultTableViewer
             
             ColorDepthMatch match = selected.get(0);
 
-            ImageModel<ColorDepthMatch, String> imageModel = getImageModel();
+            ImageModel<ColorDepthMatch,Reference> imageModel = getImageModel();
             String filepath = imageModel.getImageFilepath(match);
             String title = imageModel.getImageTitle(match);
             hud.setFilepathAndToggleDialog(filepath, title, toggle, false);
@@ -426,12 +418,12 @@ public class ColorDepthResultTableViewer
 
     private List<ColorDepthMatch> getSelectedObjects() {
         try {
-            ImageModel<ColorDepthMatch, String> imageModel = getImageModel();
+            ImageModel<ColorDepthMatch,Reference> imageModel = getImageModel();
             List<ColorDepthMatch> selected = new ArrayList<>();
-            for(String filepath : selectionModel.getSelectedIds()) {
-                ColorDepthMatch match = imageModel.getImageByUniqueId(filepath);
+            for(Reference id : selectionModel.getSelectedIds()) {
+                ColorDepthMatch match = imageModel.getImageByUniqueId(id);
                 if (match==null) {
-                    throw new IllegalStateException("Image model has no object for unique id: "+filepath);
+                    throw new IllegalStateException("Image model has no object for unique id: "+id);
                 }
                 else {
                     selected.add(match);

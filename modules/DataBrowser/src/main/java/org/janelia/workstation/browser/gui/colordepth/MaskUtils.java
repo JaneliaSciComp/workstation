@@ -1,7 +1,7 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
 import org.janelia.model.access.domain.TimebasedIdentifierGenerator;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.filecache.RemoteLocation;

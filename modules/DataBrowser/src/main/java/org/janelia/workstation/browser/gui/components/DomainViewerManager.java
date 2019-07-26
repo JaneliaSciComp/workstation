@@ -2,24 +2,24 @@ package org.janelia.workstation.browser.gui.components;
 
 import java.awt.Component;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
-import org.janelia.workstation.browser.gui.colordepth.ColorDepthMatchSelectionEvent;
-import org.janelia.workstation.browser.gui.colordepth.ColorDepthSearchEditorPanel;
-import org.janelia.workstation.core.workers.SimpleWorker;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.browser.gui.colordepth.ColorDepthMatchSelectionEvent;
+import org.janelia.workstation.browser.gui.colordepth.ColorDepthSearchEditorPanel;
+import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * Manages the life cycle of domain viewers based on user generated selected events. This manager
@@ -125,8 +125,7 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
         }
 
         log.info("colorDepthMatchSelected({})",match);
-        
-        if (match.getSample()==null) return;
+        if (match.getImageRef()==null) return;
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -134,15 +133,15 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
 
             @Override
             protected void doStuff() throws Exception {
-                sample = DomainMgr.getDomainMgr().getModel().getDomainObject(match.getSample());
+                ColorDepthImage image = DomainMgr.getDomainMgr().getModel().getDomainObject(match.getImageRef());
+                if (image != null) {
+                    sample = DomainMgr.getDomainMgr().getModel().getDomainObject(image.getSampleRef());
+                }
             }
 
             @Override
             protected void hadSuccess() {
-                if (sample == null) {
-                    log.warn("Cannot find match sample: {}", match.getSample());
-                }
-                else {
+                if (sample != null) {
                     DomainViewerTopComponent viewer = DomainViewerManager.getInstance().getActiveViewer();
                     if (viewer!=null) {
                         // If we are reacting to a selection event in another viewer, then this load is not user driven.

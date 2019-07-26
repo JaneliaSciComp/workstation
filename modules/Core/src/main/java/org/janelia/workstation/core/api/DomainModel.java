@@ -1,5 +1,6 @@
 package org.janelia.workstation.core.api;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,8 +29,9 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;
 import org.janelia.model.domain.compute.ContainerizedService;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
@@ -605,12 +607,25 @@ public class DomainModel {
         return null;
     }
 
-    public List<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception {
+    public List<ColorDepthLibrary> getColorDepthLibraries() throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        List<DataSet> dataSets = new ArrayList<>(sampleFacade.getColorDepthDataSets(alignmentSpace));
-        List<DataSet> canonicalDataSets = putOrUpdate(dataSets, false);
-        if (TIMER) w.stop("getColorDepthDataSets");
-        return canonicalDataSets;
+        List<ColorDepthLibrary> libraries = new ArrayList<>();
+        for (DomainObject obj : domainFacade.getAllDomainObjectsByClass(ColorDepthLibrary.class.getName())) {
+            if (obj instanceof ColorDepthLibrary) {
+                libraries.add((ColorDepthLibrary)obj);
+            }
+        }
+        List<ColorDepthLibrary> canonicalLibraries = putOrUpdate(libraries, false);
+        if (TIMER) w.stop("getColorDepthLibraries");
+        return canonicalLibraries;
+    }
+
+    public List<ColorDepthLibrary> getColorDepthLibraries(String alignmentSpace) throws Exception {
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        List<ColorDepthLibrary> libraries = new ArrayList<>(sampleFacade.getColorDepthLibraries(alignmentSpace));
+        List<ColorDepthLibrary> canonicalLibraries = putOrUpdate(libraries, false);
+        if (TIMER) w.stop("getColorDepthLibraries");
+        return canonicalLibraries;
     }
 
     public List<String> getAlignmentSpaces() throws Exception {

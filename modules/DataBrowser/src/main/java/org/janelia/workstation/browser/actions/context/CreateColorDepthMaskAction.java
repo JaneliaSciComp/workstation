@@ -9,7 +9,7 @@ import javax.swing.Action;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFiles;
-import org.janelia.model.domain.sample.Image;
+import org.janelia.model.domain.sample.AlignedImage2d;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.colordepth.CreateMaskFromImageAction;
 import org.janelia.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
@@ -48,8 +48,8 @@ public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
         if (getNodeContext().isSingleObjectOfType(Sample.class)) {
             selectedObject = getNodeContext().getSingleObjectOfType(Sample.class);
         }
-        else if (getNodeContext().isSingleObjectOfType(Image.class)) {
-            selectedObject = getNodeContext().getSingleObjectOfType(Image.class);
+        else if (getNodeContext().isSingleObjectOfType(AlignedImage2d.class)) {
+            selectedObject = getNodeContext().getSingleObjectOfType(AlignedImage2d.class);
         }
 
         setEnabledAndVisible(false);
@@ -64,13 +64,13 @@ public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
                 String typeName = doim.getImageTypeName();
 
                 List<Sample> samples = new ArrayList<>();
-                List<Image> images = new ArrayList<>();
+                List<AlignedImage2d> images = new ArrayList<>();
                 for (Object obj : viewerContext.getSelectedObjects()) {
                     if (obj instanceof Sample) {
                         samples.add((Sample) obj);
                     }
-                    else if (obj instanceof Image) {
-                        images.add((Image) obj);
+                    else if (obj instanceof AlignedImage2d) {
+                        images.add((AlignedImage2d) obj);
                     }
                 }
 

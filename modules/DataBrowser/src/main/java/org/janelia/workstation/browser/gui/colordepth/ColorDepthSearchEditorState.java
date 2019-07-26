@@ -8,8 +8,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
 import org.janelia.workstation.common.gui.listview.ListViewerState;
@@ -22,7 +22,7 @@ import org.openide.windows.TopComponent;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ColorDepthSearchEditorState 
-        implements DomainObjectEditorState<ColorDepthSearch, ColorDepthMatch, String> {
+        implements DomainObjectEditorState<ColorDepthSearch,ColorDepthMatch,Reference> {
 
     @JsonIgnore
     private DomainListViewTopComponent topComponent;
@@ -33,7 +33,7 @@ public class ColorDepthSearchEditorState
     private ColorDepthSearch domainObject;
     private Integer page;
     private ListViewerState listViewerState;
-    private Collection<String> selectedIds;
+    private Collection<Reference> selectedIds;
     private Reference selectedMask;
     private Integer searchResultIndex;
     
@@ -44,7 +44,7 @@ public class ColorDepthSearchEditorState
             @JsonProperty("searchResultIndex") Integer searchResultIndex, 
             @JsonProperty("page") Integer page, 
             @JsonProperty("listViewerState") ListViewerState listViewerState, 
-            @JsonProperty("selectedIds") Collection<String> selectedIds) {
+            @JsonProperty("selectedIds") Collection<Reference> selectedIds) {
         this.domainObjectNode = null;
         this.domainObject = domainObject;
         this.page = page;
@@ -56,7 +56,7 @@ public class ColorDepthSearchEditorState
 
     public ColorDepthSearchEditorState(DomainObjectNode<ColorDepthSearch> domainObjectNode,
                                        Reference selectedMask, Integer searchResultIndex, Integer page,
-                                       ListViewerState listViewerState, Collection<String> selectedIds) {
+                                       ListViewerState listViewerState, Collection<Reference> selectedIds) {
         this.domainObjectNode = domainObjectNode;
         this.domainObject = domainObjectNode.getDomainObject();
         this.page = page;
@@ -90,7 +90,7 @@ public class ColorDepthSearchEditorState
         return listViewerState;
     }
 
-    public Collection<String> getSelectedIds() {
+    public Collection<Reference> getSelectedIds() {
         return selectedIds;
     }
 

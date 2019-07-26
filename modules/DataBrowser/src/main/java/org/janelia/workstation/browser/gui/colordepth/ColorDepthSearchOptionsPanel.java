@@ -22,6 +22,7 @@ import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 
 import com.google.common.collect.ImmutableSet;
+import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.workstation.browser.gui.editor.ConfigPanel;
 import org.janelia.workstation.browser.gui.editor.SelectionButton;
 import org.janelia.workstation.browser.gui.editor.SingleSelectionButton;
@@ -30,8 +31,7 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
-import org.janelia.model.domain.sample.DataSet;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 
 import com.google.common.collect.ImmutableList;
 
@@ -68,12 +68,12 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
     private final JSlider thresholdSlider;
     private final JTextField pctPxField;
     private final JLabel thresholdLabel;
-    private final SelectionButton<DataSet> dataSetButton;
+    private final SelectionButton<ColorDepthLibrary> libraryButton;
     
     // State
     private boolean dirty = false;
     private ColorDepthSearch search;
-    private List<DataSet> dataSets; // all possible data sets in the current alignment space
+    private List<ColorDepthLibrary> libraries; // all possible libraries in the current alignment space
     
     public ColorDepthSearchOptionsPanel() {
 
@@ -125,31 +125,31 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         };
         pixFlucButton.setToolTipText(PIX_FLUC_TOOLTIP);
         
-        dataSetButton = new SelectionButton<DataSet>("Data Sets") {
+        libraryButton = new SelectionButton<ColorDepthLibrary>("Color Depth Libraries") {
             
             @Override
-            public Collection<DataSet> getValues() {
-                if (dataSets==null) return ImmutableSet.of();
-                return dataSets.stream()
-                        .filter(dataSet -> isShowDataSet(dataSet))
-                        .sorted(Comparator.comparing(DataSet::getIdentifier))
+            public Collection<ColorDepthLibrary> getValues() {
+                if (libraries ==null) return ImmutableSet.of();
+                return libraries.stream()
+                        .filter(library -> isShowLibrary(library))
+                        .sorted(Comparator.comparing(ColorDepthLibrary::getIdentifier))
                         .collect(Collectors.toList());
             }
 
             @Override
-            public Set<DataSet> getSelectedValues() {
-                if (dataSets==null) return ImmutableSet.of();
-                Map<String, DataSet> dataSetLookup = dataSets.stream().collect(Collectors.toMap(DataSet::getIdentifier, Function.identity()));
-                return search.getDataSets().stream().map(dataSet -> dataSetLookup.get(dataSet)).filter(Objects::nonNull).collect(Collectors.toSet());
+            public Set<ColorDepthLibrary> getSelectedValues() {
+                if (libraries ==null) return ImmutableSet.of();
+                Map<String, ColorDepthLibrary> libraryLookup = libraries.stream().collect(Collectors.toMap(ColorDepthLibrary::getIdentifier, Function.identity()));
+                return search.getLibraries().stream().map(library -> libraryLookup.get(library)).filter(Objects::nonNull).collect(Collectors.toSet());
             }
 
             @Override
-            public String getName(DataSet value) {
+            public String getName(ColorDepthLibrary value) {
                 return value.getIdentifier();
             }
             
             @Override
-            public String getLabel(DataSet value) {
+            public String getLabel(ColorDepthLibrary value) {
                 Integer count = value.getColorDepthCounts().get(search.getAlignmentSpace());
                 if (count==null) return value.getIdentifier();
                 return String.format("%s (%d images)", value.getIdentifier(), count);
@@ -157,28 +157,28 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
             
             @Override
             protected void selectAll() {
-                if (dataSets==null) return;
-                List<String> allDataSets = dataSets.stream()
-                        .sorted(Comparator.comparing(DataSet::getIdentifier))
-                        .map(DataSet::getIdentifier)
+                if (libraries ==null) return;
+                List<String> all = libraries.stream()
+                        .sorted(Comparator.comparing(ColorDepthLibrary::getIdentifier))
+                        .map(ColorDepthLibrary::getIdentifier)
                         .collect(Collectors.toList());
-                search.getParameters().setDataSets(allDataSets);
+                search.getParameters().setLibraries(all);
                 dirty = true;
             }
             
             @Override
             protected void clearSelected() {
-                search.getDataSets().clear();
+                search.getLibraries().clear();
                 dirty = true;
             }
 
             @Override
-            protected void updateSelection(DataSet dataSet, boolean selected) {
+            protected void updateSelection(ColorDepthLibrary library, boolean selected) {
                 if (selected) {
-                    search.getDataSets().add(dataSet.getIdentifier());
+                    search.getLibraries().add(library.getIdentifier());
                 }
                 else {
-                    search.getDataSets().remove(dataSet.getIdentifier());
+                    search.getLibraries().remove(library.getIdentifier());
                 }
                 dirty = true;
             }
@@ -270,8 +270,8 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         this.dirty = false;
     }
 
-    public void setDataSets(List<DataSet> dataSets) {
-        this.dataSets = dataSets;
+    public void setLibraries(List<ColorDepthLibrary> libraries) {
+        this.libraries = libraries;
     }
 
     public void setThreshold(int threshold) {
@@ -281,12 +281,12 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
     
     public void refresh() {
         pixFlucButton.update();
-        dataSetButton.update();
+        libraryButton.update();
         removeAllConfigComponents();
         addConfigComponent(thresholdPanel);
         addConfigComponent(pctPxPanel);
         addConfigComponent(pixFlucButton);
-        addConfigComponent(dataSetButton);
+        addConfigComponent(libraryButton);
     }
 
     @Override
@@ -294,8 +294,8 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(search), true, true, true));
     }
 
-    protected boolean isShowDataSet(DataSet dataSet) {
-        return ClientDomainUtils.hasReadAccess(dataSet);
+    protected boolean isShowLibrary(ColorDepthLibrary library) {
+        return ClientDomainUtils.hasReadAccess(library);
     }
     
     public static final class ZSliceRange {

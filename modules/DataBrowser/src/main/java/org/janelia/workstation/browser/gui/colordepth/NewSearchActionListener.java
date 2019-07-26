@@ -15,7 +15,7 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 
 /**
  * Prompts the user to select an alignment space and creates a new, empty color depth search.

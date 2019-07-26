@@ -1,6 +1,6 @@
 package org.janelia.workstation.browser.actions.context;
 
-import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
 import org.janelia.workstation.browser.gui.colordepth.ColorDepthSearchDialog;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;

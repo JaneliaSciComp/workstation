@@ -5,7 +5,9 @@ import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.enums.SplitHalfType;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -29,7 +31,7 @@ import java.util.Map;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, String> {
+public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, Reference> {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthResultImageModel.class);
 
@@ -37,24 +39,45 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
     private static final String SPLIT_ANNOTATION_OWNER = "group:flylight";
     
     // State
-    private Map<Reference, Sample> sampleMap = new HashMap<>();
-    private Map<String, ColorDepthMatch> matchMap = new HashMap<>();
-    private Map<String, SplitTypeInfo> splitInfos = new HashMap<>();
+    private final ColorDepthMask mask;
+    private final Map<Reference, ColorDepthMatch> matchMap;
+    private final Map<Reference, ColorDepthImage> imageMap;
+    private final Map<Reference, Sample> sampleMap;
+    private final Map<String, SplitTypeInfo> splitInfos;
     
     public ColorDepthResultImageModel(
-            Collection<ColorDepthMatch> matches, 
+            ColorDepthMask mask,
+            Collection<ColorDepthMatch> matches,
+            Collection<ColorDepthImage> images,
             Collection<Sample> samples,
             Map<String, SplitTypeInfo> splitInfos) {
-        
+        this.mask = mask;
+        this.matchMap = new HashMap<>();
         for (ColorDepthMatch match : matches) {
-            matchMap.put(match.getFilepath(), match);
+            matchMap.put(match.getImageRef(), match);
         }
+        this.imageMap = DomainUtils.getMapByReference(images);
         this.sampleMap = DomainUtils.getMapByReference(samples);
         this.splitInfos = splitInfos;
     }
-    
+
+    public ColorDepthMask getMask() {
+        return mask;
+    }
+
+    public ColorDepthImage getImage(ColorDepthMatch match) {
+        return imageMap.get(match.getImageRef());
+    }
+
     public Sample getSample(ColorDepthMatch match) {
-        return sampleMap.get(match.getSample());
+        ColorDepthImage image = getImage(match);
+        if (image==null) {
+            throw new IllegalStateException("Image does not exist: "+match.getImageRef());
+        }
+        if (image.getSampleRef()==null) {
+            return null;
+        }
+        return sampleMap.get(image.getSampleRef());
     }
     
     public Collection<Sample> getSamples() {
@@ -62,14 +85,14 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
     }
     
     @Override
-    public String getImageUniqueId(ColorDepthMatch match) {
-        return match.getFilepath();
+    public Reference getImageUniqueId(ColorDepthMatch match) {
+        return match.getImageRef();
     }
     
     @Override
     public String getImageFilepath(ColorDepthMatch match) {
         if (!hasAccess(match)) return null;
-        return match.getFilepath();
+        return getImage(match).getFilepath();
     }
 
     @Override
@@ -79,19 +102,19 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
     }
 
     @Override
-    public ColorDepthMatch getImageByUniqueId(String filepath) {
+    public ColorDepthMatch getImageByUniqueId(Reference filepath) {
         return matchMap.get(filepath);
     }
     
     @Override
     public String getImageTitle(ColorDepthMatch match) {
         if (!hasAccess(match)) return "Access denied";
-        if (match.getSample()==null) {
-            return match.getFile().getName();
+        ColorDepthImage image = getImage(match);
+        if (image.getSampleRef()==null) {
+            return image.getFile().getName();
         }
         else {
-            Sample sample = sampleMap.get(match.getSample());
-            
+            Sample sample = getSample(match);
             if (isShowVtLineNames()) {
                 if (sample.getVtLine()!=null) {
                     return sample.getVtLine()+"-"+sample.getSlideCode();
@@ -126,8 +149,8 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
     public List<Annotation> getAnnotations(ColorDepthMatch match) {
 
         List<Annotation> annotations = new ArrayList<>();
-        if (match.getSample()!=null) {
-            Sample sample = sampleMap.get(match.getSample());
+        Sample sample = getSample(match);
+        if (sample!=null) {
             SplitTypeInfo splitTypeInfo = getSplitTypeInfo(sample);
             if (splitTypeInfo != null) {
                 if (splitTypeInfo.hasAD()) {
@@ -151,13 +174,11 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, S
     }
     
     private boolean hasAccess(ColorDepthMatch match) {
-        if (match.getSample()!=null) {
-            Sample sample = sampleMap.get(match.getSample());
-            if (sample == null) {
-                // The result maps to a sample, but the user has no access to see it
-                // TODO: check access to data set?
-                return false;
-            }
+        Sample sample = getSample(match);
+        if (sample == null) {
+            // The result maps to a sample, but the user has no access to see it
+            // TODO: check access to image?
+            return false;
         }
         return true;
     }

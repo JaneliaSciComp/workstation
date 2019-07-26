@@ -9,6 +9,8 @@ import java.util.List;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
 import org.janelia.workstation.core.actions.NodeContext;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.nodes.ChildObjectsNode;
@@ -27,9 +29,9 @@ import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
-import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthResult;
 import org.janelia.model.domain.sample.Sample;
 
 /**
@@ -41,18 +43,19 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     
     // Current selection
     protected ColorDepthResult contextObject;
-    protected ChildSelectionModel<ColorDepthMatch,String> editSelectionModel;
+    protected ChildSelectionModel<ColorDepthMatch,Reference> editSelectionModel;
     protected ColorDepthResultImageModel imageModel;
     protected List<ColorDepthMatch> matches;
     protected boolean multiple;
     
     // If single result selected, these will be not null
     protected ColorDepthMatch match;
+    protected ColorDepthImage image;
     protected Sample sample;
     protected String matchName;
     
     public ColorDepthMatchContextMenu(ColorDepthResult result, List<ColorDepthMatch> matches, ColorDepthResultImageModel imageModel, 
-            ChildSelectionModel<ColorDepthMatch,String> editSelectionModel) {
+            ChildSelectionModel<ColorDepthMatch,Reference> editSelectionModel) {
         this.contextObject = result;
         this.matches = matches;
         this.imageModel = imageModel;
@@ -60,12 +63,13 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         this.multiple = matches.size() > 1;
         this.match = matches.size() == 1 ? matches.get(0) : null;
         if (match != null) {
-            if (match.getSample()==null) {
-                this.matchName = match.getFile().getName();
+            this.image = imageModel.getImage(match);
+            this.sample = imageModel.getSample(match);
+            if (sample==null) {
+                this.matchName = image.getFile().getName();
             }
             else {
-                this.sample = match==null ? null : imageModel.getSample(match);
-                this.matchName = multiple ? null : (sample == null ? "Access denied" : sample.getName());
+                this.matchName = sample.getName();
             }
         }
         ActivityLogHelper.logUserAction("ColorDepthMatchContextMenu.create", match);
@@ -147,19 +151,11 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         List<Sample> samples = getSamples();
         if (samples.isEmpty()) return null;
         if (match==null) return null;
-        
+
         AddToResultsAction action = AddToResultsAction.get();
         action.setDomainObjects(samples);
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        try {
-            // This should properly be done in a background thread, but as a shortcut we'll rely on the fact it's cached 
-            ColorDepthMask mask = model.getDomainObject(match.getMaskRef());
-            action.setMask(mask);
-        }
-        catch (Exception e) {
-            FrameworkAccess.handleExceptionQuietly(e);
-            return null;
-        }
+        action.setMask(imageModel.getMask());
         
         JMenuItem item = action.getPopupPresenter();
         if (item!=null) {
@@ -189,7 +185,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
 
     protected JMenuItem getOpenInFinderItem() {
     	if (multiple) return null;
-        String path = match.getFilepath();
+        String path = image.getFilepath();
         if (path==null) return null;
         if (!OpenInFinderAction.isSupported()) return null;
         return getNamedActionItem(new OpenInFinderAction(path));
@@ -197,7 +193,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
 
     protected JMenuItem getOpenWithAppItem() {
     	if (multiple) return null;
-        String path = match.getFilepath();
+        String path = image.getFilepath();
         if (path==null) return null;
         if (!OpenWithDefaultAppAction.isSupported()) return null;
         return getNamedActionItem(new OpenWithDefaultAppAction(path));
@@ -208,13 +204,10 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         
         JMenuItem toggleHudMI = new JMenuItem("Show in Lightbox");
         toggleHudMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
-        toggleHudMI.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.showInLightbox", match);
-                String title = imageModel.getImageTitle(match);
-                Hud.getSingletonInstance().setFilepathAndToggleDialog(match.getFilepath(), title, true, false);
-            }
+        toggleHudMI.addActionListener(e -> {
+            ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.showInLightbox", match);
+            String title = imageModel.getImageTitle(match);
+            Hud.getSingletonInstance().setFilepathAndToggleDialog(image.getFilepath(), title, true, false);
         });
 
         return toggleHudMI;
@@ -223,8 +216,9 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     protected List<Sample> getSamples() {
         List<Sample> samples = new ArrayList<>();
         for(ColorDepthMatch match : matches) {
-            if (match.getSample()!=null) {
-                samples.add(imageModel.getSample(match));
+            Sample sample = imageModel.getSample(match);
+            if (sample!=null) {
+                samples.add(sample);
             }
         }
         return samples;

@@ -29,7 +29,6 @@ import javax.swing.SwingUtilities;
 
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
-
 import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainConstants;
@@ -37,7 +36,6 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectAttribute;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;

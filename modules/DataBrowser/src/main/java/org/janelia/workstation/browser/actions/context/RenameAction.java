@@ -4,8 +4,8 @@ import javax.swing.JOptionPane;
 
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.tiledMicroscope.TmSample;

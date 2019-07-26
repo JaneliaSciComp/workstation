@@ -4,7 +4,7 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.PipelineError;

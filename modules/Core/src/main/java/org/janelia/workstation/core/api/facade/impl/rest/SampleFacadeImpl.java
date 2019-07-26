@@ -12,8 +12,10 @@ import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
+import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
+import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
@@ -193,9 +195,9 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
         checkBadResponse(target, response);
         return response.readEntity(Long.class);
     }
-    
+
     @Override
-    public Collection<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception {
+    public Collection<ColorDepthLibrary> getColorDepthLibraries(String alignmentSpace) throws Exception {
         WebTarget target = getDomainService("data/dataset/colordepth")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("alignmentSpace", alignmentSpace);
@@ -203,7 +205,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
                 .request("application/json")
                 .get();
         checkBadResponse(target, response);
-        return response.readEntity(new GenericType<List<DataSet>>() {});
+        return response.readEntity(new GenericType<List<ColorDepthLibrary>>() {});
     }
 
     private WebTarget getDomainService(String path) {

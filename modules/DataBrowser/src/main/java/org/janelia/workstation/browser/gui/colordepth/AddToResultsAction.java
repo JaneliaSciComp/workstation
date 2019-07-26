@@ -3,7 +3,7 @@ package org.janelia.workstation.browser.gui.colordepth;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
 import org.janelia.model.domain.workspace.GroupedFolder;
 import org.janelia.model.domain.workspace.ProxyGroup;
 import org.janelia.model.domain.workspace.TreeNode;

@@ -6,8 +6,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.janelia.model.domain.Reference;
 import org.janelia.workstation.core.model.search.SearchResults;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ColorDepthSearchResults implements SearchResults<ColorDepthMatch, String> {
+public class ColorDepthSearchResults implements SearchResults<ColorDepthMatch,Reference> {
 
     private static final Logger log = LoggerFactory.getLogger(ColorDepthSearchResults.class);
 
@@ -132,7 +133,7 @@ public class ColorDepthSearchResults implements SearchResults<ColorDepthMatch, S
         boolean updated = false;
         for(final ColorDepthResultPage page : getPages()) {
             if (page==null) continue; // Page not yet loaded
-            final ColorDepthMatch pageObject = page.getObjectById(match.getFilepath());
+            final ColorDepthMatch pageObject = page.getObjectById(match.getImageRef());
             if (pageObject!=null) {
                 page.updateObject(match);
                 updated = true;

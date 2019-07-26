@@ -3,8 +3,8 @@ package org.janelia.workstation.browser.gui.colordepth;
 import java.util.Arrays;
 
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;

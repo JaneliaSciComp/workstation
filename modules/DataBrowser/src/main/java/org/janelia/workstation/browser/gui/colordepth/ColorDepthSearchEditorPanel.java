@@ -33,11 +33,12 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
-import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
-import org.janelia.model.domain.sample.DataSet;
+import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
+import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthResult;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.progress.ProgressMeterMgr;
@@ -82,7 +83,7 @@ import org.slf4j.LoggerFactory;
 public class ColorDepthSearchEditorPanel
         extends JPanel
         implements DomainObjectEditor<ColorDepthSearch>,
-                   ParentNodeSelectionEditor<ColorDepthSearch, ColorDepthMatch, String> {
+                   ParentNodeSelectionEditor<ColorDepthSearch, ColorDepthMatch,Reference> {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchEditorPanel.class);
 
@@ -130,7 +131,7 @@ public class ColorDepthSearchEditorPanel
                     return;
                 }
                 
-                if (search.getDataSets().isEmpty()) {
+                if (search.getLibraries().isEmpty()) {
                     JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "You need to select some data sets to search against.");
                     return;
                 }
@@ -324,14 +325,14 @@ public class ColorDepthSearchEditorPanel
         
         SimpleWorker worker = new SimpleWorker() {
 
-            private List<DataSet> alignmentSpaceDataSets;
+            private List<ColorDepthLibrary> alignmentSpaceLibraries;
             
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 masks = model.getDomainObjectsAs(ColorDepthMask.class, colorDepthSearch.getMasks());
                 results = model.getDomainObjectsAs(ColorDepthResult.class, colorDepthSearch.getResults());
-                alignmentSpaceDataSets = model.getColorDepthDataSets(colorDepthSearch.getAlignmentSpace());
+                alignmentSpaceLibraries = model.getColorDepthLibraries(colorDepthSearch.getAlignmentSpace());
             }
             
             @Override
@@ -340,9 +341,9 @@ public class ColorDepthSearchEditorPanel
                 log.info("Loaded ColorDepthSearch#{}", colorDepthSearch.getId());
                 log.info("Loaded {} masks", masks.size());
                 log.info("Loaded {} results", results.size());
-                log.info("Loaded {} data sets", alignmentSpaceDataSets.size());
+                log.info("Loaded {} libraries for alignment space", alignmentSpaceLibraries.size(), colorDepthSearch.getAlignmentSpace());
                 
-                searchOptionsPanel.setDataSets(alignmentSpaceDataSets);
+                searchOptionsPanel.setLibraries(alignmentSpaceLibraries);
                 
                 showSearchView(isUserDriven);
                 
@@ -455,30 +456,30 @@ public class ColorDepthSearchEditorPanel
     }
     
     @Override
-    public ChildSelectionModel<ColorDepthMatch,String> getSelectionModel() {
+    public ChildSelectionModel<ColorDepthMatch,Reference> getSelectionModel() {
         return colorDepthResultPanel.getSelectionModel();
     }
 
     @Override
-    public ChildSelectionModel<ColorDepthMatch,String> getEditSelectionModel() {
+    public ChildSelectionModel<ColorDepthMatch,Reference> getEditSelectionModel() {
         return colorDepthResultPanel.getEditSelectionModel();
     }
 
     @Override
-    public ViewerContext<ColorDepthMatch, String> getViewerContext() {
-        return new ViewerContext<ColorDepthMatch, String>() {
+    public ViewerContext<ColorDepthMatch,Reference> getViewerContext() {
+        return new ViewerContext<ColorDepthMatch,Reference>() {
             @Override
-            public ChildSelectionModel<ColorDepthMatch, String> getSelectionModel() {
+            public ChildSelectionModel<ColorDepthMatch,Reference> getSelectionModel() {
                 return colorDepthResultPanel.getSelectionModel();
             }
 
             @Override
-            public ChildSelectionModel<ColorDepthMatch, String> getEditSelectionModel() {
+            public ChildSelectionModel<ColorDepthMatch,Reference> getEditSelectionModel() {
                 return colorDepthResultPanel.isEditMode() ? colorDepthResultPanel.getEditSelectionModel() : null;
             }
 
             @Override
-            public ImageModel<ColorDepthMatch, String> getImageModel() {
+            public ImageModel<ColorDepthMatch,Reference> getImageModel() {
                 return colorDepthResultPanel.getImageModel();
             }
         };
@@ -537,7 +538,7 @@ public class ColorDepthSearchEditorPanel
         }
         
         if (event.isUserDriven()) {
-            log.info("colorDepthMatchSelected({})", match.getFilepath());
+            log.info("colorDepthMatchSelected({})", match.getImageRef());
             FrameworkAccess.getInspectionController().inspect(getProperties(match));
         }
     }
@@ -545,30 +546,33 @@ public class ColorDepthSearchEditorPanel
     private Map<String,Object> getProperties(ColorDepthMatch match) {
 
         Map<String,Object> values = new HashMap<>();
-        
-        String dataSet = match.getDataSet();
+
+        ColorDepthResultImageModel imageModel = colorDepthResultPanel.getImageModel();
+        ColorDepthImage image = imageModel.getImage(match);
+
+        String dataSet = image.getLibrary();
         String owner = dataSet.split("_")[0];
 
-        values.put("Channel Number", match.getChannelNumber());
+        values.put("Channel Number", image.getChannelNumber());
         values.put("Score (Pixels)", match.getScore());
         values.put("Score (Percent)", MaskUtils.getFormattedScorePct(match));
         values.put("Data Set", dataSet);
         values.put("Owner", owner);
         
         try {
-            if (match.getSample()==null) {
+            if (image.getSampleRef()==null) {
                 // Non-Workstation Data set
-                values.put("Name", match.getFile().getName());
-                values.put("Filepath", match.getFilepath());
+                values.put("Name", image.getFile().getName());
+                values.put("Filepath", image.getFilepath());
             }
             else {
-                Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(match.getSample());
+                Sample sample = imageModel.getSample(match);
                 if (sample!=null) {
                     values.put("Name", sample.getName());
                     values.put("Line", sample.getLine());
                     values.put("VT Line", sample.getVtLine());
                     // Only display the filepath if user has access to the sample
-                    values.put("Filepath", match.getFilepath());
+                    values.put("Filepath", image.getFilepath());
                 }
             }
         }
@@ -605,7 +609,7 @@ public class ColorDepthSearchEditorPanel
     }
 
     @Override
-    public DomainObjectEditorState<ColorDepthSearch,ColorDepthMatch,String> saveState() {
+    public DomainObjectEditorState<ColorDepthSearch,ColorDepthMatch,Reference> saveState() {
         if (searchNode==null) {
             if (search==null) {
                 log.warn("No object is loaded, so state cannot be saved");
@@ -635,7 +639,7 @@ public class ColorDepthSearchEditorPanel
     }
 
     @Override
-    public void restoreState(DomainObjectEditorState<ColorDepthSearch,ColorDepthMatch,String> state) {
+    public void restoreState(DomainObjectEditorState<ColorDepthSearch,ColorDepthMatch,Reference> state) {
         if (state==null) {
             log.warn("Cannot restore null state");
             return;
@@ -648,7 +652,7 @@ public class ColorDepthSearchEditorPanel
         }
 
         // Prepare to restore the selection
-        List<String> selected = colorDepthResultPanel.getResultPanel().getViewer().getSelectionModel().getSelectedIds();
+        List<Reference> selected = colorDepthResultPanel.getResultPanel().getViewer().getSelectionModel().getSelectedIds();
         selected.clear();
         selected.addAll(state.getSelectedIds());
 

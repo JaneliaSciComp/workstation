@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
+import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.LineRelease;
@@ -98,11 +99,11 @@ public interface SampleFacade {
      * @throws Exception
      */
     Long dispatchTask(JsonTask task, String processName) throws Exception;
-    
+
     /**
-     * Returns the list of data sets available for color depth search in a given alignment space.
+     * Returns the list of libraries available for color depth search in a given alignment space.
      * @return
      * @throws Exception
      */
-    Collection<DataSet> getColorDepthDataSets(String alignmentSpace) throws Exception;
+    Collection<ColorDepthLibrary> getColorDepthLibraries(String alignmentSpace) throws Exception;
 }

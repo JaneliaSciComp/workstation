@@ -6,9 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.janelia.model.domain.Reference;
 import org.janelia.workstation.core.model.AnnotatedObjectList;
 import org.janelia.workstation.core.model.search.ResultPage;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.model.domain.ontology.Annotation;
 
 /**
@@ -16,17 +17,17 @@ import org.janelia.model.domain.ontology.Annotation;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ColorDepthResultPage implements AnnotatedObjectList<ColorDepthMatch,String>, ResultPage<ColorDepthMatch,String> {
+public class ColorDepthResultPage implements AnnotatedObjectList<ColorDepthMatch,Reference>, ResultPage<ColorDepthMatch,Reference> {
 
     private final List<ColorDepthMatch> matches = new ArrayList<>();
     private final long numTotalResults;
     
-    private Map<String, ColorDepthMatch> matchMap;
+    private Map<Reference,ColorDepthMatch> matchMap;
     
     public ColorDepthResultPage(List<ColorDepthMatch> matches, long totalNumResults) {
         
         for(ColorDepthMatch match : matches) {
-            if (matches!=null) {
+            if (match!=null) {
                 this.matches.add(match);
             }
         }
@@ -50,23 +51,23 @@ public class ColorDepthResultPage implements AnnotatedObjectList<ColorDepthMatch
     }
     
     @Override
-    public List<Annotation> getAnnotations(String filepath) {
+    public List<Annotation> getAnnotations(Reference id) {
         return Collections.emptyList();
     }
     
-    private synchronized Map<String, ColorDepthMatch> getMatchByFilepath() {
+    private synchronized Map<Reference,ColorDepthMatch> getMatchByImageRef() {
         if (matchMap==null) {
             this.matchMap = new HashMap<>();
             for(ColorDepthMatch match : matches) {
-                matchMap.put(match.getFilepath(), match);
+                matchMap.put(match.getImageRef(), match);
             }
         }
         return matchMap;
     }
     
     @Override
-    public synchronized ColorDepthMatch getObjectById(String filepath) {
-        return getMatchByFilepath().get(filepath);
+    public synchronized ColorDepthMatch getObjectById(Reference id) {
+        return getMatchByImageRef().get(id);
     }
 
     @Override
@@ -75,7 +76,7 @@ public class ColorDepthResultPage implements AnnotatedObjectList<ColorDepthMatch
     }
     
     @Override
-    public boolean updateAnnotations(String filepath, List<Annotation> annotations) {
+    public boolean updateAnnotations(Reference id, List<Annotation> annotations) {
         return false;
     }
 }

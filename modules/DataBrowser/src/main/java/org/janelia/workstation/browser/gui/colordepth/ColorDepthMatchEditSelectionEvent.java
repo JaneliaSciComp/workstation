@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.colordepth;
 
 import java.util.List;
 
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 
 /**
  * Event that is thrown when a color depth match is "edit selected" with a checkbox in the Color Depth Search editor.

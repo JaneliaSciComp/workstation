@@ -8,7 +8,7 @@ import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.core.model.SplitHalf;
 import org.janelia.workstation.core.model.SplitTypeInfo;
 import org.janelia.model.domain.enums.SplitHalfType;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.model.domain.sample.Sample;
 
 /**

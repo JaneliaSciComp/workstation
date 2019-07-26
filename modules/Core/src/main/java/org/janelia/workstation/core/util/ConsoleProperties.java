@@ -33,10 +33,13 @@ public class ConsoleProperties extends ConfigProperties {
             // properties are being loaded.
             synchronized (me) {
                 load(CONSOLE_PROPERTIES, me);
+                log.info("sync.rest.url={}", getString("sync.rest.url"));
                 if (additionalProperties != null) {
                     load(additionalProperties, me);
+                    log.info("sync.rest.url={}", getString("sync.rest.url"));
                 }
                 load(DEVELOPER_PROPERTIES, me);
+                log.info("sync.rest.url={}", getString("sync.rest.url"));
             }
         }
         return me;

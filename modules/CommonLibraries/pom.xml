@@ -645,7 +645,7 @@
                         <publicPackage>org.janelia.model.domain.enums</publicPackage>
                         <publicPackage>org.janelia.model.domain.enums.algorithms</publicPackage>
                         <publicPackage>org.janelia.model.domain.gui.alignment_board</publicPackage>
-                        <publicPackage>org.janelia.model.domain.gui.colordepth</publicPackage>
+                        <publicPackage>org.janelia.model.domain.gui.cdmip</publicPackage>
                         <publicPackage>org.janelia.model.domain.gui.search</publicPackage>
                         <publicPackage>org.janelia.model.domain.gui.search.criteria</publicPackage>
                         <publicPackage>org.janelia.model.domain.interfaces</publicPackage>

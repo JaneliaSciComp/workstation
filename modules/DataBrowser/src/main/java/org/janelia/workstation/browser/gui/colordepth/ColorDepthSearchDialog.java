@@ -3,7 +3,6 @@ package org.janelia.workstation.browser.gui.colordepth;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
+import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
@@ -35,9 +35,8 @@ import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
-import org.janelia.model.domain.sample.DataSet;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -202,14 +201,14 @@ public class ColorDepthSearchDialog extends ModalDialog {
         
         SimpleWorker worker = new SimpleWorker() {
             
-            private List<DataSet> dataSets;
+            private List<ColorDepthLibrary> libraries;
             private List<ColorDepthSearch> searches = new ArrayList<>();
                     
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
 
-                dataSets = model.getColorDepthDataSets(alignmentSpace);
+                libraries = model.getColorDepthLibraries(alignmentSpace);
                 
                 for(ColorDepthSearch search : model.getAllDomainObjectsByClass(ColorDepthSearch.class)) {
                     // TODO: this should use hasWriteAccess, once save is working server-side
@@ -248,8 +247,8 @@ public class ColorDepthSearchDialog extends ModalDialog {
                     }
                 }
 
-                log.info("Adding {} data sets to data set button", dataSets.size());
-                searchOptionsPanel.setDataSets(dataSets);
+                log.info("Adding {} values to library button", libraries.size());
+                searchOptionsPanel.setLibraries(libraries);
                 
                 updateState();
                 revalidate();
@@ -310,7 +309,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
         ColorDepthSearch search = searchOptionsPanel.getSearch();
 
         if (execute) {
-            if (search.getDataSets().isEmpty()) {
+            if (search.getLibraries().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "You need to select some data sets to search against.");
                 return;
             }

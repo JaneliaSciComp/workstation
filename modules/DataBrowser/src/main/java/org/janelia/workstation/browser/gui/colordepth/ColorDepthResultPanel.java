@@ -1,5 +1,19 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -7,10 +21,11 @@ import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.enums.SplitHalfType;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMask;
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
-import org.janelia.model.domain.gui.colordepth.ColorDepthResult;
-import org.janelia.model.domain.gui.colordepth.ColorDepthSearch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthResult;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.ExportResultsAction;
 import org.janelia.workstation.browser.gui.editor.SelectionButton;
@@ -27,7 +42,6 @@ import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.api.web.SageRestClient;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
-import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.model.DomainModelViewUtils;
 import org.janelia.workstation.core.model.SplitTypeInfo;
 import org.janelia.workstation.core.model.search.ResultPage;
@@ -37,28 +51,6 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class ColorDepthResultPanel extends JPanel implements SearchProvider, PreferenceSupport {
 
@@ -87,7 +79,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private final SingleSelectionButton<ColorDepthResult> historyButton;
     private final JCheckBox newOnlyCheckbox;
     private final JTextField resultsPerLineField;
-    private final PaginatedResultsPanel<ColorDepthMatch, String> resultsPanel;
+    private final PaginatedResultsPanel<ColorDepthMatch,Reference> resultsPanel;
     private final JLabel noRunLabel;
     private final JLabel noMatchesLabel;
 
@@ -102,7 +94,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private ColorDepthSearchResults searchResults;
     private final Set<SplitHalfType> selectedSplitTypes = new HashSet<>();
     
-    private final ChildSelectionModel<ColorDepthMatch,String> selectionModel = new ChildSelectionModel<ColorDepthMatch,String>() {
+    private final ChildSelectionModel<ColorDepthMatch,Reference> selectionModel = new ChildSelectionModel<ColorDepthMatch,Reference>() {
 
         @Override
         protected void selectionChanged(List<ColorDepthMatch> objects, boolean select, boolean clearAll, boolean isUserDriven) {
@@ -110,12 +102,12 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         }
 
         @Override
-        public String getId(ColorDepthMatch match) {
-            return match.getFilepath();
+        public Reference getId(ColorDepthMatch match) {
+            return match.getImageRef();
         }
     };
 
-    private final ChildSelectionModel<ColorDepthMatch,String> editSelectionModel = new ChildSelectionModel<ColorDepthMatch,String>() {
+    private final ChildSelectionModel<ColorDepthMatch,Reference> editSelectionModel = new ChildSelectionModel<ColorDepthMatch,Reference>() {
 
         @Override
         protected void selectionChanged(List<ColorDepthMatch> objects, boolean select, boolean clearAll, boolean isUserDriven) {
@@ -123,8 +115,8 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         }
         
         @Override
-        public String getId(ColorDepthMatch match) {
-            return match.getFilepath();
+        public Reference getId(ColorDepthMatch match) {
+            return match.getImageRef();
         }
     };
     
@@ -233,16 +225,16 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         topPanel.add(perLinePanel);
         topPanel.add(splitTypeButton);
         
-        this.resultsPanel = new PaginatedResultsPanel<ColorDepthMatch,String>(selectionModel, editSelectionModel, this, this, viewerTypes) {
+        this.resultsPanel = new PaginatedResultsPanel<ColorDepthMatch,Reference>(selectionModel, editSelectionModel, this, this, viewerTypes) {
     
             @Override
-            protected ResultPage<ColorDepthMatch, String> getPage(SearchResults<ColorDepthMatch, String> searchResults, int page) throws Exception {
+            protected ResultPage<ColorDepthMatch,Reference> getPage(SearchResults<ColorDepthMatch,Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
             }
             
             @Override
-            public String getId(ColorDepthMatch object) {
-                return object.getFilepath();
+            public Reference getId(ColorDepthMatch match) {
+                return match.getImageRef();
             }
 
             @Override
@@ -404,15 +396,23 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
      */
     private ColorDepthSearchResults prepareResults(List<ColorDepthMatch> maskMatches) throws Exception {
 
-        // Fetch associated samples
-        
-        Set<Reference> sampleRefs = new HashSet<>();            
-        for (ColorDepthMatch match : maskMatches) {
-            log.trace("Will load {}", match.getSample());
-            sampleRefs.add(match.getSample());
-        }
-        
         DomainModel model = DomainMgr.getDomainMgr().getModel();
+
+        // Fetch associated images
+        Set<Reference> imageRefs = new HashSet<>();
+        for (ColorDepthMatch match : maskMatches) {
+            imageRefs.add(match.getImageRef());
+        }
+
+        List<ColorDepthImage> images = model.getDomainObjectsAs(ColorDepthImage.class, new ArrayList<>(imageRefs));
+
+        // Fetch associated samples
+        Set<Reference> sampleRefs = new HashSet<>();            
+        for (ColorDepthImage image : images) {
+            log.trace("Will load {}", image.getSampleRef());
+            sampleRefs.add(image.getSampleRef());
+        }
+
         List<Sample> samples = model.getDomainObjectsAs(Sample.class, new ArrayList<>(sampleRefs));
         
         // Fetch split half information
@@ -441,7 +441,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         }
         
         // Create and set image model
-        this.imageModel = new ColorDepthResultImageModel(maskMatches, samples, splitInfos);
+        this.imageModel = new ColorDepthResultImageModel(mask, maskMatches, images, samples, splitInfos);
         resultsPanel.setImageModel(imageModel);
         
         // Filter matches
@@ -483,14 +483,16 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             int currResultIndex = results.indexOf(currResult);
             for (int i=0; i<currResultIndex; i++) {
                 for(ColorDepthMatch match : results.get(i).getMaskMatches(mask)) {
-                    filepaths.add(match.getFilepath());
+                    ColorDepthImage image = imageModel.getImage(match);
+                    filepaths.add(image.getFilepath());
                 }
             }
             
             // Now filter the current results to show the new matches only
             List<ColorDepthMatch> filteredMatches = new ArrayList<>();
             for(ColorDepthMatch match : maskMatches) {
-                if (!filepaths.contains(match.getFilepath())) {
+                ColorDepthImage image = imageModel.getImage(match);
+                if (!filepaths.contains(image.getFilepath())) {
                     filteredMatches.add(match);
                 }
             }
@@ -515,8 +517,9 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         // Group matches by line
         Map<String,LineMatches> lines = new LinkedHashMap<>();
         for (ColorDepthMatch match : maskMatches) {
+            ColorDepthImage image = imageModel.getImage(match);
             Sample sample = imageModel.getSample(match);
-            String line = sample==null ? ""+match.getSample() : sample.getLine();
+            String line = sample==null ? ""+image.getSampleName() : sample.getLine();
             LineMatches lineMatches = lines.get(line);
             if (lineMatches==null) {
                 lineMatches = new LineMatches(line);
@@ -569,7 +572,8 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     }
     
     private boolean showMatch(ColorDepthMatch match) {
-        if (match.getSample()==null) return true; // Match is not bound to a sample
+        ColorDepthImage image = imageModel.getImage(match);
+        if (image.getSampleRef()==null) return true; // Match is not bound to a sample
         Sample sample = imageModel.getSample(match);
         // If match is bound to a sample, we need access to it
         return sample != null;
@@ -595,16 +599,17 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             Set<Long> seenSamples = new HashSet<>();
             List<ColorDepthMatch> orderedMatches = new ArrayList<>();
             for (ColorDepthMatch match : matches) {
-                
-                if (match.getSample() == null) {
+
+                ColorDepthImage image = imageModel.getImage(match);
+                if (image.getSampleRef() == null) {
                     orderedMatches.add(match);
                     continue;
                 }
-                
-                String matchStr = String.format("%s@ch%s - %2.2f", 
-                        match.getSample(), match.getChannelNumber(), match.getScorePercent());
 
-                if (seenSamples.contains(match.getSample().getTargetId())) {
+                String matchStr = String.format("%s@ch%s - %2.2f",
+                        image.getSampleRef(), image.getChannelNumber(), match.getScorePercent());
+
+                if (seenSamples.contains(image.getSampleRef().getTargetId())) {
                     // Only show top hit for each sample
                     log.debug("  Skipping duplicate sample: {}", matchStr);
                     continue;
@@ -619,7 +624,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
                 log.debug("  Adding match: {}", matchStr);
                 orderedMatches.add(match);
                 
-                seenSamples.add(match.getSample().getTargetId());
+                seenSamples.add(image.getSampleRef().getTargetId());
             }
             
             return orderedMatches;   
@@ -675,16 +680,16 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         if (searchResults==null) return;
         if (resultsPanel.getViewer() instanceof ColorDepthResultTableViewer) {
             ColorDepthResultTableViewer viewer = (ColorDepthResultTableViewer)resultsPanel.getViewer();
-            ExportResultsAction<ColorDepthMatch, String> action = new ExportResultsAction<>(searchResults, viewer);
+            ExportResultsAction<ColorDepthMatch,Reference> action = new ExportResultsAction<>(searchResults, viewer);
             action.actionPerformed(null);
         }   
     }
 
-    public ChildSelectionModel<ColorDepthMatch, String> getSelectionModel() {
+    public ChildSelectionModel<ColorDepthMatch,Reference> getSelectionModel() {
         return selectionModel;
     }
 
-    public ChildSelectionModel<ColorDepthMatch, String> getEditSelectionModel() {
+    public ChildSelectionModel<ColorDepthMatch,Reference> getEditSelectionModel() {
         return editSelectionModel;
     }
 
@@ -707,7 +712,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         return results.indexOf(currResult);
     }
 
-    public PaginatedResultsPanel<ColorDepthMatch, String> getResultPanel() {
+    public PaginatedResultsPanel<ColorDepthMatch,Reference> getResultPanel() {
         return resultsPanel;
     }
 

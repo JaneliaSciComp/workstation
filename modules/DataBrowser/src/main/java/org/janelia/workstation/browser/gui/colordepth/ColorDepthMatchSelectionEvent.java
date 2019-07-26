@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.colordepth;
 
 import java.util.List;
 
-import org.janelia.model.domain.gui.colordepth.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.workstation.core.events.selection.ObjectSelectionEvent;
 
 /**
