@@ -479,28 +479,26 @@ public class DomainInspectorPanel extends JPanel {
 
         final List<DomainObjectPermission> eaps = new ArrayList<>(getPermissions(domainObject));
 
-        Collections.sort(eaps, new Comparator<DomainObjectPermission>() {
-            @Override
-            public int compare(DomainObjectPermission o1, DomainObjectPermission o2) {
-                ComparisonChain chain = ComparisonChain.start()
-                        .compare(o2.isOwner(), o1.isOwner(), Ordering.natural())
-                        .compare(o1.getSubjectKey(), o2.getSubjectKey(), Ordering.natural().nullsFirst());
-                return chain.result();
-            }
+        Collections.sort(eaps, (o1, o2) -> {
+            ComparisonChain chain = ComparisonChain.start()
+                    .compare(o2.isOwner(), o1.isOwner(), Ordering.natural())
+                    .compare(o1.getSubjectKey(), o2.getSubjectKey(), Ordering.natural().nullsFirst());
+            return chain.result();
         });
 
-        if (domainObject instanceof Filtering) {
+        // Factor these out into a separate module
+        if (domainObject instanceof Sample) {
+            permissionsNoteLabel.setText("Note: sharing this Sample will also share its LSMs and Neuron Fragments.");
+        }
+        else if (domainObject instanceof DataSet) {
+            permissionsNoteLabel.setText("Note: sharing this Data Set will also share its current and future Samples, " +
+                    "LSMS, Neuron Fragments, and Color Depth MIPs.");
+        }
+        else if (domainObject instanceof Filtering) {
             permissionsNoteLabel.setText("Note: sharing this Filter does not share its results.");
         }
         else if (domainObject instanceof TreeNode) {
             permissionsNoteLabel.setText("Note: sharing this Folder also shares all of its current and future contents.");
-        }
-        // Factor these out into a separate module
-        else if (domainObject instanceof Sample) {
-            permissionsNoteLabel.setText("Note: sharing this Sample will also share its LSMs and Neuron Fragments.");
-        }
-        else if (domainObject instanceof DataSet) {
-            permissionsNoteLabel.setText("Note: sharing this Data Set will also share its current and future Samples, LSMS, and Neuron Fragments.");
         }
         else {
             permissionsNoteLabel.setText("");

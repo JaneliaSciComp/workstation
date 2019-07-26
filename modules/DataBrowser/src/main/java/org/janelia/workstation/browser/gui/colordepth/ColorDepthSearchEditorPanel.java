@@ -110,6 +110,7 @@ public class ColorDepthSearchEditorPanel
     private ColorDepthSearch search;
     private List<ColorDepthMask> masks; // cached masks
     private List<ColorDepthResult> results; // cached results
+    private List<ColorDepthLibrary> alignmentSpaceLibraries; // cached results
     private Reference selectedMaskRef = null;
     private Map<ColorDepthMask,MaskPanel> maskPanelMap = new HashMap<>();
     
@@ -189,7 +190,12 @@ public class ColorDepthSearchEditorPanel
             protected void panelSelected(SelectablePanel resultPanel, boolean isUserDriven) {
                 if (resultPanel instanceof MaskPanel) {
                     ColorDepthMask mask = ((MaskPanel)resultPanel).getMask();
-                    colorDepthResultPanel.loadSearchResults(search, results, mask, isUserDriven);
+                    if (results!=null) {
+                        colorDepthResultPanel.loadSearchResults(search, results, mask, isUserDriven);
+                    }
+                    else {
+                        colorDepthResultPanel.showNoMatches();
+                    }
                     selectedMaskRef = Reference.createFor(mask);
                     Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(mask), isUserDriven, true, true));
                 }
@@ -314,18 +320,20 @@ public class ColorDepthSearchEditorPanel
         final StopWatch w = new StopWatch();
 
         searchOptionsPanel.setSearch(colorDepthSearch);
-        
+
+        // Reset state
         setProcessing(false);
         setError(false);
         maskPanelMap.clear();
-        
+        this.masks = null;
+        this.results = null;
+        this.alignmentSpaceLibraries = null;
         this.search = colorDepthSearch;
+
         log.info("Loading {} masks", colorDepthSearch.getMasks().size());
         log.info("Loading {} results", colorDepthSearch.getResults().size());
         
         SimpleWorker worker = new SimpleWorker() {
-
-            private List<ColorDepthLibrary> alignmentSpaceLibraries;
             
             @Override
             protected void doStuff() throws Exception {
@@ -393,21 +401,21 @@ public class ColorDepthSearchEditorPanel
         JPanel titlePanel = new JPanel(new BorderLayout());
         titlePanel.add(titleLabel, BorderLayout.CENTER);
         maskListPanel.add(titlePanel);
-        
-        for(ColorDepthMask mask : masks) {
-            MaskPanel maskPanel = new MaskPanel(mask);
-            maskListPanel.addPanel(maskPanel);
-            maskPanelMap.put(mask, maskPanel);
-        }
 
         removeAll();
         add(searchOptionsPanel, BorderLayout.NORTH);
         
-        if (masks.isEmpty()) {
+        if (masks==null || masks.isEmpty()) {
             add(helpPanel, BorderLayout.CENTER);
             colorDepthResultPanel.showNothing();
         }
         else {
+
+            for(ColorDepthMask mask : masks) {
+                MaskPanel maskPanel = new MaskPanel(mask);
+                maskListPanel.addPanel(maskPanel);
+                maskPanelMap.put(mask, maskPanel);
+            }
 
             ColorDepthMask selectedMask = null;
             if (selectedMaskRef != null) {
@@ -550,13 +558,13 @@ public class ColorDepthSearchEditorPanel
         ColorDepthResultImageModel imageModel = colorDepthResultPanel.getImageModel();
         ColorDepthImage image = imageModel.getImage(match);
 
-        String dataSet = image.getLibrary();
-        String owner = dataSet.split("_")[0];
+        String dataSets = StringUtils.getCommaDelimited(image.getLibraries());
+        String owner = dataSets.split("_")[0];
 
         values.put("Channel Number", image.getChannelNumber());
         values.put("Score (Pixels)", match.getScore());
         values.put("Score (Percent)", MaskUtils.getFormattedScorePct(match));
-        values.put("Data Set", dataSet);
+        values.put("Data Set", dataSets);
         values.put("Owner", owner);
         
         try {
