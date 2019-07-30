@@ -251,8 +251,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
                 searchOptionsPanel.setLibraries(libraries);
                 
                 updateState();
-                revalidate();
-                repaint();
+                pack();
             }
 
             @Override

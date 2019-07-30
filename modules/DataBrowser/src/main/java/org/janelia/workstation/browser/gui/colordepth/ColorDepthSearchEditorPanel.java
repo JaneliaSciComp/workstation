@@ -229,6 +229,8 @@ public class ColorDepthSearchEditorPanel
             if (result != 0) return;
         }
 
+        log.info("Executing color depth search {}", search);
+
         setProcessing(true);
         setError(false);
 
@@ -343,6 +345,7 @@ public class ColorDepthSearchEditorPanel
 
         // Reset state
         if (isUserDriven) {
+            log.info("Reset progress UI");
             setProcessing(false);
             setError(false);
         }
@@ -384,11 +387,13 @@ public class ColorDepthSearchEditorPanel
                 for(BackgroundWorker worker : ProgressMeterMgr.getProgressMeterMgr().getActiveWorkers()) {
                     if (worker instanceof SearchMonitoringWorker) {
                         SearchMonitoringWorker searchWorker = (SearchMonitoringWorker)worker;
+                        log.info("Checking active worker {}?={}", searchWorker.getSearch().getId(), search.getId());
                         if (searchWorker.getSearch().getId().equals(search.getId())) {
                             isProcessing = true;
                         }
                     }
                 }
+                log.info("Updating progress UI to: "+isProcessing);
                 setProcessing(isProcessing);
                 
                 ActivityLogHelper.logElapsed("ColorDepthSearchEditorPanel.loadDomainObject", search, w);
