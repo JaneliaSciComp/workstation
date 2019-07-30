@@ -360,9 +360,9 @@ public class ColorDepthResultTableViewer
             return MaskUtils.getFormattedScorePct(match);
         }
         else if (ATTR_FILENAME.getName().equals(columnName)) {
-            return model.getImage(match).getFile().getName();
+            return model.getImage(match).getName();
         }
-        if (ATTR_CHANNEL.getName().equals(columnName)) {
+        else if (ATTR_CHANNEL.getName().equals(columnName)) {
             return model.getImage(match).getChannelNumber();
         }
         else {

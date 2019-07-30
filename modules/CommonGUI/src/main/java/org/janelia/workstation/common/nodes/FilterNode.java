@@ -9,9 +9,13 @@ import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 
 public class FilterNode<T extends Filtering> extends AbstractDomainObjectNode<T> {
-        
-    public FilterNode(ChildFactory<?> parentChildFactory, T filter) throws Exception {
-        super(parentChildFactory, Children.LEAF, filter);
+
+    public FilterNode(ChildFactory<?> parentChildFactory, Children children, T filter) {
+        super(parentChildFactory, children, filter);
+    }
+
+    public FilterNode(ChildFactory<?> parentChildFactory, T filter) {
+        this(parentChildFactory, Children.LEAF, filter);
     }
     
     public T getFilter() {

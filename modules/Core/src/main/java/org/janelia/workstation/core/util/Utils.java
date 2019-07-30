@@ -61,6 +61,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 
@@ -86,6 +87,11 @@ public class Utils {
     private static final int ONE_GIGABYTE = 1024 * ONE_MEGABYTE;
 
     private static final int DEFAULT_BUFFER_SIZE = 8 * ONE_KILOBYTE;
+
+    static {
+        // Scan to find the Twelvemonkeys plugin for TIFF
+        ImageIO.scanForPlugins();
+    }
 
     /**
      * Read an image using the ImageIO API. Currently supports TIFFs, PNGs and JPEGs.
@@ -117,7 +123,7 @@ public class Utils {
                         stream = new FileInputStream(new File(path));
                     }
 
-                    // Supports GIF, PNG, JPEG, BMP, and WBMP 
+                    // Supports GIF, PNG, JPEG, BMP, and WBMP (and TIFF via Twelvemonkeys)
                     image = ImageIO.read(stream);
                     if (image==null) {
                         throw new FormatException("File format is not supported: " + format);

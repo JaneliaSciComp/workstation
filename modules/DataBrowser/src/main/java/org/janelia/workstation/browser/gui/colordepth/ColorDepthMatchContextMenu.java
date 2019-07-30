@@ -66,7 +66,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
             this.image = imageModel.getImage(match);
             this.sample = imageModel.getSample(match);
             if (sample==null) {
-                this.matchName = image.getFile().getName();
+                this.matchName = image.getName();
             }
             else {
                 this.matchName = sample.getName();

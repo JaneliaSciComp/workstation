@@ -519,7 +519,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         for (ColorDepthMatch match : maskMatches) {
             ColorDepthImage image = imageModel.getImage(match);
             Sample sample = imageModel.getSample(match);
-            String line = sample==null ? ""+image.getSampleName() : sample.getLine();
+            String line = sample==null ? image.getName() : sample.getLine();
             LineMatches lineMatches = lines.get(line);
             if (lineMatches==null) {
                 lineMatches = new LineMatches(line);

@@ -1,16 +1,6 @@
 package org.janelia.workstation.core.api;
 
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import javax.swing.SwingUtilities;
 
@@ -18,7 +8,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
-
+import com.google.common.collect.ComparisonChain;
 import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
 import org.janelia.it.jacs.shared.solr.SolrParams;
@@ -59,6 +49,7 @@ import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.util.ColorDepthUtils;
 import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -592,10 +583,20 @@ public class DomainModel {
     public List<DataSet> getDataSets() throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         List<DataSet> dataSets = new ArrayList<>(sampleFacade.getDataSets());
+        dataSets.sort(new DataSetComparator());
         List<DataSet> canonicalDataSets = putOrUpdate(dataSets, false);
         if (TIMER) w.stop("getDataSets");
         return canonicalDataSets;
     }
+
+    public class DataSetComparator implements Comparator<DataSet> {
+        @Override
+        public int compare(DataSet o1, DataSet o2) {
+            return ComparisonChain.start()
+                    .compareTrueFirst(ClientDomainUtils.isOwner(o1), ClientDomainUtils.isOwner(o2))
+                    .compare(o1.getIdentifier(), o2.getIdentifier()).result();
+        }
+    };
 
     public DataSet getDataSet(String identifier) throws Exception {
         // TODO: improve performance by fetching only the required data set
@@ -615,6 +616,7 @@ public class DomainModel {
                 libraries.add((ColorDepthLibrary)obj);
             }
         }
+        libraries.sort(new ColorDepthComparator());
         List<ColorDepthLibrary> canonicalLibraries = putOrUpdate(libraries, false);
         if (TIMER) w.stop("getColorDepthLibraries");
         return canonicalLibraries;
@@ -623,16 +625,31 @@ public class DomainModel {
     public List<ColorDepthLibrary> getColorDepthLibraries(String alignmentSpace) throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         List<ColorDepthLibrary> libraries = new ArrayList<>(sampleFacade.getColorDepthLibraries(alignmentSpace));
+        libraries.sort(new ColorDepthComparator());
         List<ColorDepthLibrary> canonicalLibraries = putOrUpdate(libraries, false);
         if (TIMER) w.stop("getColorDepthLibraries");
         return canonicalLibraries;
     }
 
+    public class ColorDepthComparator implements Comparator<ColorDepthLibrary> {
+        @Override
+        public int compare(ColorDepthLibrary o1, ColorDepthLibrary o2) {
+            return ComparisonChain.start()
+                    .compareTrueFirst(ClientDomainUtils.isOwner(o1), ClientDomainUtils.isOwner(o2))
+                    .compare(o1.getIdentifier(), o2.getIdentifier()).result();
+        }
+    };
+
     public List<String> getAlignmentSpaces() throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         Set<String> alignmentSpaces = new TreeSet<>();
-        for (DataSet dataSet : getDataSets()) {
-            alignmentSpaces.addAll(dataSet.getColorDepthCounts().keySet());
+        for (ColorDepthLibrary library : getColorDepthLibraries()) {
+            for (String alignmentSpace : library.getColorDepthCounts().keySet()) {
+                if (ColorDepthUtils.isAlignmentSpaceVisible(alignmentSpace)) {
+                    alignmentSpaces.addAll(library.getColorDepthCounts().keySet());
+                }
+            }
+
         }
         if (TIMER) w.stop("getAlignmentSpaces");
         return new ArrayList<>(alignmentSpaces);

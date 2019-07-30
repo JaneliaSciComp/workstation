@@ -1,5 +1,12 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
+import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
+import java.util.List;
+
+import javax.swing.AbstractAction;
+import javax.swing.JOptionPane;
+
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.Sample;
@@ -14,12 +21,6 @@ import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.AbstractAction;
-import javax.swing.JOptionPane;
-import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
-import java.util.List;
 
 /**
  * Allows the user to create a mask for color depth search from an existing color depth MIP on a sample.
@@ -36,12 +37,8 @@ public class CreateMaskFromSampleAction extends AbstractAction {
     private SampleAlignmentResult alignment;
     private String imagePath;
 
-    public CreateMaskFromSampleAction() {
-        super("Create Mask for Color Depth Search...");
-    }
-    
     public CreateMaskFromSampleAction(Sample sample, ArtifactDescriptor resultDescriptor, String typeName) {
-        this(); // call no-args constructor to set title
+        super("Create Mask for Color Depth Search...");
         this.sample = sample;
         this.resultDescriptor = resultDescriptor;
         this.typeName = typeName;
@@ -50,13 +47,8 @@ public class CreateMaskFromSampleAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        log.debug("sample: "+sample);
-        log.debug("resultDescriptor: "+resultDescriptor);
-        log.debug("typeName: "+typeName);
-        
         HasFiles fileProvider = DescriptorUtils.getResult(sample, resultDescriptor);
-        log.debug("fileProvider: "+fileProvider);
-        
+
         if (!(fileProvider instanceof SampleAlignmentResult)) {
             
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
@@ -68,7 +60,6 @@ public class CreateMaskFromSampleAction extends AbstractAction {
         
         alignment = (SampleAlignmentResult)fileProvider;
         imagePath = DomainUtils.getFilepath(alignment, typeName);
-        log.debug("imagePath: "+imagePath);
         
         if (imagePath==null) {
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),

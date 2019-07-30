@@ -13,6 +13,7 @@ public class OptionConstants {
     public static final String SHOW_RECENTLY_OPENED_ITEMS = "SessionMgr.ShowRecentlyOpenedItems";
     public static final String SHOW_FLY_LINE_RELEASES = "SessionMgr.ShowFlyLineReleases";
     public static final String SHOW_DATA_SETS = "SessionMgr.ShowDataSets";
+    public static final String SHOW_COLOR_DEPTH_LIBRARIES = "SessionMgr.ShowColorDepthLibraries";
     public static final String SHOW_RELEASE_NOTES = "SessionMgr.ShowReleaseNotes";
     public static final String LAST_SHOWN_RELEASE_NOTES = "SessionMgr.LastShownReleaseNotes";
     public static final String SANITIZE_FILENAMES_PROPERTY = "SessionMgr.SanitizeFilenames1";

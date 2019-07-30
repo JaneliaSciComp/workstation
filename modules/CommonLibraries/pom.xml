@@ -73,6 +73,12 @@
             <artifactId>jai-codec</artifactId>
             <version>1.1.3</version>
         </dependency>
+        <!-- This is never used directly in our code, but adds support for TIFF images to ImageIO -->
+        <dependency>
+            <groupId>com.twelvemonkeys.imageio</groupId>
+            <artifactId>imageio-tiff</artifactId>
+            <version>3.4.1</version>
+        </dependency>
         <dependency>
             <groupId>com.xuggle</groupId>
             <artifactId>xuggle-xuggler</artifactId>
@@ -436,6 +442,27 @@
                         <publicPackage>com.google.common.util.concurrent</publicPackage>
                         <publicPackage>com.google.gwt.user.client.rpc</publicPackage>
                         <publicPackage>com.sun.media.jai.codec</publicPackage>
+                        <publicPackage>com.twelvemonkeys</publicPackage>
+                        <publicPackage>com.twelvemonkeys.image</publicPackage>
+                        <publicPackage>com.twelvemonkeys.io</publicPackage>
+                        <publicPackage>com.twelvemonkeys.io.enc</publicPackage>
+                        <publicPackage>com.twelvemonkeys.io.ole2</publicPackage>
+                        <publicPackage>com.twelvemonkeys.net</publicPackage>
+                        <publicPackage>com.twelvemonkeys.xml</publicPackage>
+                        <publicPackage>com.twelvemonkeys.lang</publicPackage>
+                        <publicPackage>com.twelvemonkeys.util</publicPackage>
+                        <publicPackage>com.twelvemonkeys.util.convert</publicPackage>
+                        <publicPackage>com.twelvemonkeys.util.regex</publicPackage>
+                        <publicPackage>com.twelvemonkeys.util.service</publicPackage>
+                        <publicPackage>com.twelvemonkeys.imageio</publicPackage>
+                        <publicPackage>com.twelvemonkeys.imageio.color</publicPackage>
+                        <publicPackage>com.twelvemonkeys.imageio.spi</publicPackage>
+                        <publicPackage>com.twelvemonkeys.imageio.stream</publicPackage>
+                        <publicPackage>com.twelvemonkeys.imageio.util</publicPackage>
+                        <publicPackage>com.twelvemonkeys.imageio.metadata</publicPackage>
+                        <publicPackage>com.twelvemonkeys.imageio.metadata.tiff</publicPackage>
+                        <publicPackage>com.twelvemonkeys.imageio.plugins</publicPackage>
+                        <publicPackage>com.twelvemonkeys.imageio.plugins.tiff</publicPackage>
                         <publicPackage>com.xuggle.*</publicPackage>
                         <publicPackage>edu.wlu.cs.levy.CG</publicPackage>
                         <publicPackage>javax.inject</publicPackage>

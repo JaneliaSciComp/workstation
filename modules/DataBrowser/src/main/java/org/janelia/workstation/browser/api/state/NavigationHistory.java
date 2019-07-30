@@ -123,7 +123,7 @@ public class NavigationHistory {
 
     private void loadState(DomainObjectEditorState<?,?,?> state) {
 
-        DomainListViewTopComponent tc = (DomainListViewTopComponent)state.getTopComponent();
+        DomainListViewTopComponent tc = state.getTopComponent();
         if (!tc.isOpened()) {
             tc.open();
         }

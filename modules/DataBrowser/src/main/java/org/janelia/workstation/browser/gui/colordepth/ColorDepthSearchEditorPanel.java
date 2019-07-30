@@ -83,7 +83,7 @@ import org.slf4j.LoggerFactory;
 public class ColorDepthSearchEditorPanel
         extends JPanel
         implements DomainObjectEditor<ColorDepthSearch>,
-                   ParentNodeSelectionEditor<ColorDepthSearch, ColorDepthMatch,Reference> {
+                   ParentNodeSelectionEditor<ColorDepthSearch,ColorDepthMatch,Reference> {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchEditorPanel.class);
 
@@ -123,51 +123,7 @@ public class ColorDepthSearchEditorPanel
         searchOptionsPanel = new ColorDepthSearchOptionsPanel();
         
         searchButton = new JButton("Execute Search");
-        searchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                
-                if (search.getMasks().isEmpty()) {
-                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "You need to select some masks to search on.");
-                    return;
-                }
-                
-                if (search.getLibraries().isEmpty()) {
-                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "You need to select some data sets to search against.");
-                    return;
-                }
-                
-                if (executingPanel.isVisible()) {
-                Object[] options = { "Yes", "Cancel" };
-                int result = JOptionPane.showOptionDialog(ColorDepthSearchEditorPanel.this, 
-                        "This search is already running. Are you sure you want to run it again?", 
-                        "Execute search", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
-                        null, options, options[0]);
-                
-                if (result != 0) return;
-                }
-                
-                SimpleWorker worker = new SimpleWorker() {
-                        
-                    @Override
-                    protected void doStuff() throws Exception {
-                        search = searchOptionsPanel.saveChanges();
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        executeSearch();
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        FrameworkAccess.handleException(error);
-                    }
-                };
-
-                worker.execute();
-            }
-        });
+        searchButton.addActionListener(e -> executeSearch());
         
         executingPanel = new JPanel(new BorderLayout());
         executingPanel.setVisible(false);
@@ -250,7 +206,71 @@ public class ColorDepthSearchEditorPanel
             }
         });
     }
-    
+
+    private void executeSearch() {
+
+        if (search.getMasks().isEmpty()) {
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "You need to select some masks to search on.");
+            return;
+        }
+
+        if (search.getLibraries().isEmpty()) {
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "You need to select some color depth libraries to search against.");
+            return;
+        }
+
+        if (executingPanel.isVisible()) {
+            Object[] options = { "Yes", "Cancel" };
+            int result = JOptionPane.showOptionDialog(ColorDepthSearchEditorPanel.this,
+                    "This search is already running. Are you sure you want to run it again?",
+                    "Execute search", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+                    null, options, options[0]);
+
+            if (result != 0) return;
+        }
+
+        setProcessing(true);
+        setError(false);
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                search = searchOptionsPanel.saveChanges();
+
+                ActivityLogHelper.logUserAction("ColorDepthSearchEditorPanel.executeSearch", search);
+
+                Long serviceId = asyncServiceClient.invokeService("colorDepthObjectSearch",
+                        ImmutableList.of("-searchId", search.getId().toString()),
+                        null,
+                        ImmutableMap.of());
+
+                AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(search, serviceId) {
+                    @Override
+                    public Callable<Void> getSuccessCallback() {
+                        return () -> {
+                            // Refresh and load the search which is completed
+                            forceInvalidate();
+                            return null;
+                        };
+                    }
+                };
+                executeWorker.executeWithEvents();
+            }
+
+            @Override
+            protected void hadSuccess() {
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+            }
+        };
+
+        worker.execute();
+    }
+
     private void reload() throws Exception {
         
         if (search==null) {
@@ -266,7 +286,7 @@ public class ColorDepthSearchEditorPanel
                 }
                 this.search = updatedSearch;
                 restoreState(saveState());
-                loadDomainObject(updatedSearch, false, null);
+                //loadDomainObject(updatedSearch, false, null);
             }
             else {
                 // The search no longer exists, or we no longer have access to it (perhaps running as a different user?) 
@@ -322,8 +342,10 @@ public class ColorDepthSearchEditorPanel
         searchOptionsPanel.setSearch(colorDepthSearch);
 
         // Reset state
-        setProcessing(false);
-        setError(false);
+        if (isUserDriven) {
+            setProcessing(false);
+            setError(false);
+        }
         maskPanelMap.clear();
         this.masks = null;
         this.results = null;
@@ -358,14 +380,16 @@ public class ColorDepthSearchEditorPanel
                 debouncer.success();
                 
                 // Update processing status
+                boolean isProcessing = false;
                 for(BackgroundWorker worker : ProgressMeterMgr.getProgressMeterMgr().getActiveWorkers()) {
                     if (worker instanceof SearchMonitoringWorker) {
                         SearchMonitoringWorker searchWorker = (SearchMonitoringWorker)worker;
                         if (searchWorker.getSearch().getId().equals(search.getId())) {
-                            setProcessing(true);
+                            isProcessing = true;
                         }
                     }
                 }
+                setProcessing(isProcessing);
                 
                 ActivityLogHelper.logElapsed("ColorDepthSearchEditorPanel.loadDomainObject", search, w);
             }
@@ -492,30 +516,6 @@ public class ColorDepthSearchEditorPanel
             }
         };
     }
-
-    private void executeSearch() {
-
-        ActivityLogHelper.logUserAction("ColorDepthSearchEditorPanel.executeSearch", search);
-        
-        Long serviceId = asyncServiceClient.invokeService("colorDepthObjectSearch",
-                ImmutableList.of("-searchId", search.getId().toString()),
-                null,
-                ImmutableMap.of());
-        
-        AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(search, serviceId) {
-            @Override
-            public Callable<Void> getSuccessCallback() {
-                return () -> {
-                    // Refresh and load the search which is completed
-                    forceInvalidate();
-                    return null;
-                };
-            }
-        };
-        setProcessing(true);
-        setError(false);
-        executeWorker.executeWithEvents();
-    }
     
     @Subscribe
     public void processEvent(WorkerEndedEvent e) {
@@ -524,9 +524,7 @@ public class ColorDepthSearchEditorPanel
             log.info("Got worker ended event: "+worker.getSearch().getId());
             if (worker.getSearch().getId().equals(search.getId())) {
                 setProcessing(false);
-                if (worker.getError() != null) {
-                    setError(true);
-                }
+                setError(worker.getError() != null);
             }
         }
     }
@@ -558,29 +556,28 @@ public class ColorDepthSearchEditorPanel
         ColorDepthResultImageModel imageModel = colorDepthResultPanel.getImageModel();
         ColorDepthImage image = imageModel.getImage(match);
 
-        String dataSets = StringUtils.getCommaDelimited(image.getLibraries());
-        String owner = dataSets.split("_")[0];
+        String libraries = StringUtils.getCommaDelimited(image.getLibraries());
+        String owner = libraries.split("_")[0];
 
         values.put("Channel Number", image.getChannelNumber());
         values.put("Score (Pixels)", match.getScore());
         values.put("Score (Percent)", MaskUtils.getFormattedScorePct(match));
-        values.put("Data Set", dataSets);
+        values.put("Color Depth Libraries", libraries);
         values.put("Owner", owner);
         
         try {
-            if (image.getSampleRef()==null) {
-                // Non-Workstation Data set
-                values.put("Name", image.getFile().getName());
-                values.put("Filepath", image.getFilepath());
-            }
-            else {
+            values.put("Name", image.getName());
+            values.put("Filepath", image.getFilepath());
+            if (image.getSampleRef()!=null) {
                 Sample sample = imageModel.getSample(match);
                 if (sample!=null) {
-                    values.put("Name", sample.getName());
+                    values.put("Sample Name", sample.getName());
                     values.put("Line", sample.getLine());
                     values.put("VT Line", sample.getVtLine());
-                    // Only display the filepath if user has access to the sample
-                    values.put("Filepath", image.getFilepath());
+                }
+                else {
+                    // Hide the filepath if user can't access the sample
+                    values.remove("Filepath");
                 }
             }
         }
@@ -605,6 +602,7 @@ public class ColorDepthSearchEditorPanel
     
     private void setProcessing(boolean isRunning) {
         executingPanel.setVisible(isRunning);
+        searchButton.setEnabled(!isRunning);
     }
     
     private void setError(boolean isError) {
@@ -672,10 +670,10 @@ public class ColorDepthSearchEditorPanel
         colorDepthResultPanel.getResultPanel().getViewer().restoreState(state.getListViewerState());
         
         if (state.getDomainObjectNode()==null) {
-            loadDomainObject(state.getDomainObject(), true, null);
+            loadDomainObject(state.getDomainObject(), false, null);
         }
         else {
-            loadDomainObjectNode(state.getDomainObjectNode(), true, null);
+            loadDomainObjectNode(state.getDomainObjectNode(), false, null);
         }
     }
 

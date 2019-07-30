@@ -66,6 +66,7 @@ import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.core.model.search.SearchResults;
+import org.janelia.workstation.core.util.ColorDepthUtils;
 import org.janelia.workstation.core.util.ConcurrentUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -863,7 +864,10 @@ public class SampleEditorPanel
                         }
                         
                         if (hasColorDepthMips) {
-                            alignmentSpaces.add(result.getAlignmentSpace());
+                            String alignmentSpace = result.getAlignmentSpace();
+                            if (ColorDepthUtils.isAlignmentSpaceVisible(alignmentSpace)) {
+                                alignmentSpaces.add(alignmentSpace);
+                            }
                         }
                     }
                 }

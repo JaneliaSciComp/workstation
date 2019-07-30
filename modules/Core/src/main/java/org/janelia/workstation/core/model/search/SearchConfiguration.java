@@ -386,14 +386,9 @@ public class SearchConfiguration {
                 // Sort each facet list in place. The mutability isn't great, but no one else will see this list.
                 for(String facet : results.getFacetValues().keySet()) {
                     List<FacetValue> facetValueList = results.getFacetValues().get(facet);
-                    Collections.sort(facetValueList, new Comparator<FacetValue>() {
-                        @Override
-                        public int compare(FacetValue o1, FacetValue o2) {
-                            return ComparisonChain.start()
-                                    .compare(o1.getValue(), o2.getValue(), Ordering.natural())
-                                    .result();
-                        }
-                    });
+                    facetValueList.sort((o1, o2) -> ComparisonChain.start()
+                            .compare(o1.getValue(), o2.getValue(), Ordering.natural())
+                            .result());
                 }
 
                 facetValues.putAll(results.getFacetValues());

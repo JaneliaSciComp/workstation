@@ -78,7 +78,6 @@ public class SearchHereAction extends BaseContextualNodeAction {
         }
         else if (domainObject instanceof Filter) {
             filter = DomainUtils.cloneFilter((Filter)domainObject);
-            filter.setName(null);
         }
         else {
             throw new IllegalStateException("Cannot search in node of type "+domainObject.getClass());

@@ -24,6 +24,8 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ActionID(
         category = "Actions",
@@ -39,10 +41,14 @@ import org.openide.util.NbBundle;
 @NbBundle.Messages("CTL_CreateColorDepthMaskAction=Create Color Depth Mask")
 public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
 
+    private final static Logger log = LoggerFactory.getLogger(CreateColorDepthMaskAction.class);
+
     private Action innerAction;
 
     @Override
     protected void processContext() {
+
+        this.innerAction = null;
 
         DomainObject selectedObject = null;
         if (getNodeContext().isSingleObjectOfType(Sample.class)) {
@@ -54,6 +60,8 @@ public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
 
         setEnabledAndVisible(false);
         if (selectedObject !=null) {
+
+            log.trace("Processing selected object: {}", selectedObject.getName());
 
             ViewerContext viewerContext = getViewerContext();
             DomainObjectImageModel doim = DomainUIUtils.getDomainObjectImageModel(viewerContext);
@@ -74,7 +82,7 @@ public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
                     }
                 }
 
-                if (!samples.isEmpty() && samples.size() == selectedObjects.size()) {
+                if (!samples.isEmpty() && samples.size() == 1) {
                     if (resultDescriptor!=null && resultDescriptor.isAligned()) {
                         setVisible(true);
 
@@ -92,7 +100,7 @@ public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
                             }
                         }
                     }
-                } else if (!images.isEmpty() && images.size() == selectedObjects.size()) {
+                } else if (!images.isEmpty() && images.size() == 1) {
                     this.innerAction = new CreateMaskFromImageAction(images.get(0));
                     setEnabledAndVisible(true);
                 }

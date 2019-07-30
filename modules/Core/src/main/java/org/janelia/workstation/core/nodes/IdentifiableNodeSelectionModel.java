@@ -1,6 +1,7 @@
 package org.janelia.workstation.core.nodes;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.janelia.model.domain.DomainObject;
@@ -36,7 +37,10 @@ public class IdentifiableNodeSelectionModel extends SelectionModel<Node,Long> {
                 if (identifiableNode instanceof DomainObjectNode) {
                     DomainObjectNode domainObjectNode = (DomainObjectNode)identifiableNode;
                     DomainObject domainObject = domainObjectNode.getDomainObject();
-                    Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), Arrays.asList(domainObject), select, clearAll, isUserDriven));
+                    if (domainObject.getId()!=null) {
+                        Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(),
+                                Collections.singletonList(domainObject), select, clearAll, isUserDriven));
+                    }
                 }
             }
             else {

@@ -28,11 +28,6 @@ public class DataSetNode extends FilterNode<DataSet> {
     }
 
     @Override
-    public String getSecondaryLabel() {
-        return null;
-    }
-
-    @Override
     public String getExtraLabel() {
         return null;
     }

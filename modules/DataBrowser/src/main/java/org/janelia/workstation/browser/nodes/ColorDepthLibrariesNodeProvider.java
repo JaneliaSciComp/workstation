@@ -9,17 +9,17 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;
 
-import static org.janelia.workstation.core.options.OptionConstants.SHOW_DATA_SETS;
+import static org.janelia.workstation.core.options.OptionConstants.SHOW_COLOR_DEPTH_LIBRARIES;
 
 /**
- * Adds the data sets node to the Data Explorer.
+ * Adds the color depth libraries node to the Data Explorer.
  */
 @ServiceProvider(service = NodeProvider.class, path=NodeProvider.LOOKUP_PATH)
-public class DataSetsNodeProvider implements NodeProvider  {
+public class ColorDepthLibrariesNodeProvider implements NodeProvider  {
 
-    private static final int NODE_ORDER = 20;
+    private static final int NODE_ORDER = 22;
 
-    public DataSetsNodeProvider() {
+    public ColorDepthLibrariesNodeProvider() {
     }
 
     public List<NodeGenerator> getNodeGenerators() {
@@ -33,13 +33,13 @@ public class DataSetsNodeProvider implements NodeProvider  {
 
             @Override
             public Node createNode() {
-                return new DataSetsNode();
+                return new ColorDepthLibrariesNode();
             }
         });
     }
     
     public static boolean isShowMenuItem() {
-        return FrameworkAccess.getModelProperty(SHOW_DATA_SETS, true);
+        return FrameworkAccess.getModelProperty(SHOW_COLOR_DEPTH_LIBRARIES, true);
     }
     
 }

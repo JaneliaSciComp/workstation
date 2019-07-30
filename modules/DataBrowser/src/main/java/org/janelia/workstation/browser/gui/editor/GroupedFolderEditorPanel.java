@@ -511,10 +511,10 @@ public class GroupedFolderEditorPanel extends JPanel implements
         resultsPanel.getViewer().restoreState(state.getListViewerState());
            
         if (state.getDomainObjectNode()==null) {
-            loadDomainObject(state.getDomainObject(), true, null);
+            loadDomainObject(state.getDomainObject(), false, null);
         }
         else {
-            loadDomainObjectNode(state.getDomainObjectNode(), true, null);
+            loadDomainObjectNode(state.getDomainObjectNode(), false, null);
         }
     }
 

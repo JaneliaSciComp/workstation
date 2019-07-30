@@ -310,7 +310,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
 
         if (execute) {
             if (search.getLibraries().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "You need to select some data sets to search against.");
+                JOptionPane.showMessageDialog(this, "You need to select some color depth libraries to search against.");
                 return;
             }
         }

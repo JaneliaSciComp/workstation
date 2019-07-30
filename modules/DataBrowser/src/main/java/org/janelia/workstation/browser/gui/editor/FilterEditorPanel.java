@@ -45,6 +45,7 @@ import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
 import org.janelia.model.domain.interfaces.HasIdentifier;
+import org.janelia.model.domain.interfaces.HasName;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.ExportResultsAction;
@@ -312,8 +313,11 @@ public class FilterEditorPanel
     }
 
     private void setFilter(Filtering canonicalFilter) {
+
         // Clone the filter so that we don't modify the one in the cache
         this.filter = DomainUtils.cloneFilter(canonicalFilter);
+        filter.setName(canonicalFilter.getName());
+
         if (Filter.class.equals(canonicalFilter.getClass())) {
             // We can only override the given object with a cloned filter (e.g. use the "Save" action) if it's a Filter to begin with
             filter.setId(canonicalFilter.getId());

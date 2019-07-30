@@ -177,7 +177,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         TopComponent topComponent = UIUtils.getAncestorWithType(
                 (Component)e.getSourceComponent(), TopComponent.class);
         if (topComponent==this && editor!=null) {
-            log.trace("Viewer context changed, updating cookie because of {}", e);
+            log.info("Viewer context changed, updating cookie because of {}", e);
             updateContext(editor.getViewerContext());
         }
     }
@@ -451,7 +451,10 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         
         if (!prepareForLoad(state.getDomainObject())) return;
         editor.restoreState(state);
-        
+
+        updateContext(editor.getViewerContext());
+        updateNodeIfChanged(editor.getSelectionModel().getObjects());
+
         // TODO: this should run as a callback after loadState is fully complete
         // Update the editor name
         setName(editor.getName());

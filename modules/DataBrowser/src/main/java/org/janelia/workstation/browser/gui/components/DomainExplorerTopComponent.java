@@ -67,10 +67,7 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.janelia.workstation.core.options.OptionConstants.NAVIGATE_ON_CLICK;
-import static org.janelia.workstation.core.options.OptionConstants.SHOW_DATA_SETS;
-import static org.janelia.workstation.core.options.OptionConstants.SHOW_FLY_LINE_RELEASES;
-import static org.janelia.workstation.core.options.OptionConstants.SHOW_RECENTLY_OPENED_ITEMS;
+import static org.janelia.workstation.core.options.OptionConstants.*;
 
 
 /**
@@ -176,6 +173,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         final JCheckBoxMenuItem showDataSetsMenuItem = new JCheckBoxMenuItem("Show data sets", isShowDataSets());
         showDataSetsMenuItem.addActionListener(e -> setShowDataSets(showDataSetsMenuItem.isSelected()));
         configButton.addMenuItem(showDataSetsMenuItem);
+
+        final JCheckBoxMenuItem showColorDepthLibraries = new JCheckBoxMenuItem("Show color depth libraries", isShowColorDepthLibraries());
+        showColorDepthLibraries.addActionListener(e -> setShowColorDepthLibraries(showColorDepthLibraries.isSelected()));
+        configButton.addMenuItem(showColorDepthLibraries);
 
         final JCheckBoxMenuItem showReleasesMenuItem = new JCheckBoxMenuItem("Show fly line releases", isShowFlyLineReleases());
         showReleasesMenuItem.addActionListener(e -> setShowFlyLineReleases(showReleasesMenuItem.isSelected()));
@@ -379,6 +380,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
         else if (event.getKey().equals(SHOW_RECENTLY_OPENED_ITEMS)
                 || event.getKey().equals(SHOW_DATA_SETS)
+                || event.getKey().equals(SHOW_COLOR_DEPTH_LIBRARIES)
                 || event.getKey().equals(SHOW_FLY_LINE_RELEASES)) {
             // Recreate the root node so that it picks up the new visibility preferences
             refresh(false, true, null); 
@@ -637,7 +639,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private void navigateNode(Node node) {
         if (node instanceof AbstractDomainObjectNode) {
             log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
-            selectionModel.select((AbstractDomainObjectNode<?>)node, true, true);
+            selectionModel.select(node, true, true);
         }
     }
 
@@ -691,6 +693,22 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         FrameworkAccess.setModelProperty(SHOW_RECENTLY_OPENED_ITEMS, value);
     }
 
+    public static boolean isShowDataSets() {
+        return FrameworkAccess.getModelProperty(SHOW_DATA_SETS, true);
+    }
+
+    private static void setShowDataSets(boolean value) {
+        FrameworkAccess.setModelProperty(SHOW_DATA_SETS, value);
+    }
+
+    public static boolean isShowColorDepthLibraries() {
+        return FrameworkAccess.getModelProperty(SHOW_COLOR_DEPTH_LIBRARIES, true);
+    }
+
+    private static void setShowColorDepthLibraries(boolean value) {
+        FrameworkAccess.setModelProperty(SHOW_COLOR_DEPTH_LIBRARIES, value);
+    }
+
     public static boolean isShowFlyLineReleases() {
         return FrameworkAccess.getModelProperty(SHOW_FLY_LINE_RELEASES, true);
     }
@@ -699,11 +717,4 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         FrameworkAccess.setModelProperty(SHOW_FLY_LINE_RELEASES, value);
     }
 
-    public static boolean isShowDataSets() {
-        return FrameworkAccess.getModelProperty(SHOW_DATA_SETS, true);
-    }
-
-    private static void setShowDataSets(boolean value) {
-        FrameworkAccess.setModelProperty(SHOW_DATA_SETS, value);
-    }
 }

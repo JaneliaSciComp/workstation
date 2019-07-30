@@ -238,8 +238,8 @@ public class CustomTreeView extends BeanTreeView {
             if (path==null) continue;
             log.debug("Expanding id path: {}",NodeUtils.createPathString(path));
             TreePath tp = getTreePath(path);
-            log.info("Expanding tree path: {}",tp);
             if (tp != null) {
+                log.info("Expanding tree path: {}",tp);
                 expand(tp);
                 numExpanded++;
             }

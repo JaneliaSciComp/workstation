@@ -11,6 +11,7 @@ import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.SplitTypeInfo;
@@ -111,7 +112,7 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, R
         if (!hasAccess(match)) return "Access denied";
         ColorDepthImage image = getImage(match);
         if (image.getSampleRef()==null) {
-            return image.getFile().getName();
+            return image.getName();
         }
         else {
             Sample sample = getSample(match);
@@ -174,13 +175,7 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, R
     }
     
     private boolean hasAccess(ColorDepthMatch match) {
-        Sample sample = getSample(match);
-        if (sample == null) {
-            // The result maps to a sample, but the user has no access to see it
-            // TODO: check access to image?
-            return false;
-        }
-        return true;
+        return ClientDomainUtils.hasReadAccess(getImage(match));
     }
 
     private Boolean isShowVtLineNamesCached;
