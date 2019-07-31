@@ -1,7 +1,5 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,30 +7,27 @@ import java.util.List;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
-import org.janelia.workstation.core.actions.NodeContext;
-import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.nodes.ChildObjectsNode;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
+import org.janelia.model.domain.gui.cdmip.ColorDepthResult;
+import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.workstation.browser.actions.OpenWithDefaultAppAction;
+import org.janelia.workstation.browser.actions.context.AddToFolderAction;
 import org.janelia.workstation.browser.gui.components.DomainViewerManager;
 import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.browser.gui.hud.Hud;
-import org.janelia.workstation.browser.actions.context.AddToFolderAction;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.gui.support.PopupContextMenu;
+import org.janelia.workstation.core.actions.NodeContext;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
-import org.janelia.workstation.common.gui.support.PopupContextMenu;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
-import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
-import org.janelia.model.domain.gui.cdmip.ColorDepthResult;
-import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.core.nodes.ChildObjectsNode;
 
 /**
  * Context pop up menu for color depth results.
@@ -117,6 +112,9 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         add(getOpenWithAppItem());
 
         setNextAddRequiresSeparator(true);
+        add(getCreateMaskAction());
+
+        setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
     }
 
@@ -150,7 +148,6 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         
         List<Sample> samples = getSamples();
         if (samples.isEmpty()) return null;
-        if (match==null) return null;
 
         AddToResultsAction action = AddToResultsAction.get();
         action.setDomainObjects(samples);
@@ -197,6 +194,11 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         if (path==null) return null;
         if (!OpenWithDefaultAppAction.isSupported()) return null;
         return getNamedActionItem(new OpenWithDefaultAppAction(path));
+    }
+
+    protected JMenuItem getCreateMaskAction() {
+        if (multiple) return null;
+        return getNamedActionItem(new CreateMaskFromImageAction(image));
     }
 
     protected JMenuItem getHudMenuItem() {
