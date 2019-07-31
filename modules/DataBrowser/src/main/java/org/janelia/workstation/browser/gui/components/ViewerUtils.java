@@ -1,8 +1,16 @@
 package org.janelia.workstation.browser.gui.components;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
+import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.model.DomainModelViewUtils;
+import org.janelia.workstation.core.nodes.ChildObjectsNode;
+import org.openide.util.Lookup;
+import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.Mode;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
@@ -104,4 +112,35 @@ public class ViewerUtils {
     public static DomainObjectEditorState<?,?,?> deserialize(String serializedState) throws Exception {
         return mapper.readValue(DomainModelViewUtils.convertModelPackages(serializedState), DomainObjectEditorState.class);
     }
+    
+    public static void updateContextIfChanged(Lookup.Provider lookupProvider, InstanceContent content, ViewerContext viewerContext) {
+        Collection<? extends ViewerContext> viewerContexts = lookupProvider.getLookup().lookupAll(ViewerContext.class);
+        if (viewerContexts.isEmpty() || viewerContexts.iterator().next().equals(viewerContext)) {
+            log.info("Updating ViewerContext ({})", viewerContext);
+            // Clear all existing nodes
+            lookupProvider.getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+            // Add new node
+            if (viewerContext!=null) {
+                content.add(viewerContext);
+            }
+        }
+    }
+
+    public static void updateNodeIfChanged(Lookup.Provider lookupProvider, InstanceContent content, Collection objects) {
+
+        List<Object> currentObjects = new ArrayList<>();
+        for (ChildObjectsNode childObjectsNode : lookupProvider.getLookup().lookupAll(ChildObjectsNode.class)) {
+            currentObjects.addAll(childObjectsNode.getObjects());
+        }
+
+        List<Object> newObjects = new ArrayList<>(objects);
+        if (!currentObjects.equals(newObjects)) {
+            log.info("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
+            // Clear all existing nodes
+            lookupProvider.getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
+            // Add new node
+            content.add(new ChildObjectsNode(newObjects));
+        }
+    }
+
 }

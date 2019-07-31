@@ -7,12 +7,8 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronFragment;
-import org.janelia.model.domain.sample.PipelineError;
-import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.editor.SampleEditorPanel;
-import org.janelia.workstation.browser.selection.PipelineErrorSelectionEvent;
-import org.janelia.workstation.browser.selection.PipelineResultSelectionEvent;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
@@ -39,9 +35,7 @@ import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -137,9 +131,9 @@ public final class DomainViewerTopComponent extends TopComponent {
         DomainViewerManager.getInstance().activate(this);
         if (editor!=null) {
             editor.activate();
-            updateContext(editor.getViewerContext());
+            ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
             if (editor.getViewerContext()!=null) {
-                updateNodeIfChanged(editor.getViewerContext().getSelectionModel().getObjects());
+                ViewerUtils.updateNodeIfChanged(this, content, editor.getViewerContext().getSelectionModel().getObjects());
             }
         }
     }
@@ -160,7 +154,10 @@ public final class DomainViewerTopComponent extends TopComponent {
         if (topComponent==this && editor!=null) {
             log.info("Our selection changed, updating cookie because of {}", e);
             if (editor.getViewerContext()!=null) {
-                updateNodeIfChanged(editor.getViewerContext().getSelectionModel().getObjects());
+                ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
+                if (editor.getViewerContext()!=null) {
+                    ViewerUtils.updateNodeIfChanged(this, content, editor.getViewerContext().getSelectionModel().getObjects());
+                }
             }
         }
     }
@@ -194,35 +191,38 @@ public final class DomainViewerTopComponent extends TopComponent {
                 (Component)e.getSourceComponent(), TopComponent.class);
         if (topComponent==this && editor!=null) {
             log.info("Viewer context changed, updating cookie because of {}", e);
-            updateContext(editor.getViewerContext());
+            ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
         }
     }
 
-    private void updateContext(ViewerContext viewerContext) {
-        // Clear all existing nodes
-        getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
-        if (viewerContext!=null) {
-            // Add new node
-            content.add(viewerContext);
-        }
-    }
-
-    private void updateNodeIfChanged(Collection objects) {
-
-        List<Object> currentObjects = new ArrayList<>();
-        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
-            currentObjects.addAll(childObjectsNode.getObjects());
-        }
-
-        List<Object> newObjects = new ArrayList<>(objects);
-        if (!currentObjects.equals(newObjects)) {
-            log.info("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
-            // Clear all existing nodes
-            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
-            // Add new node
-            content.add(new ChildObjectsNode(newObjects));
-        }
-    }
+//    private void updateContextIfChanged(ViewerContext viewerContext) {
+//        Collection<? extends ViewerContext> viewerContexts = getLookup().lookupAll(ViewerContext.class);
+//        if (viewerContexts.isEmpty() || viewerContexts.iterator().next().equals(viewerContext)) {
+//            // Clear all existing nodes
+//            getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+//            // Add new node
+//            if (viewerContext!=null) {
+//                content.add(viewerContext);
+//            }
+//        }
+//    }
+//
+//    private void updateNodeIfChanged(Collection objects) {
+//
+//        List<Object> currentObjects = new ArrayList<>();
+//        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
+//            currentObjects.addAll(childObjectsNode.getObjects());
+//        }
+//
+//        List<Object> newObjects = new ArrayList<>(objects);
+//        if (!currentObjects.equals(newObjects)) {
+//            log.info("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
+//            // Clear all existing nodes
+//            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
+//            // Add new node
+//            content.add(new ChildObjectsNode(newObjects));
+//        }
+//    }
 
     void writeProperties(java.util.Properties p) {
         if (p==null) return;

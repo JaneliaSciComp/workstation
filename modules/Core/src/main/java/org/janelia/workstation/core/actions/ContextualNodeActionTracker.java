@@ -61,10 +61,19 @@ public class ContextualNodeActionTracker implements LookupListener {
 
         Collection<? extends Node> selectedNodes = nodeResult.allInstances();
         NodeContext nodeContext = new NodeContext(selectedNodes);
-        log.info("New node selection: {}", nodeContext);
 
         Collection<? extends ViewerContext> viewerContexts = viewerContextResult.allInstances();
         ViewerContext viewerContext = viewerContexts.isEmpty()?null:viewerContexts.iterator().next();
+
+        if (lookupEvent.getSource()==nodeResult) {
+            log.info("Nodes changed: {} selected", nodeContext.getObjects().size());
+        }
+        else if (lookupEvent.getSource()==viewerContextResult) {
+            log.info("Viewer context changed: {}", viewerContext);
+        }
+        else {
+            throw new IllegalStateException("Unexpected lookup event");
+        }
 
         for (ContextualNodeAction dependent : dependents) {
             try {

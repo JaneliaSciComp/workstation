@@ -85,7 +85,7 @@ public class MaskCreationDialog extends ModalDialog {
         setThreshold(DEFAULT_THRESHOLD_VALUE);
         optionsPanel.add(thresholdPanel);
 
-        if (sample==null) {
+        if (selectedAlignmentSpace==null) {
             SingleSelectionButton<String> alignmentSpaceButton = new SingleSelectionButton<String>("Alignment Space") {
 
                 @Override

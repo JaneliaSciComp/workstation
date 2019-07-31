@@ -94,7 +94,8 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     protected PreferenceSupport preferenceSupport;
     protected SearchProvider searchProvider;
     protected List<? extends ListViewerClassProvider> validViewerTypes;
-    
+    private ImageModel<T, S> imageModel;
+
     public PaginatedResultsPanel(
             ChildSelectionModel<T,S> selectionModel,
             ChildSelectionModel<T,S> editSelectionModel,
@@ -296,23 +297,20 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             resultsView.setPreferenceSupport(preferenceSupport);
             resultsView.setSearchProvider(searchProvider);
             if (getImageModel() != null) {
-                // TODO: does this make any sense?
                 resultsView.setImageModel(getImageModel());
             }
         }
     }
 
     public void setImageModel(ImageModel<T, S> imageModel) {
+        this.imageModel = imageModel;
         if (resultsView != null) {
             resultsView.setImageModel(imageModel);
         }
     }
 
     public ImageModel<T, S> getImageModel() {
-        if (resultsView != null) {
-            return resultsView.getImageModel();
-        }
-        return null;
+        return imageModel!=null?imageModel:resultsView.getImageModel();
     }
 
     public boolean isEditMode() {

@@ -135,8 +135,8 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
             FindContextManager.getInstance().activateContext(findContext);
         }
         if (editor!=null) {
-            updateContext(editor.getViewerContext());
-            updateNodeIfChanged(editor.getSelectionModel().getObjects());
+            ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
+            ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
         }
     }
     
@@ -156,7 +156,8 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
                 (Component)e.getSourceComponent(), TopComponent.class);
         if (topComponent==this && editor!=null) {
             log.trace("Our selection changed, updating cookie because of {}", e);
-            updateNodeIfChanged(editor.getSelectionModel().getObjects());
+            ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
+            ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
         }
     }
 
@@ -167,7 +168,8 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
                 (Component)e.getSourceComponent(), TopComponent.class);
         if (topComponent==this && editor!=null) {
             log.trace("Our selection changed, updating cookie because of {}", e);
-            updateNodeIfChanged(editor.getSelectionModel().getObjects());
+            ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
+            ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
         }
     }
 
@@ -178,35 +180,39 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
                 (Component)e.getSourceComponent(), TopComponent.class);
         if (topComponent==this && editor!=null) {
             log.trace("Viewer context changed, updating cookie because of {}", e);
-            updateContext(editor.getViewerContext());
+            ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
+            ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
         }
     }
 
-    private void updateContext(ViewerContext viewerContext) {
-        // Clear all existing nodes
-        getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
-        if (viewerContext!=null) {
-            // Add new node
-            content.add(viewerContext);
-        }
-    }
-
-    private void updateNodeIfChanged(Collection objects) {
-
-        List<Object> currentObjects = new ArrayList<>();
-        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
-            currentObjects.addAll(childObjectsNode.getObjects());
-        }
-
-        List<Object> newObjects = new ArrayList<>(objects);
-        if (!currentObjects.equals(newObjects)) {
-            log.trace("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
-            // Clear all existing nodes
-            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
-            // Add new node
-            content.add(new ChildObjectsNode(newObjects));
-        }
-    }
+//    private void updateContextIfChanged(ViewerContext viewerContext) {
+//        Collection<? extends ViewerContext> viewerContexts = getLookup().lookupAll(ViewerContext.class);
+//        if (viewerContexts.isEmpty() || viewerContexts.iterator().next().equals(viewerContext)) {
+//            // Clear all existing nodes
+//            getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+//            // Add new node
+//            if (viewerContext!=null) {
+//                content.add(viewerContext);
+//            }
+//        }
+//    }
+//
+//    private void updateNodeIfChanged(Collection objects) {
+//
+//        List<Object> currentObjects = new ArrayList<>();
+//        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
+//            currentObjects.addAll(childObjectsNode.getObjects());
+//        }
+//
+//        List<Object> newObjects = new ArrayList<>(objects);
+//        if (!currentObjects.equals(newObjects)) {
+//            log.trace("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
+//            // Clear all existing nodes
+//            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
+//            // Add new node
+//            content.add(new ChildObjectsNode(newObjects));
+//        }
+//    }
 
     void writeProperties(java.util.Properties p) {
     }

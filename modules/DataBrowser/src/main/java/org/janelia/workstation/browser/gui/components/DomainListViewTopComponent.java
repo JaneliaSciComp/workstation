@@ -147,8 +147,8 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
         }
         if (editor!=null) {
-            updateContext(editor.getViewerContext());
-            updateNodeIfChanged(editor.getSelectionModel().getObjects());
+            ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
+            ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
         }
     }
     
@@ -167,7 +167,8 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
                 (Component)e.getSourceComponent(), TopComponent.class);
         if (topComponent==this && editor!=null) {
             log.trace("Our selection changed, updating cookie because of {}", e);
-            updateNodeIfChanged(editor.getSelectionModel().getObjects());
+            ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
+            ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
         }
     }
 
@@ -178,35 +179,38 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
                 (Component)e.getSourceComponent(), TopComponent.class);
         if (topComponent==this && editor!=null) {
             log.info("Viewer context changed, updating cookie because of {}", e);
-            updateContext(editor.getViewerContext());
+            ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
         }
     }
 
-    private void updateContext(ViewerContext viewerContext) {
-        // Clear all existing nodes
-        getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
-        // Add new node
-        if (viewerContext!=null) {
-            content.add(viewerContext);
-        }
-    }
-
-    private void updateNodeIfChanged(Collection objects) {
-
-        List<Object> currentObjects = new ArrayList<>();
-        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
-            currentObjects.addAll(childObjectsNode.getObjects());
-        }
-
-        List<Object> newObjects = new ArrayList<>(objects);
-        if (!currentObjects.equals(newObjects)) {
-            log.trace("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
-            // Clear all existing nodes
-            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
-            // Add new node
-            content.add(new ChildObjectsNode(newObjects));
-        }
-    }
+//    private void updateContextIfChanged(ViewerContext viewerContext) {
+//        Collection<? extends ViewerContext> viewerContexts = getLookup().lookupAll(ViewerContext.class);
+//        if (viewerContexts.isEmpty() || viewerContexts.iterator().next().equals(viewerContext)) {
+//            // Clear all existing nodes
+//            getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+//            // Add new node
+//            if (viewerContext!=null) {
+//                content.add(viewerContext);
+//            }
+//        }
+//    }
+//
+//    private void updateNodeIfChanged(Collection objects) {
+//
+//        List<Object> currentObjects = new ArrayList<>();
+//        for (ChildObjectsNode childObjectsNode : getLookup().lookupAll(ChildObjectsNode.class)) {
+//            currentObjects.addAll(childObjectsNode.getObjects());
+//        }
+//
+//        List<Object> newObjects = new ArrayList<>(objects);
+//        if (!currentObjects.equals(newObjects)) {
+//            log.trace("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
+//            // Clear all existing nodes
+//            getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
+//            // Add new node
+//            content.add(new ChildObjectsNode(newObjects));
+//        }
+//    }
 
     void writeProperties(java.util.Properties p) {
         if (p==null || editor==null) return;
@@ -452,8 +456,8 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (!prepareForLoad(state.getDomainObject())) return;
         editor.restoreState(state);
 
-        updateContext(editor.getViewerContext());
-        updateNodeIfChanged(editor.getSelectionModel().getObjects());
+        ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
+        ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
 
         // TODO: this should run as a callback after loadState is fully complete
         // Update the editor name
