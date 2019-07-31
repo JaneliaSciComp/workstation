@@ -77,7 +77,7 @@ public final class NewMaskActionListener implements ActionListener {
                     String now = dateFormatter.format(new Date());
                     String maskName = "Mask uploaded on "+now;
                     MaskCreationDialog maskCreationDialog = new MaskCreationDialog( 
-                            image, uploadPath, alignmentSpaces, null, maskName, null, true);
+                            image, uploadPath, alignmentSpaces, null, maskName, null, null, true);
                     maskCreationDialog.showForMask();
                 }
 

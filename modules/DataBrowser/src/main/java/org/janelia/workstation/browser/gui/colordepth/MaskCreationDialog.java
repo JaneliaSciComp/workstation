@@ -41,30 +41,28 @@ public class MaskCreationDialog extends ModalDialog {
     private static final String THRESHOLD_LABEL_PREFIX = "Mask Threshold:";
     private static final int DEFAULT_THRESHOLD_VALUE = 100;
 
-    private JPanel optionsPanel;
     private final JTextField maskNameField;
     private final JSlider thresholdSlider;
     private final JLabel thresholdLabel;
-    private final JPanel thresholdPanel;
-    private final SingleSelectionButton<String> alignmentSpaceButton;
-    private final ImageMaskingPanel maskingPanel;
-    
+
     private Sample sample;
     private BufferedImage originalImage;
     private String originalImagePath;
     private BufferedImage mask;
     private String alignmentSpace;
+    private String anatomicalArea;
     private boolean isContinue = false;
     
-    public MaskCreationDialog(BufferedImage originalImage, String originalImagePath, List<String> alignmentSpaces, 
-            String selectedAlignmentSpace, String defaultMaskName, Sample sample, boolean allowMasking) {
+    public MaskCreationDialog(BufferedImage originalImage, String originalImagePath, List<String> alignmentSpaces,
+                       String selectedAlignmentSpace, String defaultMaskName, Sample sample, String anatomicalArea, boolean allowMasking) {
 
         this.originalImage = originalImage;
         this.originalImagePath = originalImagePath;
         this.alignmentSpace = selectedAlignmentSpace;
+        this.anatomicalArea = anatomicalArea;
         this.sample = sample;
-        
-        this.optionsPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 15, 10));
+
+        JPanel optionsPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 15, 10));
 
         this.maskNameField = new JTextField(40);
         maskNameField.setText(defaultMaskName);
@@ -81,34 +79,38 @@ public class MaskCreationDialog extends ModalDialog {
         thresholdSlider.addChangeListener((ChangeEvent e) -> {
             setThreshold(thresholdSlider.getValue());
         });
-        thresholdPanel = new JPanel(new BorderLayout());
+        JPanel thresholdPanel = new JPanel(new BorderLayout());
         thresholdPanel.add(thresholdLabel, BorderLayout.NORTH);
         thresholdPanel.add(thresholdSlider, BorderLayout.CENTER);
         setThreshold(DEFAULT_THRESHOLD_VALUE);
-                
-        alignmentSpaceButton = new SingleSelectionButton<String>("Alignment Space") {
-            
-            @Override
-            public Collection<String> getValues() {
-                return alignmentSpaces;
-            }
-
-            @Override
-            public String getSelectedValue() {
-                return alignmentSpace;
-            }
-            
-            @Override
-            public void updateSelection(String value) {
-                alignmentSpace = value;
-            }
-        };
-        alignmentSpaceButton.update();
-
         optionsPanel.add(thresholdPanel);
-        optionsPanel.add(alignmentSpaceButton);
-        
-        maskingPanel = new ImageMaskingPanel();
+
+        if (sample==null) {
+            SingleSelectionButton<String> alignmentSpaceButton = new SingleSelectionButton<String>("Alignment Space") {
+
+                @Override
+                public Collection<String> getValues() {
+                    return alignmentSpaces;
+                }
+
+                @Override
+                public String getSelectedValue() {
+                    return alignmentSpace;
+                }
+
+                @Override
+                public void updateSelection(String value) {
+                    alignmentSpace = value;
+                }
+            };
+            alignmentSpaceButton.update();
+            optionsPanel.add(alignmentSpaceButton);
+        }
+        else if (alignmentSpace==null) {
+            throw new IllegalStateException("Creating mask from sample, but no alignment space is specified");
+        }
+
+        ImageMaskingPanel maskingPanel = new ImageMaskingPanel();
         if (!allowMasking) {
             maskingPanel.getMaskButton().setVisible(false);
             maskingPanel.getResetButton().setVisible(false);
@@ -201,7 +203,7 @@ public class MaskCreationDialog extends ModalDialog {
                 }
 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                colorDepthMask = model.createColorDepthMask(maskName, alignmentSpace, uploadPath, threshold, sample);
+                colorDepthMask = model.createColorDepthMask(maskName, alignmentSpace, uploadPath, threshold, sample, anatomicalArea);
             }
 
             @Override

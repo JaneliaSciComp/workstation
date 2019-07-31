@@ -1068,17 +1068,20 @@ public class DomainModel {
         return search;
     }
 
-    public ColorDepthMask createColorDepthMask(String maskName, String alignmentSpace, String filepath, Integer maskThreshold, Sample sample) throws Exception {
+    public ColorDepthMask createColorDepthMask(String maskName, String alignmentSpace, String filepath, Integer maskThreshold, Sample sample, String anatomicalArea) throws Exception {
 
         ColorDepthMask mask = new ColorDepthMask();
         mask.setName(maskName);
         mask.setAlignmentSpace(alignmentSpace);
+        mask.setAnatomicalArea(anatomicalArea);
         mask.setFilepath(filepath);
         mask.setMaskThreshold(maskThreshold);
         if (sample != null) {
             mask.setSample(Reference.createFor(sample));
         }
         mask = save(mask);
+
+        log.info("Saved {} with area={} and alignmentSpace={}", mask, anatomicalArea, alignmentSpace);
 
         // Add it to the mask folder
         TreeNode masksFolder = getDefaultWorkspaceFolder(DomainConstants.NAME_COLOR_DEPTH_MASKS, true);

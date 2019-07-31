@@ -98,7 +98,7 @@ public class CreateMaskFromSampleAction extends AbstractAction {
         try {
             String maskName = "Mask derived from "+sample.getLine();
             MaskCreationDialog maskCreationDialog = new MaskCreationDialog(
-                    image, null, alignmentSpaces, alignment.getAlignmentSpace(), maskName, sample, true);
+                    image, null, alignmentSpaces, alignment.getAlignmentSpace(), maskName, sample, alignment.getAnatomicalArea(), true);
             maskCreationDialog.showForMask();
         }
         catch (Exception e) {

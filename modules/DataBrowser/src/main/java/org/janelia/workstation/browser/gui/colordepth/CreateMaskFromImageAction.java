@@ -1,9 +1,16 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
+import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
+import java.util.List;
+
+import javax.swing.AbstractAction;
+import javax.swing.JOptionPane;
+
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.model.domain.sample.AlignedImage2d;
-import org.janelia.model.domain.sample.Image;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.filecache.URLProxy;
@@ -12,12 +19,6 @@ import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.AbstractAction;
-import javax.swing.JOptionPane;
-import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
-import java.util.List;
 
 /**
  * Allows the user to create a mask for color depth search from an existing image.
@@ -84,12 +85,17 @@ public class CreateMaskFromImageAction extends AbstractAction {
     private void showMaskDialog(BufferedImage image, List<String> alignmentSpaces) {
 
         // could be null, but that's okay, in that case the user has to pick
-        String imageAlignmentSpace = this.image.getAlignmentSpace(); 
-        
+        String imageAlignmentSpace = this.image.getAlignmentSpace();
+
+        String anatomicalArea = null;
+        if (image instanceof HasAnatomicalArea) {
+            anatomicalArea = ((HasAnatomicalArea) image).getAnatomicalArea();
+        }
+
         try {
             String maskName = "Mask derived from "+this.image.getName();
             MaskCreationDialog maskCreationDialog = new MaskCreationDialog(
-                    image, null, alignmentSpaces, imageAlignmentSpace, maskName, null, true);
+                    image, null, alignmentSpaces, imageAlignmentSpace, maskName, null, anatomicalArea,true);
             maskCreationDialog.showForMask();
         }
         catch (Exception e) {
