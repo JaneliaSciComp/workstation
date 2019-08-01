@@ -67,6 +67,9 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, R
     }
 
     public ColorDepthImage getImage(ColorDepthMatch match) {
+        if (match.getImageRef()==null) {
+            throw new IllegalStateException("Null image ref: "+match);
+        }
         return imageMap.get(match.getImageRef());
     }
 

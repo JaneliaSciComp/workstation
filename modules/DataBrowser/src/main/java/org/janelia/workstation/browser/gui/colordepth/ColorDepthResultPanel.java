@@ -484,7 +484,9 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             for (int i=0; i<currResultIndex; i++) {
                 for(ColorDepthMatch match : results.get(i).getMaskMatches(mask)) {
                     ColorDepthImage image = imageModel.getImage(match);
-                    filepaths.add(image.getFilepath());
+                    if (image!=null) {
+                        filepaths.add(image.getFilepath());
+                    }
                 }
             }
             
@@ -492,8 +494,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             List<ColorDepthMatch> filteredMatches = new ArrayList<>();
             for(ColorDepthMatch match : maskMatches) {
                 ColorDepthImage image = imageModel.getImage(match);
-                if (!filepaths.contains(image.getFilepath())) {
-                    filteredMatches.add(match);
+                if (image!=null) {
+                    if (!filepaths.contains(image.getFilepath())) {
+                        filteredMatches.add(match);
+                    }
                 }
             }
             
