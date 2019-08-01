@@ -53,6 +53,9 @@ public class ColorDepthHud extends ModalDialog {
         return instance;
     }
 
+    private static final int CROSSHAIR_OFFSET = 4;
+    private static final int CROSSHAIR_SIZE = 5;
+
     // Input Handling
     private final Point pp = new Point();
     private KeyListener keyListener;
@@ -63,9 +66,8 @@ public class ColorDepthHud extends ModalDialog {
     private final JLabel previewLabel1;
     private final JScrollPane scrollPane2;
     private final JLabel previewLabel2;
-
-    JLayer<JScrollPane> scrollLayer1;
-    JLayer<JScrollPane> scrollLayer2;
+    private final JLayer<JScrollPane> scrollLayer1;
+    private final JLayer<JScrollPane> scrollLayer2;
 
     // Current state
     private boolean firstShowing = true;
@@ -76,17 +78,11 @@ public class ColorDepthHud extends ModalDialog {
         @Override
         public void paint(Graphics g, JComponent c) {
 
-//            BufferedImage image = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
-//            Graphics2D g2 = image.createGraphics();
-//            super.paint(g2, c);
-//            image.getColorModel().getRGB(pixel);
-//            g2.dispose();
-
             super.paint(g, c);
             if (point != null) {
                 // Draw red crosshair
-                int o = 4; // crosshair offset
-                int s = 4; // crosshair size
+                int o = CROSSHAIR_OFFSET;
+                int s = CROSSHAIR_SIZE;
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setColor(Color.red);
                 g2.drawLine(point.x-s-o, point.y, point.x-o, point.y);
@@ -95,7 +91,6 @@ public class ColorDepthHud extends ModalDialog {
                 g2.drawLine(point.x, point.y+s+o, point.x, point.y+o);
                 g2.dispose();
             }
-
         }
     }
 
@@ -121,7 +116,6 @@ public class ColorDepthHud extends ModalDialog {
         scrollPane2.setViewportView(previewLabel2);
         scrollLayer2 = new JLayer<>(scrollPane2, new MouseCursorLayerUI());
 
-
         // Borrowed from https://stackoverflow.com/questions/1984071/how-to-hide-cursor-in-a-swing-application
         Cursor blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(
                 new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB),
@@ -146,7 +140,7 @@ public class ColorDepthHud extends ModalDialog {
             }
 
             public void mouseDragged(final MouseEvent e) {
-                point = e.getPoint();
+                // Move location
                 JViewport vport = (JViewport) e.getSource();
                 Point cp = e.getPoint();
                 Point vp = vport.getViewPosition();
@@ -154,6 +148,10 @@ public class ColorDepthHud extends ModalDialog {
                 previewLabel1.scrollRectToVisible(new Rectangle(vp, vport.getSize()));
                 previewLabel2.scrollRectToVisible(new Rectangle(vp, vport.getSize()));
                 pp.setLocation(cp);
+                // Update cursor
+                point = e.getPoint();
+                scrollLayer1.repaint();
+                scrollLayer2.repaint();
             }
 
             public void mousePressed(MouseEvent e) {
