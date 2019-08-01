@@ -235,11 +235,11 @@ public class ColorDepthHud extends ModalDialog {
     @Override
     protected void packAndShow() {
         SwingUtilities.updateComponentTreeUI(this);
+        pack();
         if (firstShowing) {
             setLocationRelativeTo(getParent());
             firstShowing = false;
         }
-        pack();
         setVisible(true);
     }
 
@@ -315,8 +315,8 @@ public class ColorDepthHud extends ModalDialog {
                 width = Math.min(image1.getWidth(), width);
                 height = Math.min(image1.getHeight(), height);
 
-                scrollPane1.setSize(width, height);
-                scrollPane2.setSize(width, height);
+                scrollPane1.setSize(new Dimension(width, height));
+                scrollPane2.setSize(new Dimension(width, height));
 
                 if (toggle) {
                     toggleDialog();

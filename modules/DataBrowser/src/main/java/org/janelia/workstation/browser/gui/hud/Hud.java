@@ -3,9 +3,13 @@ package org.janelia.workstation.browser.gui.hud;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
+import org.janelia.workstation.browser.gui.colordepth.CreateMaskFromImageAction;
+import org.janelia.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
 import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
@@ -22,17 +26,8 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.ImageIcon;
-import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
@@ -76,6 +71,7 @@ public class Hud extends ModalDialog {
     private final JLabel previewLabel;
     private final ResultSelectionButton resultButton;
     private final ImageTypeSelectionButton typeButton;
+    private final JButton colorDepthMaskButton;
     private final JMenu rgbMenu = new JMenu("RGB Controls");
     private final JPanel menuLikePanel;
     private JCheckBox render3DCheckbox;
@@ -121,6 +117,7 @@ public class Hud extends ModalDialog {
                 setObjectAndToggleDialog(domainObject, resultDescriptor, typeButton.getImageTypeName(), false, true);
             }
         };
+
         typeButton = new ImageTypeSelectionButton() {
             @Override
             protected void imageTypeChanged(FileType fileType) {
@@ -128,12 +125,38 @@ public class Hud extends ModalDialog {
             }
         };
 
+        colorDepthMaskButton = new JButton("Create Mask for Color Depth Search");
+        colorDepthMaskButton.setVisible(false);
+        colorDepthMaskButton.setFocusable(false);
+        colorDepthMaskButton.setRequestFocusEnabled(false);
+        colorDepthMaskButton.addActionListener(e -> {
+            if (domainObject instanceof Sample) {
+                CreateMaskFromSampleAction action = new CreateMaskFromSampleAction((Sample) domainObject, resultButton.getResultDescriptor(), imageType.name());
+                hideDialog();
+                action.actionPerformed(e);
+            }
+            else if (domainObject instanceof ColorDepthImage) {
+                CreateMaskFromImageAction action = new CreateMaskFromImageAction((ColorDepthImage) domainObject);
+                hideDialog();
+                action.actionPerformed(e);
+            }
+            else if (domainObject instanceof ColorDepthMask) {
+                CreateMaskFromImageAction action = new CreateMaskFromImageAction((ColorDepthMask) domainObject);
+                hideDialog();
+                action.actionPerformed(e);
+            }
+            else {
+                throw new IllegalStateException("Cannot extract color depth MIP from "+domainObject);
+            }
+        });
+
         JPanel leftSidePanel = new JPanel();
         leftSidePanel.setLayout(new FlowLayout());
         leftSidePanel.setFocusable(false);
         leftSidePanel.setRequestFocusEnabled(false);
         leftSidePanel.add(resultButton);
         leftSidePanel.add(typeButton);
+        leftSidePanel.add(colorDepthMaskButton);
 
         menuLikePanel = new JPanel();
         menuLikePanel.setFocusable(false);
@@ -274,9 +297,15 @@ public class Hud extends ModalDialog {
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
             fileProvider = DescriptorUtils.getResult(sample, resultButton.getResultDescriptor());
+            colorDepthMaskButton.setVisible(
+                               imageType == FileType.ColorDepthMip1
+                            || imageType == FileType.ColorDepthMip2
+                            || imageType == FileType.ColorDepthMip3
+                            || imageType == FileType.ColorDepthMip4);
         }
         else if (domainObject instanceof HasFiles) {
             fileProvider = (HasFiles)domainObject;
+            colorDepthMaskButton.setVisible(domainObject instanceof ColorDepthImage || domainObject instanceof ColorDepthMask);
         }
 
         log.info("Using file provider: {}", fileProvider);
@@ -330,6 +359,9 @@ public class Hud extends ModalDialog {
             if (toggle) {
                 toggleDialog();
             }
+            else {
+                pack();
+            }
         }
         else {
             log.info("fast3dFile={}", getFast3dFile());
@@ -370,7 +402,7 @@ public class Hud extends ModalDialog {
                 protected void hadSuccess() {
                     
                     if (image!=null) {
-                        previewLabel.setIcon(image == null ? null : new ImageIcon(image));
+                        previewLabel.setIcon(new ImageIcon(image));
                         dirtyEntityFor3D = true;
                         if (render3DCheckbox != null) {
                             render3DCheckbox.setSelected(false);
@@ -382,14 +414,16 @@ public class Hud extends ModalDialog {
                         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                         int width = (int)Math.round((double)screenSize.width*0.9);
                         int height = (int)Math.round((double)screenSize.height*0.9);
-                        width = Math.min(image.getWidth()+50, width);
-                        height = Math.min(image.getHeight()+100, height);
-                        setPreferredSize(new Dimension(width, height));
-                        setSize(new Dimension(width, height));
+                        width = Math.min(image.getWidth()+5, width);
+                        height = Math.min(image.getHeight()+5, height);
+                        scrollPane.setSize(new Dimension(width, height));
                     }
                     
                     if (toggle) {
                         toggleDialog();
+                    }
+                    else {
+                        pack();
                     }
                 }
 
@@ -490,6 +524,7 @@ public class Hud extends ModalDialog {
     @Override
     protected void packAndShow() {
         SwingUtilities.updateComponentTreeUI(this);
+        pack();
         if (firstShowing) {
             setLocationRelativeTo(getParent());
             firstShowing = false;
