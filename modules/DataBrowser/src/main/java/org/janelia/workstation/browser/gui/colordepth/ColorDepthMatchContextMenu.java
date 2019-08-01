@@ -19,7 +19,6 @@ import org.janelia.workstation.browser.actions.context.AddToFolderAction;
 import org.janelia.workstation.browser.gui.components.DomainViewerManager;
 import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
-import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.core.actions.NodeContext;
@@ -115,7 +114,6 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         add(getCreateMaskAction());
 
         setNextAddRequiresSeparator(true);
-        add(getHudMenuItem());
         add(getCompareHudMenuItem());
     }
 
@@ -202,28 +200,14 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         return getNamedActionItem(new CreateMaskFromImageAction(image));
     }
 
-    protected JMenuItem getHudMenuItem() {
-        if (multiple) return null;
-        
-        JMenuItem toggleHudMI = new JMenuItem("Show in Lightbox");
-        toggleHudMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
-        toggleHudMI.addActionListener(e -> {
-            ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.showInLightbox", match);
-            String title = imageModel.getImageTitle(match);
-            Hud.getSingletonInstance().setFilepathAndToggleDialog(image.getFilepath(), title, true, false);
-        });
-
-        return toggleHudMI;
-    }
-
     protected JMenuItem getCompareHudMenuItem() {
         if (multiple) return null;
 
-        JMenuItem toggleHudMI = new JMenuItem("Show in Lightbox with mask");
+        JMenuItem toggleHudMI = new JMenuItem("Show in Lightbox");
         toggleHudMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
         toggleHudMI.addActionListener(e -> {
             ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.showInLightWithMask", match);
-            ColorDepthHud.getSingletonInstance().setObjectAndToggleDialog(imageModel.getMask(), match, true);
+            ColorDepthHud.getSingletonInstance().setObjectAndToggleDialog(match, imageModel,true);
         });
 
         return toggleHudMI;

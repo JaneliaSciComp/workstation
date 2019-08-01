@@ -8,23 +8,19 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.List;
 
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JLayer;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.plaf.LayerUI;
 
 import net.miginfocom.swing.MigLayout;
+import org.janelia.model.domain.enums.SplitHalfType;
 import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
+import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.browser.gui.support.AnnotationTagCloudPanel;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
@@ -51,6 +47,10 @@ public class ColorDepthHud extends ModalDialog {
             instance = new ColorDepthHud();
         }
         return instance;
+    }
+
+    public static boolean isInitialized() {
+        return instance != null;
     }
 
     private static final int CROSSHAIR_OFFSET = 4;
@@ -243,11 +243,13 @@ public class ColorDepthHud extends ModalDialog {
         setVisible(true);
     }
 
-    public void setObjectAndToggleDialog(ColorDepthMask mask, ColorDepthMatch match, boolean toggle) {
-
+    public void setObjectAndToggleDialog(ColorDepthMatch match, ColorDepthResultImageModel imageModel, boolean toggle) {
 
         SimpleWorker worker = new SimpleWorker()     {
 
+            private String title;
+            private String subtitle;
+            private List<Annotation> annotations;
             private ColorDepthImage image;
             private Sample sample;
             private BufferedImage image1;
@@ -255,12 +257,22 @@ public class ColorDepthHud extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
+
+                // Get information from the image model
+                ColorDepthMask mask = imageModel.getMask();
+                annotations = imageModel.getAnnotations(match);
+                title = imageModel.getImageTitle(match);
+                subtitle = imageModel.getImageSubtitle(match);
+
+                // Load related objects
                 image = DomainMgr.getDomainMgr().getModel().getDomainObject(match.getImageRef());
-                log.info("sample: {}", image.getSampleRef());
+                log.debug("sampleRef: {}", image.getSampleRef());
                 if (image.getSampleRef()!=null) {
                     sample = DomainMgr.getDomainMgr().getModel().getDomainObject(image.getSampleRef());
                 }
-                log.info("sample: {}", sample);
+                log.debug("sample: {}", sample);
+
+                // Load images
                 URLProxy imageFileURL1 = FileMgr.getFileMgr().getURL(mask.getFilepath(), true);
                 this.image1 = Utils.readImage(imageFileURL1);
                 URLProxy imageFileURL2 = FileMgr.getFileMgr().getURL(image.getFilepath(), true);
@@ -270,20 +282,29 @@ public class ColorDepthHud extends ModalDialog {
             @Override
             protected void hadSuccess() {
 
+                AnnotationTagCloudPanel annotationPanel = new AnnotationTagCloudPanel() {
+                    @Override
+                    protected JPopupMenu getPopupMenu(Annotation annotation) {
+                        if (annotation.getName().equals(SplitHalfType.AD.getName())
+                                || annotation.getName().equals(SplitHalfType.DBD.getName())) {
+                            SplitHalfContextMenu menu = new SplitHalfContextMenu(
+                                    imageModel, match, SplitHalfType.valueOf(annotation.getName()));
+                            menu.addMenuItems();
+                            return menu;
+                        }
+                        return null;
+                    }
+                };
+                annotationPanel.setAnnotations(annotations);
 
-                String matchText = "Match score: "+match.getScore()+" ("+match.getScorePercent()+"%)";
-
-                String title;
-                if (sample != null) {
-                    title = sample.getName();
-                }
-                else {
-                    title = new File(image.getFilepath()).getName();
-                }
+                JPanel titlePanel = new JPanel();
+                titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.LINE_AXIS));
+                titlePanel.add(new JLabel(title));
+                titlePanel.add(annotationPanel);
 
                 headPanel.removeAll();
-                headPanel.add(new JLabel(matchText), "al left top");
-                headPanel.add(new JLabel(title), "al right top");
+                headPanel.add(titlePanel, "al left center");
+                headPanel.add(new JLabel(subtitle), "al right center");
 
                 previewLabel1.setIcon(image1 == null ? null : new ImageIcon(image1));
                 previewLabel2.setIcon(image2 == null ? null : new ImageIcon(image2));

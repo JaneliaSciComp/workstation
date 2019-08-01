@@ -43,7 +43,7 @@ public class SplitHalfContextMenu extends PopupContextMenu {
         }
     }
 
-    protected JMenuItem getNamedActionItem(Action action, String title) {
+    private JMenuItem getNamedActionItem(Action action, String title) {
         return new JMenuItem(action) {
             @Override
             public String getText() {
@@ -52,7 +52,7 @@ public class SplitHalfContextMenu extends PopupContextMenu {
         };
     }
 
-    protected String getSplitHalfTitle(SplitHalf splitHalf) {
+    private String getSplitHalfTitle(SplitHalf splitHalf) {
         StringBuilder sb = new StringBuilder();
         sb.append(splitHalf.getLine());
         sb.append(" (");

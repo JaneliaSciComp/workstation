@@ -367,7 +367,7 @@ public class ColorDepthResultIconGridViewer
 
     @Override
     protected void objectDoubleClick(ColorDepthMatch match) {
-        getPopupMenu(Arrays.asList(match)).runDefaultAction();
+        getPopupMenu(Collections.singletonList(match)).runDefaultAction();
     }
     
     @Override
@@ -387,9 +387,9 @@ public class ColorDepthResultIconGridViewer
     @Override
     protected void updateHud(boolean toggle) {
 
-        if (!toggle && !Hud.isInitialized()) return;
-        
-        Hud hud = Hud.getSingletonInstance();
+        if (!toggle && !ColorDepthHud.isInitialized()) return;
+
+        ColorDepthHud hud = ColorDepthHud.getSingletonInstance();
         hud.setKeyListener(keyListener);
 
         try {
@@ -401,11 +401,11 @@ public class ColorDepthResultIconGridViewer
             }
             
             ColorDepthMatch match = selected.get(0);
-            
-            ImageModel<ColorDepthMatch,Reference> imageModel = getImageModel();
+
+            ColorDepthResultImageModel imageModel = (ColorDepthResultImageModel)getImageModel();
             String filepath = imageModel.getImageFilepath(match);
             String title = imageModel.getImageTitle(match);
-            hud.setFilepathAndToggleDialog(filepath, title, toggle, false);
+            hud.setObjectAndToggleDialog(match, imageModel, toggle);
         } 
         catch (Exception ex) {
             FrameworkAccess.handleException(ex);

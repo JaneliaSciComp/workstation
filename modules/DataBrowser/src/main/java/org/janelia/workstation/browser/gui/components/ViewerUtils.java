@@ -115,10 +115,10 @@ public class ViewerUtils {
 
     public static void updateContextIfChanged(Lookup.Provider lookupProvider, InstanceContent content, ViewerContext viewerContext) {
         Collection<? extends ViewerContext> viewerContexts = lookupProvider.getLookup().lookupAll(ViewerContext.class);
-        if (viewerContexts.isEmpty() || viewerContexts.iterator().next().equals(viewerContext)) {
+        if (viewerContexts.isEmpty() || !viewerContexts.iterator().next().equals(viewerContext)) {
             log.info("Updating ViewerContext ({})", viewerContext);
             // Clear all existing nodes
-            lookupProvider.getLookup().lookupAll(ViewerContext.class).forEach(content::remove);
+            viewerContexts.forEach(content::remove);
             // Add new node
             if (viewerContext!=null) {
                 content.add(viewerContext);
