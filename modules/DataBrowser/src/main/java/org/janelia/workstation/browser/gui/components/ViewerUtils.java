@@ -112,7 +112,7 @@ public class ViewerUtils {
     public static DomainObjectEditorState<?,?,?> deserialize(String serializedState) throws Exception {
         return mapper.readValue(DomainModelViewUtils.convertModelPackages(serializedState), DomainObjectEditorState.class);
     }
-    
+
     public static void updateContextIfChanged(Lookup.Provider lookupProvider, InstanceContent content, ViewerContext viewerContext) {
         Collection<? extends ViewerContext> viewerContexts = lookupProvider.getLookup().lookupAll(ViewerContext.class);
         if (viewerContexts.isEmpty() || viewerContexts.iterator().next().equals(viewerContext)) {

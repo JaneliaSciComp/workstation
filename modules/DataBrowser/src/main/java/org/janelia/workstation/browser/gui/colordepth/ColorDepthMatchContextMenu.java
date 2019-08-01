@@ -116,6 +116,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
 
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
+        add(getCompareHudMenuItem());
     }
 
     protected JMenuItem getTitleItem() {
@@ -214,7 +215,20 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
 
         return toggleHudMI;
     }
-    
+
+    protected JMenuItem getCompareHudMenuItem() {
+        if (multiple) return null;
+
+        JMenuItem toggleHudMI = new JMenuItem("Show in Lightbox with mask");
+        toggleHudMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0));
+        toggleHudMI.addActionListener(e -> {
+            ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.showInLightWithMask", match);
+            ColorDepthHud.getSingletonInstance().setObjectAndToggleDialog(imageModel.getMask(), match, true);
+        });
+
+        return toggleHudMI;
+    }
+
     protected List<Sample> getSamples() {
         List<Sample> samples = new ArrayList<>();
         for(ColorDepthMatch match : matches) {

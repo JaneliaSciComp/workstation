@@ -52,50 +52,38 @@ public class ImageMaskingPanel extends JPanel {
 
         maskButton = new JButton("Mask");
         maskButton.setFocusable(false);
-        maskButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                createMask();
-                if (onMask!=null) {
-                    onMask.accept(mask);
-                }
+        maskButton.addActionListener(e -> {
+            createMask();
+            if (onMask!=null) {
+                onMask.accept(mask);
             }
         });
 
         resetButton = new JButton("Revert");
         resetButton.setEnabled(false);
         resetButton.setFocusable(false);
-        resetButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                resetButton.setEnabled(false);
-                mask = null;
-                setImage(image);
-            }
+        resetButton.addActionListener(e -> {
+            resetButton.setEnabled(false);
+            mask = null;
+            setImage(image);
         });
 
         cancelButton = new JButton("Cancel");
         cancelButton.setFocusable(false);
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (onContinue!=null) {
-                    onCancel.accept(null);
-                }
+        cancelButton.addActionListener(e -> {
+            if (onContinue!=null) {
+                onCancel.accept(null);
             }
         });
         
         continueButton = new JButton("Continue");
         continueButton.setFocusable(false);
-        continueButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (mask==null) {
-                    createMask();
-                }
-                if (onContinue!=null) {
-                    onContinue.accept(mask);
-                }
+        continueButton.addActionListener(e -> {
+            if (mask==null) {
+                createMask();
+            }
+            if (onContinue!=null) {
+                onContinue.accept(mask);
             }
         });
         

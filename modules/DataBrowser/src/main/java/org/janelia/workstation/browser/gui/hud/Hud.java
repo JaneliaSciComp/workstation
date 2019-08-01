@@ -64,11 +64,11 @@ public class Hud extends ModalDialog {
 
     public static final String THREE_D_CONTROL = "3D";
 
-    private static Hud instance;
-    
+    // Input Handling
     private final Cursor defCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
     private final Cursor hndCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
     private final Point pp = new Point();
+    private KeyListener keyListener;
     
     // GUI
     private boolean dirtyEntityFor3D;
@@ -81,7 +81,6 @@ public class Hud extends ModalDialog {
     private JCheckBox render3DCheckbox;
     private Mip3d mip3d;
     private Hud3DController hud3DController;
-    private KeyListener keyListener;
 
     // Current state
     private boolean firstShowing = true;
@@ -99,7 +98,8 @@ public class Hud extends ModalDialog {
     public static boolean isInitialized() {
         return instance != null;
     }
-    
+
+    private static Hud instance;
     public static Hud getSingletonInstance() {
         if (instance == null) {
             instance = new Hud();
@@ -127,7 +127,6 @@ public class Hud extends ModalDialog {
                 setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), fileType.name(), false, true);
             }
         };
-
 
         JPanel leftSidePanel = new JPanel();
         leftSidePanel.setLayout(new FlowLayout());
@@ -177,7 +176,7 @@ public class Hud extends ModalDialog {
         
         add(scrollPane, BorderLayout.CENTER);
 
-        // Default key listener should close this win   dow
+        // Default key listener should close this window
         setKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
