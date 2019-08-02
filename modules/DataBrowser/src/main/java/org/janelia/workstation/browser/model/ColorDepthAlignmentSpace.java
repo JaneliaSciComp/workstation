@@ -3,14 +3,12 @@ package org.janelia.workstation.browser.model;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.gui.search.Filtering;
-import org.janelia.model.domain.gui.search.criteria.AttributeValueCriteria;
 import org.janelia.model.domain.gui.search.criteria.Criteria;
 import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
 

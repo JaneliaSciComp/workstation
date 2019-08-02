@@ -1,9 +1,7 @@
 package org.janelia.workstation.browser.gui.editor;
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import java.util.Collections;
 
 import javax.swing.JMenuItem;
@@ -18,7 +16,6 @@ import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.common.actions.PopupLabelAction;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
-import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
@@ -36,7 +33,7 @@ public class ColorDepthContextMenu extends PopupContextMenu {
     private final SampleAlignmentResult result;
     private final FileType fileType;
 
-    public ColorDepthContextMenu(Sample sample, ArtifactDescriptor resultDescriptor, 
+    ColorDepthContextMenu(Sample sample, ArtifactDescriptor resultDescriptor,
             SampleAlignmentResult result, FileType fileType) {
         this.sample = sample;
         this.resultDescriptor = resultDescriptor;
@@ -62,13 +59,6 @@ public class ColorDepthContextMenu extends PopupContextMenu {
         
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-//        addSeparator();
-//        addSeparator();
-//
-//        for (Component currentContextMenuItem : DomainObjectAcceptorHelper.getCurrentContextMenuItems()) {
-//            add(currentContextMenuItem);
-//        }
-//
     }
     
     public void runDefaultAction() {

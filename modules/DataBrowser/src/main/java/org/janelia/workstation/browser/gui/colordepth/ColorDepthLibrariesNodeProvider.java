@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.nodes;
+package org.janelia.workstation.browser.gui.colordepth;
 
 import java.util.Collections;
 import java.util.List;

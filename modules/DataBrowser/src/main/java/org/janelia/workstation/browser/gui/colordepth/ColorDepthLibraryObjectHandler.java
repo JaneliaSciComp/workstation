@@ -1,6 +1,5 @@
-package org.janelia.workstation.browser.nodes;
+package org.janelia.workstation.browser.gui.colordepth;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 import org.janelia.model.domain.DomainObject;
