@@ -36,8 +36,7 @@ public class ExplorerRootNodeChildFactory extends ChildFactory<NodeGenerator> {
                 allGenerators.addAll(generators);
             }
             
-            Collections.sort(allGenerators, Comparator.comparing(NodeGenerator::getIndex));
-            
+            allGenerators.sort(Comparator.comparing(NodeGenerator::getIndex));
             list.addAll(allGenerators);
             
             for(Workspace workspace : DomainMgr.getDomainMgr().getModel().getWorkspaces()) {

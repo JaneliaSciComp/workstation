@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JOptionPane;
 
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.interfaces.HasIdentifier;
@@ -30,7 +31,7 @@ public class ColorDepthLibrariesNode extends AbstractNode implements HasIdentifi
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthLibrariesNode.class);
 
-    private static final long NODE_ID = 20L; // This magic number means nothing, it just needs to be unique and different from GUID space.
+    private static final long NODE_ID = 30L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final ColorDepthLibrariesChildFactory childFactory;
 
@@ -116,7 +117,8 @@ public class ColorDepthLibrariesNode extends AbstractNode implements HasIdentifi
 
         @Override
         public void actionPerformed(ActionEvent e) {
-
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                    "To search a library, right-click any color depth MIP and select 'Create Mask for Color Depth Search'");
         }
     }
 

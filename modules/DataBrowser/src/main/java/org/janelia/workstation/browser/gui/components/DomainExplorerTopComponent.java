@@ -178,6 +178,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         showColorDepthLibraries.addActionListener(e -> setShowColorDepthLibraries(showColorDepthLibraries.isSelected()));
         configButton.addMenuItem(showColorDepthLibraries);
 
+        final JCheckBoxMenuItem showColorDepthSearches = new JCheckBoxMenuItem("Show color depth searches", isShowColorDepthSearches());
+        showColorDepthSearches.addActionListener(e -> setShowColorDepthSearches(showColorDepthSearches.isSelected()));
+        configButton.addMenuItem(showColorDepthSearches);
+
         final JCheckBoxMenuItem showReleasesMenuItem = new JCheckBoxMenuItem("Show fly line releases", isShowFlyLineReleases());
         showReleasesMenuItem.addActionListener(e -> setShowFlyLineReleases(showReleasesMenuItem.isSelected()));
         configButton.addMenuItem(showReleasesMenuItem);
@@ -381,6 +385,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         else if (event.getKey().equals(SHOW_RECENTLY_OPENED_ITEMS)
                 || event.getKey().equals(SHOW_DATA_SETS)
                 || event.getKey().equals(SHOW_COLOR_DEPTH_LIBRARIES)
+                || event.getKey().equals(SHOW_COLOR_DEPTH_SEARCHES)
                 || event.getKey().equals(SHOW_FLY_LINE_RELEASES)) {
             // Recreate the root node so that it picks up the new visibility preferences
             refresh(false, true, null); 
@@ -671,13 +676,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
      */
     public static boolean isSupported(DomainObject domainObject) {
         DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
-        if (provider!=null) {
-            return true;
-        }
-        return false;
+        return provider != null;
     }
     
-    public static boolean isNavigateOnClick() {
+    static boolean isNavigateOnClick() {
         return FrameworkAccess.getModelProperty(NAVIGATE_ON_CLICK, true);
     }
     
@@ -685,7 +687,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         FrameworkAccess.setModelProperty(NAVIGATE_ON_CLICK, value);
     }
 
-    public static boolean isShowRecentMenuItems() {
+    private static boolean isShowRecentMenuItems() {
         return FrameworkAccess.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS, true);
     }
     
@@ -693,7 +695,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         FrameworkAccess.setModelProperty(SHOW_RECENTLY_OPENED_ITEMS, value);
     }
 
-    public static boolean isShowDataSets() {
+    private static boolean isShowDataSets() {
         return FrameworkAccess.getModelProperty(SHOW_DATA_SETS, true);
     }
 
@@ -701,7 +703,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         FrameworkAccess.setModelProperty(SHOW_DATA_SETS, value);
     }
 
-    public static boolean isShowColorDepthLibraries() {
+    private static boolean isShowColorDepthLibraries() {
         return FrameworkAccess.getModelProperty(SHOW_COLOR_DEPTH_LIBRARIES, true);
     }
 
@@ -709,7 +711,15 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         FrameworkAccess.setModelProperty(SHOW_COLOR_DEPTH_LIBRARIES, value);
     }
 
-    public static boolean isShowFlyLineReleases() {
+    private static boolean isShowColorDepthSearches() {
+        return FrameworkAccess.getModelProperty(SHOW_COLOR_DEPTH_SEARCHES, true);
+    }
+
+    private static void setShowColorDepthSearches(boolean value) {
+        FrameworkAccess.setModelProperty(SHOW_COLOR_DEPTH_SEARCHES, value);
+    }
+
+    private static boolean isShowFlyLineReleases() {
         return FrameworkAccess.getModelProperty(SHOW_FLY_LINE_RELEASES, true);
     }
 

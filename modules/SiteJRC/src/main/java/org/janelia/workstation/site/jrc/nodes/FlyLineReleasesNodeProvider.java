@@ -17,7 +17,7 @@ import static org.janelia.workstation.core.options.OptionConstants.SHOW_FLY_LINE
 @ServiceProvider(service = NodeProvider.class, path=NodeProvider.LOOKUP_PATH)
 public class FlyLineReleasesNodeProvider implements NodeProvider  {
 
-    private static final int NODE_ORDER = 30;
+    private static final int NODE_ORDER = 40;
 
     public FlyLineReleasesNodeProvider() {
     }

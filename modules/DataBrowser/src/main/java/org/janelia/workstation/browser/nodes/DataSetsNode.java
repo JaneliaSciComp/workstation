@@ -31,7 +31,7 @@ public class DataSetsNode extends AbstractNode implements HasIdentifier {
 
     private final static Logger log = LoggerFactory.getLogger(DataSetsNode.class);
 
-    private static final long DATA_SETS_NODE_ID = 20L; // This magic number means nothing, it just needs to be unique and different from GUID space.
+    private static final long NODE_ID = 20L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final DataSetNodeChildFactory childFactory;
 
@@ -46,7 +46,7 @@ public class DataSetsNode extends AbstractNode implements HasIdentifier {
 
     @Override
     public Long getId() {
-        return DATA_SETS_NODE_ID;
+        return NODE_ID;
     }
 
     @Override
@@ -127,7 +127,7 @@ public class DataSetsNode extends AbstractNode implements HasIdentifier {
         @Override
         protected boolean createKeys(List<DataSet> list) {
             try {
-                log.debug("Creating children keys for FlyLineReleasesNode");
+                log.debug("Creating children keys for DataSetsNode");
                 list.addAll(DomainMgr.getDomainMgr().getModel().getDataSets());
             }
             catch (Exception ex) {

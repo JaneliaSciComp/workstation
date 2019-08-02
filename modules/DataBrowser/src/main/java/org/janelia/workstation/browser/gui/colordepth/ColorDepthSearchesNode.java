@@ -1,4 +1,4 @@
-package org.janelia.workstation.site.jrc.nodes;
+package org.janelia.workstation.browser.gui.colordepth;
 
 import java.awt.Image;
 import java.awt.event.ActionEvent;
@@ -10,38 +10,37 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
+import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.interfaces.HasIdentifier;
-import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
-import org.openide.util.actions.SystemAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A node which shows the items most recently opened by the user.  
+ * A node which shows the color depth libraries accessible to the current user.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
+public class ColorDepthSearchesNode extends AbstractNode implements HasIdentifier {
 
-    private final static Logger log = LoggerFactory.getLogger(FlyLineReleasesNode.class);
+    private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchesNode.class);
 
-    public static final long NODE_ID = 40L; // This magic number means nothing, it just needs to be unique and different from GUID space.
+    private static final long NODE_ID = 31L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
-    private final LineReleaseNodeChildFactory childFactory;
+    private final ColorDepthSearchesChildFactory childFactory;
 
-    public FlyLineReleasesNode() {
-        this(new LineReleaseNodeChildFactory());
+    ColorDepthSearchesNode() {
+        this(new ColorDepthSearchesChildFactory());
     }
 
-    private FlyLineReleasesNode(LineReleaseNodeChildFactory childFactory) {
+    private ColorDepthSearchesNode(ColorDepthSearchesChildFactory childFactory) {
         super(Children.create(childFactory, false));
         this.childFactory = childFactory;
     }
@@ -53,7 +52,7 @@ public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
 
     @Override
     public String getDisplayName() {
-        return "Fly Line Releases";
+        return "Color Depth Searches";
     }
 
     @Override
@@ -70,7 +69,7 @@ public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
     
     @Override
     public Image getIcon(int type) {
-        return Icons.getIcon("folder_image.png").getImage();
+        return Icons.getIcon("folder_palette.png").getImage();
     }
 
     @Override
@@ -91,7 +90,7 @@ public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
     public Action[] getActions(boolean context) {
         Collection<Action> actions = new ArrayList<>();
         actions.add(new PopupLabelAction());
-        actions.add(new CreateNewReleaseAction());
+        actions.add(new SearchAction());
         return actions.toArray(new Action[0]);
     }
 
@@ -111,31 +110,27 @@ public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
         }
     }
 
-    protected final class CreateNewReleaseAction extends AbstractAction {
+    protected final class SearchAction extends AbstractAction {
 
-        CreateNewReleaseAction() {
-            putValue(NAME, "Create New Fly Line Release...");
+        SearchAction() {
+            putValue(NAME, "Create New Color Depth Search");
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                    "<html>Creating a <b>Fly Line Release</b> will allow you to publish your data to Janelia's external Split-GAL4 website.<br><br>" +
-                                   "To create a new Fly Line Release, select one or more Samples that you would like to publish, <br>" +
-                                   "right-click one of them, and choose the '<b>Stage Samples for Publishing</b>' option.</html>",
-                    "How to create a new Fly Line Release",
-                    JOptionPane.INFORMATION_MESSAGE);
+                    "To create a new search, right-click any color depth MIP and select 'Create Mask for Color Depth Search'");
         }
     }
 
-    private static class LineReleaseNodeChildFactory extends ChildFactory<LineRelease> {
-        
+    private static class ColorDepthSearchesChildFactory extends ChildFactory<ColorDepthSearch> {
+
         @Override
-        protected boolean createKeys(List<LineRelease> list) {
+        protected boolean createKeys(List<ColorDepthSearch> list) {
             try {
-                log.debug("Creating children keys for FlyLineReleasesNode");
-                list.addAll(DomainMgr.getDomainMgr().getModel().getLineReleases());
-            } 
+                log.debug("Creating children keys for ColorDepthSearchesNode");
+                list.addAll(DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(ColorDepthSearch.class));
+            }
             catch (Exception ex) {
                 FrameworkAccess.handleException(ex);
             }
@@ -143,16 +138,16 @@ public class FlyLineReleasesNode extends AbstractNode implements HasIdentifier {
         }
 
         @Override
-        protected Node createNodeForKey(LineRelease key) {
+        protected Node createNodeForKey(ColorDepthSearch key) {
             try {
-                return new FlyLineReleaseNode(this, key);
+                return new ColorDepthSearchNode(this, key);
             }
             catch (Exception e) {
                 log.error("Error creating node for key " + key, e);
             }
             return null;
         }
-        
+
         public void refresh() {
             log.debug("Refreshing child factory for "+getClass().getSimpleName());
             refresh(true);
