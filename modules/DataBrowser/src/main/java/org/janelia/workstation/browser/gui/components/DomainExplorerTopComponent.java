@@ -399,6 +399,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         DomainObject domainObject = event.getDomainObject();
         
         Set<IdentifiableNode<DomainObject>> nodes = NodeTracker.getInstance().getNodesByObject(domainObject);
+        log.info("Found {} nodes for {}",nodes.size(),domainObject);
+
         if (!nodes.isEmpty()) {
             log.info("Updating removed object: {}",domainObject.getName());
             for(IdentifiableNode<?> node : nodes) {

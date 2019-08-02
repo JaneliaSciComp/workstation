@@ -10,11 +10,14 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
+import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
@@ -151,6 +154,20 @@ public class ColorDepthSearchesNode extends AbstractNode implements HasIdentifie
         public void refresh() {
             log.debug("Refreshing child factory for "+getClass().getSimpleName());
             refresh(true);
+        }
+    }
+
+    @Subscribe
+    public void domainObjectAdded(DomainObjectCreateEvent event) {
+        if (event.getDomainObject() instanceof ColorDepthSearch) {
+            refreshChildren();
+        }
+    }
+
+    @Subscribe
+    public void domainObjectRemoved(DomainObjectRemoveEvent event) {
+        if (event.getDomainObject() instanceof ColorDepthSearch) {
+            refreshChildren();
         }
     }
 }

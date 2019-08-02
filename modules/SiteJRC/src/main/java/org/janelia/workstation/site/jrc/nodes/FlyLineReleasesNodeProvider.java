@@ -3,6 +3,7 @@ package org.janelia.workstation.site.jrc.nodes;
 import java.util.Collections;
 import java.util.List;
 
+import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.integration.spi.nodes.NodeGenerator;
 import org.janelia.workstation.integration.spi.nodes.NodeProvider;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -18,6 +19,7 @@ import static org.janelia.workstation.core.options.OptionConstants.SHOW_FLY_LINE
 public class FlyLineReleasesNodeProvider implements NodeProvider  {
 
     private static final int NODE_ORDER = 40;
+    private static FlyLineReleasesNode NODE_INSTANCE;
 
     public FlyLineReleasesNodeProvider() {
     }
@@ -33,12 +35,19 @@ public class FlyLineReleasesNodeProvider implements NodeProvider  {
 
             @Override
             public Node createNode() {
-                return new FlyLineReleasesNode();
+                synchronized (FlyLineReleasesNodeProvider.class) {
+                    if (NODE_INSTANCE != null) {
+                        Events.getInstance().unregisterOnEventBus(NODE_INSTANCE);
+                    }
+                    NODE_INSTANCE = new FlyLineReleasesNode();
+                    Events.getInstance().registerOnEventBus(NODE_INSTANCE);
+                    return NODE_INSTANCE;
+                }
             }
         });
     }
     
-    public static boolean isShow() {
+    private static boolean isShow() {
         return FrameworkAccess.getModelProperty(SHOW_FLY_LINE_RELEASES, true);
     }
     

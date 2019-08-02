@@ -222,7 +222,7 @@ public class RemoveFromFolderAction extends BaseContextualNodeAction {
 
                 // Remove any actual objects that are no longer referenced
                 if (!listToDelete.isEmpty()) {
-                    log.info("Looking for provider to deleting object entirely: {}", listToDelete);
+                    log.debug("Looking for provider to deleting object entirely: {}", listToDelete);
                     for(DomainObject domainObject : listToDelete) {
                         DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
                         if (provider!=null) {
