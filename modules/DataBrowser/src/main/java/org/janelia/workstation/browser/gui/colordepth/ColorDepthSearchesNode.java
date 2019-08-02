@@ -35,7 +35,7 @@ public class ColorDepthSearchesNode extends AbstractNode implements HasIdentifie
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchesNode.class);
 
-    private static final long NODE_ID = 31L; // This magic number means nothing, it just needs to be unique and different from GUID space.
+    public static final long NODE_ID = 31L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final ColorDepthSearchesChildFactory childFactory;
 

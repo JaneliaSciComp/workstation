@@ -413,8 +413,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 }
             }
         }
-
-        SwingUtilities.invokeLater(() -> beanTreeView.expand(expanded));
     }
     
     @Subscribe
@@ -424,22 +422,25 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             refresh(false, true, null);
         }
         else {
+            boolean updated = false;
             final List<Long[]> expanded = beanTreeView.getExpandedPaths();
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for(DomainObject domainObject : event.getDomainObjects()) {
                 Set<IdentifiableNode<DomainObject>> nodes = NodeTracker.getInstance().getNodesByObject(domainObject);
                 if (!nodes.isEmpty()) {
-                    log.debug("Updating invalidated object: {}",domainObject.getName());
+                    log.info("Updating {} nodes for invalidated object: {}", nodes.size(), domainObject.getName());
                     for(IdentifiableNode<DomainObject> node : nodes) {
                         try {
                             DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
                             if (refreshed==null) {
                                 log.debug("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
                                 node.destroy();
+                                updated = true;
                             }
                             else {
                                 log.debug("  Updating node@{} with refreshed object",System.identityHashCode(node));
                                 node.update(refreshed);
+                                updated = true;
                             }
                         }  
                         catch (Exception ex) {
@@ -449,12 +450,12 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 }
             }
 
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
+            if (updated) {
+                SwingUtilities.invokeLater(() -> {
+                    log.info("Re-expanding {} paths after object invalidation", expanded.size());
                     beanTreeView.expand(expanded);
-                }
-            });
+                });
+            }
         }
     }
     
@@ -504,17 +505,18 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
                         try {
                             if (pathsToExpand != null) {
-                                log.info("Restoring serialized expanded state");
+                                log.info("Restoring {} expanded paths (serialized state)", pathsToExpand.size());
                                 beanTreeView.expand(pathsToExpand);
                                 pathsToExpand = null;
                             }
                             else {
                                 if (restoreState) {
-                                    log.info("Restoring expanded state");
                                     if (expanded != null) {
+                                    log.info("Restoring {} expanded paths", expanded.size());
                                         beanTreeView.expand(expanded);
                                     }
                                     if (selected != null) {
+                                    log.info("Restoring {} selected paths", selected.size());
                                         beanTreeView.selectPaths(selected);
                                     }
                                 }

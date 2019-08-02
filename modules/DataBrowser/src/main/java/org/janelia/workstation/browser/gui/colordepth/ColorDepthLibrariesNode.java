@@ -116,7 +116,7 @@ public class ColorDepthLibrariesNode extends AbstractNode implements HasIdentifi
     protected final class SearchAction extends AbstractAction {
 
         SearchAction() {
-            putValue(NAME, "Search Color Depth MIPs...");
+            putValue(NAME, "Search Color Depth MIPs");
         }
 
         @Override

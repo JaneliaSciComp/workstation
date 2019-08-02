@@ -11,8 +11,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.Action;
 import javax.swing.JPopupMenu;
@@ -129,25 +131,25 @@ public class CustomTreeView extends BeanTreeView {
     
     public List<Long[]> getExpandedPaths() {
 
-        List<Long[]> result = new ArrayList<>();
+        Set<Long[]> result = new LinkedHashSet<>();
 
         TreeNode rtn = Visualizer.findVisualizer(getRootNode());
         TreePath tp = new TreePath(rtn); // Get the root
 
         Enumeration<TreePath> paths = tree.getExpandedDescendants(tp);
-        if (null != paths) {
+        if (paths != null) {
             while (paths.hasMoreElements()) {
                 TreePath ep = paths.nextElement();
                 Node en = Visualizer.findNode(ep.getLastPathComponent());
                 Long[] path = NodeUtils.createIdPath(en);
-                if (path.length>0) {
+                if (path!=null && path.length>0) {
                     log.debug("Adding expanded path " + NodeUtils.createPathString(en));
                     result.add(path);
                 }
             }
         }
 
-        return result;
+        return new ArrayList<>(result);
     }
     
     public void selectNode(Node node) {
@@ -231,15 +233,14 @@ public class CustomTreeView extends BeanTreeView {
         if (paths==null) return numExpanded;
 
         // Sort by length so that shorter paths are expanded first
-        Collections.sort(paths, Comparator.comparingInt(o -> o.length));
+        paths.sort(Comparator.comparingInt(o -> o.length));
 
-        for (Iterator<Long[]> it = paths.iterator(); it.hasNext();) {
-            Long[] path = it.next();
-            if (path==null) continue;
-            log.debug("Expanding id path: {}",NodeUtils.createPathString(path));
+        for (Long[] path : paths) {
+            if (path == null) continue;
+            log.debug("Expanding id path: {}", NodeUtils.createPathString(path));
             TreePath tp = getTreePath(path);
             if (tp != null) {
-                log.info("Expanding tree path: {}",tp);
+                log.info("Expanding tree path: {}", tp);
                 expand(tp);
                 numExpanded++;
             }

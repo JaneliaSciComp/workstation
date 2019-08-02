@@ -1,8 +1,5 @@
 package org.janelia.workstation.browser.gui.editor;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -28,9 +25,15 @@ public abstract class SelectionButton<T> extends DropDownButton {
     private static final int MAX_VALUES_STRING_LENGTH = 20;
     
     private String label;
+    private boolean displaySelectedValues;
 
     public SelectionButton(String label) {
+        this(label, true);
+    }
+
+    public SelectionButton(String label, boolean displaySelectedValues) {
         this.label = label;
+        this.displaySelectedValues = displaySelectedValues;
         update();
     }
         
@@ -43,14 +46,15 @@ public abstract class SelectionButton<T> extends DropDownButton {
 
         StringBuilder text = new StringBuilder();
         text.append(label);
-        List<String> valueLabels = new ArrayList<>(getSelectedValues().stream().map(value -> getName(value)).collect(Collectors.toList()));
-        if (!valueLabels.isEmpty()) {
-            Collections.sort(valueLabels);
+        if (displaySelectedValues) {
+            List<String> valueLabels = getSelectedValues().stream().map(this::getName).collect(Collectors.toList());
+            if (!valueLabels.isEmpty()) {
+                Collections.sort(valueLabels);
                 text.append(" (");
                 text.append(StringUtils.getCommaDelimited(valueLabels, MAX_VALUES_STRING_LENGTH));
                 text.append(")");
+            }
         }
-        
         setText(text.toString());
     }
     
@@ -65,22 +69,18 @@ public abstract class SelectionButton<T> extends DropDownButton {
     
             if (!selectedValueNames.isEmpty()) {
                 final JMenuItem menuItem = new JMenuItem("Clear selected");
-                menuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        clearSelected();
-                        update();
-                    }
+                menuItem.addActionListener(e -> {
+                    clearSelected();
+                    update();
                 });
                 addMenuItem(menuItem);
             }
 
             if (selectedValueNames.size() != values.size()) {
                 final JMenuItem selectAllItem = new JMenuItem("Select All");
-                selectAllItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        selectAll();
-                        update();
-                    }
+                selectAllItem.addActionListener(e -> {
+                    selectAll();
+                    update();
                 });
                 addMenuItem(selectAllItem);
             }
@@ -93,16 +93,14 @@ public abstract class SelectionButton<T> extends DropDownButton {
                 }
                 String label = getLabel(value);
                 final JMenuItem menuItem = new JCheckBoxMenuItem(label, selected);
-                menuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        if (menuItem.isSelected()) {
-                            updateSelection(value, true);
-                        }
-                        else {
-                            updateSelection(value, false);
-                        }
-                        update();
+                menuItem.addActionListener(e -> {
+                    if (menuItem.isSelected()) {
+                        updateSelection(value, true);
                     }
+                    else {
+                        updateSelection(value, false);
+                    }
+                    update();
                 });
                 addMenuItem(menuItem);
             }

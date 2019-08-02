@@ -6,18 +6,7 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -317,8 +306,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
         SimpleWorker worker = new SimpleWorker() {
             
             ColorDepthSearch colorDepthSearch = search;
-            TreeNode searchesFolder;
-            
+
             @Override
             protected void doStuff() throws Exception {
 
@@ -350,8 +338,6 @@ public class ColorDepthSearchDialog extends ModalDialog {
                     AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(colorDepthSearch, serviceId);
                     executeWorker.executeWithEvents();
                 }
-                
-                searchesFolder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_COLOR_DEPTH_SEARCHES, true);
             }
 
             @Override
@@ -359,14 +345,14 @@ public class ColorDepthSearchDialog extends ModalDialog {
                 
                 setVisible(false);
                 ActivityLogHelper.logUserAction("AddMaskDialog.processSave", mask.getId());
-                
-                if (searchesFolder != null) {
-                    DomainExplorerTopComponent.getInstance().expandNodeById(searchesFolder.getId());
-                }
-                
+
                 if (colorDepthSearch != null) {
-                    DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(colorDepthSearch.getId());
+                    SwingUtilities.invokeLater(() -> {
+                        DomainExplorerTopComponent.getInstance().expandNodeById(ColorDepthSearchesNode.NODE_ID);
+                        DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(colorDepthSearch.getId());
+                    });
                 }
+
             }
 
             @Override

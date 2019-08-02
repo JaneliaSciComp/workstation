@@ -199,7 +199,7 @@ public class MaskCreationDialog extends ModalDialog {
                     ImageIO.write(mask, "png", tempFile);
                     log.info("Wrote mask to temporary file: {}", tempFile);
                     uploadPath = MaskUtils.uploadMask(tempFile);
-                    log.info("Uploaded mask to: ", uploadPath);
+                    log.info("Uploaded mask to: {}", uploadPath);
                 }
 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
