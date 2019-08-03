@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -12,14 +13,15 @@ import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.apache.commons.io.FilenameUtils;
+import org.janelia.filecacheutils.FileProxy;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.util.Utils;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.filecache.URLProxy;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,16 +61,10 @@ public final class NewMaskActionListener implements ActionListener {
                 @Override
                 protected void doStuff() throws Exception {
                     uploadPath = MaskUtils.uploadMask(localFile);
-                    File file = FileMgr.getFileMgr().getFile(uploadPath, false);
-                    if (file==null) {
-                        // Cache is probably disabled, just fetch remotely
-                        URLProxy imageFileURL = FileMgr.getFileMgr().getURL(uploadPath, false);
-                        this.image = Utils.readImage(imageFileURL);
+                    FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(uploadPath, false);
+                    try (InputStream imageStream = imageFileProxy.openContentStream()) {
+                        this.image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFileProxy.getFileId()));
                     }
-                    else {
-                        this.image = Utils.readImage(file.getAbsolutePath());
-                    }
-                    
                     alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();
                 }
 

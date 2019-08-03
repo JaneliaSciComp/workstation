@@ -56,11 +56,6 @@ public class StorageClientMgr {
         this.masterStorageClient = new MasterStorageClient(baseUrl, httpClient, objectMapper);
     }
 
-    public URLProxy getDownloadFileURL(String standardPathName) throws FileNotFoundException {
-        AgentStorageClient storageClient = getStorageClientForStandardPath(standardPathName);
-        return storageClient.getDownloadFileURL(standardPathName);
-    }
-
     private AgentStorageClient getStorageClientForStandardPath(String standardPathName) throws FileNotFoundException {
         String standardLocation = standardPathName.replaceFirst("^jade:\\/\\/", "").replace('\\', '/');
         Path lookupPath = Paths.get(standardLocation);
@@ -82,7 +77,7 @@ public class StorageClientMgr {
             for (String pathPrefix : storagePathPrefixCandidates) {
                 storageClient = STORAGE_WORKERS_CACHE.getIfPresent(pathPrefix);
                 if (storageClient != null) {
-                    LOG.debug("Found storage client {} for {} in cache", storageClient.baseUrl, pathPrefix);
+                    LOG.debug("Found storage client {} for {} in cache", storageClient.getBaseUrl(), pathPrefix);
                     return storageClient;
                 }
             }
@@ -119,7 +114,7 @@ public class StorageClientMgr {
             );
             if (storageKey != null) {
                 STORAGE_WORKERS_CACHE.put(storageKey, storageClient);
-                LOG.info("Created storage client {} for {}", storageClient.baseUrl, storageKey);
+                LOG.info("Created storage client {} for {}", storageClient.getBaseUrl(), storageKey);
             } else {
                 LOG.warn("No storage agent cached for {}", standardPathName);
             }

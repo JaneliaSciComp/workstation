@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -67,7 +68,7 @@ class AgentStorageClient extends AbstractStorageClient {
                 DavConstants.DEPTH_0,
                 0
         );
-        return new WebDavFile(remoteFileName, multiStatusResponses[0], connectionErrorHandler);
+        return new WebDavFile(remoteFileName, multiStatusResponses, connectionErrorHandler);
     }
 
     /**
@@ -163,14 +164,6 @@ class AgentStorageClient extends AbstractStorageClient {
     URL getUploadFileURL(String storageLocation) {
         try {
             return new URL(baseUrl + "/data_content/" + (StringUtils.isBlank(storageLocation) ? "" : storageLocation));
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException(e);
-        }
-    }
-
-    URLProxy getDownloadFileURL(String standardPathName) {
-        try {
-            return new URLProxy(new URL(baseUrl + "/storage_path/data_content/" + standardPathName), connectionErrorHandler);
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }

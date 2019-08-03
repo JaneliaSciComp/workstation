@@ -1,7 +1,7 @@
 package org.janelia.workstation.browser.gui.listview.icongrid;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
+import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -9,12 +9,12 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.FilenameUtils;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.ImageCache;
 import org.janelia.workstation.core.util.Utils;
-import org.janelia.workstation.core.filecache.URLProxy;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +33,8 @@ public abstract class LoadImageWorker extends SimpleWorker {
     private static final String LOAD_IMAGE_WORKER_THREADS_PROPERTY = "console.images.workerThreads";
     private static final String CACHE_BEHIND_PROPERTY = "console.images.ayncCacheBehind";
 
-    public static final int numWorkerThreads = ConsoleProperties.getInt(LOAD_IMAGE_WORKER_THREADS_PROPERTY, 10);
-    public static final boolean useCacheBehind = ConsoleProperties.getBoolean(CACHE_BEHIND_PROPERTY, true);
+    private static final int numWorkerThreads = ConsoleProperties.getInt(LOAD_IMAGE_WORKER_THREADS_PROPERTY, 10);
+    private static final boolean useCacheBehind = ConsoleProperties.getBoolean(CACHE_BEHIND_PROPERTY, true);
 
     static {
         if (log.isDebugEnabled()) {
@@ -79,19 +79,20 @@ public abstract class LoadImageWorker extends SimpleWorker {
 
         if (useCacheBehind) {
             // Async cache-behind
-            log.trace("Async cache-behind loading: {}",imageFilename);
-            URLProxy imageFileURL = FileMgr.getFileMgr().getURL(imageFilename, true);
-            log.info("Loading image from {}", imageFileURL);
-            maxSizeImage = Utils.readImage(imageFileURL);
+            try (InputStream imageStream = FileMgr.getFileMgr().getFile(imageFilename, true).openContentStream()) {
+                log.trace("Async cache-behind loading: {}",imageFilename);
+                log.info("Loading image from {}", imageFilename);
+                maxSizeImage = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFilename));
+            }
             if (maxSizeImage != null && imageCache != null) {
                 imageCache.put(imageFilename, maxSizeImage);
             }
-        }
-        else {
+        } else {
             // Sync cache-ahead
-            log.trace("Cache-ahead loading: {}",imageFilename);
-            File imageFile = FileMgr.getFileMgr().getFile(imageFilename, false);
-            maxSizeImage = Utils.readImage(new URLProxy(imageFile.toURI().toURL()));
+            try (InputStream imageStream = FileMgr.getFileMgr().getFile(imageFilename, false).openContentStream()) {
+                log.trace("Cache-ahead loading: {}", imageFilename);
+                maxSizeImage = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFilename));
+            }
         }
 
         if (maxSizeImage != null) {

@@ -22,7 +22,5 @@ public interface BrickInfo {
     Box3 getBoundingBox();
     Texture3d loadBrick(double maxEdgePadWidth) throws IOException;
     boolean isSameBrick(BrickInfo other);
-
-    // Matrix that transforms local texture coordinates to world units (e.g. stage coordinates)
-    Matrix getStageCoordToTexCoord();
+    Matrix getStageCoordToTexCoord(); // Matrix that transforms stage coordinates to local texture coordinates
 }

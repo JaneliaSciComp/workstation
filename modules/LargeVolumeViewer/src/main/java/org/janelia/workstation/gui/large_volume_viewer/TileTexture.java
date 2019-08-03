@@ -1,10 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
 import javax.media.opengl.GL2;
-import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
-import org.janelia.it.jacs.shared.lvv.TileIndex;
-
 
 /*
  * Note the subtle distinction between Tile2d and TileTexture

@@ -5,10 +5,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.beans.PropertyDescriptor;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -89,7 +86,10 @@ public class NeuronFilterDialog extends ModalDialog {
         strategySelection = new JComboBox();
         strategySelection.setMaximumSize(new Dimension (300,50));
         strategySelection.setActionCommand("SetStrategy");
-        for (String label: strategyLabels.values()) {
+
+        ArrayList<String> sortedLabels = new ArrayList<>(strategyLabels.values());
+        Collections.sort(sortedLabels);
+        for (String label: sortedLabels) {
              strategySelection.addItem(label);
         }
         strategyPanel.add(strategySelection);

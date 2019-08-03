@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
 
 import org.janelia.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.AxesActor;
@@ -28,7 +29,6 @@ import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton_mesh.NeuronTraceVtxAttribMgr;

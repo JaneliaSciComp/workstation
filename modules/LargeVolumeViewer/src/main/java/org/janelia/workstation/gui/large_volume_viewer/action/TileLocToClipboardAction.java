@@ -1,17 +1,18 @@
 package org.janelia.workstation.gui.large_volume_viewer.action;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.workstation.core.util.SystemInfo;
-import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JLabel;
-import java.awt.event.ActionEvent;
+
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.core.util.SystemInfo;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Converts the text, as it is expected, in the status label, into a tile

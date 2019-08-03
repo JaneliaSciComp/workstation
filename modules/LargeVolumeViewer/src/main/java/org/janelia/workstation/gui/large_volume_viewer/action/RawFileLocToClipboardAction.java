@@ -4,13 +4,15 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JLabel;
+
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
 import org.janelia.workstation.gui.large_volume_viewer.SharedVolumeImage;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.slf4j.Logger;

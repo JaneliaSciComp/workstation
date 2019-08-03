@@ -73,23 +73,22 @@ public class RefreshHandler implements MessageHandler {
     }
 
     private boolean init() {
-        try {
-            MessageConnection messageConnection = ConnectionManager.getInstance()
-                    .getConnection(MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 20);
-            msgReceiver = new AsyncMessageConsumerImpl(messageConnection);
-            // create a temporary binding to ModelRefresh exchange and listen on that channel for the replies
-            msgReceiver.bindAndConnectTo("ModelRefresh", "", null);
-            msgReceiver.subscribe(this);
-            log.info("Established connection to message server " + MESSAGESERVER_URL);
-            return true;
-        } catch (Exception e) {
-            AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-            String error = "Problems initializing connection to message server " + MESSAGESERVER_URL +
-                    " with username: " + MESSAGESERVER_USERACCOUNT;
-            annotationMgr.presentError(error, "Problem connecting to Message Server");
-            log.error(error, e);
-            return false;
-        }
+        MessageConnection messageConnection = ConnectionManager.getInstance()
+                .getConnection(
+                        MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 20,
+                        (exc) -> {
+                            AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+                            String error = "Problems initializing connection to message server " + MESSAGESERVER_URL +
+                                    " with username: " + MESSAGESERVER_USERACCOUNT;
+                            annotationMgr.presentError(error, "Problem connecting to Message Server");
+                            log.error(error, exc);
+                        });
+        msgReceiver = new AsyncMessageConsumerImpl(messageConnection);
+        // create a temporary binding to ModelRefresh exchange and listen on that channel for the replies
+        msgReceiver.bindAndConnectTo("ModelRefresh", "", null);
+        msgReceiver.subscribe(this);
+        log.info("Established connection to message server " + MESSAGESERVER_URL);
+        return messageConnection.isOpen();
     }
 
     void refreshNeuronUpdates() {

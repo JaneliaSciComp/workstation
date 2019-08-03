@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -256,6 +257,10 @@ public class ConsoleProperties extends ConfigProperties {
         else return path + File.separator + filename;
     }
 
+    public static String getLocalCacheDir() {
+        String consolePrefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
+        return ConsoleProperties.getString("console.localCache.rootDirectory", StringUtils.appendIfMissing(consolePrefsDir, "/") + ".jacs-file-cache");
+    }
 
     /**
      * This method is responsible for loading the property file represented by propertiesFileName

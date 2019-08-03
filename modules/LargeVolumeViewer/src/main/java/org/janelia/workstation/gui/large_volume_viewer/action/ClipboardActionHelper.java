@@ -1,19 +1,19 @@
 package org.janelia.workstation.gui.large_volume_viewer.action;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.FileBasedOctreeMetadataSniffer;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.lvv.TileIndex;
-import org.janelia.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
-import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.nio.file.Path;
+
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.gui.large_volume_viewer.FileBasedOctreeMetadataSniffer;
+import org.janelia.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
+import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helps classes that do similar things to move stuff into the clipboard.

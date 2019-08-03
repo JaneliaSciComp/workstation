@@ -4,10 +4,8 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;

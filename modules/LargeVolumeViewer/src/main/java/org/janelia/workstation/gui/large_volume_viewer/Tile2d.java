@@ -1,15 +1,15 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import com.google.common.base.Preconditions;
-import com.jogamp.opengl.util.texture.TextureCoords;
 import java.awt.geom.Point2D;
+
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
+
+import com.google.common.base.Preconditions;
+import com.jogamp.opengl.util.texture.TextureCoords;
+
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.opengl.GLActor;

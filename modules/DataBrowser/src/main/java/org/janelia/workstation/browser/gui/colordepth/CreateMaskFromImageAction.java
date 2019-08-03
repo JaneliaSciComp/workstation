@@ -2,18 +2,20 @@ package org.janelia.workstation.browser.gui.colordepth;
 
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
+import java.io.InputStream;
 import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
+import org.apache.commons.io.FilenameUtils;
+import org.janelia.filecacheutils.FileProxy;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.model.domain.sample.AlignedImage2d;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
-import org.janelia.workstation.core.filecache.URLProxy;
 import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -63,8 +65,10 @@ public class CreateMaskFromImageAction extends AbstractAction {
             
             @Override
             protected void doStuff() throws Exception {
-                URLProxy imageFileURL = FileMgr.getFileMgr().getURL(imagePath, true);
-                this.image = Utils.readImage(imageFileURL);
+                FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(imagePath, false);
+                try (InputStream imageStream = imageFileProxy.openContentStream()) {
+                    this.image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFileProxy.getFileId()));
+                }
                 alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();
             }
 

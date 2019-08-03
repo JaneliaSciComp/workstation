@@ -2,7 +2,6 @@
 package org.janelia.horta;
 
 import Jama.Matrix;
-import com.sun.media.jai.codec.FileSeekableStream;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.geometry3d.Box3;
@@ -12,18 +11,12 @@ import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.VoxelIndex;
 import org.janelia.rendering.RawImage;
-import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -226,22 +219,25 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setTileDims(Arrays.stream(pixelDims).boxed().toArray(Integer[]::new));
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
 
-        InputStream rawImageStream = volumeLocation.readRawTileContent(rawImage, colorChannelIndex);
-        try {
-            if (!texture.loadTiffStack(rawImage.toString() + "-ch-" + colorChannelIndex, rawImageStream)) {
-                return null;
-            } else {
-                return texture;
-            }
-        } finally {
-            if (rawImageStream != null) {
-                try {
-                    rawImageStream.close();
-                } catch (IOException ignore) {
-                    LOG.info("Exception closing the stream for image {}, channel {}", rawImage, colorChannelIndex, ignore);
-                }
-            }
-        }
+        return volumeLocation.getRawTileContent(rawImage, colorChannelIndex)
+                .map(streamableRawImage -> {
+                    try {
+                        if (!texture.loadTiffStack(rawImage.toString() + "-ch-" + colorChannelIndex, streamableRawImage.getStream())) {
+                            return null;
+                        } else {
+                            return texture;
+                        }
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    } finally {
+                        try {
+                            streamableRawImage.close();
+                        } catch (IOException ignore) {
+                            LOG.info("Exception closing the stream for image {}, channel {}", rawImage, colorChannelIndex, ignore);
+                        }
+                    }
+                })
+                .orElse(null);
     }
 
     @Override

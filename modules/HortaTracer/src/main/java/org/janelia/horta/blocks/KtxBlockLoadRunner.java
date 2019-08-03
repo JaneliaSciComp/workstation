@@ -3,7 +3,7 @@ package org.janelia.horta.blocks;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import org.apache.commons.lang3.StringUtils;
+
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.actors.TetVolumeMeshActor;
@@ -47,12 +47,11 @@ public class KtxBlockLoadRunner
     }
 
     private void loadFromBlockSource() {
-        try (InputStream is = ktxBlockTileSource.streamKeyBlock(ktxOctreeBlockTileKey)) {
-            URI sourceURI = ktxBlockTileSource.getKeyBlockPathURI(ktxOctreeBlockTileKey);
-            loadStream(StringUtils.defaultIfBlank(ktxBlockTileSource.sourceServerURL + sourceURI.toString(),
-                    ktxBlockTileSource.getOriginatingSampleURL().toString() + sourceURI.toString()), is);
+        try (InputStream blockStream = ktxBlockTileSource.streamKeyBlock(ktxOctreeBlockTileKey)) {
+            URI sourceURI = ktxBlockTileSource.getKeyBlockRelativePathURI(ktxOctreeBlockTileKey);
+            loadStream(ktxBlockTileSource.getDataServerURI().toString() + sourceURI.toString(), blockStream);
         } catch (IOException ex) {
-            LOG.warn("IOException loading tile {} from block source", ktxOctreeBlockTileKey);
+            LOG.warn("IOException loading tile {} from block source", ktxOctreeBlockTileKey, ex);
             state = State.FAILED;
         }
     }
@@ -67,6 +66,10 @@ public class KtxBlockLoadRunner
     }
 
     private void loadStream(String sourceName, InputStream stream) {
+        if (stream == null) {
+            // no ktx data is available
+            return;
+        }
         long start = System.nanoTime();
         state = State.LOADING;
         KtxData ktxData = new KtxData();
@@ -75,13 +78,13 @@ public class KtxBlockLoadRunner
             blockDescription = ktxOctreeBlockTileKey.toString();
         }
         try {
-            ktxData.loadStreamInterruptably(stream);
+            ktxData.loadStream(stream);
             if (ktxOctreeBlockTileKey == null) {
                 blockDescription = ktxData.header.keyValueMetadata.get("octree_path");
             }
         } catch (IOException ex) {
             state = State.FAILED;
-            LOG.warn("IOException loading tile {} from stream", blockDescription);
+            LOG.warn("IOException loading tile {} from stream", blockDescription, ex);
             return;
         } catch (InterruptedException ex) {
             LOG.info("loading tile {} was interrupted", blockDescription);

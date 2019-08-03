@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 @Category(TestCategories.InteractiveTests.class)
 public class TestMeshRender {
     private static Logger logger = LoggerFactory.getLogger(TestMeshRender.class);
-    public static final Long COMPARTMENT_RENDERABLE_ID = 5555L;
+    private static final Long COMPARTMENT_RENDERABLE_ID = 5555L;
     private static long renderId;
 
     public static void main( final String[] args ) throws Exception {
@@ -47,7 +47,7 @@ public class TestMeshRender {
         private MeshViewer viewerWidget;
         private VertexAttributeSourceI attribMgr;
 
-        public PresWorker() {
+        PresWorker() {
             viewerWidget = new MeshViewer();
             Action dumpAction = new AbstractAction("Dump"){
 

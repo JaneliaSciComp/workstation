@@ -1,5 +1,6 @@
 package org.janelia.workstation.browser.gui.hud;
 
+import org.apache.commons.io.FilenameUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
@@ -45,6 +46,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.InputStream;
 
 
 /**
@@ -382,12 +384,11 @@ public class Hud extends ModalDialog {
                     // Ensure we have an image and that it is cached.
                     if (image == null) {
                         log.debug("Must load image.");
-                        final File imageFile = FileMgr.getFileMgr().getFile(filepath, false);
-                        if (imageFile != null) {
-                            image = Utils.readImage(imageFile.getAbsolutePath());
-                            if (ic != null) {
-                                ic.put(filepath, image);
-                            }
+                        try (InputStream imageStream = FileMgr.getFileMgr().getFile(filepath, false).openContentStream()) {
+                            image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(filepath));
+                        }
+                        if (ic != null) {
+                            ic.put(filepath, image);
                         }
                     }
 

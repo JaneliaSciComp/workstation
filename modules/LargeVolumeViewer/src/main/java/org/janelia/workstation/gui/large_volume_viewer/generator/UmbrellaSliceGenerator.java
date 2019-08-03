@@ -3,8 +3,8 @@ package org.janelia.workstation.gui.large_volume_viewer.generator;
 import java.util.Iterator;
 
 import org.janelia.workstation.gui.large_volume_viewer.Tile2d;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.lvv.TileIndex;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
 import org.janelia.workstation.gui.large_volume_viewer.TileSet;
 
 /**
@@ -13,9 +13,7 @@ import org.janelia.workstation.gui.large_volume_viewer.TileSet;
  * @author brunsc
  *
  */
-public class UmbrellaSliceGenerator 
-implements Iterable<TileIndex>, Iterator<TileIndex>
-{
+public class UmbrellaSliceGenerator implements Iterable<TileIndex>, Iterator<TileIndex> {
 	// private static final Logger log = LoggerFactory.getLogger(UmbrellaSliceGenerator.class);
 
 	// Outer loop iterates over slice

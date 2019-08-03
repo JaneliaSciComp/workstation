@@ -19,6 +19,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import org.janelia.model.access.domain.IdSource;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.workstation.gui.large_volume_viewer.model_adapter.RandomNeuronGenerator;
@@ -26,9 +27,6 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.lvv.TileFormat.MicrometerXyz;
-import org.janelia.it.jacs.shared.lvv.TileFormat.VoxelXyz;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
@@ -158,8 +156,8 @@ public class GenerateNeuronsDialog extends ModalDialog {
         BoundingBox3d boundingBox = lvvv.getQuadViewUi().getBoundingBox();
         log.info("Bounding box (micrometers): {}", boundingBox);
         
-        VoxelXyz min = tileFormat.voxelXyzForMicrometerXyzMatrix(new MicrometerXyz(boundingBox.getMin()));
-        VoxelXyz max = tileFormat.voxelXyzForMicrometerXyzMatrix(new MicrometerXyz(boundingBox.getMax()));
+        TileFormat.VoxelXyz min = tileFormat.voxelXyzForMicrometerXyzMatrix(new TileFormat.MicrometerXyz(boundingBox.getMin()));
+        TileFormat.VoxelXyz max = tileFormat.voxelXyzForMicrometerXyzMatrix(new TileFormat.MicrometerXyz(boundingBox.getMax()));
         boundingBox = new BoundingBox3d(min.asVec3(), max.asVec3());
         
         // Make the box smaller, because most neurons will not show up in 

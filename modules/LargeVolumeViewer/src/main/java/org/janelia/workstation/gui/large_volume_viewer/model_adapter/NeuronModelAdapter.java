@@ -93,15 +93,18 @@ class NeuronModelAdapter {
 
     private MessageSender getSender() {
         if (messageSender == null) {
-            try {
-                MessageConnection messageConnection = ConnectionManager.getInstance()
-                        .getConnection(MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 0);
-                MessageSender newMessageSender = new MessageSenderImpl(messageConnection);
-                newMessageSender.connectTo(MESSAGESERVER_UPDATESEXCHANGE, MESSAGESERVER_ROUTINGKEY);
-                messageSender = newMessageSender;
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
+            MessageConnection messageConnection = ConnectionManager.getInstance()
+                    .getConnection(MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 0,
+                            (e) -> {
+                                if (e instanceof RuntimeException) {
+                                    throw (RuntimeException)e;
+                                } else {
+                                    throw new IllegalStateException(e);
+                                }
+                            });
+            MessageSender newMessageSender = new MessageSenderImpl(messageConnection);
+            newMessageSender.connectTo(MESSAGESERVER_UPDATESEXCHANGE, MESSAGESERVER_ROUTINGKEY);
+            messageSender = newMessageSender;
         }
         return messageSender;
     }

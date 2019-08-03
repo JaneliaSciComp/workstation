@@ -5,12 +5,11 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.glu.GLU;
 
-import org.janelia.it.jacs.shared.lvv.TextureData2d;
+import com.jogamp.opengl.util.texture.TextureCoords;
+
 import org.janelia.workstation.gui.opengl.GLError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.jogamp.opengl.util.texture.TextureCoords;
 
 public class TextureData2dGL extends TextureData2d
 implements TextureDataI

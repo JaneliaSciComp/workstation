@@ -1,6 +1,9 @@
 package org.janelia.workstation.core.filecache;
 
+import com.sun.org.apache.xpath.internal.operations.Mult;
+
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.http.HttpStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.property.DavProperty;
@@ -30,58 +33,63 @@ class AbstractWebDav {
      * populate this file's attributes.
      *
      * @param  webdavFileKey        the webdav file key
-     * @param  multiStatusResponse  the PROPFIND response for the file.
+     * @param  multiStatusResponses  the PROPFIND responses for the file.
      *
      * @throws IllegalArgumentException
      *   if a file specific URL cannot be constructed.
      */
-    AbstractWebDav(String webdavFileKey, MultiStatusResponse multiStatusResponse)
+    AbstractWebDav(String webdavFileKey, MultiStatusResponse[] multiStatusResponses)
             throws IllegalArgumentException {
 
         this.webdavFileKey = webdavFileKey;
 
-        final DavPropertySet notFoundPropertySet = multiStatusResponse.getProperties(HttpStatus.SC_NOT_FOUND);
+        boolean resourceFound = false;
+        for (MultiStatusResponse multiStatusResponse : multiStatusResponses) {
+            final DavPropertySet goodResource = multiStatusResponse.getProperties(HttpStatus.SC_OK);
+            if (goodResource.isEmpty()) {
+                continue;
+            } else {
+                resourceFound = true;
+                remoteFileUrl = multiStatusResponse.getHref();
+                final DefaultDavProperty<?> resourceTypeProperty =
+                        (DefaultDavProperty<?>) goodResource.get(DavPropertyName.RESOURCETYPE);
 
-        if (!notFoundPropertySet.isEmpty()) {
+                if (resourceTypeProperty != null) {
+                    final String resourceTypeValue =
+                            String.valueOf(resourceTypeProperty.getValue());
+                    this.isDirectory = (resourceTypeValue.contains(COLLECTION));
+                }
+
+                final DavProperty<?> contentLengthProperty =
+                        goodResource.get(DavPropertyName.GETCONTENTLENGTH);
+                if (contentLengthProperty != null) {
+                    String contentLengthStrValue = (String) contentLengthProperty.getValue();
+                    if (StringUtils.isNotBlank(contentLengthStrValue)) {
+                        this.contentLength = Long.parseLong(contentLengthStrValue);
+                    }
+                }
+
+                final DavProperty<?> storageRootDirProperty =
+                        goodResource.get(DavPropertyName.create("storageRootDir", Namespace.getNamespace("JADE:")));
+                if (storageRootDirProperty != null) {
+                    this.storageRootDir = String.valueOf(storageRootDirProperty.getValue());
+                }
+
+                final DavProperty<?> storageBindNameProperty =
+                        goodResource.get(DavPropertyName.create("storageBindName", Namespace.getNamespace("JADE:")));
+                if (storageBindNameProperty != null) {
+                    this.storageBindName = String.valueOf(storageBindNameProperty.getValue());
+                }
+                break;
+            }
+        }
+
+        if (!resourceFound) {
             // the property was not found - this can be either because the file or storage does not exist
             // or because there are no storage agents to serve the requested content
             throw new IllegalArgumentException("No resource found for " + webdavFileKey +
                     ". This happens either because no storage was found or " +
                     "because there are no storage agents to serve the requested content.");
-        } else {
-            final DavPropertySet propertySet = multiStatusResponse.getProperties(HttpStatus.SC_OK);
-
-            remoteFileUrl = multiStatusResponse.getHref();
-            final DefaultDavProperty<?> resourceTypeProperty =
-                    (DefaultDavProperty<?>) propertySet.get(DavPropertyName.RESOURCETYPE);
-
-            if (resourceTypeProperty != null) {
-                final String resourceTypeValue =
-                        String.valueOf(resourceTypeProperty.getValue());
-                this.isDirectory = (resourceTypeValue.contains(COLLECTION));
-            }
-
-            final DavProperty<?> contentLengthProperty =
-                    propertySet.get(DavPropertyName.GETCONTENTLENGTH);
-            if (contentLengthProperty != null) {
-                String contentLengthStrValue = (String) contentLengthProperty.getValue();
-                if (StringUtils.isNotBlank(contentLengthStrValue)) {
-                    this.contentLength = Long.parseLong(contentLengthStrValue);
-                }
-            }
-
-            final DavProperty<?> storageRootDirProperty =
-                    propertySet.get(DavPropertyName.create("storageRootDir", Namespace.getNamespace("JADE:")));
-            if (storageRootDirProperty != null) {
-                this.storageRootDir = String.valueOf(storageRootDirProperty.getValue());
-            }
-
-            final DavProperty<?> storageBindNameProperty =
-                    propertySet.get(DavPropertyName.create("storageBindName", Namespace.getNamespace("JADE:")));
-            if (storageBindNameProperty != null) {
-                this.storageBindName = String.valueOf(storageBindNameProperty.getValue());
-            }
-
         }
     }
 
@@ -109,16 +117,12 @@ class AbstractWebDav {
     /**
      * @return the number of kilobytes in file.
      */
-    long getKilobytes() {
-        long kilobytes = 0;
+    Long getSizeInBytes() {
         if (contentLength != null) {
-            final long len = contentLength;
-            kilobytes = len / ONE_KILOBYTE;
-            if ((len % ONE_KILOBYTE) > 0) {
-                kilobytes++; // round up to nearest kb
-            }
+            return contentLength;
+        } else {
+            return null;
         }
-        return kilobytes;
     }
 
     String getStorageRootDir() {
@@ -131,10 +135,14 @@ class AbstractWebDav {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "{webdavFileKey='" + webdavFileKey + '\'' +
-                ", isDirectory=" + isDirectory +
-                ", contentLength=" + contentLength +
-                '}';
+        return new ToStringBuilder(this)
+                .append("remoteFileUrl", remoteFileUrl)
+                .append("webdavFileKey", webdavFileKey)
+                .append("isDirectory", isDirectory)
+                .append("contentLength", contentLength)
+                .append("storageRootDir", storageRootDir)
+                .append("storageBindName", storageBindName)
+                .toString();
     }
 
     private static final long ONE_KILOBYTE = 1024;

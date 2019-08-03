@@ -1,12 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
 import java.net.URI;
-import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.FileBasedBlockTiffOctreeLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.RestServiceBasedBlockTiffOctreeLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.TextureData2d;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 
@@ -21,18 +15,16 @@ public class TileStackOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter {
     private static final int VOLUMES_CACHE_SIZE = ConsoleProperties.getInt("console.lvv.volumes.cache.size", 2);
     private static final int TILES_CACHE_SIZE = ConsoleProperties.getInt("console.lvv.tiles.cache.size", 100);
 
-    BlockTiffOctreeLoadAdapter blockTiffOctreeLoadAdapter;
+    private final BlockTiffOctreeLoadAdapter blockTiffOctreeLoadAdapter;
 
     TileStackOctreeLoadAdapter(TileFormat tileFormat, URI baseURI) {
         super(tileFormat, baseURI);
         if (baseURI.getScheme().startsWith("file")) {
-            blockTiffOctreeLoadAdapter = new FileBasedBlockTiffOctreeLoadAdapter(tileFormat, baseURI);
+            blockTiffOctreeLoadAdapter = new FileBasedBlockTiffOctreeLoadAdapter(tileFormat, baseURI,
+                    VOLUMES_CACHE_SIZE, TILES_CACHE_SIZE);
         } else if (baseURI.getScheme().startsWith("http")) {
-            blockTiffOctreeLoadAdapter = new RestServiceBasedBlockTiffOctreeLoadAdapter(tileFormat, 
-                    baseURI,
-                    AccessManager.getAccessManager().getAppAuthorization(),
-                    VOLUMES_CACHE_SIZE,
-                    TILES_CACHE_SIZE
+            blockTiffOctreeLoadAdapter = new RestServiceBasedBlockTiffOctreeLoadAdapter(tileFormat, baseURI, AccessManager.getAccessManager().getAppAuthorization(),
+                    VOLUMES_CACHE_SIZE, TILES_CACHE_SIZE
             );
         } else {
             throw new IllegalArgumentException("Don't know how to load " + baseURI);

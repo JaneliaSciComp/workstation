@@ -1,23 +1,8 @@
 package org.janelia.horta.loader;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.prefs.PreferenceChangeEvent;
-import java.util.prefs.PreferenceChangeListener;
-import java.util.prefs.Preferences;
-
-import javax.swing.SwingUtilities;
-
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.janelia.console.viewerapi.model.ImageColorModel;
-// import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.geometry3d.PerspectiveCamera;
+import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.BrainTileInfo;
@@ -34,6 +19,15 @@ import org.openide.util.NbPreferences;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.prefs.PreferenceChangeEvent;
+import java.util.prefs.PreferenceChangeListener;
+import java.util.prefs.Preferences;
 
 /**
  * Keeps in memory a configurable number of nearby volume tiles.
@@ -53,19 +47,41 @@ public class HortaVolumeCache {
     private int gpuTileCount = 1;
     private final PerspectiveCamera camera;
     private StaticVolumeBrickSource source = null;
-    
+
     // Lightweight metadata
-    private final Collection<BrickInfo> nearVolumeMetadata = new ConcurrentHashSet<>();
+    private final Collection<BrickInfo> nearVolumeMetadata = new ConcurrentSkipListSet<>((t1, t2) -> {
+        // dummmy comparator that simply looks at the X coordinate of the centroid
+        Vector3 c1 = t1.getBoundingBox().getCentroid();
+        Vector3 c2 = t2.getBoundingBox().getCentroid();
+        if (c1.getX() < c2.getX()) {
+            return -1;
+        } else if (c1.getX() > c2.getX()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    });
 
     // Large in-memory cache
     private final Map<BrickInfo, Texture3d> nearVolumeInRam = new ConcurrentHashMap<>();
 
-    private final Map<BrickInfo, RequestProcessor.Task> queuedTiles = new ConcurrentHashMap();
-    private final Map<BrickInfo, RequestProcessor.Task> loadingTiles = new ConcurrentHashMap();
+    private final Map<BrickInfo, RequestProcessor.Task> queuedTiles = new ConcurrentHashMap<>();
+    private final Map<BrickInfo, RequestProcessor.Task> loadingTiles = new ConcurrentHashMap<>();
 
     // Fewer on GPU cache
     private final Map<BrickInfo, BrickActor> actualDisplayTiles = new ConcurrentHashMap<>();
-    private final Collection<BrickInfo> desiredDisplayTiles = new ConcurrentHashSet<>();
+    private final Collection<BrickInfo> desiredDisplayTiles = new ConcurrentSkipListSet<>((t1, t2) -> {
+        // dummmy comparator that simply looks at the X coordinate of the centroid
+        Vector3 c1 = t1.getBoundingBox().getCentroid();
+        Vector3 c2 = t2.getBoundingBox().getCentroid();
+        if (c1.getX() < c2.getX()) {
+            return -1;
+        } else if (c1.getX() > c2.getX()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    });
     
     // To enable/disable loading
     private boolean doUpdateCache = true;
@@ -225,10 +241,7 @@ public class HortaVolumeCache {
             desiredDisplayTiles.clear();
             desiredDisplayTiles.addAll(veryClosestBricks);
         }
-        
-        // Just in case; should not be necessary
-        // closestBricks.addAll(veryClosestBricks);
-        
+
         // Compare to cached list of tile metadata
         // Create list of new and obsolete tiles
         Collection<BrickInfo> obsoleteBricks = new ArrayList<>();
@@ -297,8 +310,6 @@ public class HortaVolumeCache {
         if (loadingTiles.containsKey(tile))
             return; // already loading
 
-        // System.out.println("Horta Volume cache loading tile "+tile.getTileRelativePath()+"...");
-
         Runnable loadTask = new Runnable() {
             @Override
             public void run() {
@@ -325,25 +336,12 @@ public class HortaVolumeCache {
                 ProgressHandle progress = ProgressHandleFactory.createHandle("Loading Tile " + tile.getTileRelativePath() + " ...");
 
                 try {
-                    // Check whether this tile is still relevant
+                    // should we throttle to slow down loading of too many tiles if user is moving a lot?
                     if (! nearVolumeMetadata.contains(tile)) {
                         return;
                     }
 
-                    // Throttle to slow down loading of too many tiles if user is moving a lot
-    //                if (queuedForLoad.size() > 2) { // Hmm... Many things are already loading, so maybe I should play it cool...
-    //                    try {
-    //                        Thread.sleep(1000); // milliseconds to wait before starting load
-    //                    } catch (InterruptedException ex) {
-    //                    }
-    //                }
-
-                    // Maybe after that wait, this tile is no longer needed
-                    if (! nearVolumeMetadata.contains(tile)) {
-                        return;
-                    }
-
-                    if (! doUpdateCache) {
+                    if (!doUpdateCache) {
                         return;
                     }
 
@@ -351,7 +349,7 @@ public class HortaVolumeCache {
                     progress.setDisplayName("Loading Tile " + tile.getTileRelativePath() + " ...");
                     progress.switchToIndeterminate();
                     Texture3d tileTexture = tile.loadBrick(10, currentColorChannel);
-                    if (tileTexture!=null) {
+                    if (tileTexture != null) {
                         if (nearVolumeMetadata.contains(tile)) { // Make sure this tile is still desired after loading
                             nearVolumeInRam.put(tile, tileTexture);
                             // Trigger GPU upload, if appropriate
@@ -476,8 +474,8 @@ public class HortaVolumeCache {
         }
     }
     
-    public static interface TileDisplayObserver {
-        public void update(BrickActor newTile, Collection<? extends BrickInfo> allTiles);
+    public interface TileDisplayObserver {
+        void update(BrickActor newTile, Collection<? extends BrickInfo> allTiles);
     }
 
     private void fireUpdateInEDT(final BrickActor actor) {

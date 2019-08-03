@@ -1,7 +1,5 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.jacs.shared.lvv.TileIndex;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;

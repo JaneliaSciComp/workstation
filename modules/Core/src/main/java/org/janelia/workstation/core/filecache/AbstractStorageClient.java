@@ -41,4 +41,7 @@ abstract class AbstractStorageClient {
         }
     }
 
+    String getBaseUrl() {
+        return baseUrl;
+    }
 }

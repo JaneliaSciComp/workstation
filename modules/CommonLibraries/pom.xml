@@ -522,6 +522,7 @@
                         <publicPackage>javassist.tools.web</publicPackage>
                         <publicPackage>javassist.util</publicPackage>
                         <publicPackage>javassist.util.proxy</publicPackage>
+                        <publicPackage>loci.common</publicPackage>
                         <publicPackage>loci.formats.*</publicPackage>
                         <publicPackage>net.miginfocom.*</publicPackage>
                         <publicPackage>net.jpountz.lz4</publicPackage>
@@ -663,6 +664,7 @@
                         <publicPackage>org.glassfish.jersey.uri.internal</publicPackage>
                         <publicPackage>org.hibernate.*</publicPackage>
                         <publicPackage>org.janelia.configutils</publicPackage>
+                        <publicPackage>org.janelia.filecacheutils</publicPackage>
                         <publicPackage>org.janelia.model.access.domain</publicPackage>
                         <publicPackage>org.janelia.model.access.tiledMicroscope</publicPackage>
                         <publicPackage>org.janelia.model.domain</publicPackage>

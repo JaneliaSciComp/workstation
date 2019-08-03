@@ -7,10 +7,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Paths;
 import java.util.TreeMap;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.filecacheutils.LocalFileCacheStorage;
+import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.core.events.Events;
@@ -35,6 +38,9 @@ import com.google.common.eventbus.Subscribe;
 public class LocalPreferenceMgr {
 
     private static final Logger log = LoggerFactory.getLogger(LocalPreferenceMgr.class);
+    public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 10;
+    public static final int DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY = 50;
+    public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
 
     // Singleton
     private static LocalPreferenceMgr instance;
@@ -49,8 +55,9 @@ public class LocalPreferenceMgr {
     private final String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
     private final String prefsFile = prefsDir + ".JW_Settings";
     private final File settingsFile;
+    private final LocalFileCacheStorage localFileCacheStorage;
 
-    protected TreeMap<Object, Object> modelProperties;
+    private TreeMap<Object, Object> modelProperties;
     
     private LocalPreferenceMgr() {
 
@@ -89,6 +96,7 @@ public class LocalPreferenceMgr {
         }
 
         readSettingsFile();
+        localFileCacheStorage = new LocalFileCacheStorage(Paths.get(ConsoleProperties.getLocalCacheDir()), getFileCacheGigabyteCapacity() * 1024 * 1024);
     }
 
     @SuppressWarnings("unchecked")
@@ -138,7 +146,7 @@ public class LocalPreferenceMgr {
         }
     }
     
-    public void writeSettings() {
+    private void writeSettings() {
         try {
             boolean success = settingsFile.delete();
             if (!success) {
@@ -177,7 +185,41 @@ public class LocalPreferenceMgr {
         if (modelProperties == null) throw new IllegalStateException("Local preferences have not yet been initialized");
         return modelProperties.get(key);
     }
-    
+
+    @SuppressWarnings("unchecked")
+    public <T> T getModelPropertyAs(Object key, Class<T> propertyClass) {
+        if (modelProperties == null) throw new IllegalStateException("Local preferences have not yet been initialized");
+        return (T) modelProperties.get(key);
+    }
+
+    public Integer getFileCacheGigabyteCapacity() {
+        return getModelPropertyAs(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, Integer.class);
+    }
+
+    public final Integer setFileCacheGigabyteCapacity(Integer gigabyteCapacity) {
+        Integer cacheCapacityInGB;
+        if (gigabyteCapacity == null) {
+            cacheCapacityInGB = DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY;
+        } else if (gigabyteCapacity < MIN_FILE_CACHE_GIGABYTE_CAPACITY) {
+            cacheCapacityInGB = MIN_FILE_CACHE_GIGABYTE_CAPACITY;
+        } else if (gigabyteCapacity > MAX_FILE_CACHE_GIGABYTE_CAPACITY) {
+            cacheCapacityInGB = MAX_FILE_CACHE_GIGABYTE_CAPACITY;
+        } else {
+            cacheCapacityInGB = gigabyteCapacity;
+        }
+        setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, cacheCapacityInGB);
+
+        int cacheCapacityInKB = cacheCapacityInGB * 1024 * 1024;
+        if (cacheCapacityInKB != localFileCacheStorage.getCapacityInKB()) {
+            localFileCacheStorage.setCapacityInKB(cacheCapacityInKB);
+        }
+        return cacheCapacityInGB;
+    }
+
+    public LocalFileCacheStorage getLocalFileCacheStorage() {
+        return localFileCacheStorage;
+    }
+
     @Subscribe
     public void systemWillExit(ApplicationClosing closingEvent) {
         writeSettings();

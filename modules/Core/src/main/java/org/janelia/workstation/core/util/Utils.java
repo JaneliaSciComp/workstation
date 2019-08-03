@@ -1,49 +1,11 @@
 package org.janelia.workstation.core.util;
 
-import loci.formats.FormatException;
-import loci.formats.IFormatReader;
-import loci.formats.gui.BufferedImageReader;
-import loci.formats.in.APNGReader;
-import loci.formats.in.BMPReader;
-import loci.formats.in.GIFReader;
-import loci.formats.in.JPEGReader;
-import loci.formats.in.TiffReader;
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.janelia.workstation.core.api.FileMgr;
-import org.janelia.workstation.core.api.http.HttpClientProxy;
-import org.janelia.workstation.core.filecache.URLProxy;
-import org.janelia.workstation.core.options.OptionConstants;
-import org.janelia.workstation.core.workers.BackgroundWorker;
-import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.perf4j.LoggingStopWatch;
-import org.perf4j.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
-import java.awt.Desktop;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.HeadlessException;
-import java.awt.Image;
-import java.awt.RenderingHints;
-import java.awt.Transparency;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.PixelGrabber;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,9 +23,38 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
+
+import com.google.common.io.ByteStreams;
+import loci.common.ByteArrayHandle;
+import loci.common.Location;
+import loci.formats.FormatException;
+import loci.formats.IFormatReader;
+import loci.formats.gui.BufferedImageReader;
+import loci.formats.in.APNGReader;
+import loci.formats.in.BMPReader;
+import loci.formats.in.GIFReader;
+import loci.formats.in.JPEGReader;
+import loci.formats.in.TiffReader;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.janelia.filecacheutils.FileProxy;
+import org.janelia.workstation.core.api.FileMgr;
+import org.janelia.workstation.core.options.OptionConstants;
+import org.janelia.workstation.core.workers.BackgroundWorker;
+import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.perf4j.LoggingStopWatch;
+import org.perf4j.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Common utilities for loading images, copying files, testing strings, etc.
@@ -93,123 +84,98 @@ public class Utils {
         ImageIO.scanForPlugins();
     }
 
-    /**
-     * Read an image using the ImageIO API. Currently supports TIFFs, PNGs and JPEGs.
-     */
-    public static BufferedImage readImage(String path) throws Exception {
-        try {
-            String selectedRenderer = FrameworkAccess.getModelProperty(
-                    OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.LOCI.toString());
-            RendererType2D renderer = RendererType2D.valueOf(selectedRenderer);
-            String format = FilenameUtils.getExtension(path);
-            BufferedImage image;
-            
-            if (renderer == RendererType2D.IMAGE_IO) {
-                InputStream stream = null;
-                GetMethod get = null;
-                try {
-                    if (path.startsWith("http://")) {
-                        HttpClientProxy client = FileMgr.getFileMgr().getHttpClient();
-                        get = new GetMethod(path);
-                        int responseCode = client.executeMethod(get);
-                        log.trace("readImage: GET " + responseCode + ", path=" + path);
-                        if (responseCode != 200) {
-                            throw new FileNotFoundException("Response code "+responseCode+" returned for call to "+path);
-                        }
-                        stream = get.getResponseBodyAsStream();
-                    }
-                    else {
-                        log.trace("readImage: FileInputStream path=" + path);
-                        stream = new FileInputStream(new File(path));
-                    }
-
-                    // Supports GIF, PNG, JPEG, BMP, and WBMP (and TIFF via Twelvemonkeys)
-                    image = ImageIO.read(stream);
-                    if (image==null) {
-                        throw new FormatException("File format is not supported: " + format);
-                    }
-                }
-                finally {
-                    if (get != null) {
-                        get.releaseConnection();
-                    }
-                    if (stream != null) {
-                        try {
-                            stream.close();
-                        }
-                        catch (IOException e) {
-                            log.warn("readImage: failed to close {}", path, e);
-                        }
-                    }
-                }
-            } 
-            else {
-                IFormatReader reader;
-                switch (format) {
-                    case "tif":
-                    case "tiff":
-                        reader = new TiffReader();
-                        break;
-                    case "png":
-                        reader = new APNGReader();
-                        break;
-                    case "jpg":
-                    case "jpeg":
-                        reader = new JPEGReader();
-                        break;
-                    case "bmp":
-                        reader = new BMPReader();
-                        break;
-                    case "gif":
-                        reader = new GIFReader();
-                        break;
-                    default:
-                        throw new FormatException("File format is not supported: " + format);
-                }
-                BufferedImageReader in = new BufferedImageReader(reader);
-                in.setId(path);
-                image = in.openImage(0);
-                in.close();
-            }
-
-            return image;
-        }
-        catch (Exception e) {
-            if (e instanceof IOException) {
-                throw e;
-            } 
-            else {
-                throw new IOException("Error reading image: " + path, e);
-            }
-        }
-    }
-
-    /**
-     * Read an image from a URL using the ImageIO API. Currently supports TIFFs, PNGs and JPEGs.
-     */
-    public static BufferedImage readImage(URLProxy urlProxy) throws Exception {
+    public static BufferedImage readImageFromInputStream(InputStream inputStream, String format) {
+        String selectedRenderer = FrameworkAccess.getModelProperty(
+                OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.LOCI.toString());
+        RendererType2D renderer = RendererType2D.valueOf(selectedRenderer);
         BufferedImage image;
-        StopWatch stopWatch = TIMER ? new LoggingStopWatch() : null;
-        // Some extra finagling is required because LOCI libraries do not like the file protocol for some reason
-        if (urlProxy.getProtocol().equals("file")) {
-            String localFilepath = urlProxy.toString().replace("file:", "");
-            log.trace("Loading cached file: {}", localFilepath);
-            image = Utils.readImage(localFilepath);
-            if (TIMER) {
-                stopWatch.stop("readCachedImage");
+        if (renderer == RendererType2D.IMAGE_IO) {
+            try {
+                image = readWithImageIOFromInputStream(inputStream);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Invalid image stream", e);
             }
         } else {
-            log.trace("Loading url: {}", urlProxy);
             try {
-                image = Utils.readImage(urlProxy.toString());
-            } catch (Exception e) {
-                urlProxy.handleError(e);
-                throw e;
+                byte[] imageBytes = ByteStreams.toByteArray(inputStream);
+                String streamId = "inBytes." + format;
+                Location.mapFile(streamId, new ByteArrayHandle(imageBytes));
+                image = readWithLociReaderFromStreamId(streamId, format);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Invalid image stream", e);
+            }
+        }
+        if (image == null) {
+            throw new IllegalArgumentException("File format is not supported: " + format);
+        }
+        return image;
+    }
+
+    private static BufferedImage readWithImageIOFromInputStream(InputStream inputStream) throws IOException {
+        // Supports GIF, PNG, JPEG, BMP, and WBMP
+        return ImageIO.read(inputStream);
+    }
+
+    private static BufferedImage readWithLociReaderFromStreamId(String streamId, String format) {
+        IFormatReader reader;
+        switch (format) {
+            case "tif":
+            case "tiff":
+                reader = new TiffReader();
+                break;
+            case "png":
+                reader = new APNGReader();
+                break;
+            case "jpg":
+            case "jpeg":
+                reader = new JPEGReader();
+                break;
+            case "bmp":
+                reader = new BMPReader();
+                break;
+            case "gif":
+                reader = new GIFReader();
+                break;
+            default:
+                throw new IllegalArgumentException("File format is not supported: " + format);
+        }
+        BufferedImage image;
+        BufferedImageReader imageReader = new BufferedImageReader(reader);
+        try {
+            imageReader.setId(streamId);
+            image = imageReader.openImage(0);
+            imageReader.close();
+        } catch (IOException | FormatException e) {
+            throw new IllegalArgumentException("Invalid image stream id", e);
+        }
+        return image;
+    }
+
+    public static BufferedImage readImageFromLocalFile(String localFilePath) {
+        String format = FilenameUtils.getExtension(localFilePath);
+        String selectedRenderer = FrameworkAccess.getModelProperty(
+                OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.LOCI.toString());
+        RendererType2D renderer = RendererType2D.valueOf(selectedRenderer);
+        BufferedImage image;
+        if (renderer == RendererType2D.IMAGE_IO) {
+            InputStream imageStream;
+            try {
+                imageStream = new FileInputStream(localFilePath);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Cannot open local image file " + localFilePath, e);
+            }
+            try {
+                image = readWithImageIOFromInputStream(imageStream);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Invalid local image file " + localFilePath, e);
             } finally {
-                if (TIMER) {
-                    stopWatch.stop("readRemoteImage");
+                try {
+                    imageStream.close();
+                } catch (IOException ignore) {
                 }
             }
+        } else {
+            image = readWithLociReaderFromStreamId(localFilePath, format);
         }
         return image;
     }
@@ -434,7 +400,8 @@ public class Utils {
 
             @Override
             protected void doStuff() throws Exception {
-                file = FileMgr.getFileMgr().getFile(filePath, false);
+                FileProxy fileProxy = FileMgr.getFileMgr().getFile(filePath, false);
+                file = fileProxy.getLocalFile();
             }
 
             @Override
@@ -508,47 +475,40 @@ public class Utils {
             throw new IOException("Unable to open " + destination.getAbsolutePath() + " for writing.");
         }
 
-        InputStream input = null;
-        WorkstationFile wfile = new WorkstationFile(standardPath);
+        InputStream input;
+        FileProxy fileProxy = FileMgr.getFileMgr().getFile(standardPath, false);
 
+        Long length;
+        log.info("copyURLToFile {} to {}", standardPath, destination);
+
+        int estimatedCompressionFactor;
+        InputStream fileProxyStream = fileProxy.openContentStream();
         try {
-            input = wfile.getStream();
-            Long length = wfile.getLength();
-
-            log.info("copyURLToFile: length={}, effectiveURL={}", length, wfile.getEffectiveURL());
-
-            if (length != null && length == 0) {
-                throw new IOException("length of " + wfile.getEffectiveURL() + " is 0");
-            }
-
-            if (wfile.getStatusCode() != 200) {
-                throw new IOException("status code for " + wfile.getEffectiveURL() + " is " + wfile.getStatusCode());
-            }
-
-            int estimatedCompressionFactor = 1;
             if (standardPath.endsWith(EXTENSION_BZ2) &&
-                    (! destination.getName().endsWith(EXTENSION_BZ2))) {
-                input = new BZip2CompressorInputStream(input, true);
+                    (!destination.getName().endsWith(EXTENSION_BZ2))) {
+                input = new BZip2CompressorInputStream(fileProxyStream, true);
                 estimatedCompressionFactor = 3;
                 length = null;
+            } else {
+                input = fileProxyStream;
+                estimatedCompressionFactor = 1;
+                length = fileProxy.estimateSizeInBytes().orElse(null);
             }
+        } catch (Exception e) {
+            IOUtils.closeQuietly(fileProxyStream);
+            throw e;
+        }
 
-            FileOutputStream output = new FileOutputStream(destination);
-            
-            try {
-                final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
-                if (length != null && totalBytesWritten < length) {
-                    throw new CancellationException("Bytes written (" + totalBytesWritten + ") for " + wfile.getEffectiveURL() +
-                                          " is less than source length (" + length + ")");
-                }
-            } 
-            finally {
-                IOUtils.closeQuietly(input); // close input here to ensure bzip stream is properly closed
-                IOUtils.closeQuietly(output);
+        FileOutputStream output = new FileOutputStream(destination);
+        try {
+            final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
+            if (length != null && totalBytesWritten < length) {
+                throw new CancellationException("Bytes written (" + totalBytesWritten + ") for " + fileProxy.getFileId() +
+                                      " is less than source length (" + length + ")");
             }
-        } 
-        finally {
-            wfile.close();
+        } finally {
+            IOUtils.closeQuietly(input); // close input here to ensure bzip stream is properly closed
+            IOUtils.closeQuietly(output);
         }
     }
 
@@ -650,19 +610,7 @@ public class Utils {
         else {
             log.warn("No length given, falling back on inefficient copy method");
 
-            // 30-35 MB/s (Windows to NAS)
-//          ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_BUFFER_SIZE);
-//            int numRead = 0;
-//            long totalBytesWritten = 0; 
-//            while (numRead >= 0) {
-//                buffer.rewind();
-//                numRead = inc.read(buffer);
-//                buffer.rewind();
-//                totalBytesWritten += output.getChannel().write(buffer);
-//            }
-            
             // 10-15 MB/s (Windows to NAS)
-            
             byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
             int bytesRead;
             long totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;

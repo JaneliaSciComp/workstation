@@ -99,8 +99,11 @@ public class RestJsonClientManager {
         };
         client.register(headerFilter);
 
-        //client.register(CustomLoggingFilter.class);
         return client;
+    }
+
+    public Client getHttpClient(boolean auth) {
+        return auth ? authClient : client;
     }
 
     public WebTarget getTarget(String serverUrl, boolean auth) {

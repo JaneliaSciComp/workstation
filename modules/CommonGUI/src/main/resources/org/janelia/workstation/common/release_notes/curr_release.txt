@@ -20,8 +20,10 @@ MouseLight Tools
   dependency on internal Samba drive mounts. It is no longer necessary to mount external drives to use these tools.
 
 Large Volume Viewer
-* Fixed bug: merge and split should work when autotracing is on
+* Merge and split should work when autotracing is on
 * Added "unique" predefined note
+* Present spatial filters in sorted order
 
 Horta
 * Import/export color model dialogs default to standard folder on shared drive
+* Fixed issue with neuron becoming unselectable in Horta

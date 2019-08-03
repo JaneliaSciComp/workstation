@@ -1,8 +1,8 @@
 package org.janelia.horta.volume;
 
 import java.io.IOException;
+
 import org.janelia.console.viewerapi.model.ImageColorModel;
-// import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial;
@@ -19,14 +19,12 @@ import org.janelia.horta.actors.BrainTileMesh;
 public class BrickActor extends MeshActor implements DepthSlabClipper {
     private final BrainTileInfo brainTile;
     private final BrickMaterial brickMaterial;
-    
-    public BrickActor(BrainTileInfo brainTile, 
-            ImageColorModel brightnessModel, 
-            VolumeState volumeState, 
-            int colorChannel) throws IOException 
-    {
-        super(
-                new BrainTileMesh(brainTile), 
+
+    public BrickActor(BrainTileInfo brainTile,
+                      ImageColorModel brightnessModel,
+                      VolumeState volumeState,
+                      int colorChannel) throws IOException {
+        super(new BrainTileMesh(brainTile),
                 new BrickMaterial(brainTile, brightnessModel, volumeState, colorChannel),
                 null);
         this.brainTile = brainTile;
@@ -34,24 +32,22 @@ public class BrickActor extends MeshActor implements DepthSlabClipper {
     }
 
     // Constructor version that uses preloaded Texture3d
-    public BrickActor(
-            BrainTileInfo brainTile,
-            Texture3d texture3d, 
-            ImageColorModel brightnessModel, 
-            VolumeState volumeState) 
-    {
+    public BrickActor(BrainTileInfo brainTile,
+                      Texture3d texture3d,
+                      ImageColorModel brightnessModel,
+                      VolumeState volumeState) {
         super(new BrainTileMesh(brainTile),
                 new BrickMaterial(texture3d, brightnessModel, volumeState),
                 null);
         this.brainTile = brainTile;
-        this.brickMaterial = (BrickMaterial)getMaterial();    }
+        this.brickMaterial = (BrickMaterial)getMaterial();
+    }
     
     public void setOpaqueDepthTexture(Texture2d depthTexture) {
         brickMaterial.setOpaqueDepthTexture(depthTexture);
     }
 
-    public BrainTileInfo getBrainTile()
-    {
+    public BrainTileInfo getBrainTile() {
         return brainTile;
     }
 
@@ -61,12 +57,10 @@ public class BrickActor extends MeshActor implements DepthSlabClipper {
 
     private static class BrickMaterial extends VolumeMipMaterial {
 
-        private BrickMaterial(
-                BrainTileInfo brainTile, 
-                ImageColorModel imageColorModel,
-                VolumeState volumeState,
-                int colorChannel) throws IOException
-        {
+        private BrickMaterial(BrainTileInfo brainTile,
+                              ImageColorModel imageColorModel,
+                              VolumeState volumeState,
+                              int colorChannel) throws IOException {
             super(safeLoadBrick(brainTile, colorChannel), imageColorModel);
             setVolumeState(volumeState);
         }
@@ -82,8 +76,7 @@ public class BrickActor extends MeshActor implements DepthSlabClipper {
         private BrickMaterial(
                 Texture3d texture3d,
                 ImageColorModel imageColorModel,
-                VolumeState volumeState) 
-        {
+                VolumeState volumeState) {
             super(texture3d, imageColorModel);
             setVolumeState(volumeState);
         }

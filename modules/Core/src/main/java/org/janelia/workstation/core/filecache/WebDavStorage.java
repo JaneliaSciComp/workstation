@@ -15,14 +15,14 @@ class WebDavStorage extends AbstractWebDav {
      * populate this file's attributes.
      *
      * @param  webdavFileKey        the webdav file key
-     * @param  multiStatusResponse  the PROPFIND response for the file.
+     * @param  multiStatusResponses  the PROPFIND responses for the file.
      *
      * @throws IllegalArgumentException
      *   if a file specific URL cannot be constructed.
      */
-    WebDavStorage(String webdavFileKey, MultiStatusResponse multiStatusResponse)
+    WebDavStorage(String webdavFileKey, MultiStatusResponse[] multiStatusResponses)
             throws IllegalArgumentException {
-        super(webdavFileKey, multiStatusResponse);
+        super(webdavFileKey, multiStatusResponses);
     }
 
 }

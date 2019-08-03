@@ -25,7 +25,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class RandomNeuronGenerator {
 
-    private static final Logger log = LoggerFactory.getLogger(org.janelia.it.jacs.shared.lvv.RandomNeuronGenerator.class);
+    private static final Logger log = LoggerFactory.getLogger(RandomNeuronGenerator.class);
 
     private static final UnitVec3 UNIT_X = new UnitVec3(CoordinateAxis.X);
     private static final UnitVec3 UNIT_Y = new UnitVec3(CoordinateAxis.Y);

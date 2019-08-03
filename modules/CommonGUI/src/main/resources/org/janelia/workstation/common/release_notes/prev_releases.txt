@@ -1,3 +1,15 @@
+// 8.1.1
+
+Data Browser
+* All context menu items are now also found in the main menu under Actions
+* Streamlined publishing workflow (right-click and choose "Stage Samples for Publishing")
+* Data Sets and Fly Line Releases are now accessible as top-level items in the Data Explorer
+* Added warning when no publishing names are found
+
+MouseLight Tools
+* Present spatial filters in sorted order
+* Fixed issue with neuron becoming unselectable in Horta
+
 // 8.1
 
 Data Browser

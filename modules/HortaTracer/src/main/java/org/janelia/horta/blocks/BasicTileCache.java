@@ -42,8 +42,8 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
 
     private final Set<TILE_KEY> nearVolumeMetadata = new ConcurrentHashSet<>();
 
-    protected final Map<TILE_KEY, TILE_DATA> nearVolumeInRam = new ConcurrentHashMap<>();
-    protected final Map<TILE_KEY, TILE_DATA> obsoleteTiles = new ConcurrentHashMap<>();
+    final Map<TILE_KEY, TILE_DATA> nearVolumeInRam = new ConcurrentHashMap<>();
+    final Map<TILE_KEY, TILE_DATA> obsoleteTiles = new ConcurrentHashMap<>();
 
     // To enable/disable loading
     private RequestProcessor loadProcessor;
@@ -51,7 +51,7 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public BasicTileCache() {
+    BasicTileCache() {
         Preferences pref = NbPreferences.forModule(TileLoadingPanel.class);
 
         String concurrentLoadsStr = pref.get(TileLoadingPanel.PREFERENCE_CONCURRENT_LOADS, TileLoadingPanel.PREFERENCE_CONCURRENT_LOADS_DEFAULT);
@@ -156,11 +156,6 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
             queueLoad(key, getLoadRunner());
         }
 
-        if (displayChanged) {
-            // No, don't update when blocks are removed, only when they are added.
-            // displayChangeObservable.setChanged();
-            // displayChangeObservable.notifyObservers();
-        }
     }
 
     public ObservableInterface getDisplayChangeObservable() {
@@ -187,13 +182,11 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
         Runnable loadTask = new Runnable() {
             @Override
             public void run() {
-                // log.info("Beginning load for tile {}", key.toString());
-
-                if (Thread.currentThread().isInterrupted()) {
-                    log.info("loadTask was interrupted before it began");
-                    queuedTiles.remove(key);
-                    return;
-                }
+//                if (Thread.currentThread().isInterrupted()) {
+//                    log.info("loadTask was interrupted before it began");
+//                    queuedTiles.remove(key);
+//                    return;
+//                }
 
                 // Move from "queued" to "loading" state
                 synchronized (queuedTiles) {
@@ -206,15 +199,10 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                     queuedTiles.remove(key);
                 }
 
-                ProgressHandle progress = ProgressHandleFactory.createHandle("Loading Tile " + key.toString() + " ...");
+                ProgressHandle progress = ProgressHandleFactory.createHandle("Loading Tile " + key.toString() + " ...", null, null);
 
                 try {
                     // Check whether this tile is still relevant
-                    if (!nearVolumeMetadata.contains(key)) {
-                        return;
-                    }
-
-                    // Maybe after that wait, this tile is no longer needed
                     if (!nearVolumeMetadata.contains(key)) {
                         return;
                     }
@@ -244,10 +232,9 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                     displayChangeObservable.setChanged();
                     displayChangeObservable.notifyObservers();
                 } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
+                    log.info("loadTask was IOException {}", key.toString(), ex);
                 } catch (InterruptedException ex) {
-                    log.info("loadTask was interrupted {}", key.toString());
-                    Exceptions.printStackTrace(ex);
+                    log.info("loadTask was interrupted {}", key.toString(), ex);
                 } finally {
                     loadingTiles.remove(key);
                     progress.finish();

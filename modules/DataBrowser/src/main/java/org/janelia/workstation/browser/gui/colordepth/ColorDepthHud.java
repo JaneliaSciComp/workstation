@@ -7,13 +7,13 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.List;
 
 import javax.swing.*;
 import javax.swing.plaf.LayerUI;
 
 import net.miginfocom.swing.MigLayout;
+import org.apache.commons.io.FilenameUtils;
 import org.janelia.model.domain.enums.SplitHalfType;
 import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
@@ -24,7 +24,6 @@ import org.janelia.workstation.browser.gui.support.AnnotationTagCloudPanel;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
-import org.janelia.workstation.core.filecache.URLProxy;
 import org.janelia.workstation.core.keybind.KeymapUtil;
 import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -273,10 +272,8 @@ public class ColorDepthHud extends ModalDialog {
                 log.debug("sample: {}", sample);
 
                 // Load images
-                URLProxy imageFileURL1 = FileMgr.getFileMgr().getURL(mask.getFilepath(), true);
-                this.image1 = Utils.readImage(imageFileURL1);
-                URLProxy imageFileURL2 = FileMgr.getFileMgr().getURL(image.getFilepath(), true);
-                this.image2 = Utils.readImage(imageFileURL2);
+                this.image1 = Utils.readImageFromInputStream(FileMgr.getFileMgr().openFileInputStream(mask.getFilepath(), false), FilenameUtils.getExtension(mask.getFilepath()));
+                this.image2 = Utils.readImageFromInputStream(FileMgr.getFileMgr().openFileInputStream(image.getFilepath(), false), FilenameUtils.getExtension(image.getFilepath()));
             }
 
             @Override

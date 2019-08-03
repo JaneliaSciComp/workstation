@@ -2,18 +2,19 @@ package org.janelia.workstation.browser.gui.colordepth;
 
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
+import java.io.InputStream;
 import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
+import org.apache.commons.io.FilenameUtils;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleAlignmentResult;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
-import org.janelia.workstation.core.filecache.URLProxy;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.util.Utils;
@@ -75,8 +76,9 @@ public class CreateMaskFromSampleAction extends AbstractAction {
             
             @Override
             protected void doStuff() throws Exception {
-                URLProxy imageFileURL = FileMgr.getFileMgr().getURL(imagePath, true);
-                this.image = Utils.readImage(imageFileURL);
+                try (InputStream imageStream = FileMgr.getFileMgr().openFileInputStream(imagePath, false)) {
+                    this.image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imagePath));
+                }
                 alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();
             }
 

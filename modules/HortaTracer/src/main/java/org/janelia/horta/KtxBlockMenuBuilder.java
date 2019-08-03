@@ -22,7 +22,7 @@ class KtxBlockMenuBuilder {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public boolean isPreferKtx() {
+    boolean isPreferKtx() {
         return preferKtx;
     }
 
@@ -30,8 +30,7 @@ class KtxBlockMenuBuilder {
         preferKtx = doPreferKtx;
     }
     
-    void populateMenus(final HortaMenuContext context) 
-    {
+    void populateMenus(final HortaMenuContext context) {
         JMenu tilesMenu = new JMenu("Tiles");
         context.topMenu.add(tilesMenu);
         
@@ -45,7 +44,6 @@ class KtxBlockMenuBuilder {
                 try {
                     nttc.loadPersistentTileAtLocation(context.mouseXyz);
                 } catch (IOException ex) {
-                    // Exceptions.printStackTrace(ex);
                     logger.info("Tile load failed");
                 }
             }

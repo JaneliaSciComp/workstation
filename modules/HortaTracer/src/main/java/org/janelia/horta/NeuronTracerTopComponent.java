@@ -1,10 +1,5 @@
 package org.janelia.horta;
 
-import org.janelia.console.viewerapi.controller.UnmixingListener;
-import org.janelia.horta.render.NeuronMPRenderer;
-import org.janelia.horta.actors.ScaleBar;
-import org.janelia.horta.actors.CenterCrossHairActor;
-import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -35,9 +30,16 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.prefs.Preferences;
+
 import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
@@ -56,15 +58,39 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.MouseInputListener;
 import javax.swing.text.Keymap;
+
+import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
+
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.horta.volume.LocalVolumeBrickSource;
-import org.janelia.horta.volume.StaticVolumeBrickSource;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.console.viewerapi.SynchronizationHelper;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
+import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.console.viewerapi.actions.RenameNeuronAction;
+import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
+import org.janelia.console.viewerapi.actions.ToggleNeuronVisibilityAction;
+import org.janelia.console.viewerapi.controller.ColorModelListener;
+import org.janelia.console.viewerapi.controller.UnmixingListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
+import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
+import org.janelia.console.viewerapi.model.ChannelColorModel;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
+import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertexCreationObserver;
+import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
+import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
+import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
+import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Quaternion;
 import org.janelia.geometry3d.Rotation;
@@ -72,9 +98,38 @@ import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Viewport;
+import org.janelia.geometry3d.WavefrontObjLoader;
 import org.janelia.gltools.GL3Actor;
+import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.MultipassRenderer;
+import org.janelia.gltools.material.TransparentEnvelope;
 import org.janelia.gltools.material.VolumeMipMaterial;
+import org.janelia.horta.actions.ResetHortaRotationAction;
+import org.janelia.horta.activity_logging.ActivityLogHelper;
+import org.janelia.horta.actors.CenterCrossHairActor;
+import org.janelia.horta.actors.ScaleBar;
+import org.janelia.horta.actors.SpheresActor;
+import org.janelia.horta.actors.TetVolumeActor;
+import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
+import org.janelia.horta.loader.DroppedFileHandler;
+import org.janelia.horta.loader.GZIPFileLoader;
+import org.janelia.horta.loader.HortaKtxLoader;
+import org.janelia.horta.loader.HortaSwcLoader;
+import org.janelia.horta.loader.HortaVolumeCache;
+import org.janelia.horta.loader.LZ4FileLoader;
+import org.janelia.horta.loader.ObjMeshLoader;
+import org.janelia.horta.loader.TarFileLoader;
+import org.janelia.horta.loader.TgzFileLoader;
+import org.janelia.horta.loader.TilebaseYamlLoader;
+import org.janelia.horta.movie.HortaMovieSource;
+import org.janelia.horta.nodes.BasicHortaWorkspace;
+import org.janelia.horta.nodes.WorkspaceUtil;
+import org.janelia.horta.render.NeuronMPRenderer;
+import org.janelia.horta.volume.BrickActor;
+import org.janelia.horta.volume.BrickInfo;
+import org.janelia.horta.volume.LocalVolumeBrickSource;
+import org.janelia.horta.volume.StaticVolumeBrickSource;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.rendering.CachedRenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
@@ -83,55 +138,6 @@ import org.janelia.scenewindow.SceneRenderer;
 import org.janelia.scenewindow.SceneRenderer.CameraType;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
-import org.janelia.console.viewerapi.SynchronizationHelper;
-import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
-import org.janelia.console.viewerapi.ViewerLocationAcceptor;
-import org.janelia.console.viewerapi.actions.RenameNeuronAction;
-import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
-import org.janelia.console.viewerapi.actions.ToggleNeuronVisibilityAction;
-import org.janelia.console.viewerapi.controller.ColorModelListener;
-import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
-import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
-import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
-import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertexCreationObserver;
-import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
-import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
-import org.janelia.console.viewerapi.model.VertexWithNeuron;
-import org.janelia.horta.activity_logging.ActivityLogHelper;
-import org.janelia.horta.actors.SpheresActor;
-import org.janelia.horta.loader.DroppedFileHandler;
-import org.janelia.horta.loader.GZIPFileLoader;
-import org.janelia.horta.loader.HortaSwcLoader;
-import org.janelia.horta.loader.HortaVolumeCache;
-import org.janelia.horta.loader.ObjMeshLoader;
-import org.janelia.horta.loader.TarFileLoader;
-import org.janelia.horta.loader.TgzFileLoader;
-import org.janelia.horta.loader.TilebaseYamlLoader;
-import org.janelia.horta.movie.HortaMovieSource;
-import org.janelia.horta.nodes.BasicHortaWorkspace;
-import org.janelia.horta.nodes.WorkspaceUtil;
-import org.janelia.horta.volume.BrickActor;
-import org.janelia.horta.volume.BrickInfo;
-import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
-import org.janelia.console.viewerapi.model.ChannelColorModel;
-import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
-import org.janelia.geometry3d.MeshGeometry;
-import org.janelia.geometry3d.WavefrontObjLoader;
-import org.janelia.gltools.MeshActor;
-import org.janelia.gltools.material.TransparentEnvelope;
-import org.janelia.horta.actions.ResetHortaRotationAction;
-import org.janelia.horta.actors.TetVolumeActor;
-import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
-import org.janelia.horta.blocks.KtxOctreeBlockTileSourceProvider;
-import org.janelia.horta.loader.HortaKtxLoader;
-import org.janelia.horta.loader.LZ4FileLoader;
-import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
-import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
 import org.openide.actions.UndoAction;
@@ -141,11 +147,11 @@ import org.openide.awt.MouseUtils;
 import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
 import org.openide.util.Lookup;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
 import org.openide.util.actions.SystemAction;
 import org.openide.util.lookup.Lookups;
+import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -178,7 +184,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         implements VolumeProjection {
 
     static final String PREFERRED_ID = "NeuronTracerTopComponent";
-    static final String BASE_YML_FILE = "tilebase.cache.yml";
     private static final int DEFAULT_VOLUMES_CACHE_SIZE = 2;
     private static final int DEFAULT_TILES_CACHE_SIZE = 100;
 
@@ -514,7 +519,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         currentSource = locationList.get(0).getSampleUrl().toString();
         defaultColorChannel = locationList.get(0).getDefaultColorChannel();
         volumeCache.setColorChannel(defaultColorChannel);        
-        playback.reviewPoints(locationList, currentSource, autoRotation, speed, stepScale);
+        playback.reviewPoints(locationList, autoRotation, speed, stepScale);
     }
 
     void setSampleLocation(SampleLocation sampleLocation) {
@@ -527,7 +532,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
             }
             ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                    currentSource, neuronTraceLoader,this, sceneWindow
+                    neuronTraceLoader,this, sceneWindow
             );
 
             // if neuron and neuron vertex passed, select this parent vertex
@@ -886,7 +891,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         Viewport viewport = sceneWindow.getCamera().getViewport();
         viewport.setzNearRelative(prefs.getFloat("slabNear", viewport.getzNearRelative()));
         viewport.setzFarRelative(prefs.getFloat("slabFar", viewport.getzFarRelative()));
-        // 
+
         volumeState.projectionMode =
                 prefs.getInt("startupProjectionMode", volumeState.projectionMode);
         volumeState.filteringOrder =
@@ -1062,7 +1067,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     public void loadDroppedYaml(String sourceName, InputStream yamlStream) throws IOException {
-        setVolumeSource(new LocalVolumeBrickSource(URI.create(sourceName), yamlStream, leverageCompressedFiles, Optional::empty));
+        setVolumeSource(new LocalVolumeBrickSource(URI.create(sourceName), yamlStream, leverageCompressedFiles, v -> {}));
         neuronTraceLoader.loadTileAtCurrentFocus(volumeSource);
     }
 
@@ -1206,7 +1211,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
                     logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
                     ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                            currentSource, neuronTraceLoader, NeuronTracerTopComponent.this, sceneWindow
+                            neuronTraceLoader, NeuronTracerTopComponent.this, sceneWindow
                     );
                     RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
                     if (locationProviders.size() > 1) {
@@ -1723,14 +1728,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 }
 
-                // SECTION: Tracing options
-                // menu.add(new JPopupMenu.Separator());
-                // Fetch anchor location before popping menu, because menu causes
-                // hover location to clear
-                // TODO:
-                // NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
-                // tracingInteractor.exportMenuItems(menu, hoverAnchor);
-
                 // Cancel/do nothing action
                 topMenu.add(new JPopupMenu.Separator());
                 topMenu.add(new AbstractAction("Close This Menu [ESC]") {
@@ -1828,11 +1825,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public Vector3 worldXyzForScreenXy(Point2D xy) {
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
         double depthOffset = neuronMPRenderer.depthOffsetForScreenXy(xy, pCam);
-        Vector3 xyz = worldXyzForScreenXy(
-                xy,
-                pCam,
-                depthOffset);
-        return xyz;
+        return worldXyzForScreenXy(xy, pCam, depthOffset);
     }
 
     @Override
@@ -1853,7 +1846,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         return viewport.getHeightPixels() / vantage.getSceneUnitsPerViewportHeight();
     }
 
-    public boolean setCubifyVoxels(boolean cubify) {
+    private boolean setCubifyVoxels(boolean cubify) {
         if (cubify == doCubifyVoxels)
             return false; // no change
         doCubifyVoxels = cubify;
@@ -1912,7 +1905,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         setBackgroundColor(topColor, bottomColor);
     }
 
-    public void setBackgroundColor(Color topColor, Color bottomColor) {
+    private void setBackgroundColor(Color topColor, Color bottomColor) {
         neuronMPRenderer.setBackgroundColor(topColor, bottomColor);
         float[] bf = bottomColor.getColorComponents(new float[3]);
         double bottomLuma = 0.30 * bf[0] + 0.59 * bf[1] + 0.11 * bf[2];
@@ -1934,9 +1927,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     @Override
     public void componentOpened() {
-        // logger.info("Horta opened");
         neuronEditDispatcher.onOpened();
-        // loadStartupPreferences();
     }
 
     // NOTE: componentClosed() is only called when just the Horta window is closed, not
@@ -2042,14 +2033,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         glad.swapBuffers();
     }
 
-    public TmSample getCurrentSample() {
-        if (this.metaWorkspace != null) {
-            return this.metaWorkspace.getSample();
-        } else {
-            return null;
-        }
-    }
-
     public BufferedImage getScreenShot() {
         GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
         glad.getContext().makeCurrent();
@@ -2080,11 +2063,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         activeNeuronSet.updateObjectMeshName(oldName, updatedName);
     }
 
-    public KtxOctreeBlockTileSource getKtxSource() {
+    KtxOctreeBlockTileSource getKtxSource() {
         return ktxSource;
     }
 
-    public void setKtxSource(KtxOctreeBlockTileSource ktxSource) {
+    void setKtxSource(KtxOctreeBlockTileSource ktxSource) {
         this.ktxSource = ktxSource;
         TetVolumeActor.getInstance().setKtxTileSource(ktxSource);
         // Don't load both ktx and raw tiles at the same time
@@ -2100,27 +2083,13 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     void loadPersistentTileAtLocation(Vector3 location) throws IOException {
         if (ktxSource == null) {
-            KtxOctreeBlockTileSource source = openTileSource();
-            if (source == null) {
-                return;
-            }
-            setKtxSource(source);
+            // here it used to create a ktx source but
+            // the code was not correct so for now simply throw the exception
+            // just to see if this ever happens;
+            // if it does this will have to be fixed properly
+            throw new IllegalStateException("Internal Error! KTX source has not been set.");
         }
         neuronTraceLoader.loadKtxTileAtLocation(ktxSource, location, true);
-    }
-
-    private KtxOctreeBlockTileSource openTileSource() {
-        try {
-            return KtxOctreeBlockTileSourceProvider.createKtxOctreeBlockTileSource(this.getCurrentSample(), null);
-        } catch (Exception ex) {
-            logger.warn("Error initializing KTX source for "+getCurrentSample().getFilepath(), ex);
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Error initializing KTX source for sample at " + getCurrentSample().getFilepath(),
-                    "Error initializing KTX source",
-                    JOptionPane.ERROR_MESSAGE);
-            return null;
-        }
     }
 
     public void resetRotation() {
@@ -2130,11 +2099,11 @@ public final class NeuronTracerTopComponent extends TopComponent
                 v, 150);
     }
 
-    public boolean isPreferKtx() {
+    boolean isPreferKtx() {
         return ktxBlockMenuBuilder.isPreferKtx();
     }
 
-    public void setPreferKtx(boolean doPreferKtx) {
+    private void setPreferKtx(boolean doPreferKtx) {
         ktxBlockMenuBuilder.setPreferKtx(doPreferKtx);
     }
 }

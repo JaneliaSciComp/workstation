@@ -258,6 +258,7 @@
                 <configuration>
                     <finalName>${clusterName}</finalName>
                     <installersFilePrefix>${clusterName}</installersFilePrefix>
+                    <debugAdditionalArguments>${janeliaws.debug.args}</debugAdditionalArguments>
                     <etcConfFile>${basedir}/target/${brandingToken}.conf</etcConfFile>
                     <!-- Override ANT-based installer builder -->
                     <templateFile>${basedir}/src/main/app-resources/template.xml</templateFile>

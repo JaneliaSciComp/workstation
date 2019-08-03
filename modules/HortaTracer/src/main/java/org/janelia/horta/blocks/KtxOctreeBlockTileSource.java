@@ -31,7 +31,6 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
 
     protected final URL originatingSampleURL;
     protected String sampleKtxTilesBaseDir;
-    protected String sourceServerURL;
     protected KtxOctreeBlockTileKey rootKey;
     protected KtxHeader rootHeader;
     protected KtxOctreeResolution maximumResolution;
@@ -45,10 +44,9 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
     public KtxOctreeBlockTileSource init(TmSample sample) {
         Preconditions.checkArgument(sample.getFilepath() != null && sample.getFilepath().trim().length() > 0);
         this.sampleKtxTilesBaseDir = getKtxBaseDir(sample.getFilepath());
-        this.sourceServerURL = getSourceServerURL(sample);
         this.rootKey = new KtxOctreeBlockTileKey(this, Collections.<Integer>emptyList());
-        this.rootHeader = createKtxHeader(rootKey);
-        this.maximumResolution = createKtxResolution(rootHeader);
+        this.rootHeader = loadKtxHeader(rootKey);
+        this.maximumResolution = getKtxResolution(rootHeader);
         Pair<ConstVector3, Vector3> volumeCorners = getVolumeCorners(sample, rootHeader);
         this.origin = volumeCorners.getLeft();
         this.outerCorner = volumeCorners.getRight();
@@ -67,28 +65,25 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         }
     }
 
-    protected abstract String getSourceServerURL(TmSample sample);
-
-    protected URI getKeyBlockPathURI(KtxOctreeBlockTileKey key) {
-        return URI.create(sampleKtxTilesBaseDir)
+    URI getKeyBlockRelativePathURI(KtxOctreeBlockTileKey key) {
+        return URI.create(getKtxSubDir())
                 .resolve(key.getKeyPath())
                 .resolve(key.getKeyBlockName("_8_xy_"))
                 ;
     }
 
-    private KtxHeader createKtxHeader(KtxOctreeBlockTileKey octreeRootKey) {
-        try {
-            KtxHeader ktxHeader = new KtxHeader();
-            ktxHeader.loadStream(streamKeyBlock(octreeRootKey));
+    private KtxHeader loadKtxHeader(KtxOctreeBlockTileKey octreeRootKey) {
+        KtxHeader ktxHeader = new KtxHeader();
+        try (InputStream blockStream = streamKeyBlock(octreeRootKey)) {
+            ktxHeader.loadStream(blockStream);
             return ktxHeader;
         } catch (IOException e) {
-            LOG.error("Error loading KTX header for {}({}) from {}",
-                    octreeRootKey, getKeyBlockPathURI(octreeRootKey), sourceServerURL);
+            LOG.error("Error loading KTX header for {}({}) from {}", octreeRootKey, getKeyBlockRelativePathURI(octreeRootKey), originatingSampleURL);
             throw new IllegalStateException(e);
         }
     }
 
-    private KtxOctreeResolution createKtxResolution(KtxHeader ktxHeader) {
+    private KtxOctreeResolution getKtxResolution(KtxHeader ktxHeader) {
         // Parse maximum resolution
         int maxRes = Integer.parseInt(ktxHeader.keyValueMetadata.get("multiscale_total_levels").trim()) - 1;
         return new KtxOctreeResolution(maxRes);
@@ -213,10 +208,9 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         ConstVector3 blockOrigin = getBlockOrigin(octreeCenterBlockKey);
         KtxOctreeResolution ktxResolution = new KtxOctreeResolution(octreeCenterBlockKey.getKeyDepth());
         ConstVector3 blockExtent = getBlockSize(ktxResolution);
-        Vector3 centroid = new Vector3(blockExtent);
-        centroid.multiplyScalar(0.5f);
-        centroid = centroid.plus(blockOrigin);
-        return centroid;
+        return new Vector3(blockExtent)
+                .multiplyScalar(0.5f)
+                .plus(blockOrigin);
     }
 
     private ConstVector3 getBlockOrigin(KtxOctreeBlockTileKey octreeKey) {
@@ -241,12 +235,14 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
 
     @Override
     public BlockTileData loadBlock(KtxOctreeBlockTileKey key) throws IOException, InterruptedException {
-        try (InputStream stream = streamKeyBlock(key)) {
+        try (InputStream blockStream = streamKeyBlock(key)) {
             KtxOctreeBlockTileData data = new KtxOctreeBlockTileData();
-            data.loadStreamInterruptably(stream);
+            data.loadStream(blockStream);
             return data;
         }
     }
+
+    abstract URI getDataServerURI();
 
     @Override
     public URL getOriginatingSampleURL() {
@@ -256,7 +252,7 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
     @Override
     public int hashCode() {
         int hash = 3;
-        hash = 59 * hash + Objects.hashCode(this.sourceServerURL);
+        hash = 59 * hash + Objects.hashCode(this.originatingSampleURL);
         hash = 59 * hash + Objects.hashCode(this.sampleKtxTilesBaseDir);
         return hash;
     }
@@ -273,7 +269,7 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
             return false;
         }
         final KtxOctreeBlockTileSource other = (KtxOctreeBlockTileSource) obj;
-        if (!Objects.equals(this.sourceServerURL, other.sourceServerURL)) {
+        if (!Objects.equals(this.originatingSampleURL, other.originatingSampleURL)) {
             return false;
         }
         if (!Objects.equals(this.sampleKtxTilesBaseDir, other.sampleKtxTilesBaseDir)) {

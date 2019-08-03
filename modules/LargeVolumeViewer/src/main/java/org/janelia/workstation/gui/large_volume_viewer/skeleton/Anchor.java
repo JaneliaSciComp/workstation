@@ -2,7 +2,7 @@ package org.janelia.workstation.gui.large_volume_viewer.skeleton;
 
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.controller.SkeletonAnchorListener;
 
 import java.util.LinkedHashSet;
