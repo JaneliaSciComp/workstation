@@ -12,14 +12,12 @@ import javax.swing.JOptionPane;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
-import org.janelia.model.domain.interfaces.HasIdentifier;
-import org.janelia.model.domain.sample.DataSet;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.nodes.IdentifiableNode;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
@@ -31,11 +29,11 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ColorDepthLibrariesNode extends AbstractNode implements HasIdentifier {
+public class ColorDepthLibrariesNode extends IdentifiableNode {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthLibrariesNode.class);
 
-    private static final long NODE_ID = 30L; // This magic number means nothing, it just needs to be unique and different from GUID space.
+    public static final long NODE_ID = 30L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final ColorDepthLibrariesChildFactory childFactory;
 

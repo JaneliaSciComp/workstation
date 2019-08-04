@@ -6,10 +6,10 @@ import java.awt.datatransfer.Transferable;
 import java.io.IOException;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.model.domain.interfaces.HasIdentifier;
-import org.janelia.workstation.core.nodes.IdentifiableNode;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.nodes.NodeTracker;
+import org.janelia.workstation.core.nodes.UserObjectNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.util.datatransfer.ExTransferable;
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class InternalNode<T extends HasIdentifier> extends IdentifiableNode<T> {
+public class InternalNode<T extends HasIdentifier> extends UserObjectNode<T> {
         
     private final static Logger log = LoggerFactory.getLogger(InternalNode.class);
     

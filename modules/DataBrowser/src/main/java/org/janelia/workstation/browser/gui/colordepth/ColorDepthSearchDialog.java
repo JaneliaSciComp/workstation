@@ -23,10 +23,8 @@ import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
-import org.janelia.model.domain.workspace.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -293,11 +291,9 @@ public class ColorDepthSearchDialog extends ModalDialog {
                 return;
             }
         }
-        
-        ColorDepthSearch search = searchOptionsPanel.getSearch();
 
         if (execute) {
-            if (search.getLibraries().isEmpty()) {
+            if (searchOptionsPanel.getSearch().getLibraries().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "You need to select some color depth libraries to search against.");
                 return;
             }
@@ -305,7 +301,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
         
         SimpleWorker worker = new SimpleWorker() {
             
-            ColorDepthSearch colorDepthSearch = search;
+            ColorDepthSearch search = searchOptionsPanel.getSearch();
 
             @Override
             protected void doStuff() throws Exception {
@@ -319,40 +315,36 @@ public class ColorDepthSearchDialog extends ModalDialog {
                 }
 
                 if (newSearchRadioButton.isSelected()) {
-                    colorDepthSearch.setName(searchNameField.getText());   
+                    search.setName(searchNameField.getText());
                 }             
                 
-                colorDepthSearch = searchOptionsPanel.saveChanges();
-                
-                model.addMaskToSearch(colorDepthSearch, mask);
+                search = searchOptionsPanel.saveChanges();
+                search = model.addMaskToSearch(search, mask);
                 
                 if (execute) {
-                    ActivityLogHelper.logUserAction("AddMaskDialog.executeSearch", colorDepthSearch);
+                    ActivityLogHelper.logUserAction("ColorDepthSearchDialog.executeSearch", search);
 
                     AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
                     Long serviceId = asyncServiceClient.invokeService("colorDepthObjectSearch",
-                            ImmutableList.of("-searchId", colorDepthSearch.getId().toString()),
+                            ImmutableList.of("-searchId", search.getId().toString()),
                             null,
                             ImmutableMap.of());
                     
-                    AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(colorDepthSearch, serviceId);
+                    AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(search, serviceId);
                     executeWorker.executeWithEvents();
+                }
+                else {
+                    ActivityLogHelper.logUserAction("ColorDepthSearchDialog.processSave", search);
                 }
             }
 
             @Override
             protected void hadSuccess() {
-                
+                SwingUtilities.invokeLater(() -> {
+                    DomainExplorerTopComponent.getInstance().expandNodeById(ColorDepthSearchesNode.NODE_ID);
+                    DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(search.getId());
+                });
                 setVisible(false);
-                ActivityLogHelper.logUserAction("AddMaskDialog.processSave", mask.getId());
-
-                if (colorDepthSearch != null) {
-                    SwingUtilities.invokeLater(() -> {
-                        DomainExplorerTopComponent.getInstance().expandNodeById(ColorDepthSearchesNode.NODE_ID);
-                        DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(colorDepthSearch.getId());
-                    });
-                }
-
             }
 
             @Override

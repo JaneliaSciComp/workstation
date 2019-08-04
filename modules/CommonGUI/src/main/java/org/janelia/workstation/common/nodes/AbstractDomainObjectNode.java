@@ -12,6 +12,7 @@ import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
 import org.janelia.workstation.core.nodes.NodeTracker;
+import org.janelia.workstation.core.nodes.UserObjectNode;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -44,7 +45,7 @@ import java.util.List;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class AbstractDomainObjectNode<T extends DomainObject> 
-        extends IdentifiableNode<T>
+        extends UserObjectNode<T>
         implements DomainObjectNode<T>, Has2dRepresentation  {
 
     private final static Logger log = LoggerFactory.getLogger(AbstractDomainObjectNode.class);

@@ -6,11 +6,14 @@ import org.openide.nodes.Children;
 import org.openide.util.Lookup;
 
 /**
- * A node which has an identifier.
+ * A NetBeans node which has an identifier.
+ *
+ * In a perfect world, we could just use intersection types (e.g. <T extends Node & HasIdentifier>) for this sort of
+ * thing. Unfortunately, NetBeans eschews interfaces and thus forces this inheritance hierarchy.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class IdentifiableNode<T> extends AbstractNode implements HasIdentifier {
+public abstract class IdentifiableNode extends AbstractNode implements HasIdentifier {
 
     public IdentifiableNode(Children children) {
         super(children);
@@ -22,8 +25,4 @@ public abstract class IdentifiableNode<T> extends AbstractNode implements HasIde
 
     public abstract Long getId();
 
-    public abstract T getObject();
-
-    public abstract void update(T refreshed);
-    
 }

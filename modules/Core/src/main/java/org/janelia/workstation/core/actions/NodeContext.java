@@ -9,7 +9,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import org.janelia.workstation.core.nodes.ChildObjectsNode;
-import org.janelia.workstation.core.nodes.IdentifiableNode;
+import org.janelia.workstation.core.nodes.UserObjectNode;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -35,8 +35,8 @@ public class NodeContext {
         this.nodes = nodes;
         this.objects = new ArrayList<>();
         for (Node node : nodes) {
-            if (node instanceof IdentifiableNode) {
-                Object object = ((IdentifiableNode) node).getObject();
+            if (node instanceof UserObjectNode) {
+                Object object = ((UserObjectNode) node).getObject();
                 objects.add(object);
             }
             else if (node instanceof ChildObjectsNode) {

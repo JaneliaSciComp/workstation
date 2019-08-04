@@ -8,14 +8,13 @@ import java.util.Map;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.nodes.IdentifiableNode;
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
 import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
@@ -27,11 +26,11 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class RecentlyOpenedItemsNode extends AbstractNode implements HasIdentifier {
+public class RecentlyOpenedItemsNode extends IdentifiableNode {
         
     private final static Logger log = LoggerFactory.getLogger(RecentlyOpenedItemsNode.class);
     
-    private static final long NODE_ID = 10L; // This magic number means nothing, it just needs to be unique and different from GUID space.
+    public static final long NODE_ID = 10L; // This magic number means nothing, it just needs to be unique and different from GUID space.
     
     private final DomainObjectNodeChildFactory childFactory;
 

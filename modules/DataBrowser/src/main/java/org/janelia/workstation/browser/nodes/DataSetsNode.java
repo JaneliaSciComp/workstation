@@ -10,15 +10,14 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.workstation.browser.gui.dialogs.DataSetDialog;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.nodes.IdentifiableNode;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
@@ -30,11 +29,11 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DataSetsNode extends AbstractNode implements HasIdentifier {
+public class DataSetsNode extends IdentifiableNode {
 
     private final static Logger log = LoggerFactory.getLogger(DataSetsNode.class);
 
-    private static final long NODE_ID = 20L; // This magic number means nothing, it just needs to be unique and different from GUID space.
+    public static final long NODE_ID = 20L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final DataSetNodeChildFactory childFactory;
 

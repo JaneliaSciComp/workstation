@@ -11,15 +11,14 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
-import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.nodes.IdentifiableNode;
+import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
@@ -31,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ColorDepthSearchesNode extends AbstractNode implements HasIdentifier {
+public class ColorDepthSearchesNode extends IdentifiableNode {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchesNode.class);
 
@@ -41,6 +40,7 @@ public class ColorDepthSearchesNode extends AbstractNode implements HasIdentifie
 
     ColorDepthSearchesNode() {
         this(new ColorDepthSearchesChildFactory());
+        NodeTracker.getInstance().registerNode(this);
     }
 
     private ColorDepthSearchesNode(ColorDepthSearchesChildFactory childFactory) {

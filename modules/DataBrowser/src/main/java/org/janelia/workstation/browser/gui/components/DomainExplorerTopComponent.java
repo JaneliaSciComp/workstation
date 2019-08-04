@@ -47,6 +47,7 @@ import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelection
 import org.janelia.workstation.core.nodes.IdentifiableNode;
 import org.janelia.workstation.core.nodes.IdentifiableNodeSelectionModel;
 import org.janelia.workstation.core.nodes.NodeTracker;
+import org.janelia.workstation.core.nodes.UserObjectNode;
 import org.janelia.workstation.core.util.ConcurrentUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
@@ -398,12 +399,12 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         final List<Long[]> expanded = beanTreeView.getExpandedPaths();
         DomainObject domainObject = event.getDomainObject();
         
-        Set<IdentifiableNode<DomainObject>> nodes = NodeTracker.getInstance().getNodesByObject(domainObject);
+        Set<IdentifiableNode> nodes = NodeTracker.getInstance().getNodesByObject(domainObject);
         log.info("Found {} nodes for {}",nodes.size(),domainObject);
 
         if (!nodes.isEmpty()) {
             log.info("Updating removed object: {}",domainObject.getName());
-            for(IdentifiableNode<?> node : nodes) {
+            for(IdentifiableNode node : nodes) {
                 try {
                     log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
                     node.destroy();
@@ -426,10 +427,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             final List<Long[]> expanded = beanTreeView.getExpandedPaths();
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for(DomainObject domainObject : event.getDomainObjects()) {
-                Set<IdentifiableNode<DomainObject>> nodes = NodeTracker.getInstance().getNodesByObject(domainObject);
+                Set<IdentifiableNode> nodes = NodeTracker.getInstance().getNodesByObject(domainObject);
                 if (!nodes.isEmpty()) {
                     log.info("Updating {} nodes for invalidated object: {}", nodes.size(), domainObject.getName());
-                    for(IdentifiableNode<DomainObject> node : nodes) {
+                    for(IdentifiableNode node : nodes) {
                         try {
                             DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
                             if (refreshed==null) {
@@ -437,9 +438,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                                 node.destroy();
                                 updated = true;
                             }
-                            else {
+                            else if (node instanceof UserObjectNode) {
+                                UserObjectNode<DomainObject> userObjectNode = ((UserObjectNode) node);
                                 log.debug("  Updating node@{} with refreshed object",System.identityHashCode(node));
-                                node.update(refreshed);
+                                userObjectNode.update(refreshed);
                                 updated = true;
                             }
                         }  
@@ -568,12 +570,18 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         beanTreeView.expand(idPath);
     }
 
-    public void expandNodeById(Long id) {
+    public boolean expandNodeById(Long id) {
         log.info("expandNodeById({})", id);
         for(Node node : NodeTracker.getInstance().getNodesById(id)) {
-            expand(NodeUtils.createIdPath(node));
-            break;
+            if (node != null) {
+                Long[] idPath = NodeUtils.createIdPath(node);
+                if (idPath!=null) {
+                    expand(idPath);
+                    return true;
+                }
+            }
         }
+        return false;
     }
 
     public void selectNode(Node node) {

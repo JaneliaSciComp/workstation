@@ -38,11 +38,11 @@ public class NodeTracker {
      * Package private method for nodes to use to register themselves.
      * @param node
      */
-    public void registerNode(final IdentifiableNode<?> node) {
+    public void registerNode(final IdentifiableNode node) {
         // Clear existing references to similar nodes
         int c = 0;
         for(Iterator<WeakReference> iterator = nodesById.get(node.getId()).iterator(); iterator.hasNext(); ) {
-            WeakReference<IdentifiableNode<?>> ref = iterator.next();
+            WeakReference<IdentifiableNode> ref = iterator.next();
             if (ref.get()==null) {
                 log.trace("removing expired reference for {}",node.getId());
                 iterator.remove();
@@ -54,20 +54,20 @@ public class NodeTracker {
         if (c>1) {
             log.trace("Object {} has {} nodes",node.getDisplayName(), c);
         }
-        
+
         nodesById.put(node.getId(), new WeakReference<>(node));
         log.debug("registered node@{} - {}",System.identityHashCode(node),node.getDisplayName());
     }
-    
+
     /**
      * Package private method for nodes to use to deregister themselves.
      * @param node
      */
-    public void deregisterNode(final IdentifiableNode<?> node) {
+    public void deregisterNode(final IdentifiableNode node) {
         Long id = node.getId();
         for(Iterator<WeakReference> iterator = nodesById.get(id).iterator(); iterator.hasNext(); ) {
-            WeakReference<IdentifiableNode<?>> ref = iterator.next();
-            IdentifiableNode<?> regNode = ref.get();
+            WeakReference<IdentifiableNode> ref = iterator.next();
+            IdentifiableNode regNode = ref.get();
             if (regNode==node) {
                 log.debug("unregistered node@{} - {}",System.identityHashCode(regNode),regNode.getDisplayName());
                 iterator.remove();
@@ -80,22 +80,22 @@ public class NodeTracker {
      * @param object
      * @return
      */
-    public <T extends HasIdentifier> Set<IdentifiableNode<T>> getNodesByObject(T object) {
+    public Set<IdentifiableNode> getNodesByObject(HasIdentifier object) {
         log.debug("getting nodes for {}",object);
         return getNodesById(object.getId());
     }
-    
+
     /**
      * Get all the nodes currently in use which hold a domain object with the given id.
      * @param id
      * @return
      */
-    public <T extends HasIdentifier> Set<IdentifiableNode<T>> getNodesById(Long id) {
+    public Set<IdentifiableNode> getNodesById(Long id) {
         log.debug("getting nodes with id {}",id);
-        Set<IdentifiableNode<T>> nodes = new HashSet<>();
+        Set<IdentifiableNode> nodes = new HashSet<>();
         for(Iterator<WeakReference> iterator = nodesById.get(id).iterator(); iterator.hasNext(); ) {
-            WeakReference<IdentifiableNode<T>> ref = iterator.next();
-            IdentifiableNode<T> node = ref.get();
+            WeakReference<IdentifiableNode> ref = iterator.next();
+            IdentifiableNode node = ref.get();
             if (node==null) {
                 iterator.remove();
             }

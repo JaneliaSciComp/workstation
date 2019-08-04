@@ -100,11 +100,13 @@ public class NodeUtils {
     }
     
     public static Long[] createIdPath(Node node) {
-        
+
+        if (node==null) throw new IllegalArgumentException("Null node provided");
+
         LinkedList<Long> ar = new LinkedList<>();
         
         if (node instanceof HasIdentifier) {
-            while ((node != null) && (node instanceof HasIdentifier)) {
+            while (node instanceof HasIdentifier) {
                 ar.addFirst(((HasIdentifier)node).getId());
                 node = node.getParentNode();
             }

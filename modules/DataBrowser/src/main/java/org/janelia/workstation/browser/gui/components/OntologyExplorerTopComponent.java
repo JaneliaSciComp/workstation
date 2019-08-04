@@ -802,7 +802,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
 
     public void executeBinding(Long ontologyTermId) {
 
-        for (IdentifiableNode<?> identifiableNode : NodeTracker.getInstance().getNodesById(ontologyTermId)) {
+        for (IdentifiableNode identifiableNode : NodeTracker.getInstance().getNodesById(ontologyTermId)) {
 
             // Now we can select the node we actually want
             Long[] path = NodeUtils.createIdPath(identifiableNode);
@@ -844,7 +844,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 // Refresh the nodes that are losing the keybind
                 if (existingAction instanceof OntologyElementAction) {
                     OntologyElementAction existingAction2 = (OntologyElementAction)existingAction;
-                    for (IdentifiableNode<?> node : NodeTracker.getInstance().getNodesById(existingAction2.getOntologyTermId())) {
+                    for (IdentifiableNode node : NodeTracker.getInstance().getNodesById(existingAction2.getOntologyTermId())) {
                         if (node instanceof OntologyTermNode) {
                             ((OntologyTermNode)node).fireShortcutChanged();
                         }
@@ -853,7 +853,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             }
             
             // Refresh the nodes gaining the keybind
-            for (IdentifiableNode<?> node : NodeTracker.getInstance().getNodesById(action.getOntologyTermId())) {
+            for (IdentifiableNode node : NodeTracker.getInstance().getNodesById(action.getOntologyTermId())) {
                 if (node instanceof OntologyTermNode) {
                     OntologyTermNode ontologyTermNode = (OntologyTermNode)node;
                     ontologyTermNode.fireShortcutChanged();
