@@ -17,6 +17,7 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
+import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -44,6 +45,7 @@ public class FlyLineReleasesNode extends IdentifiableNode {
     private FlyLineReleasesNode(LineReleaseNodeChildFactory childFactory) {
         super(Children.create(childFactory, false));
         this.childFactory = childFactory;
+        NodeTracker.getInstance().registerNode(this);
     }
 
     @Override

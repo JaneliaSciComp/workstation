@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,15 +26,21 @@ import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.context.ApplyAnnotationAction;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
+import org.janelia.workstation.browser.gui.components.DomainListViewManager;
+import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
+import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
 import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.model.PreferenceConstants;
+import org.janelia.workstation.core.nodes.IdentifiableNode;
+import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -141,7 +146,6 @@ public class StageForPublishingDialog extends ModalDialog {
     }
 
     private void updateState() {
-
         if (existingReleaseRadioButton.isSelected()) {
             existingReleaseLabel.setEnabled(true);
             releaseComboBox.setEnabled(true);
@@ -215,10 +219,16 @@ public class StageForPublishingDialog extends ModalDialog {
             @Override
             protected void hadSuccess() {
 
+                log.info("lastSelectedRelease: {}", lastSelectedRelease);
+                log.info("lastSelectedObjectives: {}", lastSelectedObjectives);
+
                 releaseComboPanel.removeAll();
                 releaseComboPanel.add(releaseComboBox);
 
+                // By default, select "New Release"
                 newReleaseRadioButton.setSelected(true);
+                existingReleaseRadioButton.setSelected(false);
+
                 if (releases.isEmpty()) {
                     existingReleaseRadioButton.setEnabled(false);
                     releaseComboBox.setEnabled(false);
@@ -237,16 +247,25 @@ public class StageForPublishingDialog extends ModalDialog {
                             toSelect = last;
                         }
                     }
-                    if (lastSelectedRelease!=null) {
+                    if (toSelect!=null) {
                         model.setSelectedItem(toSelect);
+                        // Select "Existing Release"
                         newReleaseRadioButton.setSelected(false);
-                        existingReleaseRadioButton.setEnabled(true);
+                        existingReleaseRadioButton.setSelected(true);
                     }
                     else if (last!=null) {
                         model.setSelectedItem(last); // select the last item by default
                     }
                 }
 
+                for (String s : objectiveCheckboxMap.keySet()) {
+                    JCheckBox checkBox = objectiveCheckboxMap.get(s);
+                    if (checkBox!=null) {
+                        checkBox.setSelected(lastSelectedObjectives.contains(s));
+                    }
+                }
+
+                updateState();
                 revalidate();
                 pack();
 
@@ -329,11 +348,6 @@ public class StageForPublishingDialog extends ModalDialog {
                 model.save(lineRelease);
 
                 List<Reference> oldChildren = lineRelease.getChildren();
-                Set<Reference> children = new LinkedHashSet<>();
-                for (Sample sample : samples) {
-                    children.add(Reference.createFor(sample));
-                }
-
                 lineRelease = model.addChildren(this.lineRelease, samples);
                 log.info("Added {} new samples to release", lineRelease.getChildren().size()-oldChildren.size());
 
@@ -350,10 +364,10 @@ public class StageForPublishingDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
+                ActivityLogHelper.logUserAction("StageForPublishingDialog.processSave", lineRelease.getId());
                 setLastSelectedRelease(lineRelease.getName());
                 setLastSelectedObjectives(objectives);
                 setVisible(false);
-                ActivityLogHelper.logUserAction("StageForPublishingDialog.processSave", lineRelease.getId());
 
                 if (hadProblems) {
                     log.warn("Some problems were encountered");
@@ -375,7 +389,18 @@ public class StageForPublishingDialog extends ModalDialog {
 
                 DomainExplorerTopComponent.getInstance().refresh(() -> {
                     DomainExplorerTopComponent.getInstance().expandNodeById(FlyLineReleasesNode.NODE_ID);
-                    DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(lineRelease.getId());
+                    // This doesn't work, because the viewer will still be refreshing from the annotation changes
+                    //DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(lineRelease.getId());
+                    // Instead, let's create a new viewer...
+                    for (IdentifiableNode node : NodeTracker.getInstance().getNodesById(lineRelease.getId())) {
+                        if (node instanceof AbstractDomainObjectNode) {
+                            AbstractDomainObjectNode<?> nodeToLoad = (AbstractDomainObjectNode)node;
+                            DomainListViewTopComponent viewer = ViewerUtils.createNewViewer(DomainListViewManager.getInstance(), "editor");
+                            viewer.requestActive();
+                            viewer.loadDomainObjectNode(nodeToLoad, true);
+                            break;
+                        }
+                    }
                     return null;
                 });
             }
@@ -407,7 +432,7 @@ public class StageForPublishingDialog extends ModalDialog {
     }
 
     private int annotatePublishNames(Collection<Sample> samples) {
-        ApplyPublishingNamesActionListener a = new ApplyPublishingNamesActionListener(samples, false,true);
+        ApplyPublishingNamesActionListener a = new ApplyPublishingNamesActionListener(samples, false,true, this);
         a.actionPerformed(null);
         return a.getNumPublishingNamesApplied();
     }
@@ -465,7 +490,9 @@ public class StageForPublishingDialog extends ModalDialog {
 
     private String getLastSelectedRelease() {
         try {
-            return FrameworkAccess.getRemotePreferenceValue(PreferenceConstants.CATEGORY_PREVIOUS_VALUE, PreferenceConstants.KEY_PREVIOUS_VALUE_RELEASE_NAME, null);
+            String lastRelease = FrameworkAccess.getRemotePreferenceValue(PreferenceConstants.CATEGORY_PREVIOUS_VALUE, PreferenceConstants.KEY_PREVIOUS_VALUE_RELEASE_NAME, null);
+            log.info("Got last release: {}", lastRelease);
+            return lastRelease;
         } catch (Exception e) {
             log.error("Error getting last selected release", e);
             return null;
@@ -474,6 +501,7 @@ public class StageForPublishingDialog extends ModalDialog {
 
     private void setLastSelectedRelease(String selectedRelease) {
         try {
+            log.info("Saving last selected release as {}", selectedRelease);
             FrameworkAccess.setRemotePreferenceValue(PreferenceConstants.CATEGORY_PREVIOUS_VALUE, PreferenceConstants.KEY_PREVIOUS_VALUE_RELEASE_NAME, selectedRelease);
         }
         catch (Exception e) {
@@ -484,7 +512,9 @@ public class StageForPublishingDialog extends ModalDialog {
     private Collection<String> getLastSelectedObjectives() {
         try {
             String serializedObjectives = FrameworkAccess.getRemotePreferenceValue(PreferenceConstants.CATEGORY_PREVIOUS_VALUE, PreferenceConstants.KEY_PREVIOUS_VALUE_RELEASE_OBJECTIVES, null);
-            return Arrays.asList(StringUtils.split(","));
+            Collection<String> objectives = Arrays.asList(StringUtils.split(serializedObjectives, ","));
+            log.info("Got last selected objectives: {} -> {}", serializedObjectives, objectives);
+            return objectives;
         }
         catch (Exception e) {
             log.error("Error getting last selected objectives", e);
@@ -494,7 +524,8 @@ public class StageForPublishingDialog extends ModalDialog {
 
     private void setLastSelectedObjectives(Collection<String> objectives) {
         try {
-            FrameworkAccess.setRemotePreferenceValue(PreferenceConstants.CATEGORY_PREVIOUS_VALUE, PreferenceConstants.KEY_PREVIOUS_VALUE_RELEASE_OBJECTIVES, StringUtils.join(objectives));
+            log.info("Saving last selected objectives {} as {}", objectives, StringUtils.join(objectives, ','));
+            FrameworkAccess.setRemotePreferenceValue(PreferenceConstants.CATEGORY_PREVIOUS_VALUE, PreferenceConstants.KEY_PREVIOUS_VALUE_RELEASE_OBJECTIVES, StringUtils.join(objectives, ','));
         }
         catch (Exception e) {
             log.error("Error setting last selected objectives", e);

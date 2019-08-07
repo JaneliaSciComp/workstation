@@ -1,10 +1,15 @@
 package org.janelia.workstation.core.nodes;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.LinkedListMultimap;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +34,7 @@ public class NodeTracker {
         return singleton;
     }
     
-    private final Multimap<Long, WeakReference> nodesById = HashMultimap.<Long, WeakReference>create();
+    private final Multimap<Long, WeakReference> nodesById = LinkedListMultimap.create();
     
     private NodeTracker() {
     }
@@ -52,7 +57,7 @@ public class NodeTracker {
             }
         }
         if (c>1) {
-            log.trace("Object {} has {} nodes",node.getDisplayName(), c);
+            log.warn("Object {} has {} nodes",node.getDisplayName(), c);
         }
 
         nodesById.put(node.getId(), new WeakReference<>(node));
@@ -92,7 +97,7 @@ public class NodeTracker {
      */
     public Set<IdentifiableNode> getNodesById(Long id) {
         log.debug("getting nodes with id {}",id);
-        Set<IdentifiableNode> nodes = new HashSet<>();
+        List<IdentifiableNode> nodes = new ArrayList<>();
         for(Iterator<WeakReference> iterator = nodesById.get(id).iterator(); iterator.hasNext(); ) {
             WeakReference<IdentifiableNode> ref = iterator.next();
             IdentifiableNode node = ref.get();
@@ -103,6 +108,8 @@ public class NodeTracker {
                 nodes.add(node);
             }
         }
-        return nodes;
+        // Newest nodes first
+        Collections.reverse(nodes);
+        return new LinkedHashSet<>(nodes);
     }
 }

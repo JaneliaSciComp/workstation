@@ -132,13 +132,10 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
 
             @Override
             protected void hadSuccess() {
-                resultsPanel.showSearchResults(searchResults, true, new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        debouncer.success();
-                        ActivityLogHelper.logElapsed("TreeNodeEditorPanel.loadDomainObject", node, w);
-                        return null;
-                    }
+                resultsPanel.showSearchResults(searchResults, true, () -> {
+                    debouncer.success();
+                    ActivityLogHelper.logElapsed("TreeNodeEditorPanel.loadDomainObject", node, w);
+                    return null;
                 });
             }
 

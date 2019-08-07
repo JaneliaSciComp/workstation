@@ -1,7 +1,10 @@
 package org.janelia.workstation.site.jrc.action.context;
 
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Frame;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -13,12 +16,12 @@ import java.util.List;
 import java.util.Queue;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import net.miginfocom.swing.MigLayout;
+import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.ontology.Annotation;
@@ -33,6 +36,7 @@ import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.api.web.SageRestClient;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.site.jrc.gui.dialogs.StageForPublishingDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,11 +58,13 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
     private final boolean async;
     private final boolean userInteraction;
     private int numPublishingNamesApplied = 0;
+    private Window parent;
 
-    public ApplyPublishingNamesActionListener(Collection<Sample> samples, boolean async, boolean userInteraction) {
+    public ApplyPublishingNamesActionListener(Collection<Sample> samples, boolean async, boolean userInteraction, Window parent) {
         this.samples = samples;
         this.async = async;
         this.userInteraction = userInteraction;
+        this.parent = parent;
     }
 
     public int getNumPublishingNamesApplied() {
@@ -78,7 +84,7 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
 
                     @Override
                     protected void doStuff() throws Exception {
-                        autoAnnotateWherePossible();
+                        autoAnnotateWherePossible(this);
                     }
 
                     @Override
@@ -94,10 +100,11 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
                     }
                 };
 
+                worker.setProgressMonitor(new ProgressMonitor(FrameworkAccess.getMainFrame(), "Adding annotations", "", 0, 100));
                 worker.execute();
             }
             else {
-                autoAnnotateWherePossible();
+                autoAnnotateWherePossible(null);
                 if (userInteraction) {
                     continueWithManualAnnotation();
                 }
@@ -105,7 +112,7 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
 
     }
 
-    private void autoAnnotateWherePossible() {
+    private void autoAnnotateWherePossible(Progress progress) {
 
         final SageRestClient sageClient = DomainMgr.getDomainMgr().getSageClient();
 
@@ -119,7 +126,7 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
                     noPublishingNamesFound.add(lineName);
                 }
                 else if (possibleNames.size() == 1) {
-                    annotatePublishedName((List<Sample>)sampleByLine.get(lineName), possibleNames.iterator().next());
+                    annotatePublishedName((List<Sample>)sampleByLine.get(lineName), possibleNames.iterator().next(), progress);
                 }
                 else {
                     manualAnnotationNecessary.add(lineName);
@@ -150,7 +157,7 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
                 lineField.setEditable(false);
                 panel.add(lineField, BorderLayout.SOUTH);
 
-                JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
+                JOptionPane.showConfirmDialog(parent,
                         panel,
                         "Publishing names not available",
                         JOptionPane.OK_CANCEL_OPTION,
@@ -163,39 +170,53 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
         String lineName = manualAnnotationNecessary.remove();
         List<Sample> lineSamples = (List<Sample>)sampleByLine.get(lineName);
 
-        PublishingNameDialog dialog = new PublishingNameDialog(lineName, lineSamples);
+        PublishingNameDialog dialog = new PublishingNameDialog(parent, lineName, lineSamples);
         final String publishedName = dialog.showDialog();
         if (StringUtils.isEmpty(publishedName)) {
             return;
         }
 
-        SimpleWorker worker = new SimpleWorker() {
+        if (async) {
+            SimpleWorker worker = new SimpleWorker() {
 
-            @Override
-            protected void doStuff() throws Exception {
-                annotatePublishedName(lineSamples, publishedName);
-            }
+                @Override
+                protected void doStuff() throws Exception {
+                    annotatePublishedName(lineSamples, publishedName, this);
+                }
 
-            @Override
-            protected void hadSuccess() {
+                @Override
+                protected void hadSuccess() {
+                    continueWithManualAnnotation();
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    FrameworkAccess.handleException(error);
+                }
+            };
+            worker.setProgressMonitor(new ProgressMonitor(FrameworkAccess.getMainFrame(), "Adding annotations", "", 0, 100));
+            worker.execute();
+        }
+        else {
+            try {
+                annotatePublishedName(lineSamples, publishedName, null);
                 continueWithManualAnnotation();
             }
-
-            @Override
-            protected void hadError(Throwable error) {
-                FrameworkAccess.handleException(error);
+            catch (Exception e) {
+                FrameworkAccess.handleException(e);
             }
-        };
-
-        worker.execute();
+        }
     }
 
-    private void annotatePublishedName(List<Sample> samples, String publishedName) throws Exception {
+    private void annotatePublishedName(List<Sample> samples, String publishedName, Progress progress) throws Exception {
         Ontology publicationOntology = getPublicationOntology();
         OntologyTerm publishingNameTerm = getPublishedTerm(publicationOntology, ANNOTATION_PUBLISHING_NAME);
         ApplyAnnotationAction action = ApplyAnnotationAction.get();
-        List<Annotation> annotations = action.setObjectAnnotations(samples, publishingNameTerm, publishedName, null);
+        List<Annotation> annotations = action.setObjectAnnotations(samples, publishingNameTerm, publishedName, progress);
         if (annotations != null) {
+            if (annotations.isEmpty()) {
+                log.warn("No annotations could be applied to {} targets", samples.size());
+            }
             this.numPublishingNamesApplied += annotations.size();
         }
     }
@@ -210,7 +231,9 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
         private Collection<Sample> samples;
         private String returnValue;
 
-        PublishingNameDialog(String lineName, Collection<Sample> samples) {
+        PublishingNameDialog(Window parent, String lineName, Collection<Sample> samples) {
+
+            super(parent);
 
             this.lineName = lineName;
             this.samples = samples;

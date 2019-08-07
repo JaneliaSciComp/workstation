@@ -40,12 +40,12 @@ public class ColorDepthSearchesNode extends IdentifiableNode {
 
     ColorDepthSearchesNode() {
         this(new ColorDepthSearchesChildFactory());
-        NodeTracker.getInstance().registerNode(this);
     }
 
     private ColorDepthSearchesNode(ColorDepthSearchesChildFactory childFactory) {
         super(Children.create(childFactory, false));
         this.childFactory = childFactory;
+        NodeTracker.getInstance().registerNode(this);
     }
 
     @Override

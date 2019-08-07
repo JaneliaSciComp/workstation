@@ -12,6 +12,7 @@ import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
+import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
 import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -41,6 +42,7 @@ public class RecentlyOpenedItemsNode extends IdentifiableNode {
     private RecentlyOpenedItemsNode(DomainObjectNodeChildFactory childFactory) {
         super(Children.create(childFactory, false));
         this.childFactory = childFactory;
+        NodeTracker.getInstance().registerNode(this);
     }
 
     @Override

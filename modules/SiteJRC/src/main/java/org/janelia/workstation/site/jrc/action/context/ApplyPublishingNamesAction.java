@@ -72,7 +72,7 @@ public class ApplyPublishingNamesAction extends BaseContextualNodeAction {
 
         try {
             ActivityLogHelper.logUserAction("ApplyPublishingNamesAction.actionPerformed");
-            ApplyPublishingNamesActionListener a = new ApplyPublishingNamesActionListener(samples, false,true);
+            ApplyPublishingNamesActionListener a = new ApplyPublishingNamesActionListener(samples, false,true, FrameworkAccess.getMainFrame());
             a.actionPerformed(null);
         }
         catch (Exception ex) {

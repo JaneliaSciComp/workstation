@@ -1,5 +1,7 @@
 package org.janelia.workstation.core.nodes;
 
+import java.io.IOException;
+
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
@@ -25,4 +27,8 @@ public abstract class IdentifiableNode extends AbstractNode implements HasIdenti
 
     public abstract Long getId();
 
+    @Override
+    public void destroy() throws IOException {
+        NodeTracker.getInstance().deregisterNode(this);
+    }
 }
