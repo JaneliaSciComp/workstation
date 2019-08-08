@@ -251,6 +251,8 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         Set<TileIndex> cacheableTextures = new HashSet<TileIndex>();
         int maxCacheable = (int) (0.90 * getTextureCache().getFutureCache().getMaxSize());
 
+        LOG.debug("rearrangeLoadQueue for {} ViewTileManagers", viewTileManagers.size());
+
         // First in line are current display tiles
         // Prepare to analyze each ViewTileManager's loadStatus
         for (ViewTileManager vtm : viewTileManagers) {
@@ -346,6 +348,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
 
     // Part of new way July 9, 2013
     public void refreshCurrentTileSet() {
+        LOG.debug("refreshCurrentTileSet");
         TileSet tiles = createLatestTiles();
         Set<TileIndex> indices = new HashSet<>();
         for (Tile2d t : tiles) {
