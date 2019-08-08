@@ -95,7 +95,7 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
                     tileIndex.getZoom(),
                     tileInfo.getSliceAxis(),
                     tileInfo);
-            LOG.debug("Load tile {} using key {}", tileIndex, tileKey);
+            LOG.trace("Loading tile {} using key {}", tileIndex, tileKey);
             return renderedVolumeLoader.loadSlice(renderedVolumeLocation, renderedVolumeMetadata, tileKey)
                     .map(TextureData2d::new)
                     .orElse(null);

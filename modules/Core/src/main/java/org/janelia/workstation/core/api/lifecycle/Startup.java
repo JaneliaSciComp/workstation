@@ -52,7 +52,7 @@ public class Startup implements Runnable {
          * 1000  SEVERE      "error"
          *  900  WARNING     "warn"
          *  800  INFO        "info"
-         *  700  CONFIG  
+         *  700  CONFIG  TileServer.java
          *  500  FINE        "debug"
          *  400  FINER 
          *  300  FINEST      "trace"
