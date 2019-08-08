@@ -6,6 +6,8 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.enums.FileType;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
@@ -16,14 +18,22 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 /**
  * Create any "Tiled Microscope Sample" items (buttons, menu items, etc.) based upon this.
  */
-public class CreateTiledMicroscopeSampleAction extends AbstractAction {
+public class SaveTiledMicroscopeSampleAction extends AbstractAction {
 
-    private String name, pathToRenderFolder;
+    private TmSample sample;
+    private String name, octreePath, ktxPath, rawPath;
 
-    public CreateTiledMicroscopeSampleAction(String name, String pathToRenderFolder) {
+    public SaveTiledMicroscopeSampleAction(TmSample sample) {
+        this.sample = sample;
+    }
+
+    public SaveTiledMicroscopeSampleAction(TmSample sample, String name, String octreePath, String ktxPath, String rawPath) {
         super("Create Tiled Microscope Sample");
+        this.sample = sample;
         this.name = name;
-        this.pathToRenderFolder = pathToRenderFolder;
+        this.octreePath = octreePath;
+        this.ktxPath = ktxPath;
+        this.rawPath = rawPath;
     }
 
     @Override
@@ -37,11 +47,24 @@ public class CreateTiledMicroscopeSampleAction extends AbstractAction {
 
             @Override
             protected void doStuff() throws Exception {
-                try {
-                    newSample = TiledMicroscopeDomainMgr.getDomainMgr().createSample(name, pathToRenderFolder);
-                } catch (Exception e) {
-                    error = new IllegalStateException("Error creating sample " + name + " for path " + pathToRenderFolder + ". Make sure the path is correct and is accessible", e);
-                }
+                    if (sample != null) {
+                        if (name != null) {
+                            sample.setName(name);
+                        }
+                        if (octreePath != null) {
+                            DomainUtils.setFilepath(sample, FileType.LargeVolumeOctree, octreePath);
+                        }
+                        if (ktxPath != null) {
+                            DomainUtils.setFilepath(sample, FileType.LargeVolumeKTX, ktxPath);
+                        }
+                        if (rawPath != null) {
+                            DomainUtils.setFilepath(sample, FileType.TwoPhotonAcquisition, rawPath);
+                        }
+                        newSample = TiledMicroscopeDomainMgr.getDomainMgr().save(sample);
+                    }
+                    else {
+                        newSample = TiledMicroscopeDomainMgr.getDomainMgr().createSample(name, octreePath, ktxPath, rawPath);
+                    }
             }
             
             @Override
@@ -51,7 +74,7 @@ public class CreateTiledMicroscopeSampleAction extends AbstractAction {
                             "Add New Tiled Microscope Sample", JOptionPane.PLAIN_MESSAGE, null);
                     DomainMgr.getDomainMgr().getModel().invalidateAll();
                 } else {
-                    JOptionPane.showMessageDialog(mainFrame, "Error adding sample " + name + " at " + pathToRenderFolder +
+                    JOptionPane.showMessageDialog(mainFrame, "Error adding sample " + name + " at " + octreePath +
                                     ". Check that path exists and is accessible. If you continue to experience problems please contact support.",
                             "Failed to Add Tiled Microscope Sample", JOptionPane.ERROR_MESSAGE, null);
                 }
@@ -59,10 +82,10 @@ public class CreateTiledMicroscopeSampleAction extends AbstractAction {
             
             @Override
             protected void hadError(Throwable error) {
-                FrameworkAccess.handleException("Error creating a sample - make sure the provided sample path is correct and that the pass is accessible", error);
+                FrameworkAccess.handleException("Error saving sample - make sure the provided sample paths are correct.", error);
             }
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating sample...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Saving sample...", ""));
         worker.execute();
     }
 }

@@ -6,17 +6,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -28,6 +22,12 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RestJsonClientManager {
 
@@ -65,7 +65,13 @@ public class RestJsonClientManager {
 
     private Client buildClient(boolean auth) {
 
-        Client client = ClientBuilder.newClient();
+        ClientConfig clientConfig =
+                new ClientConfig()
+                        .connectorProvider(new ApacheConnectorProvider())
+                        .property(ClientProperties.FOLLOW_REDIRECTS, true)
+                ;
+
+        Client client = ClientBuilder.newClient(clientConfig);
         client.register(MultiPartFeature.class);
 
         JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
@@ -76,7 +82,7 @@ public class RestJsonClientManager {
         ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
         mapper.addHandler(new DeserializationProblemHandler() {
             @Override
-            public boolean handleUnknownProperty(DeserializationContext ctxt, JsonParser jp, JsonDeserializer<?> deserializer, Object beanOrClass, String propertyName) throws IOException, JsonProcessingException {
+            public boolean handleUnknownProperty(DeserializationContext ctxt, JsonParser jp, JsonDeserializer<?> deserializer, Object beanOrClass, String propertyName) throws IOException {
                 String key = beanOrClass.getClass().getName() + "." + propertyName;
                 if (failureCache.getIfPresent(key) == null) {
                     log.error("Failed to deserialize property which does not exist in model: {}", key);
@@ -89,12 +95,9 @@ public class RestJsonClientManager {
         });
 
         // Add application id to every request, and for authed requests, add the JWT token
-        ClientRequestFilter headerFilter = new ClientRequestFilter() {
-            @Override
-            public void filter(ClientRequestContext requestContext) throws IOException {
-                for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders(auth).entrySet()) {
-                    requestContext.getHeaders().add(entry.getKey(), entry.getValue());
-                }
+        ClientRequestFilter headerFilter = requestContext -> {
+            for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders(auth).entrySet()) {
+                requestContext.getHeaders().add(entry.getKey(), entry.getValue());
             }
         };
         client.register(headerFilter);

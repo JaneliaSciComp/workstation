@@ -1,6 +1,8 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.slf4j.Logger;
@@ -41,7 +43,7 @@ public class FileBasedQuadViewUi extends QuadViewUi {
      * @return
      */
     public boolean loadData(TmSample sample) {
-        String canonicalLinuxPath = sample.getFilepath();
+        String canonicalLinuxPath = sample.getLargeVolumeOctreeFilepath();
         LOG.info("loadData from file: {}", canonicalLinuxPath);
         
         // on Linux, this just works, as the input path is the Linux path;

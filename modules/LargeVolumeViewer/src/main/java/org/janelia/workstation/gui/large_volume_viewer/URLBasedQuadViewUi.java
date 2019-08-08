@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.JFrame;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 /** 
@@ -41,8 +42,10 @@ public class URLBasedQuadViewUi extends QuadViewUi {
         URL url;
         try {
             String restServerURL = ConsoleProperties.getInstance().getProperty("mouselight.rest.url");
+            if (!restServerURL.endsWith("/")) restServerURL = restServerURL+"/";
             String sampleVolumePathURI = String.format("mouselight/samples/%s/", sample.getId());
-            url = new URL(restServerURL + sampleVolumePathURI);
+            URI uri = URI.create(restServerURL).resolve(sampleVolumePathURI);
+            url = uri.toURL();
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }

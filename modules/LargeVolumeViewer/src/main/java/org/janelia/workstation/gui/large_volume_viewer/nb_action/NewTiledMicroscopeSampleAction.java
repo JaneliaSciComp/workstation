@@ -1,7 +1,5 @@
 package org.janelia.workstation.gui.large_volume_viewer.nb_action;
 
-import javax.swing.JFrame;
-
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -9,7 +7,6 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.HelpCtx;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.actions.CallableSystemAction;
-import org.openide.windows.WindowManager;
 
 @ActionID(
         category = "File",
@@ -49,8 +46,8 @@ public final class NewTiledMicroscopeSampleAction extends CallableSystemAction {
 
     @Override
     public void performAction() {
-        JFrame parent = (JFrame)WindowManager.getDefault().getMainWindow();
-        new NewTiledMicroscopeSampleDialog(parent, "Add Tiled Microscope Sample", true);
+        NewTiledMicroscopeSampleDialog dialog = new NewTiledMicroscopeSampleDialog();
+        dialog.showForNewSample();
     }
 
 }

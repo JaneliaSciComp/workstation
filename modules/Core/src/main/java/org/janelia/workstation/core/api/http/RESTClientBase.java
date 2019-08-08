@@ -1,28 +1,16 @@
 package org.janelia.workstation.core.api.http;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.client.ClientConfig;
-import org.janelia.workstation.core.api.exceptions.RemoteServiceException;
+
 import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.exceptions.RemoteServiceException;
 import org.slf4j.Logger;
 
+/**
+ * Base class for RESTful clients which provides some utility methods.
+ */
 public class RESTClientBase {
-
-    protected static Client createHttpClient(ObjectMapper objectMapper) {
-        JacksonJaxbJsonProvider jacksonProvider = new JacksonJaxbJsonProvider();
-        jacksonProvider.setMapper(objectMapper);
-        ClientConfig clientConfig = new ClientConfig()
-                .register(jacksonProvider);
-
-        return ClientBuilder.newBuilder()
-                .withConfig(clientConfig)
-                .build();
-    }
 
     protected final Logger log;
     

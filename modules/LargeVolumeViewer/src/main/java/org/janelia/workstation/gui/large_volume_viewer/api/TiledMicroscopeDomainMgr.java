@@ -14,7 +14,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObjectComparator;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
@@ -77,7 +79,7 @@ public class TiledMicroscopeDomainMgr {
         return getSample(workspace.getSampleRef().getTargetId());
     }
 
-    public TmSample createSample(String name, String filepath) throws Exception {
+    public TmSample createSample(String name, String filepath, String ktxPath, String rawPath) throws Exception {
         LOG.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
         Map<String,Object> constants = client.getTmSampleConstants(filepath);
         if (constants != null) {
@@ -86,26 +88,13 @@ public class TiledMicroscopeDomainMgr {
             TmSample sample = new TmSample();
             sample.setOwnerKey(AccessManager.getSubjectKey());
             sample.setName(name);
-            sample.setFilepath(filepath);
-            Map originMap = (Map)constants.get("origin");
-            List<Integer> origin = new ArrayList<>();
-            origin.add ((Integer)originMap.get("x"));
-            origin.add ((Integer)originMap.get("y"));
-            origin.add ((Integer)originMap.get("z"));            
-            Map scalingMap = (Map)constants.get("scaling");
-            List<Double> scaling = new ArrayList<>();
-            scaling.add ((Double)scalingMap.get("x"));
-            scaling.add ((Double)scalingMap.get("y"));
-            scaling.add ((Double)scalingMap.get("z"));
-            
-            sample.setOrigin(origin);
-            sample.setScaling(scaling);
-            if (constants.get("numberLevels") instanceof Integer) {
-                sample.setNumImageryLevels(((Integer)constants.get("numberLevels")).longValue());
-            } else {
-                sample.setNumImageryLevels(Long.parseLong((String)constants.get("numberLevels")));
+            DomainUtils.setFilepath(sample, FileType.LargeVolumeOctree, filepath);
+            if (rawPath != null) {
+                DomainUtils.setFilepath(sample, FileType.LargeVolumeKTX, ktxPath);
             }
-
+            if (rawPath != null) {
+                DomainUtils.setFilepath(sample, FileType.TwoPhotonAcquisition, rawPath);
+            }
             // call out to server to get origin/scaling information
             TmSample persistedSample = save(sample);
 
