@@ -80,7 +80,7 @@ public class TmSampleNode extends AbstractDomainObjectNode<TmSample> {
     }
     
     public TmSample getSample() {
-        return (TmSample)getDomainObject();
+        return getDomainObject();
     }
     
     @Override
@@ -90,6 +90,9 @@ public class TmSampleNode extends AbstractDomainObjectNode<TmSample> {
         
     @Override
     public Image getIcon(int type) {
+        if (!getSample().isFilesystemSync()) {
+            return Icons.getIcon("error.png").getImage();
+        }
         if (ClientDomainUtils.isOwner(getSample())) {
             return Icons.getIcon("beaker.png").getImage();
         }

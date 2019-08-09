@@ -3,6 +3,8 @@ package org.janelia.workstation.gui.large_volume_viewer.launch;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
@@ -70,7 +72,9 @@ public class ShowWorkspaceInfo extends BaseContextualNodeAction {
             title = "Sample information";
             message += "Sample name: " + sample.getName() + "\n";
             message += "Sample ID: " + sample.getId() + "\n";
-            message += "Sample path: " + sample.getFilepath() + "\n";
+            message += "Sample octree path: " + sample.getLargeVolumeOctreeFilepath() + "\n";
+            message += "Sample KTX path: " + sample.getLargeVolumeKTXFilepath() + "\n";
+            message += "Sample RAW path: " + sample.getTwoPhotonAcquisitionFilepath() + "\n";
         }
         // need to use text area so you can copy the info to clipboard
         JTextArea textarea = new JTextArea(message);

@@ -33,7 +33,7 @@ public class TextureLoadWorker implements Runnable {
     @Override
     public void run() {
         TileIndex index = texture.getIndex();
-
+        LOG.debug("loading "+index);
         if (textureCache.containsKey(index)) {
             // texture already loaded
             LOG.debug("Skipping duplicate load of texture (2) {}", index);
@@ -46,7 +46,7 @@ public class TextureLoadWorker implements Runnable {
         } else {
             // load texture
             boolean loadedSuccessfully = texture.loadImageToRam();
-
+            LOG.debug("loadedSuccessfully={} loadStatus={}", loadedSuccessfully, texture.getLoadStatus());
             if (loadedSuccessfully) {
                 textureCache.add(texture);
                 tileServer.textureLoaded(texture.getIndex());

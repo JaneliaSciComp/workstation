@@ -1,6 +1,5 @@
 package org.janelia.horta.blocks;
 
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -13,12 +12,16 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.ktx.KtxHeader;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +32,7 @@ import org.slf4j.LoggerFactory;
 public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockTileKey> {
     private static final Logger LOG = LoggerFactory.getLogger(KtxOctreeBlockTileSource.class);
 
+    private String octreeDir;
     protected final URL originatingSampleURL;
     protected String sampleKtxTilesBaseDir;
     protected KtxOctreeBlockTileKey rootKey;
@@ -42,9 +46,11 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
     }
 
     public KtxOctreeBlockTileSource init(TmSample sample) {
-        Preconditions.checkArgument(sample.getFilepath() != null && sample.getFilepath().trim().length() > 0);
-        this.sampleKtxTilesBaseDir = getKtxBaseDir(sample.getFilepath());
-        this.rootKey = new KtxOctreeBlockTileKey(this, Collections.<Integer>emptyList());
+        this.octreeDir = sample.getLargeVolumeOctreeFilepath();
+        String ktxDir = sample.getLargeVolumeKTXFilepath();
+        Preconditions.checkArgument(StringUtils.isNotBlank(ktxDir));
+        this.sampleKtxTilesBaseDir = ktxDir;
+        this.rootKey = new KtxOctreeBlockTileKey(this, Collections.emptyList());
         this.rootHeader = loadKtxHeader(rootKey);
         this.maximumResolution = getKtxResolution(rootHeader);
         Pair<ConstVector3, Vector3> volumeCorners = getVolumeCorners(sample, rootHeader);
@@ -53,20 +59,10 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         return this;
     }
 
-    String getKtxSubDir() {
-        return "ktx/";
-    }
-    
-    private String getKtxBaseDir(String sampleDir) {
-        if (sampleDir.endsWith("/")) {
-            return sampleDir + getKtxSubDir();
-        } else {
-            return sampleDir + "/" + getKtxSubDir();
-        }
-    }
-
     URI getKeyBlockRelativePathURI(KtxOctreeBlockTileKey key) {
-        return URI.create(getKtxSubDir())
+        String relativeKtxDir = sampleKtxTilesBaseDir.replace(octreeDir, "");
+        if (relativeKtxDir.startsWith("/")) relativeKtxDir = relativeKtxDir.substring(1); // strip leading slash if any
+        return URI.create(relativeKtxDir)
                 .resolve(key.getKeyPath())
                 .resolve(key.getKeyBlockName("_8_xy_"))
                 ;

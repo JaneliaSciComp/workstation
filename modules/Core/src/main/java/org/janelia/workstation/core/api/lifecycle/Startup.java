@@ -52,7 +52,7 @@ public class Startup implements Runnable {
          * 1000  SEVERE      "error"
          *  900  WARNING     "warn"
          *  800  INFO        "info"
-         *  700  CONFIG  
+         *  700  CONFIG  TileServer.java
          *  500  FINE        "debug"
          *  400  FINER 
          *  300  FINEST      "trace"
@@ -64,7 +64,7 @@ public class Startup implements Runnable {
          * Reduce logging level for this class to avoid WARNING spam about null popups from node actions.
          */
         System.setProperty("org.openide.util.Utilities.level", "SEVERE");
-        
+
         try {
             // Re-read the configuration to parse the system properties we just defined
             LogManager.getLogManager().readConfiguration();

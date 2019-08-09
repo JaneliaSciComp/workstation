@@ -1,52 +1,39 @@
 package org.janelia.workstation.gui.large_volume_viewer.nb_action;
 
-import org.janelia.workstation.gui.large_volume_viewer.action.CreateTiledMicroscopeSampleAction;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.jdesktop.swingx.VerticalLayout;
+import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.io.File;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 
-public class NewTiledMicroscopeSampleDialog extends JDialog {
+import org.apache.commons.lang.StringUtils;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.gui.large_volume_viewer.action.SaveTiledMicroscopeSampleAction;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.jdesktop.swingx.VerticalLayout;
+
+public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 	
-	JTextField nameTextField = new JTextField(40);
-	JTextField pathToRenderFolderTextField = new JTextField(40);
+	private JTextField nameTextField = new JTextField(40);
+	private JTextField pathToOctreeTextField = new JTextField(40);
+	private JTextField pathToKTXTextField = new JTextField(40);
+	private JTextField pathToRawTextField = new JTextField(40);
 
-	public NewTiledMicroscopeSampleDialog(JFrame owner, String title, boolean modal) {
-		super(owner, title, modal);
-		try {
-			jbInit();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		setUpValues();
-		SwingUtilities.updateComponentTreeUI(this);
-		pack();
-		setLocationRelativeTo(FrameworkAccess.getMainFrame());
-		setVisible(true);
-	}
+	private TmSample sample;
 
-	private void setUpValues() {
-		nameTextField.setText("");
-		pathToRenderFolderTextField.setText("");
-	}
+	public NewTiledMicroscopeSampleDialog() {
 
-	private void jbInit() throws Exception {
 		setTitle("Add Tiled Microscope Sample");
-		setSize(400, 150);
 
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new VerticalLayout(5));
@@ -62,34 +49,34 @@ public class NewTiledMicroscopeSampleDialog extends JDialog {
 		c.gridy = 0;
 		attrPanel.add(sampleNameLabel, c);
 		c.gridx = 1;
-		nameTextField.setText("Sample Name Here");
 		attrPanel.add(nameTextField, c);
 
 		// Figure out the user path preference
 		c.gridx = 0;
 		c.gridy = 1;
-		JLabel pathLabel = new JLabel("Path To Render Folder:");
-		attrPanel.add(pathLabel, c);
+		attrPanel.add(new JLabel("Path To Render Folder:"), c);
 		c.gridx = 1;
-		pathToRenderFolderTextField.setText("");
-		attrPanel.add(pathToRenderFolderTextField, c);
+		attrPanel.add(pathToOctreeTextField, c);
+
+		// Figure out the user path preference
+		c.gridx = 0;
+		c.gridy = 2;
+		attrPanel.add(new JLabel("Path To KTX Folder (optional):"), c);
+		c.gridx = 1;
+		attrPanel.add(pathToKTXTextField, c);
+
+		// Figure out the user path preference
+		c.gridx = 0;
+		c.gridy = 3;
+		attrPanel.add(new JLabel("Path To RAW Folder (optional):"), c);
+		c.gridx = 1;
+		attrPanel.add(pathToRawTextField, c);
 
 		mainPanel.add(attrPanel);
 		add(mainPanel, BorderLayout.CENTER);
 
-		JButton okButton = new JButton("Add Sample");
-		okButton.addActionListener(e -> {
-                if (nameTextField.getText().isEmpty() || pathToRenderFolderTextField.getText().isEmpty()) {
-                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                        "You must specify both a sample name and location!",
-                        "Missing values",
-                        JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-			    Action action = new CreateTiledMicroscopeSampleAction(nameTextField.getText(), pathToRenderFolderTextField.getText());
-			    action.actionPerformed(e);
-				NewTiledMicroscopeSampleDialog.this.dispose();
-		});
+		JButton okButton = new JButton("Save Sample");
+		okButton.addActionListener(e -> save());
 
 		JButton cancelButton = new JButton("Cancel");
 		cancelButton.setToolTipText("Cancel and close this dialog");
@@ -104,5 +91,59 @@ public class NewTiledMicroscopeSampleDialog extends JDialog {
 
 		add(buttonPane, BorderLayout.SOUTH);
 	}
-	
+
+	public void showForNewSample() {
+		sample = new TmSample();
+
+		packAndShow();
+	}
+
+	public void showForSample(TmSample sample) {
+		this.sample = sample;
+
+		nameTextField.setText(sample.getName());
+
+		String octreePath = sample.getLargeVolumeOctreeFilepath();
+		String ktxPath = sample.getLargeVolumeKTXFilepath();
+		String rawPath = sample.getTwoPhotonAcquisitionFilepath();
+
+		if (octreePath!=null) {
+			pathToOctreeTextField.setText(octreePath);
+		}
+
+		if (ktxPath!=null) {
+			pathToKTXTextField.setText(ktxPath);
+		}
+
+		if (rawPath!=null) {
+			pathToRawTextField.setText(rawPath);
+		}
+
+		packAndShow();
+	}
+
+	private void save() {
+
+		String name = nameTextField.getText();
+		String octree = pathToOctreeTextField.getText();
+		String ktx = StringUtils.isBlank(pathToKTXTextField.getText()) ? null : pathToKTXTextField.getText();
+		String raw = StringUtils.isBlank(pathToRawTextField.getText()) ? null : pathToRawTextField.getText();
+
+		if (octree.isEmpty()) {
+			JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+					"You must specify both a sample name and location!",
+					"Missing values",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+		if (name.isEmpty()) {
+			File file = new File(octree);
+			name = file.getName();
+		}
+
+		Action action = new SaveTiledMicroscopeSampleAction(sample, name, octree, ktx, raw);
+		action.actionPerformed(null);
+		NewTiledMicroscopeSampleDialog.this.dispose();
+	}
 }

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
 
@@ -56,12 +57,15 @@ public class CachedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter
     @Override
     public TextureData2d loadToRam(TileIndex tileIndex)
             throws TileLoadError, MissingTileException  {
-        LOG.debug("Load to RAM tile {}", tileIndex);
+        LOG.debug("loadToRam: {}", tileIndex);
         if (isEnabled()) {
             return tileCache.getUnchecked(tileIndex)
                     .orElseThrow(() -> new MissingTileException("Tile " + tileIndex + "does not exist"));
         } else {
-            return tileLoader.loadToRam(tileIndex);
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            TextureData2d texture = tileLoader.loadToRam(tileIndex);
+            LOG.debug("loadToRam for {} took {} ms", tileIndex, stopwatch.elapsed(TimeUnit.MILLISECONDS));
+            return texture;
         }
     }
 

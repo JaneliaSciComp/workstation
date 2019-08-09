@@ -1,13 +1,9 @@
 package org.janelia.workstation.gui.large_volume_viewer.launch;
 
-import javax.swing.JOptionPane;
-
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.gui.large_volume_viewer.nb_action.NewTiledMicroscopeSampleDialog;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -28,7 +24,7 @@ import org.openide.util.NbBundle;
 @ActionReferences({
         @ActionReference(path = "Menu/Actions/Large Volume", position = 1520)
 })
-@NbBundle.Messages("CTL_EditSamplePathAction=Edit Sample Path")
+@NbBundle.Messages("CTL_EditSamplePathAction=Edit Sample Paths")
 public class EditSamplePathAction extends BaseContextualNodeAction {
 
     private TmSample sample;
@@ -48,39 +44,7 @@ public class EditSamplePathAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
-
-        TmSample sample = this.sample;
-
-        final String editedPath = (String) JOptionPane.showInputDialog(
-                FrameworkAccess.getMainFrame(),
-                "New Linux path to sample:",
-                "Edit sample path",
-                JOptionPane.PLAIN_MESSAGE,
-                null, // icon
-                null, // choice list
-                sample.getFilepath()
-        );
-        if (editedPath == null || editedPath.length() == 0) {
-            // canceled
-            return;
-        }
-        else {
-            SimpleWorker saver = new SimpleWorker() {
-                @Override
-                protected void doStuff() throws Exception {
-                    sample.setFilepath(editedPath);
-                    TiledMicroscopeDomainMgr.getDomainMgr().save(sample);
-                }
-                @Override
-                protected void hadSuccess() {
-                    // Handled by event system
-                }
-                @Override
-                protected void hadError(Throwable error) {
-                    FrameworkAccess.handleException(error);
-                }
-            };
-            saver.execute();
-        }
+        NewTiledMicroscopeSampleDialog dialog = new NewTiledMicroscopeSampleDialog();
+        dialog.showForSample(this.sample);
     }
 }
