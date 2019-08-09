@@ -13,9 +13,9 @@ import org.janelia.workstation.gui.large_volume_viewer.TileSet;
  * @author brunsc
  *
  */
-public class SliceGenerator 
-implements Iterable<TileIndex>, Iterator<TileIndex>
-{
+public class SliceGenerator implements Iterable<TileIndex>, Iterator<TileIndex> {
+	private static final int DEFAULT_UMBRELLA_RANGE = 4;
+
 	// Outer loop iterates over slice
 	private Iterator<TileIndex> sliceGenerator;
 	private TileIndex baseIndex;
@@ -26,17 +26,16 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 
 	public SliceGenerator(TileFormat tileFormat, TileSet tileSet) {
 		// Identify slice boundaries
-		TileIndex ix1 = tileSet.iterator().next().getIndex();
-		int axisIx = ix1.getSliceAxis().index();
-		int sliceMin = 0;//tileFormat.getOrigin()[axisIx];
+		baseIndex = tileSet.iterator().next().getIndex();
+		int axisIx = baseIndex.getSliceAxis().index();
+		int sliceMin = 0;
 		int sliceMax = sliceMin + tileFormat.getVolumeSize()[axisIx] - 1;
 		// Choose one tile to initialize search area in slice
-		PreviousSliceGenerator down = new PreviousSliceGenerator(ix1, sliceMin);
-		NextSliceGenerator up = new NextSliceGenerator(ix1, sliceMax);
+		PreviousSliceUmbrellaGenerator down = new PreviousSliceUmbrellaGenerator(baseIndex, Math.max(sliceMin, baseIndex.getZ() - DEFAULT_UMBRELLA_RANGE));
+		NextSliceUmbrellaGenerator up = new NextSliceUmbrellaGenerator(baseIndex, Math.min(sliceMax, baseIndex.getZ() + DEFAULT_UMBRELLA_RANGE));
 		sliceGenerator = new InterleavedIterator<>(down, up);
 		this.tileSet = tileSet;
 		tileIter = this.tileSet.iterator();
-		baseIndex = tileSet.iterator().next().getIndex();
 	}
 	
 	@Override

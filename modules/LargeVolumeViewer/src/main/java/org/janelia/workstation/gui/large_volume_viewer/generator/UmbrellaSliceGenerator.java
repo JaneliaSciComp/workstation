@@ -14,6 +14,7 @@ import org.janelia.workstation.gui.large_volume_viewer.TileSet;
  *
  */
 public class UmbrellaSliceGenerator implements Iterable<TileIndex>, Iterator<TileIndex> {
+	private static final int DEFAULT_UMBRELLA_RANGE = 4;
 
 	// Outer loop iterates over slice
 	private Iterator<TileIndex> sliceGenerator;
@@ -29,8 +30,8 @@ public class UmbrellaSliceGenerator implements Iterable<TileIndex>, Iterator<Til
 		int sliceMax = sliceMin + tileFormat.getVolumeSize()[2] - 1;
 		// Choose one tile to initialize search area in Z
 		baseIndex = tileSet.iterator().next().getIndex();
-		PreviousSliceUmbrellaGenerator down = new PreviousSliceUmbrellaGenerator(baseIndex, Math.max(sliceMin, baseIndex.getZ() - 2));
-		NextSliceUmbrellaGenerator up = new NextSliceUmbrellaGenerator(baseIndex, Math.min(sliceMax, baseIndex.getZ() + 2));
+		PreviousSliceUmbrellaGenerator down = new PreviousSliceUmbrellaGenerator(baseIndex, Math.max(sliceMin, baseIndex.getZ() - DEFAULT_UMBRELLA_RANGE));
+		NextSliceUmbrellaGenerator up = new NextSliceUmbrellaGenerator(baseIndex, Math.min(sliceMax, baseIndex.getZ() + DEFAULT_UMBRELLA_RANGE));
 		sliceGenerator = new InterleavedIterator<>(down, up);
 		this.tileSet = tileSet;
 		tileIter = this.tileSet.iterator();
