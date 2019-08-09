@@ -65,13 +65,13 @@ public class RestJsonClientManager {
 
     private Client buildClient(boolean auth) {
 
-        ClientConfig clientConfig =
-                new ClientConfig()
-                        .connectorProvider(new ApacheConnectorProvider())
-                        .property(ClientProperties.FOLLOW_REDIRECTS, true)
-                ;
+//        ClientConfig clientConfig =
+//                new ClientConfig()
+//                        .connectorProvider(new ApacheConnectorProvider())
+//                        .property(ClientProperties.FOLLOW_REDIRECTS, true)
+//                ;
 
-        Client client = ClientBuilder.newClient(clientConfig);
+        Client client = ClientBuilder.newClient();
         client.register(MultiPartFeature.class);
 
         JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
