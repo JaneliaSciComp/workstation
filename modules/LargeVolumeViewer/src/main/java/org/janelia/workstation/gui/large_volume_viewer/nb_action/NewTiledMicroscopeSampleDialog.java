@@ -75,7 +75,7 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 		mainPanel.add(attrPanel);
 		add(mainPanel, BorderLayout.CENTER);
 
-		JButton okButton = new JButton("Add Sample");
+		JButton okButton = new JButton("Save Sample");
 		okButton.addActionListener(e -> save());
 
 		JButton cancelButton = new JButton("Cancel");

@@ -70,12 +70,18 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
             @Override
             protected void hadSuccess() {
                 if (null != newSample) {
-                    JOptionPane.showMessageDialog(mainFrame, "Sample " + newSample.getName() + " added successfully.",
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("Sample ").append(newSample.getName()).append(" saved successfully.");
+                    if (!newSample.isFilesystemSync()) {
+                        sb.append(" Some of the specified paths could not be accessed. Check that paths exist and try again.");
+                    }
+                    JOptionPane.showMessageDialog(mainFrame, sb.toString(),
                             "Add New Tiled Microscope Sample", JOptionPane.PLAIN_MESSAGE, null);
                     DomainMgr.getDomainMgr().getModel().invalidateAll();
-                } else {
-                    JOptionPane.showMessageDialog(mainFrame, "Error adding sample " + name + " at " + octreePath +
-                                    ". Check that path exists and is accessible. If you continue to experience problems please contact support.",
+                }
+                else {
+                    JOptionPane.showMessageDialog(mainFrame, "Error saving sample " + name +
+                                    ". Check that paths exist. If you continue to experience problems please contact support.",
                             "Failed to Add Tiled Microscope Sample", JOptionPane.ERROR_MESSAGE, null);
                 }
             }

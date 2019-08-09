@@ -24,7 +24,7 @@ import org.openide.util.NbBundle;
 @ActionReferences({
         @ActionReference(path = "Menu/Actions/Large Volume", position = 1520)
 })
-@NbBundle.Messages("CTL_EditSamplePathAction=Edit Sample Path")
+@NbBundle.Messages("CTL_EditSamplePathAction=Edit Sample Paths")
 public class EditSamplePathAction extends BaseContextualNodeAction {
 
     private TmSample sample;
