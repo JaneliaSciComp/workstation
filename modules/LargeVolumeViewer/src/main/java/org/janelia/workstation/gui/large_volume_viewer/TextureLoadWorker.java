@@ -33,20 +33,21 @@ public class TextureLoadWorker implements Runnable {
     @Override
     public void run() {
         TileIndex index = texture.getIndex();
+        log.debug("loading "+index);
 
         if (textureCache.containsKey(index)) {
-            // log.info("Skipping duplicate load of texture (2) "+index);
+             log.debug("Skipping duplicate load of texture (2) "+index);
         } // Don't load this texture if it is already loaded
         else if (texture.getLoadStatus().ordinal() == TileTexture.LoadStatus.RAM_LOADING.ordinal()) {
-            // log.info("Skipping duplicate load of texture "+texture.getIndex());
+             log.debug("Skipping duplicate load of texture "+texture.getIndex());
             // return; // already loading
         } else if (texture.getLoadStatus().ordinal() > TileTexture.LoadStatus.RAM_LOADING.ordinal()) {
-            // log.info("Skipping duplicate load of texture "+texture.getIndex());
+             log.debug("Skipping duplicate load of texture "+texture.getIndex());
             // return; // already loaded or loading
         } // Load file
         else {
             boolean loadedSuccessfully = texture.loadImageToRam();
-
+            log.debug("loadedSuccessfully={} loadStatus={}", loadedSuccessfully, texture.getLoadStatus());
             if (loadedSuccessfully) {
                 textureCache.add(texture);
                 tileServer.textureLoaded(texture.getIndex());

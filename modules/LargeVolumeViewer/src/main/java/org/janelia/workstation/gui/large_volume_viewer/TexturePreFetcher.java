@@ -39,24 +39,24 @@ public class TexturePreFetcher {
      */
     public synchronized boolean loadDisplayedTexture(TileIndex index, TileServer tileServer) {
         if (textureCache == null) {
-            log.debug("loadDisplayedTexture - return because textureCache is null");
+            log.trace("loadDisplayedTexture - return because textureCache is null");
             return false;
         }
         if (loadAdapter == null) {
-            log.debug("loadDisplayedTexture - return because loadAdapter is null");
+            log.trace("loadDisplayedTexture - return because loadAdapter is null");
             return false;
         }
         if (textureCache.getFutureCache().containsKey(index)) {
-            log.debug("loadDisplayedTexture - already in future cache");
+            log.trace("loadDisplayedTexture - already in future cache");
             textureCache.getFutureCache().get(index); // move cached texture to back of queue
             return true;
         }
         if (textureCache.containsKey(index)) {
-            log.debug("loadDisplayedTexture - already in current cache");
+            log.trace("loadDisplayedTexture - already in current cache");
             return false; // we already have this one!
         }
         if (textureCache.isLoadQueued(index)) {
-            log.debug("loadDisplayedTexture - already queued");
+            log.trace("loadDisplayedTexture - already queued");
             return false;
         }
         TileTexture texture = new TileTexture(index, loadAdapter);
@@ -67,7 +67,7 @@ public class TexturePreFetcher {
         textureCache.setLoadQueued(index, true);
         // Lowest resolution textures are in the persistent cache, and thus
         // do not impact the future cache.
-        log.debug("loadDisplayedTexture - now queued for download: {}", index);
+        log.debug("loadDisplayedTexture - queued for download: {}", index);
         return (index.getZoom() != index.getMaxZoom());
     }
 
