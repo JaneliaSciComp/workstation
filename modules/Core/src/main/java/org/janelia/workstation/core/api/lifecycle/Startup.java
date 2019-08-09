@@ -64,8 +64,6 @@ public class Startup implements Runnable {
          * Reduce logging level for this class to avoid WARNING spam about null popups from node actions.
          */
         System.setProperty("org.openide.util.Utilities.level", "SEVERE");
-        System.setProperty("org.janelia.workstation.gui.large_volume_viewer.level", "FINE");
-        System.setProperty("org.janelia.rendering.level", "FINEST");
 
         try {
             // Re-read the configuration to parse the system properties we just defined
