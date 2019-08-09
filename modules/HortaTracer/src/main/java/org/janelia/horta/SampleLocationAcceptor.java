@@ -1,8 +1,16 @@
 package org.janelia.horta;
 
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Paths;
+
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
+
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
@@ -18,10 +26,14 @@ import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.it.jacs.shared.utils.HttpClientHelper;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.security.AppAuthorization;
-import org.janelia.rendering.*;
+import org.janelia.rendering.FileBasedRenderedVolumeLocation;
+import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
+import org.janelia.rendering.RenderedVolume;
+import org.janelia.rendering.RenderedVolumeLocation;
+import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.LocalPreferenceMgr;
+import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.netbeans.api.progress.ProgressHandle;
@@ -29,11 +41,6 @@ import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Paths;
 
 public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SampleLocationAcceptor.class);
@@ -160,7 +167,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             renderedVolumeLocation = new FileBasedRenderedVolumeLocation(Paths.get(renderedOctreeUri));
             renderedVolumeMetadata = nttc.getRenderedVolumeLoader().loadVolume(renderedVolumeLocation).orElseThrow(() -> new IllegalStateException("No rendering information found for " + renderedVolumeLocation.getDataStorageURI()));
         }
-        return new RenderedVolume(new CachedRenderedVolumeLocation(renderedVolumeLocation, LocalPreferenceMgr.getInstance().getLocalFileCacheStorage()), renderedVolumeMetadata);
+        return new RenderedVolume(new CachedRenderedVolumeLocation(renderedVolumeLocation, LocalCacheMgr.getInstance().getLocalFileCacheStorage()), renderedVolumeMetadata);
     }
 
     private KtxOctreeBlockTileSource createKtxSource(RenderedVolume renderedVolume, URL renderedOctreeUrl, TmSample sample) {

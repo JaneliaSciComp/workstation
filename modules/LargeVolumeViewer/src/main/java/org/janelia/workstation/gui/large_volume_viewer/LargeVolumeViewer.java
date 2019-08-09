@@ -135,16 +135,11 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
         tileServer.addViewTileManager(viewTileManager);
         sliceActor = new SliceActor(viewTileManager);
 
-        // gray background for testing
-        // this.renderer.setBackgroundColor(new Color(0.5f, 0.5f, 0.5f, 0.0f));
-        // renderer.setBackgroundColor(Color.white);
         // black background for production
         renderer.setBackgroundColor(Color.black);
         glCanvas.getInnerAwtComponent().setPreferredSize(new Dimension(600, 600));
         rubberBand.setRepaintListener(this);
-        // setToolTipText("Double click to center on a point.");
         renderer.addActor(sliceActor);
-        // renderer.addActor(new TileOutlineActor(viewTileManager));
         // Initialize pointComputer for interconverting pixelXY <=> sceneXYZ
         pointComputer.setCamera(getCamera());
         pointComputer.setWidget(this, false);
@@ -253,10 +248,6 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
     @Override
     public ObservableCamera3d getCamera() {
         return camera;
-    }
-
-    public ImageColorModel getImageColorModel() {
-        return imageColorModel;
     }
 
     @Override
@@ -377,13 +368,14 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
         skeletonActor.setViewport(getViewport());
         skeletonActor.setPointComputer(pointComputer);
     }
-    public CameraListenerAdapter cameraListener;
+
+    private CameraListenerAdapter cameraListener;
 
     public TileServer getTileServer() {
         return tileServer;
     }
 
-    public void setImageColorModel(ImageColorModel imageColorModel) {
+    void setImageColorModel(ImageColorModel imageColorModel) {
         if (this.imageColorModel == imageColorModel) {
             return;
         }
@@ -391,7 +383,7 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
         sliceActor.setImageColorModel(imageColorModel);
     }
 
-    public void setNeuronStyleModel(NeuronStyleModel nsModel) {
+    void setNeuronStyleModel(NeuronStyleModel nsModel) {
         skeletonActor.getModel().setNeuronStyleModel(nsModel);
     }
 
@@ -407,11 +399,7 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
         return skeletonActor;
     }
 
-    public void setSkeletonActor(SkeletonActor skeletonActor) {
-        this.skeletonActor = skeletonActor;
-    }
-
-    public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) {
+    void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) {
         this.systemMenuItemGenerator = systemMenuItemGenerator;
     }
 

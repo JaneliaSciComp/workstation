@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 import javax.annotation.Nullable;
 
 import com.google.common.io.ByteStreams;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
@@ -32,7 +33,14 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         renderedVolumeFileCache = new LocalFileCache<>(
                 localFileCacheStorage,
                 new RenderedVolumeFileToProxySupplier(),
-                Executors.newFixedThreadPool(4)
+                Executors.newFixedThreadPool(4,
+                        new ThreadFactoryBuilder()
+                                .setNameFormat("CacheEvictor-%d")
+                                .setDaemon(true).build()),
+                Executors.newFixedThreadPool(4,
+                        new ThreadFactoryBuilder()
+                                .setNameFormat("LocalCachedFileWriter-%d")
+                                .setDaemon(true).build())
         );
     }
 

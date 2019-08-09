@@ -48,7 +48,6 @@ public class RestJsonClientManager {
     private Client client;
 
     public RestJsonClientManager() {
-
         this.failureCache = CacheBuilder.newBuilder()
                 .maximumSize(1000)
                 .expireAfterWrite(10, TimeUnit.MINUTES)
@@ -64,29 +63,24 @@ public class RestJsonClientManager {
     }
 
     private Client buildClient(boolean auth) {
-
-        Client client = ClientBuilder.newClient();
-        client.register(MultiPartFeature.class);
-
-        JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
+        JacksonJsonProvider jsonProvider = new JacksonJaxbJsonProvider()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        client.register(provider);
 
-        ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
-        mapper.addHandler(new DeserializationProblemHandler() {
-            @Override
-            public boolean handleUnknownProperty(DeserializationContext ctxt, JsonParser jp, JsonDeserializer<?> deserializer, Object beanOrClass, String propertyName) throws IOException, JsonProcessingException {
-                String key = beanOrClass.getClass().getName() + "." + propertyName;
-                if (failureCache.getIfPresent(key) == null) {
-                    log.error("Failed to deserialize property which does not exist in model: {}", key);
-                    failureCache.put(key, true);
-                }
-                // JW-33050: We must skip the content here, or further processing may be broken.
-                jp.skipChildren();
-                return true;
-            }
-        });
+        jsonProvider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE)
+                .addHandler(new DeserializationProblemHandler() {
+                    @Override
+                    public boolean handleUnknownProperty(DeserializationContext ctxt, JsonParser jp, JsonDeserializer<?> deserializer, Object beanOrClass, String propertyName) throws IOException, JsonProcessingException {
+                        String key = beanOrClass.getClass().getName() + "." + propertyName;
+                        if (failureCache.getIfPresent(key) == null) {
+                            log.error("Failed to deserialize property which does not exist in model: {}", key);
+                            failureCache.put(key, true);
+                        }
+                        // JW-33050: We must skip the content here, or further processing may be broken.
+                        jp.skipChildren();
+                        return true;
+                    }
+                });
 
         // Add application id to every request, and for authed requests, add the JWT token
         ClientRequestFilter headerFilter = new ClientRequestFilter() {
@@ -97,9 +91,12 @@ public class RestJsonClientManager {
                 }
             }
         };
-        client.register(headerFilter);
 
-        return client;
+        return ClientBuilder.newBuilder()
+                .register(MultiPartFeature.class)
+                .register(jsonProvider)
+                .register(headerFilter)
+                .build();
     }
 
     public Client getHttpClient(boolean auth) {

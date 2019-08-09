@@ -27,7 +27,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     private static final Logger LOG = LoggerFactory.getLogger(TileServer.class);
 
     // Derived from individual ViewTileManagers
-    public static enum LoadStatus {
+    public enum LoadStatus {
         UNINITIALIZED,
         NO_TEXTURES_LOADED,
         IMPERFECT_TEXTURES_LOADED,
@@ -70,13 +70,13 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         getTextureCache().setQueueDrainedListener(queueDrainedListener);
     }
 
-    public void textureLoaded(TileIndex tileIndex) {
+    void textureLoaded(TileIndex tileIndex) {
         for (ViewTileManager vtm : viewTileManagers) {
             vtm.textureLoaded(tileIndex);
         }
     }
 
-    public void startMinResPreFetch() {
+    private void startMinResPreFetch() {
         // log.info("starting pre fetch of lowest resolution tiles");
         // Load X and Y slices too (in addition to Z), if available
         if (sharedVolumeImage.getLoadAdapter() == null) {
@@ -119,7 +119,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         this.loadStatusListener = loadStatusListener;
     }
 
-    public void addViewTileManager(ViewTileManager viewTileManager) {
+    void addViewTileManager(ViewTileManager viewTileManager) {
         if (viewTileManagers.contains(viewTileManager)) {
             return; // already there
         }
@@ -128,7 +128,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         viewTileManager.setTextureCache(getTextureCache());
     }
 
-    public void clearCache() {
+    void clearCache() {
         // Replace entire texture cache, to avoid retained textures
         int[] textureIds = null;
         if (textureCache != null) {
@@ -166,11 +166,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         return viewTileManagers;
     }
 
-    public LoadStatus getLoadStatus() {
-        return loadStatus;
-    }
-
-    public void setLoadStatus(LoadStatus loadStatus) {
+    private void setLoadStatus(LoadStatus loadStatus) {
         if (this.loadStatus == loadStatus) {
             return; // no change
         }
@@ -185,7 +181,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         return sharedVolumeImage;
     }
 
-    void setSharedVolumeImage(SharedVolumeImage sharedVolumeImage) {
+    private void setSharedVolumeImage(SharedVolumeImage sharedVolumeImage) {
         if (this.sharedVolumeImage == sharedVolumeImage) {
             return;
         }
@@ -300,15 +296,15 @@ public class TileServer implements ComponentListener, // so changes in viewer si
                     combinedFullSlice = fullSlices.get(0);
                 } else { // more than one axis
                     Iterator<Iterable<TileIndex>> sliceIter = umbrellas.iterator();
-                    combinedUmbrella = new InterleavedIterator<TileIndex>(sliceIter.next(), sliceIter.next());
+                    combinedUmbrella = new InterleavedIterator<>(sliceIter.next(), sliceIter.next());
                     while (sliceIter.hasNext()) {
-                        combinedUmbrella = new InterleavedIterator<TileIndex>(combinedUmbrella, sliceIter.next());
+                        combinedUmbrella = new InterleavedIterator<>(combinedUmbrella, sliceIter.next());
                     }
-                    //
+
                     sliceIter = fullSlices.iterator();
-                    combinedFullSlice = new InterleavedIterator<TileIndex>(sliceIter.next(), sliceIter.next());
+                    combinedFullSlice = new InterleavedIterator<>(sliceIter.next(), sliceIter.next());
                     while (sliceIter.hasNext()) {
-                        combinedFullSlice = new InterleavedIterator<TileIndex>(combinedFullSlice, sliceIter.next());
+                        combinedFullSlice = new InterleavedIterator<>(combinedFullSlice, sliceIter.next());
                     }
                 }
 
@@ -345,7 +341,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     }
 
     // Part of new way July 9, 2013
-    public void refreshCurrentTileSet() {
+    void refreshCurrentTileSet() {
         TileSet tiles = createLatestTiles();
         Set<TileIndex> indices = new HashSet<>();
         for (Tile2d t : tiles) {
@@ -358,31 +354,11 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         rearrangeLoadQueue(tiles);
     }
 
-    // TODO - could move this to TextureCache class?
-    public void setCacheSizesAsFractionOfMaxHeap(double historyFraction, double futureFraction) {
-        if ((historyFraction + futureFraction) >= 1.0) {
-            LOG.warn("Combined cache sizes are larger than max heap size.");
-        }
-        Runtime rt = Runtime.getRuntime();
-        long maxHeapBytes = rt.maxMemory();
-        TileFormat format = sharedVolumeImage.getLoadAdapter().getTileFormat();
-        long tileBytes = format.getTileBytes();
-        int historyTileMax = (int) (historyFraction * maxHeapBytes / tileBytes);
-        int futureTileMax = (int) (futureFraction * maxHeapBytes / tileBytes);
-        getTextureCache().getHistoryCache().setMaxEntries(historyTileMax);
-        getTextureCache().getFutureCache().setMaxEntries(futureTileMax);
-    }
-
-    public void setCachedSizesSmall() {
-        getTextureCache().getHistoryCache().setMaxEntries(50);
-        getTextureCache().getFutureCache().setMaxEntries(150);
-    }
-
     public AbstractTextureLoadAdapter getLoadAdapter() {
         return sharedVolumeImage.getLoadAdapter();
     }
 
-    public ImageBrightnessStats getCurrentBrightnessStats() {
+    ImageBrightnessStats getCurrentBrightnessStats() {
         ImageBrightnessStats result = null;
         for (ViewTileManager vtm : viewTileManagers) {
             if (vtm == null) {
@@ -407,22 +383,24 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     // ComponentListener interface, to viewer changes can be tracked
     @Override
     public void componentResized(ComponentEvent e) {
-        refreshCurrentTileSet();
     }
 
     @Override
     public void componentMoved(ComponentEvent e) {
-        // refreshCurrentTileSet();
     }
 
     @Override
     public void componentShown(ComponentEvent e) {
-        refreshCurrentTileSet();
     }
 
     @Override
     public void componentHidden(ComponentEvent e) {
-        refreshCurrentTileSet();
+        // do nothing
+    }
+
+    void stop() {
+        minResPreFetcher.clear();
+        futurePreFetcher.clear();
     }
 
     //-------------------------------------------IMPLEMENTS VolumeLoadListener
@@ -435,9 +413,6 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
         futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
         clearCache();
-        //DEBUG 
-        //setCachedSizesSmall();
-        //setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
         refreshCurrentTileSet();
     }
 

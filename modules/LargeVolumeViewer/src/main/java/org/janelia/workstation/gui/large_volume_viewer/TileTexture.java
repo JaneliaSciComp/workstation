@@ -148,7 +148,7 @@ public class TileTexture {
         uploadTextureTime = System.nanoTime();
     }
 
-    public synchronized boolean loadImageToRam() {
+    synchronized boolean loadImageToRam() {
         setLoadStatus(LoadStatus.RAM_LOADING);
         try {
             textureData = new TextureData2dGL(loadAdapter.loadToRam(index));

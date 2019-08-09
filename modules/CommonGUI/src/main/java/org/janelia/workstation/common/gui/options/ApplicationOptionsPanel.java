@@ -27,6 +27,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.text.DefaultFormatter;
 
+import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.LocalPreferenceMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.AccessManager;
@@ -226,7 +227,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         fileCacheClearButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                FileMgr.getFileMgr().clearFileCache();
+                LocalCacheMgr.getInstance().clearFileCache();
                 updateFileCacheComponents(false);
             }
         });
@@ -245,8 +246,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
 
         fileCacheSpinner.setValue(capacity);
 
-        if (FileMgr.getFileMgr().isFileCacheAvailable()) {
-
+        if (LocalPreferenceMgr.getInstance().isCacheAvailable()) {
             fileCacheEnabledRadioButton.setSelected(true);
             fileCacheSpinner.setEnabled(true);
 
@@ -264,7 +264,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
                             log.warn("ignoring exception", e);
                         }
                     }
-                    double usage = FileMgr.getFileMgr().getFileCacheGigabyteUsage();
+                    double usage = LocalCacheMgr.getInstance().getFileCacheGigabyteUsage();
                     this.percentage = (usage / capacity) * 100.0;
                 }
                 
@@ -348,7 +348,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
                 ! cacheDisabled.equals(FrameworkAccess.getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY));
         if (cacheDisabledChanged) {
             log.info("Saving file cache disabled setting: "+cacheDisabled);
-            FileMgr.getFileMgr().setFileCacheDisabled(cacheDisabled);
+            LocalPreferenceMgr.getInstance().setFileCacheDisabled(cacheDisabled);
         }
         
         final boolean cacheCapacityChanged = ! cacheCapacity.equals(LocalPreferenceMgr.getInstance().getFileCacheGigabyteCapacity());

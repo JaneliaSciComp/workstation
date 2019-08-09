@@ -16,7 +16,7 @@ public class TexturePreFetcher {
     private TextureCache textureCache; // holds texture
     private AbstractTextureLoadAdapter loadAdapter; // knows how to load textures
 
-    public TexturePreFetcher(int threadPoolSize) {
+    TexturePreFetcher(int threadPoolSize) {
         textureLoadExecutor = new ThreadPoolExecutor(
                 threadPoolSize,
                 threadPoolSize,
@@ -32,7 +32,7 @@ public class TexturePreFetcher {
      * Returns "true" if this tile would occupy desired space in the future
      * cache.
      */
-    public synchronized boolean loadDisplayedTexture(TileIndex index, TileServer tileServer) {
+    synchronized boolean loadDisplayedTexture(TileIndex index, TileServer tileServer) {
         if (textureCache == null) {
             return false;
         }
@@ -85,7 +85,7 @@ public class TexturePreFetcher {
         return loadAdapter;
     }
 
-    public void setLoadAdapter(AbstractTextureLoadAdapter loadAdapter) {
+    void setLoadAdapter(AbstractTextureLoadAdapter loadAdapter) {
         this.loadAdapter = loadAdapter;
     }
 
@@ -93,7 +93,7 @@ public class TexturePreFetcher {
         return textureCache;
     }
 
-    public void setTextureCache(TextureCache textureCache) {
+    void setTextureCache(TextureCache textureCache) {
         this.textureCache = textureCache;
     }
 
