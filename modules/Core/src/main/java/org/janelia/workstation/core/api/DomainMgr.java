@@ -97,13 +97,10 @@ public class DomainMgr {
             workspaceFacade = getNewInstance(reflections, WorkspaceFacade.class);
             sageClient = new SageRestClient();
             model = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
-            listener = new PropertyChangeListener() {
-                @Override
-                public void propertyChange(PropertyChangeEvent evt) {
-                    if (evt.getPropertyName().equals(OptionConstants.USE_RUN_AS_USER_PREFERENCES)) {
-                        preferenceMap = null;
-                        model.invalidateAll();
-                    }
+            listener = evt -> {
+                if (evt.getPropertyName().equals(OptionConstants.USE_RUN_AS_USER_PREFERENCES)) {
+                    preferenceMap = null;
+                    model.invalidateAll();
                 }
             };
         } catch (Exception e) {

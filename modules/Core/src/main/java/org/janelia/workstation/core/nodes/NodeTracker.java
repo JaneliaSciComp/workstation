@@ -3,19 +3,16 @@ package org.janelia.workstation.core.nodes;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 
 /**
  * Singleton which keeps track of IdentifiableNodes as they are created and destroyed, 

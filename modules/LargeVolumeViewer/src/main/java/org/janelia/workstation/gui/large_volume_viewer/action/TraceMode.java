@@ -678,8 +678,10 @@ implements MouseMode, KeyListener
 		Anchor historyAnchor = null;
 		Anchor nextParent = skeletonActor.getModel().getNextParent();
                 
-                
-                
+        // ***** NOTE *****
+        // if you hard-code key combinations, be sure to exclude the combinations of
+        //  modifiers that you aren't handling!
+
 		switch(keyCode) {
 		case KeyEvent.VK_BACK_SPACE:
 		case KeyEvent.VK_DELETE:
@@ -687,17 +689,6 @@ implements MouseMode, KeyListener
                 skeleton.deleteLinkRequest(nextParent);
 			}
 			break;
-		/*
-		// disabling history nav for now
-		case KeyEvent.VK_LEFT:
-			// System.out.println("back");
-			historyAnchor = skeleton.getHistory().back();
-			break;
-		case KeyEvent.VK_RIGHT:
-			// System.out.println("next");
-			historyAnchor = skeleton.getHistory().next();
-			break;
-		*/
 		case KeyEvent.VK_LEFT:
 			if (nextParent != null) {
 				if (event.isAltDown()) {
@@ -734,68 +725,72 @@ implements MouseMode, KeyListener
 			break;
 		case KeyEvent.VK_A:
 			// add/edit note dialog
-			if (nextParent != null) {
+			if (event.getModifiers() == 0 && nextParent != null) {
 				skeleton.addEditNoteRequest(nextParent);
 			}
 			break;
-                case KeyEvent.VK_P:
-			TaskWorkflowViewTopComponent.getInstance().nextBranch();
-			break;
-                case KeyEvent.VK_O:
-			TaskWorkflowViewTopComponent.getInstance().prevBranch();
-			break;               
+        case KeyEvent.VK_P:
+            if (event.getModifiers() == 0) {
+                TaskWorkflowViewTopComponent.getInstance().nextBranch();
+            }
+            break;
+        case KeyEvent.VK_O:
+            if (event.getModifiers() == 0) {
+                TaskWorkflowViewTopComponent.getInstance().prevBranch();
+            }
+            break;
 		}
                 
-                // if not normal key event, check our group toggle events
-                AnnotationModel annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
-                Map<String, Map<String,Object>> groupMappings = annModel.getTagGroupMappings();
-                Iterator<String> groups = groupMappings.keySet().iterator();
-                while (groups.hasNext()) {
-                    String groupName = groups.next();
-                    Map<String,Object> fooMap = groupMappings.get(groupName);
-                    String keyMap = (String)fooMap.get("keymap");
-                    if (keyMap!=null && keyMap.equals(KeymapUtil.getTextByKeyStroke(KeyStroke.getKeyStrokeForEvent(event)))) {
-                        // toggle property
-                        Boolean toggled = (Boolean)fooMap.get("toggled");
-                        if (toggled==null) 
-                            toggled = Boolean.FALSE;
-                        toggled = !toggled;
-                        fooMap.put("toggled", toggled);
-                        
-                        // get all neurons in group
-                        Set<TmNeuronMetadata> neurons = annModel.getNeuronsForTag(groupName);
-                        List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
-                        // set toggle state
-                        String property =(String)fooMap.get("toggleprop");
-                        if (property!=null) {
-                            try {
-                                Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
-                                if (property.equals(NeuronGroupsDialog.PROPERTY_RADIUS)) {
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, toggled);
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
-                                } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuronList, !toggled);
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
-                                } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, toggled);
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();                                    
-                                } else if (property.equals(NeuronGroupsDialog.PROPERTY_CROSSCHECK)) {
-                                    List<String> properties =  new ArrayList<String>();
-                                    properties.add("Radius");
-                                    properties.add("Background");
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggled);
-                                    LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();                                    
-                                }
-                            } catch (Exception error) {
+        // if not normal key event, check our group toggle events
+        AnnotationModel annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
+        Map<String, Map<String,Object>> groupMappings = annModel.getTagGroupMappings();
+        Iterator<String> groups = groupMappings.keySet().iterator();
+        while (groups.hasNext()) {
+            String groupName = groups.next();
+            Map<String,Object> fooMap = groupMappings.get(groupName);
+            String keyMap = (String)fooMap.get("keymap");
+            if (keyMap!=null && keyMap.equals(KeymapUtil.getTextByKeyStroke(KeyStroke.getKeyStrokeForEvent(event)))) {
+                // toggle property
+                Boolean toggled = (Boolean)fooMap.get("toggled");
+                if (toggled==null)
+                    toggled = Boolean.FALSE;
+                toggled = !toggled;
+                fooMap.put("toggled", toggled);
 
-                                FrameworkAccess.handleException(error);
-                            }
+                // get all neurons in group
+                Set<TmNeuronMetadata> neurons = annModel.getNeuronsForTag(groupName);
+                List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
+                // set toggle state
+                String property =(String)fooMap.get("toggleprop");
+                if (property!=null) {
+                    try {
+                        Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
+                        if (property.equals(NeuronGroupsDialog.PROPERTY_RADIUS)) {
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, toggled);
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
+                        } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuronList, !toggled);
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
+                        } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, toggled);
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
+                        } else if (property.equals(NeuronGroupsDialog.PROPERTY_CROSSCHECK)) {
+                            List<String> properties =  new ArrayList<String>();
+                            properties.add("Radius");
+                            properties.add("Background");
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggled);
+                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
                         }
-                        
+                    } catch (Exception error) {
+
+                        FrameworkAccess.handleException(error);
                     }
                 }
-		if (historyAnchor != null)
-			camera.setFocus(historyAnchor.getLocation());
+
+            }
+        }
+        if (historyAnchor != null)
+            camera.setFocus(historyAnchor.getLocation());
 	}
 
 	private void checkShiftPlusCursor(InputEvent event) {

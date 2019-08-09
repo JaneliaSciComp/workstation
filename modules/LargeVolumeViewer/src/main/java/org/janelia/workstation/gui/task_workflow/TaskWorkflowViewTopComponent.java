@@ -192,7 +192,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     private static final Logger log = LoggerFactory.getLogger(TaskWorkflowViewTopComponent.class);
 
     public void prevBranch() {
-       if (currGroupIndex!=-1) {
+       if (groupList != null && currGroupIndex!=-1) {
            ReviewGroup currGroup = groupList.get(currGroupIndex);
             if (currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
                 // clear current review markers
@@ -227,7 +227,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     }
     
     public void nextBranch() {
-        if (currGroupIndex!=-1) {
+        if (groupList != null && currGroupIndex!=-1) {
             ReviewGroup currGroup = groupList.get(currGroupIndex);
             if (currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
                 // clear current review markers

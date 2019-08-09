@@ -38,7 +38,9 @@ public class ReversePlayReviewAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
        NeuronTracerTopComponent nttc = NeuronTracerTopComponent.findThisComponent();
-       nttc.resumePlaybackReview(PlayReviewManager.PlayDirection.REVERSE);
+        if (nttc != null && nttc.isShowing()) {
+            nttc.resumePlaybackReview(PlayReviewManager.PlayDirection.REVERSE);
+        }
     }
     
     @Override
