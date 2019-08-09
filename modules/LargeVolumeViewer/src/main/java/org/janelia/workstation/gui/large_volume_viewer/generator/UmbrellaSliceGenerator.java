@@ -28,13 +28,12 @@ public class UmbrellaSliceGenerator implements Iterable<TileIndex>, Iterator<Til
 		int sliceMin = 0;
 		int sliceMax = sliceMin + tileFormat.getVolumeSize()[2] - 1;
 		// Choose one tile to initialize search area in Z
-		TileIndex ix1 = tileSet.iterator().next().getIndex();
-		PreviousSliceUmbrellaGenerator down = new PreviousSliceUmbrellaGenerator(ix1, sliceMin);
-		NextSliceUmbrellaGenerator up = new NextSliceUmbrellaGenerator(ix1, sliceMax);
+		baseIndex = tileSet.iterator().next().getIndex();
+		PreviousSliceUmbrellaGenerator down = new PreviousSliceUmbrellaGenerator(baseIndex, Math.max(sliceMin, baseIndex.getZ() - 2));
+		NextSliceUmbrellaGenerator up = new NextSliceUmbrellaGenerator(baseIndex, Math.min(sliceMax, baseIndex.getZ() + 2));
 		sliceGenerator = new InterleavedIterator<>(down, up);
 		this.tileSet = tileSet;
 		tileIter = this.tileSet.iterator();
-		baseIndex = tileSet.iterator().next().getIndex();
 	}
 	
 	@Override

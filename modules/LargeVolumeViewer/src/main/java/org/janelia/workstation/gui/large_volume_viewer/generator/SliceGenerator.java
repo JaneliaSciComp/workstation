@@ -33,7 +33,7 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 		// Choose one tile to initialize search area in slice
 		PreviousSliceGenerator down = new PreviousSliceGenerator(ix1, sliceMin);
 		NextSliceGenerator up = new NextSliceGenerator(ix1, sliceMax);
-		sliceGenerator = new InterleavedIterator<TileIndex>(down, up);
+		sliceGenerator = new InterleavedIterator<>(down, up);
 		this.tileSet = tileSet;
 		tileIter = this.tileSet.iterator();
 		baseIndex = tileSet.iterator().next().getIndex();
