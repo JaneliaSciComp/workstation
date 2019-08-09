@@ -2,14 +2,8 @@ package org.janelia.workstation.gui.large_volume_viewer;
 
 import java.net.URI;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpStatus;
@@ -18,7 +12,6 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
 import org.janelia.it.jacs.shared.utils.HttpClientHelper;
 import org.janelia.model.security.AppAuthorization;
-import org.janelia.rendering.CachedRenderedVolumeLoader;
 import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
@@ -26,8 +19,7 @@ import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.rendering.TileInfo;
 import org.janelia.rendering.TileKey;
-import org.janelia.rendering.utils.HttpClientProvider;
-import org.janelia.workstation.core.api.LocalPreferenceMgr;
+import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,15 +45,11 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
     private RenderedVolumeLocation renderedVolumeLocation;
     private RenderedVolumeMetadata renderedVolumeMetadata;
 
-    RestServiceBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat,
-                                               URI volumeBaseURI,
-                                               AppAuthorization appAuthorization,
-                                               int volumeCacheSize,
-                                               int tileCacheSize) {
+    RestServiceBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat, URI volumeBaseURI, AppAuthorization appAuthorization) {
         super(tileFormat, volumeBaseURI);
         this.appAuthorization = appAuthorization;
         this.objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        this.renderedVolumeLoader = new CachedRenderedVolumeLoader(new RenderedVolumeLoaderImpl(), volumeCacheSize, tileCacheSize);
+        this.renderedVolumeLoader = new RenderedVolumeLoaderImpl();
     }
 
     @Override
@@ -88,7 +76,7 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
                             null,
                             () -> RestJsonClientManager.getInstance().getHttpClient(true)
                     ),
-                    LocalPreferenceMgr.getInstance().getLocalFileCacheStorage());
+                    LocalCacheMgr.getInstance().getLocalFileCacheStorage());
             getTileFormat().initializeFromRenderedVolumeMetadata(renderedVolumeMetadata);
         } catch (Exception ex) {
             LOG.error("Error getting sample 2d tile from {}", url, ex);
@@ -107,7 +95,7 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
                     tileIndex.getZoom(),
                     tileInfo.getSliceAxis(),
                     tileInfo);
-            LOG.debug("Loading tile {} using key {}", tileIndex, tileKey);
+            LOG.trace("Loading tile {} using key {}", tileIndex, tileKey);
             return renderedVolumeLoader.loadSlice(renderedVolumeLocation, renderedVolumeMetadata, tileKey)
                     .map(TextureData2d::new)
                     .orElse(null);

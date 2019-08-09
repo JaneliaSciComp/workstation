@@ -13,10 +13,9 @@ import java.util.stream.Collectors;
  * @author brunsc
  *
  */
-public class TileSet
-        extends HashSet<Tile2d> {
+public class TileSet extends HashSet<Tile2d> {
 
-    public static enum LoadStatus {
+    public enum LoadStatus {
         NO_TEXTURES_LOADED,
         SOME_TEXTURES_LOADED,
         COARSE_TEXTURES_LOADED,
@@ -25,7 +24,7 @@ public class TileSet
 
     private LoadStatus loadStatus;
 
-    public void assignTextures(TextureCache textureCache) {
+    void assignTextures(TextureCache textureCache) {
         int bestCount = 0;
         int coarseCount = 0;
         int noneCount = 0;
@@ -54,7 +53,7 @@ public class TileSet
 
     // 1.0 means fully up-to-date
     // 0.0 means no textures have been loaded
-    public float getPercentDisplayable() {
+    private float getPercentDisplayable() {
         if (this.size() == 0) {
             return 1.0f; // TODO up-to-date
         }
@@ -77,18 +76,14 @@ public class TileSet
         return result;
     }
 
-    public boolean canDisplay() {
+    boolean canDisplay() {
         float pd = getPercentDisplayable();
         // Display if a threshold number of tiles are displayable
         final double minProportion = 0.3;
-        if (pd >= minProportion) {
-            return true;
-        } else {
-            return false;
-        }
+        return pd >= minProportion;
     }
 
-    public Tile2d.LoadStatus getMinStage() {
+    Tile2d.LoadStatus getMinStage() {
         if (size() < 1) {
             return Tile2d.LoadStatus.NO_TEXTURE_LOADED;
         }
@@ -102,17 +97,17 @@ public class TileSet
         return result;
     }
 
-    public LoadStatus getLoadStatus() {
+    LoadStatus getLoadStatus() {
         return loadStatus;
     }
 
-    public void setLoadStatus(LoadStatus loadStatus) {
+    void setLoadStatus(LoadStatus loadStatus) {
         this.loadStatus = loadStatus;
     }
 
     // Start loading textures to quickly populate these tiles, even if the
     // textures are not the optimal resolution
-    public Set<TileIndex> getFastNeededTextures() {
+    Set<TileIndex> getFastNeededTextures() {
         // Which tiles need to be textured?
         Set<Tile2d> untexturedTiles = this.stream()
                 .filter(tile -> tile.getLoadStatus().ordinal() < Tile2d.LoadStatus.COARSE_TEXTURE_LOADED.ordinal())
@@ -162,7 +157,7 @@ public class TileSet
     }
 
     // Start loading textures of the optimal resolution for these tiles
-    public Set<TileIndex> getBestNeededTextures() {
+    Set<TileIndex> getBestNeededTextures() {
         // Which tiles need to be textured?
         return this.stream()
                 .filter(tile -> tile.getLoadStatus().ordinal() < Tile2d.LoadStatus.BEST_TEXTURE_LOADED.ordinal())

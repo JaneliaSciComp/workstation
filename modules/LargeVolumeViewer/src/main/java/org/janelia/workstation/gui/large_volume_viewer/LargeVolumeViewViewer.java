@@ -63,7 +63,7 @@ public class LargeVolumeViewViewer extends JPanel {
         setLayout(new BorderLayout());
     }
 
-    public void showLoadingIndicator() {
+    private void showLoadingIndicator() {
         removeAll();
         add(new JLabel(Icons.getLoadingIcon()), BorderLayout.CENTER);
         revalidate();
@@ -255,7 +255,6 @@ public class LargeVolumeViewViewer extends JPanel {
             }
         };
         worker.execute();
-
     }
     
     public void setInitialViewFocus(Vec3 initialViewFocus, Double initialZoom) {
@@ -298,6 +297,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 protected void doStuff() throws Exception {
                     logger.info("Clearing cache...");
                     oldQuadView.clearCache();
+                    oldQuadView.clear();
                 }
 
                 @Override
@@ -313,7 +313,7 @@ public class LargeVolumeViewViewer extends JPanel {
             worker.execute();
         }
         
-        if (annotationModel!=null) {
+        if (annotationModel != null) {
             Events.getInstance().unregisterOnEventBus(annotationModel);
             // trying to diagnose a later null:
             logger.info("setting annotationModel to null");

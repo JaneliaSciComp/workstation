@@ -130,7 +130,6 @@ import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.LocalVolumeBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
-import org.janelia.rendering.CachedRenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.scenewindow.OrbitPanZoomInteractor;
@@ -184,8 +183,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         implements VolumeProjection {
 
     static final String PREFERRED_ID = "NeuronTracerTopComponent";
-    private static final int DEFAULT_VOLUMES_CACHE_SIZE = 2;
-    private static final int DEFAULT_TILES_CACHE_SIZE = 100;
 
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor worldInteractor;
@@ -242,12 +239,12 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     private NeuronSet activeNeuronSet = null;
 
-    public static final NeuronTracerTopComponent getInstance() {
+    public static NeuronTracerTopComponent getInstance() {
         return findThisComponent();
     }
 
     public NeuronTracerTopComponent() {
-        renderedVolumeLoader = new CachedRenderedVolumeLoader(new RenderedVolumeLoaderImpl(), DEFAULT_VOLUMES_CACHE_SIZE, DEFAULT_TILES_CACHE_SIZE);
+        renderedVolumeLoader = new RenderedVolumeLoaderImpl();
 
         // This block is what the wizard created
         initComponents();

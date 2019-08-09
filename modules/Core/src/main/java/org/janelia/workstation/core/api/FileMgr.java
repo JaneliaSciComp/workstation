@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.concurrent.Executors;
 
 import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
@@ -50,7 +51,6 @@ public class FileMgr {
     private int webdavMaxTotalConnections;
     private HttpClientProxy httpClient;
     private StorageClientMgr storageClientMgr;
-    private LocalFileCacheStorage localFileCacheStorage;
     private LocalFileCache<WebdavCachedFileKey> webdavLocalFileCache;
 
     private FileMgr() {
@@ -72,7 +72,18 @@ public class FileMgr {
                 managerParams.setMaxTotalConnections(webdavMaxTotalConnections);
                 httpClient = new HttpClientProxy(new HttpClient(mgr));
                 storageClientMgr = new StorageClientMgr(webdavBaseUrl, httpClient);
-                setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(LocalPreferenceMgr.getInstance().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
+                webdavLocalFileCache = new LocalFileCache<>(
+                        LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
+                        new WebDavFileKeyProxySupplier(httpClient, storageClientMgr),
+                        Executors.newFixedThreadPool(4,
+                                new ThreadFactoryBuilder()
+                                        .setNameFormat("CacheEvictor-%d")
+                                        .setDaemon(true).build()),
+                        Executors.newFixedThreadPool(4,
+                                new ThreadFactoryBuilder()
+                                        .setNameFormat("LocalCachedFileWriter-%d")
+                                        .setDaemon(true).build())
+                );
             }
         });
     }
@@ -83,70 +94,6 @@ public class FileMgr {
 
     public WebDavUploader getFileUploader() {
         return new WebDavUploader(storageClientMgr);
-    }
-
-    /**
-     * @return true if a local file cache is available for this session; otherwise false.
-     */
-    public boolean isFileCacheAvailable() {
-        return (webdavLocalFileCache != null);
-    }
-
-    /**
-     * Enables or disables the local file cache and
-     * saves the setting as a session preference.
-     *
-     * @param isDisabled if true, cache will be disabled;
-     * otherwise cache will be enabled.
-     */
-    public void setFileCacheDisabled(boolean isDisabled) {
-        LocalPreferenceMgr.getInstance().setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
-
-        if (isDisabled) {
-            LOG.warn("disabling local cache");
-            webdavLocalFileCache = null;
-            localFileCacheStorage = null;
-        } else {
-            try {
-                localFileCacheStorage = LocalPreferenceMgr.getInstance().getLocalFileCacheStorage();
-                webdavLocalFileCache = new LocalFileCache<>(
-                        localFileCacheStorage,
-                        new WebDavFileKeyProxySupplier(httpClient, storageClientMgr),
-                        Executors.newFixedThreadPool(4));
-            } catch (IllegalStateException e) {
-                webdavLocalFileCache = null;
-                localFileCacheStorage = null;
-                LOG.error("disabling local cache after initialization failure", e);
-            }
-        }
-    }
-
-    /**
-     * @return the total size (in gigabytes) of all currently cached files.
-     */
-    public double getFileCacheGigabyteUsage() {
-        double usage = 0.0;
-        if (localFileCacheStorage != null) {
-            final long kilobyteUsage = localFileCacheStorage.getCurrentSizeInKB();
-            usage = kilobyteUsage / (1024.0 * 1024.0);
-        }
-        return usage;
-    }
-
-    public int getFileCacheGigabyteUsagePercent() {
-        int capacity = LocalPreferenceMgr.getInstance().getFileCacheGigabyteCapacity();
-        double usage = FileMgr.getFileMgr().getFileCacheGigabyteUsage();
-        double percent = (usage / (double)capacity) * 100.0;
-        return (int)percent;
-    }
-
-    /**
-     * Removes all locally cached files.
-     */
-    public void clearFileCache() {
-        if (localFileCacheStorage != null) {
-            localFileCacheStorage.clear();
-        }
     }
 
     /**
@@ -165,12 +112,7 @@ public class FileMgr {
      * null if caching is disabled or the file cannot be cached.
      */
     public FileProxy getFile(String standardPath, boolean forceRefresh) {
-        if (isFileCacheAvailable()) {
-            return webdavLocalFileCache.getCachedFileEntry(new WebdavCachedFileKey(standardPath), forceRefresh);
-        } else {
-            // return this as a local file
-            return new LocalFileProxy(standardPath);
-        }
+        return webdavLocalFileCache.getCachedFileEntry(new WebdavCachedFileKey(standardPath), forceRefresh);
     }
 
     /**

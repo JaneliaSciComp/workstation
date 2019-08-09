@@ -11,13 +11,13 @@ import org.slf4j.LoggerFactory;
  */
 public class TextureLoadWorker implements Runnable {
 
-    private static final Logger log = LoggerFactory.getLogger(TextureLoadWorker.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TextureLoadWorker.class);
 
     private TileTexture texture;
     private TextureCache textureCache;
     private TileServer tileServer;
 
-    public TextureLoadWorker(TileTexture texture, TextureCache textureCache, TileServer tileServer) {
+    TextureLoadWorker(TileTexture texture, TextureCache textureCache, TileServer tileServer) {
         if (texture.getLoadStatus().ordinal() < TileTexture.LoadStatus.LOAD_QUEUED.ordinal()) {
             texture.setLoadStatus(TileTexture.LoadStatus.LOAD_QUEUED);
         }
@@ -33,21 +33,20 @@ public class TextureLoadWorker implements Runnable {
     @Override
     public void run() {
         TileIndex index = texture.getIndex();
-        log.debug("loading "+index);
-
+        LOG.debug("loading "+index);
         if (textureCache.containsKey(index)) {
-             log.debug("Skipping duplicate load of texture (2) "+index);
-        } // Don't load this texture if it is already loaded
-        else if (texture.getLoadStatus().ordinal() == TileTexture.LoadStatus.RAM_LOADING.ordinal()) {
-             log.debug("Skipping duplicate load of texture "+texture.getIndex());
-            // return; // already loading
+            // texture already loaded
+            LOG.debug("Skipping duplicate load of texture (2) {}", index);
+        } else if (texture.getLoadStatus().ordinal() == TileTexture.LoadStatus.RAM_LOADING.ordinal()) {
+            // texture currently loading
+            LOG.debug("Skipping duplicate load of texture {}", texture.getIndex());
         } else if (texture.getLoadStatus().ordinal() > TileTexture.LoadStatus.RAM_LOADING.ordinal()) {
-             log.debug("Skipping duplicate load of texture "+texture.getIndex());
-            // return; // already loaded or loading
-        } // Load file
-        else {
+            // texture currently loaded or loading
+            LOG.debug("Skipping duplicate load of texture {}", texture.getIndex());
+        } else {
+            // load texture
             boolean loadedSuccessfully = texture.loadImageToRam();
-            log.debug("loadedSuccessfully={} loadStatus={}", loadedSuccessfully, texture.getLoadStatus());
+            LOG.debug("loadedSuccessfully={} loadStatus={}", loadedSuccessfully, texture.getLoadStatus());
             if (loadedSuccessfully) {
                 textureCache.add(texture);
                 tileServer.textureLoaded(texture.getIndex());

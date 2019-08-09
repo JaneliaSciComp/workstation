@@ -55,7 +55,6 @@ public class LocalPreferenceMgr {
     private final String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
     private final String prefsFile = prefsDir + ".JW_Settings";
     private final File settingsFile;
-    private final LocalFileCacheStorage localFileCacheStorage;
 
     private TreeMap<Object, Object> modelProperties;
     
@@ -96,7 +95,6 @@ public class LocalPreferenceMgr {
         }
 
         readSettingsFile();
-        localFileCacheStorage = new LocalFileCacheStorage(Paths.get(ConsoleProperties.getLocalCacheDir()), getFileCacheGigabyteCapacity() * 1024 * 1024);
     }
 
     @SuppressWarnings("unchecked")
@@ -193,7 +191,8 @@ public class LocalPreferenceMgr {
     }
 
     public Integer getFileCacheGigabyteCapacity() {
-        return getModelPropertyAs(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, Integer.class);
+        Integer cacheCapacityInGB = getModelPropertyAs(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, Integer.class);
+        return cacheCapacityInGB != null ? cacheCapacityInGB : DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY;
     }
 
     public final Integer setFileCacheGigabyteCapacity(Integer gigabyteCapacity) {
@@ -208,16 +207,27 @@ public class LocalPreferenceMgr {
             cacheCapacityInGB = gigabyteCapacity;
         }
         setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, cacheCapacityInGB);
-
-        int cacheCapacityInKB = cacheCapacityInGB * 1024 * 1024;
-        if (cacheCapacityInKB != localFileCacheStorage.getCapacityInKB()) {
-            localFileCacheStorage.setCapacityInKB(cacheCapacityInKB);
-        }
         return cacheCapacityInGB;
     }
 
-    public LocalFileCacheStorage getLocalFileCacheStorage() {
-        return localFileCacheStorage;
+    Boolean getFileCacheDisabled() {
+        Boolean fileCacheDisabled = getModelPropertyAs(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, Boolean.class);
+        return fileCacheDisabled != null && fileCacheDisabled;
+    }
+
+    public boolean isCacheAvailable() {
+        return !getFileCacheDisabled();
+    }
+
+    /**
+     * Enables or disables the local file cache and
+     * saves the setting as a session preference.
+     *
+     * @param isDisabled if true, cache will be disabled;
+     * otherwise cache will be enabled.
+     */
+    public void setFileCacheDisabled(boolean isDisabled) {
+        setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
     }
 
     @Subscribe

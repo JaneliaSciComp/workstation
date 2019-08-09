@@ -14,7 +14,6 @@ import org.janelia.workstation.gui.large_volume_viewer.TileSet;
  *
  */
 public class UmbrellaSliceGenerator implements Iterable<TileIndex>, Iterator<TileIndex> {
-	// private static final Logger log = LoggerFactory.getLogger(UmbrellaSliceGenerator.class);
 
 	// Outer loop iterates over slice
 	private Iterator<TileIndex> sliceGenerator;
@@ -26,16 +25,15 @@ public class UmbrellaSliceGenerator implements Iterable<TileIndex>, Iterator<Til
 
 	public UmbrellaSliceGenerator(TileFormat tileFormat, TileSet tileSet) {
 		// Identify slice boundaries
-		int sliceMin = 0;//tileFormat.getOrigin()[2];
+		int sliceMin = 0;
 		int sliceMax = sliceMin + tileFormat.getVolumeSize()[2] - 1;
 		// Choose one tile to initialize search area in Z
-		TileIndex ix1 = tileSet.iterator().next().getIndex();
-		PreviousSliceUmbrellaGenerator down = new PreviousSliceUmbrellaGenerator(ix1, sliceMin);
-		NextSliceUmbrellaGenerator up = new NextSliceUmbrellaGenerator(ix1, sliceMax);
-		sliceGenerator = new InterleavedIterator<TileIndex>(down, up);
+		baseIndex = tileSet.iterator().next().getIndex();
+		PreviousSliceUmbrellaGenerator down = new PreviousSliceUmbrellaGenerator(baseIndex, Math.max(sliceMin, baseIndex.getZ() - 2));
+		NextSliceUmbrellaGenerator up = new NextSliceUmbrellaGenerator(baseIndex, Math.min(sliceMax, baseIndex.getZ() + 2));
+		sliceGenerator = new InterleavedIterator<>(down, up);
 		this.tileSet = tileSet;
 		tileIter = this.tileSet.iterator();
-		baseIndex = tileSet.iterator().next().getIndex();
 	}
 	
 	@Override
@@ -81,7 +79,6 @@ public class UmbrellaSliceGenerator implements Iterable<TileIndex>, Iterator<Til
 			tileIter = tileSet.iterator(); // reset tiles
 			baseIndex = sliceGenerator.next();
 		}
-		// log.info("generating "+currentIndex());
 		return currentIndex();
 	}
 

@@ -49,8 +49,6 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.common.gui.dialogs.MemoryCheckDialog;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.workstation.gui.large_volume_viewer.action.*;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
@@ -239,7 +237,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         spinnerValue.setValue(z);
     }
 
-    public void zoomChanged(Double zoom) {
+    private void zoomChanged(Double zoom) {
         double zoomMin = Math.log(getMinZoom()) / Math.log(2.0);
         double zoomMax = Math.log(getMaxZoom()) / Math.log(2.0);
         double zoomLog = Math.log(zoom) / Math.log(2.0);
@@ -515,7 +513,11 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return annotationModel;
     }
 
-    public void clearCache() {
+    void clear() {
+        tileServer.stop();
+    }
+
+    void clearCache() {
         tileServer.clearCache();
     }
 

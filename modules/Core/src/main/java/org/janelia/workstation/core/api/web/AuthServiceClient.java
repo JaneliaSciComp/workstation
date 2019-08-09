@@ -27,10 +27,6 @@ public class AuthServiceClient extends RESTClientBase {
 
     private WebTarget service;    
 
-    public AuthServiceClient() {
-        this(ConsoleProperties.getInstance().getProperty("auth.rest.url"));
-    }
-    
     public AuthServiceClient(String serverUrl) {
         super(log);
         this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, false);

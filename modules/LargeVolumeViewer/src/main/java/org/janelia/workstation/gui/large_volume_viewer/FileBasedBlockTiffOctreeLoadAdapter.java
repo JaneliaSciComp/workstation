@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
-import org.janelia.rendering.CachedRenderedVolumeLoader;
 import org.janelia.rendering.FileBasedRenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
@@ -13,7 +12,7 @@ import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.rendering.TileInfo;
 import org.janelia.rendering.TileKey;
-import org.janelia.workstation.core.api.LocalPreferenceMgr;
+import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,16 +35,13 @@ public class FileBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdap
     private final RenderedVolumeLocation renderedVolumeLocation;
     private RenderedVolumeMetadata renderedVolumeMetadata;
 
-    FileBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat,
-                                        URI volumeBaseURI,
-                                        int volumeCacheSize,
-                                        int tileCacheSize) {
+    FileBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat, URI volumeBaseURI) {
         super(tileFormat, volumeBaseURI);
         this.baseFolder = Paths.get(volumeBaseURI);
-        this.renderedVolumeLoader = new CachedRenderedVolumeLoader(new RenderedVolumeLoaderImpl(), volumeCacheSize, tileCacheSize);
+        this.renderedVolumeLoader = new RenderedVolumeLoaderImpl();
         this.renderedVolumeLocation = new CachedRenderedVolumeLocation(
                 new FileBasedRenderedVolumeLocation(baseFolder),
-                LocalPreferenceMgr.getInstance().getLocalFileCacheStorage());
+                LocalCacheMgr.getInstance().getLocalFileCacheStorage());
     }
 
     @Override

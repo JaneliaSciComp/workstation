@@ -88,7 +88,7 @@ public class DomainMgr {
         log.info("Initializing Domain Manager");
         String domainFacadePackageName = ConsoleProperties.getInstance().getProperty("domain.facade.package");
         try {
-            authClient = new AuthServiceClient();
+            authClient = new AuthServiceClient(ConsoleProperties.getInstance().getProperty("auth.rest.url"));
             final Reflections reflections = ReflectionsFixer.getReflections(domainFacadePackageName, getClass());
             domainFacade = getNewInstance(reflections, DomainFacade.class);
             ontologyFacade = getNewInstance(reflections, OntologyFacade.class);
