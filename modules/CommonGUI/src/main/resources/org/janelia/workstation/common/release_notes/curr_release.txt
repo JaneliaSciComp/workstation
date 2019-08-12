@@ -7,13 +7,18 @@ https://github.com/JaneliaSciComp/workstation
 Data Browser
 * The Workstation client is now able to connect to different backend servers (File->Connect)
 * You can now create and manage user groups using the Administration Tool (Window->Core)
-* Added scrolling to the color depth mask creation dialog
 * All context menu items are now also found in the main menu under Actions
 * Streamlined publishing workflow (right-click and choose "Stage Samples for Publishing")
 * Data Sets and Fly Line Releases are now accessible as top-level items in the Data Explorer
 * Core browser functionality was refactored into multiple modules for better maintainability and extensibility
 * Improved dependency management, application installers and distribution
 * Many performance improvements and bug fixes
+
+Color Depth Search
+* Color Depth Libraries and Searches are now accessible as top-level items in the Data Explorer
+* Added search options for XY shift and mask mirroring
+* Color Depth Search results now shows mask and result side-by-side with a synchronized mouse cursor
+* Added scrolling to the color depth mask creation dialog
 
 MouseLight Tools
 * Both Horta and LVV were modified to pull data from the JADE storage service, eliminating the previous
