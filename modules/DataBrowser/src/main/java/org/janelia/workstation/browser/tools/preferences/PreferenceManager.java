@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public abstract class PreferenceManager {
 
     private static final Logger log = LoggerFactory.getLogger(PreferenceManager.class);
-    
+
     protected final int DEFAULT = 0;
     private final int GROUP = 1;
     private final int USER = 2;
@@ -43,7 +43,7 @@ public abstract class PreferenceManager {
     protected static final String DESCRIPTION = "Description";
     public final static String GROUP_DIR = "GROUP_DIR";
 
-    protected ArrayList<PrefMgrListener> listeners = new ArrayList<PrefMgrListener>();
+    protected ArrayList<PrefMgrListener> listeners = new ArrayList<>();
     protected String filenameFilter = ".properties";
     protected String userDirectory = System.getProperty("user.home");
 
@@ -60,11 +60,11 @@ public abstract class PreferenceManager {
      * collections will determine the hierarchy. Default->Group->User->Dirty
      * Dirty is used for the change management.
      */
-    protected TreeMap<String, InfoObject> defaultMasterCollection = new TreeMap<String, InfoObject>();
-    protected TreeMap<String, InfoObject> groupMasterCollection = new TreeMap<String, InfoObject>();
-    protected TreeMap<String, InfoObject> userMasterCollection = new TreeMap<String, InfoObject>();
-    protected TreeMap<String, InfoObject> deletedInfos = new TreeMap<String, InfoObject>();
-    protected TreeMap<String, InfoObject> dirtyInfos = new TreeMap<String, InfoObject>();
+    protected TreeMap<String, InfoObject> defaultMasterCollection = new TreeMap<>();
+    protected TreeMap<String, InfoObject> groupMasterCollection = new TreeMap<>();
+    protected TreeMap<String, InfoObject> userMasterCollection = new TreeMap<>();
+    protected TreeMap<String, InfoObject> deletedInfos = new TreeMap<>();
+    protected TreeMap<String, InfoObject> dirtyInfos = new TreeMap<>();
 
     public PreferenceManager() {
     }
@@ -74,10 +74,10 @@ public abstract class PreferenceManager {
      * and Default collections of Info Objects.
      */
     public void initializeMasterInfoObjects() {
-        defaultMasterCollection = new TreeMap<String, InfoObject>(new MyStringComparator());
-        groupMasterCollection = new TreeMap<String, InfoObject>(new MyStringComparator());
-        userMasterCollection = new TreeMap<String, InfoObject>(new MyStringComparator());
-        dirtyInfos = new TreeMap<String, InfoObject>(new MyStringComparator());
+        defaultMasterCollection = new TreeMap<>(new MyStringComparator());
+        groupMasterCollection = new TreeMap<>(new MyStringComparator());
+        userMasterCollection = new TreeMap<>(new MyStringComparator());
+        dirtyInfos = new TreeMap<>(new MyStringComparator());
 
         if (DEBUG)
             System.out.println("Initing and building the group collections.");
@@ -98,13 +98,12 @@ public abstract class PreferenceManager {
                 try {
                     if (dirFiles.length == 0)
                         groupFilename = "";
-                    // There should be only one file in the group directory.
-                    // This needs
-                    // to be enforced somehow.
+                        // There should be only one file in the group directory.
+                        // This needs
+                        // to be enforced somehow.
                     else
                         groupFilename = newDir + File.separator + dirFiles[0];
-                }
-                catch (Exception ex) {
+                } catch (Exception ex) {
                     groupFilename = "";
                     handlePrefException(ex);
                 }
@@ -124,7 +123,7 @@ public abstract class PreferenceManager {
      * Master collection.
      */
     private void buildInfoCollection(int mode) {
-        Map<String, InfoObject> targetMasterCollection = new TreeMap<String, InfoObject>();
+        Map<String, InfoObject> targetMasterCollection = new TreeMap<>();
         String filename = "";
         if (mode == DEFAULT) {
             filename = defaultFilename;
@@ -153,12 +152,11 @@ public abstract class PreferenceManager {
                 if (!tmpFile.exists())
                     tmpFile.createNewFile();
                 targetFile = new FileInputStream(tmpFile);
-            }
-            else
+            } else
                 targetFile = new FileInputStream(new File(filename));
-            
+
             log.info("Reading from file {}", filename);
-            
+
             targetProperties.load(targetFile);
             if (mode == USER)
                 userFileDescription = targetProperties.getProperty(DESCRIPTION);
@@ -166,8 +164,7 @@ public abstract class PreferenceManager {
                 userFileDescription = "No Description.";
             }
             populateInfoObjects(targetProperties, targetMasterCollection, filename);
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             handlePrefException(ex);
         }
     }
@@ -236,7 +233,7 @@ public abstract class PreferenceManager {
      */
     public static Set<String> getUniqueKeys(Properties inputProperties) {
         Set<String> uniqueKeys = new HashSet<String>();
-        for (Enumeration<?> e = inputProperties.propertyNames(); e.hasMoreElements();) {
+        for (Enumeration<?> e = inputProperties.propertyNames(); e.hasMoreElements(); ) {
             String tempKey = ((String) e.nextElement());
             StringTokenizer mainToken = new StringTokenizer(tempKey, ".");
             if (tempKey != null && !"".equals(tempKey)) {
@@ -284,13 +281,12 @@ public abstract class PreferenceManager {
      */
     /**
      * @todo Is it necessary to reset the working collections for the Hell of
-     *       it? Just to ensure any half hearted changes are not propagated?
+     * it? Just to ensure any half hearted changes are not propagated?
      */
     public void commitChanges(boolean commitPermanently) {
         if (!commitPermanently) {
             resetWorkingCollections();
-        }
-        else
+        } else
             commitChangesToSourceObjects();
     }
 
@@ -305,8 +301,7 @@ public abstract class PreferenceManager {
             initializeMasterInfoObjects();
             commitChanges(false);
             firePreferencesChangedEvent();
-        }
-        else {
+        } else {
             setUserFileDescription(oldDescription);
         }
     }
@@ -352,8 +347,7 @@ public abstract class PreferenceManager {
             name = name.replace(' ', '^');
             name = name.replace('.', '$');
             name = name.replace(':', '?');
-        }
-        else {
+        } else {
             name = name.replace('^', ' ');
             name = name.replace('$', '.');
             name = name.replace('?', ':');
@@ -387,11 +381,9 @@ public abstract class PreferenceManager {
                 dirtyInfos.remove(targetName);
             else if (userMasterCollection.containsKey(targetName)) {
                 userMasterCollection.remove(targetName);
-            }
-            else if (groupMasterCollection.containsKey(targetName)) {
+            } else if (groupMasterCollection.containsKey(targetName)) {
                 groupMasterCollection.remove(targetName);
-            }
-            else if (defaultMasterCollection.containsKey(targetName))
+            } else if (defaultMasterCollection.containsKey(targetName))
                 handleDefaultKeyOverrideRequest();
             else if (DEBUG)
                 System.out.println("No Master collection has key " + targetName);
@@ -447,9 +439,9 @@ public abstract class PreferenceManager {
      * destination file old and new.
      */
     protected void writeOutToDestinationFile(String destinationFile) {
-        
+
         log.info("Writing to file {}", destinationFile);
-        
+
         File outputFile = new File(destinationFile);
         FileWriter writer;
         if (!outputFile.canWrite()) {
@@ -465,8 +457,7 @@ public abstract class PreferenceManager {
             writeOutAllCollections(writer, destinationFile);
             writer.flush();
             writer.close();
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             handlePrefException(ex);
         }
     }
@@ -492,8 +483,7 @@ public abstract class PreferenceManager {
                     writer.write("\n");
                 }
             }
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             if (DEBUG)
                 System.out.println("Dumping formatting of output.");
             handlePrefException(ex);
@@ -524,8 +514,7 @@ public abstract class PreferenceManager {
                 keyName2 = (String) key2;
                 if (keyName1 == null || keyName2 == null)
                     return 0;
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 return 0;
             }
             return keyName1.compareToIgnoreCase(keyName2);

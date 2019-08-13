@@ -1,21 +1,12 @@
 package org.janelia.workstation.browser.gui.options;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.prefs.BackingStoreException;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -25,11 +16,12 @@ import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
-import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.browser.tools.ToolInfo;
 import org.janelia.workstation.browser.tools.ToolMgr;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
+import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * @author Todd Safford
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-final class ToolsOptionsPanel extends javax.swing.JPanel {
+final class ToolsOptionsPanel extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(ToolsOptionsPanel.class);
 
@@ -69,52 +61,47 @@ final class ToolsOptionsPanel extends javax.swing.JPanel {
         refreshTable();
         final JTable table = new JTable(model);
         table.setFillsViewportHeight(true);
-        table.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                printDebugData(table);
+        table.getSelectionModel().addListSelectionListener(lse -> {
+            if (!lse.getValueIsAdjusting()) {
                 selectedRow = table.getSelectedRow();
+                log.info("Selected row: {}", selectedRow);
             }
         });
-        //Create the scroll pane and add the table to it.
-        JScrollPane scrollPane = new JScrollPane(table);
 
         toolFileChooser = new JFileChooser();
 
         JButton addButton = new JButton("Add");
-        addButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    addTool();
-                }
-                catch (Exception ex) {
-                    FrameworkAccess.handleException(ex);
-                }
+        addButton.addActionListener(e -> {
+            try {
+                addTool();
+            }
+            catch (Exception ex) {
+                FrameworkAccess.handleException(ex);
             }
         });
 
         JButton editButton = new JButton("Edit");
-        editButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    editTool();
-                }
-                catch (Exception ex) {
-                    FrameworkAccess.handleException(ex);
-                }
+        editButton.addActionListener(e -> {
+            try {
+                editTool();
+            }
+            catch (Exception ex) {
+                FrameworkAccess.handleException(ex);
             }
         });
 
         JButton clearTool = new JButton("Delete");
-        clearTool.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    removeTool();
-                }
-                catch (Exception ex) {
-                    FrameworkAccess.handleException(ex);
-                }
+        clearTool.addActionListener(e -> {
+            try {
+                removeTool();
+            }
+            catch (Exception ex) {
+                FrameworkAccess.handleException(ex);
             }
         });
+
+        //Create the scroll pane and add the table to it.
+        JScrollPane scrollPane = new JScrollPane(table);
 
         mainPanel.addSeparator("External Tool Configuration");
         JPanel buttonPanel = new JPanel();
@@ -156,6 +143,7 @@ final class ToolsOptionsPanel extends javax.swing.JPanel {
     private void editTool() throws Exception {
         String name = model.getValueAt(selectedRow, 0).toString();
         String path = model.getValueAt(selectedRow, 1).toString();
+        log.info("Editing tool {} at selected row {}", name, selectedRow);
         ToolInfo tool = ToolMgr.getToolMgr().getTool(name);
         EditDialog editDialog = new EditDialog(name, path);
         if (!editDialog.isCancelled()) {
@@ -177,7 +165,7 @@ final class ToolsOptionsPanel extends javax.swing.JPanel {
         }
     }
 
-    void refreshTable() {
+    private void refreshTable() {
         log.trace("Refreshing tool table");
         int tmp = model.getRowCount();
         if (0 != tmp){
@@ -212,7 +200,6 @@ final class ToolsOptionsPanel extends javax.swing.JPanel {
     }
 
     boolean valid() {
-        // TODO check whether form is consistent and complete
         return true;
     }
 
@@ -228,13 +215,13 @@ final class ToolsOptionsPanel extends javax.swing.JPanel {
         for (int i = 0; i < numRows; i++) {
             StringBuilder sb = new StringBuilder();
             for (int j = 0; j < numCols; j++) {
-                sb.append("  " + model.getValueAt(i, j));
+                sb.append("  ").append(model.getValueAt(i, j));
             }
             log.info("    row " + i + ":" + sb);
         }
     }
 
-    public class EditDialog extends JDialog {
+    public class EditDialog extends ModalDialog {
         private String nameText;
         private String pathText;
         private JTextField nameTextField;
@@ -242,8 +229,10 @@ final class ToolsOptionsPanel extends javax.swing.JPanel {
         private JFileChooser fileChooser;
         private boolean cancelled = false; 
 
-        public EditDialog(String name, String path) throws BackingStoreException {
-            super((JFrame)null, "Edit", true);
+        EditDialog(String name, String path) {
+
+            setTitle("Edit tool path");
+
             nameText = name;
             pathText = path;
             nameTextField = new JTextField(40);
@@ -253,17 +242,14 @@ final class ToolsOptionsPanel extends javax.swing.JPanel {
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));
             setSize(400, 400);
 
-            if(ToolMgr.getToolMgr().isSystemTool(name)) {
+            if (ToolMgr.getToolMgr().isSystemTool(name)) {
                 nameTextField.setEditable(false);   
             }
             
             fileChooser  = new JFileChooser();
-            fileChooser.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (fileChooser.getSelectedFile()!=null) {
-                        pathTextField.setText(fileChooser.getSelectedFile().getAbsolutePath());
-                    }
+            fileChooser.addActionListener(e -> {
+                if (fileChooser.getSelectedFile()!=null) {
+                    pathTextField.setText(fileChooser.getSelectedFile().getAbsolutePath());
                 }
             });
 
@@ -278,68 +264,67 @@ final class ToolsOptionsPanel extends javax.swing.JPanel {
                 filePathButton = new JButton("...");
             }
 
-            filePathButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    fileChooser.showOpenDialog(EditDialog.this);
-                }
-            });
+            filePathButton.addActionListener(e -> fileChooser.showOpenDialog(EditDialog.this));
 
             JButton _saveButton = new JButton("Save");
-            _saveButton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    if(!nameTextField.getText().isEmpty() && !pathTextField.getText().isEmpty()){
-                        nameText = nameTextField.getText();
-                        pathText = pathTextField.getText();
-                        EditDialog.this.setVisible(false);
-                    }
-                    else{
-                        JOptionPane.showMessageDialog(ToolsOptionsPanel.this, "Name and/or Path cannot be empty", "Edit Exception", JOptionPane.WARNING_MESSAGE);
-                        EditDialog.this.setVisible(false);
-                    }
+            _saveButton.addActionListener(actionEvent -> {
+                if (nameTextField.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(ToolsOptionsPanel.this,
+                            "Name cannot be empty", "Edit Exception", JOptionPane.WARNING_MESSAGE);
+                }
+                else if (pathTextField.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(ToolsOptionsPanel.this,
+                            "Path cannot be empty", "Edit Exception", JOptionPane.WARNING_MESSAGE);
+                }
+                else {
+                    nameText = nameTextField.getText();
+                    pathText = pathTextField.getText();
+                    EditDialog.this.setVisible(false);
                 }
             });
 
             JButton _closeButton = new JButton("Cancel");
-            _closeButton.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    cancelled = true;
-                    EditDialog.this.setVisible(false);
-                }
+            _closeButton.addActionListener(actionEvent -> {
+                cancelled = true;
+                EditDialog.this.setVisible(false);
             });
 
             JPanel namePanel = new JPanel();
             namePanel.add(new JLabel("Name:"));
             namePanel.add(nameTextField);
+
             JPanel pathPanel = new JPanel();
             pathPanel.add(new JLabel("Path:"));
             pathPanel.add(pathTextField);
             pathPanel.add(filePathButton);
+
             JPanel buttonPanel = new JPanel();
             buttonPanel.add(_saveButton);
             buttonPanel.add(_closeButton);
+
             getContentPane().add(namePanel);
             getContentPane().add(pathPanel);
             getContentPane().add(buttonPanel);
-            pack();
-            Toolkit tk = Toolkit.getDefaultToolkit();
-            Dimension screenSize = tk.getScreenSize();
-            int screenHeight = screenSize.height;
-            int screenWidth = screenSize.width;
-            setLocation((screenWidth - getWidth()) / 2, (screenHeight - getHeight()) / 2);
-            setVisible(true);
 
+            packAndShow();
+
+//            Toolkit tk = Toolkit.getDefaultToolkit();
+//            Dimension screenSize = tk.getScreenSize();
+//            int screenHeight = screenSize.height;
+//            int screenWidth = screenSize.width;
+//            setLocation((screenWidth - getWidth()) / 2, (screenHeight - getHeight()) / 2);
+//            setVisible(true);
         }
 
-        public String getNameText(){
+        String getNameText() {
             return nameText;
         }
 
-        public String getPathText(){
+        String getPathText() {
             return pathText;
         }
         
-        public boolean isCancelled() {
+        boolean isCancelled() {
             return cancelled;
         }
     }
