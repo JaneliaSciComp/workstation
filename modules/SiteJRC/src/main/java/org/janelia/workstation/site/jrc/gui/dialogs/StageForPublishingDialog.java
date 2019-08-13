@@ -13,7 +13,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang3.StringUtils;
@@ -511,7 +524,7 @@ public class StageForPublishingDialog extends ModalDialog {
 
     private Collection<String> getLastSelectedObjectives() {
         try {
-            String serializedObjectives = FrameworkAccess.getRemotePreferenceValue(PreferenceConstants.CATEGORY_PREVIOUS_VALUE, PreferenceConstants.KEY_PREVIOUS_VALUE_RELEASE_OBJECTIVES, null);
+            String serializedObjectives = FrameworkAccess.getRemotePreferenceValue(PreferenceConstants.CATEGORY_PREVIOUS_VALUE, PreferenceConstants.KEY_PREVIOUS_VALUE_RELEASE_OBJECTIVES, "");
             Collection<String> objectives = Arrays.asList(StringUtils.split(serializedObjectives, ","));
             log.info("Got last selected objectives: {} -> {}", serializedObjectives, objectives);
             return objectives;
