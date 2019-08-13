@@ -116,15 +116,13 @@ public class PanelController {
         
         @Override
         public void bulkNeuronsChanged(List<TmNeuronMetadata> addList, List<TmNeuronMetadata> deleteList) {
-            TmWorkspace workspace = annotationPanel.getAnnotationModel().getCurrentWorkspace();
             for (TmNeuronMetadata neuron : addList) {
-                filteredAnnotationList.loadNeuron(neuron);
+                wsNeuronList.addNeuronToModel(neuron);
             }
 
             for (TmNeuronMetadata neuron : deleteList) {
                 wsNeuronList.deleteFromModel(neuron);
             }
-            wsNeuronList.loadWorkspace(workspace);
         }
         
         @Override
