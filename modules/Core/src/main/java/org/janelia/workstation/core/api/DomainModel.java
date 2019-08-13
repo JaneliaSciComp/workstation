@@ -649,7 +649,6 @@ public class DomainModel {
                     alignmentSpaces.addAll(library.getColorDepthCounts().keySet());
                 }
             }
-
         }
         if (TIMER) w.stop("getAlignmentSpaces");
         return new ArrayList<>(alignmentSpaces);
@@ -669,15 +668,14 @@ public class DomainModel {
     }
 
     public List<Reference> getContainerReferences(DomainObject object) {
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
         try {
-            StopWatch w = TIMER ? new LoggingStopWatch() : null;
-            List<Reference> references = workspaceFacade.getContainerReferences(object);
-            if (TIMER) w.stop("getContainerReferences");
-            return references;
+            return workspaceFacade.getContainerReferences(object);
         } catch (Exception e) {
-            log.error("Problems checking references to object " + object.getId(), e);
+            throw new IllegalStateException(e);
+        } finally {
+            if (TIMER) w.stop("getContainerReferences");
         }
-        return null;
     }
 
     public void remove(List<? extends DomainObject> domainObjects) throws Exception {

@@ -257,7 +257,6 @@ public class PlayReviewManager {
         }
         for (int i = startIndex; i < steps; i++) {
             Thread.sleep(1000*1/fps);
-            SampleLocation sampleLocation = new BasicSampleLocation();
             currWay += stepSize;
             Vector3 iFocus = vec3Interpolator.interpolate_equidistant(currWay,
                     startFocus, startFocus, endFocus, endFocus);

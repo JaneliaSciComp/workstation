@@ -25,19 +25,19 @@ public interface WorkspaceFacade {
      * @return the search results
      * @throws Exception something went wrong
      */
-    public SolrJsonResults performSearch(SolrParams query) throws Exception;
+    SolrJsonResults performSearch(SolrParams query) throws Exception;
     
     /**
      * Return the current user's default workspace.
      * @return workspace
      */
-    public Workspace getDefaultWorkspace() throws Exception;
+    Workspace getDefaultWorkspace() throws Exception;
 
     /**
      * Return all of the workspaces that the current user can access. 
      * @return list of workspaces
      */
-    public Collection<Workspace> getWorkspaces() throws Exception;
+    Collection<Workspace> getWorkspaces() throws Exception;
 
     /**
      * Create and return a new tree node. 
@@ -45,7 +45,7 @@ public interface WorkspaceFacade {
      * @return the saved tree node
      * @throws Exception something went wrong
      */
-    public TreeNode create(TreeNode treeNode) throws Exception;
+    TreeNode create(TreeNode treeNode) throws Exception;
 
     /**
      * Create and return a new filter. 
@@ -53,7 +53,7 @@ public interface WorkspaceFacade {
      * @return the saved filter
      * @throws Exception something went wrong
      */
-    public Filter create(Filter filter) throws Exception;
+    Filter create(Filter filter) throws Exception;
 
     /**
      * Update and return the given filter.
@@ -61,7 +61,7 @@ public interface WorkspaceFacade {
      * @return the saved filter
      * @throws Exception something went wrong
      */
-    public Filter update(Filter filter) throws Exception;
+    Filter update(Filter filter) throws Exception;
 
     /**
      * Add the given references as children of the specified node, at some index. 
@@ -71,7 +71,7 @@ public interface WorkspaceFacade {
      * @return the updated node
      * @throws Exception something went wrong
      */
-    public <T extends Node> T addChildren(T node, Collection<Reference> references, Integer index) throws Exception;
+    <T extends Node> T addChildren(T node, Collection<Reference> references, Integer index) throws Exception;
 
     /**
      * Remove the given children from the given node. 
@@ -80,7 +80,7 @@ public interface WorkspaceFacade {
      * @return the updated node
      * @throws Exception something went wrong
      */
-    public <T extends Node> T removeChildren(T node, Collection<Reference> references) throws Exception;
+    <T extends Node> T removeChildren(T node, Collection<Reference> references) throws Exception;
 
     /**
      * Reorder the children of the given node. 
@@ -90,7 +90,7 @@ public interface WorkspaceFacade {
      * @return the updated node object
      * @throws Exception something went wrong
      */
-    public <T extends Node> T reorderChildren(T node, int[] order) throws Exception;
+    <T extends Node> T reorderChildren(T node, int[] order) throws Exception;
 
     /**
      * Checks whether there are any TreeNode or ObjectSet references to this object
@@ -98,6 +98,6 @@ public interface WorkspaceFacade {
      * @return the updated object set
      * @throws Exception something went wrong
      */
-    public List<Reference> getContainerReferences(DomainObject object) throws Exception;
+    List<Reference> getContainerReferences(DomainObject object) throws Exception;
 
 }
