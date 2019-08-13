@@ -43,85 +43,62 @@ public final class TestExceptionsActionBuilder implements AdminActionBuilder {
                 subMenu = new JMenu("Test Exceptions");
 
                 JMenuItem edtItem = new JMenuItem("Unhandled EDT Exception");
-                edtItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        throw new IllegalStateException("Test Unhandled EDT Exception");
-                    }
+                edtItem.addActionListener(e -> {
+                    throw new IllegalStateException("Test Unhandled EDT Exception");
                 });
                 subMenu.add(edtItem);
 
                 JMenuItem edtBarrageItem = new JMenuItem("Unhandled EDT Exception (x10)");
-                edtBarrageItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        for (int i = 0; i < 11; i++) {
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    throw new IllegalStateException("Test Unhandled EDT Exception");
-                                }
-                            });
-                        }
+                edtBarrageItem.addActionListener(e -> {
+                    for (int i = 0; i < 11; i++) {
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                throw new IllegalStateException("Test Unhandled EDT Exception");
+                            }
+                        });
                     }
                 });
                 subMenu.add(edtBarrageItem);
 
                 JMenuItem unexpectedItem = new JMenuItem("Unexpected Exception");
-                unexpectedItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
+                unexpectedItem.addActionListener(e -> {
+                    try {
                         try {
-                            try {
-                                exceptionTest("Test Unexpected Exception"); // Generate some causes to test the "Caused:" logging
-                            } catch (Exception ex2) {
-                                throw new Exception("Exception wrapper", ex2);
-                            }
-                        } catch (Exception ex) {
-                            FrameworkAccess.handleException("Testing Unexpected Exception", ex);
+                            exceptionTest("Test Unexpected Exception"); // Generate some causes to test the "Caused:" logging
+                        } catch (Exception ex2) {
+                            throw new Exception("Exception wrapper", ex2);
                         }
+                    } catch (Exception ex) {
+                        FrameworkAccess.handleException("Testing Unexpected Exception", ex);
                     }
                 });
                 subMenu.add(unexpectedItem);
 
                 JMenuItem unexpectedItem2 = new JMenuItem("Unexpected Exception (no message)");
-                unexpectedItem2.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        try {
-                            exceptionTest(null); // Generate some causes to test the "Caused:" logging
-                        } catch (Exception ex) {
-                            FrameworkAccess.handleException(ex);
-                        }
+                unexpectedItem2.addActionListener(e -> {
+                    try {
+                        exceptionTest(null); // Generate some causes to test the "Caused:" logging
+                    } catch (Exception ex) {
+                        FrameworkAccess.handleException(ex);
                     }
                 });
                 subMenu.add(unexpectedItem2);
 
                 JMenuItem oomTestItem = new JMenuItem("Out of Memory Exception");
-                oomTestItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        throw new OutOfMemoryError("Test");
-                    }
+                oomTestItem.addActionListener(e -> {
+                    throw new OutOfMemoryError("Test");
                 });
                 subMenu.add(oomTestItem);
 
                 JMenuItem noSpaceItem = new JMenuItem("No Space Left Exception");
-                noSpaceItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        throw new RuntimeException("No space left on device");
-                    }
+                noSpaceItem.addActionListener(e -> {
+                    throw new RuntimeException("No space left on device");
                 });
                 subMenu.add(noSpaceItem);
 
                 JMenuItem nbExceptionItem = new JMenuItem("NetBeans-style Exceptions.printStackTrace");
-                nbExceptionItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        Exceptions.printStackTrace(new Exception("Test Exception"));
-                    }
-                });
+                nbExceptionItem.addActionListener(e -> Exceptions.printStackTrace(new Exception("Test Exception")));
                 subMenu.add(nbExceptionItem);
             }
             subMenu.setEnabled(isEnabled());

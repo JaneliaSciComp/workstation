@@ -1,5 +1,6 @@
 package org.janelia.workstation.browser.tools;
 
+import java.awt.Container;
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
@@ -278,10 +279,10 @@ public class ToolMgr extends PreferenceManager {
         }
     }
 
-    public boolean removeTool(ToolInfo targetTool) throws Exception {
+    public boolean removeTool(Container parent, ToolInfo targetTool) throws Exception {
         String tmpName = targetTool.getName();
         if (isSystemTool(tmpName)) {
-            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+            JOptionPane.showMessageDialog(parent,
                     "Cannot remove a system tool", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -304,12 +305,12 @@ public class ToolMgr extends PreferenceManager {
         return toolTreeMap.get(toolName);
     }
 
-    public ToolInfo getToolSafely(String toolName) {
+    public ToolInfo getToolSafely(Container parent, String toolName) {
         ToolInfo tool = toolTreeMap.get(toolName);
 
         if (tool == null || null == tool.getPath() || "".equals(tool.getPath())) {
             log.error("Cannot find tool " + toolName + " in map: " + toolTreeMap.keySet());
-            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+            JOptionPane.showMessageDialog(parent,
                     "'" + toolName + "' is not configured. Please set a path for this tool in " + SystemInfo.optionsMenuName + ".", "Error", JOptionPane.ERROR_MESSAGE);
             OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
             return null;
@@ -323,31 +324,31 @@ public class ToolMgr extends PreferenceManager {
     }
 
     public static void runToolSafely(final String toolName) {
-        runToolSafely(toolName, new ArrayList<String>());
+        runToolSafely(FrameworkAccess.getMainFrame(), toolName, new ArrayList<>());
     }
 
-    public static void runToolSafely(String toolName, List<String> arguments) {
+    public static void runToolSafely(Container parent, String toolName, List<String> arguments) {
         try {
-            runTool(toolName);
+            runTool(parent, toolName);
         } catch (Exception e1) {
             log.error("Could launch tool: " + toolName, e1);
             JOptionPane.showMessageDialog(
-                    FrameworkAccess.getMainFrame(),
-                    "Could not launch this tool. "
-                            + "Please choose the appropriate file path from the Tools->Configure Tools area",
+                    parent,
+                    "Could not launch this tool. Please choose the appropriate file path from the Tools->Configure Tools area",
                     "ToolInfo Launch ERROR",
                     JOptionPane.ERROR_MESSAGE
             );
+            OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
         }
     }
 
-    public static void runTool(final String toolName) throws Exception {
-        runTool(toolName, new ArrayList<String>());
+    public static void runTool(Container parent, final String toolName) throws Exception {
+        runTool(parent, toolName, new ArrayList<>());
     }
 
-    public static void runTool(final String toolName, List<String> arguments) throws Exception {
+    public static void runTool(Container parent, final String toolName, List<String> arguments) throws Exception {
 
-        ToolInfo tool = getToolMgr().getToolSafely(toolName);
+        ToolInfo tool = getToolMgr().getToolSafely(parent, toolName);
         if (tool == null) {
             return;
         }
@@ -383,12 +384,12 @@ public class ToolMgr extends PreferenceManager {
             if (!exeFile.exists()) {
                 String msg = "Tool " + toolName + " (" + exeFile.getAbsolutePath() + ") does not exist.";
                 log.error(msg);
-                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(parent, msg, "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             } else if (!exeFile.canExecute()) {
                 String msg = "Tool " + toolName + " (" + exeFile.getAbsolutePath() + ") cannot be executed.";
                 log.error(msg);
-                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(parent, msg, "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -444,7 +445,7 @@ public class ToolMgr extends PreferenceManager {
             if (p.waitFor(100, TimeUnit.MILLISECONDS)) {
                 // Process terminated immediately, check the exit code
                 if (p.exitValue() != 0) {
-                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                    JOptionPane.showMessageDialog(parent,
                             "'" + toolName + "' could not start. Please check your configuration.", "Error", JOptionPane.ERROR_MESSAGE);
                     OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
                 }
@@ -452,7 +453,7 @@ public class ToolMgr extends PreferenceManager {
         }
     }
 
-    public static void openFile(final String toolName, final String standardFilepath, final String mode) throws Exception {
+    public static void openFile(final Container parent, final String toolName, final String standardFilepath, final String mode) throws Exception {
 
         if (standardFilepath == null) {
             throw new Exception("Entity has no file path");
@@ -464,14 +465,14 @@ public class ToolMgr extends PreferenceManager {
 
                 if (file == null) {
                     log.error("Could not open file path " + standardFilepath);
-                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                    JOptionPane.showMessageDialog(parent,
                             "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 List<String> arguments = new ArrayList<>();
 
-                ToolInfo tool = getToolMgr().getToolSafely(toolName);
+                ToolInfo tool = getToolMgr().getToolSafely(parent, toolName);
                 if (tool == null) {
                     return;
                 }
@@ -494,7 +495,7 @@ public class ToolMgr extends PreferenceManager {
                     arguments.add(file.getAbsolutePath());
                 }
 
-                runTool(toolName, arguments);
+                runTool(parent, toolName, arguments);
             }
         });
 
@@ -510,7 +511,7 @@ public class ToolMgr extends PreferenceManager {
 
     @Subscribe
     public void systemWillExit(ApplicationClosing event) {
-        /**
+        /*
          * This method first commits any changes to be safe, and then sets all dirty
          * infos to the selected writeback file.  Then for each selection in the
          * writebackFileCollection (sources that have had thier infos changed)

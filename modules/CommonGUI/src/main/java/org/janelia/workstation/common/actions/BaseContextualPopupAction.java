@@ -51,7 +51,12 @@ public abstract class BaseContextualPopupAction extends BaseContextualNodeAction
             JPopupMenu pm = super.getPopupMenu();
             pm.removeAll();
             for (JComponent item : getItems()) {
-                pm.add(item);
+                if (item==null) {
+                    pm.addSeparator();
+                }
+                else {
+                    pm.add(item);
+                }
             }
             setEnabled(BaseContextualPopupAction.this.isEnabled());
             pm.pack();

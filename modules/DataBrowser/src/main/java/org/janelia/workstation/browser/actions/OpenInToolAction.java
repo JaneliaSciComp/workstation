@@ -1,5 +1,6 @@
 package org.janelia.workstation.browser.actions;
 
+import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.io.File;
 
@@ -103,13 +104,10 @@ public class OpenInToolAction extends AbstractAction {
     private void openFile(String filepath) {
         
         try {
-            ToolMgr.openFile(tool, filepath, mode);
+            ToolMgr.openFile(FrameworkAccess.getMainFrame(), tool, filepath, mode);
         } 
         catch (Exception e) {
-            log.error("Error launching tool", e);
-            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "Could not launch this tool. "
-                    + "Please choose the appropriate file path from the Tools->Configure Tools area",
-                    "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
+            FrameworkAccess.handleException(e);
         }
     }
 }

@@ -141,6 +141,9 @@ final class ToolsOptionsPanel extends JPanel {
     }
     
     private void editTool() throws Exception {
+        if (selectedRow<0) {
+            return;
+        }
         String name = model.getValueAt(selectedRow, 0).toString();
         String path = model.getValueAt(selectedRow, 1).toString();
         log.info("Editing tool {} at selected row {}", name, selectedRow);
@@ -157,9 +160,12 @@ final class ToolsOptionsPanel extends JPanel {
     }
 
     private void removeTool() throws Exception {
+        if (selectedRow<0) {
+            return;
+        }
         String key = model.getValueAt(selectedRow, 0).toString();
         ToolInfo tmpTool = ToolMgr.getToolMgr().getTool(key);
-        if (ToolMgr.getToolMgr().removeTool(tmpTool)) {
+        if (ToolMgr.getToolMgr().removeTool(ToolsOptionsPanel.this, tmpTool)) {
             controller.changed();
             model.removeRow(selectedRow);
         }
@@ -231,6 +237,7 @@ final class ToolsOptionsPanel extends JPanel {
 
         EditDialog(String name, String path) {
 
+            super(ToolsOptionsPanel.this);
             setTitle("Edit tool path");
 
             nameText = name;
@@ -269,11 +276,11 @@ final class ToolsOptionsPanel extends JPanel {
             JButton _saveButton = new JButton("Save");
             _saveButton.addActionListener(actionEvent -> {
                 if (nameTextField.getText().isEmpty()) {
-                    JOptionPane.showMessageDialog(ToolsOptionsPanel.this,
+                    JOptionPane.showMessageDialog(EditDialog.this,
                             "Name cannot be empty", "Edit Exception", JOptionPane.WARNING_MESSAGE);
                 }
                 else if (pathTextField.getText().isEmpty()) {
-                    JOptionPane.showMessageDialog(ToolsOptionsPanel.this,
+                    JOptionPane.showMessageDialog(EditDialog.this,
                             "Path cannot be empty", "Edit Exception", JOptionPane.WARNING_MESSAGE);
                 }
                 else {
@@ -307,13 +314,6 @@ final class ToolsOptionsPanel extends JPanel {
             getContentPane().add(buttonPanel);
 
             packAndShow();
-
-//            Toolkit tk = Toolkit.getDefaultToolkit();
-//            Dimension screenSize = tk.getScreenSize();
-//            int screenHeight = screenSize.height;
-//            int screenWidth = screenSize.width;
-//            setLocation((screenWidth - getWidth()) / 2, (screenHeight - getHeight()) / 2);
-//            setVisible(true);
         }
 
         String getNameText() {

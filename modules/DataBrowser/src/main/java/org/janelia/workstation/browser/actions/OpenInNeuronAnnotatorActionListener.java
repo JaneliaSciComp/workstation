@@ -172,14 +172,13 @@ public class OpenInNeuronAnnotatorActionListener implements ActionListener {
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "Could not get Neuron Annotator to launch and connect. "
                             + "Please contact support.", "Launch Error", JOptionPane.ERROR_MESSAGE);
-            return;
         }
     }
 
     private void startNA() throws Exception {
         log.debug("Client {} is not running. Starting a new instance.",
                 NEURON_ANNOTATOR_CLIENT_NAME);
-        ToolMgr.runTool(ToolMgr.TOOL_NA);
+        ToolMgr.runTool(FrameworkAccess.getMainFrame(), ToolMgr.TOOL_NA);
         boolean notRunning = true;
         int killCount = 0;
         while (notRunning && killCount < 2) {
