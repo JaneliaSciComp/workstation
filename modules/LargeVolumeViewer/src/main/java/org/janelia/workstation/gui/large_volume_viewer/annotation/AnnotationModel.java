@@ -2552,8 +2552,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public void fireBackgroundNeuronOwnershipChanged(TmNeuronMetadata neuron) {
-        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
-            b.neuronOwnerChanged(neuron);
+        // don't mess with background updates to system neurons if the spatial filter is hiding them
+        if (!applyFilter) {
+            for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
+                b.neuronOwnerChanged(neuron);
+            }
         }
     }
     
