@@ -28,6 +28,7 @@ Large Volume Viewer
 * Merge and split should work when autotracing is on
 * Added "unique" predefined note
 * Present spatial filters in sorted order
+* Spatial filter is only automatically enabled when there are more than 1000 group owned fragments
 
 Horta
 * Import/export color model dialogs default to standard folder on shared drive
