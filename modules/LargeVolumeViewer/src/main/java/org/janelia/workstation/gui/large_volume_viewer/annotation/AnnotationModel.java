@@ -114,6 +114,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     private static final String NEURON_TAG_VISIBILITY = "hidden";
 
+    private static final int NUMBER_FRAGMENTS_THRESHOLD = 1000;
+
     private final TiledMicroscopeDomainMgr tmDomainMgr;
 
     private SWCDataConverter swcDataConverter;
@@ -355,12 +357,17 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         log.info("Loading neurons for workspace {}", workspace.getId());
         neuronManager.loadWorkspaceNeurons(workspace);
 
-        // if workspace contains any fragments, enable filter
+        // if workspace contains more system-owned fragments than a threshold , enable filter
         String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+        applyFilter = false;
+        int nFragments = 0;
         for (TmNeuronMetadata neuron: neuronManager.getNeurons()) {
             if (neuron.getOwnerKey().equals(systemNeuron)) {
-                applyFilter = true;
-                break;
+                nFragments += 1;
+                if (nFragments >= NUMBER_FRAGMENTS_THRESHOLD) {
+                    applyFilter = true;
+                    break;
+                }
             }
         }
 
@@ -2552,8 +2559,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public void fireBackgroundNeuronOwnershipChanged(TmNeuronMetadata neuron) {
-        for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
-            b.neuronOwnerChanged(neuron);
+        // don't mess with background updates to system neurons if the spatial filter is hiding them
+        if (!applyFilter) {
+            for (BackgroundAnnotationListener b: backgroundAnnotationListeners) {
+                b.neuronOwnerChanged(neuron);
+            }
         }
     }
     
