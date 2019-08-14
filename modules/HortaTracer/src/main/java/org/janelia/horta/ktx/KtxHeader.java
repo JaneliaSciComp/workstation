@@ -33,18 +33,17 @@ public class KtxHeader {
 
     public ByteOrder byteOrder;
     public int glType;
-    int glTypeSize;
+    public int glTypeSize;
     public int glFormat;
     public int glInternalFormat;
     public int glBaseInternalFormat;
     public int pixelWidth, pixelHeight, pixelDepth;
-    int numberOfArrayElements;
-    int numberOfFaces;
+    public int numberOfArrayElements;
+    public int numberOfFaces;
     public int numberOfMipmapLevels;
     public Map<String, String> keyValueMetadata = new LinkedHashMap<>(); // must preserve key order!
     
-    public KtxHeader loadStream(InputStream stream) throws IOException
-    {
+    public void loadStream(InputStream stream) throws IOException {
         // https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
         byte[] identifier = new byte[12];
         int readCount = stream.read(identifier, 0, 12);
@@ -106,7 +105,6 @@ public class KtxHeader {
             String value = s.substring(nullPos + 1);
             keyValueMetadata.put(key, value);
         }
-        return this;
     }
     
 }

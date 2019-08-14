@@ -33,10 +33,6 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
     private static final Logger log = LoggerFactory.getLogger(WorkspaceFacadeImpl.class);
 
     private WebTarget service;
-    
-    public WorkspaceFacadeImpl() {
-        this(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"));
-    }
 
     public WorkspaceFacadeImpl(String serverUrl) {
         super(log);

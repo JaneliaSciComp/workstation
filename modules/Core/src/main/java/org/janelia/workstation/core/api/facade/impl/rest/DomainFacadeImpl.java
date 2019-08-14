@@ -31,11 +31,7 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
 
     private WebTarget service;
 
-    public DomainFacadeImpl() {
-        this(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"));
-    }
-
-    private DomainFacadeImpl(String serverUrl) {
+    public DomainFacadeImpl(String serverUrl) {
         super(log);
         log.info("Using server URL: {}",serverUrl);
         this.service = RestJsonClientManager.getInstance().getTarget(serverUrl, true);

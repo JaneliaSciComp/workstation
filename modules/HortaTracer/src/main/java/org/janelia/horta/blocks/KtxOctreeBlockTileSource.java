@@ -32,24 +32,25 @@ import org.slf4j.LoggerFactory;
 public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockTileKey> {
     private static final Logger LOG = LoggerFactory.getLogger(KtxOctreeBlockTileSource.class);
 
-    private String octreeDir;
-    protected final URL originatingSampleURL;
-    protected String sampleKtxTilesBaseDir;
-    protected KtxOctreeBlockTileKey rootKey;
-    protected KtxHeader rootHeader;
-    protected KtxOctreeResolution maximumResolution;
-    protected ConstVector3 origin;
-    protected Vector3 outerCorner;
+    private final URL originatingSampleURL;
+    private String sampleKtxTilesBaseDir;
+    private KtxOctreeBlockTileKey rootKey;
+    private KtxHeader rootHeader;
+    private KtxOctreeResolution maximumResolution;
+    private ConstVector3 origin;
+    private Vector3 outerCorner;
 
     KtxOctreeBlockTileSource(URL originatingSampleURL) {
         this.originatingSampleURL = originatingSampleURL;
     }
 
     public KtxOctreeBlockTileSource init(TmSample sample) {
-        this.octreeDir = sample.getLargeVolumeOctreeFilepath();
-        String ktxDir = sample.getLargeVolumeKTXFilepath();
-        Preconditions.checkArgument(StringUtils.isNotBlank(ktxDir));
-        this.sampleKtxTilesBaseDir = ktxDir;
+        this.sampleKtxTilesBaseDir =
+                StringUtils.appendIfMissing(
+                        StringUtils.defaultIfBlank(
+                                sample.getLargeVolumeKTXFilepath(),
+                                StringUtils.appendIfMissing(sample.getLargeVolumeOctreeFilepath(), "/") + "ktx"),
+                        "/");
         this.rootKey = new KtxOctreeBlockTileKey(this, Collections.emptyList());
         this.rootHeader = loadKtxHeader(rootKey);
         this.maximumResolution = getKtxResolution(rootHeader);
@@ -59,10 +60,13 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         return this;
     }
 
-    URI getKeyBlockRelativePathURI(KtxOctreeBlockTileKey key) {
-        String relativeKtxDir = sampleKtxTilesBaseDir.replace(octreeDir, "");
-        if (relativeKtxDir.startsWith("/")) relativeKtxDir = relativeKtxDir.substring(1); // strip leading slash if any
-        return URI.create(relativeKtxDir)
+    /**
+     *
+     * @param key
+     * @return absolute path URL for a key block
+     */
+    URI getKeyBlockAbsolutePathURI(KtxOctreeBlockTileKey key) {
+        return URI.create(sampleKtxTilesBaseDir)
                 .resolve(key.getKeyPath())
                 .resolve(key.getKeyBlockName("_8_xy_"))
                 ;
@@ -74,7 +78,7 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
             ktxHeader.loadStream(blockStream);
             return ktxHeader;
         } catch (IOException e) {
-            LOG.error("Error loading KTX header for {}({}) from {}", octreeRootKey, getKeyBlockRelativePathURI(octreeRootKey), originatingSampleURL);
+            LOG.error("Error loading KTX header for {}({}) from {}", octreeRootKey, getKeyBlockAbsolutePathURI(octreeRootKey), originatingSampleURL);
             throw new IllegalStateException(e);
         }
     }

@@ -33,11 +33,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
     private WebTarget domainService;
     private WebTarget legacyDomainService;
     
-    public SampleFacadeImpl() {
-        this(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"), ConsoleProperties.getInstance().getProperty("domain.facade.rest.legacyUrl"));
-    }
-
-    private SampleFacadeImpl(String domainServiceURL, String legacyDomainServiceURL) {
+    public SampleFacadeImpl(String domainServiceURL, String legacyDomainServiceURL) {
         super(log);
         this.domainService = RestJsonClientManager.getInstance().getTarget(domainServiceURL, true);
         this.legacyDomainService = RestJsonClientManager.getInstance().getTarget(legacyDomainServiceURL, true);

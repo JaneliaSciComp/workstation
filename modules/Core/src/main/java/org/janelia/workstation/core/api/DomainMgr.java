@@ -1,6 +1,5 @@
 package org.janelia.workstation.core.api;
 
-import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,6 +17,7 @@ import org.janelia.model.security.User;
 import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.model.util.ReflectionsFixer;
 import org.janelia.workstation.core.api.exceptions.SystemError;
+import org.janelia.workstation.core.api.facade.impl.rest.*;
 import org.janelia.workstation.core.api.facade.interfaces.DomainFacade;
 import org.janelia.workstation.core.api.facade.interfaces.OntologyFacade;
 import org.janelia.workstation.core.api.facade.interfaces.SampleFacade;
@@ -33,7 +33,6 @@ import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,15 +85,15 @@ public class DomainMgr {
         }
 
         log.info("Initializing Domain Manager");
-        String domainFacadePackageName = ConsoleProperties.getInstance().getProperty("domain.facade.package");
         try {
+            String domainFacadeURL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
+            String legacyDomainFacadeURL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.legacyUrl");
             authClient = new AuthServiceClient(ConsoleProperties.getInstance().getProperty("auth.rest.url"));
-            final Reflections reflections = ReflectionsFixer.getReflections(domainFacadePackageName, getClass());
-            domainFacade = getNewInstance(reflections, DomainFacade.class);
-            ontologyFacade = getNewInstance(reflections, OntologyFacade.class);
-            sampleFacade = getNewInstance(reflections, SampleFacade.class);
-            subjectFacade = getNewInstance(reflections, SubjectFacade.class);
-            workspaceFacade = getNewInstance(reflections, WorkspaceFacade.class);
+            domainFacade = new DomainFacadeImpl(domainFacadeURL);
+            ontologyFacade = new OntologyFacadeImpl(domainFacadeURL);
+            sampleFacade = new SampleFacadeImpl(domainFacadeURL, legacyDomainFacadeURL);
+            subjectFacade = new SubjectFacadeImpl(domainFacadeURL);
+            workspaceFacade = new WorkspaceFacadeImpl(domainFacadeURL);
             sageClient = new SageRestClient();
             model = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
             listener = evt -> {
@@ -111,18 +110,7 @@ public class DomainMgr {
         ApplicationOptions.getInstance().addPropertyChangeListener(listener);
     }
 
-    private <T> T getNewInstance(Reflections reflections, Class<T> clazz) {
-        for (Class<? extends T> implClass : reflections.getSubTypesOf(clazz)) {
-            try {
-                return implClass.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
-                log.error("Cannot instantiate " + implClass.getName(), e);
-            }
-        }
-        throw new IllegalStateException("No implementation for " + clazz.getName() + " found");
-    }
-
-    public AuthServiceClient getAuthClient() {
+    AuthServiceClient getAuthClient() {
         return authClient;
     }
 

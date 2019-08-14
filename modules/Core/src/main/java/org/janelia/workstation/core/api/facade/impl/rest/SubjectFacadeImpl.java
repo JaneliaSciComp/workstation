@@ -31,10 +31,6 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
 
     private WebTarget service;
     
-    public SubjectFacadeImpl() {
-        this(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"));
-    }
-
     public SubjectFacadeImpl(String serverUrl) {
         super(log);
         log.debug("Using server URL: {}",serverUrl);

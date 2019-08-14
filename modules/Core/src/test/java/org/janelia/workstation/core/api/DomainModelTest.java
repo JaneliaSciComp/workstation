@@ -33,12 +33,13 @@ public class DomainModelTest {
     }
     
     @Before
-    public void setUp() throws Exception {
-        domainFacade = new DomainFacadeImpl();
-        OntologyFacade ontologyFacade = new OntologyFacadeImpl();
-        SampleFacade sampleFacade = new SampleFacadeImpl();
-        SubjectFacade subjectFacade = new SubjectFacadeImpl();
-        WorkspaceFacade workspaceFacade = new WorkspaceFacadeImpl();
+    public void setUp() {
+        String testServerUrl = "testServerUrl";
+        domainFacade = new DomainFacadeImpl(testServerUrl);
+        OntologyFacade ontologyFacade = new OntologyFacadeImpl(testServerUrl);
+        SampleFacade sampleFacade = new SampleFacadeImpl(testServerUrl, "testLegacyServerUrl");
+        SubjectFacade subjectFacade = new SubjectFacadeImpl(testServerUrl);
+        WorkspaceFacade workspaceFacade = new WorkspaceFacadeImpl(testServerUrl);
         domainModel = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
     }
     

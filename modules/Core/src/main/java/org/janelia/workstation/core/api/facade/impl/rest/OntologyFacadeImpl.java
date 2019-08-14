@@ -31,10 +31,6 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
 
     private WebTarget service;
     
-    public OntologyFacadeImpl() {
-        this(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"));
-    }
-
     public OntologyFacadeImpl(String serverUrl) {
         super(log);
         log.debug("Using server URL: {}",serverUrl);

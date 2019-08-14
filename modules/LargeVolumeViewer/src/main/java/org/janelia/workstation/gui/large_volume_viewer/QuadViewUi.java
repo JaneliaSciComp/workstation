@@ -99,14 +99,14 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     private static final int MINIMUM_MEMORY_REQUIRED_GB = 7;
 
-    public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
+    private static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
     private boolean bAllowOrthoView = false;    // this disabled switching between single and multiple ortho views
 
     // One shared camera for all viewers.
     // (there's only one viewer now actually, but you know...)
     private BasicObservableCamera3d camera = new BasicObservableCamera3d();
-    GLContextSharer orthoViewContextSharer = new GLContextSharer(glProfile);
+    private GLContextSharer orthoViewContextSharer = new GLContextSharer(glProfile);
 
     private LargeVolumeViewer largeVolumeViewer = new LargeVolumeViewer(
             orthoViewContextSharer.getCapabilities(),
@@ -114,19 +114,19 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
             orthoViewContextSharer.getContext(),
             camera);
 
-    TileServer tileServer = largeVolumeViewer.getTileServer();
+    private TileServer tileServer = largeVolumeViewer.getTileServer();
     private SharedVolumeImage volumeImage = tileServer.getSharedVolumeImage();
     private ImageColorModel imageColorModel = new ImageColorModel(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
     private NeuronStyleModel neuronStyleModel = new NeuronStyleModel();
 
     // Four quadrants for orthogonal views
-    OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
-    OrthogonalPanel swViewer = new OrthogonalPanel(CoordinateAxis.Y, orthoViewContextSharer);
-    OrthogonalPanel nwViewer = new OrthogonalPanel(CoordinateAxis.Z, orthoViewContextSharer);
+    private OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
+    private OrthogonalPanel swViewer = new OrthogonalPanel(CoordinateAxis.Y, orthoViewContextSharer);
+    private OrthogonalPanel nwViewer = new OrthogonalPanel(CoordinateAxis.Z, orthoViewContextSharer);
 
-    JPanel zViewerPanel = new JPanel();
-    JComponent seViewer = zViewerPanel; // should be same as Z...
-    JPanel viewerPanel = new JPanel();
+    private JPanel zViewerPanel = new JPanel();
+    private JComponent seViewer = zViewerPanel; // should be same as Z...
+    private JPanel viewerPanel = new JPanel();
 
     // we never finished the multi-panel orthogonal view, and it's not
     //  on the agenda now; so in this list, only leave the one we use
@@ -149,7 +149,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     private JLabel statusLabel = new JLabel("status area");
     private LoadStatusLabel loadStatusLabel = new LoadStatusLabel();
 
-    ZScanMode zScanMode = new ZScanMode(volumeImage);
+    private ZScanMode zScanMode = new ZScanMode(volumeImage);
 
     // annotation things
     private final AnnotationModel annotationModel;
@@ -264,8 +264,8 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return camera.getFocus();
     }
 
-    public boolean setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
-        return camera.setPixelsPerSceneUnit(pixelsPerSceneUnit);
+    void setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
+        camera.setPixelsPerSceneUnit(pixelsPerSceneUnit);
     }
 
     public double getPixelsPerSceneUnit() {
@@ -407,7 +407,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         quadViewController.registerForEvents(tileServer);
         quadViewController.registerForEvents(goToLocationAction);
 
-        OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
+        OrthogonalPanel[] viewPanels = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
         quadViewController.registerForEvents(imageColorModel);
         quadViewController.unregisterOrthPanels();
@@ -708,7 +708,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         // ...so the usual Java "create another class"...
         class QuadrantConstraints extends GridBagConstraints {
 
-            public QuadrantConstraints(int x, int y) {
+            private QuadrantConstraints(int x, int y) {
                 this.gridx = x;
                 this.gridy = y;
                 this.gridwidth = 1;
