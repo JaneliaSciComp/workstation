@@ -3,14 +3,12 @@ package org.janelia.horta.blocks;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.actors.TetVolumeMeshActor;
 import org.janelia.horta.ktx.KtxData;
-import org.janelia.horta.ktx.KtxHeader;
 import org.janelia.horta.loader.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
