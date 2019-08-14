@@ -12,16 +12,14 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.ktx.KtxHeader;
-import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
