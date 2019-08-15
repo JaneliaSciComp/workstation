@@ -7,6 +7,7 @@ import java.util.logging.LogManager;
 import javax.imageio.ImageIO;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
@@ -139,6 +140,8 @@ public class Startup implements Runnable {
             protected void doStuff() throws Exception {
                 // Initialize the services
                 ServiceMgr.getServiceMgr().initServices();
+                // Initialize domain model classes
+                DomainUtils.equals(null, null);
             }
 
             @Override
