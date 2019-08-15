@@ -16,6 +16,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
+import org.janelia.workstation.browser.actions.ExportPickedNames;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.actions.ExportPickedGUIDs;
 import org.janelia.workstation.browser.actions.ExportPickedLineNames;
@@ -102,17 +103,23 @@ public class ColorDepthResultIconGridViewer
         editOkButton.setVisible(false);
         editOkButton.setToolTipText("Open split generation website with selected lines");
 
-        JMenuItem exportLinesMenuItem = new JMenuItem("Export line names");
-        exportLinesMenuItem.addActionListener((e) -> {
-            new ExportPickedLineNames(getPickedItems()).actionPerformed(e);
-        });
-        editOkButton.addMenuItem(exportLinesMenuItem);
-
         JMenuItem exportGuidsMenuItem = new JMenuItem("Export GUIDs (globally unique identifiers)");
         exportGuidsMenuItem.addActionListener((e) -> {
             new ExportPickedGUIDs(getPickedItems()).actionPerformed(e);
         });
         editOkButton.addMenuItem(exportGuidsMenuItem);
+
+        JMenuItem exportNamesMenuItem = new JMenuItem("Export object names");
+        exportNamesMenuItem.addActionListener((e) -> {
+            new ExportPickedNames(getPickedItems()).actionPerformed(e);
+        });
+        editOkButton.addMenuItem(exportNamesMenuItem);
+
+        JMenuItem exportLinesMenuItem = new JMenuItem("Export line names");
+        exportLinesMenuItem.addActionListener((e) -> {
+            new ExportPickedLineNames(getPickedItems()).actionPerformed(e);
+        });
+        editOkButton.addMenuItem(exportLinesMenuItem);
 
         JMenuItem splitGenMenuItem = new JMenuItem("Send to split generation website");
         splitGenMenuItem.addActionListener((e) -> {
