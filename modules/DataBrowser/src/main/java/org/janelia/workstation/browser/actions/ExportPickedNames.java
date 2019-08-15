@@ -10,14 +10,14 @@ import org.janelia.model.domain.Reference;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ExportPickedGUIDs extends AbstractExportPickedAction {
+public class ExportPickedNames extends AbstractExportPickedAction {
 
-    public ExportPickedGUIDs(List<Reference> refs) {
+    public ExportPickedNames(List<Reference> refs) {
         super(refs);
     }
 
     @Override
     protected String export(DomainObject domainObject) {
-        return domainObject.toString();
+        return domainObject.getName();
     }
 }

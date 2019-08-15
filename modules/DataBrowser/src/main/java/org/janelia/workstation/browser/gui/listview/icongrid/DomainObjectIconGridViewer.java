@@ -12,6 +12,7 @@ import org.janelia.model.domain.workspace.Node;
 import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.workstation.browser.actions.ExportPickedGUIDs;
 import org.janelia.workstation.browser.actions.ExportPickedLineNames;
+import org.janelia.workstation.browser.actions.ExportPickedNames;
 import org.janelia.workstation.browser.actions.ExportPickedToSplitGenWebsite;
 import org.janelia.workstation.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
@@ -169,17 +170,23 @@ public class DomainObjectIconGridViewer
         editOkButton.setVisible(false);
         editOkButton.setToolTipText("Open split generation website with selected lines");
 
-        JMenuItem exportLinesMenuItem = new JMenuItem("Export line names");
-        exportLinesMenuItem.addActionListener((e) -> {
-            new ExportPickedLineNames(getPickedItems()).actionPerformed(e);
-        });
-        editOkButton.addMenuItem(exportLinesMenuItem);
-
         JMenuItem exportGuidsMenuItem = new JMenuItem("Export GUIDs (globally unique identifiers)");
         exportGuidsMenuItem.addActionListener((e) -> {
             new ExportPickedGUIDs(getPickedItems()).actionPerformed(e);
         });
         editOkButton.addMenuItem(exportGuidsMenuItem);
+
+        JMenuItem exportNamesMenuItem = new JMenuItem("Export object names");
+        exportNamesMenuItem.addActionListener((e) -> {
+            new ExportPickedNames(getPickedItems()).actionPerformed(e);
+        });
+        editOkButton.addMenuItem(exportNamesMenuItem);
+
+        JMenuItem exportLinesMenuItem = new JMenuItem("Export line names");
+        exportLinesMenuItem.addActionListener((e) -> {
+            new ExportPickedLineNames(getPickedItems()).actionPerformed(e);
+        });
+        editOkButton.addMenuItem(exportLinesMenuItem);
 
         JMenuItem splitGenMenuItem = new JMenuItem("Send to split generation website");
         splitGenMenuItem.addActionListener((e) -> {
