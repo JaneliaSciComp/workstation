@@ -3,12 +3,13 @@ package org.janelia.workstation.browser.gui.colordepth;
 import java.awt.Image;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
-import org.janelia.workstation.core.util.ColorDepthUtils;
 import org.janelia.workstation.browser.model.ColorDepthAlignmentSpace;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.nodes.FilterNode;
+import org.janelia.workstation.core.util.ColorDepthUtils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 public class ColorDepthLibraryNode extends FilterNode<ColorDepthLibrary> {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthLibraryNode.class);
+    private final static AtomicLong counter = new AtomicLong(4000);
 
     ColorDepthLibraryNode(ChildFactory<?> parentChildFactory, ColorDepthLibrary library) {
         this(parentChildFactory, new ColorDepthLibraryFactory(library), library);
@@ -49,7 +51,7 @@ public class ColorDepthLibraryNode extends FilterNode<ColorDepthLibrary> {
 
     @Override
     public Image getIcon(int type) {
-        return Icons.getIcon("database.png").getImage();
+        return Icons.getIcon("folder_red.png").getImage();
     }
 
     private static class ColorDepthLibraryFactory extends ChildFactory<ColorDepthAlignmentSpace> {
@@ -69,7 +71,9 @@ public class ColorDepthLibraryNode extends FilterNode<ColorDepthLibrary> {
                 alignmentSpaces.sort(String::compareTo);
                 for (String alignmentSpace : alignmentSpaces) {
                     if (ColorDepthUtils.isAlignmentSpaceVisible(alignmentSpace)) {
-                        list.add(new ColorDepthAlignmentSpace(library, alignmentSpace, c++));
+                        long id = counter.getAndIncrement();
+                        ColorDepthAlignmentSpace colorDepthAlignmentSpace = new ColorDepthAlignmentSpace(id, library, alignmentSpace, c++);
+                        list.add(colorDepthAlignmentSpace);
                     }
                 }
             }

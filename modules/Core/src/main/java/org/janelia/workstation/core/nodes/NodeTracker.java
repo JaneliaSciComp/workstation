@@ -42,11 +42,12 @@ public class NodeTracker {
      */
     public void registerNode(final IdentifiableNode node) {
         // Clear existing references to similar nodes
+        long nodeId = node.getId();
         int c = 0;
-        for(Iterator<WeakReference> iterator = nodesById.get(node.getId()).iterator(); iterator.hasNext(); ) {
+        for(Iterator<WeakReference> iterator = nodesById.get(nodeId).iterator(); iterator.hasNext(); ) {
             WeakReference<IdentifiableNode> ref = iterator.next();
             if (ref.get()==null) {
-                log.trace("removing expired reference for {}",node.getId());
+                log.trace("removing expired reference for {}", nodeId);
                 iterator.remove();
             }
             else {
@@ -54,10 +55,10 @@ public class NodeTracker {
             }
         }
         if (c>1) {
-            log.warn("Object {} has {} nodes",node.getDisplayName(), c);
+            log.warn("Object '{}' (id={}) has {} nodes", node.getDisplayName(), nodeId, c);
         }
 
-        nodesById.put(node.getId(), new WeakReference<>(node));
+        nodesById.put(nodeId, new WeakReference<>(node));
         log.debug("registered node@{} - {}",System.identityHashCode(node),node.getDisplayName());
     }
 
@@ -66,8 +67,8 @@ public class NodeTracker {
      * @param node
      */
     public void deregisterNode(final IdentifiableNode node) {
-        Long id = node.getId();
-        for(Iterator<WeakReference> iterator = nodesById.get(id).iterator(); iterator.hasNext(); ) {
+        Long nodeId = node.getId();
+        for(Iterator<WeakReference> iterator = nodesById.get(nodeId).iterator(); iterator.hasNext(); ) {
             WeakReference<IdentifiableNode> ref = iterator.next();
             IdentifiableNode regNode = ref.get();
             if (regNode==node) {

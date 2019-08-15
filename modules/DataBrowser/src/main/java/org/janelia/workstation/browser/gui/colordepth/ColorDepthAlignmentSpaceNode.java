@@ -5,7 +5,8 @@ import java.awt.Image;
 import org.janelia.workstation.browser.model.ColorDepthAlignmentSpace;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.nodes.FilterNode;
-import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A node which shows a single alignment space within a color depth library.
@@ -13,6 +14,8 @@ import org.janelia.workstation.core.api.ClientDomainUtils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ColorDepthAlignmentSpaceNode extends FilterNode<ColorDepthAlignmentSpace> {
+
+    private final static Logger log = LoggerFactory.getLogger(ColorDepthAlignmentSpaceNode.class);
 
     public ColorDepthAlignmentSpaceNode(ColorDepthAlignmentSpace cdas) throws Exception {
         super(null, cdas);
@@ -41,12 +44,7 @@ public class ColorDepthAlignmentSpaceNode extends FilterNode<ColorDepthAlignment
 
     @Override
     public Image getIcon(int type) {
-        if (ClientDomainUtils.isOwner(getFilter())) {
-            return Icons.getIcon("search-white-icon.png").getImage();
-        }
-        else {
-            return Icons.getIcon("search-blue-icon.png").getImage();
-        }
+        return Icons.getIcon("folder_red.png").getImage();
     }
 
     @Override

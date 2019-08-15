@@ -17,6 +17,7 @@ import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
  */
 public class ColorDepthAlignmentSpace implements Filtering {
 
+    private Long id;
     private ColorDepthLibrary library;
     private String alignmentSpace;
     private List<Criteria> lazyCriteria;
@@ -26,7 +27,8 @@ public class ColorDepthAlignmentSpace implements Filtering {
     public ColorDepthAlignmentSpace() {
     }
 
-    public ColorDepthAlignmentSpace(ColorDepthLibrary library, String alignmentSpace, int index) {
+    public ColorDepthAlignmentSpace(Long id, ColorDepthLibrary library, String alignmentSpace, int index) {
+        this.id = id;
         this.library = library;
         this.alignmentSpace = alignmentSpace;
         this.index = index;
@@ -46,12 +48,12 @@ public class ColorDepthAlignmentSpace implements Filtering {
 
     @Override
     public Long getId() {
-        return null;
+        return id;
     }
 
     @Override
     public void setId(Long id) {
-        throw new UnsupportedOperationException();
+        this.id = id;
     }
 
     @Override
@@ -71,7 +73,6 @@ public class ColorDepthAlignmentSpace implements Filtering {
 
     @Override
     public void setOwnerKey(String ownerKey) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -81,7 +82,6 @@ public class ColorDepthAlignmentSpace implements Filtering {
 
     @Override
     public void setReaders(Set<String> readers) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -91,7 +91,6 @@ public class ColorDepthAlignmentSpace implements Filtering {
 
     @Override
     public void setWriters(Set<String> writers) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -101,7 +100,6 @@ public class ColorDepthAlignmentSpace implements Filtering {
 
     @Override
     public void setCreationDate(Date creationDate) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -111,7 +109,6 @@ public class ColorDepthAlignmentSpace implements Filtering {
 
     @Override
     public void setUpdatedDate(Date updatedDate) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
