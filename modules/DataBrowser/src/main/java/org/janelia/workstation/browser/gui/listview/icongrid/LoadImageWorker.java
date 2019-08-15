@@ -9,7 +9,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Stopwatch;
 import org.apache.commons.io.FilenameUtils;
+import org.janelia.filecacheutils.FileProxy;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -78,16 +80,19 @@ public abstract class LoadImageWorker extends SimpleWorker {
         }
 
         if (useCacheBehind) {
+            Stopwatch stopwatch = Stopwatch.createStarted();
             // Async cache-behind
-            try (InputStream imageStream = FileMgr.getFileMgr().getFile(imageFilename, true).openContentStream()) {
+            FileProxy proxy = FileMgr.getFileMgr().getFile(imageFilename, false);
+            try (InputStream imageStream = proxy.openContentStream()) {
                 log.trace("Async cache-behind loading: {}",imageFilename);
-                log.info("Loading image from {}", imageFilename);
                 maxSizeImage = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFilename));
+                log.info("Took {} ms to load {}", stopwatch.elapsed(TimeUnit.MILLISECONDS), imageFilename);
             }
             if (maxSizeImage != null && imageCache != null) {
                 imageCache.put(imageFilename, maxSizeImage);
             }
-        } else {
+        }
+        else {
             // Sync cache-ahead
             try (InputStream imageStream = FileMgr.getFileMgr().getFile(imageFilename, false).openContentStream()) {
                 log.trace("Cache-ahead loading: {}", imageFilename);
