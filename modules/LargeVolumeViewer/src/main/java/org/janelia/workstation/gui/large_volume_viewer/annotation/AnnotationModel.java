@@ -454,7 +454,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     // this method sets the current neuron but does not fire an event to update the UI
     private synchronized void setCurrentNeuron(TmNeuronMetadata neuron) {
-        log.trace("setCurrentNeuron({})",neuron);
+        log.info("setCurrentNeuron({})",neuron);
         // be sure we're using the neuron object from the current workspace
         if (neuron != null) {
             this.currentNeuron = getNeuronFromNeuronID(neuron.getId());
@@ -475,12 +475,16 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     // this method sets the current neuron *and* updates the UI; null neuron means deselect
     public void selectNeuron(TmNeuronMetadata neuron) {
-        log.info("selectNeuron({})",neuron);
         if (neuron != null && getCurrentNeuron() != null && neuron.getId().equals(getCurrentNeuron().getId())) {
             return;
         }
         setCurrentNeuron(neuron); // synchronized on this AnnotationModel here
-        SwingUtilities.invokeLater(() -> fireNeuronSelected(neuron));
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fireNeuronSelected(neuron);
+            }
+        });
         if (getCurrentWorkspace()!=null && neuron!=null) {
             activityLog.logSelectNeuron(getCurrentWorkspace().getId(), neuron.getId());
         }
@@ -547,6 +551,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
                     NeuronUpdates updates = neuronFilter.selectVertex(annotation);                    
                     updateFrags(updates);
+                    setCurrentNeuron(neuron);
                     selectNeuron(neuron);
                     log.info("TOTAL FRAG UPDATE TIME: {}",stopwatch.elapsed().toMillis());
                     stopwatch.stop();
@@ -589,7 +594,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             // This happens, for example, when a new workspace is loaded and we try to find the previous nextParent anchor.
             log.warn("There is no neuron with id: {}", neuronID);
         }
-        log.debug("getNeuronFromNeuronID({}) = {}",neuronID,foundNeuron);
         return foundNeuron;
     }
 
@@ -2598,6 +2602,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     void fireNeuronSelected(TmNeuronMetadata neuron) {
+        log.info("SELECT MODE IS {}",getSelectMode());
         if (!getSelectMode())
             return;
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
