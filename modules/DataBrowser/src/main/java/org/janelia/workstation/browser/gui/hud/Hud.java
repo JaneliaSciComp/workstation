@@ -221,7 +221,9 @@ public class Hud extends ModalDialog {
             }
         });
 
-        init3dGui();
+        // KR: This is disabled for now because the data we have is not consistent, and doesn't usually include movies anymore
+        // We need an implementation which reads H5J files instead.
+        //init3dGui();
 
         if (mip3d != null) {
             mip3d.setDoubleBuffered(true);
