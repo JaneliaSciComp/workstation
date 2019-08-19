@@ -3,6 +3,8 @@ package org.janelia.workstation.browser.gui.colordepth;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
@@ -27,6 +29,10 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.nodes.ChildObjectsNode;
+import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.core.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Context pop up menu for color depth results.
@@ -34,7 +40,9 @@ import org.janelia.workstation.core.nodes.ChildObjectsNode;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ColorDepthMatchContextMenu extends PopupContextMenu {
-    
+
+    private final static Logger log = LoggerFactory.getLogger(ColorDepthMatchContextMenu.class);
+
     // Current selection
     protected ColorDepthResult contextObject;
     protected ChildSelectionModel<ColorDepthMatch,Reference> editSelectionModel;
@@ -111,6 +119,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         add(getOpenWithAppItem());
 
         setNextAddRequiresSeparator(true);
+        add(getOpenWithNeuprintItem());
         add(getCreateMaskAction());
 
         setNextAddRequiresSeparator(true);
@@ -193,6 +202,40 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         if (path==null) return null;
         if (!OpenWithDefaultAppAction.isSupported()) return null;
         return getNamedActionItem(new OpenWithDefaultAppAction(path));
+    }
+
+    protected JMenuItem getOpenWithNeuprintItem() {
+        if (multiple) return null;
+        String path = image.getFilepath();
+        if (path==null) return null;
+
+        boolean flyem = false;
+        for (String library : image.getLibraries()) {
+            if (library.startsWith("flyem")) {
+                flyem = true;
+            }
+        }
+
+        if (!flyem) return null;
+
+        Pattern p = Pattern.compile(".*?(\\d{9,}).*?");
+        Matcher m = p.matcher(image.getName());
+        String bodyId = m.matches() ? m.group(1) : "";
+
+        final String neuprintUrl = ConsoleProperties.getInstance().getProperty("neuprint.url");
+        final String fullUrl = neuprintUrl+"?bodyid="+bodyId;
+
+        JMenuItem item = new JMenuItem("Open Neuron Skeleton in neuPrint");
+        item.addActionListener(e -> {
+            log.info("Opening in browser: {}", fullUrl);
+            Utils.openUrlInBrowser(fullUrl);
+        });
+
+        if (!m.matches()) {
+            item.setEnabled(false);
+        }
+
+        return item;
     }
 
     protected JMenuItem getCreateMaskAction() {
