@@ -895,7 +895,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             }
         }
         catch (Exception e) {
-            log.error("Could not load user's key binding preferences", e);
+            log.error("Could not load user's key binding preferences");
             FrameworkAccess.handleException(e);
         }
     }

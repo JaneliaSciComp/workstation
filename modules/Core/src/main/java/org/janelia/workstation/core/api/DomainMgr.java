@@ -141,7 +141,9 @@ public class DomainMgr {
     @Subscribe
     public void runAsUserChanged(SessionStartEvent event) {
         log.info("User changed, resetting model");
-        preferenceMap = null;
+        synchronized (this) {
+            this.preferenceMap = null;
+        }
         model.invalidateAll();
     }
 
