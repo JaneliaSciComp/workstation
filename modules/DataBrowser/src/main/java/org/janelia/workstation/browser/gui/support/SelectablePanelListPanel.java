@@ -97,6 +97,12 @@ public class SelectablePanelListPanel extends ScrollablePanel {
                 else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
                     object = getNextPanel();
                 }
+                else if (e.getKeyCode() == KeyEvent.VK_UP) {
+                    object = getPreviousPanel();
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    object = getNextPanel();
+                }
             }
 
             if (object != null) {
