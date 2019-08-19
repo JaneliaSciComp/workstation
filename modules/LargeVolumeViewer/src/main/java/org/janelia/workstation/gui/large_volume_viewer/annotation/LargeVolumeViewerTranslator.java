@@ -679,7 +679,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     @Override
     public void neuronModelChanged(TmNeuronMetadata neuron) {
-        logger.info("remote NeuronDelete: {}", neuron);
+        logger.debug("remote NeuronDelete: {}", neuron);
 
         Anchor nextParent = largeVolumeViewer.getSkeletonActor().getModel().getNextParent();
 
@@ -693,7 +693,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     @Override
     public void neuronModelCreated(TmNeuronMetadata neuron) {
-        logger.info("remote NeuronCreated: {}", neuron);
+        logger.debug("remote NeuronCreated: {}", neuron);
 
         Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
         List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
@@ -721,7 +721,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     @Override
     public void neuronModelDeleted(TmNeuronMetadata neuron) {
-        logger.info("remote NeuronDelete: {}", neuron);
+        logger.debug("remote NeuronDelete: {}", neuron);
         skeletonController.neuronStyleRemoved(neuron);
         skeletonController.remoteClearAnchors(neuron.getGeoAnnotationMap().values());
         skeletonController.remoteRemoveAnchoredVoxelPaths(neuron.getId());
