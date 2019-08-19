@@ -14,7 +14,7 @@ public class PreviousSliceUmbrellaGenerator implements Iterator<TileIndex>, Iter
 	private TileIndex index;
 	private int stepCount = 0;
 	
-	public PreviousSliceUmbrellaGenerator(TileIndex seed, int sliceMin) {
+	PreviousSliceUmbrellaGenerator(TileIndex seed, int sliceMin) {
 		this.sliceMin = sliceMin;
 		index = seed.previousSlice();
 	}
@@ -38,7 +38,7 @@ public class PreviousSliceUmbrellaGenerator implements Iterator<TileIndex>, Iter
 			if (i != null)
 				index = i;
 		}
-		if (stepCount == 50) { // lower resolution farther from center
+		if (stepCount == 10) { // lower resolution farther from center
 			TileIndex i = index.zoomOut();
 			if (i != null)
 				index = i;

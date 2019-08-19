@@ -6,9 +6,14 @@ import java.nio.file.Paths;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.base.Objects;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
@@ -31,10 +36,10 @@ import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolume;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeMetadata;
+import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.LocalCacheMgr;
-import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -155,7 +160,14 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         renderedVolumeMetadata.getVolumeBasePath(),
                         appAuthorization.getAuthenticationToken(),
                         null,
-                        () -> RestJsonClientManager.getInstance().getHttpClient(true)
+                        () -> {
+                            Client client = ClientBuilder.newClient();
+                            JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
+                                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                                    .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+                            client.register(provider);
+                            return new ClientProxy(client);
+                        }
                 );
             } catch (Exception e) {
                 LOG.error("Error getting sample volume info from {}", url, e);

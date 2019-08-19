@@ -56,7 +56,7 @@ public class SliceGenerator implements Iterable<TileIndex>, Iterator<TileIndex> 
 		// First correct zoom
 		while (result.getZoom() < baseIndex.getZoom())
 			result = result.zoomOut();
-		int xyz[] = {result.getX(), result.getY(), result.getZ()};
+		int[] xyz = {result.getX(), result.getY(), result.getZ()};
 		// Take slice index from baseIndex
 		int sliceIx = result.getSliceAxis().index();
 		xyz[sliceIx] = baseIndex.getCoordinate(sliceIx);

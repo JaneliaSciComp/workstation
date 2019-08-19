@@ -11,9 +11,7 @@ import org.janelia.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.workstation.gui.large_volume_viewer.TileSet;
 import org.janelia.workstation.gui.large_volume_viewer.ViewTileManager;
 
-public class LodGenerator 
-implements Iterable<TileIndex>, Iterator<TileIndex>
-{
+public class LodGenerator implements Iterable<TileIndex>, Iterator<TileIndex> {
 	private TileServer tileServer;
 	Iterator<Integer> allLod;
 	Iterator<Tile2d> tileIter;

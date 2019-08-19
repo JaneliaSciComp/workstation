@@ -39,9 +39,9 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     private LoadStatus loadStatus = LoadStatus.UNINITIALIZED;
 
     // One thread pool to load minimal representation of volume
-    private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(10);
+    private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(5);
     // One thread pool to load current and prefetch textures
-    private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(10);
+    private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(30);
 
     // Refactoring 6/12/2013
     private SharedVolumeImage sharedVolumeImage;
@@ -102,9 +102,9 @@ public class TileServer implements ComponentListener, // so changes in viewer si
             tileGenerator = generators.get(0);
         } else {
             Iterator<MinResSliceGenerator> i = generators.iterator();
-            tileGenerator = new InterleavedIterator<TileIndex>(i.next(), i.next());
+            tileGenerator = new InterleavedIterator<>(i.next(), i.next());
             while (i.hasNext()) {
-                tileGenerator = new InterleavedIterator<TileIndex>(tileGenerator, i.next());
+                tileGenerator = new InterleavedIterator<>(tileGenerator, i.next());
             }
         }
         for (TileIndex i : tileGenerator) {
@@ -241,14 +241,12 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         }
         updateLoadStatus();
 
-        // log.info("updatePreFetchSlot");
         futurePreFetcher.clear();
 
         Set<TileIndex> cacheableTextures = new HashSet<TileIndex>();
         int maxCacheable = (int) (0.90 * getTextureCache().getFutureCache().getMaxSize());
 
         LOG.debug("rearrangeLoadQueue for {} ViewTileManagers", viewTileManagers.size());
-
         // First in line are current display tiles
         // Prepare to analyze each ViewTileManager's loadStatus
         for (ViewTileManager vtm : viewTileManagers) {
@@ -259,7 +257,6 @@ public class TileServer implements ComponentListener, // so changes in viewer si
                 if (cacheableTextures.contains(ix)) {
                     continue; // already noted
                 }
-                long t1 = System.nanoTime();
                 if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this)) {
                     cacheableTextures.add(ix);
                 }
@@ -268,7 +265,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
 
         if (doPrefetch && !VolumeCache.useVolumeCache()) {
             // Sort tiles into X, Y, and Z slices to help with generators
-            Map<CoordinateAxis, TileSet> axisTiles = new HashMap<CoordinateAxis, TileSet>();
+            Map<CoordinateAxis, TileSet> axisTiles = new HashMap<>();
             for (Tile2d tile : currentTiles) {
                 TileIndex i = tile.getIndex();
                 CoordinateAxis axis = i.getSliceAxis();
@@ -283,11 +280,9 @@ public class TileServer implements ComponentListener, // so changes in viewer si
             for (CoordinateAxis axis : axisTiles.keySet()) {
                 TileSet tiles = axisTiles.get(axis);
                 // Umbrella Z scan
-                Iterable<TileIndex> sliceGen = new UmbrellaSliceGenerator(getLoadAdapter().getTileFormat(), tiles);
-                umbrellas.add(sliceGen);
+                umbrellas.add(new UmbrellaSliceGenerator(getLoadAdapter().getTileFormat(), tiles));
                 // Full resolution Z scan
-                sliceGen = new SliceGenerator(getLoadAdapter().getTileFormat(), tiles);
-                fullSlices.add(sliceGen);
+                fullSlices.add(new SliceGenerator(getLoadAdapter().getTileFormat(), tiles));
             }
             // Interleave the various umbrella generators
             if (umbrellas.size() > 0) {
@@ -343,7 +338,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     }
 
     // Part of new way July 9, 2013
-    public void refreshCurrentTileSet() {
+    void refreshCurrentTileSet() {
         LOG.trace("refreshCurrentTileSet");
         TileSet tiles = createLatestTiles();
         Set<TileIndex> indices = new HashSet<>();

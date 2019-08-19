@@ -9,9 +9,7 @@ import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
  * @author brunsc
  *
  */
-public class PreviousSliceGenerator 
-implements Iterator<TileIndex>, Iterable<TileIndex>
-{
+public class PreviousSliceGenerator implements Iterator<TileIndex>, Iterable<TileIndex> {
 	private int sliceMin;
 	private TileIndex index;
 	

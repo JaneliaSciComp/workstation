@@ -16,7 +16,7 @@ public class RangeIterator implements Iterator<Integer>, Iterable<Integer> {
 	private int increment = 1;
 	private int limit;
 	
-	public RangeIterator(int limit) {
+	RangeIterator(int limit) {
 		this.limit = limit;
 	}
 	
@@ -25,7 +25,7 @@ public class RangeIterator implements Iterator<Integer>, Iterable<Integer> {
 		this.limit = limit;
 	}
 	
-	public RangeIterator(int start, int limit, int increment) {
+	RangeIterator(int start, int limit, int increment) {
 		this.start = this.value = start;
 		this.limit = limit;
 		this.increment = increment;

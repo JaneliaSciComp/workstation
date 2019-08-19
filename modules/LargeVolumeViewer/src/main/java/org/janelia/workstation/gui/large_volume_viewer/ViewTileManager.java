@@ -98,11 +98,11 @@ public class ViewTileManager {
     private SharedVolumeImage volumeImage;
     private StatusUpdateListener loadStatusChangedListener;
 
-    public ViewTileManager(TileConsumer tileConsumer) {
+    ViewTileManager(TileConsumer tileConsumer) {
         this.tileConsumer = tileConsumer;
     }
 
-    public void textureLoaded(TileIndex index) {
+    void textureLoaded(TileIndex index) {
         if (displayableTextures.contains(index)) {
             tileConsumer.repaint();
         }
@@ -118,11 +118,11 @@ public class ViewTileManager {
         }
     }
 
-    public TileSet createLatestTiles() {
+    TileSet createLatestTiles() {
         return createLatestTiles(tileConsumer);
     }
 
-    protected TileSet createLatestTiles(TileConsumer tileConsumer) {
+    private TileSet createLatestTiles(TileConsumer tileConsumer) {
         return createLatestTiles(tileConsumer.getCamera(),
                 tileConsumer.getViewport(),
                 tileConsumer.getSliceAxis(),
@@ -141,10 +141,6 @@ public class ViewTileManager {
             return result;
         }
 
-        if (sliceAxis == CoordinateAxis.X) {
-            // System.out.println("X");
-        }
-
         // Need to loop over x and y
         // Need to compute z, and zoom
         // 1) zoom
@@ -152,7 +148,7 @@ public class ViewTileManager {
         int zoom = tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
         int zoomMax = tileFormat.getZoomLevelCount() - 1;
 
-        int xyzFromWhd[] = {0, 1, 2};
+        int[] xyzFromWhd = {0, 1, 2};
         rearrangeFromRotationAxis(viewerInGround, xyzFromWhd);
 
         // 2) z or other slice axisIndex (d: depth)
@@ -178,7 +174,7 @@ public class ViewTileManager {
         // Must adjust the depth tile value relative to origin.
         for (int w = tileUnits.getwMin(); w <= tileUnits.getwMax(); ++w) {
             for (int h = tileUnits.gethMin(); h <= tileUnits.gethMax(); ++h) {
-                int whd[] = {w, h, relativeTileDepth};
+                int[] whd = {w, h, relativeTileDepth};
                 TileIndex key = new TileIndex(
                         whd[xyzFromWhd[0]],
                         whd[xyzFromWhd[1]],
@@ -188,7 +184,6 @@ public class ViewTileManager {
                 Tile2d tile = new Tile2d(key, tileFormat);
                 tile.setYMax(bb.getMax().getY()); // To help flip y; Always actual Y! (right?)
                 result.add(tile);
-                //dumpTileIndex(tile);
             }
         }
         return result;
@@ -198,11 +193,11 @@ public class ViewTileManager {
         return textureCache;
     }
 
-    public LoadStatus getLoadStatus() {
+    LoadStatus getLoadStatus() {
         return loadStatus;
     }
 
-    public void setLoadStatus(LoadStatus loadStatus) {
+    void setLoadStatus(LoadStatus loadStatus) {
         if (loadStatus == this.loadStatus) {
             return;
         }
@@ -212,7 +207,7 @@ public class ViewTileManager {
         }
     }
 
-    public void setTextureCache(TextureCache textureCache) {
+    void setTextureCache(TextureCache textureCache) {
         this.textureCache = textureCache;
     }
 
@@ -220,16 +215,16 @@ public class ViewTileManager {
         return tileConsumer;
     }
 
-    public SharedVolumeImage getVolumeImage() {
+    SharedVolumeImage getVolumeImage() {
         return volumeImage;
     }
 
-    public void setVolumeImage(SharedVolumeImage volumeImage) {
+    void setVolumeImage(SharedVolumeImage volumeImage) {
         this.volumeImage = volumeImage;
     }
 
     // Produce a list of renderable tiles to complete this view
-    public TileSet updateDisplayTiles() {
+    TileSet updateDisplayTiles() {
         // Update latest tile set
         latestTiles = createLatestTiles();
         latestTiles.assignTextures(textureCache);
@@ -257,7 +252,7 @@ public class ViewTileManager {
         }
 
         // Which tile set will we display this time?
-        TileSet result = latestTiles;
+        TileSet result;
         if (latestTiles.canDisplay()) {
             if (latestTiles.getLoadStatus() == TileSet.LoadStatus.BEST_TEXTURES_LOADED) {
                 setLoadStatus(LoadStatus.BEST_TEXTURES_LOADED);
@@ -333,11 +328,11 @@ public class ViewTileManager {
         return result;
     }
 
-    public TileSet getLatestTiles() {
+    TileSet getLatestTiles() {
         return latestTiles;
     }
 
-    public Collection<TileIndex> getNeededTextures() {
+    Collection<TileIndex> getNeededTextures() {
         // 3/23/2016 CMB JW-24845
         // Avoid (rare?) ConcurrentModificationException, by sending a Copy of the neededTextures
         Collection<TileIndex> result;

@@ -8,9 +8,7 @@ import java.util.Iterator;
  * @param <E>
  *
  */
-public class InterleavedIterator<E> 
-implements Iterator<E>, Iterable<E> 
-{
+public class InterleavedIterator<E> implements Iterator<E>, Iterable<E> {
 	private Iterator<E> first;
 	private Iterator<E> second;
 	private boolean useFirst = true;
@@ -39,12 +37,10 @@ implements Iterator<E>, Iterable<E>
 		}
 		useFirst = ! useFirst; // swap for next time
 		if (primary.hasNext()) {
-			E result = primary.next();
-			return result;
-		}
-		else {
-			E result = secondary.next();
-			return result; // because primary is exhausted
+			return primary.next();
+		} else {
+			// primary is exhausted
+			return secondary.next();
 		}
 	}
 
