@@ -11,8 +11,10 @@ import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
@@ -133,6 +135,7 @@ public class ColorDepthSearchesNode extends IdentifiableNode {
             try {
                 log.debug("Creating children keys for ColorDepthSearchesNode");
                 list.addAll(DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(ColorDepthSearch.class));
+                list.sort(new DomainObjectComparator(AccessManager.getSubjectKey()));
             }
             catch (Exception ex) {
                 FrameworkAccess.handleException(ex);
