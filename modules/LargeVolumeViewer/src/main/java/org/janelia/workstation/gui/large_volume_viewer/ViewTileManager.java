@@ -5,6 +5,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
+import com.google.common.collect.Sets;
+
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -87,8 +90,8 @@ public class ViewTileManager {
     // LastGoodTiles always hold a displayable tile set, even when emergency
     // tiles are loading.
     private TileSet lastGoodTiles;
-    private Set<TileIndex> neededTextures = new HashSet<>();
-    private Set<TileIndex> displayableTextures = new HashSet<>();
+    private final Set<TileIndex> neededTextures = new HashSet<>();
+    private final Set<TileIndex> displayableTextures = new HashSet<>();
 
     // private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
     private TileSet previousTiles;
@@ -287,17 +290,19 @@ public class ViewTileManager {
         newNeededTextures.addAll(emergencyTiles.getFastNeededTextures());
         // Decide whether to load fastest textures or best textures
         Tile2d.LoadStatus stage = latestTiles.getMinStage();
-        if (stage.ordinal() < Tile2d.LoadStatus.COARSE_TEXTURE_LOADED.ordinal()) // First load the fast ones
-        {
+        if (stage.ordinal() < Tile2d.LoadStatus.COARSE_TEXTURE_LOADED.ordinal()) {
+            // First load the fast ones
             newNeededTextures.addAll(latestTiles.getFastNeededTextures());
         }
         // Then load the best ones
         newNeededTextures.addAll(latestTiles.getBestNeededTextures());
+
         // Use set/getNeededTextures() methods for thread safety
-        if (!newNeededTextures.equals(neededTextures)) {
+        Set<TileIndex> texturesToGet = Sets.difference(newNeededTextures, neededTextures);
+        if (!texturesToGet.isEmpty()) {
             synchronized (neededTextures) {
                 neededTextures.clear();
-                neededTextures.addAll(newNeededTextures);
+                neededTextures.addAll(texturesToGet);
             }
         }
         if ((!latestTiles.equals(previousTiles))
