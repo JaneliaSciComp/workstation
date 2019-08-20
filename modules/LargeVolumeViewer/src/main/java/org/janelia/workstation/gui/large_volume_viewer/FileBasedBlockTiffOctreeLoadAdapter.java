@@ -3,6 +3,9 @@ package org.janelia.workstation.gui.large_volume_viewer;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.Executors;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
 import org.janelia.rendering.FileBasedRenderedVolumeLocation;
@@ -41,7 +44,12 @@ public class FileBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdap
         this.renderedVolumeLoader = new RenderedVolumeLoaderImpl();
         this.renderedVolumeLocation = new CachedRenderedVolumeLocation(
                 new FileBasedRenderedVolumeLocation(baseFolder),
-                LocalCacheMgr.getInstance().getLocalFileCacheStorage());
+                LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
+                Executors.newFixedThreadPool(4,
+                        new ThreadFactoryBuilder()
+                                .setNameFormat("FileBasedOctreeCacheWriter-%d")
+                                .setDaemon(true)
+                                .build()));
     }
 
     @Override

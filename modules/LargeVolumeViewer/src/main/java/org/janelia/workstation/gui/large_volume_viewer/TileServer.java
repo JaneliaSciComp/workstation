@@ -39,9 +39,9 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     private LoadStatus loadStatus = LoadStatus.UNINITIALIZED;
 
     // One thread pool to load minimal representation of volume
-    private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(5);
+    private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(5, 10);
     // One thread pool to load current and prefetch textures
-    private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(30);
+    private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(35, 45);
 
     // Refactoring 6/12/2013
     private SharedVolumeImage sharedVolumeImage;

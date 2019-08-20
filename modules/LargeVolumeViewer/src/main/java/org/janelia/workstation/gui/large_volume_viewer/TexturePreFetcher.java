@@ -8,26 +8,30 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TexturePreFetcher {
+class TexturePreFetcher {
 
     private static final Logger log = LoggerFactory.getLogger(TexturePreFetcher.class);
 
-    private static final String TEX_FETCH_THREADNAME_PREFIX = "TexturePreFetch";
     private final ThreadPoolExecutor textureLoadExecutor;
     private final Map<Future<?>, TileIndex> futures = new HashMap<>();
     private TextureCache textureCache; // holds texture
     private AbstractTextureLoadAdapter loadAdapter; // knows how to load textures
 
-    TexturePreFetcher(int threadPoolSize) {
+    TexturePreFetcher(int coreThreadPoolSize, int maxThreadPoolSize) {
         textureLoadExecutor = new ThreadPoolExecutor(
-                threadPoolSize,
-                threadPoolSize,
-                0, TimeUnit.SECONDS,
+                coreThreadPoolSize,
+                maxThreadPoolSize,
+                5, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(),
-                new CustomNamedThreadFactory(TEX_FETCH_THREADNAME_PREFIX)
+                new ThreadFactoryBuilder()
+                        .setNameFormat("TexturePreFetch-%03d")
+                        .setDaemon(true)
+                        .build()
         );
     }
 
@@ -71,7 +75,7 @@ public class TexturePreFetcher {
         return (index.getZoom() != index.getMaxZoom());
     }
 
-    public synchronized void clear() {
+    synchronized void clear() {
         if (textureCache == null) {
             return;
         }
@@ -92,16 +96,8 @@ public class TexturePreFetcher {
         futures.clear();
     }
 
-    public AbstractTextureLoadAdapter getLoadAdapter() {
-        return loadAdapter;
-    }
-
     void setLoadAdapter(AbstractTextureLoadAdapter loadAdapter) {
         this.loadAdapter = loadAdapter;
-    }
-
-    public TextureCache getTextureCache() {
-        return textureCache;
     }
 
     void setTextureCache(TextureCache textureCache) {

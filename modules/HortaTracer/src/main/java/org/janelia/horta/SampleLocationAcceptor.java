@@ -3,6 +3,7 @@ package org.janelia.horta;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.concurrent.Executors;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.base.Objects;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -40,6 +42,7 @@ import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.LocalCacheMgr;
+import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -160,14 +163,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         renderedVolumeMetadata.getVolumeBasePath(),
                         appAuthorization.getAuthenticationToken(),
                         null,
-                        () -> {
-                            Client client = ClientBuilder.newClient();
-                            JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
-                                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                                    .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-                            client.register(provider);
-                            return new ClientProxy(client);
-                        }
+                        () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
                 );
             } catch (Exception e) {
                 LOG.error("Error getting sample volume info from {}", url, e);
@@ -179,7 +175,17 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             renderedVolumeLocation = new FileBasedRenderedVolumeLocation(Paths.get(renderedOctreeUri));
             renderedVolumeMetadata = nttc.getRenderedVolumeLoader().loadVolume(renderedVolumeLocation).orElseThrow(() -> new IllegalStateException("No rendering information found for " + renderedVolumeLocation.getDataStorageURI()));
         }
-        return new RenderedVolume(new CachedRenderedVolumeLocation(renderedVolumeLocation, LocalCacheMgr.getInstance().getLocalFileCacheStorage()), renderedVolumeMetadata);
+        return new RenderedVolume(
+                new CachedRenderedVolumeLocation(
+                        renderedVolumeLocation,
+                        LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
+                        Executors.newFixedThreadPool(
+                                10,
+                                new ThreadFactoryBuilder()
+                                        .setNameFormat("HortaTileCacheWriter-%d")
+                                        .setDaemon(true)
+                                        .build())),
+                renderedVolumeMetadata);
     }
 
     private KtxOctreeBlockTileSource createKtxSource(RenderedVolume renderedVolume, URL renderedOctreeUrl, TmSample sample) {

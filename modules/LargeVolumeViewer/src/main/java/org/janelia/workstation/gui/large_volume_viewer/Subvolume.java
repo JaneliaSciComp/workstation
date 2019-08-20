@@ -22,6 +22,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -36,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 public class Subvolume {
 
-    public static final int N_THREADS = 20;
+    private static final int N_THREADS = 20;
     private static final String PROGRESS_REPORT_FORMAT = "%d of %d to go...";
 
     private IndeterminateNoteProgressMonitor progressMonitor;
@@ -61,10 +63,9 @@ public class Subvolume {
      * @param corner2
      * @param wholeImage
      */
-    public Subvolume(
-            ZoomedVoxelIndex corner1,
-            ZoomedVoxelIndex corner2,
-            SharedVolumeImage wholeImage) {
+    public Subvolume(ZoomedVoxelIndex corner1,
+                     ZoomedVoxelIndex corner2,
+                     SharedVolumeImage wholeImage) {
         initialize(corner1, corner2, wholeImage, null);
     }
 
@@ -77,11 +78,10 @@ public class Subvolume {
      * @param wholeImage
      * @param textureCache
      */
-    public Subvolume(
-            ZoomedVoxelIndex corner1,
-            ZoomedVoxelIndex corner2,
-            SharedVolumeImage wholeImage,
-            TextureCache textureCache) {
+    public Subvolume(ZoomedVoxelIndex corner1,
+                     ZoomedVoxelIndex corner2,
+                     SharedVolumeImage wholeImage,
+                     TextureCache textureCache) {
         initialize(corner1, corner2, wholeImage, textureCache);
     }
 
@@ -95,12 +95,11 @@ public class Subvolume {
      * @param textureCache
      * @param progressMonitor for reporting relative completion.
      */
-    public Subvolume(
-            ZoomedVoxelIndex corner1,
-            ZoomedVoxelIndex corner2,
-            SharedVolumeImage wholeImage,
-            TextureCache textureCache,
-            IndeterminateNoteProgressMonitor progressMonitor) {
+    Subvolume(ZoomedVoxelIndex corner1,
+              ZoomedVoxelIndex corner2,
+              SharedVolumeImage wholeImage,
+              TextureCache textureCache,
+              IndeterminateNoteProgressMonitor progressMonitor) {
         this.progressMonitor = progressMonitor;
         initialize(corner1, corner2, wholeImage, textureCache);
     }
@@ -118,14 +117,13 @@ public class Subvolume {
      * @param textureCache
      * @param progressMonitor for reporting relative completion.
      */
-    public Subvolume(
-            Vec3 center,
-            SharedVolumeImage wholeImage,
-            double micrometerVoxels,
-            ZoomLevel zoom,
-            int[] dimensions,
-            TextureCache textureCache,
-            IndeterminateNoteProgressMonitor progressMonitor) {
+    Subvolume(Vec3 center,
+              SharedVolumeImage wholeImage,
+              double micrometerVoxels,
+              ZoomLevel zoom,
+              int[] dimensions,
+              TextureCache textureCache,
+              IndeterminateNoteProgressMonitor progressMonitor) {
         this.progressMonitor = progressMonitor;
         initializeFor3D(center, micrometerVoxels, zoom, dimensions, wholeImage, textureCache);
     }
@@ -164,11 +162,10 @@ public class Subvolume {
     }
 
     // Load an octree subvolume into memory as a dense volume block
-    public Subvolume(
-            Vec3 corner1,
-            Vec3 corner2,
-            double micrometerResolution,
-            SharedVolumeImage wholeImage) {
+    Subvolume(Vec3 corner1,
+              Vec3 corner2,
+              double micrometerResolution,
+              SharedVolumeImage wholeImage) {
         // Use the TileFormat class to convert between micrometer coordinates
         // and the arcane integer TileIndex coordinates.
         TileFormat tileFormat = wholeImage.getLoadAdapter().getTileFormat();
@@ -368,7 +365,11 @@ public class Subvolume {
     }
 
     private void multiThreadedFetch(Set<TileIndex> neededTiles, final TextureCache textureCache, final AbstractTextureLoadAdapter loadAdapter, final TileFormat tileFormat, final ZoomLevel zoom, final ZoomedVoxelIndex farCorner) {
-        ExecutorService executorService = ThreadUtils.establishExecutor(N_THREADS, new CustomNamedThreadFactory("SubvolumeFetch"));
+        ExecutorService executorService = ThreadUtils.establishExecutor(
+                N_THREADS,
+                new ThreadFactoryBuilder()
+                        .setNameFormat("SubvolumeFetch-%03d")
+                        .build());
         List<Future<Boolean>> followUps = new ArrayList<>();
         totalTiles = neededTiles.size();
         remainingTiles = neededTiles.size();

@@ -1,6 +1,7 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
 import java.net.URI;
+import java.util.concurrent.Executors;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpStatus;
@@ -27,6 +29,7 @@ import org.janelia.rendering.TileInfo;
 import org.janelia.rendering.TileKey;
 import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.workstation.core.api.LocalCacheMgr;
+import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,16 +83,15 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
                             renderedVolumeMetadata.getVolumeBasePath(),
                             appAuthorization.getAuthenticationToken(),
                             null,
-                            () -> {
-                                Client client = ClientBuilder.newClient();
-                                JacksonJsonProvider provider = new JacksonJaxbJsonProvider()
-                                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                                        .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-                                client.register(provider);
-                                return new ClientProxy(client);
-                            }
+                            () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
                     ),
-                    LocalCacheMgr.getInstance().getLocalFileCacheStorage());
+                    LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
+                    Executors.newFixedThreadPool(
+                            35,
+                            new ThreadFactoryBuilder()
+                                    .setNameFormat("RestBasedOctreeCacheWriter-%d")
+                                    .setDaemon(true)
+                                    .build()));
             getTileFormat().initializeFromRenderedVolumeMetadata(renderedVolumeMetadata);
         } catch (Exception ex) {
             LOG.error("Error getting sample 2d tile from {}", url, ex);

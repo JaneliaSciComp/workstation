@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.annotation.Nullable;
@@ -28,7 +29,8 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
     private final LocalFileCache<RenderedVolumeFileKey> renderedVolumeFileCache;
 
     public CachedRenderedVolumeLocation(RenderedVolumeLocation delegate,
-                                        LocalFileCacheStorage localFileCacheStorage) {
+                                        LocalFileCacheStorage localFileCacheStorage,
+                                        ExecutorService localCachedFileWriteExecutor) {
         this.delegate = delegate;
         renderedVolumeFileCache = new LocalFileCache<>(
                 localFileCacheStorage,
@@ -37,10 +39,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                         new ThreadFactoryBuilder()
                                 .setNameFormat("CacheEvictor-%d")
                                 .setDaemon(true).build()),
-                Executors.newFixedThreadPool(4,
-                        new ThreadFactoryBuilder()
-                                .setNameFormat("LocalCachedFileWriter-%d")
-                                .setDaemon(true).build())
+                localCachedFileWriteExecutor
         );
     }
 

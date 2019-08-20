@@ -8,7 +8,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import javax.swing.ProgressMonitor;
 
-import org.janelia.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.slf4j.Logger;
@@ -204,7 +205,11 @@ public class MatrixFilter3D {
         // First, let's change the bytes going into the neighborhoods, to
         // all long values.  One pass, rather than repeating that operation.
         final long[] inputLongs = convertToLong( param );          
-        final ExecutorService executorService = ThreadUtils.establishExecutor( NUM_THREADS, new CustomNamedThreadFactory("MatrixFilter") );
+        final ExecutorService executorService = ThreadUtils.establishExecutor(
+                NUM_THREADS,
+                new ThreadFactoryBuilder()
+                        .setNameFormat("MatrixFilter-%03d")
+                        .build());
         List<Future<Void>> callbacks = new ArrayList<>();
         for (int ch = 0; ch < channelCount; ch++) {
             for (int z = 0; z < sz; z++) {
