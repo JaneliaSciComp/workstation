@@ -10,6 +10,9 @@ import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
  *
  */
 public class PreviousSliceUmbrellaGenerator implements Iterator<TileIndex>, Iterable<TileIndex> {
+	private static final int _2X_ZOOMOUT_STEP = 5;
+	private static final int _4X_ZOOMOUT_STEP = 25;
+
 	private int sliceMin;
 	private TileIndex index;
 	private int stepCount = 0;
@@ -33,12 +36,11 @@ public class PreviousSliceUmbrellaGenerator implements Iterator<TileIndex>, Iter
 	public TileIndex next() {
 		TileIndex result = index;
 		// Lower resolution as we get farther from center slice
-		if (stepCount == 5) { // lower resolution farther from center
+		if (stepCount == _2X_ZOOMOUT_STEP) { // lower resolution farther from center
 			TileIndex i = index.zoomOut();
 			if (i != null)
 				index = i;
-		}
-		if (stepCount == 50) { // lower resolution farther from center
+		} else  if (stepCount == _4X_ZOOMOUT_STEP) { // lower resolution farther from center
 			TileIndex i = index.zoomOut();
 			if (i != null)
 				index = i;
