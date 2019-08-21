@@ -26,7 +26,7 @@ class TexturePreFetcher {
         textureLoadExecutor = new ThreadPoolExecutor(
                 coreThreadPoolSize,
                 maxThreadPoolSize,
-                5, TimeUnit.SECONDS,
+                0, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(),
                 new ThreadFactoryBuilder()
                         .setNameFormat("TexturePreFetch-%03d")

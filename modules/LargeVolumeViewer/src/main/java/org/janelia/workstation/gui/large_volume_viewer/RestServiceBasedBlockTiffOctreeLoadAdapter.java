@@ -3,15 +3,8 @@ package org.janelia.workstation.gui.large_volume_viewer;
 import java.net.URI;
 import java.util.concurrent.Executors;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpStatus;
@@ -54,7 +47,9 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
     private RenderedVolumeLocation renderedVolumeLocation;
     private RenderedVolumeMetadata renderedVolumeMetadata;
 
-    RestServiceBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat, URI volumeBaseURI, AppAuthorization appAuthorization) {
+    RestServiceBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat,
+                                               URI volumeBaseURI,
+                                               AppAuthorization appAuthorization) {
         super(tileFormat, volumeBaseURI);
         this.appAuthorization = appAuthorization;
         this.objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -86,12 +81,7 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
                             () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
                     ),
                     LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
-                    Executors.newFixedThreadPool(
-                            35,
-                            new ThreadFactoryBuilder()
-                                    .setNameFormat("RestBasedOctreeCacheWriter-%d")
-                                    .setDaemon(true)
-                                    .build()));
+                    Executors.newWorkStealingPool());
             getTileFormat().initializeFromRenderedVolumeMetadata(renderedVolumeMetadata);
         } catch (Exception ex) {
             LOG.error("Error getting sample 2d tile from {}", url, ex);

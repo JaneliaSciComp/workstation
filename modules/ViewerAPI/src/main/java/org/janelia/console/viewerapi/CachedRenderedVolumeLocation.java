@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.Nullable;
 
@@ -72,13 +73,13 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
     @Nullable
     @Override
     public byte[] readTileImagePageAsTexturedBytes(String tileRelativePath, List<String> channelImageNames, int pageNumber) {
+        AtomicReference<byte[]> textureBytesReference = new AtomicReference<>(null);
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
                 .withRelativePath(tileRelativePath)
                 .withChannelImageNames(channelImageNames)
                 .withPageNumber(pageNumber)
                 .build(() -> new FileProxy() {
                     private Long size = null;
-                    private byte[] textureBytes;
 
                     @Override
                     public String getFileId() {
@@ -94,20 +95,21 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                     @Override
                     public InputStream openContentStream() {
                         fetchContent();
-                        if (textureBytes == null) {
+                        if (textureBytesReference.get() == null) {
                             return null;
                         } else {
-                            return new ByteArrayInputStream(textureBytes);
+                            return new ByteArrayInputStream(textureBytesReference.get());
                         }
                     }
 
                     private void fetchContent() {
                         if (size == null) {
-                            textureBytes = delegate.readTileImagePageAsTexturedBytes(tileRelativePath, channelImageNames, pageNumber);
+                            byte[] textureBytes = delegate.readTileImagePageAsTexturedBytes(tileRelativePath, channelImageNames, pageNumber);
                             if (textureBytes == null) {
                                 size = 0L;
                             } else {
                                 size = (long) textureBytes.length;
+                                textureBytesReference.set(textureBytes);
                             }
                         }
                     }
@@ -131,9 +133,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         }
         if (contentStream != null) {
             try {
-                return ByteStreams.toByteArray(contentStream);
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
+                return textureBytesReference.get();
             } finally {
                 try {
                     contentStream.close();

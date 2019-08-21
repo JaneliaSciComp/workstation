@@ -61,11 +61,6 @@ import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.workspace.Node;
 import org.openide.DialogDisplayer;
 import org.openide.WizardDescriptor;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
-import org.openide.awt.ActionRegistration;
-import org.openide.util.NbBundle.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

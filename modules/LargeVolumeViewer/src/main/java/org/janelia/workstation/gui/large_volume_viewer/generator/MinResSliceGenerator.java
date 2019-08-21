@@ -12,18 +12,17 @@ import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
  * @author brunsc
  *
  */
-public class MinResSliceGenerator
-        implements Iterable<TileIndex>, Iterator<TileIndex> {
+public class MinResSliceGenerator implements Iterable<TileIndex>, Iterator<TileIndex> {
 
-    TileIndex index1, index2;
-    int sliceMin, sliceMax;
-    boolean useFirst = true;
+    private TileIndex index1, index2;
+    private int sliceMin, sliceMax;
+    private boolean useFirst = true;
     private CoordinateAxis sliceAxis;
 
     public MinResSliceGenerator(TileFormat tileFormat, CoordinateAxis sliceAxis) {
         this.sliceAxis = sliceAxis;
         int maxZoom = tileFormat.getZoomLevelCount() - 1;
-        int xyz[] = {0, 0, 0};
+        int[] xyz = {0, 0, 0};
         int sa = sliceAxis.index();
         sliceMin = 0;//tileFormat.getOrigin()[sa];
         sliceMax = sliceMin + tileFormat.getVolumeSize()[sa];

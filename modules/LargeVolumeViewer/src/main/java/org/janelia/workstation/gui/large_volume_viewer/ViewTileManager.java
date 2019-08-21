@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
@@ -295,12 +296,12 @@ public class ViewTileManager {
         }
         // Then load the best ones
         newNeededTextures.addAll(latestTiles.getBestNeededTextures());
-
         // Use set/getNeededTextures() methods for thread safety
-        Set<TileIndex> texturesToGet = Sets.difference(newNeededTextures, neededTextures);
-        synchronized (neededTextures) {
-            neededTextures.clear();
-            neededTextures.addAll(texturesToGet);
+        if (!newNeededTextures.equals(neededTextures)) {
+            synchronized (neededTextures) {
+                neededTextures.clear();
+                neededTextures.addAll(newNeededTextures);
+            }
         }
         if ((!latestTiles.equals(previousTiles))
                 && (latestTiles != null)
@@ -339,7 +340,7 @@ public class ViewTileManager {
         // Avoid (rare?) ConcurrentModificationException, by sending a Copy of the neededTextures
         Collection<TileIndex> result;
         synchronized (neededTextures) {
-            result = new ArrayList<>(neededTextures);
+            result = ImmutableSet.copyOf(neededTextures);
         }
         return result;
     }

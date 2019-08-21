@@ -38,7 +38,7 @@ public class PreviousSliceUmbrellaGenerator implements Iterator<TileIndex>, Iter
 			if (i != null)
 				index = i;
 		}
-		if (stepCount == 10) { // lower resolution farther from center
+		if (stepCount == 50) { // lower resolution farther from center
 			TileIndex i = index.zoomOut();
 			if (i != null)
 				index = i;

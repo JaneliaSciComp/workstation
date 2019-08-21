@@ -39,9 +39,9 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     private LoadStatus loadStatus = LoadStatus.UNINITIALIZED;
 
     // One thread pool to load minimal representation of volume
-    private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(5, 10);
+    private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(10, 10);
     // One thread pool to load current and prefetch textures
-    private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(35, 45);
+    private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(10, 15);
 
     // Refactoring 6/12/2013
     private SharedVolumeImage sharedVolumeImage;
@@ -337,7 +337,6 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         updateLoadStatus();
     }
 
-    // Part of new way July 9, 2013
     void refreshCurrentTileSet() {
         LOG.trace("refreshCurrentTileSet");
         TileSet tiles = createLatestTiles();
@@ -381,6 +380,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     // ComponentListener interface, to viewer changes can be tracked
     @Override
     public void componentResized(ComponentEvent e) {
+        refreshCurrentTileSet();
     }
 
     @Override
@@ -389,6 +389,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
 
     @Override
     public void componentShown(ComponentEvent e) {
+        refreshCurrentTileSet();
     }
 
     @Override

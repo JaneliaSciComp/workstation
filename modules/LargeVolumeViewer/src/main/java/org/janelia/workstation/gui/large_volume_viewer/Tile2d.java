@@ -57,7 +57,7 @@ public class Tile2d implements GLActor {
     }
 
     // Choose the best available texture for this tile
-    public void assignTexture(TextureCache textureCache) {
+    void assignTexture(TextureCache textureCache) {
         if (getLoadStatus().ordinal() >= LoadStatus.BEST_TEXTURE_LOADED.ordinal()) {
             return; // Already as good as it gets
         }
@@ -84,7 +84,6 @@ public class Tile2d implements GLActor {
             ix = ix.zoomOut();
         }
         // No texture was found; maybe next time
-        // log.info("texture cache miss "+getIndex());
     }
 
     @Override
