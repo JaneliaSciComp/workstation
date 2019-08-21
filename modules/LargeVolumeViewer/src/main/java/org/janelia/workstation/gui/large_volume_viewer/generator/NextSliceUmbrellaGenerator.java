@@ -9,14 +9,12 @@ import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
  * @author brunsc
  *
  */
-public class NextSliceUmbrellaGenerator 
-implements Iterator<TileIndex>, Iterable<TileIndex>
-{
+public class NextSliceUmbrellaGenerator implements Iterator<TileIndex>, Iterable<TileIndex> {
 	private int sliceMax;
 	private TileIndex index;
 	private int stepCount = 0;
 	
-	public NextSliceUmbrellaGenerator(TileIndex seed, int sliceMax) {
+	NextSliceUmbrellaGenerator(TileIndex seed, int sliceMax) {
 		this.sliceMax = sliceMax;
 		index = seed.nextSlice();
 	}

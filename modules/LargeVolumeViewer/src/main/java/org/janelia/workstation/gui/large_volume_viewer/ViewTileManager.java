@@ -167,10 +167,9 @@ public class ViewTileManager {
         int relativeTileDepth = tileFormat.calcRelativeTileDepth(xyzFromWhd, fD, bb);
 
         // 3) x and y tile index range
-        ViewBoundingBox screenBounds
-                = tileFormat.findViewBounds(
-                        viewport.getWidth(), viewport.getHeight(), focus, camera.getPixelsPerSceneUnit(), xyzFromWhd
-                );
+        ViewBoundingBox screenBounds = tileFormat.findViewBounds(
+                viewport.getWidth(), viewport.getHeight(), focus, camera.getPixelsPerSceneUnit(), xyzFromWhd
+        );
         TileBoundingBox tileUnits = tileFormat.viewBoundsToTileBounds(xyzFromWhd, screenBounds, zoom);
 
         TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
@@ -192,7 +191,7 @@ public class ViewTileManager {
         return result;
     }
 
-    public TextureCache getTextureCache() {
+    TextureCache getTextureCache() {
         return textureCache;
     }
 
@@ -299,11 +298,9 @@ public class ViewTileManager {
 
         // Use set/getNeededTextures() methods for thread safety
         Set<TileIndex> texturesToGet = Sets.difference(newNeededTextures, neededTextures);
-        if (!texturesToGet.isEmpty()) {
-            synchronized (neededTextures) {
-                neededTextures.clear();
-                neededTextures.addAll(texturesToGet);
-            }
+        synchronized (neededTextures) {
+            neededTextures.clear();
+            neededTextures.addAll(texturesToGet);
         }
         if ((!latestTiles.equals(previousTiles))
                 && (latestTiles != null)

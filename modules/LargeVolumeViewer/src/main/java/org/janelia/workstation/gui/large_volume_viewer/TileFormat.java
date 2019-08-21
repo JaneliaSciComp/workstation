@@ -27,7 +27,7 @@ public class TileFormat {
     private int[] tileSize = {1024, 1024, 1}; // in voxels (possibly)
     private double[] voxelMicrometers = {1, 1, 1}; // in micrometers per voxel
     private int zoomLevelCount = 0;
-    private double zoomFactorCache[] = {1, 2, 4, 8};
+    private double[] zoomFactorCache = {1, 2, 4, 8};
     private int bitDepth = 8;
     private int channelCount = 1;
     private int intensityMax = 255;
@@ -97,8 +97,8 @@ public class TileFormat {
                 zoom, zoomMax, indexStyle, sliceDirection);
     }
 
-    public TileIndex tileIndexForZoomedVoxelIndex(ZoomedVoxelIndex ix,
-                                                  CoordinateAxis sliceDirection) {
+    TileIndex tileIndexForZoomedVoxelIndex(ZoomedVoxelIndex ix,
+                                           CoordinateAxis sliceDirection) {
         int zoom = ix.getZoomLevel().getLog2ZoomOutFactor();
         TileXyz tileXyz = tileXyzForZoomedVoxelIndex(
                 ix,
@@ -231,7 +231,7 @@ public class TileFormat {
     }
 
 
-    public int calcRelativeTileDepth(int[] xyzFromWhd, double focusDepth, BoundingBox3d bb) {
+    int calcRelativeTileDepth(int[] xyzFromWhd, double focusDepth, BoundingBox3d bb) {
         // Bounding box is actually 0.5 voxels bigger than number of slices at each end
         int dMin = (int) (bb.getMin().get(xyzFromWhd[Z_OFFS]) / getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] + 0.5);
         int dMax = (int) (bb.getMax().get(xyzFromWhd[Z_OFFS]) / getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] - 0.5);
@@ -270,7 +270,7 @@ public class TileFormat {
      *
      * @return
      */
-    public int[] getTileSize() {
+    int[] getTileSize() {
         return tileSize;
     }
 
@@ -308,7 +308,7 @@ public class TileFormat {
      *
      * @return
      */
-    public int getBitDepth() {
+    int getBitDepth() {
         return bitDepth;
     }
 
@@ -327,7 +327,7 @@ public class TileFormat {
      *
      * @return
      */
-    public int getIntensityMax() {
+    int getIntensityMax() {
         return intensityMax;
     }
 
@@ -337,7 +337,7 @@ public class TileFormat {
      *
      * @return
      */
-    public int getIntensityMin() {
+    int getIntensityMin() {
         return intensityMin;
     }
 
@@ -356,7 +356,7 @@ public class TileFormat {
         this.origin = origin;
     }
 
-    public void setVolumeSize(int[] volumeSize) {
+    void setVolumeSize(int[] volumeSize) {
         // In case somewhere, the original array is being passed around
         // and used directly, prior to having been reset from defaults.
         if (this.volumeSize != null) {
@@ -397,7 +397,7 @@ public class TileFormat {
         this.voxToMicronMatrix = voxToMicronMatrix;
     }
 
-    public void setTileSize(int[] tileSize) {
+    void setTileSize(int[] tileSize) {
         // In case somewhere, the original array is being passed around
         // and used directly, prior to having been reset from defaults.
         if (this.tileSize != null) {
@@ -409,11 +409,11 @@ public class TileFormat {
         }
     }
 
-    public void setVoxelMicrometers(double[] voxelMicrometers) {
+    void setVoxelMicrometers(double[] voxelMicrometers) {
         this.voxelMicrometers = voxelMicrometers;
     }
 
-    public void setZoomLevelCount(int zoomLevelCount) {
+    void setZoomLevelCount(int zoomLevelCount) {
         if (this.zoomLevelCount == zoomLevelCount)
             return; // no change
         this.zoomLevelCount = zoomLevelCount;
@@ -423,19 +423,19 @@ public class TileFormat {
             zoomFactorCache[z] = Math.pow(2, z);
     }
 
-    public void setBitDepth(int bitDepth) {
+    void setBitDepth(int bitDepth) {
         this.bitDepth = bitDepth;
     }
 
-    public void setChannelCount(int channelCount) {
+    void setChannelCount(int channelCount) {
         this.channelCount = channelCount;
     }
 
-    public void setIntensityMax(int intensityMax) {
+    void setIntensityMax(int intensityMax) {
         this.intensityMax = intensityMax;
     }
 
-    public void setIntensityMin(int intensityMin) {
+    void setIntensityMin(int intensityMin) {
         this.intensityMin = intensityMin;
     }
 
@@ -451,7 +451,7 @@ public class TileFormat {
      * intensityMax = 255
      * sRgb = false
      */
-    public final void setDefaultParameters() {
+    final void setDefaultParameters() {
         for (int i = 0; i < 3; ++i) {
             origin[i] = 0;
             volumeSize[i] = 512; // whatever
@@ -470,52 +470,32 @@ public class TileFormat {
         hasZSlices = true;
     }
 
-    public void setSrgb(boolean srgb) {
+    void setSrgb(boolean srgb) {
         this.srgb = srgb;
     }
 
-    public int getTileBytes() {
-        int w = getTileSize()[X_OFFS];
-        int h = getTileSize()[Y_OFFS];
-        int bpp = getChannelCount() * getBitDepth() / 8;
-        return w * h * bpp;
-    }
-
-    public boolean isHasZSlices() {
+    boolean isHasZSlices() {
         return hasZSlices;
     }
 
-    public boolean isHasXSlices() {
+    boolean isHasXSlices() {
         return hasXSlices;
     }
 
-    public boolean isHasYSlices() {
+    boolean isHasYSlices() {
         return hasYSlices;
     }
 
-    public void setHasZSlices(boolean hasZSlices) {
+    void setHasZSlices(boolean hasZSlices) {
         this.hasZSlices = hasZSlices;
     }
 
-    public void setHasXSlices(boolean hasXSlices) {
+    void setHasXSlices(boolean hasXSlices) {
         this.hasXSlices = hasXSlices;
     }
 
-    public void setHasYSlices(boolean hasYSlices) {
+    void setHasYSlices(boolean hasYSlices) {
         this.hasYSlices = hasYSlices;
-    }
-
-    /**
-     * Helper to avoid calling Math.pow() all the time.
-     *
-     * @param zoomLevel
-     * @return
-     */
-    protected double zoomFactorForZoomLevel(int zoomLevel) {
-        if ((zoomLevel >= 0) && (zoomLevel < zoomLevelCount))
-            return zoomFactorCache[zoomLevel];
-        // Rare case where zoomLevel is outside acceptable range
-        return Math.pow(2, zoomLevel);
     }
 
     // Aug 26, 2013 attempt at greater type safety between different x/y/z units
@@ -534,7 +514,7 @@ public class TileFormat {
                 xyz[2] * getVoxelMicrometers()[Z_OFFS]);
     }
 
-    public MicrometerXyz micrometerXyzForVoxelXyzMatrix(VoxelXyz v, CoordinateAxis sliceDirection) {
+    MicrometerXyz micrometerXyzForVoxelXyzMatrix(VoxelXyz v, CoordinateAxis sliceDirection) {
         establishConversionMatrices();
         double[] rawVoxels = new double[]{
                 v.getX(), v.getY(), v.getZ(), 1.0
@@ -568,7 +548,7 @@ public class TileFormat {
         return new VoxelXyz((int) result.get(0, 0), (int) result.get(1, 0), (int) result.get(2, 0));
     }
 
-    public VoxelXyz voxelXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis) {
+    VoxelXyz voxelXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis) {
         int zoomFactor = z.getZoomLevel().getZoomOutFactor();
         int xyz[] = {z.getX(), z.getY(), z.getZ()};
         int depthAxis = sliceAxis.index();
@@ -591,7 +571,7 @@ public class TileFormat {
         return micrometerXyzForVoxelXyz(vx, axis);
     }
 
-    public Vec3 micronVec3ForVoxelVec3Cornered(Vec3 voxelVec3) {
+    private Vec3 micronVec3ForVoxelVec3Cornered(Vec3 voxelVec3) {
         TileFormat.VoxelXyz vox = new TileFormat.VoxelXyz(voxelVec3);
         TileFormat.MicrometerXyz micron = micrometerXyzForVoxelXyz(vox, CoordinateAxis.Z);
         return new Vec3(micron.getX(), micron.getY(), micron.getZ());
@@ -620,7 +600,7 @@ public class TileFormat {
      * @param sliceAxis
      * @return
      */
-    public ZoomedVoxelIndex zoomedVoxelIndexForTileXyz(TileXyz t, ZoomLevel zoomLevel, CoordinateAxis sliceAxis) {
+    ZoomedVoxelIndex zoomedVoxelIndexForTileXyz(TileXyz t, ZoomLevel zoomLevel, CoordinateAxis sliceAxis) {
         int xyz[] = {t.getX(), t.getY(), t.getZ()};
         int depthAxis = sliceAxis.index();
         for (int i = 0; i < 3; ++i) {
@@ -640,7 +620,7 @@ public class TileFormat {
     /**
      * TileIndex xyz containing ZoomedVoxel
      */
-    public TileXyz tileXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis) {
+    TileXyz tileXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis) {
         int xyz[] = {z.getX(), z.getY(), z.getZ()};
         // Invert Y axis to convert to Raveler convention from image convention.
         int zoomFactor = z.getZoomLevel().getZoomOutFactor();
@@ -671,28 +651,24 @@ public class TileFormat {
 
     // Volume units can be one of 4 interconvertible types
     // These classes are intended to enforce type safety between different unit types
-    public static interface Unit {
+    interface Unit {
     }
 
     // Base unit
-    public static class MicrometerUnit implements Unit {
+    static class MicrometerUnit implements Unit {
     }
 
     // 1 um
-    public static class VoxelUnit implements Unit {
+    static class VoxelUnit implements Unit {
     }
 
-    public static class ZoomedVoxelUnit implements Unit {
+    static class TileUnit implements Unit {
     }
 
-    public static class TileUnit implements Unit {
-    }
+    public static class UnittedVec3Int<U extends Unit> implements Cloneable {
+        private int[] data = new int[3];
 
-    public static class UnittedVec3Int<U extends Unit>
-            implements Cloneable {
-        private int data[] = new int[3];
-
-        public UnittedVec3Int(int x, int y, int z) {
+        UnittedVec3Int(int x, int y, int z) {
             data[X_OFFS] = x;
             data[Y_OFFS] = y;
             data[Z_OFFS] = z;
@@ -716,11 +692,10 @@ public class TileFormat {
         }
     }
 
-    public static class UnittedVec3Double<U extends Unit>
-            implements Cloneable {
-        private double data[] = new double[3];
+    public static class UnittedVec3Double<U extends Unit> implements Cloneable {
+        private double[] data = new double[3];
 
-        public UnittedVec3Double(double x, double y, double z) {
+        UnittedVec3Double(double x, double y, double z) {
             data[X_OFFS] = x;
             data[Y_OFFS] = y;
             data[Z_OFFS] = z;
@@ -779,8 +754,8 @@ public class TileFormat {
 
     ; // 2
 
-    public static class TileXyz extends UnittedVec3Int<TileUnit> {
-        public TileXyz(int x, int y, int z) {
+    static class TileXyz extends UnittedVec3Int<TileUnit> {
+        TileXyz(int x, int y, int z) {
             super(x, y, z);
         }
     } // 4
