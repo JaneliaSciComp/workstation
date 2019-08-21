@@ -1,19 +1,16 @@
 package org.janelia.console.viewerapi;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.janelia.filecacheutils.FileProxy;
@@ -70,84 +67,68 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         return delegate.readTileImageInfo(tileRelativePath);
     }
 
-    @Nullable
+    private static class RenderedVolumeContentFileProxy implements FileProxy {
+        private String fileId;
+        private final Supplier<Optional<StreamableContent>> streamableContentSupplier;
+        private StreamableContent streamableContent;
+
+        private RenderedVolumeContentFileProxy(String fileId, Supplier<Optional<StreamableContent>> streamableContentSupplier) {
+            this.fileId = fileId;
+            this.streamableContentSupplier = streamableContentSupplier;
+            this.streamableContent = null;
+        }
+
+        @Override
+        public String getFileId() {
+            return fileId;
+        }
+
+        @Override
+        public Optional<Long> estimateSizeInBytes() {
+            fetchContent();
+            return Optional.of(streamableContent.getSize());
+        }
+
+        @Override
+        public InputStream openContentStream() {
+            fetchContent();
+            return streamableContent.getStream();
+        }
+
+        private void fetchContent() {
+            if (streamableContent == null) {
+                streamableContent = streamableContentSupplier.get().orElse(StreamableContent.empty());
+            }
+        }
+
+        @Override
+        public File getLocalFile() {
+            return null;
+        }
+
+        @Override
+        public boolean deleteProxy() {
+            return false;
+        }
+
+    }
+
     @Override
-    public byte[] readTileImagePageAsTexturedBytes(String tileRelativePath, List<String> channelImageNames, int pageNumber) {
-        AtomicReference<byte[]> textureBytesReference = new AtomicReference<>(null);
+    public Optional<StreamableContent> readTileImagePageAsTexturedBytes(String tileRelativePath, List<String> channelImageNames, int pageNumber) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
                 .withRelativePath(tileRelativePath)
                 .withChannelImageNames(channelImageNames)
                 .withPageNumber(pageNumber)
-                .build(() -> new FileProxy() {
-                    private Long size = null;
-
-                    @Override
-                    public String getFileId() {
-                        return tileRelativePath + "." + pageNumber;
-                    }
-
-                    @Override
-                    public Optional<Long> estimateSizeInBytes() {
-                        fetchContent();
-                        return Optional.of(size);
-                    }
-
-                    @Override
-                    public InputStream openContentStream() {
-                        fetchContent();
-                        if (textureBytesReference.get() == null) {
-                            return null;
-                        } else {
-                            return new ByteArrayInputStream(textureBytesReference.get());
-                        }
-                    }
-
-                    private void fetchContent() {
-                        if (size == null) {
-                            byte[] textureBytes = delegate.readTileImagePageAsTexturedBytes(tileRelativePath, channelImageNames, pageNumber);
-                            if (textureBytes == null) {
-                                size = 0L;
-                            } else {
-                                size = (long) textureBytes.length;
-                                textureBytesReference.set(textureBytes);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public File getLocalFile() {
-                        return null;
-                    }
-
-                    @Override
-                    public boolean deleteProxy() {
-                        return false;
-                    }
-                });
+                .build(() -> new RenderedVolumeContentFileProxy(
+                        tileRelativePath + "." + pageNumber,
+                        () -> delegate.readTileImagePageAsTexturedBytes(tileRelativePath, channelImageNames, pageNumber))
+                );
         FileProxy f = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
-        InputStream contentStream;
-        if (f != null) {
-            contentStream = f.openContentStream();
-        } else {
-            contentStream = null;
-        }
-        if (contentStream != null) {
-            try {
-                return textureBytesReference.get();
-            } finally {
-                try {
-                    contentStream.close();
-                } catch (IOException ignore) {
-                }
-            }
-        } else {
-            return null;
-        }
+        return streamableContentFromFileProxy(renderedVolumeFileCache.getCachedFileEntry(fileKey, false));
    }
 
-    @Nullable
     @Override
-    public byte[] readRawTileROIPixels(RawImage rawImage, int channel, int xCenter, int yCenter, int zCenter, int dimx, int dimy, int dimz) {
+    public Optional<StreamableContent> readRawTileROIPixels(RawImage rawImage, int channel, int xCenter, int yCenter, int zCenter, int dimx, int dimy, int dimz) {
         return delegate.readRawTileROIPixels(rawImage, channel, xCenter, yCenter, zCenter, dimx, dimy, dimz);
     }
 
@@ -155,44 +136,10 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
     public Optional<StreamableContent> getContentFromRelativePath(String relativePath) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
                 .withRelativePath(relativePath)
-                .build(() -> new FileProxy() {
-                    private StreamableContent streamableContent = null;
-
-                    @Override
-                    public String getFileId() {
-                        return getRenderedVolumePath() + relativePath;
-                    }
-
-                    @Override
-                    public Optional<Long> estimateSizeInBytes() {
-                        fetchContent();
-                        return Optional.of(streamableContent.getSize());
-                    }
-
-                    @Nullable
-                    @Override
-                    public InputStream openContentStream() {
-                        fetchContent();
-                        return streamableContent.getStream();
-                    }
-
-                    private void fetchContent() {
-                        if (streamableContent == null) {
-                            streamableContent = delegate.getContentFromRelativePath(relativePath)
-                                    .orElse(new StreamableContent(0, null));
-                        }
-                    }
-
-                    @Override
-                    public File getLocalFile() {
-                        return null;
-                    }
-
-                    @Override
-                    public boolean deleteProxy() {
-                        return false;
-                    }
-                });
+                .build(() -> new RenderedVolumeContentFileProxy(
+                        getRenderedVolumePath() + relativePath,
+                        () -> delegate.getContentFromRelativePath(relativePath))
+                );
         return streamableContentFromFileProxy(renderedVolumeFileCache.getCachedFileEntry(fileKey, false));
     }
 
@@ -200,44 +147,10 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
     public Optional<StreamableContent> getContentFromAbsolutePath(String absolutePath) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
                 .withAbsolutePath(absolutePath)
-                .build(() -> new FileProxy() {
-                    private StreamableContent streamableContent;
-
-                    @Override
-                    public String getFileId() {
-                        return getRenderedVolumePath() + absolutePath;
-                    }
-
-                    @Override
-                    public Optional<Long> estimateSizeInBytes() {
-                        fetchContent();
-                        return Optional.of(streamableContent.getSize());
-                    }
-
-                    @Nullable
-                    @Override
-                    public InputStream openContentStream() {
-                        fetchContent();
-                        return streamableContent.getStream();
-                    }
-
-                    private void fetchContent() {
-                        if (streamableContent == null) {
-                            streamableContent = delegate.getContentFromAbsolutePath((absolutePath))
-                                    .orElse(new StreamableContent(0, null));
-                        }
-                    }
-
-                    @Override
-                    public File getLocalFile() {
-                        return null;
-                    }
-
-                    @Override
-                    public boolean deleteProxy() {
-                        return false;
-                    }
-                });
+                .build(() -> new RenderedVolumeContentFileProxy(
+                        getRenderedVolumePath() + absolutePath,
+                        () -> delegate.getContentFromAbsolutePath(absolutePath))
+                );
         return streamableContentFromFileProxy(renderedVolumeFileCache.getCachedFileEntry(fileKey, false));
     }
 
@@ -245,7 +158,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         if (f == null) {
             return Optional.empty();
         } else {
-            return Optional.of(new StreamableContent(f.estimateSizeInBytes().orElse(-1L), f.openContentStream()));
+            return Optional.of(StreamableContent.of(f.estimateSizeInBytes().orElse(-1L), f.openContentStream()));
         }
     }
 }

@@ -1,10 +1,12 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpStatus;
@@ -81,7 +83,12 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
                             () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
                     ),
                     LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
-                    Executors.newWorkStealingPool());
+                    Executors.newFixedThreadPool(
+                            10,
+                            new ThreadFactoryBuilder()
+                                    .setNameFormat("RestBasedOctreeCacheWriter-%d")
+                                    .setDaemon(true)
+                                    .build()));
             getTileFormat().initializeFromRenderedVolumeMetadata(renderedVolumeMetadata);
         } catch (Exception ex) {
             LOG.error("Error getting sample 2d tile from {}", url, ex);
@@ -102,6 +109,10 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
                     tileInfo);
             LOG.trace("Loading tile {} using key {}", tileIndex, tileKey);
             return renderedVolumeLoader.loadSlice(renderedVolumeLocation, renderedVolumeMetadata, tileKey)
+                    .flatMap(sc -> {
+                        byte[] content = sc.getBytes();
+                        return content == null ? Optional.empty() : Optional.of(content);
+                    })
                     .map(TextureData2d::new)
                     .orElse(null);
         } catch (Exception ex) {

@@ -308,9 +308,9 @@ public class TextureData2d {
         return textureData2dArray;
     }
 
-    public TextureData2d() {}
+    TextureData2d() {}
 
-    public TextureData2d(byte[] bytes) {
+    TextureData2d(byte[] bytes) {
         ByteBuffer byteBuffer=ByteBuffer.wrap(bytes);
         mipmapLevel=byteBuffer.getInt();
         width=byteBuffer.getInt();

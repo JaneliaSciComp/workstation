@@ -204,7 +204,7 @@ public class LargeVolumeViewViewer extends JPanel {
             private SimpleListenableFuture<Void> loadVolume(AtomicBoolean volumeLoaded) {
                 // but now we have to do the loads in other threads, so we don't lock the UI;
                 //  first start up the image volume load
-                final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading image data...");
+                final ProgressHandle progress = ProgressHandle.createHandle("Loading image data...");
                 progress.start();
                 progress.setDisplayName("Loading image data");
                 progress.switchToIndeterminate();

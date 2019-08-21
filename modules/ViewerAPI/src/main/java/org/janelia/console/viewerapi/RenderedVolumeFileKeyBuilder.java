@@ -15,7 +15,7 @@ class RenderedVolumeFileKeyBuilder {
     private List<String> channelImageNames;
     private int pageNumber = -1;
 
-    public RenderedVolumeFileKeyBuilder(String renderedVolumePath) {
+    RenderedVolumeFileKeyBuilder(String renderedVolumePath) {
         this.renderedVolumePath = renderedVolumePath;
     }
 
