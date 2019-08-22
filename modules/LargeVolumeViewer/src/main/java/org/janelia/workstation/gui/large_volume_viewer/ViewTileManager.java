@@ -1,13 +1,12 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
@@ -34,7 +33,7 @@ public class ViewTileManager {
     /**
      * @param loadStatusChangedListener the loadStatusChangedListener to set
      */
-    public void setLoadStatusChangedListener(StatusUpdateListener loadStatusChangedListener) {
+    void setLoadStatusChangedListener(StatusUpdateListener loadStatusChangedListener) {
         this.loadStatusChangedListener = loadStatusChangedListener;
     }
 
@@ -73,7 +72,7 @@ public class ViewTileManager {
      * scene to update in the fastest possible way, giving the comforting
      * impression of responsiveness.
      */
-    public static enum LoadStatus {
+    public enum LoadStatus {
         NO_TEXTURES_LOADED,
         STALE_TEXTURES_LOADED,
         IMPERFECT_TEXTURES_LOADED,
@@ -94,7 +93,6 @@ public class ViewTileManager {
     private final Set<TileIndex> neededTextures = new HashSet<>();
     private final Set<TileIndex> displayableTextures = new HashSet<>();
 
-    // private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
     private TileSet previousTiles;
 
     private TileConsumer tileConsumer;
@@ -296,38 +294,25 @@ public class ViewTileManager {
         }
         // Then load the best ones
         newNeededTextures.addAll(latestTiles.getBestNeededTextures());
-        // Use set/getNeededTextures() methods for thread safety
-        if (!newNeededTextures.equals(neededTextures)) {
-            synchronized (neededTextures) {
-                neededTextures.clear();
-                neededTextures.addAll(newNeededTextures);
-            }
+        synchronized (neededTextures) {
+            neededTextures.clear();
+            neededTextures.addAll(newNeededTextures);
         }
-        if ((!latestTiles.equals(previousTiles))
-                && (latestTiles != null)
-                && (latestTiles.size() > 0)) {
+        if (!latestTiles.isEmpty() && !latestTiles.equals(previousTiles)) {
             previousTiles = latestTiles;
         }
         // Remember which textures might be useful
         // Even if it's LOADED, it might not be PAINTED yet.
         displayableTextures.clear();
-        for (Tile2d tile : latestTiles) {
-            // Best texture so far
-            if (tile.getBestTexture() != null) {
-                displayableTextures.add(tile.getBestTexture().getIndex());
-            }
-            // Best possible
-            displayableTextures.add(tile.getIndex());
-        }
-        for (Tile2d tile : emergencyTiles) {
-            // Best texture so far
-            if (tile.getBestTexture() != null) {
-                displayableTextures.add(tile.getBestTexture().getIndex());
-            }
-            // Best possible
-            displayableTextures.add(tile.getIndex());
-        }
-
+        Stream.concat(latestTiles.stream(), emergencyTiles.stream())
+                .forEach(tile -> {
+                    // Best texture so far
+                    if (tile.getBestTexture() != null) {
+                        displayableTextures.add(tile.getBestTexture().getIndex());
+                    }
+                    // Best possible
+                    displayableTextures.add(tile.getIndex());
+                });
         return result;
     }
 

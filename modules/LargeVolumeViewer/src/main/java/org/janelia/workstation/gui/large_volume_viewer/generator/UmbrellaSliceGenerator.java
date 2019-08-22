@@ -14,7 +14,7 @@ import org.janelia.workstation.gui.large_volume_viewer.TileSet;
  *
  */
 public class UmbrellaSliceGenerator implements Iterable<TileIndex>, Iterator<TileIndex> {
-	private static final int DEFAULT_UMBRELLA_RANGE = 50;
+	private static final int DEFAULT_UMBRELLA_RANGE = 150;
 
 	// Outer loop iterates over slice
 	private Iterator<TileIndex> sliceGenerator;
