@@ -30,16 +30,18 @@ public class KtxData {
     }
 
     private ByteBuffer loadOneMipmap(InputStream stream, int mipmapLevel) throws IOException, InterruptedException {
-        stream.read(sizeBuf.array());
-        sizeBuf.rewind();
-        int imageSize = (int) ((long) sizeBuf.getInt() & 0xffffffffL);
-        // TODO: figure out how to stream straight into the direct buffer
-        // For now, copy into the direct buffer
-        byte[] b = new byte[imageSize];
-        int bytesRead = 0;
+        int imageSize;
+        int bytesRead;
+        byte[] b;
         try {
-            bytesRead = stream.read(b, bytesRead, imageSize - bytesRead);
-        } catch (IOException e) {
+            stream.read(sizeBuf.array());
+            sizeBuf.rewind();
+            imageSize = (int) ((long) sizeBuf.getInt() & 0xffffffffL);
+            // TODO: figure out how to stream straight into the direct buffer
+            // For now, copy into the direct buffer
+            b = new byte[imageSize];
+            bytesRead = stream.read(b, 0, imageSize);
+        } catch (Exception e) {
             // this exception most likely occurred because of an interruption
             throw new InterruptedException("Interrupted the loading of mipmap level " + (mipmapLevel + 1));
         }
