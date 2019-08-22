@@ -12,7 +12,7 @@ package org.janelia.workstation.gui.large_volume_viewer;
  * 
  * @author fosterl
  */
-public class TileBoundingBox {
+class TileBoundingBox {
 
     private int wMin;
     private int wMax;
@@ -22,56 +22,56 @@ public class TileBoundingBox {
     /**
      * @return the wMin
      */
-    public int getwMin() {
+    int getwMin() {
         return wMin;
     }
 
     /**
      * @param wMin the wMin to set
      */
-    public void setwMin(int wMin) {
+    void setwMin(int wMin) {
         this.wMin = wMin;
     }
 
     /**
      * @return the wMax
      */
-    public int getwMax() {
+    int getwMax() {
         return wMax;
     }
 
     /**
      * @param wMax the wMax to set
      */
-    public void setwMax(int wMax) {
+    void setwMax(int wMax) {
         this.wMax = wMax;
     }
 
     /**
      * @return the hMin
      */
-    public int gethMin() {
+    int gethMin() {
         return hMin;
     }
 
     /**
      * @param hMin the hMin to set
      */
-    public void sethMin(int hMin) {
+    void sethMin(int hMin) {
         this.hMin = hMin;
     }
 
     /**
      * @return the hMax
      */
-    public int gethMax() {
+    int gethMax() {
         return hMax;
     }
 
     /**
      * @param hMax the hMax to set
      */
-    public void sethMax(int hMax) {
+    void sethMax(int hMax) {
         this.hMax = hMax;
     }
 }

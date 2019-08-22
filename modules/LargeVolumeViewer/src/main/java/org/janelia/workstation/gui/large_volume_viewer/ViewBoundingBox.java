@@ -13,7 +13,7 @@ package org.janelia.workstation.gui.large_volume_viewer;
  * 
  * @author fosterl
  */
-public class ViewBoundingBox {
+class ViewBoundingBox {
 
     private double wFMin;
     private double wFMax;
@@ -23,56 +23,56 @@ public class ViewBoundingBox {
     /**
      * @return the wFMin
      */
-    public double getwFMin() {
+    double getwFMin() {
         return wFMin;
     }
 
     /**
      * @param wFMin the wFMin to set
      */
-    public void setwFMin(double wFMin) {
+    void setwFMin(double wFMin) {
         this.wFMin = wFMin;
     }
 
     /**
      * @return the wFMax
      */
-    public double getwFMax() {
+    double getwFMax() {
         return wFMax;
     }
 
     /**
      * @param wFMax the wFMax to set
      */
-    public void setwFMax(double wFMax) {
+    void setwFMax(double wFMax) {
         this.wFMax = wFMax;
     }
 
     /**
      * @return the hFMin
      */
-    public double gethFMin() {
+    double gethFMin() {
         return hFMin;
     }
 
     /**
      * @param hFMin the hFMin to set
      */
-    public void sethFMin(double hFMin) {
+    void sethFMin(double hFMin) {
         this.hFMin = hFMin;
     }
 
     /**
      * @return the hFMax
      */
-    public double gethFMax() {
+    double gethFMax() {
         return hFMax;
     }
 
     /**
      * @param hFMax the hFMax to set
      */
-    public void sethFMax(double hFMax) {
+    void sethFMax(double hFMax) {
         this.hFMax = hFMax;
     }
     

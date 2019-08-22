@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
@@ -167,14 +168,18 @@ public class ViewTileManager {
 
         // 3) x and y tile index range
         ViewBoundingBox screenBounds = tileFormat.findViewBounds(
-                viewport.getWidth(), viewport.getHeight(), focus, camera.getPixelsPerSceneUnit(), xyzFromWhd
+                viewport.getWidth(),
+                viewport.getHeight(),
+                focus,
+                camera.getPixelsPerSceneUnit(),
+                xyzFromWhd
         );
-        TileBoundingBox tileUnits = tileFormat.viewBoundsToTileBounds(xyzFromWhd, screenBounds, zoom);
+        TileBoundingBox tileBounds = tileFormat.viewBoundsToTileBounds(xyzFromWhd, screenBounds, zoom);
 
         TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
         // Must adjust the depth tile value relative to origin.
-        for (int w = tileUnits.getwMin(); w <= tileUnits.getwMax(); ++w) {
-            for (int h = tileUnits.gethMin(); h <= tileUnits.gethMax(); ++h) {
+        for (int w = tileBounds.getwMin(); w <= tileBounds.getwMax(); ++w) {
+            for (int h = tileBounds.gethMin(); h <= tileBounds.gethMax(); ++h) {
                 int[] whd = {w, h, relativeTileDepth};
                 TileIndex key = new TileIndex(
                         whd[xyzFromWhd[0]],
@@ -294,9 +299,12 @@ public class ViewTileManager {
         }
         // Then load the best ones
         newNeededTextures.addAll(latestTiles.getBestNeededTextures());
-        synchronized (neededTextures) {
-            neededTextures.clear();
-            neededTextures.addAll(newNeededTextures);
+        Set<TileIndex> tilesToGet = Sets.difference(newNeededTextures, neededTextures);
+        if (!tilesToGet.isEmpty()) {
+            synchronized (neededTextures) {
+                neededTextures.clear();
+                neededTextures.addAll(tilesToGet);
+            }
         }
         if (!latestTiles.isEmpty() && !latestTiles.equals(previousTiles)) {
             previousTiles = latestTiles;

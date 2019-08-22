@@ -1,6 +1,8 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -99,7 +101,7 @@ public class TileSet extends HashSet<Tile2d> {
         return loadStatus;
     }
 
-    void setLoadStatus(LoadStatus loadStatus) {
+    private void setLoadStatus(LoadStatus loadStatus) {
         this.loadStatus = loadStatus;
     }
 
@@ -107,10 +109,46 @@ public class TileSet extends HashSet<Tile2d> {
     // textures are not the optimal resolution
     Set<TileIndex> getFastNeededTextures() {
         // Which tiles need to be textured?
-        return this.stream()
+        Set<Tile2d> untexturedTiles = this.stream()
                 .filter(tile -> tile.getLoadStatus().ordinal() < Tile2d.LoadStatus.COARSE_TEXTURE_LOADED.ordinal())
-                .map(tile -> tile.getIndex())
                 .collect(Collectors.toSet());
+        // Whittle down the list one texture at a time.
+        Set<TileIndex> neededTextures = new HashSet<>();
+        // Warning! This algorithm is O(n^2) on the number of tiles! TODO
+        while (untexturedTiles.size() > 0) {
+            // Store a score for each candidate texture
+            Map<TileIndex, Double> textureScores = new HashMap<>();
+            // Remember which tiles could use a particular texture
+            Map<TileIndex, Set<Tile2d>> tilesByTexture = new HashMap<>();
+            // Accumulate a score for each candidate texture from each tile
+            // TODO - cache something so we don't need to do O(n) in this loop every time
+            // TODO - downweight textures that have already failed to load
+            for (Tile2d tile : untexturedTiles) {
+                TileIndex textureKey = tile.getIndex();
+                double textureScore = textureScores.getOrDefault(textureKey, 0.) + 1.;
+                textureScores.put(textureKey, textureScore);
+                if (!tilesByTexture.containsKey(textureKey)) {
+                    tilesByTexture.put(textureKey, new HashSet<>());
+                }
+                tilesByTexture.get(textureKey).add(tile);
+            }
+            // Choose the highest scoring texture for inclusion
+            double bestScore = 0.0;
+            TileIndex bestTexture = null;
+            // O(n) on candidate tile list is better than sorting
+            for (TileIndex textureIndex : textureScores.keySet()) {
+                if (textureScores.get(textureIndex) > bestScore) {
+                    bestTexture = textureIndex;
+                }
+            }
+            assert (bestTexture != null);
+            neededTextures.add(bestTexture);
+            // remove satisfied tiles from untextured tiles list
+            for (Tile2d tile : tilesByTexture.get(bestTexture)) {
+                untexturedTiles.remove(tile);
+            }
+        }
+        return neededTextures;
     }
 
     // Start loading textures of the optimal resolution for these tiles
