@@ -1,12 +1,8 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
 
 /**
  * A group of Tile2d that together form a complete image on the

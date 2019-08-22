@@ -189,7 +189,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         this.sharedVolumeImage.addVolumeLoadListener(this);
     }
 
-    public TextureCache getTextureCache() {
+    TextureCache getTextureCache() {
         return textureCache;
     }
 
