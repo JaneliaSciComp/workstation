@@ -1,5 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -71,8 +72,15 @@ public class FileBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdap
             LOG.debug("Load tile {} using key {} -> {}", tileIndex, tileKey, renderedVolumeMetadata.getRelativeTilePath(tileKey));
             return renderedVolumeLoader.loadSlice(renderedVolumeLocation, renderedVolumeMetadata, tileKey)
                     .flatMap(sc -> {
-                        byte[] content = sc.getBytes();
-                        return content == null ? Optional.empty() : Optional.of(content);
+                        try {
+                            byte[] content = sc.getBytes();
+                            return content == null ? Optional.empty() : Optional.of(content);
+                        } finally {
+                            try {
+                                sc.close();
+                            } catch (IOException ignore) {
+                            }
+                        }
                     })
                     .map(TextureData2d::new)
                     .orElse(null);
