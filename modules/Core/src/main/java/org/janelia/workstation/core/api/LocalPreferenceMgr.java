@@ -38,8 +38,8 @@ import com.google.common.eventbus.Subscribe;
 public class LocalPreferenceMgr {
 
     private static final Logger log = LoggerFactory.getLogger(LocalPreferenceMgr.class);
-    public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 10;
-    public static final int DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY = 50;
+    public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 5;
+    public static final int DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY = 20;
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
 
     // Singleton

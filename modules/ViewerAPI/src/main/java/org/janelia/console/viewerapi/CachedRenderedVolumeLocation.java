@@ -1,16 +1,20 @@
 package org.janelia.console.viewerapi;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.janelia.filecacheutils.FileProxy;
@@ -19,7 +23,7 @@ import org.janelia.filecacheutils.LocalFileCacheStorage;
 import org.janelia.rendering.RawImage;
 import org.janelia.rendering.RenderedImageInfo;
 import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.rendering.StreamableContent;
+import org.janelia.rendering.Streamable;
 
 public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
 
@@ -67,14 +71,18 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         return delegate.readTileImageInfo(tileRelativePath);
     }
 
-    private static class RenderedVolumeContentFileProxy implements FileProxy {
+    private static class RenderedVolumeContentFileProxy<T> implements FileProxy {
         private String fileId;
-        private final Supplier<Optional<StreamableContent>> streamableContentSupplier;
-        private StreamableContent streamableContent;
+        private final Supplier<Streamable<T>> streamableContentSupplier;
+        private final Function<T, InputStream> contentToStreamMapper;
+        private Streamable<T> streamableContent;
 
-        private RenderedVolumeContentFileProxy(String fileId, Supplier<Optional<StreamableContent>> streamableContentSupplier) {
+        private RenderedVolumeContentFileProxy(String fileId,
+                                               Supplier<Streamable<T>> streamableContentSupplier,
+                                               Function<T, InputStream> contentToStreamMapper) {
             this.fileId = fileId;
             this.streamableContentSupplier = streamableContentSupplier;
+            this.contentToStreamMapper = contentToStreamMapper;
             this.streamableContent = null;
         }
 
@@ -92,12 +100,16 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         @Override
         public InputStream openContentStream() {
             fetchContent();
-            return streamableContent.getStream();
+            if (streamableContent.getContent() == null) {
+                return null;
+            } else {
+                return contentToStreamMapper.apply(streamableContent.getContent());
+            }
         }
 
         private void fetchContent() {
             if (streamableContent == null) {
-                streamableContent = streamableContentSupplier.get().orElse(StreamableContent.empty());
+                streamableContent = streamableContentSupplier.get();
             }
         }
 
@@ -114,51 +126,72 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
     }
 
     @Override
-    public Optional<StreamableContent> readTileImagePageAsTexturedBytes(String tileRelativePath, List<String> channelImageNames, int pageNumber) {
+    public Streamable<byte[]> readTileImagePageAsTexturedBytes(String tileRelativePath, List<String> channelImageNames, int pageNumber) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
                 .withRelativePath(tileRelativePath)
                 .withChannelImageNames(channelImageNames)
                 .withPageNumber(pageNumber)
-                .build(() -> new RenderedVolumeContentFileProxy(
+                .build(() -> new RenderedVolumeContentFileProxy<>(
                         tileRelativePath + "." + pageNumber,
-                        () -> delegate.readTileImagePageAsTexturedBytes(tileRelativePath, channelImageNames, pageNumber))
+                        () -> delegate.readTileImagePageAsTexturedBytes(tileRelativePath, channelImageNames, pageNumber),
+                        bytes -> new ByteArrayInputStream(bytes))
                 );
         FileProxy f = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
-        return streamableContentFromFileProxy(renderedVolumeFileCache.getCachedFileEntry(fileKey, false));
+        return streamableContentFromFileProxy(
+                renderedVolumeFileCache.getCachedFileEntry(fileKey, false),
+                contentStream -> {
+                    try {
+                        return ByteStreams.toByteArray(contentStream);
+                    } catch(Exception e) {
+                        throw new IllegalStateException(e);
+                    } finally {
+                        try {
+                            contentStream.close();
+                        } catch (IOException ignore) {
+                        }
+                    }
+                });
    }
 
     @Override
-    public Optional<StreamableContent> readRawTileROIPixels(RawImage rawImage, int channel, int xCenter, int yCenter, int zCenter, int dimx, int dimy, int dimz) {
+    public Streamable<byte[]> readRawTileROIPixels(RawImage rawImage, int channel, int xCenter, int yCenter, int zCenter, int dimx, int dimy, int dimz) {
         return delegate.readRawTileROIPixels(rawImage, channel, xCenter, yCenter, zCenter, dimx, dimy, dimz);
     }
 
     @Override
-    public Optional<StreamableContent> getContentFromRelativePath(String relativePath) {
+    public Streamable<InputStream> getContentFromRelativePath(String relativePath) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
                 .withRelativePath(relativePath)
-                .build(() -> new RenderedVolumeContentFileProxy(
+                .build(() -> new RenderedVolumeContentFileProxy<>(
                         getRenderedVolumePath() + relativePath,
-                        () -> delegate.getContentFromRelativePath(relativePath))
+                        () -> delegate.getContentFromRelativePath(relativePath),
+                        Function.identity())
                 );
-        return streamableContentFromFileProxy(renderedVolumeFileCache.getCachedFileEntry(fileKey, false));
+        return streamableContentFromFileProxy(
+                renderedVolumeFileCache.getCachedFileEntry(fileKey, false),
+                Function.identity());
     }
 
     @Override
-    public Optional<StreamableContent> getContentFromAbsolutePath(String absolutePath) {
+    public Streamable<InputStream> getContentFromAbsolutePath(String absolutePath) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
                 .withAbsolutePath(absolutePath)
-                .build(() -> new RenderedVolumeContentFileProxy(
+                .build(() -> new RenderedVolumeContentFileProxy<>(
                         getRenderedVolumePath() + absolutePath,
-                        () -> delegate.getContentFromAbsolutePath(absolutePath))
+                        () -> delegate.getContentFromAbsolutePath(absolutePath),
+                        Function.identity())
                 );
-        return streamableContentFromFileProxy(renderedVolumeFileCache.getCachedFileEntry(fileKey, false));
+        return streamableContentFromFileProxy(
+                renderedVolumeFileCache.getCachedFileEntry(fileKey, false),
+                Function.identity());
     }
 
-    private Optional<StreamableContent> streamableContentFromFileProxy(FileProxy f) {
+    private <T> Streamable<T> streamableContentFromFileProxy(FileProxy f, Function<InputStream, T> streamToContentMapper) {
         if (f == null) {
-            return Optional.empty();
+            return Streamable.empty();
         } else {
-            return Optional.of(StreamableContent.of(f.estimateSizeInBytes().orElse(-1L), f.openContentStream()));
+            InputStream contentStream = f.openContentStream();
+            return Streamable.of(streamToContentMapper.apply(contentStream), f.estimateSizeInBytes().orElse(-1L));
         }
     }
 }

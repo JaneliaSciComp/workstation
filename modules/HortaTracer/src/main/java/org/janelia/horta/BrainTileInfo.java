@@ -12,14 +12,17 @@ import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.VoxelIndex;
 import org.janelia.rendering.RawImage;
 import org.janelia.rendering.RenderedVolumeLocation;
+import org.janelia.rendering.Streamable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Represents Mouse Brain tile information entry from tilebase.cache.yml file.
@@ -220,24 +223,24 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
 
         return volumeLocation.getRawTileContent(rawImage, colorChannelIndex)
-                .map(streamableRawImage -> {
-                    try {
-                        if (!texture.loadTiffStack(rawImage.toString() + "-ch-" + colorChannelIndex, streamableRawImage.getStream())) {
-                            return null;
-                        } else {
-                            return texture;
-                        }
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    } finally {
-                        try {
-                            streamableRawImage.close();
-                        } catch (IOException ignore) {
-                            LOG.info("Exception closing the stream for image {}, channel {}", rawImage, colorChannelIndex, ignore);
-                        }
-                    }
-                })
-                .orElse(null);
+               .consume(rawImageStream -> {
+                   try {
+                       if (!texture.loadTiffStack(rawImage.toString() + "-ch-" + colorChannelIndex, rawImageStream)) {
+                           return null;
+                       } else {
+                           return texture;
+                       }
+                   } catch (IOException e) {
+                       throw new UncheckedIOException(e);
+                   } finally {
+                       try {
+                           rawImageStream.close();
+                       } catch (IOException ignore) {
+                           LOG.info("Exception closing the stream for image {}, channel {}", rawImage, colorChannelIndex, ignore);
+                       }
+                   }
+               }, (t, s) -> s)
+               .getContent();
     }
 
     @Override

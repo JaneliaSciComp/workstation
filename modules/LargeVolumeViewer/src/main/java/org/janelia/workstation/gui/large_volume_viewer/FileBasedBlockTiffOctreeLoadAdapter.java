@@ -1,10 +1,8 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.concurrent.Executors;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -70,20 +68,9 @@ public class FileBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdap
                     tileInfo.getSliceAxis(),
                     tileInfo);
             LOG.debug("Load tile {} using key {} -> {}", tileIndex, tileKey, renderedVolumeMetadata.getRelativeTilePath(tileKey));
-            return renderedVolumeLoader.loadSlice(renderedVolumeLocation, renderedVolumeMetadata, tileKey)
-                    .flatMap(sc -> {
-                        try {
-                            byte[] content = sc.getBytes();
-                            return content == null ? Optional.empty() : Optional.of(content);
-                        } finally {
-                            try {
-                                sc.close();
-                            } catch (IOException ignore) {
-                            }
-                        }
-                    })
-                    .map(TextureData2d::new)
-                    .orElse(null);
+            byte[] textureBytes = renderedVolumeLoader.loadSlice(renderedVolumeLocation, renderedVolumeMetadata, tileKey)
+                    .getContent();
+            return textureBytes != null ? new TextureData2d(textureBytes) : null;
         } catch (Exception ex) {
             LOG.error("Error getting sample 2d tile from {}", renderedVolumeMetadata.getDataStorageURI(), ex);
             throw new TileLoadError(ex);
