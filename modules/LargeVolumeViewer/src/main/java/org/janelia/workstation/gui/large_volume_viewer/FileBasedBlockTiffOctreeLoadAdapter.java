@@ -38,14 +38,15 @@ public class FileBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdap
     private final RenderedVolumeLocation renderedVolumeLocation;
     private RenderedVolumeMetadata renderedVolumeMetadata;
 
-    FileBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat, URI volumeBaseURI) {
+    FileBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat, URI volumeBaseURI, int concurrency) {
         super(tileFormat, volumeBaseURI);
         this.baseFolder = Paths.get(volumeBaseURI);
         this.renderedVolumeLoader = new RenderedVolumeLoaderImpl();
         this.renderedVolumeLocation = new CachedRenderedVolumeLocation(
                 new FileBasedRenderedVolumeLocation(baseFolder),
                 LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
-                Executors.newFixedThreadPool(4,
+                concurrency,
+                Executors.newFixedThreadPool(concurrency,
                         new ThreadFactoryBuilder()
                                 .setNameFormat("FileBasedOctreeCacheWriter-%d")
                                 .setDaemon(true)

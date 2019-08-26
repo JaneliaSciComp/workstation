@@ -1,6 +1,5 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,10 +17,11 @@ public class SharedVolumeImage implements VolumeImage3d {
 
     private final BoundingBox3d boundingBox3d = new BoundingBox3d();
     private final Collection<VolumeLoadListener> volumeLoadListeners = new ArrayList<>();
+    private TileLoaderProvider tileLoaderProvider;
     private BlockTiffOctreeLoadAdapter loadAdapter;
     private URL volumeBaseURL;
 
-    public void addVolumeLoadListener(VolumeLoadListener l) {
+    void addVolumeLoadListener(VolumeLoadListener l) {
         volumeLoadListeners.add(l);
     }
 
@@ -36,10 +36,11 @@ public class SharedVolumeImage implements VolumeImage3d {
 
     @Override
     public int getMaximumIntensity() {
-        if (getLoadAdapter() == null) {
+        if (isLoaded()) {
+            return getLoadAdapter().getTileFormat().getIntensityMax();
+        } else {
             return 0;
         }
-        return getLoadAdapter().getTileFormat().getIntensityMax();
     }
 
     @Override
@@ -59,42 +60,46 @@ public class SharedVolumeImage implements VolumeImage3d {
 
     @Override
     public double getXResolution() {
-        if (getLoadAdapter() == null) {
+        if (isLoaded()) {
+            return getLoadAdapter().getTileFormat().getVoxelMicrometers()[0];
+        } else {
             return 0;
         }
-        return getLoadAdapter().getTileFormat().getVoxelMicrometers()[0];
     }
 
     @Override
     public double getYResolution() {
-        if (getLoadAdapter() == null) {
+        if (isLoaded()) {
+            return getLoadAdapter().getTileFormat().getVoxelMicrometers()[1];
+        } else {
             return 0;
         }
-        return getLoadAdapter().getTileFormat().getVoxelMicrometers()[1];
     }
 
     @Override
     public double getZResolution() {
-        if (getLoadAdapter() == null) {
+        if (isLoaded()) {
+            return getLoadAdapter().getTileFormat().getVoxelMicrometers()[2];
+        } else {
             return 0;
         }
-        return getLoadAdapter().getTileFormat().getVoxelMicrometers()[2];
     }
 
     public int[] getOrigin() {
-        if (getLoadAdapter() == null) {
-            return new int[]{0, 0, 0};
-        } else {
+        if (isLoaded()) {
             return getLoadAdapter().getTileFormat().getOrigin();
+        } else {
+            return new int[]{0, 0, 0};
         }
     }
 
     @Override
     public int getNumberOfChannels() {
-        if (getLoadAdapter() == null) {
+        if (isLoaded()) {
+            return getLoadAdapter().getTileFormat().getChannelCount();
+        } else {
             return 0;
         }
-        return getLoadAdapter().getTileFormat().getChannelCount();
     }
 
     public URL getVolumeBaseURL() {
@@ -113,8 +118,7 @@ public class SharedVolumeImage implements VolumeImage3d {
             return false;
         }
 
-        loadAdapter = TileStackCacheController.createInstance(
-                new TileStackOctreeLoadAdapter(new TileFormat(), URI.create(volumeBaseURL.toString())));
+        loadAdapter = tileLoaderProvider.createLoadAdapter(volumeBaseURL.toString());
         loadAdapter.loadMetadata();
 
         // Update bounding box
@@ -142,8 +146,17 @@ public class SharedVolumeImage implements VolumeImage3d {
         }
     }
 
+    boolean isLoaded() {
+        return loadAdapter != null && loadAdapter.getTileFormat() != null;
+    }
+
     public AbstractTextureLoadAdapter getLoadAdapter() {
         return loadAdapter;
+    }
+
+    SharedVolumeImage setTileLoaderProvider(TileLoaderProvider tileLoaderProvider) {
+        this.tileLoaderProvider = tileLoaderProvider;
+        return this;
     }
 
     private void fireVolumeLoaded(URL volumeBaseURL) {

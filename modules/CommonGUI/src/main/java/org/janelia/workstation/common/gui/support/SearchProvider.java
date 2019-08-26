@@ -10,22 +10,22 @@ public interface SearchProvider {
 	/**
 	 * Get the sort field. The field name may be prefixed with a +/- to control the sort direction.
 	 */
-	public String getSortField();
+	String getSortField();
 
 	/**
 	 * Set the sort field. The field name may be prefixed with a +/- to control the sort direction.
 	 * @param sortField
 	 */
-	public void setSortField(String sortField);
+	void setSortField(String sortField);
 	
 	/**
 	 * Re-run the current search with updated preferences. 
 	 */
-	public void search();
+	void search();
 
 	/**
 	 * Export the current results.
 	 */
-    public void export();
+    void export();
 	
 }

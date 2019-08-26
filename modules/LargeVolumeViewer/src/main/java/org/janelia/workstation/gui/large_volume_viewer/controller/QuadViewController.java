@@ -224,7 +224,7 @@ public class QuadViewController implements ViewStateListener {
     private class QvucRepaintColorModelListener implements ColorModelListener {
         private JComponent component;
         
-        public QvucRepaintColorModelListener(JComponent component) {
+        QvucRepaintColorModelListener(JComponent component) {
             this.component = component;
         }
         

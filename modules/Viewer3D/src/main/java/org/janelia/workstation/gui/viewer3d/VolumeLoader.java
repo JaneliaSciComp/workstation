@@ -32,7 +32,7 @@ public class VolumeLoader implements VolumeLoaderI {
 
     private Logger logger;
 
-    public VolumeLoader( FileResolver resolver ) {
+    public VolumeLoader(FileResolver resolver) {
         logger = LoggerFactory.getLogger( VolumeLoader.class );
         this.resolver = resolver;
     }

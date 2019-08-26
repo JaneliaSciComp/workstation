@@ -13,7 +13,7 @@ public class TileStackCacheController extends BlockTiffOctreeLoadAdapter {
         return instance;
     }
 
-    public static TileStackCacheController createInstance(BlockTiffOctreeLoadAdapter blockKeyTileLoader) {
+    static TileStackCacheController createInstance(BlockTiffOctreeLoadAdapter blockKeyTileLoader) {
         instance = new TileStackCacheController(blockKeyTileLoader);
         return instance;
     }

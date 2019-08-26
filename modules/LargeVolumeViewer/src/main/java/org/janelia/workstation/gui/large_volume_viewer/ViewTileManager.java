@@ -168,8 +168,8 @@ public class ViewTileManager {
 
         // 3) x and y tile index range
         ViewBoundingBox screenBounds = tileFormat.findViewBounds(
-                (int) (viewport.getWidth() * 1.2),
-                (int) (viewport.getHeight() * 1.2),
+                (int) (viewport.getWidth() * 1.4),
+                (int) (viewport.getHeight() * 1.4),
                 focus,
                 camera.getPixelsPerSceneUnit(),
                 xyzFromWhd

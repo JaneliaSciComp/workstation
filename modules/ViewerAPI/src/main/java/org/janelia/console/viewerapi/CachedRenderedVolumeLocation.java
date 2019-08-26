@@ -32,10 +32,12 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
 
     public CachedRenderedVolumeLocation(RenderedVolumeLocation delegate,
                                         LocalFileCacheStorage localFileCacheStorage,
+                                        int cacheConcurrency,
                                         ExecutorService localCachedFileWriteExecutor) {
         this.delegate = delegate;
         renderedVolumeFileCache = new LocalFileCache<>(
                 localFileCacheStorage,
+                cacheConcurrency,
                 new RenderedVolumeFileToProxySupplier(),
                 Executors.newFixedThreadPool(4,
                         new ThreadFactoryBuilder()

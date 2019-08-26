@@ -21,7 +21,6 @@ public class SubvolumeProvider {
         this.tileServer = tileServer;
     }
 
-
     /**
      * this method returns a read-only subvolume of data (maximum zoom,
      * intended for calculations); we have one that takes Vec3 input

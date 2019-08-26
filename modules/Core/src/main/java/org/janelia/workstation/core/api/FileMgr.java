@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 public class FileMgr {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileMgr.class);
+    private static final int DEFAULT_FILE_CACHE_CONCURRENCY = 8;
 
     // Singleton
     private static FileMgr instance;
@@ -74,12 +75,13 @@ public class FileMgr {
                 storageClientMgr = new StorageClientMgr(webdavBaseUrl, httpClient);
                 webdavLocalFileCache = new LocalFileCache<>(
                         LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
+                        DEFAULT_FILE_CACHE_CONCURRENCY,
                         new WebDavFileKeyProxySupplier(httpClient, storageClientMgr),
                         Executors.newFixedThreadPool(4,
                                 new ThreadFactoryBuilder()
                                         .setNameFormat("CacheEvictor-%d")
                                         .setDaemon(true).build()),
-                        Executors.newFixedThreadPool(4,
+                        Executors.newFixedThreadPool(DEFAULT_FILE_CACHE_CONCURRENCY,
                                 new ThreadFactoryBuilder()
                                         .setNameFormat("LocalCachedFileWriter-%d")
                                         .setDaemon(true).build())

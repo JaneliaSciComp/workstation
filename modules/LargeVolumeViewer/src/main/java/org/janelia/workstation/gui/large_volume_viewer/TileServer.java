@@ -2,6 +2,7 @@ package org.janelia.workstation.gui.large_volume_viewer;
 
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +26,8 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         VolumeLoadListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(TileServer.class);
+    private static final int MIN_RES_TILE_LOADER_CONCURRENCY = 10;
+    private static final int HIGHER_RES_TILE_LOADER_CONCURRENCY = 15;
 
     // Derived from individual ViewTileManagers
     public enum LoadStatus {
@@ -39,9 +42,9 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     private LoadStatus loadStatus = LoadStatus.UNINITIALIZED;
 
     // One thread pool to load minimal representation of volume
-    private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(10, 10);
+    private final TexturePreFetcher minResPreFetcher; //!!!! = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, MIN_RES_TILE_LOADER_CONCURRENCY);
     // One thread pool to load current and prefetch textures
-    private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(10, 15);
+    private final TexturePreFetcher futurePreFetcher; //!!!! = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, HIGHER_RES_TILE_LOADER_CONCURRENCY);
 
     // Refactoring 6/12/2013
     private SharedVolumeImage sharedVolumeImage;
@@ -58,7 +61,19 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     private Set<TileIndex> currentDisplayTiles = new HashSet<>();
 
     public TileServer(SharedVolumeImage sharedVolumeImage) {
-        setSharedVolumeImage(sharedVolumeImage);
+        this.minResPreFetcher = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, MIN_RES_TILE_LOADER_CONCURRENCY);
+        this.futurePreFetcher = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, HIGHER_RES_TILE_LOADER_CONCURRENCY);
+
+        setSharedVolumeImage(sharedVolumeImage.setTileLoaderProvider(new TileLoaderProvider() {
+            int concurrency = HIGHER_RES_TILE_LOADER_CONCURRENCY;
+
+            @Override
+            BlockTiffOctreeLoadAdapter createLoadAdapter(String baseURI) {
+                return TileStackCacheController.createInstance(
+                        new TileStackOctreeLoadAdapter(new TileFormat(), URI.create(baseURI), concurrency));
+            }
+        }));
+
         minResPreFetcher.setTextureCache(getTextureCache());
         futurePreFetcher.setTextureCache(getTextureCache());
         queueDrainedListener = new StatusUpdateListener() {
@@ -79,7 +94,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     private void startMinResPreFetch() {
         // log.info("starting pre fetch of lowest resolution tiles");
         // Load X and Y slices too (in addition to Z), if available
-        if (sharedVolumeImage.getLoadAdapter() == null) {
+        if (!sharedVolumeImage.isLoaded()) {
             return;
         }
         // queue load of all low resolution textures

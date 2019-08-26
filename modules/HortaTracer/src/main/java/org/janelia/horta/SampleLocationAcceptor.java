@@ -23,6 +23,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.filecacheutils.LocalFileCacheStorage;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
@@ -53,6 +54,7 @@ import org.slf4j.LoggerFactory;
 public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SampleLocationAcceptor.class);
     private static final HttpClientHelper HTTP_HELPER = new HttpClientHelper();
+    private static final int CACHE_CONCURRENCY = 10;
 
     private final NeuronTraceLoader loader;
     private final NeuronTracerTopComponent nttc;
@@ -175,12 +177,14 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             renderedVolumeLocation = new FileBasedRenderedVolumeLocation(Paths.get(renderedOctreeUri));
             renderedVolumeMetadata = nttc.getRenderedVolumeLoader().loadVolume(renderedVolumeLocation).orElseThrow(() -> new IllegalStateException("No rendering information found for " + renderedVolumeLocation.getDataStorageURI()));
         }
+
         return new RenderedVolume(
                 new CachedRenderedVolumeLocation(
                         renderedVolumeLocation,
                         LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
+                        CACHE_CONCURRENCY,
                         Executors.newFixedThreadPool(
-                                10,
+                                CACHE_CONCURRENCY,
                                 new ThreadFactoryBuilder()
                                         .setNameFormat("HortaTileCacheWriter-%d")
                                         .setDaemon(true)

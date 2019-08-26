@@ -37,7 +37,7 @@ extends BaseRenderer
         // set camera
         glCamera.setUp(gl);
         for (GLActor a : actors) {
-        		a.display(gLDrawable);
+            a.display(gLDrawable);
         }
         glCamera.tearDown(gl);
     		gl.glFlush();

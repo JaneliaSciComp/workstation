@@ -45,16 +45,19 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
     private final ObjectMapper objectMapper;
     private final AppAuthorization appAuthorization;
     private final RenderedVolumeLoader renderedVolumeLoader;
+    private final int concurrency;
     private RenderedVolumeLocation renderedVolumeLocation;
     private RenderedVolumeMetadata renderedVolumeMetadata;
 
     RestServiceBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat,
                                                URI volumeBaseURI,
+                                               int concurrency,
                                                AppAuthorization appAuthorization) {
         super(tileFormat, volumeBaseURI);
         this.appAuthorization = appAuthorization;
-        this.objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.renderedVolumeLoader = new RenderedVolumeLoaderImpl();
+        this.concurrency = concurrency;
+        this.objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
@@ -82,8 +85,9 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
                             () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
                     ),
                     LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
+                    concurrency,
                     Executors.newFixedThreadPool(
-                            10,
+                            concurrency,
                             new ThreadFactoryBuilder()
                                     .setNameFormat("RestBasedOctreeCacheWriter-%d")
                                     .setDaemon(true)
