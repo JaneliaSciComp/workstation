@@ -144,7 +144,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                 contentStream -> {
                     try {
                         return ByteStreams.toByteArray(contentStream);
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         throw new IllegalStateException(e);
                     } finally {
                         try {
@@ -193,7 +193,11 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
             return Streamable.empty();
         } else {
             InputStream contentStream = f.openContentStream();
-            return Streamable.of(streamToContentMapper.apply(contentStream), f.estimateSizeInBytes().orElse(-1L));
+            if (contentStream == null) {
+                return Streamable.empty();
+            } else {
+                return Streamable.of(streamToContentMapper.apply(contentStream), f.estimateSizeInBytes().orElse(-1L));
+            }
         }
     }
 }
