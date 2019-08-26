@@ -50,6 +50,11 @@ Data Browser
 * Improved dependency management, application installers and distribution
 * Many performance improvements and bug fixes
 
+// 7.29
+
+Large Volume Viewer/Horta Tracer
+* Added new spatial filter feature for scalability in large fragment workspaces
+
 // 7.28
 
 Data Browser
