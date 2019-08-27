@@ -94,8 +94,6 @@ public class ViewTileManager {
     private final Set<TileIndex> neededTextures = new HashSet<>();
     private final Set<TileIndex> displayableTextures = new HashSet<>();
 
-    private TileSet previousTiles;
-
     private TileConsumer tileConsumer;
     private TextureCache textureCache;
     private SharedVolumeImage volumeImage;
@@ -236,13 +234,12 @@ public class ViewTileManager {
         latestTiles.assignTextures(textureCache);
 
         // Push latest textures to front of LRU cache
-        for (Tile2d tile : latestTiles) {
-            TileTexture texture = tile.getBestTexture();
-            if (texture == null) {
-                continue;
-            }
-            textureCache.markHistorical(texture);
-        }
+        int bestTexturesMovedToFrontOfQueue = latestTiles.stream()
+                .map(tile -> tile.getBestTexture())
+                .filter(texture -> texture != null)
+                .map(texture -> textureCache.markHistorical(texture) ? 1 : 0)
+                .reduce(0, (n1, n2) -> n1 + n2)
+                ;
 
         // Need to assign textures to emergency tiles too...
         if (emergencyTiles != null) {
@@ -305,9 +302,9 @@ public class ViewTileManager {
                 neededTextures.clear();
                 neededTextures.addAll(tilesToGet);
             }
-        }
-        if (!latestTiles.isEmpty() && !latestTiles.equals(previousTiles)) {
-            previousTiles = latestTiles;
+        } else if (getLoadStatus().ordinal() >= LoadStatus.IMPERFECT_TEXTURES_LOADED.ordinal() && bestTexturesMovedToFrontOfQueue == 0 ) {
+            // since there are no new textures needed assume the best ones are loaded
+            setLoadStatus(LoadStatus.BEST_TEXTURES_LOADED);
         }
         // Remember which textures might be useful
         // Even if it's LOADED, it might not be PAINTED yet.
@@ -336,16 +333,6 @@ public class ViewTileManager {
             result = ImmutableSet.copyOf(neededTextures);
         }
         return result;
-    }
-
-    @SuppressWarnings("unused")
-    private void dumpTileIndex(Tile2d tile) {
-        StringBuilder bldr = new StringBuilder();
-        bldr.append("====From VTM: Tile Info: ");
-        bldr.append("TileInx=[" + tile.getIndex().getX() + ":" + tile.getIndex().getY() + ":" + tile.getIndex().getZ() + "]");
-        bldr.append(" TileBB=[" + tile.getBoundingBox3d().getMin() + ":" + tile.getBoundingBox3d().getMax() + "]");
-        bldr.append(" ZoomLevel=[" + tile.getIndex().getZoom() + "]");
-        LOG.info(bldr.toString());
     }
 
     private void rearrangeFromRotationAxis(Rotation3d viewerInGround, int[] xyzFromWhd) {

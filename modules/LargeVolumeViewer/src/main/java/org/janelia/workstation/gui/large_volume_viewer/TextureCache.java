@@ -98,20 +98,22 @@ public class TextureCache {
         }
     }
 
-    // Indicate that a particular texture has been viewed, rather than simply
-    // pre-fetched.
-    public synchronized void markHistorical(TileTexture tile) {
+    // Indicate that a particular texture has been viewed, rather than simply pre-fetched.
+    synchronized boolean markHistorical(TileTexture tile) {
         if (tile == null) {
-            return;
+            return false;
         }
         // Only future cached textures need to be moved.
         // (textures in the persistent cache should remain there)
         if (persistentCache.containsKey(tile.getIndex())) {
-            return;
+            return false;
         }
         if (futureCache.remove(tile.getIndex()) != null) {
             historyCache.put(tile.getIndex(), tile); // move texture to the front of the queue
             LOG.trace("Successfully removed {} from future cache.", tile);
+            return true;
+        } else {
+            return false;
         }
     }
 

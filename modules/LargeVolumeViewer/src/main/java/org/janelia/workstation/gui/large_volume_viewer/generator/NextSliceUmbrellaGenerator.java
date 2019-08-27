@@ -11,7 +11,7 @@ import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
  */
 public class NextSliceUmbrellaGenerator implements Iterator<TileIndex>, Iterable<TileIndex> {
 	private static final int _2X_ZOOMOUT_STEP = 8;
-	private static final int _4X_ZOOMOUT_STEP = 16;
+	private static final int _4X_ZOOMOUT_STEP = 12;
 
 	private int sliceMax;
 	private TileIndex index;
