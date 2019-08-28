@@ -200,4 +200,14 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
             }
         }
     }
+
+    @Override
+    public boolean checkContentAtRelativePath(String relativePath) {
+        return delegate.checkContentAtRelativePath(relativePath);
+    }
+
+    @Override
+    public boolean checkContentAtAbsolutePath(String absolutePath) {
+        return delegate.checkContentAtAbsolutePath(absolutePath);
+    }
 }
