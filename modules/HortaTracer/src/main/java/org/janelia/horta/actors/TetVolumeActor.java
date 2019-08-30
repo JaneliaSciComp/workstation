@@ -33,16 +33,7 @@ import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
-import org.janelia.horta.blocks.BlockChooser;
-import org.janelia.horta.blocks.BlockDisplayUpdater;
-import org.janelia.horta.blocks.BlockTileKey;
-import org.janelia.horta.blocks.BlockTileResolution;
-import org.janelia.horta.blocks.BlockTileSource;
-import org.janelia.horta.blocks.Finest8DisplayBlockChooser;
-import org.janelia.horta.blocks.KtxOctreeBlockTileData;
-import org.janelia.horta.blocks.KtxOctreeBlockTileKey;
-import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
-import org.janelia.horta.blocks.KtxTileCache;
+import org.janelia.horta.blocks.*;
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.Lookups;
 
@@ -78,7 +69,7 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
 
     private final BlockSorter blockSorter = new BlockSorter();    
     private final KtxTileCache dynamicTiles = new KtxTileCache(null);
-    private final BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> chooser8 = new Finest8DisplayBlockChooser();
+    private final BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> chooser8 = new OctreeDisplayBlockChooser();
     private final BlockDisplayUpdater<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> blockDisplayUpdater = new BlockDisplayUpdater<>(chooser8);
     private final Collection<GL3Resource> obsoleteActors = new ArrayList<>();
 
@@ -99,7 +90,7 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
         colorMapTexture.setGenerateMipmaps(false);
         colorMapTexture.setMinFilter(GL3.GL_LINEAR);
         colorMapTexture.setMagFilter(GL3.GL_LINEAR);
-        
+        dynamicTiles.setBlockStrategy(chooser8);
         blockDisplayUpdater.getDisplayChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
@@ -175,7 +166,7 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
         // 2) Set up shader exactly once, for all volume blocks
         // Adjust actual Z-clip planes to allow imposter geometry to lie
         // outside the "official" Z-clip planes. Correct final clipping will 
-        // happen in the fragement shader. This is necessary because the
+        // happen in the fragment shader. This is necessary because the
         // imposter geometry represents multiple voxels at various depths.
         Viewport vp = camera.getViewport();
         // Z-near remains unchanged, because we are using back faces for imposter geometry.

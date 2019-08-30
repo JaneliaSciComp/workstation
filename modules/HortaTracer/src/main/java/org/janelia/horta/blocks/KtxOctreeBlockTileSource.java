@@ -37,6 +37,7 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
     protected KtxOctreeResolution maximumResolution;
     protected ConstVector3 origin;
     protected Vector3 outerCorner;
+    private long zoomLevels;
 
     KtxOctreeBlockTileSource(URL originatingSampleURL) {
         this.originatingSampleURL = originatingSampleURL;
@@ -48,6 +49,7 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         this.sourceServerURL = getSourceServerURL(sample);
         this.rootKey = new KtxOctreeBlockTileKey(this, Collections.<Integer>emptyList());
         this.rootHeader = createKtxHeader(rootKey);
+        this.setZoomLevels(sample.getNumImageryLevels());
         this.maximumResolution = createKtxResolution(rootHeader);
         Pair<ConstVector3, Vector3> volumeCorners = getVolumeCorners(sample, rootHeader);
         this.origin = volumeCorners.getLeft();
@@ -280,5 +282,13 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
             return false;
         }
         return true;
+    }
+
+    public long getZoomLevels() {
+        return zoomLevels;
+    }
+
+    public void setZoomLevels(long zoomLevels) {
+        this.zoomLevels = zoomLevels;
     }
 }
