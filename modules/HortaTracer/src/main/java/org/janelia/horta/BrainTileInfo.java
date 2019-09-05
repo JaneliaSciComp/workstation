@@ -1,10 +1,15 @@
 
 package org.janelia.horta;
 
+import java.io.IOException;
+import java.nio.channels.ClosedByInterruptException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import Jama.Matrix;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.janelia.filecacheutils.FileProxy;
 import org.janelia.geometry3d.Box3;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
@@ -13,21 +18,8 @@ import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.VoxelIndex;
 import org.janelia.rendering.RawImage;
 import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.rendering.Streamable;
-import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
-import static org.janelia.rendering.RenderedVolumeLocation.DEFAULT_RAW_CH_SUFFIX_PATTERN;
 
 /**
  * Represents Mouse Brain tile information entry from tilebase.cache.yml file.
@@ -48,12 +40,10 @@ public class BrainTileInfo implements BrickInfo {
     
     // TODO  colorChannelIndex is a temporary hack that should be removed when we can show more than one channel at once
     private int colorChannelIndex = 0;
-    private boolean leverageCompressedFiles;
 
     BrainTileInfo(RawTileLoader tileLoader,
                   String basePath,
                   String tileRelativePath,
-                  boolean leverageCompressedFiles,
                   int[] bbOriginNanometers,
                   int[] bbShapeNanometers,
                   int[] pixelDims,
@@ -62,7 +52,6 @@ public class BrainTileInfo implements BrickInfo {
         this.tileLoader = tileLoader;
         this.basePath = basePath;
         this.tileRelativePath = tileRelativePath;
-        this.leverageCompressedFiles = leverageCompressedFiles;
         this.bbOriginNanometers = bbOriginNanometers;
         this.bbShapeNanometers = bbShapeNanometers;
         this.pixelDims = pixelDims;
@@ -236,9 +225,12 @@ public class BrainTileInfo implements BrickInfo {
                         } else {
                             return texture;
                         }
+                    } catch (ClosedByInterruptException e) {
+                        LOG.info("Cancelled loading tiff stack {}", tileStack);
+                        return null;
                     } catch (IOException e) {
                         LOG.error("Error loading raw tile stack {}", tileStack, e);
-                        throw new IllegalStateException("Error loading tile stack " + tileStack, e);
+                        return null;
                     } finally {
                         try {
                             rawImageStream.close();

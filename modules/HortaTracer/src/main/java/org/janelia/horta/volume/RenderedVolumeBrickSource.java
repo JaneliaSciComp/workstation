@@ -31,21 +31,21 @@ public class RenderedVolumeBrickSource implements StaticVolumeBrickSource {
         this.tileLoader = tileLoader;
     }
 
-    public RenderedVolumeBrickSource init(TmSample sample, boolean leverageCompressedFiles, Consumer<Integer> progressUpdater) {
-        Pair<Double, BrickInfoSet> volumeBricksMetadata = loadVolumeBricksMetadata(sample.getTwoPhotonAcquisitionFilepath(), leverageCompressedFiles, progressUpdater);
+    public RenderedVolumeBrickSource init(TmSample sample, Consumer<Integer> progressUpdater) {
+        Pair<Double, BrickInfoSet> volumeBricksMetadata = loadVolumeBricksMetadata(sample.getTwoPhotonAcquisitionFilepath(), progressUpdater);
         this.resolution = volumeBricksMetadata.getLeft();
         this.brickInfoSet = volumeBricksMetadata.getRight();
         return this;
     }
 
-    private Pair<Double, BrickInfoSet> loadVolumeBricksMetadata(String acquisitionPath, boolean leverageCompressedFiles, Consumer<Integer> progressUpdater) {
+    private Pair<Double, BrickInfoSet> loadVolumeBricksMetadata(String acquisitionPath, Consumer<Integer> progressUpdater) {
         // There is no dynamic loading by resolution at the moment for raw tiles in yaml file
         // so treat all tiles as having the same resolution as the first tile
         List<RawImage> rawImageTiles = renderedVolumeLoader.loadVolumeRawImageTiles(renderedVolume.getVolumeLocation());
         int totalRawImageTilesCount = rawImageTiles.size();
         progressUpdater.accept(25);
         return rawImageTiles.stream()
-                .map(rawImage -> BrainTileInfoBuilder.fromRawImage(tileLoader, StringUtils.defaultIfBlank(acquisitionPath, rawImage.getAcquisitionPath()), rawImage, leverageCompressedFiles))
+                .map(rawImage -> BrainTileInfoBuilder.fromRawImage(tileLoader, StringUtils.defaultIfBlank(acquisitionPath, rawImage.getAcquisitionPath()), rawImage))
                 .reduce(MutablePair.of(null, new BrickInfoSet()),
                         (Pair<Double, BrickInfoSet> res, BrainTileInfo brainTileInfo) -> {
                             res.getRight().add(brainTileInfo);

@@ -114,7 +114,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         }
                     } else {
                         // use raw tiles, which are handled by the StaticVolumeBrickSource
-                        StaticVolumeBrickSource volumeBrickSource = createStaticVolumeBrickSource(renderedVolume, sample, sampleLocation.isCompressed(), progress);
+                        StaticVolumeBrickSource volumeBrickSource = createStaticVolumeBrickSource(renderedVolume, sample, progress);
                         nttc.setVolumeSource(volumeBrickSource);
                         // start loading raw tiles
                         progress.switchToIndeterminate();
@@ -205,7 +205,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         return new RenderedVolumeKtxOctreeBlockTileSource(renderedVolume.getVolumeLocation(), renderedOctreeUrl).init(sample);
     }
 
-    private StaticVolumeBrickSource createStaticVolumeBrickSource(RenderedVolume renderedVolume, TmSample sample, boolean useCompression, ProgressHandle progress) {
+    private StaticVolumeBrickSource createStaticVolumeBrickSource(RenderedVolume renderedVolume, TmSample sample, ProgressHandle progress) {
         progress.switchToDeterminate(100);
         RawTileLoader rawTileLoader;
         if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
@@ -223,7 +223,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         } else {
             rawTileLoader = new FileBasedRawTileLoader();
         }
-        return new RenderedVolumeBrickSource(nttc.getRenderedVolumeLoader(), renderedVolume, rawTileLoader).init(sample, useCompression, progress::progress);
+        return new RenderedVolumeBrickSource(nttc.getRenderedVolumeLoader(), renderedVolume, rawTileLoader).init(sample, progress::progress);
     }
 
     private void setCameraLocation(SampleLocation sampleLocation) {

@@ -93,7 +93,6 @@ public class BrainTileInfoBuilder {
                 tileLoader,
                 tileBasePath,
                 localPath,
-                leverageCompressedFiles,
                 bbOriginNanometers,
                 bbShapeNanometers,
                 pixelDims,
@@ -101,7 +100,7 @@ public class BrainTileInfoBuilder {
                 transform);
     }
 
-    public static BrainTileInfo fromRawImage(RawTileLoader tileLoader, String acquisitionPath, RawImage rawImage, boolean leverageCompressedFiles) {
+    public static BrainTileInfo fromRawImage(RawTileLoader tileLoader, String acquisitionPath, RawImage rawImage) {
         double[][] dd = new double[5][5];
         for (int i = 0; i < 5; ++i) {
             for (int j = 0; j < 5; ++j) {
@@ -113,7 +112,6 @@ public class BrainTileInfoBuilder {
                 tileLoader,
                 acquisitionPath,
                 rawImage.getRelativePath(),
-                leverageCompressedFiles,
                 Arrays.stream(rawImage.getOriginInNanos()).mapToInt(Integer::intValue).toArray(),
                 Arrays.stream(rawImage.getDimsInNanos()).mapToInt(Integer::intValue).toArray(),
                 Arrays.stream(rawImage.getTileDims()).mapToInt(Integer::intValue).toArray(),

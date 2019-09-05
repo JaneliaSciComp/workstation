@@ -67,7 +67,7 @@ public class BrickActor extends MeshActor implements DepthSlabClipper {
 
         private static Texture3d safeLoadBrick(BrainTileInfo brainTile, int colorChannel) throws IOException {
             Texture3d brick = brainTile.loadBrick(10, colorChannel);
-            if (brick==null) {
+            if (brick == null) {
                 throw new IOException("Load was interrupted");
             }
             return brick;
