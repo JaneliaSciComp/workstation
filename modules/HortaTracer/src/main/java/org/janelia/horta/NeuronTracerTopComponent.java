@@ -1360,6 +1360,40 @@ public final class NeuronTracerTopComponent extends TopComponent
                             redrawNow();
                         }
                     }));
+
+                    JMenu strategyMenu = new JMenu("Block Loading Strategy");
+                    viewMenu.add(strategyMenu);
+                    strategyMenu.add(new JRadioButtonMenuItem(
+                            new AbstractAction("Finest 8 Max") {
+                                {
+                                    putValue(Action.SELECTED_KEY,
+                                            volumeState.blockStrategy == 0);
+                                }
+
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    volumeState.blockStrategy = 0;
+                                    TetVolumeActor.getInstance().changeStrategy(VolumeMipMaterial.VolumeState.BLOCK_STRATEGY_FINEST_8_MAX);
+                                    neuronMPRenderer.setIntensityBufferDirty();
+                                    redrawNow();
+                                }
+                            }));
+
+                    strategyMenu.add(new JRadioButtonMenuItem(
+                            new AbstractAction("Multi-level Octree") {
+                                {
+                                    putValue(Action.SELECTED_KEY,
+                                            volumeState.blockStrategy == 1);
+                                }
+
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    volumeState.blockStrategy = 1;
+                                    TetVolumeActor.getInstance().changeStrategy(VolumeMipMaterial.VolumeState.BLOCK_STRATEGY_OCTTREE);
+                                    neuronMPRenderer.setIntensityBufferDirty();
+                                    redrawNow();
+                                }
+                            }));
                 }
 
                 if (sceneWindow != null) {

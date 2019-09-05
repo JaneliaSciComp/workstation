@@ -5,8 +5,6 @@ import java.util.*;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Generate sorted list of up to eight max resolution blocks near current focus
@@ -15,20 +13,6 @@ import org.slf4j.LoggerFactory;
  */
 public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Finest8DisplayBlockChooser.class);
-    private List<Float> zoomLevels = new ArrayList<>();
-    private int blocksAcrossViewport = 3;
-
-    private void initBlockSizes(KtxOctreeBlockTileSource source, Vantage vantage) {
-        int numLevels = (int)source.getZoomLevels();
-        for (int i=2; i<numLevels; i++) {
-            float blockHeight = source.getBlockSize(new KtxOctreeResolution(i)).getY();
-            LOG.info("blockHeight is {} ",  blockHeight);
-
-            zoomLevels.add(blockHeight * blocksAcrossViewport);
-            LOG.info("Zoom level {} is {} ", i, blockHeight * 2);
-        }
-    }
     /*
      Choose the eight closest maximum resolution blocks to the current focus point.
      */
@@ -36,30 +20,9 @@ public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTi
     public List<KtxOctreeBlockTileKey> chooseBlocks(KtxOctreeBlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus,
                                                     Vantage vantage) {
         // Find up to eight closest blocks adjacent to focus
-        int zoomIndex = zoomLevels.size()-1;
-        int zoomLevel = 2;  // default to coarsest block
-        if (zoomIndex<=0) {
-            initBlockSizes(source, vantage);
-        }
-        boolean foundZoom = false;
-        float screenHeight = vantage.getSceneUnitsPerViewportHeight();
+        BlockTileResolution maxResolution = source.getMaximumResolution();
 
-        LOG.info("SCREEN HEIGHT IS {}",screenHeight);
-        while (!foundZoom && zoomIndex>1) {
-
-            if (screenHeight<zoomLevels.get(zoomIndex)) {
-                zoomLevel = zoomIndex+2;
-                foundZoom = true;
-            }
-
-            LOG.info("zoom Comparison is {} less than {}",screenHeight,zoomLevels.get(zoomIndex));
-            zoomIndex--;
-        }
-
-        LOG.info("ZOOM LEVEL  IS {}",zoomLevel);
-        BlockTileResolution blockResolution = new KtxOctreeResolution(zoomLevel);
-        //         ConstVector3 blockSize = source.getMaximumResolutionBlockSize();
-        ConstVector3 blockSize = source.getBlockSize(new KtxOctreeResolution(zoomLevel));
+        ConstVector3 blockSize = source.getMaximumResolutionBlockSize();
         float dxa[] = new float[]{
             0f,
             -blockSize.getX(),
@@ -80,7 +43,7 @@ public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTi
             for (float dy : dya) {
                 for (float dz : dza) {
                     ConstVector3 location = focus.plus(new Vector3(dx, dy, dz));
-                    KtxOctreeBlockTileKey tileKey = source.getBlockKeyAt(location, blockResolution);
+                    KtxOctreeBlockTileKey tileKey = source.getBlockKeyAt(location, maxResolution);
                     if (tileKey == null) {
                         continue;
                     }
@@ -88,8 +51,6 @@ public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTi
                 }
             }
         }
-        LOG.info("number of possible tiles  IS {}",neighboringBlocks.size());
-
         // Sort the blocks strictly by distance to focus
         Collections.sort(neighboringBlocks, new BlockComparator(focus));
 
@@ -104,16 +65,19 @@ public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTi
     }
 
     @Override
-    public Map chooseObsoleteTiles(Map<BlockTileKey, BlockTileData> currentTiles, Map<BlockTileKey, BlockTileData> desiredTiles, BlockTileKey finishedTile) {
-        // Remove obsolete tiles from loading and loaded
+    public Map chooseObsoleteTiles(Map<BlockTileKey, BlockTileData> currentTiles, Map<BlockTileKey, BlockTileData> desiredTiles,
+                                   BlockTileKey finishedTile) {
+
         Map<BlockTileKey, BlockTileData> obsoleteTiles = new HashMap<>();
+
         Iterator<BlockTileKey> iter = currentTiles.keySet().iterator();
         while (iter.hasNext()) {
             BlockTileKey key = iter.next();
             if (!desiredTiles.containsKey(key)) {
-                obsoleteTiles.put(key, currentTiles.get(key));
+                iter.remove();
             }
         }
+
         return obsoleteTiles;
     }
 

@@ -376,9 +376,13 @@ implements DepthSlabClipper
         public static int FILTER_NEAREST = 0;
         public static int FILTER_TRILINEAR = 1;
         public static int FILTER_TRICUBIC = 3; // There is no "2"
+
+        public static int BLOCK_STRATEGY_FINEST_8_MAX = 0;
+        public static int BLOCK_STRATEGY_OCTTREE = 1;
         
         public int filteringOrder = FILTER_TRILINEAR;  // 0: NEAREST; 1: TRILINEAR; 2: <not used> 3: TRICUBIC
-        public int projectionMode = PROJECTION_MAXIMUM; // 0: Maximum intensity projection; 1: Occluding    
+        public int projectionMode = PROJECTION_MAXIMUM; // 0: Maximum intensity projection; 1: Occluding
+        public int blockStrategy = BLOCK_STRATEGY_OCTTREE;
     }
     
 }

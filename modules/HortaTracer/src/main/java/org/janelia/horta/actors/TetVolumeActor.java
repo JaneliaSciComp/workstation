@@ -69,8 +69,8 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
 
     private final BlockSorter blockSorter = new BlockSorter();    
     private final KtxTileCache dynamicTiles = new KtxTileCache(null);
-    private final BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> chooser8 = new OctreeDisplayBlockChooser();
-    private final BlockDisplayUpdater<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> blockDisplayUpdater = new BlockDisplayUpdater<>(chooser8);
+    private BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> chooser;
+    private BlockDisplayUpdater<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> blockDisplayUpdater;
     private final Collection<GL3Resource> obsoleteActors = new ArrayList<>();
 
     // Singleton actor has private constructor
@@ -90,15 +90,30 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
         colorMapTexture.setGenerateMipmaps(false);
         colorMapTexture.setMinFilter(GL3.GL_LINEAR);
         colorMapTexture.setMagFilter(GL3.GL_LINEAR);
-        dynamicTiles.setBlockStrategy(chooser8);
+        chooser = new OctreeDisplayBlockChooser();
+        initBlockStrategy(chooser);
+
+        Lookups.singleton(unmixMinScale);
+    }
+
+    public void changeStrategy(int strategy) {
+        if (strategy == VolumeState.BLOCK_STRATEGY_OCTTREE) {
+            chooser = new OctreeDisplayBlockChooser();
+        } else if (strategy == VolumeState.BLOCK_STRATEGY_FINEST_8_MAX){
+            chooser = new Finest8DisplayBlockChooser();
+        }
+        initBlockStrategy(chooser);
+    }
+
+    private void initBlockStrategy(BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> chooser) {
+        dynamicTiles.setBlockStrategy(chooser);
+        blockDisplayUpdater = new BlockDisplayUpdater<>(chooser);
         blockDisplayUpdater.getDisplayChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
                 dynamicTiles.updateDesiredTiles(blockDisplayUpdater.getDesiredBlocks());
             }
         });
-
-        Lookups.singleton(unmixMinScale);
     }
 
     public Object3d addPersistentBlock(Object3d child) {
