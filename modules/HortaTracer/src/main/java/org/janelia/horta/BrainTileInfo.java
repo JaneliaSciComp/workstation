@@ -4,6 +4,7 @@ package org.janelia.horta;
 import Jama.Matrix;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.janelia.filecacheutils.FileProxy;
 import org.janelia.geometry3d.Box3;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
@@ -13,6 +14,7 @@ import org.janelia.horta.volume.VoxelIndex;
 import org.janelia.rendering.RawImage;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.Streamable;
+import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +24,10 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import static org.janelia.rendering.RenderedVolumeLocation.DEFAULT_RAW_CH_SUFFIX_PATTERN;
 
 /**
  * Represents Mouse Brain tile information entry from tilebase.cache.yml file.
@@ -31,7 +36,7 @@ import java.util.stream.Stream;
 public class BrainTileInfo implements BrickInfo {
     private static final Logger LOG = LoggerFactory.getLogger(BrainTileInfo.class);
 
-    private final RenderedVolumeLocation volumeLocation;
+    private final RawTileLoader tileLoader;
     private final String basePath;
     private final int[] bbOriginNanometers;
     private final int[] bbShapeNanometers;
@@ -45,7 +50,7 @@ public class BrainTileInfo implements BrickInfo {
     private int colorChannelIndex = 0;
     private boolean leverageCompressedFiles;
 
-    BrainTileInfo(RenderedVolumeLocation volumeLocation,
+    BrainTileInfo(RawTileLoader tileLoader,
                   String basePath,
                   String tileRelativePath,
                   boolean leverageCompressedFiles,
@@ -54,7 +59,7 @@ public class BrainTileInfo implements BrickInfo {
                   int[] pixelDims,
                   int bytesPerIntensity,
                   Matrix transform) {
-        this.volumeLocation = volumeLocation;
+        this.tileLoader = tileLoader;
         this.basePath = basePath;
         this.tileRelativePath = tileRelativePath;
         this.leverageCompressedFiles = leverageCompressedFiles;
@@ -203,17 +208,16 @@ public class BrainTileInfo implements BrickInfo {
      * Returns null if the load is interrupted. It would be better to use an InterruptedIOException for that,
      * but it's too slow.
      */
-    public Texture3d loadBrick(double maxEdgePadWidth, int colorChannel) throws IOException {
+    public Texture3d loadBrick(double maxEdgePadWidth, int colorChannel) {
         setColorChannelIndex(colorChannel);
         return loadBrick(maxEdgePadWidth);
     }
 
     @Override
-    public Texture3d loadBrick(double maxEdgePadWidth) throws IOException {
+    public Texture3d loadBrick(double maxEdgePadWidth) {
         Texture3d texture = new Texture3d();
 
         RawImage rawImage = new RawImage();
-        rawImage.setRenderedVolumePath(volumeLocation.getVolumeLocation().toString());
         rawImage.setAcquisitionPath(basePath);
         rawImage.setRelativePath(tileRelativePath);
         rawImage.setOriginInNanos(Arrays.stream(bbOriginNanometers).boxed().toArray(Integer[]::new));
@@ -222,25 +226,27 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setTileDims(Arrays.stream(pixelDims).boxed().toArray(Integer[]::new));
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
 
-        return volumeLocation.getRawTileContent(rawImage, colorChannelIndex)
-               .consume(rawImageStream -> {
-                   try {
-                       if (!texture.loadTiffStack(rawImage.toString() + "-ch-" + colorChannelIndex, rawImageStream)) {
-                           return null;
-                       } else {
-                           return texture;
-                       }
-                   } catch (IOException e) {
-                       throw new UncheckedIOException(e);
-                   } finally {
-                       try {
-                           rawImageStream.close();
-                       } catch (IOException ignore) {
-                           LOG.info("Exception closing the stream for image {}, channel {}", rawImage, colorChannelIndex, ignore);
-                       }
-                   }
-               }, (t, s) -> s)
-               .getContent();
+        return tileLoader.findStorageLocation(basePath)
+                .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, rawImage.getRawImagePath(String.format(RenderedVolumeLocation.DEFAULT_RAW_CH_SUFFIX_PATTERN, colorChannelIndex))).asOptional())
+                .map(rawImageStream -> {
+                    String tileStack = rawImage.toString() + "-ch-" + colorChannelIndex;
+                    try {
+                        if (!texture.loadTiffStack(tileStack, rawImageStream)) {
+                            return null;
+                        } else {
+                            return texture;
+                        }
+                    } catch (IOException e) {
+                        LOG.error("Error loading raw tile stack {}", tileStack, e);
+                        throw new IllegalStateException("Error loading tile stack " + tileStack, e);
+                    } finally {
+                        try {
+                            rawImageStream.close();
+                        } catch (IOException ignore) {
+                        }
+                    }
+                })
+                .orElse(null);
     }
 
     @Override

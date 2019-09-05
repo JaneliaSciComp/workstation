@@ -44,7 +44,9 @@ import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
+import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.options.ApplicationOptions;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
@@ -112,7 +114,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         }
                     } else {
                         // use raw tiles, which are handled by the StaticVolumeBrickSource
-                        StaticVolumeBrickSource volumeBrickSource = createStaticVolumeBrickSource(renderedVolume, sampleLocation.isCompressed(), progress);
+                        StaticVolumeBrickSource volumeBrickSource = createStaticVolumeBrickSource(renderedVolume, sample, sampleLocation.isCompressed(), progress);
                         nttc.setVolumeSource(volumeBrickSource);
                         // start loading raw tiles
                         progress.switchToIndeterminate();
@@ -203,9 +205,25 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         return new RenderedVolumeKtxOctreeBlockTileSource(renderedVolume.getVolumeLocation(), renderedOctreeUrl).init(sample);
     }
 
-    private StaticVolumeBrickSource createStaticVolumeBrickSource(RenderedVolume renderedVolume, boolean useCompression, ProgressHandle progress) {
+    private StaticVolumeBrickSource createStaticVolumeBrickSource(RenderedVolume renderedVolume, TmSample sample, boolean useCompression, ProgressHandle progress) {
         progress.switchToDeterminate(100);
-        return new RenderedVolumeBrickSource(nttc.getRenderedVolumeLoader(), renderedVolume, useCompression, progress::progress);
+        RawTileLoader rawTileLoader;
+        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
+            rawTileLoader = new CachedRawTileLoader(
+                    new JadeBasedRawTileLoader(new JadeServiceClient(ConsoleProperties.getString("jadestorage.rest.url"), () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false))),
+                    LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
+                    CACHE_CONCURRENCY,
+                    Executors.newFixedThreadPool(
+                            CACHE_CONCURRENCY,
+                            new ThreadFactoryBuilder()
+                                    .setNameFormat("HortaTileCacheWriter-%d")
+                                    .setDaemon(true)
+                                    .build())
+            );
+        } else {
+            rawTileLoader = new FileBasedRawTileLoader();
+        }
+        return new RenderedVolumeBrickSource(nttc.getRenderedVolumeLoader(), renderedVolume, rawTileLoader).init(sample, useCompression, progress::progress);
     }
 
     private void setCameraLocation(SampleLocation sampleLocation) {

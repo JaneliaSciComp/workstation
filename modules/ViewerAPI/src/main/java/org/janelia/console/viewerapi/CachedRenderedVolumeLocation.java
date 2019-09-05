@@ -41,7 +41,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                 new RenderedVolumeFileToProxySupplier(),
                 Executors.newFixedThreadPool(4,
                         new ThreadFactoryBuilder()
-                                .setNameFormat("CacheEvictor-%d")
+                                .setNameFormat("RenderedVolumeFileCacheEvictor-%d")
                                 .setDaemon(true).build()),
                 localCachedFileWriteExecutor
         );

@@ -6,10 +6,13 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.ImmutableSet;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.horta.BrainTileInfo;
 import org.janelia.horta.BrainTileInfoBuilder;
+import org.janelia.horta.RawTileLoader;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.RawImage;
 import org.janelia.rendering.RenderedVolume;
 import org.janelia.rendering.RenderedVolumeLoader;
@@ -18,25 +21,31 @@ public class RenderedVolumeBrickSource implements StaticVolumeBrickSource {
 
     private final RenderedVolumeLoader renderedVolumeLoader;
     private final RenderedVolume renderedVolume;
-    private final Double resolution;
-    private final BrickInfoSet brickInfoSet;
+    private final RawTileLoader tileLoader;
+    private Double resolution;
+    private BrickInfoSet brickInfoSet;
 
-    public RenderedVolumeBrickSource(RenderedVolumeLoader renderedVolumeLoader, RenderedVolume renderedVolume, boolean leverageCompressedFiles, Consumer<Integer> progressUpdater) {
+    public RenderedVolumeBrickSource(RenderedVolumeLoader renderedVolumeLoader, RenderedVolume renderedVolume, RawTileLoader tileLoader) {
         this.renderedVolumeLoader = renderedVolumeLoader;
         this.renderedVolume = renderedVolume;
-        Pair<Double, BrickInfoSet> volumeBricksMetadata = loadVolumeBricksMetadata(leverageCompressedFiles, progressUpdater);
-        this.resolution = volumeBricksMetadata.getLeft();
-        this.brickInfoSet = volumeBricksMetadata.getRight();
+        this.tileLoader = tileLoader;
     }
 
-    private Pair<Double, BrickInfoSet> loadVolumeBricksMetadata(boolean leverageCompressedFiles, Consumer<Integer> progressUpdater) {
+    public RenderedVolumeBrickSource init(TmSample sample, boolean leverageCompressedFiles, Consumer<Integer> progressUpdater) {
+        Pair<Double, BrickInfoSet> volumeBricksMetadata = loadVolumeBricksMetadata(sample.getTwoPhotonAcquisitionFilepath(), leverageCompressedFiles, progressUpdater);
+        this.resolution = volumeBricksMetadata.getLeft();
+        this.brickInfoSet = volumeBricksMetadata.getRight();
+        return this;
+    }
+
+    private Pair<Double, BrickInfoSet> loadVolumeBricksMetadata(String acquisitionPath, boolean leverageCompressedFiles, Consumer<Integer> progressUpdater) {
         // There is no dynamic loading by resolution at the moment for raw tiles in yaml file
         // so treat all tiles as having the same resolution as the first tile
         List<RawImage> rawImageTiles = renderedVolumeLoader.loadVolumeRawImageTiles(renderedVolume.getVolumeLocation());
         int totalRawImageTilesCount = rawImageTiles.size();
         progressUpdater.accept(25);
         return rawImageTiles.stream()
-                .map(rawImage -> BrainTileInfoBuilder.fromRawImage(renderedVolume.getVolumeLocation(), rawImage, leverageCompressedFiles))
+                .map(rawImage -> BrainTileInfoBuilder.fromRawImage(tileLoader, StringUtils.defaultIfBlank(acquisitionPath, rawImage.getAcquisitionPath()), rawImage, leverageCompressedFiles))
                 .reduce(MutablePair.of(null, new BrickInfoSet()),
                         (Pair<Double, BrickInfoSet> res, BrainTileInfo brainTileInfo) -> {
                             res.getRight().add(brainTileInfo);

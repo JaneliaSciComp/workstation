@@ -362,8 +362,7 @@ public class HortaVolumeCache {
                     else {
                         LOG.info("Load was interrupted for: {}", tile.getTileRelativePath());
                     }
-                }
-                catch (IOException ex) {
+                } catch (Exception ex) {
                     Exceptions.printStackTrace(ex);
                 }
                 finally {
