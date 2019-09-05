@@ -20,7 +20,11 @@ public class KtxData {
 
     public void loadStream(InputStream stream) throws IOException, InterruptedException {
         if (stream != null) {
-            header.loadStream(stream);
+            try {
+                header.loadStream(stream);
+            } catch (IOException e) {
+                throw new InterruptedException("Interrupted while loading the KTX header");
+            }
             sizeBuf.order(header.byteOrder);
             mipmaps.clear();
             for (int m = 0; m < header.numberOfMipmapLevels; ++m) {
