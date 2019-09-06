@@ -12,13 +12,13 @@ import org.slf4j.LoggerFactory;
 /**
  * JadeBasedRawTileLoader.
  */
-public class JadeBasedRawTileLoader implements RawTileLoader {
+public class JadeBasedTileLoader implements TileLoader {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JadeBasedRawTileLoader.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JadeBasedTileLoader.class);
 
     private final JadeServiceClient jadeClient;
 
-    JadeBasedRawTileLoader(JadeServiceClient jadeClient) {
+    JadeBasedTileLoader(JadeServiceClient jadeClient) {
         this.jadeClient = jadeClient;
     }
 

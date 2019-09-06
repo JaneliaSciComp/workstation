@@ -9,7 +9,7 @@ import org.janelia.rendering.Streamable;
 /**
  * RawTileLoader.
  */
-public interface RawTileLoader {
+public interface TileLoader {
     Optional<String> findStorageLocation(String tileLocation);
 
     Streamable<InputStream> streamTileContent(String storageLocation, String tileLocation);

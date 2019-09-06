@@ -2,7 +2,6 @@ package org.janelia.horta.volume;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -12,10 +11,8 @@ import com.google.common.collect.ImmutableSet;
 
 import org.janelia.console.viewerapi.OsFilePathRemapper;
 import org.janelia.horta.BrainTileInfoBuilder;
-import org.janelia.horta.FileBasedRawTileLoader;
-import org.janelia.horta.RawTileLoader;
-import org.janelia.rendering.FileBasedRenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolumeLocation;
+import org.janelia.horta.FileBasedTileLoader;
+import org.janelia.horta.TileLoader;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -45,7 +42,7 @@ public class LocalVolumeBrickSource implements StaticVolumeBrickSource {
         float totalTiles = tiles.size();
         Double tileResolution = null;
 
-        RawTileLoader tileLoader = new FileBasedRawTileLoader();
+        TileLoader tileLoader = new FileBasedTileLoader();
         brickInfoSet = new BrickInfoSet();
         // There is no dynamic loading by resolution at the moment for raw tiles in yaml file
         // so treat all tiles as having the same resolution as the first tile

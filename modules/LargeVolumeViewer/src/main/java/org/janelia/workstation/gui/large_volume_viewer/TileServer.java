@@ -64,7 +64,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         this.minResPreFetcher = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, MIN_RES_TILE_LOADER_CONCURRENCY);
         this.futurePreFetcher = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, HIGHER_RES_TILE_LOADER_CONCURRENCY);
 
-        setSharedVolumeImage(sharedVolumeImage.setTileLoaderProvider(new TileLoaderProvider() {
+        setSharedVolumeImage(sharedVolumeImage.setTileLoaderProvider(new BlockTiffOctreeTileLoaderProvider() {
             int concurrency = HIGHER_RES_TILE_LOADER_CONCURRENCY;
 
             @Override

@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
+import org.janelia.horta.TileLoader;
 import org.janelia.horta.ktx.KtxHeader;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.slf4j.Logger;
@@ -27,10 +28,11 @@ import org.slf4j.LoggerFactory;
 /**
  * @author brunsc
  */
-public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockTileKey> {
+public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockTileKey> {
     private static final Logger LOG = LoggerFactory.getLogger(KtxOctreeBlockTileSource.class);
 
     private final URL originatingSampleURL;
+    private final TileLoader tileLoader;
     private String sampleKtxTilesBaseDir;
     private KtxOctreeBlockTileKey rootKey;
     private KtxHeader rootHeader;
@@ -38,8 +40,9 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
     private ConstVector3 origin;
     private Vector3 outerCorner;
 
-    KtxOctreeBlockTileSource(URL originatingSampleURL) {
+    public KtxOctreeBlockTileSource(URL originatingSampleURL, TileLoader tileLoader) {
         this.originatingSampleURL = originatingSampleURL;
+        this.tileLoader = tileLoader;
     }
 
     public KtxOctreeBlockTileSource init(TmSample sample) {
@@ -135,7 +138,13 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
         );
     }
 
-    protected abstract InputStream streamKeyBlock(KtxOctreeBlockTileKey octreeKey);
+    InputStream streamKeyBlock(KtxOctreeBlockTileKey octreeKey) {
+        String octreeKeyBlockAbsolutePath = getKeyBlockAbsolutePathURI(octreeKey).toString();
+        return tileLoader.findStorageLocation(sampleKtxTilesBaseDir)
+                .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, octreeKeyBlockAbsolutePath).asOptional())
+                .orElse(null)
+                ;
+    }
 
     @Override
     public BlockTileResolution getMaximumResolution() {
@@ -239,8 +248,6 @@ public abstract class KtxOctreeBlockTileSource implements BlockTileSource<KtxOct
             return data;
         }
     }
-
-    abstract URI getDataServerURI();
 
     @Override
     public URL getOriginatingSampleURL() {

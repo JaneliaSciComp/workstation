@@ -13,11 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * JadeBasedRawTileLoader.
+ * FileBasedTileLoader.
  */
-public class FileBasedRawTileLoader implements RawTileLoader {
+public class FileBasedTileLoader implements TileLoader {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FileBasedRawTileLoader.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FileBasedTileLoader.class);
 
     @Override
     public Optional<String> findStorageLocation(String tileLocation) {

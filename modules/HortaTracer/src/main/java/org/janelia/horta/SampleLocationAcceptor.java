@@ -3,39 +3,33 @@ package org.janelia.horta;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.Executors;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.base.Objects;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
-import org.janelia.filecacheutils.LocalFileCacheStorage;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
-import org.janelia.horta.blocks.RenderedVolumeKtxOctreeBlockTileSource;
-import org.janelia.horta.volume.RenderedVolumeBrickSource;
+import org.janelia.horta.volume.RawVolumeBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.it.jacs.shared.utils.HttpClientHelper;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.security.AppAuthorization;
 import org.janelia.rendering.FileBasedRenderedVolumeLocation;
 import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
+import org.janelia.rendering.RawImage;
 import org.janelia.rendering.RenderedVolume;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeMetadata;
@@ -180,18 +174,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             renderedVolumeMetadata = nttc.getRenderedVolumeLoader().loadVolume(renderedVolumeLocation).orElseThrow(() -> new IllegalStateException("No rendering information found for " + renderedVolumeLocation.getDataStorageURI()));
         }
 
-        return new RenderedVolume(
-                new CachedRenderedVolumeLocation(
-                        renderedVolumeLocation,
-                        LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
-                        CACHE_CONCURRENCY,
-                        Executors.newFixedThreadPool(
-                                CACHE_CONCURRENCY,
-                                new ThreadFactoryBuilder()
-                                        .setNameFormat("HortaTileCacheWriter-%d")
-                                        .setDaemon(true)
-                                        .build())),
-                renderedVolumeMetadata);
+        return new RenderedVolume(renderedVolumeLocation, renderedVolumeMetadata);
     }
 
     private KtxOctreeBlockTileSource createKtxSource(RenderedVolume renderedVolume, URL renderedOctreeUrl, TmSample sample) {
@@ -202,15 +185,19 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 return previousSource; // Source did not change
             }
         }
-        return new RenderedVolumeKtxOctreeBlockTileSource(renderedVolume.getVolumeLocation(), renderedOctreeUrl).init(sample);
+        return new KtxOctreeBlockTileSource(renderedOctreeUrl, getTileLoader()).init(sample);
     }
 
     private StaticVolumeBrickSource createStaticVolumeBrickSource(RenderedVolume renderedVolume, TmSample sample, ProgressHandle progress) {
         progress.switchToDeterminate(100);
-        RawTileLoader rawTileLoader;
+        List<RawImage> rawTiles = nttc.getRenderedVolumeLoader().loadVolumeRawImageTiles(renderedVolume.getVolumeLocation());
+        return new RawVolumeBrickSource(getTileLoader()).init(sample, rawTiles, progress::progress);
+    }
+
+    private TileLoader getTileLoader() {
         if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
-            rawTileLoader = new CachedRawTileLoader(
-                    new JadeBasedRawTileLoader(new JadeServiceClient(ConsoleProperties.getString("jadestorage.rest.url"), () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false))),
+            return new CachedTileLoader(
+                    new JadeBasedTileLoader(new JadeServiceClient(ConsoleProperties.getString("jadestorage.rest.url"), () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false))),
                     LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
                     CACHE_CONCURRENCY,
                     Executors.newFixedThreadPool(
@@ -221,9 +208,8 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                                     .build())
             );
         } else {
-            rawTileLoader = new FileBasedRawTileLoader();
+            return new FileBasedTileLoader();
         }
-        return new RenderedVolumeBrickSource(nttc.getRenderedVolumeLoader(), renderedVolume, rawTileLoader).init(sample, progress::progress);
     }
 
     private void setCameraLocation(SampleLocation sampleLocation) {

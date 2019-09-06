@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public class BrainTileInfo implements BrickInfo {
     private static final Logger LOG = LoggerFactory.getLogger(BrainTileInfo.class);
 
-    private final RawTileLoader tileLoader;
+    private final TileLoader tileLoader;
     private final String basePath;
     private final int[] bbOriginNanometers;
     private final int[] bbShapeNanometers;
@@ -41,7 +41,7 @@ public class BrainTileInfo implements BrickInfo {
     // TODO  colorChannelIndex is a temporary hack that should be removed when we can show more than one channel at once
     private int colorChannelIndex = 0;
 
-    BrainTileInfo(RawTileLoader tileLoader,
+    BrainTileInfo(TileLoader tileLoader,
                   String basePath,
                   String tileRelativePath,
                   int[] bbOriginNanometers,

@@ -9,8 +9,6 @@ import java.util.stream.IntStream;
 import Jama.Matrix;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.rendering.RawImage;
-import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.workstation.core.api.web.JadeServiceClient;
 
 /**
  * BrainTileInfo factory.
@@ -30,7 +28,7 @@ public class BrainTileInfoBuilder {
     //    17912676.0, 0.0, 0.485852, 995.024902, 0.0, 9909023.0, 0.0, 0.0, 0.0, 1.0, 0.0,
     //    0.0, 0.0, 0.0, 0.0, 1.0]
 
-    public static BrainTileInfo fromYAMLFragment(RawTileLoader tileLoader, String tileBasePath, boolean leverageCompressedFiles, Map<String, Object> yamlFragment) {
+    public static BrainTileInfo fromYAMLFragment(TileLoader tileLoader, String tileBasePath, boolean leverageCompressedFiles, Map<String, Object> yamlFragment) {
         Map<String, Object> aabb = (Map<String, Object>) yamlFragment.get("aabb");
         if (aabb == null) {
             throw new IllegalArgumentException("Field missing for extracting origin and shape coordinates from " + yamlFragment);
@@ -100,7 +98,7 @@ public class BrainTileInfoBuilder {
                 transform);
     }
 
-    public static BrainTileInfo fromRawImage(RawTileLoader tileLoader, String acquisitionPath, RawImage rawImage) {
+    public static BrainTileInfo fromRawImage(TileLoader tileLoader, String acquisitionPath, RawImage rawImage) {
         double[][] dd = new double[5][5];
         for (int i = 0; i < 5; ++i) {
             for (int j = 0; j < 5; ++j) {

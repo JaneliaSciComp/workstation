@@ -17,7 +17,7 @@ public class SharedVolumeImage implements VolumeImage3d {
 
     private final BoundingBox3d boundingBox3d = new BoundingBox3d();
     private final Collection<VolumeLoadListener> volumeLoadListeners = new ArrayList<>();
-    private TileLoaderProvider tileLoaderProvider;
+    private BlockTiffOctreeTileLoaderProvider tileLoaderProvider;
     private BlockTiffOctreeLoadAdapter loadAdapter;
     private URL volumeBaseURL;
 
@@ -154,7 +154,7 @@ public class SharedVolumeImage implements VolumeImage3d {
         return loadAdapter;
     }
 
-    SharedVolumeImage setTileLoaderProvider(TileLoaderProvider tileLoaderProvider) {
+    SharedVolumeImage setTileLoaderProvider(BlockTiffOctreeTileLoaderProvider tileLoaderProvider) {
         this.tileLoaderProvider = tileLoaderProvider;
         return this;
     }

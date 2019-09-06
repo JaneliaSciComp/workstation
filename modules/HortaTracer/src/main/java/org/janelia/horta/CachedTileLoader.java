@@ -19,7 +19,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.filecacheutils.FileKey;
-import org.janelia.filecacheutils.FileKeyToProxySupplier;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
 import org.janelia.filecacheutils.LocalFileCacheStorage;
@@ -30,9 +29,9 @@ import org.slf4j.LoggerFactory;
 /**
  * JadeBasedRawTileLoader.
  */
-public class CachedRawTileLoader implements RawTileLoader {
+public class CachedTileLoader implements TileLoader {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CachedRawTileLoader.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CachedTileLoader.class);
 
     private static class RawTileFileKey implements FileKey {
 
@@ -88,12 +87,12 @@ public class CachedRawTileLoader implements RawTileLoader {
 
     private static class RawTileFileProxy implements FileProxy {
 
-        private final RawTileLoader tileLoader;
+        private final TileLoader tileLoader;
         private final String tileStorageURL;
         private final String tileLocation;
         private Streamable<InputStream> streamableContent;
 
-        public RawTileFileProxy(RawTileLoader tileLoader, String tileStorageURL, String tileLocation) {
+        public RawTileFileProxy(TileLoader tileLoader, String tileStorageURL, String tileLocation) {
             this.tileLoader = tileLoader;
             this.tileStorageURL = tileStorageURL;
             this.tileLocation = tileLocation;
@@ -138,10 +137,10 @@ public class CachedRawTileLoader implements RawTileLoader {
     private final LoadingCache<String, Optional<String>> storageURLCache;
     private final LocalFileCache<RawTileFileKey> rawTileFileCache;
 
-    CachedRawTileLoader(RawTileLoader delegate,
-                        LocalFileCacheStorage localFileCacheStorage,
-                        int cacheConcurrency,
-                        ExecutorService localCachedFileWriteExecutor) {
+    CachedTileLoader(TileLoader delegate,
+                     LocalFileCacheStorage localFileCacheStorage,
+                     int cacheConcurrency,
+                     ExecutorService localCachedFileWriteExecutor) {
         this.storageURLCache = CacheBuilder.newBuilder()
                 .maximumSize(10)
                 .build(new CacheLoader<String, Optional<String>>() {
