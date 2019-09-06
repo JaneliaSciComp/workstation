@@ -33,7 +33,7 @@ public class JadeBasedTileLoader implements TileLoader {
         try {
             return jadeClient.streamContent(storageLocation, tileLocation);
         } finally {
-            LOG.info("Opened content for reading raw tile bytes from {} for {} in {} ms",
+            LOG.info("Opened content for reading tile bytes from {} for {} in {} ms",
                     storageLocation, tileLocation,
                     System.currentTimeMillis() - startTime);
         }
