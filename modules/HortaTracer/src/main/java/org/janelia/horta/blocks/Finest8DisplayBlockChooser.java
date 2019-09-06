@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> {
     private static final Logger LOG = LoggerFactory.getLogger(OctreeDisplayBlockChooser.class);
+    private ConstVector3 currFocus;
 
     /*
      Choose the eight closest maximum resolution blocks to the current focus point.
@@ -22,6 +23,10 @@ public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTi
     @Override
     public List<KtxOctreeBlockTileKey> chooseBlocks(KtxOctreeBlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus,
                                                     Vantage vantage) {
+        synchronized (this) {
+            currFocus = focus;
+        }
+
         // Find up to eight closest blocks adjacent to focus
         BlockTileResolution maxResolution = source.getMaximumResolution();
 
@@ -70,15 +75,14 @@ public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTi
     @Override
     public Map chooseObsoleteTiles(Map<BlockTileKey, BlockTileData> currentTiles, Map<BlockTileKey, BlockTileData> desiredTiles,
                                    BlockTileKey finishedTile) {
-
+        List<BlockTileKey> currentTileList = new ArrayList<BlockTileKey>();
+        currentTileList.addAll(currentTiles.keySet());
+        Collections.sort(currentTileList, new BlockComparator(currFocus));
         Map<BlockTileKey, BlockTileData> obsoleteTiles = new HashMap<>();
 
-        Iterator<BlockTileKey> iter = currentTiles.keySet().iterator();
-        while (iter.hasNext()) {
-            BlockTileKey key = iter.next();
-            if (!desiredTiles.containsKey(key)) {
-                iter.remove();
-            }
+        for (int i=8; i<currentTileList.size(); i++) {
+            BlockTileKey key = currentTileList.get(i);
+           obsoleteTiles.put(key, currentTiles.get(key));
         }
 
         return obsoleteTiles;

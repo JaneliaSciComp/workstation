@@ -115,8 +115,7 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
             chooser = new Finest8DisplayBlockChooser();
         }
         LOG.info ("New strategy is {}",chooser);
-
-        blockDisplayUpdater.getDisplayChangeObservable().deleteObservers();
+        clearAllBlocks();
         initBlockStrategy(chooser);
     }
 
