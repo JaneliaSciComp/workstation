@@ -1,11 +1,12 @@
 package org.janelia.horta.blocks;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+
 import org.janelia.geometry3d.ConstVector3;
+import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generate sorted list of up to eight max resolution blocks near current focus
@@ -13,12 +14,14 @@ import org.janelia.geometry3d.Vector3;
  * @author brunsc
  */
 public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> {
+    private static final Logger LOG = LoggerFactory.getLogger(OctreeDisplayBlockChooser.class);
 
     /*
      Choose the eight closest maximum resolution blocks to the current focus point.
      */
     @Override
-    public List<KtxOctreeBlockTileKey> chooseBlocks(KtxOctreeBlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus) {
+    public List<KtxOctreeBlockTileKey> chooseBlocks(KtxOctreeBlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus,
+                                                    Vantage vantage) {
         // Find up to eight closest blocks adjacent to focus
         BlockTileResolution maxResolution = source.getMaximumResolution();
 
@@ -62,6 +65,23 @@ public class Finest8DisplayBlockChooser implements BlockChooser<KtxOctreeBlockTi
         }
 
         return result;
+    }
+
+    @Override
+    public Map chooseObsoleteTiles(Map<BlockTileKey, BlockTileData> currentTiles, Map<BlockTileKey, BlockTileData> desiredTiles,
+                                   BlockTileKey finishedTile) {
+
+        Map<BlockTileKey, BlockTileData> obsoleteTiles = new HashMap<>();
+
+        Iterator<BlockTileKey> iter = currentTiles.keySet().iterator();
+        while (iter.hasNext()) {
+            BlockTileKey key = iter.next();
+            if (!desiredTiles.containsKey(key)) {
+                iter.remove();
+            }
+        }
+
+        return obsoleteTiles;
     }
 
     // Sort blocks by distance from focus to block centroid

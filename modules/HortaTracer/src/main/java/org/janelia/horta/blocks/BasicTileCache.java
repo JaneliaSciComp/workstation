@@ -3,7 +3,6 @@ package org.janelia.horta.blocks;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -46,12 +45,13 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
     final Map<TILE_KEY, TILE_DATA> obsoleteTiles = new ConcurrentHashMap<>();
 
     // To enable/disable loading
+    BlockChooser blockStrategy;
     private RequestProcessor loadProcessor;
     private final ObservableInterface displayChangeObservable = new ComposableObservable();
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    BasicTileCache() {
+    public BasicTileCache() {
         Preferences pref = NbPreferences.forModule(TileLoadingPanel.class);
 
         String concurrentLoadsStr = pref.get(TileLoadingPanel.PREFERENCE_CONCURRENT_LOADS, TileLoadingPanel.PREFERENCE_CONCURRENT_LOADS_DEFAULT);
@@ -87,9 +87,7 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
 
     public synchronized void updateDesiredTiles(List<TILE_KEY> desiredTiles) {
         List<TILE_KEY> newTiles = new ArrayList<>();
-        Set<TILE_KEY> desiredSet = new HashSet<>();
         for (TILE_KEY key : desiredTiles) {
-            desiredSet.add(key);
             if (!nearVolumeMetadata.contains(key)) {
                 nearVolumeMetadata.add(key);
             }
@@ -106,31 +104,20 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
             newTiles.add(key);
         }
 
-        // Remove obsolete tiles from loading and loaded
-        Iterator<TILE_KEY> iter = nearVolumeMetadata.iterator();
-        while (iter.hasNext()) {
-            TILE_KEY key = iter.next();
-            if (!desiredSet.contains(key)) {
-                iter.remove();
-            }
+        removeIfNotDesired (desiredTiles, queuedTiles);
+        removeIfNotDesired (desiredTiles, loadingTiles);
+
+        for (TILE_KEY key : newTiles) {
+            queueLoad(key, getLoadRunner());
         }
-        Iterator<Map.Entry<TILE_KEY, RequestProcessor.Task>> mapIter = queuedTiles.entrySet().iterator();
+    }
+
+    private void removeIfNotDesired (List<TILE_KEY> desiredTiles, Map<TILE_KEY, RequestProcessor.Task> tileSet) {
+        Iterator<Map.Entry<TILE_KEY, RequestProcessor.Task>> mapIter = tileSet.entrySet().iterator();
         while (mapIter.hasNext()) {
             Map.Entry<TILE_KEY, RequestProcessor.Task> entry = mapIter.next();
             TILE_KEY key = entry.getKey();
-            if (!desiredSet.contains(key)) {
-                RequestProcessor.Task task = queuedTiles.get(key);
-                if (task != null) {
-                    task.cancel();
-                }
-                mapIter.remove();
-            }
-        }
-        mapIter = loadingTiles.entrySet().iterator();
-        while (mapIter.hasNext()) {
-            Map.Entry<TILE_KEY, RequestProcessor.Task> entry = mapIter.next();
-            TILE_KEY key = entry.getKey();
-            if (!desiredSet.contains(key)) {
+            if (!desiredTiles.contains(key)) {
                 RequestProcessor.Task task = loadingTiles.get(key);
                 if (task != null) {
                     task.cancel();
@@ -138,24 +125,6 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                 mapIter.remove();
             }
         }
-        boolean displayChanged = false;
-        Iterator<Map.Entry<TILE_KEY, TILE_DATA>> mapIter2 = nearVolumeInRam.entrySet().iterator();
-        while (mapIter2.hasNext()) {
-            Map.Entry<TILE_KEY, TILE_DATA> entry = mapIter2.next();
-            TILE_KEY key = entry.getKey();
-            if (!desiredSet.contains(key)) {
-                TILE_DATA data = entry.getValue();
-                log.info("Preparing to dispose of tile {}", key.toString());
-                obsoleteTiles.put(key, data);
-                mapIter2.remove();
-                displayChanged = true;
-            }
-        }
-
-        for (TILE_KEY key : newTiles) {
-            queueLoad(key, getLoadRunner());
-        }
-
     }
 
     public ObservableInterface getDisplayChangeObservable() {
@@ -237,6 +206,14 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                     log.info("loadTask was interrupted {}", key.toString(), ex);
                 } finally {
                     loadingTiles.remove(key);
+                    // figure out if there are tiles we need to remove after successful load of a tile
+                    Map<TILE_KEY, TILE_DATA> obsoleteTiles = blockStrategy.chooseObsoleteTiles(nearVolumeInRam, queuedTiles,
+                            (BlockTileKey)key);
+                    if (obsoleteTiles!=null) {
+                        for (TILE_KEY key : obsoleteTiles.keySet()) {
+                            nearVolumeInRam.remove(key);
+                        }
+                    }
                     progress.finish();
                 }
             }
@@ -284,6 +261,14 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
             }
         }
         return result;
+    }
+
+    public BlockChooser getBlockStrategy() {
+        return blockStrategy;
+    }
+
+    public void setBlockStrategy(BlockChooser blockStrategy) {
+        this.blockStrategy = blockStrategy;
     }
 
 }

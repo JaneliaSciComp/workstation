@@ -33,18 +33,11 @@ import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
-import org.janelia.horta.blocks.BlockChooser;
-import org.janelia.horta.blocks.BlockDisplayUpdater;
-import org.janelia.horta.blocks.BlockTileKey;
-import org.janelia.horta.blocks.BlockTileResolution;
-import org.janelia.horta.blocks.BlockTileSource;
-import org.janelia.horta.blocks.Finest8DisplayBlockChooser;
-import org.janelia.horta.blocks.KtxOctreeBlockTileData;
-import org.janelia.horta.blocks.KtxOctreeBlockTileKey;
-import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
-import org.janelia.horta.blocks.KtxTileCache;
+import org.janelia.horta.blocks.*;
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.Lookups;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Volume rendering actor for blocks consisting of five tetrahedral components.
@@ -55,6 +48,8 @@ import org.openide.util.lookup.Lookups;
  * @author Christopher Bruns
  */
 public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TetVolumeActor.class);
     private static TetVolumeActor singletonInstance;
     
     // Singleton access
@@ -76,10 +71,11 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
     private final UnmixingParameters unmixMinScale = new UnmixingParameters(new float[] {0.0f, 0.0f, 0.5f, 0.5f});
     private VolumeState volumeState = new VolumeState();
 
+    private KtxOctreeBlockTileSource source;
     private final BlockSorter blockSorter = new BlockSorter();    
     private final KtxTileCache dynamicTiles = new KtxTileCache(null);
-    private final BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> chooser8 = new Finest8DisplayBlockChooser();
-    private final BlockDisplayUpdater<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> blockDisplayUpdater = new BlockDisplayUpdater<>(chooser8);
+    private BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> chooser;
+    private BlockDisplayUpdater<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> blockDisplayUpdater;
     private final Collection<GL3Resource> obsoleteActors = new ArrayList<>();
 
     // Singleton actor has private constructor
@@ -99,7 +95,9 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
         colorMapTexture.setGenerateMipmaps(false);
         colorMapTexture.setMinFilter(GL3.GL_LINEAR);
         colorMapTexture.setMagFilter(GL3.GL_LINEAR);
-        
+        chooser = new OctreeDisplayBlockChooser();
+        blockDisplayUpdater = new BlockDisplayUpdater<>(chooser);
+        initBlockStrategy(chooser);
         blockDisplayUpdater.getDisplayChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
@@ -108,6 +106,24 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
         });
 
         Lookups.singleton(unmixMinScale);
+    }
+
+    public void changeStrategy(int strategy) {
+        if (strategy == VolumeState.BLOCK_STRATEGY_OCTTREE) {
+            chooser = new OctreeDisplayBlockChooser();
+        } else if (strategy == VolumeState.BLOCK_STRATEGY_FINEST_8_MAX){
+            chooser = new Finest8DisplayBlockChooser();
+        }
+        LOG.info ("New strategy is {}",chooser);
+
+        blockDisplayUpdater.getDisplayChangeObservable().deleteObservers();
+        initBlockStrategy(chooser);
+    }
+
+    private void initBlockStrategy(BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> chooser) {
+        dynamicTiles.setBlockStrategy(chooser);
+        blockDisplayUpdater.setBlockChooser(chooser);
+        LOG.info("We have a new strategy {}", chooser);
     }
 
     public Object3d addPersistentBlock(Object3d child) {
@@ -129,6 +145,7 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
     public void setKtxTileSource(KtxOctreeBlockTileSource source) {
         dynamicTiles.setSource(source);
         blockDisplayUpdater.setBlockTileSource(source);
+        this.source = source;
     }
     
     public ObservableInterface getDynamicTileUpdateObservable() {
@@ -175,7 +192,7 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
         // 2) Set up shader exactly once, for all volume blocks
         // Adjust actual Z-clip planes to allow imposter geometry to lie
         // outside the "official" Z-clip planes. Correct final clipping will 
-        // happen in the fragement shader. This is necessary because the
+        // happen in the fragment shader. This is necessary because the
         // imposter geometry represents multiple voxels at various depths.
         Viewport vp = camera.getViewport();
         // Z-near remains unchanged, because we are using back faces for imposter geometry.

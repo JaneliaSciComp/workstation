@@ -1,5 +1,6 @@
 package org.janelia.horta.blocks;
 
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -39,6 +40,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
     private KtxOctreeResolution maximumResolution;
     private ConstVector3 origin;
     private Vector3 outerCorner;
+    private long zoomLevels;
 
     public KtxOctreeBlockTileSource(URL originatingSampleURL, TileLoader tileLoader) {
         this.originatingSampleURL = originatingSampleURL;
@@ -54,6 +56,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
                         "/");
         this.rootKey = new KtxOctreeBlockTileKey(this, Collections.emptyList());
         this.rootHeader = loadKtxHeader(rootKey);
+        this.setZoomLevels(sample.getNumImageryLevels());
         this.maximumResolution = getKtxResolution(rootHeader);
         Pair<ConstVector3, Vector3> volumeCorners = getVolumeCorners(sample, rootHeader);
         this.origin = volumeCorners.getLeft();
@@ -157,7 +160,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
         return rootBlockSize.multiplyScalar(1.0f / scale);
     }
 
-    private ConstVector3 getBlockSize(KtxOctreeResolution resolution) {
+    public ConstVector3 getBlockSize(KtxOctreeResolution resolution) {
         Vector3 rootBlockSize = outerCorner.minus(origin);
         float scale = (float) Math.pow(2.0, resolution.getResolution());
         return rootBlockSize.multiplyScalar(1.0f / scale);
@@ -281,5 +284,13 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
             return false;
         }
         return true;
+    }
+
+    public long getZoomLevels() {
+        return zoomLevels;
+    }
+
+    public void setZoomLevels(long zoomLevels) {
+        this.zoomLevels = zoomLevels;
     }
 }

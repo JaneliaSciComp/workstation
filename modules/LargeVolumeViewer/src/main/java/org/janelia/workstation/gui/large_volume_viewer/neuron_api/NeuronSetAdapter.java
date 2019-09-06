@@ -773,7 +773,7 @@ public class NeuronSetAdapter
         public void bulkNeuronsChanged(List<TmNeuronMetadata> addList, List<TmNeuronMetadata> deleteList) {
 
             Stopwatch stopwatch = Stopwatch.createStarted();
-            LOG.info("Neurons Updates: Adds: {}, Deletes: {}", addList, deleteList);
+            LOG.debug("Neurons Updates: Adds: {}, Deletes: {}", addList, deleteList);
             for (TmNeuronMetadata neuron : addList) {
                 NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
                 neuronModel.getGeometryChangeObservable().setChanged();                

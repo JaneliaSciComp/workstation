@@ -8,6 +8,9 @@ import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.Viewport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * BlockDisplayUpdater listens to the camera location, and signals an updated
@@ -17,12 +20,14 @@ import org.janelia.geometry3d.Vector3;
  */
 public class BlockDisplayUpdater<BTK extends BlockTileKey, BTS extends BlockTileSource<BTK>> {
 
+    private static final Logger LOG = LoggerFactory.getLogger(BlockDisplayUpdater.class);
     private final CameraObserver cameraObserver = new CameraObserver();
     private final ObservableInterface displayChangeObservable = new ComposableObservable();
     private Vantage vantage;
+    private Viewport viewport;
     private BTS blockTileSource;
     private ConstVector3 cachedFocus;
-    private final BlockChooser blockChooser;
+    private BlockChooser blockChooser;
     private List<BTK> cachedDesiredBlocks;
     private boolean doAutoUpdate = true;
 
@@ -71,7 +76,8 @@ public class BlockDisplayUpdater<BTK extends BlockTileKey, BTS extends BlockTile
         }
         ConstVector3 previousFocus = cachedFocus;
         cachedFocus = new Vector3(focus);
-        List<BTK> desiredBlocks = blockChooser.chooseBlocks(blockTileSource, focus, previousFocus);
+        List<BTK> desiredBlocks = getBlockChooser().chooseBlocks(blockTileSource, focus, previousFocus,
+                vantage);
         if (desiredBlocks.equals(cachedDesiredBlocks)) {
             return; // no change in desired set
         }
@@ -89,6 +95,23 @@ public class BlockDisplayUpdater<BTK extends BlockTileKey, BTS extends BlockTile
             refreshBlocks(cachedFocus);
         }
     }
+
+    public Viewport getViewport() {
+        return viewport;
+    }
+
+    public void setViewport(Viewport viewport) {
+        this.viewport = viewport;
+    }
+
+    public BlockChooser getBlockChooser() {
+        return blockChooser;
+    }
+
+    public void setBlockChooser(BlockChooser chooser) {
+        blockChooser = chooser;
+    }
+
 
     private class CameraObserver implements Observer {
 
