@@ -86,6 +86,7 @@ public class JadeServiceClient {
             WebTarget target = httpClient.target(serverURL)
                     .path("agent_storage/storage_path/data_content")
                     .path(dataPath);
+            LOG.info("Streaming content from {}", target);
             Response response = target.request()
                     .get();
             int responseStatus = response.getStatus();
