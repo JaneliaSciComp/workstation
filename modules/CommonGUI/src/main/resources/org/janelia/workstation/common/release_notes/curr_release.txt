@@ -29,7 +29,9 @@ Large Volume Viewer
 * Added "unique" predefined note
 * Present spatial filters in sorted order
 * Spatial filter is only automatically enabled when there are more than 1000 group owned fragments
+* Sample icon indicates if there is missing image data
 
 Horta
 * Import/export color model dialogs default to standard folder on shared drive
 * Fixed issue with neuron becoming unselectable in Horta
+* Enabled multi-level ktx display (lower resolution but greater spatial extent)
