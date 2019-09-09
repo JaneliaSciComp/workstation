@@ -123,6 +123,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     private TmSample currentSample;
     private TmWorkspace currentWorkspace;
     private TmNeuronMetadata currentNeuron;
+    private TmGeoAnnotation currentVertex;
     private List<TmNeuronMetadata> currentFilteredNeuronList;
     private TmNeuronTagMap currentTagMap;
 
@@ -452,6 +453,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         return currentNeuron;
     }
 
+    // current neuron methods
+    public TmGeoAnnotation getCurrentPoint() {
+        log.trace("getCurrentPoint = {}",currentVertex);
+        return currentVertex;
+    }
+
     // this method sets the current neuron but does not fire an event to update the UI
     private synchronized void setCurrentNeuron(TmNeuronMetadata neuron) {
         log.info("setCurrentNeuron({})",neuron);
@@ -552,6 +559,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     NeuronUpdates updates = neuronFilter.selectVertex(annotation);                    
                     updateFrags(updates);
                     setCurrentNeuron(neuron);
+                    currentVertex = annotation;
                     selectNeuron(neuron);
                     log.info("TOTAL FRAG UPDATE TIME: {}",stopwatch.elapsed().toMillis());
                     stopwatch.stop();
@@ -893,6 +901,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
                     updateFrags(updates);
                     selectPoint(neuron.getId(), annotation.getId());
+                    SkeletonController.getInstance().setNextParent(annotation.getId());
                 }
                 activityLog.logEndOfOperation(getWsId(), xyz);
             }

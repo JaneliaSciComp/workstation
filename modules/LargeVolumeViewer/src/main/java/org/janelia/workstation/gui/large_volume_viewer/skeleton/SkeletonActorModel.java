@@ -496,7 +496,7 @@ public class SkeletonActorModel {
         updateLines(anchors);
 
         if (!anchors.contains(getNextParent())) {
-            setNextParent(null);
+           // setNextParent(null);
         }
         
         w.start();
