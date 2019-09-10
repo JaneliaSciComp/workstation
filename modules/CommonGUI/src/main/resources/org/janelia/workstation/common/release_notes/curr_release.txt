@@ -15,6 +15,7 @@ Data Browser
 * Many performance improvements and bug fixes
 
 Color Depth Search
+* File cache has been refactored and optimized for network performance
 * Color Depth Libraries and Searches are now accessible as top-level items in the Data Explorer
 * Added search options for XY shift and mask mirroring
 * Color Depth Search results now shows mask and result side-by-side with a synchronized mouse cursor
@@ -23,6 +24,8 @@ Color Depth Search
 MouseLight Tools
 * Both Horta and LVV were modified to pull data from the JADE storage service, eliminating the previous
   dependency on internal Samba drive mounts. It is no longer necessary to mount external drives to use these tools.
+* Local file cache is now used for all MouseLight data
+* Octree, KTX, and RAW data paths are now set explicitly on the sample
 
 Large Volume Viewer
 * Merge and split should work when autotracing is on
