@@ -1366,7 +1366,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     JMenu strategyMenu = new JMenu("Block Loading Strategy");
                     viewMenu.add(strategyMenu);
                     strategyMenu.add(new JRadioButtonMenuItem(
-                            new AbstractAction("Finest 8 Max") {
+                            new AbstractAction("Highest resolution only") {
                                 {
                                     putValue(Action.SELECTED_KEY,
                                             volumeState.blockStrategy == 0);
@@ -1382,7 +1382,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             }));
 
                     strategyMenu.add(new JRadioButtonMenuItem(
-                            new AbstractAction("Multi-level Octree") {
+                            new AbstractAction("Multi-resolution octree") {
                                 {
                                     putValue(Action.SELECTED_KEY,
                                             volumeState.blockStrategy == 1);
