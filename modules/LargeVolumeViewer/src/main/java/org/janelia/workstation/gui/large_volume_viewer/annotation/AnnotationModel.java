@@ -1,10 +1,31 @@
 package org.janelia.workstation.gui.large_volume_viewer.annotation;
 
-import Jama.Matrix;
+import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+
+import javax.swing.SwingUtilities;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
+
+import Jama.Matrix;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
@@ -18,8 +39,6 @@ import org.janelia.it.jacs.shared.swc.SWCNode;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainUtils;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
@@ -31,9 +50,11 @@ import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.security.Subject;
 import org.janelia.model.util.MatrixUtilities;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionSupport;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.gui.large_volume_viewer.LoadTimer;
 import org.janelia.workstation.gui.large_volume_viewer.NoteExporter;
 import org.janelia.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
@@ -60,25 +81,6 @@ import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.SwingUtilities;
-import java.awt.Color;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * This class is responsible for handling requests from the AnnotationManager.  those
@@ -108,7 +110,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     private static final Logger log = LoggerFactory.getLogger(AnnotationModel.class);
     
-    public static final String STD_SWC_EXTENSION = SWCData.STD_SWC_EXTENSION;
+    static final String STD_SWC_EXTENSION = SWCData.STD_SWC_EXTENSION;
     private static final String COLOR_FORMAT = "# COLOR %f,%f,%f";
     private static final String NAME_FORMAT = "# NAME %s";
 
@@ -2266,11 +2268,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     //  wrapper where for mutating calls, we save the map and fire appropriate updates
 
     public Set<String> getPredefinedNeuronTags() {
-        return currentTagMap.getPredefinedTags();
+        return getAllTagMeta().getPredefinedTags();
     }
     
     public TmNeuronTagMap getAllTagMeta() {
-        return currentTagMap;
+        // if not set return an empty tag map
+        return currentTagMap == null ? new TmNeuronTagMap() : currentTagMap;
     }
 
     public Set<String> getAvailableNeuronTags() {
@@ -2280,11 +2283,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     public Set<String> getNeuronTags(TmNeuronMetadata neuron) {
-        return currentTagMap.getTags(neuron);
+        return getAllTagMeta().getTags(neuron);
     }
 
     public Set<String> getAllNeuronTags() {
-        return currentTagMap.getAllTags();
+        return getAllTagMeta().getAllTags();
     }
     
     public void saveTagMeta(Map<String,Map<String,Object>> allTagMeta) throws Exception {
@@ -2298,31 +2301,10 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
     
-    public void setTagMeta(String tagName, Map<String,Object> meta) {
-        currentTagMap.setTagGroupMapping(tagName, meta);
+    public Map<String, Map<String,Object>> getTagGroupMappings() {
+        return getAllTagMeta().getAllTagGroupMappings();
     }
-    
-    public Map<String,Object> getTagGroupMapping(String tagName) {
-        return currentTagMap.geTagGroupMapping(tagName);
-    }
-    
-    public Map<String,Map<String,Object>> getTagGroupMappings() {
-        // if load is interrupted, currentTagMap could be null:
-        if (currentTagMap != null) {
-            return currentTagMap.getAllTagGroupMappings();
-        } else {
-            return new HashMap<>();
-        }
-    }
-    
-    public Boolean getToggleUserGroupState () {
-        return currentTagMap.isSaveUserGroupState();
-    }
-    
-    public void setToggleUserGroupState(boolean saveState) {
-        currentTagMap.setSaveUserGroupState(saveState);
-    }
-    
+
      public void loadUserPreferences() throws Exception {
          if (this.getCurrentSample()==null || this.getCurrentSample().getId()==null) return;
          Map<String,Map<String,Object>> tagGroupMappings = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, this.getCurrentSample().getId().toString(), null);
@@ -2358,7 +2340,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public void saveUserPreferences() throws Exception {
         // for now use the tag map as the user preferences... as preferences increase, generalize the structure
         FrameworkAccess.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT,
-                this.getCurrentSample().getId().toString(), currentTagMap.getAllTagGroupMappings());      
+                this.getCurrentSample().getId().toString(), getAllTagMeta().getAllTagGroupMappings());
     }
     
     public void saveUserTags() throws Exception {
@@ -2367,11 +2349,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     
 
     public Set<TmNeuronMetadata> getNeuronsForTag(String tag) {
-        return currentTagMap.getNeurons(tag);
+        return getAllTagMeta().getNeurons(tag);
     }
 
     public boolean hasNeuronTag(TmNeuronMetadata neuron, String tag) {
-        return currentTagMap.hasTag(neuron, tag);
+        return getAllTagMeta().hasTag(neuron, tag);
     }
     
     public void addNeuronTag(String tag, TmNeuronMetadata neuron) throws Exception {
@@ -2387,7 +2369,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(() -> fireNeuronTagsChanged(neuronList));
     }
     
-    public void addUserNeuronTag(String tag, TmNeuronMetadata neuron) {
+    private void addUserNeuronTag(String tag, TmNeuronMetadata neuron) {
         currentTagMap.addUserTag(tag, neuron);
         try {
             saveUserTags();
@@ -2396,7 +2378,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
     
-    public void removeUserNeuronTag(String tag, TmNeuronMetadata neuron) {
+    private void removeUserNeuronTag(String tag, TmNeuronMetadata neuron) {
         currentTagMap.removeUserTag(tag, neuron);
         try {
             saveUserTags();
@@ -2405,7 +2387,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
     }
     
-    public Set<String> getUserNeuronTags(TmNeuronMetadata neuron) {
+    private Set<String> getUserNeuronTags(TmNeuronMetadata neuron) {
         if (currentTagMap != null) {
             return currentTagMap.getUserTags().get(neuron.getId());
         } else {
@@ -2420,7 +2402,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public void removeNeuronTag(String tag, List<TmNeuronMetadata> neuronList) throws Exception {
         tmDomainMgr.bulkEditNeuronTags(neuronList, Arrays.asList(tag), false);
         for (TmNeuronMetadata neuron: neuronList) {
-            currentTagMap.removeTag(tag, neuron);
+            getAllTagMeta().removeTag(tag, neuron);
             neuron.getTags().remove(tag);
         }
         SwingUtilities.invokeLater(() -> fireNeuronTagsChanged(neuronList));
@@ -2428,12 +2410,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     public void clearNeuronTags(TmNeuronMetadata neuron) throws Exception {
         tmDomainMgr.bulkEditNeuronTags(Arrays.asList(neuron), new ArrayList<>(neuron.getTags()), false);
-        currentTagMap.clearTags(neuron);
+        getAllTagMeta().clearTags(neuron);
         neuron.getTags().clear();
         SwingUtilities.invokeLater(() -> fireNeuronTagsChanged(Arrays.asList(neuron)));
     }
 
-    public List<File> breakOutByRoots(File infile) throws IOException {
+    List<File> breakOutByRoots(File infile) throws IOException {
         return new SWCData().breakOutByRoots(infile);
     }
 

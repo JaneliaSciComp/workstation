@@ -1,14 +1,17 @@
 package org.janelia.workstation.core.api.http;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestFilter;
+import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -21,6 +24,7 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,10 +93,22 @@ public class RestJsonClientManager {
             }
         };
 
+        ClientResponseFilter followRedirectFilter = (clientRequestContext, clientResponseContext) -> {
+            if (clientResponseContext.getStatusInfo().getFamily() != Response.Status.Family.REDIRECTION)
+                return;
+
+            Response resp = clientRequestContext.getClient().target(clientResponseContext.getLocation()).request().method(clientRequestContext.getMethod());
+
+            clientResponseContext.setEntityStream((InputStream) resp.getEntity());
+            clientResponseContext.setStatusInfo(resp.getStatusInfo());
+            clientResponseContext.setStatus(resp.getStatus());
+        };
+
         return ClientBuilder.newBuilder()
                 .register(MultiPartFeature.class)
                 .register(jsonProvider)
                 .register(headerFilter)
+                .register(followRedirectFilter)
                 .build();
     }
 

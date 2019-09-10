@@ -27,7 +27,7 @@ public class NeuronManager {
     private static final Logger LOG = LoggerFactory.getLogger(NeuronManager.class);
     private final NeuronModelAdapter neuronModelAdapter;
     private final IdSource idSource;
-    private final Map<Long, TmNeuronMetadata> neuronMap = new ConcurrentHashMap<>();
+    private final Map<Long, TmNeuronMetadata> neuronMap = new HashMap<>();
     private CompletableFuture<Boolean> ownershipRequest;
     private CompletableFuture<TmNeuronMetadata> createNeuronRequest;
 
