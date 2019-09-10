@@ -17,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.google.common.io.ByteStreams;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.media.multipart.BodyPart;
@@ -228,9 +229,13 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         checkBadResponse(target, response);
     }
 
-    Collection<Pair<TmNeuronMetadata,InputStream>> getWorkspaceNeuronPairs(Long workspaceId) {
+    Collection<Pair<TmNeuronMetadata,InputStream>> getWorkspaceNeuronPairs(Long workspaceId, long offset, int length) {
         WebTarget target = getMouselightDataEndpoint("/workspace/neuron")
-                .queryParam("workspaceId", workspaceId);
+                .queryParam("workspaceId", workspaceId)
+                .queryParam("offset", offset)
+                .queryParam("length", length)
+                ;
+
         Response response = target
                 .request("multipart/mixed")
                 .get();

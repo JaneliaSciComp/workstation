@@ -7,8 +7,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import com.google.common.eventbus.Subscribe;
+import java.util.Spliterator;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
@@ -27,8 +30,6 @@ import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -213,18 +214,53 @@ public class TiledMicroscopeDomainMgr {
         getModel().notifyDomainObjectRemoved(workspace);
     }
     
-    public List<TmNeuronMetadata> getWorkspaceNeurons(Long workspaceId) throws Exception {
+    public Stream<TmNeuronMetadata> streamWorkspaceNeurons(Long workspaceId) {
         LOG.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
-        List<TmNeuronMetadata> neurons = new ArrayList<>();
-        for(Pair<TmNeuronMetadata, InputStream> pair : client.getWorkspaceNeuronPairs(workspaceId)) {
-            TmNeuronMetadata neuronMetadata = pair.getLeft();
-            exchanger.deserializeNeuron(pair.getRight(), neuronMetadata);
-            LOG.trace("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);
-            neurons.add(neuronMetadata);
-        }
-        LOG.trace("Loaded {} neurons for workspace {}", neurons.size(), workspaceId);
-        return neurons;
+        Spliterator<Stream<TmNeuronMetadata>> workspaceNeuronsSupplier = new Spliterator<Stream<TmNeuronMetadata>>() {
+            volatile long offset = 0L;
+            int defaultLength = 100000;
+            @Override
+            public boolean tryAdvance(Consumer<? super Stream<TmNeuronMetadata>> action) {
+                Collection<Pair<TmNeuronMetadata, InputStream>> neuronsWithPoints = client.getWorkspaceNeuronPairs(workspaceId, offset, defaultLength);
+                long lastEntryOffset = offset + neuronsWithPoints.size();
+                LOG.trace("Retrieved {} entries ({} - {}) from {} -> {}", neuronsWithPoints.size(), offset, lastEntryOffset);
+                if (neuronsWithPoints.isEmpty()) {
+                    return false;
+                } else {
+                    offset = lastEntryOffset;
+                    List<TmNeuronMetadata> neurons = new ArrayList<>();
+                    for(Pair<TmNeuronMetadata, InputStream> pair : neuronsWithPoints) {
+                        TmNeuronMetadata neuronMetadata = pair.getLeft();
+                        try {
+                            exchanger.deserializeNeuron(pair.getRight(), neuronMetadata);
+                        } catch (Exception e) {
+                            throw new IllegalStateException(e);
+                        }
+                        LOG.trace("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);
+                        neurons.add(neuronMetadata);
+                    }
+                    action.accept(neurons.stream());
+                    return neurons.size() == defaultLength;
+                }
+            }
+
+            @Override
+            public Spliterator<Stream<TmNeuronMetadata>> trySplit() {
+                return null;
+            }
+
+            @Override
+            public long estimateSize() {
+                return Long.MAX_VALUE;
+            }
+
+            @Override
+            public int characteristics() {
+                return ORDERED;
+            }
+        };
+        return StreamSupport.stream(workspaceNeuronsSupplier, true).flatMap(Function.identity());
     }
 
     public TmNeuronMetadata saveMetadata(TmNeuronMetadata neuronMetadata) throws Exception {

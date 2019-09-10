@@ -1,6 +1,15 @@
 package org.janelia.workstation.gui.large_volume_viewer.model_adapter;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.janelia.messaging.core.ConnectionManager;
 import org.janelia.messaging.core.MessageConnection;
 import org.janelia.messaging.core.MessageSender;
@@ -17,13 +26,6 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-
 /**
  * Implementation of the model adapter, which pulls/pushes data through
  * the TiledMicroscopeDomainMgr.
@@ -38,6 +40,7 @@ import java.util.concurrent.CompletableFuture;
  */
 class NeuronModelAdapter {
 
+    private static final int MAX_NEURONS = 4000000;
     private static Logger LOG = LoggerFactory.getLogger(NeuronModelAdapter.class);
 
     private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
@@ -49,46 +52,40 @@ class NeuronModelAdapter {
     private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
     private MessageSender messageSender;
 
-    List<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) throws Exception {
+    Stream<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) {
         LOG.info("Loading neurons for workspace: {}", workspace);
-        List<TmNeuronMetadata> neurons = new ArrayList<>();
-
+        StopWatch stopWatch = new StopWatch();
         try {
-            StopWatch stopWatch = new StopWatch();
-            List<TmNeuronMetadata> neuronList = tmDomainMgr.getWorkspaceNeurons(workspace.getId());
-            LOG.info("Loading {} neurons took {} ms", neuronList.size(), stopWatch.getElapsedTime());
-
-            if (ClientDomainUtils.hasWriteAccess(workspace)) {
-                if (ApplicationPanel.isVerifyNeurons()) {
-                    LOG.info("Checking neuron data consistency");
-
-                    // check neuron consistency and repair (some) problems
-                    for (TmNeuronMetadata neuron : neuronList) {
-                        LOG.debug("Checking neuron data for TmNeuronMetadata#{}", neuron.getId());
-                        List<String> results = neuron.checkRepairNeuron();
-                        if (results.size() > 0) {
-                            // save results, then output to LOG; this is unfortunately
-                            //  not visible to the user; we aren't in a place in the
-                            //  code where we can pop a dialog
-                            for (String s : results) {
-                                LOG.warn(s);
+            return tmDomainMgr.streamWorkspaceNeurons(workspace.getId())
+                    .limit(MAX_NEURONS)
+                    .map(neuron -> {
+                        if (ClientDomainUtils.hasWriteAccess(workspace)) {
+                            if (ApplicationPanel.isVerifyNeurons()) {
+                                LOG.info("Checking neuron data consistency");
+                                // check neuron consistency and repair (some) problems
+                                LOG.debug("Checking neuron data for TmNeuronMetadata#{}", neuron.getId());
+                                List<String> results = neuron.checkRepairNeuron();
+                                if (results.size() > 0) {
+                                    // save results, then output to LOG; this is unfortunately
+                                    //  not visible to the user; we aren't in a place in the
+                                    //  code where we can pop a dialog
+                                    for (String s : results) {
+                                        LOG.warn(s);
+                                    }
+                                    try {
+                                        return tmDomainMgr.save(neuron);
+                                    } catch (Exception e) {
+                                        throw new IllegalStateException(e);
+                                    }
+                                }
                             }
-                            neuron = tmDomainMgr.save(neuron);
                         }
-                        neurons.add(neuron);
-                    }
-                } else {
-                    neurons.addAll(neuronList);
-                }
-            } else {
-                neurons.addAll(neuronList);
-            }
-
-        } catch (Exception ex) {
-            throw ex;
+                        return neuron;
+                    })
+                    ;
+        } finally {
+            LOG.info("Getting neurons stream took {} ms", stopWatch.getElapsedTime());
         }
-
-        return neurons;
     }
 
     private MessageSender getSender() {

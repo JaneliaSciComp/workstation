@@ -1,5 +1,16 @@
 package org.janelia.workstation.gui.large_volume_viewer.model_adapter;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.janelia.model.access.domain.IdSource;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
@@ -10,10 +21,6 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.TmNeuronUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class NeuronManager {
 
@@ -193,9 +200,8 @@ public class NeuronManager {
      */
     public void loadWorkspaceNeurons(TmWorkspace workspace) throws Exception {
         neuronMap.clear();
-        for(TmNeuronMetadata neuron : neuronModelAdapter.loadNeurons(workspace)) {
-            addNeuron(neuron);
-        }
+        neuronModelAdapter.loadNeurons(workspace)
+                .forEach(n -> addNeuron(n));
     }
 
     /**
