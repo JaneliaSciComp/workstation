@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 @ActionReferences({
     @ActionReference(path = "Menu/Actions/Sample", position = 540)
 })
-@Messages("CTL_StageForPublishingAction=Stage for Publishing")
+@Messages("CTL_StageForPublishingAction=Stage for Publishing...")
 public final class StageForPublishingAction extends BaseContextualNodeAction {
 
     private static final Logger log = LoggerFactory.getLogger(StageForPublishingAction.class);

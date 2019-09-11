@@ -27,7 +27,7 @@ import org.openide.util.NbBundle;
 @ActionReferences({
         @ActionReference(path = "Menu/Actions/Sample", position = 520)
 })
-@NbBundle.Messages("CTL_ChangeSampleCompressionAction=Change Sample Compression Strategy")
+@NbBundle.Messages("CTL_ChangeSampleCompressionAction=Change Sample Compression Strategy...")
 public class ChangeSampleCompressionAction extends BaseContextualNodeAction {
 
     private Collection<Sample> samples = new ArrayList<>();
