@@ -58,7 +58,7 @@ public final class NewSearchActionListener implements ActionListener {
 
                 List<ColorDepthSearch> searches = new ArrayList<>(); 
                 for(ColorDepthSearch search : allSearches) {
-                    if (alignmentSpace==null || search.getAlignmentSpace().equals(alignmentSpace)) {
+                    if (search.getAlignmentSpace().equals(alignmentSpace)) {
                         searches.add(search);
                     }
                 }

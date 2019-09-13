@@ -55,7 +55,7 @@ public class NodeTracker {
             }
         }
         if (c>1) {
-            log.warn("Object '{}' (id={}) has {} nodes", node.getDisplayName(), nodeId, c);
+            log.debug("Object '{}' (id={}) has {} nodes", node.getDisplayName(), nodeId, c);
         }
 
         nodesById.put(nodeId, new WeakReference<>(node));

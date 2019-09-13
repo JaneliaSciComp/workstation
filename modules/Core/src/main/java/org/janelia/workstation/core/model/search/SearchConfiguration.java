@@ -59,7 +59,7 @@ public class SearchConfiguration {
     // Source state
     private final Filter filter;
     private final int pageSize;
-    private String sortCriteria;
+    private String sortCriteria = "+id";
     
     // Derived from source state
     private Class<? extends DomainObject> searchClass;
@@ -104,12 +104,7 @@ public class SearchConfiguration {
  
         // Order alphabetically by label
         List<DomainObjectAttribute> searchAttributes = DomainUtils.getSearchAttributes(searchClass);
-        Collections.sort(searchAttributes, new Comparator<DomainObjectAttribute>() {
-            @Override
-            public int compare(DomainObjectAttribute o1, DomainObjectAttribute o2) {
-                return o1.getLabel().compareTo(o2.getLabel());
-            }
-        });
+        searchAttributes.sort(Comparator.comparing(DomainObjectAttribute::getLabel));
         
         for(DomainObjectAttribute attr : searchAttributes) {
             if (attr.isDisplay()) {
@@ -332,8 +327,15 @@ public class SearchConfiguration {
         this.displayQueryString = qs.toString();
         
         this.query = builder.getQuery();
-        log.debug("Searching for: ", query);
-        
+        log.info("Searching for: {}", builder.getSearchString());
+        log.debug("  auxString={}", builder.getAuxString());
+        log.debug("  auxAnnotationQuery={}", builder.getAuxAnnotationQueryString());
+        log.debug("  facets={}", builder.getFacets());
+        log.debug("  filters={}", builder.getFilters());
+        log.debug("  rootId={}", builder.getRootId());
+        log.debug("  ownerKeys={}", builder.getOwnerKeys());
+        log.debug("  sortBy={}", builder.getSortField());
+
         DomainObjectResultPage firstPage = performSearch(0);
         SolrSearchResults searchResults = new SolrSearchResults(this, firstPage);
         log.debug("Got {} results", firstPage.getNumPageResults());

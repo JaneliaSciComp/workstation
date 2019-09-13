@@ -915,11 +915,8 @@ public class FilterEditorPanel
             String sortCriteriaPref = FrameworkAccess.getRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), null);
             if (sortCriteriaPref!=null) {
-                log.debug("Loaded sort criteria preference: {}",sortCriteriaPref);
+                log.info("Loaded sort criteria preference: {}", sortCriteriaPref);
                 searchConfig.setSortCriteria(sortCriteriaPref);
-            }
-            else {
-                searchConfig.setSortCriteria(null);
             }
         }
         catch (Exception e) {
@@ -932,7 +929,7 @@ public class FilterEditorPanel
         try {
             FrameworkAccess.setRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), searchConfig.getSortCriteria());
-            log.debug("Saved sort criteria preference: {}",searchConfig.getSortCriteria());
+            log.info("Saved sort criteria preference: {}",searchConfig.getSortCriteria());
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);
