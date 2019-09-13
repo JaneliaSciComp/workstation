@@ -495,9 +495,17 @@ public class SkeletonActorModel {
         //  we know where the paths are!)
         updateLines(anchors);
 
-        if (!anchors.contains(getNextParent())) {
-           // setNextParent(null);
+        boolean foundNextParent = false;
+        Anchor nextParent = getNextParent();
+        if (nextParent!=null) {
+            for (Anchor anchor: anchors) {
+                if (anchor.getGuid().equals(nextParent.getGuid())) {
+                    foundNextParent = true;
+                }
+            }
         }
+        if (!foundNextParent)
+            setNextParent(null);
         
         w.start();
         log.trace("updateAnchors took {} ms",w.getElapsedTime());

@@ -106,7 +106,7 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
         Set<Long> delSet = new HashSet<>();
         while (newFragIter.hasNext()) {
             Long frag = newFragIter.next();
-            if (!fragments.contains(frag))
+            if (!fragments.contains(frag) && !userNeuronIds.contains(frag))
                 addSet.add(frag);
         }        
         fragments = newFrags;

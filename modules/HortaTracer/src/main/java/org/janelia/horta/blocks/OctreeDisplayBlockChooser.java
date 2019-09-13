@@ -36,7 +36,7 @@ public class OctreeDisplayBlockChooser implements BlockChooser<KtxOctreeBlockTil
                                                     Vantage vantage) {
         // Find up to eight closest blocks adjacent to focus
         int zoomIndex = zoomLevels.size()-1;
-        int zoomLevel = 2;  // default to coarsest block
+        int zoomLevel = 1;  // default to coarsest block
         if (zoomIndex<=0) {
             initBlockSizes(source, vantage);
         }
@@ -50,6 +50,8 @@ public class OctreeDisplayBlockChooser implements BlockChooser<KtxOctreeBlockTil
             }
             zoomIndex--;
         }
+
+        LOG.info("ZOOM LEVEL {}",zoomLevel);
 
         BlockTileResolution blockResolution = new KtxOctreeResolution(zoomLevel);
         //         ConstVector3 blockSize = source.getMaximumResolutionBlockSize();
