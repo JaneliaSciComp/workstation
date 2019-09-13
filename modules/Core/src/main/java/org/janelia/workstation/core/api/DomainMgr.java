@@ -8,16 +8,18 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.eventbus.Subscribe;
-
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.util.SubjectUtils;
-import org.janelia.model.util.ReflectionsFixer;
 import org.janelia.workstation.core.api.exceptions.SystemError;
-import org.janelia.workstation.core.api.facade.impl.rest.*;
+import org.janelia.workstation.core.api.facade.impl.rest.DomainFacadeImpl;
+import org.janelia.workstation.core.api.facade.impl.rest.OntologyFacadeImpl;
+import org.janelia.workstation.core.api.facade.impl.rest.SampleFacadeImpl;
+import org.janelia.workstation.core.api.facade.impl.rest.SubjectFacadeImpl;
+import org.janelia.workstation.core.api.facade.impl.rest.WorkspaceFacadeImpl;
 import org.janelia.workstation.core.api.facade.interfaces.DomainFacade;
 import org.janelia.workstation.core.api.facade.interfaces.OntologyFacade;
 import org.janelia.workstation.core.api.facade.interfaces.SampleFacade;
@@ -79,11 +81,6 @@ public class DomainMgr {
         // This initialization must be run on the EDT, because other things in the connection sequence depend
         // on these services, namely the authentication which depends on the AuthServiceClient.
 
-        if (listener != null) {
-            // In case this is a refresh, we need to remove the existing listener first
-            ApplicationOptions.getInstance().removePropertyChangeListener(listener);
-        }
-
         log.info("Initializing Domain Manager");
         try {
             String domainFacadeURL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
@@ -96,18 +93,17 @@ public class DomainMgr {
             workspaceFacade = new WorkspaceFacadeImpl(domainFacadeURL);
             sageClient = new SageRestClient();
             model = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
-            listener = evt -> {
-                if (evt.getPropertyName().equals(OptionConstants.USE_RUN_AS_USER_PREFERENCES)) {
-                    preferenceMap = null;
-                    model.invalidateAll();
-                }
-            };
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             FrameworkAccess.handleException(e);
         }
+    }
 
-        // Register new listener
-        ApplicationOptions.getInstance().addPropertyChangeListener(listener);
+    @Subscribe
+    public synchronized void runAsUserChanged(SessionStartEvent event) {
+        log.info("User changed, resetting model");
+        this.preferenceMap = null;
+        model.invalidateAll();
     }
 
     AuthServiceClient getAuthClient() {
@@ -136,15 +132,6 @@ public class DomainMgr {
 
     public SageRestClient getSageClient() {
         return sageClient;
-    }
-
-    @Subscribe
-    public void runAsUserChanged(SessionStartEvent event) {
-        log.info("User changed, resetting model");
-        synchronized (this) {
-            this.preferenceMap = null;
-        }
-        model.invalidateAll();
     }
 
     /**
@@ -202,20 +189,20 @@ public class DomainMgr {
      * @param key
      * @return
      */
-    Preference getPreference(String category, String key) throws Exception {
+    synchronized Preference getPreference(String category, String key) throws Exception {
         loadPreferences();
         String mapKey = category + ":" + key;
         return preferenceMap.get(mapKey);
     }
 
     @SuppressWarnings("unchecked")
-    <T> T getPreferenceValue(String category, String key, T defaultValue) throws Exception {
+    synchronized <T> T getPreferenceValue(String category, String key, T defaultValue) throws Exception {
         Preference preference = getPreference(category, key);
         if (preference == null) return defaultValue;
         return (T) preference.getValue();
     }
 
-    List<Preference> getPreferences(String category) throws Exception {
+    synchronized List<Preference> getPreferences(String category) throws Exception {
         loadPreferences();
         List<Preference> categoryPreferences = new ArrayList<>();
         for (Preference preference : preferenceMap.values()) {

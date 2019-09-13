@@ -43,13 +43,13 @@ public class ConnectionMgr {
     public String getConnectionString() {
         // This is here for only for migration from the older client
         String defaultValue = FrameworkAccess.getModelProperty(CONNECTION_STRING_PREF, null);
-        log.trace("legacy string: {}", defaultValue);
+        log.info("legacy string: {}", defaultValue);
 
         defaultValue = ConsoleProperties.getString("api.gateway", defaultValue);
-        log.trace("hardcoded api.gateway string: {}", defaultValue);
+        log.info("hardcoded api.gateway string: {}", defaultValue);
 
         defaultValue = FrameworkAccess.getLocalPreferenceValue(ConnectionMgr.class, CONNECTION_STRING_PREF, defaultValue);
-        log.trace("final connection string: {}", defaultValue);
+        log.info("final connection string: {}", defaultValue);
         return defaultValue;
     }
 
@@ -115,16 +115,9 @@ public class ConnectionMgr {
         String serverVersion = ConsoleProperties.getString("server.versionNumber", "");
 
         if (!StringUtils.isBlank(serverVersion)) {
-
             String clientVersion = ConsoleProperties.getString("client.versionNumber", "");
-
-            log.info("clientVersion: {}", clientVersion);
             log.info("serverVersion: {}", serverVersion);
-
-            if (!serverVersion.equals(clientVersion) && !"DEV".equals(clientVersion)) {
-                log.warn("CLIENT/SERVER VERSION MISMATCH");
-            }
-
+            log.info("clientVersion: {}", clientVersion);
         }
 
         Events.getInstance().postOnEventBus(new ConsolePropsLoaded());
