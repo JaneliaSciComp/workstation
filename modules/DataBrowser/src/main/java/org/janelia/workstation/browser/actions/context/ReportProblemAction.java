@@ -75,7 +75,7 @@ public class ReportProblemAction extends BaseContextualPopupAction {
 
                 ActivityLogHelper.logUserAction("DomainObjectContentMenu.reportAProblemWithThisData", domainObject);
 
-                final ApplyAnnotationAction action = ApplyAnnotationAction.get();
+                final ApplyAnnotationActionListener action = new ApplyAnnotationActionListener();
                 SimpleListenableFuture<List<Annotation>> future =
                         action.annotateReferences(term, Collections.singletonList(Reference.createFor(domainObject)));
 

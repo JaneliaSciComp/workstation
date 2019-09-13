@@ -285,12 +285,7 @@ public class DomainObjectIconGridViewer
             deselectObjects(domainObjects, isUserDriven, notifyModel);
         }
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                scrollSelectedObjectsToCenter();
-            }
-        });
+        SwingUtilities.invokeLater(() -> scrollSelectedObjectsToCenter());
     }
 
     @Override

@@ -38,6 +38,7 @@ import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.context.ApplyAnnotationAction;
+import org.janelia.workstation.browser.actions.context.ApplyAnnotationActionListener;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.browser.gui.components.DomainListViewManager;
 import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
@@ -433,7 +434,7 @@ public class StageForPublishingDialog extends ModalDialog {
     private int annotatePublishObjective(Collection<Sample> samples, Collection<String> objectives) throws Exception {
         int numAnnotations = 0;
         Ontology publicationOntology = getPublicationOntology();
-        ApplyAnnotationAction action = ApplyAnnotationAction.get();
+        final ApplyAnnotationActionListener action = new ApplyAnnotationActionListener();
         for (String objective : objectives) {
             OntologyTerm publishingNameTerm = getPublishedTerm(publicationOntology, String.format(ANNOTATION_PUBLISH_OBJECTIVE, objective));
             List<Annotation> annotations = action.setObjectAnnotations(new ArrayList<>(samples), publishingNameTerm, null, null);

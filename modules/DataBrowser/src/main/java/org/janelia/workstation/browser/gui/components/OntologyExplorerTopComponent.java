@@ -10,6 +10,7 @@ import org.janelia.model.security.Subject;
 import org.janelia.model.security.util.PermissionTemplate;
 import org.janelia.workstation.browser.actions.context.ApplyAnnotationAction;
 import org.janelia.workstation.browser.actions.OntologyElementAction;
+import org.janelia.workstation.browser.actions.context.ApplyAnnotationActionListener;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.dialogs.AutoAnnotationPermissionDialog;
 import org.janelia.workstation.browser.gui.dialogs.BulkAnnotationPermissionDialog;
@@ -91,6 +92,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -638,56 +640,54 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
         toolBar.setRollover(true);
-        
-        if (ontologies != null) {
-            final JButton ontologyButton = new JButton("Open ontology...");
-            ontologyButton.setIcon(Icons.getIcon("open_action.png"));
-            ontologyButton.setToolTipText("Open ontology");
-            ontologyButton.setFocusable(false);
-            ontologyButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
 
-                    final JScrollPopupMenu ontologyListMenu = new JScrollPopupMenu();
-                    ontologyListMenu.setMaximumVisibleRows(50);
+        final JButton ontologyButton = new JButton("Open ontology...");
+        ontologyButton.setIcon(Icons.getIcon("open_action.png"));
+        ontologyButton.setToolTipText("Open ontology");
+        ontologyButton.setFocusable(false);
+        ontologyButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
 
-                    Long currOntologyId = StateMgr.getStateMgr().getCurrentOntologyId();
-                    for (final Ontology ontology : ontologies) {
-                        Subject subject = null;
-                        try {
-                            // TODO: this should happen in a background thread
-                            subject = AccessManager.getSubjectByNameOrKey(ontology.getOwnerKey());
-                        }
-                        catch (Exception ex) {
-                            log.error("Error getting subject: "+ontology.getOwnerKey(),ex);
-                        }
-                        String owner = subject==null?ontology.getOwnerKey():subject.getFullName();
-                        boolean checked = currOntologyId != null && ontology.getId().equals(currOntologyId);
-                        JMenuItem roleMenuItem = new JRadioButtonMenuItem(ontology.getName() + " (" + owner + ")", checked);
-                        String iconName = ClientDomainUtils.isOwner(ontology)?"folder.png":"folder_blue.png";
-                        roleMenuItem.setIcon(Icons.getIcon(iconName));
-                        roleMenuItem.addActionListener(new ActionListener() {
-                            public void actionPerformed(ActionEvent e) {
-                                ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.openOntology", ontology);
-                                StateMgr.getStateMgr().setCurrentOntologyId(ontology.getId());
-                            }
-                        });
-                        ontologyListMenu.add(roleMenuItem);
+                final JScrollPopupMenu ontologyListMenu = new JScrollPopupMenu();
+                ontologyListMenu.setMaximumVisibleRows(50);
+
+                Long currOntologyId = StateMgr.getStateMgr().getCurrentOntologyId();
+                for (final Ontology ontology : ontologies) {
+                    Subject subject = null;
+                    try {
+                        // TODO: this should happen in a background thread
+                        subject = AccessManager.getSubjectByNameOrKey(ontology.getOwnerKey());
                     }
-
-                    ontologyListMenu.add(new JSeparator());
-
-                    JMenuItem addMenuItem = new JMenuItem("Create New Ontology...");
-                    addMenuItem.setIcon(Icons.getIcon("page_add.png"));
-                    addMenuItem.addActionListener(new NewOntologyActionListener());
-                    ontologyListMenu.add(addMenuItem);
-
-                    ontologyListMenu.show(ontologyButton, 0, ontologyButton.getHeight());
+                    catch (Exception ex) {
+                        log.error("Error getting subject: "+ontology.getOwnerKey(),ex);
+                    }
+                    String owner = subject==null?ontology.getOwnerKey():subject.getFullName();
+                    boolean checked = currOntologyId != null && ontology.getId().equals(currOntologyId);
+                    JMenuItem roleMenuItem = new JRadioButtonMenuItem(ontology.getName() + " (" + owner + ")", checked);
+                    String iconName = ClientDomainUtils.isOwner(ontology)?"folder.png":"folder_blue.png";
+                    roleMenuItem.setIcon(Icons.getIcon(iconName));
+                    roleMenuItem.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.openOntology", ontology);
+                            StateMgr.getStateMgr().setCurrentOntologyId(ontology.getId());
+                        }
+                    });
+                    ontologyListMenu.add(roleMenuItem);
                 }
-            });
-            ontologyButton.addMouseListener(new MouseForwarder(toolBar, "OntologyButton->JToolBar"));
-            toolBar.add(ontologyButton);
-        }
+
+                ontologyListMenu.add(new JSeparator());
+
+                JMenuItem addMenuItem = new JMenuItem("Create New Ontology...");
+                addMenuItem.setIcon(Icons.getIcon("page_add.png"));
+                addMenuItem.addActionListener(new NewOntologyActionListener());
+                ontologyListMenu.add(addMenuItem);
+
+                ontologyListMenu.show(ontologyButton, 0, ontologyButton.getHeight());
+            }
+        });
+        ontologyButton.addMouseListener(new MouseForwarder(toolBar, "OntologyButton->JToolBar"));
+        toolBar.add(ontologyButton);
 
         final JToggleButton keyBindButton = new JToggleButton();
         keyBindButton.setIcon(Icons.getIcon("keyboard_add.png"));
@@ -761,7 +761,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         if (node instanceof OntologyTermNode) {
             log.info("Running action for node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
             OntologyTermNode termNode = (OntologyTermNode)node;
-            ApplyAnnotationAction.get().performAction(termNode.getOntologyTerm());
+            final ApplyAnnotationActionListener action = new ApplyAnnotationActionListener();
+            action.performAction(termNode.getOntologyTerm());
         }
     }
     
@@ -792,28 +793,19 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         }
     }
 
-    /** @deprecated */
-    public void showKeyBindDialog(OntologyTermNode node) {
-        OntologyElementAction action = getActionForTerm(node.getOntologyTerm());
-        if (action!=null) {
-            getKeyBindDialog().showForAction(action);
-        }
-    }
+    public void executeBinding(OntologyTerm term) {
 
-    public void executeBinding(Long ontologyTermId) {
-
-        for (IdentifiableNode identifiableNode : NodeTracker.getInstance().getNodesById(ontologyTermId)) {
+        for (IdentifiableNode identifiableNode : NodeTracker.getInstance().getNodesById(term.getId())) {
 
             // Now we can select the node we actually want
             Long[] path = NodeUtils.createIdPath(identifiableNode);
             OntologyTermNode node = select(path);
             if (node!=null) {
-                javax.swing.Action a = node.getPreferredAction();
-                if (a != null) {
-                    log.info("Executing default node action for: {}",node.getOntologyTerm());
-                    a.actionPerformed(new ActionEvent(node, ActionEvent.ACTION_PERFORMED, ""));
-                }
-                
+                beanTreeView.selectNode(node);
+
+                ApplyAnnotationActionListener action = new ApplyAnnotationActionListener(Arrays.asList(term));
+                action.actionPerformed(null);
+
                 // Just execute once, even if there are multiple nodes with the same id handing around
                 break;
             }   

@@ -160,17 +160,22 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             if (KeymapUtil.isModifier(e)) {
                 return;
             }
+
             if (e.getID() != KeyEvent.KEY_PRESSED) {
                 return;
             }
             
             KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-            if (!KeyBindings.getKeyBindings().executeBinding(shortcut)) {
+            if (KeyBindings.getKeyBindings().executeBinding(shortcut)) {
+                e.consume();
+            }
+            else {
                 
                 // No keybinds matched, use the default behavior
                 // Ctrl-A or Meta-A to select all
                 if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
                     selectObjects(objectList, true, true);
+                    e.consume();
                     return;
                 } 
                 else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
@@ -180,6 +185,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 }
                 else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     enterKeyPressed();
+                    e.consume();
                     return;
                 }
                 else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
@@ -217,6 +223,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                         }
                     }
 
+                    e.consume();
                 }
                 else {
                     endRangeSelection();
@@ -240,6 +247,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
                     if (object != null) {
                         userSelectObject(object, true);
+                        e.consume();
                     }
                 }
             }

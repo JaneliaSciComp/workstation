@@ -29,6 +29,7 @@ import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.context.ApplyAnnotationAction;
+import org.janelia.workstation.browser.actions.context.ApplyAnnotationActionListener;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -211,7 +212,7 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
     private void annotatePublishedName(List<Sample> samples, String publishedName, Progress progress) throws Exception {
         Ontology publicationOntology = getPublicationOntology();
         OntologyTerm publishingNameTerm = getPublishedTerm(publicationOntology, ANNOTATION_PUBLISHING_NAME);
-        ApplyAnnotationAction action = ApplyAnnotationAction.get();
+        final ApplyAnnotationActionListener action = new ApplyAnnotationActionListener();
         List<Annotation> annotations = action.setObjectAnnotations(samples, publishingNameTerm, publishedName, progress);
         if (annotations != null) {
             if (annotations.isEmpty()) {

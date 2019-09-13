@@ -33,7 +33,7 @@ public class OntologyElementAction implements Action {
     @Override
     public void doAction() {
         OntologyExplorerTopComponent explorer = OntologyExplorerTopComponent.getInstance();
-        explorer.executeBinding(ontologyTerm.getId());
+        explorer.executeBinding(ontologyTerm);
     }
 
     @Override
