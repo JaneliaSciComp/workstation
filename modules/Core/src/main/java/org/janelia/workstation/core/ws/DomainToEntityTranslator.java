@@ -8,7 +8,6 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.PathTranslator;
 import org.janelia.model.domain.DomainObject;
@@ -36,11 +35,10 @@ public class DomainToEntityTranslator {
 
     private static final Logger log = LoggerFactory.getLogger(DomainToEntityTranslator.class);
 
-    private DomainModel model = DomainMgr.getDomainMgr().getModel();
     private long dummyId = 0;
 
     public Entity getOntologyEntity(Long ontologyId) throws Exception {
-        Ontology ontology = model.getDomainObject(Ontology.class, ontologyId);
+        Ontology ontology = DomainMgr.getDomainMgr().getModel().getDomainObject(Ontology.class, ontologyId);
         if (ontology==null) return null;
         return getOntologyEntity(ontology);
     }
@@ -113,7 +111,7 @@ public class DomainToEntityTranslator {
         
         try {
             int orderIndex = 0;
-            for(DomainObject domainObject : model.getDomainObjects(separation.getFragmentsReference())) {
+            for(DomainObject domainObject : DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference())) {
                 NeuronFragment fragment = (NeuronFragment)domainObject;
                 if (fragment instanceof CuratedNeuron) {
                     log.trace("Omitting curated fragment: {}", fragment);
