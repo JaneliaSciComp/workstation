@@ -46,6 +46,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 
@@ -385,12 +386,17 @@ public class Hud extends ModalDialog {
 
                     // Ensure we have an image and that it is cached.
                     if (image == null) {
-                        log.debug("Must load image.");
-                        try (InputStream imageStream = FileMgr.getFileMgr().getFile(filepath, false).openContentStream()) {
-                            image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(filepath));
+                        try {
+                            log.debug("Must load image.");
+                            try (InputStream imageStream = FileMgr.getFileMgr().getFile(filepath, false).openContentStream()) {
+                                image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(filepath));
+                            }
+                            if (ic != null) {
+                                ic.put(filepath, image);
+                            }
                         }
-                        if (ic != null) {
-                            ic.put(filepath, image);
+                        catch (FileNotFoundException e) {
+                            log.warn("Could not find file: "+filepath, e);
                         }
                     }
 
