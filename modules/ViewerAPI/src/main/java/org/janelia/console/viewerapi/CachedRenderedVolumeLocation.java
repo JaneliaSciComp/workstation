@@ -58,8 +58,8 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
     }
 
     @Override
-    public String getRenderedVolumePath() {
-        return delegate.getRenderedVolumePath();
+    public String getBaseDataStoragePath() {
+        return delegate.getBaseDataStoragePath();
     }
 
     @Override
@@ -128,14 +128,14 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
     }
 
     @Override
-    public Streamable<byte[]> readTileImagePageAsTexturedBytes(String tileRelativePath, List<String> channelImageNames, int pageNumber) {
-        RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
-                .withRelativePath(tileRelativePath)
+    public Streamable<byte[]> readTiffPageAsTexturedBytes(String imageRelativePath, List<String> channelImageNames, int pageNumber) {
+        RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getBaseDataStoragePath())
+                .withRelativePath(imageRelativePath)
                 .withChannelImageNames(channelImageNames)
                 .withPageNumber(pageNumber)
                 .build(() -> new RenderedVolumeContentFileProxy<>(
-                        tileRelativePath + "." + pageNumber,
-                        () -> delegate.readTileImagePageAsTexturedBytes(tileRelativePath, channelImageNames, pageNumber),
+                        imageRelativePath + "." + pageNumber,
+                        () -> delegate.readTiffPageAsTexturedBytes(imageRelativePath, channelImageNames, pageNumber),
                         bytes -> new ByteArrayInputStream(bytes))
                 );
         FileProxy f = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
@@ -156,16 +156,16 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
    }
 
     @Override
-    public Streamable<byte[]> readRawTileROIPixels(RawImage rawImage, int channel, int xCenter, int yCenter, int zCenter, int dimx, int dimy, int dimz) {
-        return delegate.readRawTileROIPixels(rawImage, channel, xCenter, yCenter, zCenter, dimx, dimy, dimz);
+    public Streamable<byte[]> readTiffImageROIPixels(String imagePath, int xCenter, int yCenter, int zCenter, int dimx, int dimy, int dimz) {
+        return delegate.readTiffImageROIPixels(imagePath, xCenter, yCenter, zCenter, dimx, dimy, dimz);
     }
 
     @Override
     public Streamable<InputStream> getContentFromRelativePath(String relativePath) {
-        RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
+        RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getBaseDataStoragePath())
                 .withRelativePath(relativePath)
                 .build(() -> new RenderedVolumeContentFileProxy<>(
-                        getRenderedVolumePath() + relativePath,
+                        getBaseDataStoragePath() + relativePath,
                         () -> delegate.getContentFromRelativePath(relativePath),
                         Function.identity())
                 );
@@ -176,10 +176,10 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
 
     @Override
     public Streamable<InputStream> getContentFromAbsolutePath(String absolutePath) {
-        RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getRenderedVolumePath())
+        RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getBaseDataStoragePath())
                 .withAbsolutePath(absolutePath)
                 .build(() -> new RenderedVolumeContentFileProxy<>(
-                        getRenderedVolumePath() + absolutePath,
+                        getBaseDataStoragePath() + absolutePath,
                         () -> delegate.getContentFromAbsolutePath(absolutePath),
                         Function.identity())
                 );

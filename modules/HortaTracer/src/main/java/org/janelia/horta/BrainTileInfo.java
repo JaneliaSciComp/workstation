@@ -17,7 +17,7 @@ import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.VoxelIndex;
 import org.janelia.rendering.RawImage;
-import org.janelia.rendering.RenderedVolumeLocation;
+import org.janelia.rendering.RenderedVolumeLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -216,7 +216,7 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
 
         return tileLoader.findStorageLocation(basePath)
-                .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, rawImage.getRawImagePath(String.format(RenderedVolumeLocation.DEFAULT_RAW_CH_SUFFIX_PATTERN, colorChannelIndex))).asOptional())
+                .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, rawImage.getRawImagePath(colorChannelIndex)).asOptional())
                 .map(rawImageStream -> {
                     String tileStack = rawImage.toString() + "-ch-" + colorChannelIndex;
                     try {
