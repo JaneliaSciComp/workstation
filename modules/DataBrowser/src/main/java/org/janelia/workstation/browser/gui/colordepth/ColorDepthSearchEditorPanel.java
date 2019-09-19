@@ -38,6 +38,7 @@ import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.model.domain.gui.cdmip.ColorDepthResult;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.progress.ProgressMeterMgr;
 import org.janelia.workstation.browser.gui.support.LoadedImagePanel;
@@ -51,6 +52,8 @@ import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.api.web.AsyncServiceClient;
@@ -206,6 +209,11 @@ public class ColorDepthSearchEditorPanel
     }
 
     private void executeSearch() {
+
+        if (!ClientDomainUtils.isOwner(search)) {
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "Only the search owner ("+search.getOwnerName()+") can execute this search.");
+            return;
+        }
 
         if (search.getMasks().isEmpty()) {
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "You need to select some masks to search on.");
@@ -609,7 +617,6 @@ public class ColorDepthSearchEditorPanel
         executingPanel.setVisible(isProcessing);
         searchButton.setEnabled(!isProcessing);
         searchOptionsPanel.updateUI();
-
     }
     
     private void setError(boolean isError) {
