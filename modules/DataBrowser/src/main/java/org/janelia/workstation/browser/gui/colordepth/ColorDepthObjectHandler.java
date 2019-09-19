@@ -1,10 +1,13 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
+import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -18,7 +21,7 @@ import org.openide.util.lookup.ServiceProvider;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = DomainObjectHandler.class)
+@ServiceProvider(service = DomainObjectHandler.class, position = 202)
 public class ColorDepthObjectHandler implements DomainObjectHandler {
 
     @Override
@@ -34,13 +37,19 @@ public class ColorDepthObjectHandler implements DomainObjectHandler {
         else if (ColorDepthSearch.class.isAssignableFrom(clazz)) {
             return true;
         }
+        else if (ColorDepthLibrary.class.isAssignableFrom(clazz)) {
+            return true;
+        }
         return false;
     }
 
     @Override
     public Node getNode(DomainObject domainObject, ChildFactory parentChildFactory) throws Exception {
-        if (ColorDepthSearch.class.isAssignableFrom(domainObject.getClass())) {
+        if (domainObject instanceof ColorDepthSearch) {
             return new ColorDepthSearchNode(parentChildFactory, (ColorDepthSearch)domainObject);
+        }
+        else if (domainObject instanceof ColorDepthLibrary) {
+            return new ColorDepthLibraryNode(parentChildFactory, (ColorDepthLibrary) domainObject);
         }
         else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);
@@ -49,8 +58,11 @@ public class ColorDepthObjectHandler implements DomainObjectHandler {
 
     @Override
     public Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
-        if (ColorDepthSearch.class.isAssignableFrom(domainObject.getClass())) {
+        if (domainObject instanceof ColorDepthSearch) {
             return ColorDepthSearchEditorPanel.class;
+        }
+        else if (domainObject instanceof ColorDepthLibrary) {
+            return FilterEditorPanel.class;
         }
         return null;
     }
@@ -63,6 +75,9 @@ public class ColorDepthObjectHandler implements DomainObjectHandler {
         else if (domainObject instanceof ColorDepthSearch) {
             return "search_large.png";
         }
+        else if (domainObject instanceof ColorDepthLibrary) {
+            return "folder_large.png";
+        }
         else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);
         }
@@ -70,25 +85,45 @@ public class ColorDepthObjectHandler implements DomainObjectHandler {
 
     @Override
     public boolean supportsRemoval(DomainObject domainObject) {
-        if (ColorDepthMask.class.isAssignableFrom(domainObject.getClass())) {
+        if (domainObject instanceof ColorDepthMask) {
             return true;
         }
-        else if (ColorDepthSearch.class.isAssignableFrom(domainObject.getClass())) {
+        else if (domainObject instanceof ColorDepthSearch) {
             return true;
         }
-        else {
-            return false;
+        else if (domainObject instanceof ColorDepthLibrary) {
+            return true;
         }
+        return false;
     }
     
     @Override
     public void remove(DomainObject domainObject) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        if (ColorDepthMask.class.isAssignableFrom(domainObject.getClass())) {
-            model.remove(Arrays.asList((ColorDepthMask)domainObject));
+        if (domainObject instanceof ColorDepthMask) {
+            model.remove(Collections.singletonList((ColorDepthMask) domainObject));
         }
-        else if (ColorDepthSearch.class.isAssignableFrom(domainObject.getClass())) {
-            model.remove(Arrays.asList(((ColorDepthSearch)domainObject)));
+        else if (domainObject instanceof ColorDepthSearch) {
+            model.remove(Collections.singletonList(((ColorDepthSearch) domainObject)));
+        }
+        else if (domainObject instanceof ColorDepthLibrary) {
+            model.remove(Collections.singletonList((ColorDepthLibrary) domainObject));
+        }
+        else {
+            throw new IllegalArgumentException("Domain class not supported: "+domainObject);
+        }
+    }
+
+    @Override
+    public int getMaxReferencesBeforeRemoval(DomainObject domainObject) {
+        if (domainObject instanceof ColorDepthMask) {
+            return 1;
+        }
+        else if (domainObject instanceof ColorDepthSearch) {
+            return 0;
+        }
+        else if (domainObject instanceof ColorDepthLibrary) {
+            return 0;
         }
         else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);

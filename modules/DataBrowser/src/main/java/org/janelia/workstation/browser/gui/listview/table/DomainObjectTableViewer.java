@@ -9,7 +9,7 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
 import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
-import org.janelia.workstation.browser.actions.RemoveItemsFromFolderAction;
+import org.janelia.workstation.browser.actions.RemoveItemsActionListener;
 import org.janelia.workstation.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.support.SampleUIUtils;
@@ -321,7 +321,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             if (parent instanceof Node) {
                 Node node = (Node) parent;
                 if (ClientDomainUtils.hasWriteAccess(node)) {
-                    RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(node, getSelectedObjects());
+                    RemoveItemsActionListener action = new RemoveItemsActionListener(node, getSelectedObjects());
                     action.actionPerformed(null);
                 }
             }

@@ -56,4 +56,8 @@ public class LineReleaseObjectHandler implements DomainObjectHandler {
         model.remove((LineRelease)domainObject);
     }
 
+    @Override
+    public int getMaxReferencesBeforeRemoval(DomainObject domainObject) {
+        return 0;
+    }
 }

@@ -3,22 +3,21 @@ package org.janelia.workstation.browser.gui.editor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.util.Arrays;
+import java.util.Collections;
 
-import javax.swing.Action;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
-import org.janelia.workstation.common.gui.support.PopupContextMenu;
-import org.janelia.workstation.common.actions.CopyToClipboardAction;
-import org.janelia.workstation.browser.actions.RemoveItemsFromFolderAction;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.interfaces.HasFilepath;
-import org.janelia.model.domain.workspace.ProxyGroup;
 import org.janelia.model.domain.workspace.GroupedFolder;
+import org.janelia.model.domain.workspace.ProxyGroup;
+import org.janelia.workstation.browser.actions.RemoveItemsActionListener;
+import org.janelia.workstation.browser.gui.hud.Hud;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.common.gui.support.PopupContextMenu;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 
 /**
  * Context pop up menu for color depth results.
@@ -78,8 +77,8 @@ public class GroupContextMenu extends PopupContextMenu {
 
     protected JMenuItem getRemoveFromFolderItem() {
 
-        Action action = new RemoveItemsFromFolderAction(contextObject, Arrays.asList(group));
-        JMenuItem deleteItem = getNamedActionItem(action);
+        ActionListener action = new RemoveItemsActionListener(contextObject, Collections.singletonList(group));
+        JMenuItem deleteItem = getNamedActionItem("Remove Group", action);
         
         if (!ClientDomainUtils.hasWriteAccess(contextObject)) {
             deleteItem.setEnabled(false);
