@@ -379,20 +379,8 @@ public class ColorDepthSearchEditorPanel
                 showSearchView(isUserDriven);
                 
                 debouncer.success();
-                
-                // Update processing status
-                boolean isProcessing = false;
-                for(BackgroundWorker worker : ProgressMeterMgr.getProgressMeterMgr().getActiveWorkers()) {
-                    if (worker instanceof SearchMonitoringWorker) {
-                        SearchMonitoringWorker searchWorker = (SearchMonitoringWorker)worker;
-                        log.info("Checking active worker {}?={}", searchWorker.getSearch().getId(), search.getId());
-                        if (searchWorker.getSearch().getId().equals(search.getId())) {
-                            isProcessing = true;
-                        }
-                    }
-                }
-                log.info("Updating progress UI to: "+isProcessing);
-                setProcessing(isProcessing);
+
+                setProcessing(checkIfProcessing());
                 
                 ActivityLogHelper.logElapsed("ColorDepthSearchEditorPanel.loadDomainObject", search, w);
             }
@@ -405,6 +393,19 @@ public class ColorDepthSearchEditorPanel
             }
         };
         worker.execute();
+    }
+
+    private boolean checkIfProcessing() {
+        for(BackgroundWorker worker : ProgressMeterMgr.getProgressMeterMgr().getActiveWorkers()) {
+            if (worker instanceof SearchMonitoringWorker) {
+                SearchMonitoringWorker searchWorker = (SearchMonitoringWorker)worker;
+                log.info("Checking active worker {}?={}", searchWorker.getSearch().getId(), search.getId());
+                if (searchWorker.getSearch().getId().equals(search.getId())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public void showNothing() {
@@ -603,13 +604,18 @@ public class ColorDepthSearchEditorPanel
         });
     }
     
-    private void setProcessing(boolean isRunning) {
-        executingPanel.setVisible(isRunning);
-        searchButton.setEnabled(!isRunning);
+    private void setProcessing(boolean isProcessing) {
+        log.info("Updating progress UI to: {}", isProcessing);
+        executingPanel.setVisible(isProcessing);
+        searchButton.setEnabled(!isProcessing);
+        searchOptionsPanel.updateUI();
+
     }
     
     private void setError(boolean isError) {
+        log.info("Updating error UI to: {}", isError);
         executionErrorLabel.setVisible(isError);
+        searchOptionsPanel.updateUI();
     }
     
     @Override
