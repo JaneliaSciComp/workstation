@@ -271,7 +271,7 @@ public class TiledMicroscopeDomainMgr {
             getModel().notifyDomainObjectCreated(savedMetadata);
         }
         else {
-            savedMetadata = client.updateMetadata(neuronMetadata);
+            savedMetadata = client.update(neuronMetadata);
             getModel().notifyDomainObjectChanged(savedMetadata);
         }
         return savedMetadata;
@@ -284,7 +284,7 @@ public class TiledMicroscopeDomainMgr {
                 throw new IllegalArgumentException("Bulk neuron creation is currently unsupported");
             }
         }
-        List<TmNeuronMetadata> updatedMetadata = client.updateMetadata(neuronList);
+        List<TmNeuronMetadata> updatedMetadata = client.update(neuronList);
         for(TmNeuronMetadata tmNeuronMetadata : updatedMetadata) {
             getModel().notifyDomainObjectChanged(tmNeuronMetadata);
         }
@@ -293,20 +293,18 @@ public class TiledMicroscopeDomainMgr {
     
     public TmNeuronMetadata save(TmNeuronMetadata neuronMetadata) throws Exception {
         LOG.debug("save({})", neuronMetadata);
-        TmProtobufExchanger exchanger = new TmProtobufExchanger();
-        InputStream protobufStream = new ByteArrayInputStream(exchanger.serializeNeuron(neuronMetadata));
         TmNeuronMetadata savedMetadata;
         if (neuronMetadata.getId()==null) {
-            savedMetadata = client.create(neuronMetadata, protobufStream);
+            savedMetadata = client.create(neuronMetadata);
             getModel().notifyDomainObjectCreated(savedMetadata);
         }
         else {
-            savedMetadata = client.update(neuronMetadata, protobufStream);
+            savedMetadata = client.update(neuronMetadata);
             getModel().notifyDomainObjectChanged(savedMetadata);
         }
         // We assume that the neuron data was saved on the server, but it only returns metadata for efficiency. We
         // already have the data, so let's copy it over into the new object.
-        exchanger.copyNeuronData(neuronMetadata, savedMetadata);
+       // exchanger.copyNeuronData(neuronMetadata, savedMetadata);
         return savedMetadata;
     }
     

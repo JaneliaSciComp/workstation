@@ -271,10 +271,9 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         return response.readEntity(TmNeuronMetadata.class);
     }
 
-    public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) {
+    public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata) {
         FormDataMultiPart multiPart = new FormDataMultiPart()
-                .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE)
-                .field("protobufBytes", protobufStream, MediaType.APPLICATION_OCTET_STREAM_TYPE);
+                .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE);
         WebTarget target = getMouselightDataEndpoint("/workspace/neuron");
         Response response = target
                 .request()
@@ -283,56 +282,25 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         return response.readEntity(TmNeuronMetadata.class);
     }
 
-    TmNeuronMetadata updateMetadata(TmNeuronMetadata neuronMetadata) {
-        return update(neuronMetadata, null);
-    }
-
-    public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) {
-       List<TmNeuronMetadata> list = update(Arrays.asList(Pair.of(neuronMetadata, protobufStream)));
+    public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata) {
+       List<TmNeuronMetadata> list = update(Arrays.asList(neuronMetadata));
        if (list.isEmpty()) return null;
        if (list.size()>1) LOG.warn("update(TmNeuronMetadata) returned more than one result.");
        return list.get(0);
     }
 
-    List<TmNeuronMetadata> updateMetadata(List<TmNeuronMetadata> neuronList) {
-        List<Pair<TmNeuronMetadata,InputStream>> pairs = new ArrayList<>();
-        for(TmNeuronMetadata tmNeuronMetadata : neuronList) {
-            pairs.add(Pair.of(tmNeuronMetadata, null));
-        }
-        return update(pairs);
-    }
-
-    public List<TmNeuronMetadata> update(Collection<Pair<TmNeuronMetadata,InputStream>> neuronPairs) {
+    public List<TmNeuronMetadata> update(Collection<TmNeuronMetadata> neurons) {
         StopWatch w = new StopWatch();
-        if (neuronPairs.isEmpty()) return Collections.emptyList();
-        MultiPart multiPartEntity = new MultiPart();
-        for (Pair<TmNeuronMetadata, InputStream> neuronPair : neuronPairs) {
-            multiPartEntity.bodyPart(new BodyPart(neuronPair.getLeft(), MediaType.APPLICATION_JSON_TYPE));
-            if (neuronPair.getRight()!=null) {
-                multiPartEntity.bodyPart(new BodyPart(neuronPair.getRight(), MediaType.APPLICATION_OCTET_STREAM_TYPE));
-            }
-            else {
-                multiPartEntity.bodyPart(new BodyPart("", MediaType.TEXT_PLAIN_TYPE));
-            }
-        }
-        
-        String logStr;
-        if (neuronPairs.size()==1) {
-            TmNeuronMetadata neuron = neuronPairs.iterator().next().getLeft();
-            logStr = neuron==null?"null neuron":neuron.toString();
-        }
-        else {
-            logStr = neuronPairs.size()+" neurons";
-        }
+        if (neurons.isEmpty()) return Collections.emptyList();
 
         WebTarget target = getMouselightDataEndpoint("/workspace/neuron");
         Response response = target
                 .request()
-                .post(Entity.entity(multiPartEntity, MultiPartMediaTypes.MULTIPART_MIXED));
+                .post(Entity.json(neurons));
         checkBadResponse(target, response);
 
         List<TmNeuronMetadata> list = response.readEntity(new GenericType<List<TmNeuronMetadata>>() {});
-        LOG.info("Updated {} in {} ms",logStr,w.getElapsedTime());
+        LOG.info("Updated {} in {} ms",neurons.toString(),w.getElapsedTime());
         return list;
     }
 
