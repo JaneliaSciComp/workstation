@@ -229,7 +229,7 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         checkBadResponse(target, response);
     }
 
-    Collection<Pair<TmNeuronMetadata,InputStream>> getWorkspaceNeuronPairs(Long workspaceId, long offset, int length) {
+    Collection<TmNeuronMetadata> getWorkspaceNeurons(Long workspaceId, long offset, int length) {
         WebTarget target = getMouselightDataEndpoint("/workspace/neuron")
                 .queryParam("workspaceId", workspaceId)
                 .queryParam("offset", offset)
@@ -237,47 +237,21 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
                 ;
 
         Response response = target
-                .request("multipart/mixed")
+                .request("application/json")
                 .get();
         checkBadResponse(target, response);
-        MultiPart multipart = response.readEntity(MultiPart.class);
-        List<Pair<TmNeuronMetadata,InputStream>> neurons = new ArrayList<>();
-        BodyPart jsonPart = null;
-        for(BodyPart bodyPart : multipart.getBodyParts()) {
-            if (jsonPart==null) {
-                // Every other part is a JSON representation
-                jsonPart = bodyPart;
-            }
-            else  {
-                // Every other part is the protobuf byte representation
-                TmNeuronMetadata neuron = jsonPart.getEntityAs(TmNeuronMetadata.class);
-                InputStream protobufStream = bodyPart.getEntityAs(InputStream.class);
-                neurons.add(Pair.of(neuron, protobufStream));
-                // Get ready to read the next pair
-                jsonPart = null;
-            }
-        }
+        List<TmNeuronMetadata> neurons = response.readEntity(new GenericType<List<TmNeuronMetadata>>() {});
         return neurons;
     }
 
-    TmNeuronMetadata createMetadata(TmNeuronMetadata neuronMetadata) {
-        FormDataMultiPart multiPart = new FormDataMultiPart()
-                .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE);
-        WebTarget target = getMouselightDataEndpoint("/workspace/neuron");
-        Response response = target
-                .request()
-                .put(Entity.entity(multiPart, multiPart.getMediaType()));
-        checkBadResponse(target, response);
-        return response.readEntity(TmNeuronMetadata.class);
-    }
-
     public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata) {
-        FormDataMultiPart multiPart = new FormDataMultiPart()
-                .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE);
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(neuronMetadata);
         WebTarget target = getMouselightDataEndpoint("/workspace/neuron");
         Response response = target
                 .request()
-                .put(Entity.entity(multiPart, multiPart.getMediaType()));
+                .put(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(TmNeuronMetadata.class);
     }

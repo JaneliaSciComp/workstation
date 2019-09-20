@@ -222,24 +222,13 @@ public class TiledMicroscopeDomainMgr {
             int defaultLength = 100000;
             @Override
             public boolean tryAdvance(Consumer<? super Stream<TmNeuronMetadata>> action) {
-                Collection<Pair<TmNeuronMetadata, InputStream>> neuronsWithPoints = client.getWorkspaceNeuronPairs(workspaceId, offset, defaultLength);
-                long lastEntryOffset = offset + neuronsWithPoints.size();
-                LOG.trace("Retrieved {} entries ({} - {}) from {} -> {}", neuronsWithPoints.size(), offset, lastEntryOffset);
-                if (neuronsWithPoints.isEmpty()) {
+                Collection<TmNeuronMetadata> neurons= client.getWorkspaceNeurons(workspaceId, offset, defaultLength);
+                long lastEntryOffset = offset + neurons.size();
+                LOG.trace("Retrieved {} entries ({} - {}) from {} -> {}", neurons.size(), offset, lastEntryOffset);
+                if (neurons.isEmpty()) {
                     return false;
                 } else {
                     offset = lastEntryOffset;
-                    List<TmNeuronMetadata> neurons = new ArrayList<>();
-                    for(Pair<TmNeuronMetadata, InputStream> pair : neuronsWithPoints) {
-                        TmNeuronMetadata neuronMetadata = pair.getLeft();
-                        try {
-                            exchanger.deserializeNeuron(pair.getRight(), neuronMetadata);
-                        } catch (Exception e) {
-                            throw new IllegalStateException(e);
-                        }
-                        LOG.trace("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);
-                        neurons.add(neuronMetadata);
-                    }
                     action.accept(neurons.stream());
                     return neurons.size() == defaultLength;
                 }
@@ -267,7 +256,7 @@ public class TiledMicroscopeDomainMgr {
         LOG.debug("save({})", neuronMetadata);
         TmNeuronMetadata savedMetadata;
         if (neuronMetadata.getId()==null) {
-            savedMetadata = client.createMetadata(neuronMetadata);
+            savedMetadata = client.create(neuronMetadata);
             getModel().notifyDomainObjectCreated(savedMetadata);
         }
         else {
