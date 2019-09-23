@@ -1,25 +1,22 @@
 package org.janelia.horta.nodes;
 
 import java.awt.Color;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Observer;
+
 import org.janelia.console.viewerapi.ComposableObservable;
-// import org.janelia.geometry3d.Vantage;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.VantageInterface;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 /**
  * @author Christopher Bruns
  */
-public class BasicHortaWorkspace implements HortaMetaWorkspace
-{
+public class BasicHortaWorkspace implements HortaMetaWorkspace {
     private final VantageInterface vantage;
     private final ComposableObservable changeObservable = new ComposableObservable();
     private Color backgroundColor = new Color(0.1f, 0.1f, 0.1f, 1f);
@@ -32,7 +29,6 @@ public class BasicHortaWorkspace implements HortaMetaWorkspace
         this.vantage = vantage;
     }
 
-    
     @Override
     public VantageInterface getVantage()
     {

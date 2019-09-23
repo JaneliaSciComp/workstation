@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.Executors;
 import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
@@ -59,6 +60,7 @@ import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.MouseInputListener;
 import javax.swing.text.Keymap;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 
 import org.janelia.console.viewerapi.BasicSampleLocation;
@@ -130,13 +132,20 @@ import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.LocalVolumeBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
+import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.scenewindow.OrbitPanZoomInteractor;
 import org.janelia.scenewindow.SceneRenderer;
 import org.janelia.scenewindow.SceneRenderer.CameraType;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
+import org.janelia.workstation.core.api.LocalCacheMgr;
+import org.janelia.workstation.core.api.http.RestJsonClientManager;
+import org.janelia.workstation.core.api.web.JadeServiceClient;
+import org.janelia.workstation.core.options.ApplicationOptions;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
 import org.openide.actions.UndoAction;
@@ -183,6 +192,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         implements VolumeProjection {
 
     static final String PREFERRED_ID = "NeuronTracerTopComponent";
+    private static final int CACHE_CONCURRENCY = 10;
 
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor worldInteractor;
@@ -2064,6 +2074,14 @@ public final class NeuronTracerTopComponent extends TopComponent
         glad.swapBuffers();
     }
 
+    private TmSample getCurrentSample() {
+        if (this.metaWorkspace != null) {
+            return this.metaWorkspace.getSample();
+        } else {
+            return null;
+        }
+    }
+
     public BufferedImage getScreenShot() {
         GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
         glad.getContext().makeCurrent();
@@ -2114,14 +2132,57 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     void loadPersistentTileAtLocation(Vector3 location) throws IOException {
         if (ktxSource == null) {
-            // here it used to create a ktx source but
-            // the code was not correct so for now simply throw the exception
-            // just to see if this ever happens;
-            // if it does this will have to be fixed properly
-            throw new IllegalStateException("Internal Error! KTX source has not been set.");
+            // this is the case when the action is triggered by a LoadHortaTileAtFocus  and there's no ktx source set yet
+            KtxOctreeBlockTileSource source = createKtxSource();
+            if (source == null) {
+                return;
+            }
         }
         neuronTraceLoader.loadKtxTileAtLocation(ktxSource, location, true);
     }
+
+    private KtxOctreeBlockTileSource createKtxSource() {
+        TmSample tmSample = getCurrentSample();
+        if (tmSample == null) {
+            logger.error("Internal Error: No sample has been set for creating a KTX source");
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No sample set for creating a KTX source",
+                    "KTX sample source error",
+                    JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+        try {
+            return new KtxOctreeBlockTileSource(getCurrentSourceURL(), getTileLoader()).init(tmSample);
+        } catch (Exception e) {
+            logger.warn("Error initializing KTX source for {}", getCurrentSample(), e);
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Error initializing KTX source for sample at " + tmSample.getLargeVolumeOctreeFilepath(),
+                    "Error initializing KTX source",
+                    JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+    }
+
+    TileLoader getTileLoader() {
+        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
+            return new CachedTileLoader(
+                    new JadeBasedTileLoader(new JadeServiceClient(ConsoleProperties.getString("jadestorage.rest.url"), () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false))),
+                    LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
+                    CACHE_CONCURRENCY,
+                    Executors.newFixedThreadPool(
+                            CACHE_CONCURRENCY,
+                            new ThreadFactoryBuilder()
+                                    .setNameFormat("HortaTileCacheWriter-%d")
+                                    .setDaemon(true)
+                                    .build())
+            );
+        } else {
+            return new FileBasedTileLoader();
+        }
+    }
+
 
     public void resetRotation() {
         Vantage v = sceneWindow.getVantage();
