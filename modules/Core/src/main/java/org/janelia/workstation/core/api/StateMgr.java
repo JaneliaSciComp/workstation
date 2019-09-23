@@ -167,7 +167,7 @@ public class StateMgr {
 
     public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
         String category = DomainConstants.PREFERENCE_CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
-        List<Preference> prefs = DomainMgr.getDomainMgr().getPreferences(category);
+        List<Preference> prefs = DomainMgr.getDomainMgr().getPreferencesByCategory(category);
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(AccessManager.getSubjectKey(), ontologyId);
         for (Preference pref : prefs) {
             if (pref.getValue()!=null) {
@@ -184,7 +184,7 @@ public class StateMgr {
         Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
         log.info("Saving {} key bindings for ontology {}", keybinds.size(), ontologyKeyBindings.getOntologyId());
         
-        List<Preference> preferences = DomainMgr.getDomainMgr().getPreferences(category);
+        List<Preference> preferences = DomainMgr.getDomainMgr().getPreferencesByCategory(category);
         
         for (OntologyKeyBind bind : keybinds) {
             Preference pref = DomainMgr.getDomainMgr().getPreference(category, bind.getKey());

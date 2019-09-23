@@ -10,9 +10,7 @@ import org.openide.nodes.Node;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public interface DomainObjectHandler extends Compatible<DomainObject> {
-    
-    public static final String DOMAIN_OBJECT_LOOKUP_PATH = "DomainObject/DomainObjectNodeProvider";
-    
+
     /**
      * Can this service handle the given object?
      */
@@ -53,7 +51,15 @@ public interface DomainObjectHandler extends Compatible<DomainObject> {
      * @return
      */
     boolean supportsRemoval(DomainObject domainObject);
-    
+
+    /**
+     * Returns the maximum number of references that can exist to the object before its safe to remove.
+     * @return
+     */
+    default int getMaxReferencesBeforeRemoval(DomainObject domainObject) {
+        return 1;
+    }
+
     /**
      * Domain-specific deletion.
      * @param domainObject

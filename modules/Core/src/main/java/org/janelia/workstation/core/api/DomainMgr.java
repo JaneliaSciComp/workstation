@@ -32,7 +32,6 @@ import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.events.model.PreferenceChangeEvent;
 import org.janelia.workstation.core.options.ApplicationOptions;
-import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
@@ -202,7 +201,7 @@ public class DomainMgr {
         return (T) preference.getValue();
     }
 
-    synchronized List<Preference> getPreferences(String category) throws Exception {
+    public synchronized List<Preference> getPreferencesByCategory(String category) throws Exception {
         loadPreferences();
         List<Preference> categoryPreferences = new ArrayList<>();
         for (Preference preference : preferenceMap.values()) {
@@ -219,11 +218,20 @@ public class DomainMgr {
      * @param preference
      * @throws Exception
      */
-    void savePreference(Preference preference) throws Exception {
+    Preference savePreference(Preference preference) throws Exception {
         Preference updated = subjectFacade.savePreference(preference);
-        preferenceMap.put(getPreferenceMapKey(preference), updated);
+        String key = getPreferenceMapKey(preference);
+        if (updated.getValue()==null) {
+            // deleted
+            preferenceMap.remove(key);
+            log.info("Deleted preference {} in category {} with key {}", updated.getId(), updated.getCategory(), updated.getKey());
+        }
+        else {
+            preferenceMap.put(key, updated);
+            log.info("Saved preference {} in category {} with {}={}", updated.getId(), updated.getCategory(), updated.getKey(), updated.getValue());
+        }
         notifyPreferenceChanged(updated);
-        log.info("Saved preference {} in category {} with {}={}", preference.getId(), preference.getCategory(), preference.getKey(), preference.getValue());
+        return updated;
     }
 
     public static String getPreferenceSubject() {
@@ -239,7 +247,7 @@ public class DomainMgr {
      * @param value
      * @throws Exception
      */
-    void setPreference(String category, String key, Object value) throws Exception {
+    public void setPreference(String category, String key, Object value) throws Exception {
         Preference preference = DomainMgr.getDomainMgr().getPreference(category, key);
         if (preference == null) {
             preference = new Preference(getPreferenceSubject(), category, key, value);
@@ -249,12 +257,12 @@ public class DomainMgr {
         savePreference(preference);
     }
 
-    public Map<String, String> loadPreferencesAsMap(String category) throws Exception {
-        List<Preference> titlePreferences = DomainMgr.getDomainMgr().getPreferences(category);
-        Map<String, String> map = new HashMap<>();
+    public <T> Map<String, T> loadPreferencesAsMap(String category) throws Exception {
+        List<Preference> titlePreferences = DomainMgr.getDomainMgr().getPreferencesByCategory(category);
+        Map<String, T> map = new HashMap<>();
         for (Preference preference : titlePreferences) {
             if (preference.getValue() != null) {
-                map.put(preference.getKey(), (String) preference.getValue());
+                map.put(preference.getKey(), (T)preference.getValue());
             }
         }
         return map;

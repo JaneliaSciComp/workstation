@@ -55,4 +55,8 @@ public class DataSetObjectHandler implements DomainObjectHandler {
         model.remove((DataSet)domainObject);
     }
 
+    @Override
+    public int getMaxReferencesBeforeRemoval(DomainObject domainObject) {
+        return 0;
+    }
 }

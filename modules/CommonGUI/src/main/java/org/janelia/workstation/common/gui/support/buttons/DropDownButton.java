@@ -79,7 +79,7 @@ public class DropDownButton extends JButton {
                                 popupMenu.removeAll();
                             }
                             JScrollPopupMenu popupMenu = new JScrollPopupMenu();
-                            for (Component component : components) {
+                            for (Component component : getMenuComponents()) {
                                 popupMenu.add(component);
                             }
                             popupMenu.addPopupMenuListener(getMenuListener());
@@ -191,6 +191,10 @@ public class DropDownButton extends JButton {
     
     public void addMenuItem(Component component) {
         components.add(component);
+    }
+
+    public List<Component> getMenuComponents() {
+        return components;
     }
 
     private class Model extends DefaultButtonModel {

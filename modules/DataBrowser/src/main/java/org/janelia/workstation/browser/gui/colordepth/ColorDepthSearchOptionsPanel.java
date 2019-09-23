@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.event.MouseEvent;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -20,22 +19,26 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
-import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import org.apache.commons.lang3.SerializationException;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
+import org.janelia.model.domain.gui.cdmip.ColorDepthParameters;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.workstation.browser.gui.editor.ConfigPanel;
 import org.janelia.workstation.browser.gui.editor.SelectionButton;
 import org.janelia.workstation.browser.gui.editor.SingleSelectionButton;
+import org.janelia.workstation.common.gui.presets.Preset;
+import org.janelia.workstation.common.gui.presets.PresetManager;
+import org.janelia.workstation.common.gui.presets.PresetSelectionButton;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
-import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * User options panel for a color depth search. Reused between the color depth search editor and the mask dialog. 
@@ -45,6 +48,7 @@ import com.google.common.collect.ImmutableList;
 public class ColorDepthSearchOptionsPanel extends ConfigPanel {
     
     // Constants
+    private static final String PRESET_NAME = "ColorDepthSearch";
     private static final String THRESHOLD_LABEL_PREFIX = "Data Threshold: ";
     private static final int DEFAULT_THRESHOLD_VALUE = 100;
 
@@ -53,8 +57,6 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
     private static final String PCT_POSITIVE_THRESHOLD_TITLE = "Min match %";
     private static final String PIX_COLOR_FLUCTUATION_TITLE = "Z Slice Range";
     private static final String XY_SHIFT_TITLE = "XY Shift";
-
-    private static final String DEFAULT_PCT_PC = "10.00";
 
     private static final String THRESHOLD_TOOLTIP = "Everything below this value is not considered in the search images";
     private static final String PCT_PX_TOOLTIP = "Minimum percent pixel match to consider a match";
@@ -72,11 +74,10 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
     }
 
     // UI Components
+    private final PresetSelectionButton presetSelectionButton;
     private final JLabel thresholdLabel;
     private final JPanel thresholdPanel;
     private final JSlider thresholdSlider;
-    private final JPanel pctPxPanel;
-    private final JTextField pctPxField;
     private final SingleSelectionButton<LabeledValue> xyShiftButton;
     private final SingleSelectionButton<LabeledValue> pixFlucButton;
     private final JCheckBox mirrorCheckbox;
@@ -101,14 +102,6 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         thresholdPanel.add(thresholdLabel, BorderLayout.NORTH);
         thresholdPanel.add(thresholdSlider, BorderLayout.CENTER);
         thresholdPanel.setToolTipText(THRESHOLD_TOOLTIP);
-
-        pctPxField = new JTextField(DEFAULT_PCT_PC);
-        pctPxField.setHorizontalAlignment(JTextField.RIGHT);
-        pctPxField.setColumns(5);
-        pctPxPanel = new JPanel(new BorderLayout());
-        pctPxPanel.add(new JLabel(PCT_POSITIVE_THRESHOLD_TITLE), BorderLayout.CENTER);
-        pctPxPanel.add(pctPxField, BorderLayout.SOUTH);
-        pctPxPanel.setToolTipText(PCT_PX_TOOLTIP);
 
         pixFlucButton = new SingleSelectionButton<LabeledValue>(PIX_COLOR_FLUCTUATION_TITLE) {
             
@@ -223,6 +216,35 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
             }
             
         };
+
+        PresetManager<ColorDepthParameters> presetManager = new PresetManager<ColorDepthParameters>(PRESET_NAME) {
+
+            private ObjectMapper mapper = new ObjectMapper();
+
+            @Override
+            protected ColorDepthParameters getCurrentSettings() {
+                ColorDepthParameters preset = new ColorDepthParameters();
+                populateParametersFromUI(preset);
+                return preset;
+            }
+
+            @Override
+            protected void loadSettings(ColorDepthParameters parameters) {
+                setParameters(parameters);
+            }
+
+            @Override
+            protected String serialize(ColorDepthParameters parameters) throws Exception {
+                return mapper.writeValueAsString(parameters);
+            }
+
+            @Override
+            protected ColorDepthParameters deserialize(String json) throws Exception  {
+                return mapper.readValue(json, ColorDepthParameters.class);
+            }
+        };
+
+        this.presetSelectionButton = new PresetSelectionButton(presetManager);
     }
 
     /**
@@ -232,21 +254,21 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
      */
     public ColorDepthSearch saveChanges() throws Exception {
 
-        Double pctPositivePixels;
-        try {
-            pctPositivePixels = new Double(pctPxField.getText());
-            if (pctPositivePixels<1 || pctPositivePixels>100) {
-                throw new NumberFormatException();
-            }
-            search.getParameters().setPctPositivePixels(pctPositivePixels);
+        populateParametersFromUI(search.getParameters());
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        
+        if (search.getId() == null) {
+            // new search
+            search = model.createColorDepthSearch(search);
         }
-        catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    PCT_POSITIVE_THRESHOLD_TITLE +" must be a percentage between 1 and 100",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+        else {
+            search = model.save(search);    
         }
+        
+        return search;
+    }
+
+    private void populateParametersFromUI(ColorDepthParameters parameters) {
 
         Double pixFlucValue;
         try {
@@ -254,7 +276,7 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
             if (pixFlucValue<1 || pixFlucValue>100) {
                 throw new NumberFormatException();
             }
-            search.getParameters().setPixColorFluctuation(pixFlucValue);
+            parameters.setPixColorFluctuation(pixFlucValue);
         }
         catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(
@@ -269,7 +291,7 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
             if (xyShiftValue<0) {
                 throw new NumberFormatException();
             }
-            search.getParameters().setXyShift(xyShiftValue);
+            parameters.setXyShift(xyShiftValue);
         }
         catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(
@@ -279,21 +301,9 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
                     JOptionPane.ERROR_MESSAGE);
         }
 
-        search.getParameters().setMirrorMask(mirrorCheckbox.isSelected());
-        search.getParameters().setDataThreshold(thresholdSlider.getValue());
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
-        
-        if (search.getId() == null) {
-            // new search
-            search = model.createColorDepthSearch(search);
-        }
-        else {
-            search = model.save(search);    
-        }
-        
-        return search;
+        parameters.setMirrorMask(mirrorCheckbox.isSelected());
+        parameters.setDataThreshold(thresholdSlider.getValue());
     }
-    
     
     public ColorDepthSearch getSearch() {
         return search;
@@ -301,35 +311,30 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
 
     public void setSearch(ColorDepthSearch colorDepthSearch) {
         this.search = colorDepthSearch;
-
         setTitle(colorDepthSearch.getName()+" ("+colorDepthSearch.getAlignmentSpace()+")");
-        
-        if (colorDepthSearch.getDataThreshold()!=null) {
-            setThreshold(colorDepthSearch.getDataThreshold());
+        setParameters(colorDepthSearch.getParameters());
+        this.dirty = false;
+    }
+
+    public void setParameters(ColorDepthParameters parameters) {
+
+        if (parameters.getDataThreshold()!=null) {
+            setThreshold(parameters.getDataThreshold());
         }
         else {
             setThreshold(DEFAULT_THRESHOLD_VALUE);
         }
-        
-        if (colorDepthSearch.getPctPositivePixels()!=null) {
-            pctPxField.setText(PX_FORMATTER.format(colorDepthSearch.getPctPositivePixels()));
-        }
-        else {
-            pctPxField.setText(DEFAULT_PCT_PC);
-        }
 
-        int currValue = colorDepthSearch.getPixColorFluctuation() == null ? -1 : colorDepthSearch.getPixColorFluctuation().intValue();
+        int currValue = parameters.getPixColorFluctuation() == null ? -1 : parameters.getPixColorFluctuation().intValue();
         LabeledValue value = rangeValues.stream().filter(lv -> lv.getValue()==currValue).findFirst().orElseGet(() -> defaultSliceRange);
         pixFlucButton.setSelectedValue(value);
 
-        int currShiftValue = colorDepthSearch.getXyShift() == null ? 0 : colorDepthSearch.getXyShift();
+        int currShiftValue = parameters.getXyShift() == null ? 0 : parameters.getXyShift();
         LabeledValue value2 = shiftValues.stream().filter(lv -> lv.getValue()==currShiftValue).findFirst().orElseGet(() -> defaultShiftRange);
         xyShiftButton.setSelectedValue(value2);
 
-        Boolean mirrorMask = colorDepthSearch.getMirrorMask();
+        Boolean mirrorMask = parameters.getMirrorMask();
         mirrorCheckbox.setSelected(mirrorMask != null && mirrorMask);
-
-        this.dirty = false;
     }
 
     public void setLibraries(List<ColorDepthLibrary> libraries) {
@@ -346,8 +351,8 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         xyShiftButton.update();
         libraryButton.update();
         removeAllConfigComponents();
+        addConfigComponent(presetSelectionButton);
         addConfigComponent(thresholdPanel);
-        addConfigComponent(pctPxPanel);
         addConfigComponent(pixFlucButton);
         addConfigComponent(xyShiftButton);
         addConfigComponent(mirrorCheckbox);
