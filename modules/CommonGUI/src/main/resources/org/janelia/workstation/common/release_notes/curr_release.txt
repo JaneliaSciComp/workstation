@@ -1,2 +1,41 @@
 // 8.3
 
+In this major release, the Workstation has been refactored to allow for containerized deployment and open source
+distribution. The full source code is now available on GitHub under the Janelia Open Source License:
+https://github.com/JaneliaSciComp/workstation
+
+Data Browser
+* The Workstation client is now able to connect to different backend servers (File->Connect)
+* You can now create and manage user groups using the Administration Tool (Window->Core)
+* All context menu items are now also found in the main menu under Actions
+* Streamlined publishing workflow (right-click and choose "Stage Samples for Publishing")
+* Data Sets and Fly Line Releases are now accessible as top-level items in the Data Explorer
+* Core browser functionality was refactored into multiple modules for better maintainability and extensibility
+* Improved dependency management, application installers and distribution
+* Many performance improvements and bug fixes
+
+Color Depth Search
+* File cache has been refactored and optimized for network performance
+* Color Depth Libraries and Searches are now accessible as top-level items in the Data Explorer
+* Added search options for XY shift and mask mirroring
+* Color Depth Search results now shows mask and result side-by-side with a synchronized mouse cursor
+* Added scrolling to the color depth mask creation dialog
+* Added color depth search presets for EM/LM
+
+MouseLight Tools
+* Both Horta and LVV were modified to pull data from the JADE storage service, eliminating the previous
+  dependency on internal Samba drive mounts. It is no longer necessary to mount external drives to use these tools.
+* Local file cache is now used for all MouseLight data
+* Octree, KTX, and RAW data paths are now set explicitly on the sample
+
+Large Volume Viewer
+* Merge and split should work when autotracing is on
+* Added "unique" predefined note
+* Present spatial filters in sorted order
+* Spatial filter is only automatically enabled when there are more than 1000 group owned fragments
+* Sample icon indicates if there is missing image data
+
+Horta
+* Import/export color model dialogs default to standard folder on shared drive
+* Fixed issue with neuron becoming unselectable in Horta
+* Enabled multi-level ktx display (lower resolution but greater spatial extent)
