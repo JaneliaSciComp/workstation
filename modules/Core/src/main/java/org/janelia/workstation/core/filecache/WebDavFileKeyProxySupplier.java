@@ -1,5 +1,7 @@
 package org.janelia.workstation.core.filecache;
 
+import java.io.FileNotFoundException;
+import java.io.UncheckedIOException;
 import java.util.function.Supplier;
 
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -53,8 +55,8 @@ public class WebDavFileKeyProxySupplier implements FileKeyToProxySupplier<Webdav
         WebDavFile webDavFile;
         try {
             webDavFile = storageClientMgr.findFile(remoteFileName);
-        } catch (Exception e) {
-            throw new IllegalStateException("Error retrieving " + remoteFileName, e);
+        } catch (FileNotFoundException e) {
+            throw new UncheckedIOException("Error retrieving " + remoteFileName, e);
         }
         if (webDavFile.isDirectory()) {
             throw new IllegalArgumentException(
