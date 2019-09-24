@@ -95,7 +95,7 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
         colorMapTexture.setGenerateMipmaps(false);
         colorMapTexture.setMinFilter(GL3.GL_LINEAR);
         colorMapTexture.setMagFilter(GL3.GL_LINEAR);
-        chooser = new OctreeDisplayBlockChooser();
+        chooser = new Finest8DisplayBlockChooser();
         blockDisplayUpdater = new BlockDisplayUpdater<>(chooser);
         initBlockStrategy(chooser);
         blockDisplayUpdater.getDisplayChangeObservable().addObserver(new Observer() {
