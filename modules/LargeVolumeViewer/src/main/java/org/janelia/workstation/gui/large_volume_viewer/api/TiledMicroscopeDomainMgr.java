@@ -260,7 +260,7 @@ public class TiledMicroscopeDomainMgr {
                 return ORDERED;
             }
         };
-        return StreamSupport.stream(workspaceNeuronsSupplier, true).flatMap(Function.identity());
+        return StreamSupport.stream(workspaceNeuronsSupplier, false).flatMap(Function.identity());
     }
 
     public TmNeuronMetadata saveMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
