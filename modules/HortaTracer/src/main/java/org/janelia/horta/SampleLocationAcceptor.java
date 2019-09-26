@@ -36,7 +36,6 @@ import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
-import org.janelia.workstation.core.options.ApplicationOptions;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
@@ -138,7 +137,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private RenderedVolume getVolumeInfo(URI renderedOctreeUri) {
         RenderedVolumeLocation renderedVolumeLocation;
         RenderedVolumeMetadata renderedVolumeMetadata;
-        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess() || StringUtils.equalsIgnoreCase(renderedOctreeUri.getScheme(), "http") || StringUtils.equalsIgnoreCase(renderedOctreeUri.getScheme(), "https")) {
+        if (StringUtils.equalsIgnoreCase(renderedOctreeUri.getScheme(), "http") || StringUtils.equalsIgnoreCase(renderedOctreeUri.getScheme(), "https")) {
             String url = renderedOctreeUri.resolve("volume_info").toString();
             LOG.trace("Getting volume metadata from: {}", url);
             GetMethod getMethod = new GetMethod(url);
