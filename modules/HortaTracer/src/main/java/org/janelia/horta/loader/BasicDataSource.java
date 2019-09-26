@@ -1,6 +1,7 @@
 package org.janelia.horta.loader;
 
 import java.io.InputStream;
+import java.util.function.Supplier;
 
 /**
  *
@@ -8,18 +9,18 @@ import java.io.InputStream;
  */
 public class BasicDataSource implements DataSource
 {
-    private final InputStream stream;
+    private final Supplier<InputStream> streamSupplier;
     private final String fileName;
 
-    public BasicDataSource(InputStream stream, String fileName) {
-        this.stream = stream;
+    public BasicDataSource(Supplier<InputStream> streamSupplier, String fileName) {
+        this.streamSupplier = streamSupplier;
         this.fileName = fileName;
     }
     
     @Override
-    public InputStream getInputStream()
+    public InputStream openInputStream()
     {
-        return stream;
+        return streamSupplier.get();
     }
 
     @Override

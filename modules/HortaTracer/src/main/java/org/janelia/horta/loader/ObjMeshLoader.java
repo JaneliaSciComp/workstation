@@ -43,7 +43,7 @@ public class ObjMeshLoader implements FileTypeLoader
             public void run() {
                 MeshGeometry meshGeometry;
                 try {
-                    meshGeometry = WavefrontObjLoader.load(source.getInputStream());
+                    meshGeometry = WavefrontObjLoader.load(source.openInputStream());
                     TransparentEnvelope material = new TransparentEnvelope();
                     Color color = meshGeometry.getDefaultColor();
                     if (color != null)

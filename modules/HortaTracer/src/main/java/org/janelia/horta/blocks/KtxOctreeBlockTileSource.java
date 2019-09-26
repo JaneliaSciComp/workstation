@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,7 +78,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
 
     private KtxHeader loadKtxHeader(KtxOctreeBlockTileKey octreeRootKey) {
         KtxHeader ktxHeader = new KtxHeader();
-        try (InputStream blockStream = streamKeyBlock(octreeRootKey)) {
+        try (InputStream blockStream = streamKeyBlock(octreeRootKey).get()) {
             ktxHeader.loadStream(blockStream);
             return ktxHeader;
         } catch (IOException e) {
@@ -140,9 +141,9 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
         );
     }
 
-    InputStream streamKeyBlock(KtxOctreeBlockTileKey octreeKey) {
+    Supplier<InputStream> streamKeyBlock(KtxOctreeBlockTileKey octreeKey) {
         String octreeKeyBlockAbsolutePath = getKeyBlockAbsolutePathURI(octreeKey).toString();
-        return tileLoader.findStorageLocation(sampleKtxTilesBaseDir)
+        return () -> tileLoader.findStorageLocation(sampleKtxTilesBaseDir)
                 .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, octreeKeyBlockAbsolutePath).asOptional())
                 .orElse(null)
                 ;
@@ -244,7 +245,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
 
     @Override
     public BlockTileData loadBlock(KtxOctreeBlockTileKey key) throws IOException, InterruptedException {
-        try (InputStream blockStream = streamKeyBlock(key)) {
+        try (InputStream blockStream = streamKeyBlock(key).get()) {
             KtxOctreeBlockTileData data = new KtxOctreeBlockTileData();
             data.loadStream(blockStream);
             return data;

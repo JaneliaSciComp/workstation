@@ -3,6 +3,7 @@ package org.janelia.horta.blocks;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +33,29 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
 
-    public static interface LoadRunner<TILE_KEY, TILE_DATA> {
+    public interface LoadRunner<TILE_KEY, TILE_DATA> {
         TILE_DATA loadTile(TILE_KEY key) throws InterruptedException, IOException;
+    }
+
+    private static class TimestampedKey<K> {
+        private final long timestamp;
+        private final K key;
+
+        TimestampedKey(long timestamp, K key) {
+            this.timestamp = timestamp;
+            this.key = key;
+        }
+    }
+
+    private static class TimestampedKeyComparator<K> implements Comparator<TimestampedKey<K>> {
+        @Override
+        public int compare(TimestampedKey<K> o1, TimestampedKey<K> o2) {
+            if (o1.key.equals(o2.key)) {
+                return 0;
+            } else {
+                return Long.compare(o2.timestamp, o1.timestamp); // last inserted is the first
+            }
+        }
     }
 
     private final Map<TILE_KEY, RequestProcessor.Task> queuedTiles = new ConcurrentHashMap<>();

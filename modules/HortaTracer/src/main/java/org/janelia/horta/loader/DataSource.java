@@ -10,6 +10,6 @@ import java.io.InputStream;
  * @author Christopher Bruns
  */
 public interface DataSource {
-    InputStream getInputStream(); // Where to get the bytes
+    InputStream openInputStream(); // Where to get the bytes
     String getFileName(); // Used to help identify file type
 }
