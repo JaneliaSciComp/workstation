@@ -65,3 +65,8 @@ mvn --batch-mode -T 8 -Djava.awt.headless=true -Dkeystorepass=<password> package
 
 Once the build is complete, the installers and update center will be available under the **modules/application/target** directory.
 
+You can also run without installing, like this:
+```
+mvn -f modules/application/pom.xml nbm:cluster-app nbm:run-platform
+```
+
