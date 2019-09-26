@@ -1501,8 +1501,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         } else {
             // turns out ? or * will mess with Java's file dialogs
             //  (something about how file filters works)
-            if (neuronName.contains("?") || neuronName.contains("*")) {
-                presentError("Neuron names can't contain the ? or * characters!", "Could not rename neuron");
+            // slashes cause problem at swc export time
+            if (neuronName.contains("?") || neuronName.contains("*") || neuronName.contains("/") || neuronName.contains("\\")) {
+                presentError("Neuron names can't contain the ?, *, /, or \\ characters!", "Could not rename neuron");
                 return null;
             }
             return neuronName;

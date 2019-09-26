@@ -237,7 +237,13 @@ public class EditWorkspaceNameDialog extends ModalDialog {
     
             this.name = sb.toString();
         }
-        
+
+        // slashes in the name cause problems at swc export time
+        if (name.contains("/") || name.contains("\\")) {
+            presentError("Workspace name may not contain the / or \\ characters!", "Bad workspace name");
+            return;
+        }
+
         if (!StringUtils.isEmpty(name)) {
             this.save = true;
         }
