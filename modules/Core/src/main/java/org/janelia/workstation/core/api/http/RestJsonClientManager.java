@@ -11,6 +11,8 @@ import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -97,7 +99,16 @@ public class RestJsonClientManager {
             if (clientResponseContext.getStatusInfo().getFamily() != Response.Status.Family.REDIRECTION)
                 return;
 
-            Response resp = clientRequestContext.getClient().target(clientResponseContext.getLocation()).request().method(clientRequestContext.getMethod());
+            MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
+            for (Entry<String, String> entry : HttpServiceUtils.getExtraHeaders(auth).entrySet()) {
+                headers.add(entry.getKey(), entry.getValue());
+            }
+
+            Response resp = clientRequestContext.getClient()
+                    .target(clientResponseContext.getLocation())
+                    .request()
+                    .headers(headers)
+                    .method(clientRequestContext.getMethod());
 
             clientResponseContext.setEntityStream((InputStream) resp.getEntity());
             clientResponseContext.setStatusInfo(resp.getStatusInfo());
