@@ -151,12 +151,6 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
         Runnable loadTask = new Runnable() {
             @Override
             public void run() {
-//                if (Thread.currentThread().isInterrupted()) {
-//                    log.info("loadTask was interrupted before it began");
-//                    queuedTiles.remove(key);
-//                    return;
-//                }
-
                 // Move from "queued" to "loading" state
                 synchronized (queuedTiles) {
                     RequestProcessor.Task task = queuedTiles.get(key);
