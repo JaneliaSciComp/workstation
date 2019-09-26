@@ -62,18 +62,18 @@ public class FileBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeLoadAdap
     @Override
     public TextureData2d loadToRam(TileIndex tileIndex)
             throws TileLoadError {
+        TileInfo tileInfo = getTileInfo(tileIndex);
+        TileKey tileKey = TileKey.fromRavelerTileCoord(tileIndex.getX(), tileIndex.getY(), tileIndex.getZ(),
+                tileIndex.getZoom(),
+                tileInfo.getSliceAxis(),
+                tileInfo);
+        LOG.debug("Load tile {} using key {} -> {}", tileIndex, tileKey, renderedVolumeMetadata.getRelativeTilePath(tileKey));
         try {
-            TileInfo tileInfo = getTileInfo(tileIndex);
-            TileKey tileKey = TileKey.fromRavelerTileCoord(tileIndex.getX(), tileIndex.getY(), tileIndex.getZ(),
-                    tileIndex.getZoom(),
-                    tileInfo.getSliceAxis(),
-                    tileInfo);
-            LOG.debug("Load tile {} using key {} -> {}", tileIndex, tileKey, renderedVolumeMetadata.getRelativeTilePath(tileKey));
             byte[] textureBytes = renderedVolumeLoader.loadSlice(renderedVolumeLocation, renderedVolumeMetadata, tileKey)
                     .getContent();
             return textureBytes != null ? new TextureData2d(textureBytes) : null;
         } catch (Exception ex) {
-            LOG.error("Error getting sample 2d tile from {}", renderedVolumeMetadata.getDataStorageURI(), ex);
+            LOG.error("Error getting sample 2d tile {} based on tileIndex {} using path based on {}", tileKey, tileIndex, renderedVolumeMetadata.getDataStorageURI(), ex);
             throw new TileLoadError(ex);
         }
     }

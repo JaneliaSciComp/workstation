@@ -14,6 +14,7 @@ import com.google.common.base.Objects;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.lang.StringUtils;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -137,7 +138,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private RenderedVolume getVolumeInfo(URI renderedOctreeUri) {
         RenderedVolumeLocation renderedVolumeLocation;
         RenderedVolumeMetadata renderedVolumeMetadata;
-        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
+        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess() || StringUtils.equalsIgnoreCase(renderedOctreeUri.getScheme(), "http") || StringUtils.equalsIgnoreCase(renderedOctreeUri.getScheme(), "https")) {
             String url = renderedOctreeUri.resolve("volume_info").toString();
             LOG.trace("Getting volume metadata from: {}", url);
             GetMethod getMethod = new GetMethod(url);
@@ -158,7 +159,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
                 );
             } catch (Exception e) {
-                LOG.error("Error getting sample volume info from {}", url, e);
+                LOG.error("Error getting sample volume info from {} for renderedOctree at {}", url, renderedOctreeUri, e);
                 throw new IllegalStateException(e);
             } finally {
                 getMethod.releaseConnection();
