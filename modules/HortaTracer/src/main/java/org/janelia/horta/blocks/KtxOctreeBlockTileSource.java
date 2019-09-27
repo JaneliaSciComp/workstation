@@ -141,6 +141,13 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
         );
     }
 
+    /**
+     *
+     * @param octreeKey
+     * @return a supplier of an input stream instead of a stream to be used practically as a lazy stream that
+     * only opens when it is actually needed. Since this is used asynchronously I don't want to open it here just
+     * in case the connection has some timeout and by the time the caller uses it, it actually "expired"
+     */
     Supplier<InputStream> streamKeyBlock(KtxOctreeBlockTileKey octreeKey) {
         String octreeKeyBlockAbsolutePath = getKeyBlockAbsolutePathURI(octreeKey).toString();
         return () -> tileLoader.findStorageLocation(sampleKtxTilesBaseDir)

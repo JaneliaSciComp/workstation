@@ -118,6 +118,9 @@ public class CachedTileLoader implements TileLoader {
             try {
                 return streamableContent.getContent();
             } finally {
+                // since the file proxy is being cached we don't want to keep this
+                // around once it was consumed because if some other thread tries to read it again the stream pointer most likely will
+                // not be where the caller expects it
                 streamableContent = null;
             }
         }
