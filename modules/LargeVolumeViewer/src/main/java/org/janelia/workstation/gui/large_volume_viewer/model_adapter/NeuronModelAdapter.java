@@ -113,8 +113,16 @@ class NeuronModelAdapter {
 
         List<Long> neuronIds = new ArrayList<Long>();
         neuronIds.add(neuron.getId());
-
         ObjectMapper mapper = new ObjectMapper();
+
+        // make sure to remap the maps to the lists to accurately persist the neuron
+        neuron.getNeuronData().getGeoAnnotations().clear();
+        neuron.getNeuronData().getGeoAnnotations().addAll(neuron.getGeoAnnotationMap().values());
+        neuron.getNeuronData().getAnchoredPaths().clear();
+        neuron.getNeuronData().getAnchoredPaths().addAll(neuron.getAnchoredPathMap().values());
+        neuron.getNeuronData().getTextAnnotations().clear();
+        neuron.getNeuronData().getTextAnnotations().addAll(neuron.getStructuredTextAnnotationMap().values());
+
         Map<String, Object> updateHeaders = new HashMap<String, Object>();
         updateHeaders.put(NeuronMessageConstants.Headers.TYPE, type.toString());
         updateHeaders.put(NeuronMessageConstants.Headers.USER, AccessManager.getSubjectKey());

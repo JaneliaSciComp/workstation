@@ -216,13 +216,19 @@ public class TiledMicroscopeDomainMgr {
     
     public Stream<TmNeuronMetadata> streamWorkspaceNeurons(Long workspaceId) {
         LOG.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
-        TmProtobufExchanger exchanger = new TmProtobufExchanger();
         Spliterator<Stream<TmNeuronMetadata>> workspaceNeuronsSupplier = new Spliterator<Stream<TmNeuronMetadata>>() {
             volatile long offset = 0L;
             int defaultLength = 100000;
             @Override
             public boolean tryAdvance(Consumer<? super Stream<TmNeuronMetadata>> action) {
                 Collection<TmNeuronMetadata> neurons= client.getWorkspaceNeurons(workspaceId, offset, defaultLength);
+
+                // make sure to initialize cross references
+                for (TmNeuronMetadata neuron: neurons) {
+                    neuron.getNeuronData().initMaps();
+                    neuron.getNeuronData().initAnnotations(neuron.getId());
+                }
+
                 long lastEntryOffset = offset + neurons.size();
                 LOG.trace("Retrieved {} entries ({} - {}) from {} -> {}", neurons.size(), offset, lastEntryOffset);
                 if (neurons.isEmpty()) {
