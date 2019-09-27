@@ -49,8 +49,9 @@ public class KtxBlockLoadRunner
 
     private void loadFromBlockSource() {
         long startTime = System.currentTimeMillis();
+        URI sourceURI = ktxBlockTileSource.getKeyBlockAbsolutePathURI(ktxOctreeBlockTileKey);
+        LOG.debug("Load ktx tile {} from {}", ktxOctreeBlockTileKey, sourceURI);
         try (InputStream blockStream = ktxBlockTileSource.streamKeyBlock(ktxOctreeBlockTileKey).get()) {
-            URI sourceURI = ktxBlockTileSource.getKeyBlockAbsolutePathURI(ktxOctreeBlockTileKey);
             loadStream(blockStream, ktxData -> {
                 long endTime = System.currentTimeMillis();
                 LOG.info("Loading ktx tile {} from {} took {} ms", ktxOctreeBlockTileKey, sourceURI, endTime-startTime);

@@ -6,11 +6,16 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  *
  * @author brunsc
  */
 public class KtxData {
+
+    private static final Logger LOG = LoggerFactory.getLogger(KtxData.class);
 
     public final KtxHeader header = new KtxHeader();
     public final List<ByteBuffer> mipmaps = new ArrayList<>();

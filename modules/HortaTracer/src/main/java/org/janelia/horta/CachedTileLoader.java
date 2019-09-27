@@ -92,7 +92,7 @@ public class CachedTileLoader implements TileLoader {
         private final String tileLocation;
         private Streamable<InputStream> streamableContent;
 
-        public RawTileFileProxy(TileLoader tileLoader, String tileStorageURL, String tileLocation) {
+        RawTileFileProxy(TileLoader tileLoader, String tileStorageURL, String tileLocation) {
             this.tileLoader = tileLoader;
             this.tileStorageURL = tileStorageURL;
             this.tileLocation = tileLocation;
@@ -113,12 +113,18 @@ public class CachedTileLoader implements TileLoader {
         @Nullable
         @Override
         public InputStream openContentStream() {
+            LOG.debug("Open content stream {} / {}", tileStorageURL, tileLocation);
             fetchContent();
-            return streamableContent.getContent();
+            try {
+                return streamableContent.getContent();
+            } finally {
+                streamableContent = null;
+            }
         }
 
         private void fetchContent() {
             if (streamableContent == null) {
+                LOG.debug("Fetch content {} / {}", tileStorageURL, tileLocation);
                 streamableContent = tileLoader.streamTileContent(tileStorageURL, tileLocation);
             }
         }
@@ -174,6 +180,7 @@ public class CachedTileLoader implements TileLoader {
 
     @Override
     public Streamable<InputStream> streamTileContent(String storageLocation, String tileLocation) {
+        LOG.debug("Stream tile content {} / {}", storageLocation, tileLocation);
         FileProxy f = rawTileFileCache.getCachedFileEntry(new RawTileFileKey(storageLocation, tileLocation), false);
         if (f == null) {
             return Streamable.empty();

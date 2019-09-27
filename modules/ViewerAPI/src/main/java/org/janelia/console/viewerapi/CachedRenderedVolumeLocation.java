@@ -102,10 +102,14 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         @Override
         public InputStream openContentStream() {
             fetchContent();
-            if (streamableContent.getContent() == null) {
-                return null;
-            } else {
-                return contentToStreamMapper.apply(streamableContent.getContent());
+            try {
+                if (streamableContent.getContent() == null) {
+                    return null;
+                } else {
+                    return contentToStreamMapper.apply(streamableContent.getContent());
+                }
+            } finally {
+                streamableContent = null;
             }
         }
 

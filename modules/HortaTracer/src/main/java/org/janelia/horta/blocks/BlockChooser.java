@@ -13,8 +13,7 @@ import org.janelia.geometry3d.Vantage;
 public interface BlockChooser<K extends BlockTileKey, S extends BlockTileSource<K>> {
     List<K> chooseBlocks(S source, ConstVector3 focus, ConstVector3 previousFocus, Vantage vantage);
     // given current tiles loaded and next tiles to load, figure out
-    Map<BlockTileKey,BlockTileData> chooseObsoleteTiles(Map<BlockTileKey, BlockTileData> currentTiles,
-                                                        Map<BlockTileKey, BlockTileData> desiredTiles,
-
-                                                        BlockTileKey finishedTile);
+    Map<BlockTileKey, BlockTileData> chooseObsoleteTiles(Map<BlockTileKey, BlockTileData> currentTiles,
+                                                         Map<BlockTileKey, BlockTileData> desiredTiles,
+                                                         BlockTileKey finishedTile);
 }

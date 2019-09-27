@@ -61,6 +61,7 @@ public class JadeServiceClient {
         Preconditions.checkArgument(storagePath != null && storagePath.trim().length() > 0);
         ClientProxy httpClient = getHttpClient();
         try {
+            LOG.debug("Lookup storage for {}", storagePath);
             WebTarget target = httpClient.target(jadeURL)
                     .path("storage_volumes")
                     .queryParam("dataStoragePath", storagePath);
