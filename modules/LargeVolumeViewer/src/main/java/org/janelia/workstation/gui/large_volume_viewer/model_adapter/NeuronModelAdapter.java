@@ -114,20 +114,12 @@ class NeuronModelAdapter {
         List<Long> neuronIds = new ArrayList<Long>();
         neuronIds.add(neuron.getId());
         ObjectMapper mapper = new ObjectMapper();
-
-        // make sure to remap the maps to the lists to accurately persist the neuron
-        neuron.getNeuronData().getGeoAnnotations().clear();
-        neuron.getNeuronData().getGeoAnnotations().addAll(neuron.getGeoAnnotationMap().values());
-        neuron.getNeuronData().getAnchoredPaths().clear();
-        neuron.getNeuronData().getAnchoredPaths().addAll(neuron.getAnchoredPathMap().values());
-        neuron.getNeuronData().getTextAnnotations().clear();
-        neuron.getNeuronData().getTextAnnotations().addAll(neuron.getStructuredTextAnnotationMap().values());
+        byte[] neuronData = mapper.writeValueAsBytes(neuron);
 
         Map<String, Object> updateHeaders = new HashMap<String, Object>();
         updateHeaders.put(NeuronMessageConstants.Headers.TYPE, type.toString());
         updateHeaders.put(NeuronMessageConstants.Headers.USER, AccessManager.getSubjectKey());
         updateHeaders.put(NeuronMessageConstants.Headers.WORKSPACE, neuron.getWorkspaceId().toString());
-        updateHeaders.put(NeuronMessageConstants.Headers.METADATA, mapper.writeValueAsString(neuron));
         updateHeaders.put(NeuronMessageConstants.Headers.NEURONIDS, neuronIds.toString());
         if (extraArguments != null) {
             Iterator<String> extraKeys = extraArguments.keySet().iterator();
@@ -136,9 +128,6 @@ class NeuronModelAdapter {
                 updateHeaders.put(extraKey, extraArguments.get(extraKey));
             }
         }
-
-        TmProtobufExchanger exchanger = new TmProtobufExchanger();
-        byte[] neuronData = exchanger.serializeNeuron(neuron);
 
         getSender().sendMessage(updateHeaders, neuronData);
     }
@@ -152,10 +141,6 @@ class NeuronModelAdapter {
 
     void asyncSaveNeuron(TmNeuronMetadata neuron) throws Exception {
         sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_SAVE_NEURONDATA, null);
-    }
-
-    void asyncSaveNeuronMetadata(TmNeuronMetadata neuron) throws Exception {
-        sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_SAVE_METADATA, null);
     }
 
     void asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {

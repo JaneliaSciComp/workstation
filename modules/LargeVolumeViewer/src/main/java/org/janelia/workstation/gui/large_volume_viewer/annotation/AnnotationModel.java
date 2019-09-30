@@ -526,7 +526,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                             updates = neuronFilter.deleteNeuron(neuron);
                             break;
                         case NEURON_SAVE_NEURONDATA:
-                        case NEURON_SAVE_METADATA:
                         case NEURON_OWNERSHIP_DECISION:
                             updates = neuronFilter.updateNeuron(neuron);
                             break;
@@ -1903,7 +1902,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public synchronized void setNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) throws Exception {
         neuron.setColor(style.getColor());
         setNeuronVisibility(neuron, style.isVisible());
-        neuronManager.saveNeuronMetadata(neuron);
+        neuronManager.saveNeuronData(neuron);
         SwingUtilities.invokeLater(() -> fireNeuronStyleChanged(neuron, style));
         activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
     }

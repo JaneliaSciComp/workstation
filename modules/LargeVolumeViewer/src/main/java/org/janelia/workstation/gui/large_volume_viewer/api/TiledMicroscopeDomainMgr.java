@@ -225,8 +225,7 @@ public class TiledMicroscopeDomainMgr {
 
                 // make sure to initialize cross references
                 for (TmNeuronMetadata neuron: neurons) {
-                    neuron.getNeuronData().initMaps();
-                    neuron.getNeuronData().initAnnotations(neuron.getId());
+                    neuron.initNeuronData();
                 }
 
                 long lastEntryOffset = offset + neurons.size();

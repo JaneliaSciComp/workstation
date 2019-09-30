@@ -460,10 +460,6 @@ public class NeuronManager {
         neuronModelAdapter.asyncSaveNeuron(neuron);
     }
 
-    public void saveNeuronMetadata(TmNeuronMetadata neuron) throws Exception {
-        neuronModelAdapter.asyncSaveNeuronMetadata(neuron);
-    }
-
     public void splitNeurite(TmNeuronMetadata tmNeuronMetadata, TmGeoAnnotation newRoot) throws Exception {
         if (newRoot == null || tmNeuronMetadata == null) {
             return;

@@ -113,7 +113,6 @@ public class RefreshHandler implements MessageHandler {
                         annotationModel.fireBackgroundNeuronCreated(neuron);
                         break;
                     case NEURON_SAVE_NEURONDATA:
-                    case NEURON_SAVE_METADATA:
                         log.info("processing remote save: {},", neuron.getName());
                         annotationModel.getNeuronManager().addNeuron(neuron);
                         updateFilter(neuron, action);
@@ -139,11 +138,7 @@ public class RefreshHandler implements MessageHandler {
     private void addNeuronUpdate(Map<String, Object> msgHeaders, byte[] msgBody, NeuronMessageConstants.MessageType action, String user) {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            String metadata = MessagingUtils.getHeaderAsString(msgHeaders, NeuronMessageConstants.Headers.METADATA);
-            TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
-
-            TmProtobufExchanger exchanger = new TmProtobufExchanger();
-            exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
+            TmNeuronMetadata neuron = mapper.readValue(msgBody, TmNeuronMetadata.class);
 
             // assume this has to do with neuron CRUD; otherwise ignore
             Map neuronData = new HashMap<>();
@@ -176,11 +171,10 @@ public class RefreshHandler implements MessageHandler {
             log.debug("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
             log.debug("Heap Size: {}", Runtime.getRuntime().totalMemory());
 
-            log.debug("message properties: TYPE={},USER={},WORKSPACE={},METADATA={}",
+            log.debug("message properties: TYPE={},USER={},WORKSPACE={}",
                     msgHeaders.get(NeuronMessageConstants.Headers.TYPE),
                     msgHeaders.get(NeuronMessageConstants.Headers.USER),
-                    msgHeaders.get(NeuronMessageConstants.Headers.WORKSPACE),
-                    msgHeaders.get(NeuronMessageConstants.Headers.METADATA));
+                    msgHeaders.get(NeuronMessageConstants.Headers.WORKSPACE));
 
             NeuronMessageConstants.MessageType action = NeuronMessageConstants.MessageType.valueOf(MessagingUtils.getHeaderAsString(msgHeaders, NeuronMessageConstants.Headers.TYPE));
             String user = MessagingUtils.getHeaderAsString(msgHeaders, NeuronMessageConstants.Headers.USER);
@@ -205,14 +199,8 @@ public class RefreshHandler implements MessageHandler {
                 return;
             }
 
-            if (!msgHeaders.containsKey(NeuronMessageConstants.Headers.METADATA) || msgHeaders.get(NeuronMessageConstants.Headers.METADATA) == null) {
-                log.error("Message includes no neuron information; rejecting processing");
-                return;
-            }
-
-            String metadata = MessagingUtils.getHeaderAsString(msgHeaders, NeuronMessageConstants.Headers.METADATA);
             ObjectMapper mapper = new ObjectMapper();
-            TmNeuronMetadata neuron = mapper.readValue(metadata, TmNeuronMetadata.class);
+            TmNeuronMetadata neuron = mapper.readValue(msgBody, TmNeuronMetadata.class);
 
             TmNeuronMetadata localNeuron = annotationModel.getNeuronManager().getNeuronById(neuron.getId());// decrease the sync level
             if (localNeuron != null) {
@@ -250,7 +238,7 @@ public class RefreshHandler implements MessageHandler {
             } else if (action == NeuronMessageConstants.MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
                 // complete the future outside of the swing thread, since the copyGUI thread is blocked
                 StopWatch stopWatch2 = new StopWatch();
-                handleNeuronCreate(neuron, msgBody, n -> annotationModel.getNeuronManager().completeCreateNeuron(n));
+                handleNeuronCreate(neuron, n -> annotationModel.getNeuronManager().completeCreateNeuron(n));
                 stopWatch2.stop();
                 log.info("RefreshHandler: Remote own neuron creation update in {} ms", stopWatch2.getElapsedTime());
                 log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
@@ -266,17 +254,16 @@ public class RefreshHandler implements MessageHandler {
                             // update model or process request
                             switch (action) {
                                 case NEURON_CREATE:
-                                    handleNeuronCreate(neuron, msgBody, n -> annotationModel.getNeuronManager().addNeuron(n));
+                                    handleNeuronCreate(neuron, n -> annotationModel.getNeuronManager().addNeuron(n));
                                     break;
                                 case NEURON_SAVE_NEURONDATA:
-                                case NEURON_SAVE_METADATA:
                                     if (!user.equals(AccessManager.getSubjectKey())) {
-                                        handleNeuronChanged(neuron, msgBody);
+                                        handleNeuronChanged(neuron);
                                     }
                                     break;
                                 case NEURON_DELETE:
                                     if (!user.equals(AccessManager.getSubjectKey())) {
-                                        handleNeuronDeleted(neuron, msgBody);
+                                        handleNeuronDeleted(neuron);
                                          
                                     }
                                     break;
@@ -298,11 +285,9 @@ public class RefreshHandler implements MessageHandler {
         }
     }
 
-    private void handleNeuronCreate(TmNeuronMetadata neuron, byte[] msgBody, Consumer<TmNeuronMetadata> neuronAction) {
+    private void handleNeuronCreate(TmNeuronMetadata neuron, Consumer<TmNeuronMetadata> neuronAction) {
         try {
             log.info("remote processing create neuron " + neuron.getName());
-            TmProtobufExchanger exchanger = new TmProtobufExchanger();
-            exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
             neuronAction.accept(neuron);
 			updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE);
             annotationModel.fireBackgroundNeuronCreated(neuron);
@@ -312,11 +297,9 @@ public class RefreshHandler implements MessageHandler {
         }
     }
 
-    private void handleNeuronChanged(TmNeuronMetadata neuron, byte[] msgBody) {
+    private void handleNeuronChanged(TmNeuronMetadata neuron) {
         try {
             log.info("remote processing change neuron " + neuron.getName());
-            TmProtobufExchanger exchanger = new TmProtobufExchanger();
-            exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
             annotationModel.getNeuronManager().addNeuron(neuron);
             annotationModel.fireBackgroundNeuronChanged(neuron);
         } catch (Exception e) {
@@ -325,11 +308,9 @@ public class RefreshHandler implements MessageHandler {
         }
     }
 
-    private void handleNeuronDeleted(TmNeuronMetadata neuron, byte[] msgBody) {
+    private void handleNeuronDeleted(TmNeuronMetadata neuron) {
         try {
             log.info("remote processing delete neuron" + neuron.getName());
-            TmProtobufExchanger exchanger = new TmProtobufExchanger();
-            exchanger.deserializeNeuron(new ByteArrayInputStream(msgBody), neuron);
             updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE);
 			annotationModel.fireBackgroundNeuronDeleted(neuron);
         } catch (Exception e) {
