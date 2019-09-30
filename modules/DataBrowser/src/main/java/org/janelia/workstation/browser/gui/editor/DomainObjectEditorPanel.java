@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import javax.swing.JPanel;
 
@@ -100,8 +101,8 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T> extends
                     // Restore viewer state
                     getResultsPanel().getViewer().restoreState(state.getListViewerState());
                     // Restore selection
-                    if (selectedObjects!=null && !selectedObjects.isEmpty()) {
-                        getResultsPanel().getViewer().select(new ArrayList<>(selectedObjects), true, true, false, true);
+                    if (selectedObjects != null && !selectedObjects.isEmpty()) {
+                        getResultsPanel().getViewer().select(selectedObjects.stream().filter(o -> o != null).collect(Collectors.toList()), true, true, false, true);
                     }
                 }
                 return null;

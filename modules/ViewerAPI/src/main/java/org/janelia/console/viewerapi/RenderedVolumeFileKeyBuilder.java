@@ -1,11 +1,8 @@
 package org.janelia.console.viewerapi;
 
 import java.util.List;
-import java.util.function.Supplier;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.filecacheutils.FileProxy;
 
 class RenderedVolumeFileKeyBuilder {
 
@@ -19,7 +16,7 @@ class RenderedVolumeFileKeyBuilder {
         this.renderedVolumePath = renderedVolumePath;
     }
 
-    RenderedVolumeFileKey build(Supplier<FileProxy> fileProxySupplier) {
+    RenderedVolumeFileKey build(RenderedVolumeFileToProxyMapper fileProxyMapper) {
         StringBuilder builder = new StringBuilder();
         builder.append(normalizePath(renderedVolumePath));
         appendPath(builder, absolutePath);
@@ -40,7 +37,7 @@ class RenderedVolumeFileKeyBuilder {
         if (pageNumber >= 0) {
             builder.append('.').append(pageNumber);
         }
-        return new RenderedVolumeFileKey(builder.toString(), fileProxySupplier);
+        return new RenderedVolumeFileKey(builder.toString(), fileProxyMapper);
     }
 
 

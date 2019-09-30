@@ -2,11 +2,11 @@ package org.janelia.console.viewerapi;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -20,7 +20,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
 import org.janelia.filecacheutils.LocalFileCacheStorage;
-import org.janelia.rendering.RawImage;
 import org.janelia.rendering.RenderedImageInfo;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.Streamable;
@@ -38,7 +37,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         renderedVolumeFileCache = new LocalFileCache<>(
                 localFileCacheStorage,
                 cacheConcurrency,
-                new RenderedVolumeFileToProxySupplier(),
+                new RenderedVolumeFileToProxyMapperImpl(),
                 Executors.newFixedThreadPool(4,
                         new ThreadFactoryBuilder()
                                 .setNameFormat("RenderedVolumeFileCacheEvictor-%d")
@@ -94,17 +93,17 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         }
 
         @Override
-        public Optional<Long> estimateSizeInBytes() {
+        public Long estimateSizeInBytes() {
             fetchContent();
-            return Optional.of(streamableContent.getSize());
+            return streamableContent.getSize();
         }
 
         @Override
-        public InputStream openContentStream() {
+        public InputStream openContentStream() throws FileNotFoundException {
             fetchContent();
             try {
                 if (streamableContent.getContent() == null) {
-                    return null;
+                    throw new FileNotFoundException("No content found for " + fileId);
                 } else {
                     return contentToStreamMapper.apply(streamableContent.getContent());
                 }
@@ -140,14 +139,10 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                 .withRelativePath(imageRelativePath)
                 .withChannelImageNames(channelImageNames)
                 .withPageNumber(pageNumber)
-                .build(() -> new RenderedVolumeContentFileProxy<>(
-                        imageRelativePath + "." + pageNumber,
-                        () -> delegate.readTiffPageAsTexturedBytes(imageRelativePath, channelImageNames, pageNumber),
-                        bytes -> new ByteArrayInputStream(bytes))
-                );
-        FileProxy f = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
+                .build(renderedVolumeFileKey -> new RenderedVolumeContentFileProxy<>(renderedVolumeFileKey.getLocalName(), () -> delegate.readTiffPageAsTexturedBytes(imageRelativePath, channelImageNames, pageNumber), bytes -> new ByteArrayInputStream(bytes)))
+                ;
         return streamableContentFromFileProxy(
-                renderedVolumeFileCache.getCachedFileEntry(fileKey, false),
+                fileKey,
                 contentStream -> {
                     try {
                         return ByteStreams.toByteArray(contentStream);
@@ -171,40 +166,27 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
     public Streamable<InputStream> getContentFromRelativePath(String relativePath) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getBaseDataStoragePath())
                 .withRelativePath(relativePath)
-                .build(() -> new RenderedVolumeContentFileProxy<>(
-                        getBaseDataStoragePath() + relativePath,
-                        () -> delegate.getContentFromRelativePath(relativePath),
-                        Function.identity())
-                );
-        return streamableContentFromFileProxy(
-                renderedVolumeFileCache.getCachedFileEntry(fileKey, false),
-                Function.identity());
+                .build(renderedVolumeFileKey -> new RenderedVolumeContentFileProxy<>(renderedVolumeFileKey.getLocalName(), () -> delegate.getContentFromRelativePath(relativePath), Function.identity()))
+                ;
+        return streamableContentFromFileProxy(fileKey, Function.identity());
     }
 
     @Override
     public Streamable<InputStream> getContentFromAbsolutePath(String absolutePath) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getBaseDataStoragePath())
                 .withAbsolutePath(absolutePath)
-                .build(() -> new RenderedVolumeContentFileProxy<>(
-                        getBaseDataStoragePath() + absolutePath,
-                        () -> delegate.getContentFromAbsolutePath(absolutePath),
-                        Function.identity())
-                );
-        return streamableContentFromFileProxy(
-                renderedVolumeFileCache.getCachedFileEntry(fileKey, false),
-                Function.identity());
+                .build(renderedVolumeFileKey -> new RenderedVolumeContentFileProxy<>(renderedVolumeFileKey.getLocalName(), () -> delegate.getContentFromAbsolutePath(absolutePath), Function.identity()))
+                ;
+        return streamableContentFromFileProxy(fileKey, Function.identity());
     }
 
-    private <T> Streamable<T> streamableContentFromFileProxy(FileProxy f, Function<InputStream, T> streamToContentMapper) {
-        if (f == null) {
+    private <T> Streamable<T> streamableContentFromFileProxy(RenderedVolumeFileKey fileKey, Function<InputStream, T> streamToContentMapper) {
+        try {
+            FileProxy fileProxy = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
+            InputStream contentStream = fileProxy.openContentStream();
+            return Streamable.of(streamToContentMapper.apply(contentStream), fileProxy.estimateSizeInBytes());
+        } catch (FileNotFoundException e) {
             return Streamable.empty();
-        } else {
-            InputStream contentStream = f.openContentStream();
-            if (contentStream == null) {
-                return Streamable.empty();
-            } else {
-                return Streamable.of(streamToContentMapper.apply(contentStream), f.estimateSizeInBytes().orElse(-1L));
-            }
         }
     }
 

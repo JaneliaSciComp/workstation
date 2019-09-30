@@ -1,11 +1,9 @@
 package org.janelia.workstation.core.filecache;
 
 import java.io.FileNotFoundException;
-import java.io.UncheckedIOException;
-import java.util.function.Supplier;
 
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.janelia.filecacheutils.FileKeyToProxySupplier;
+import org.janelia.filecacheutils.FileKeyToProxyMapper;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.HttpFileProxy;
 import org.janelia.filecacheutils.LocalFileProxy;
@@ -13,25 +11,25 @@ import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WebDavFileKeyProxySupplier implements FileKeyToProxySupplier<WebdavCachedFileKey> {
+public class WebDavFileKeyProxyMapper implements FileKeyToProxyMapper<WebdavCachedFileKey> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(WebDavFileKeyProxySupplier.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WebDavFileKeyProxyMapper.class);
 
     private final HttpClientProxy httpClient;
     private final StorageClientMgr storageClientMgr;
 
-    public WebDavFileKeyProxySupplier(HttpClientProxy httpClient, StorageClientMgr storageClientMgr) {
+    public WebDavFileKeyProxyMapper(HttpClientProxy httpClient, StorageClientMgr storageClientMgr) {
         this.httpClient = httpClient;
         this.storageClientMgr = storageClientMgr;
     }
 
     @Override
-    public Supplier<FileProxy> getProxyFromKey(WebdavCachedFileKey fileKey) {
+    public FileProxy getProxyFromKey(WebdavCachedFileKey fileKey) throws FileNotFoundException {
         switch(fileKey.getRemoteFileScheme()) {
             case "file":
-                return () -> new LocalFileProxy(fileKey.getRemoteFileName());
+                return new LocalFileProxy(fileKey.getRemoteFileName());
             case "http":
-                return () -> new HttpFileProxy(
+                return new HttpFileProxy(
                     fileKey.getRemoteFileName(),
                     (String url) -> {
                         try {
@@ -51,18 +49,18 @@ public class WebDavFileKeyProxySupplier implements FileKeyToProxySupplier<Webdav
         }
     }
 
-    private Supplier<FileProxy> getWebDavFileProxy(String remoteFileName) {
+    private FileProxy getWebDavFileProxy(String remoteFileName) throws FileNotFoundException {
         WebDavFile webDavFile;
         try {
             webDavFile = storageClientMgr.findFile(remoteFileName);
         } catch (FileNotFoundException e) {
-            throw new UncheckedIOException("Error retrieving " + remoteFileName, e);
+            throw e;
         }
         if (webDavFile.isDirectory()) {
             throw new IllegalArgumentException(
                     "Requested load of directory " + webDavFile.getRemoteFileUrl() + ".  Only files may be requested.");
         }
-        return () -> new WebDavFileProxy(httpClient, webDavFile);
+        return new WebDavFileProxy(httpClient, webDavFile);
     }
 
 }

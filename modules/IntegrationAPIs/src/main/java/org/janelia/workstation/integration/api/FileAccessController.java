@@ -1,6 +1,7 @@
 package org.janelia.workstation.integration.api;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 
 /**
  * Service for unified remote file access.
@@ -8,8 +9,7 @@ import java.io.File;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public interface FileAccessController {
-    
-    public static final String LOOKUP_PATH = "FileAccessController/Location/Nodes";
+    String LOOKUP_PATH = "FileAccessController/Location/Nodes";
 
-    public File getCachedFile(String standardPath, boolean forceRefresh);
+    File getCachedFile(String standardPath, boolean forceRefresh) throws FileNotFoundException;
 }

@@ -1,6 +1,7 @@
 package org.janelia.workstation.core.filecache;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Optional;
 
@@ -29,12 +30,12 @@ public class WebDavFileProxy implements FileProxy {
     }
 
     @Override
-    public Optional<Long> estimateSizeInBytes() {
-        return Optional.of(webDavFile.getSizeInBytes());
+    public Long estimateSizeInBytes() {
+        return webDavFile.getSizeInBytes();
     }
 
     @Override
-    public InputStream openContentStream() {
+    public InputStream openContentStream() throws FileNotFoundException {
         GetMethod httpGet;
         try {
             httpGet = new GetMethod(webDavFile.getRemoteFileUrl());

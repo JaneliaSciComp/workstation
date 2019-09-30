@@ -13,19 +13,19 @@ import org.slf4j.LoggerFactory;
 
 class StorageClientResponseHelper {
 
-    private static final Logger log = LoggerFactory.getLogger(StorageClientResponseHelper.class);
+    private static final Logger LOG = LoggerFactory.getLogger(StorageClientResponseHelper.class);
 
     static MultiStatusResponse[] getResponses(HttpClientProxy httpClient, String href, int depth, int callCount)
             throws WebDavException, FileNotFoundException {
         MultiStatusResponse[] multiStatusResponses;
         PropFindMethod method = null;
         try {
-            log.debug("WebDAV property lookup - {}", href);
+            LOG.debug("WebDAV property lookup - {}", href);
             method = new PropFindMethod(href, WebDavFile.PROPERTY_NAMES, depth);
             method.addRequestHeader("Accept", "application/xml");
             method.addRequestHeader("Content-Type", "application/xml");
             final int responseCode = httpClient.executeMethod(method);
-            log.trace("getResponses: {} returned for PROPFIND {}", responseCode, href);
+            LOG.trace("getResponses: {} returned for PROPFIND {}", responseCode, href);
 
             if (responseCode == HttpStatus.SC_MULTI_STATUS) {
                 final MultiStatus multiStatus = method.getResponseBodyAsMultiStatus();

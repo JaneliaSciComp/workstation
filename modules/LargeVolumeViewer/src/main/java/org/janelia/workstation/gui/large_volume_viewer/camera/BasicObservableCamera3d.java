@@ -49,7 +49,6 @@ public class BasicObservableCamera3d
         if (!changed) {
             return false;
         }
-        // System.out.println("emit viewChanged");
         fireViewChanged();
         return true;
     }

@@ -72,7 +72,7 @@ public class FileProxyService extends AbstractHandler {
             fileProxy = FileMgr.getFileMgr().getFile(standardPath, false);
             log.info("Proxying {} for: {}", method, fileProxy.getFileId());
             response.setContentType("application/octet-stream");
-            Long nbytes = fileProxy.estimateSizeInBytes().orElse(null);
+            Long nbytes = fileProxy.estimateSizeInBytes();
             if (nbytes != null) {
                 response.addHeader("Content-length", nbytes.toString());
             }

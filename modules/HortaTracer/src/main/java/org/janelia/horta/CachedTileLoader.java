@@ -2,6 +2,7 @@
 package org.janelia.horta;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -105,9 +106,9 @@ public class CachedTileLoader implements TileLoader {
         }
 
         @Override
-        public Optional<Long> estimateSizeInBytes() {
+        public Long estimateSizeInBytes() {
             fetchContent();
-            return Optional.of(streamableContent.getSize());
+            return streamableContent.getSize();
         }
 
         @Nullable
@@ -162,7 +163,7 @@ public class CachedTileLoader implements TileLoader {
         this.rawTileFileCache = new LocalFileCache<>(
                 localFileCacheStorage,
                 cacheConcurrency,
-                fileKey -> () -> new RawTileFileProxy(delegate, fileKey.tileStorageURL, fileKey.tileLocation),
+                fileKey -> new RawTileFileProxy(delegate, fileKey.tileStorageURL, fileKey.tileLocation),
                 Executors.newFixedThreadPool(4,
                         new ThreadFactoryBuilder()
                                 .setNameFormat("RenderedVolumeFileCacheEvictor-%d")
@@ -184,16 +185,13 @@ public class CachedTileLoader implements TileLoader {
     @Override
     public Streamable<InputStream> streamTileContent(String storageLocation, String tileLocation) {
         LOG.debug("Stream tile content {} / {}", storageLocation, tileLocation);
-        FileProxy f = rawTileFileCache.getCachedFileEntry(new RawTileFileKey(storageLocation, tileLocation), false);
-        if (f == null) {
+        try {
+            FileProxy fp = rawTileFileCache.getCachedFileEntry(new RawTileFileKey(storageLocation, tileLocation), false);
+            InputStream contentStream = fp.openContentStream();
+            return Streamable.of(contentStream, fp.estimateSizeInBytes());
+        } catch (FileNotFoundException e) {
+            LOG.error("File not found for {} / {}", storageLocation, tileLocation, e);
             return Streamable.empty();
-        } else {
-            InputStream contentStream = f.openContentStream();
-            if (contentStream == null) {
-                return Streamable.empty();
-            } else {
-                return Streamable.of(contentStream, f.estimateSizeInBytes().orElse(-1L));
-            }
         }
     }
 

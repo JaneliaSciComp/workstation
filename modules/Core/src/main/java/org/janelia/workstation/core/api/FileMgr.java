@@ -1,5 +1,6 @@
 package org.janelia.workstation.core.api;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.Executors;
@@ -12,16 +13,13 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
-import org.janelia.filecacheutils.LocalFileCacheStorage;
-import org.janelia.filecacheutils.LocalFileProxy;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
 import org.janelia.workstation.core.filecache.StorageClientMgr;
-import org.janelia.workstation.core.filecache.WebDavFileKeyProxySupplier;
+import org.janelia.workstation.core.filecache.WebDavFileKeyProxyMapper;
 import org.janelia.workstation.core.filecache.WebDavUploader;
 import org.janelia.workstation.core.filecache.WebdavCachedFileKey;
-import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -76,7 +74,7 @@ public class FileMgr {
                 webdavLocalFileCache = new LocalFileCache<>(
                         LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
                         DEFAULT_FILE_CACHE_CONCURRENCY,
-                        new WebDavFileKeyProxySupplier(httpClient, storageClientMgr),
+                        new WebDavFileKeyProxyMapper(httpClient, storageClientMgr),
                         Executors.newFixedThreadPool(4,
                                 new ThreadFactoryBuilder()
                                         .setNameFormat("CacheEvictor-%d")
@@ -113,7 +111,7 @@ public class FileMgr {
      * @return an accessible file for the specified path or
      * null if caching is disabled or the file cannot be cached.
      */
-    public FileProxy getFile(String standardPath, boolean forceRefresh) {
+    public FileProxy getFile(String standardPath, boolean forceRefresh) throws FileNotFoundException {
         return webdavLocalFileCache.getCachedFileEntry(new WebdavCachedFileKey(standardPath), forceRefresh);
     }
 
