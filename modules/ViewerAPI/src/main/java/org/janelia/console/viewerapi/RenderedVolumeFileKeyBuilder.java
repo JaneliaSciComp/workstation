@@ -2,7 +2,10 @@ package org.janelia.console.viewerapi;
 
 import java.util.List;
 
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
+
+import static org.apache.commons.lang3.StringUtils.replaceChars;
 
 class RenderedVolumeFileKeyBuilder {
 
@@ -63,8 +66,8 @@ class RenderedVolumeFileKeyBuilder {
 
     private String normalizePath(String p) {
         // remove the start and the end '/' if it exists
-        return StringUtils.removeStart(
-                StringUtils.removeEnd(StringUtils.replaceChars(p, '\\', '/'), "/"),
+        return StringUtils.removeEnd(
+                RegExUtils.removeFirst(StringUtils.replaceChars(p, '\\', '/'), "^((.+:)?/+)+"), // replace patterns like C://, file:///D:/
                 "/"
         );
     }
