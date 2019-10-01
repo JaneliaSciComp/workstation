@@ -1,6 +1,7 @@
 package org.janelia.console.viewerapi;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -11,9 +12,10 @@ public class RenderedVolumeFileKey implements FileKey {
     private final String localName;
     private final RenderedVolumeFileToProxyMapper fileProxyMapperDelegate;
 
-    RenderedVolumeFileKey(String localName, RenderedVolumeFileToProxyMapper fileProxyMapperDelegate)
-    {
-        this.localName = localName;
+    RenderedVolumeFileKey(String localName, RenderedVolumeFileToProxyMapper fileProxyMapperDelegate) {
+        // we don't want to keep the root (especially windows root - <drive>:\) because it resolves to an absolute path
+        Path localPath = Paths.get(localName);
+        this.localName = localPath.getRoot() != null ? localPath.subpath(1, localPath.getNameCount()).toString() : localName;
         this.fileProxyMapperDelegate = fileProxyMapperDelegate;
     }
 
