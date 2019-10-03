@@ -59,6 +59,11 @@ public class KtxBlockLoadRunner
         } catch (IOException ex) {
             LOG.warn("IOException loading tile {} from block source", ktxOctreeBlockTileKey, ex);
             state = State.FAILED;
+        } catch (IllegalStateException ex) {
+            // these are 404 errors for files which are missing (possibly correctly, our octree
+            //  isn't 100% complete) on disk
+            LOG.warn("IllegalStateException loading tile {} from block source", ktxOctreeBlockTileKey, ex);
+            state = State.FAILED;
         }
     }
 

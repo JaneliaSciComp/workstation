@@ -178,7 +178,8 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         // Ignore network and data issues. If it's in fact a problem on our end, the user will let us know. 
         if (stacktrace.contains("java.io.IOException: unexpected end of stream") 
                 || stacktrace.contains("java.net.ConnectException: Connection refused")
-                || stacktrace.contains("java.net.ConnectException: Connection timed out")) {
+                || stacktrace.contains("java.net.ConnectException: Connection timed out")
+                || stacktrace.contains("java.io.IOException: stream is closed")) {
             return true;
         }
         
