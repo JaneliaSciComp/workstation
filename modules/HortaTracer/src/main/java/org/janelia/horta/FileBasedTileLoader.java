@@ -33,6 +33,7 @@ public class FileBasedTileLoader implements TileLoader {
             return Streamable.empty();
         } else {
             try {
+                LOG.info("Streaming tile from {}", tilePath);
                 return Streamable.of(Files.newInputStream(tilePath), Files.size(tilePath));
             } catch (IOException e) {
                 LOG.error("Error opening {}", tileLocation, e);
