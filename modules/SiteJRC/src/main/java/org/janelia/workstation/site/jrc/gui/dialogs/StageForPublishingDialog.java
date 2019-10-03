@@ -13,20 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang3.StringUtils;
@@ -37,7 +24,6 @@ import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.workstation.browser.actions.context.ApplyAnnotationAction;
 import org.janelia.workstation.browser.actions.context.ApplyAnnotationActionListener;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.browser.gui.components.DomainListViewManager;
@@ -195,9 +181,6 @@ public class StageForPublishingDialog extends ModalDialog {
 
         for (String objective : objectiveSet) {
             JCheckBox checkbox = new JCheckBox(objective, true);
-            if (!objective.equals(Objective.OBJECTIVE_20X.getName()) && !objective.equals(Objective.OBJECTIVE_63X.getName())) {
-                checkbox.setEnabled(false);
-            }
             objectiveCheckboxMap.put(objective, checkbox);
             objectivesPanel.add(checkbox);
         }
