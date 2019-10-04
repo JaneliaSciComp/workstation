@@ -17,6 +17,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import org.apache.commons.lang3.RegExUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.filecacheutils.FileKey;
@@ -50,17 +52,7 @@ public class CachedTileLoader implements TileLoader {
         }
 
         private String getLocalCacheEntryName() {
-            final String cachedFileName;
-            if (tileLocation.startsWith("jade:///")) {
-                cachedFileName = tileLocation.substring("jade:///".length());
-            } else if (tileLocation.startsWith("jade://")) {
-                cachedFileName = tileLocation.substring("jade://".length());
-            } else if (tileLocation.startsWith("/") || tileLocation.startsWith("\\")) {
-                cachedFileName = tileLocation.substring(1);
-            } else {
-                cachedFileName = tileLocation;
-            }
-            return cachedFileName;
+            return RegExUtils.removeFirst(StringUtils.replaceChars(tileLocation, '\\', '/'), "^((.+:)?/+)+"); // replace patterns like C://, file:///D:/, //
         }
 
         @Override

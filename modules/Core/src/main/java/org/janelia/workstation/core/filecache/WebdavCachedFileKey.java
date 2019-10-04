@@ -2,6 +2,8 @@ package org.janelia.workstation.core.filecache;
 
 import java.nio.file.Path;
 
+import org.apache.commons.lang3.RegExUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.filecacheutils.FileKey;
@@ -37,17 +39,7 @@ public class WebdavCachedFileKey implements FileKey {
     }
 
     private String getCachedFileName() {
-        final String cachedFileName;
-        if (remoteFileName.startsWith("jade:///")) {
-            cachedFileName = remoteFileName.substring("jade:///".length());
-        } else if (remoteFileName.startsWith("jade://")) {
-            cachedFileName = remoteFileName.substring("jade://".length());
-        } else if (remoteFileName.startsWith("/") || remoteFileName.startsWith("\\")) {
-            cachedFileName = remoteFileName.substring(1);
-        } else {
-            cachedFileName = remoteFileName;
-        }
-        return cachedFileName;
+        return RegExUtils.removeFirst(StringUtils.replaceChars(remoteFileName, '\\', '/'), "^((.+:)?/+)+"); // replace patterns like C://, file:///D:/, //
     }
 
     @Override
