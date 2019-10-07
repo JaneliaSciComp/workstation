@@ -1,5 +1,7 @@
 package org.janelia.workstation.core.api.web;
 
+import java.io.FilterInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
@@ -92,7 +94,18 @@ public class JadeServiceClient {
                     .get();
             int responseStatus = response.getStatus();
             if (responseStatus == Response.Status.OK.getStatusCode()) {
-                return Streamable.of(response.readEntity(InputStream.class), response.getLength());
+                InputStream is = response.readEntity(InputStream.class);
+                int length = response.getLength();
+                return Streamable.of(new FilterInputStream(is) {
+                    @Override
+                    public void close() throws IOException {
+                        try {
+                            response.close();
+                        } finally {
+                            super.close();
+                        }
+                    }
+                }, length);
             } else {
                 LOG.warn("Request to {} in order to get {} returned with status {}", target, dataPath, responseStatus);
                 return Streamable.empty();
