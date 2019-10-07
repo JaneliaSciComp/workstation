@@ -74,7 +74,8 @@ public class JadeServiceClient {
                 LOG.error("Request to {} returned with status {}", target, responseStatus);
                 return Optional.empty();
             }
-            JadeResults<JadeStorageVolume> storageContentResults = response.readEntity(new GenericType<JadeResults<JadeStorageVolume>>() {});
+            JadeResults<JadeStorageVolume> storageContentResults = response.readEntity(new GenericType<JadeResults<JadeStorageVolume>>() {
+            });
             return storageContentResults.resultList.stream().findFirst().map(jadeVolume -> jadeVolume.storageServiceURL);
         } finally {
             httpClient.close();
@@ -96,16 +97,18 @@ public class JadeServiceClient {
             if (responseStatus == Response.Status.OK.getStatusCode()) {
                 InputStream is = response.readEntity(InputStream.class);
                 int length = response.getLength();
-                return Streamable.of(new FilterInputStream(is) {
-                    @Override
-                    public void close() throws IOException {
-                        try {
-                            response.close();
-                        } finally {
-                            super.close();
-                        }
-                    }
-                }, length);
+                return Streamable.of(
+                        new FilterInputStream(is) {
+                            @Override
+                            public void close() throws IOException {
+                                try {
+                                    super.close();
+                                } finally {
+                                    response.close();
+                                }
+                            }
+                        },
+                        length);
             } else {
                 LOG.warn("Request to {} in order to get {} returned with status {}", target, dataPath, responseStatus);
                 return Streamable.empty();
