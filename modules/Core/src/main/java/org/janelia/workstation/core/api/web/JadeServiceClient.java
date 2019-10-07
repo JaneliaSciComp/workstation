@@ -104,6 +104,7 @@ public class JadeServiceClient {
                                 try {
                                     super.close();
                                 } finally {
+                                    // when closing the stream make sure this "connection" gets closed
                                     response.close();
                                 }
                             }
@@ -111,7 +112,12 @@ public class JadeServiceClient {
                         length);
             } else {
                 LOG.warn("Request to {} in order to get {} returned with status {}", target, dataPath, responseStatus);
-                return Streamable.empty();
+                try {
+                    return Streamable.empty();
+                } finally {
+                    // in this case it's ok to close the response right away
+                    response.close();
+                }
             }
         } finally {
             httpClient.close();
