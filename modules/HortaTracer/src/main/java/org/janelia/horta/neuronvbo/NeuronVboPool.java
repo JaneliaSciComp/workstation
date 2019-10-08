@@ -97,6 +97,10 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
         Map.Entry<Integer, Deque<NeuronVbo>> entry = vbos.firstEntry();
         Integer vboSize = entry.getKey();
         Deque<NeuronVbo> vboDeque = entry.getValue();
+        // trying to debug JW-39811, a NoSuchElement error in the vboDeque.removeFirst() line
+        if (vboSize == 0 || vboDeque.size() == 0) {
+            log.info("NeuronVboPool.popEmptiestVbo(): vboSize = " + vboSize + "; vboDeque size = " + vboDeque.size());
+        }
         NeuronVbo vbo = vboDeque.removeFirst();
         if (vboDeque.isEmpty()) {
             vbos.remove(vboSize); // That was the last of its kind
