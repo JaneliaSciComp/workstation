@@ -31,7 +31,7 @@ public class NeuronProximitySpatialFilter implements NeuronSpatialFilter {
 
     @Override
     // return a union of all individual proximities
-    public Set<Long> filterNeurons() {
+    public synchronized Set<Long> filterNeurons() {
         Set<Long> neuronFrags = new HashSet<>();
         for (Set<Long> fragSet: proximalFragments.values()) {
             neuronFrags.addAll(fragSet);
@@ -118,7 +118,7 @@ public class NeuronProximitySpatialFilter implements NeuronSpatialFilter {
 
     @Override
     // remove bounding box and fragments in vicinity
-    public NeuronUpdates deleteNeuron(TmNeuronMetadata neuron) {
+    public synchronized NeuronUpdates deleteNeuron(TmNeuronMetadata neuron) {
         userNeuronIds.remove(neuron.getId());
         NeuronUpdates updates = new NeuronUpdates();
         spatialRegions.remove(neuron.getId());
@@ -137,7 +137,7 @@ public class NeuronProximitySpatialFilter implements NeuronSpatialFilter {
 
     @Override
     // calculate single bounding box and return fragments in vicinity
-    public NeuronUpdates addNeuron(TmNeuronMetadata neuron) {
+    public synchronized NeuronUpdates addNeuron(TmNeuronMetadata neuron) {
         userNeuronIds.add(neuron.getId());
         BoundingBox3d box = calcBoundingBox(neuron);       
         spatialRegions.put(neuron.getId(),box);
@@ -152,7 +152,7 @@ public class NeuronProximitySpatialFilter implements NeuronSpatialFilter {
 
     @Override
     // update the bounding box for this neuron
-    public NeuronUpdates updateNeuron(TmNeuronMetadata neuron) {
+    public synchronized NeuronUpdates updateNeuron(TmNeuronMetadata neuron) {
         userNeuronIds.add(neuron.getId());
         Set<Long> oldFrags = proximalFragments.get(neuron.getId());  
         if (oldFrags==null)

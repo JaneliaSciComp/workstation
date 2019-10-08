@@ -25,7 +25,7 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
 
     @Override
     // return a union of all individual proximities
-    public Set<Long> filterNeurons() {
+    public synchronized Set<Long> filterNeurons() {
         Set<Long> neuronFrags = new HashSet<>();
         neuronFrags.addAll(fragments);
         neuronFrags.addAll(userNeuronIds);
