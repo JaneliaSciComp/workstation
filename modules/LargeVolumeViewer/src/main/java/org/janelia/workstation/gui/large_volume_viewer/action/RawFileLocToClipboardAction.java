@@ -9,12 +9,11 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JLabel;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.apache.commons.lang3.StringUtils;
+import org.janelia.rendering.RenderedVolumeLoader;
+import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
-import org.janelia.workstation.gui.large_volume_viewer.SharedVolumeImage;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,29 +23,25 @@ import org.slf4j.LoggerFactory;
  */
 public class RawFileLocToClipboardAction extends AbstractAction {
 
-    //todo move this to common location
-    private final static String FILE_SEP = System.getProperty("file.separator");
-    private final static String LINUX_FILE_SEP = "/";
+    private final static Logger LOG = LoggerFactory.getLogger(RawFileLocToClipboardAction.class);
 
     private final JLabel statusLabel;
     private final TileFormat tileFormat;
-    private final BasicObservableCamera3d camera;
-    private final CoordinateAxis axis;
-    private final SharedVolumeImage volumeImage;
-
-    private final Logger log = LoggerFactory.getLogger(RawFileLocToClipboardAction.class);
+    private final String sampleAcquisitionPath;
+    private final RenderedVolumeLocation renderedVolumeLocation;
+    private final RenderedVolumeLoader renderedVolumeLoader;
 
     public RawFileLocToClipboardAction(
             JLabel statusLabel,
             TileFormat tileFormat,
-            SharedVolumeImage volumeImage,
-            BasicObservableCamera3d camera,
-            CoordinateAxis axis) {
+            String sampleAcquisitionPath,
+            RenderedVolumeLocation renderedVolumeLocation,
+            RenderedVolumeLoader renderedVolumeLoader) {
         this.statusLabel = statusLabel;
         this.tileFormat = tileFormat;
-        this.camera = camera;
-        this.axis = axis;
-        this.volumeImage = volumeImage;
+        this.sampleAcquisitionPath = sampleAcquisitionPath;
+        this.renderedVolumeLocation = renderedVolumeLocation;
+        this.renderedVolumeLoader = renderedVolumeLoader;
         putValue(Action.NAME, "Copy Raw Tile File Location to Clipboard");
     }
 
@@ -60,7 +55,8 @@ public class RawFileLocToClipboardAction extends AbstractAction {
         for (int i = 0; i < micronLocation.length; i++) {
             micronIntCoords[i] = (int) micronLocation[i];
         }
-        log.info("Translated [" + content + "] to [" + micronIntCoords[0] + "," + micronIntCoords[1] + "," + micronIntCoords[2] + "]");
+
+        LOG.info("Translated [" + content + "] to [" + micronIntCoords[0] + "," + micronIntCoords[1] + "," + micronIntCoords[2] + "]");
         TileFormat.VoxelXyz voxelCoords
                 = tileFormat.voxelXyzForMicrometerXyz(
                         new TileFormat.MicrometerXyz(
@@ -69,11 +65,20 @@ public class RawFileLocToClipboardAction extends AbstractAction {
                                 micronIntCoords[2]
                         )
                 );
-        int[] voxelCoordArr = new int[]{
-            voxelCoords.getX(), voxelCoords.getY(), voxelCoords.getZ()
-        };
 
-        StringSelection selection = new StringSelection(TiledMicroscopeDomainMgr.getDomainMgr().getNearestChannelFilesURL(volumeImage.getVolumeBaseURL().toString(), voxelCoordArr));
+        String imageLocationURI = renderedVolumeLoader.findClosestRawImageFromVoxelCoord(renderedVolumeLocation, voxelCoords.getX(), voxelCoords.getY(), voxelCoords.getY())
+                .map(rawImage -> {
+                    String acquisitionPath = StringUtils.defaultIfBlank(sampleAcquisitionPath, rawImage.getAcquisitionPath());
+                    rawImage.setAcquisitionPath(acquisitionPath);
+                    return renderedVolumeLocation.getContentURIFromAbsolutePath(rawImage.getRawImagePath(0));
+                })
+                .orElseThrow(() -> {
+                    // I don't know if this will ever happen so for now I am throwing an exception
+                    LOG.warn("No location URI found for ({}, {}, {})", voxelCoords.getX(), voxelCoords.getY(), voxelCoords.getZ());
+                    return new IllegalArgumentException("No location URI found for " + voxelCoords.getX() + "," + voxelCoords.getY() + "," + voxelCoords.getZ());
+                })
+                ;
+        StringSelection selection = new StringSelection(imageLocationURI);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(selection, selection);
     }

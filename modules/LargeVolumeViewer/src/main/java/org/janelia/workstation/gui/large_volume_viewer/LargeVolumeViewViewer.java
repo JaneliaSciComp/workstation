@@ -22,10 +22,14 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.WindowLocator;
+import org.janelia.workstation.core.api.http.RestJsonClientManager;
+import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.SimpleListenableFuture;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
@@ -332,7 +336,11 @@ public class LargeVolumeViewViewer extends JPanel {
                 logger.info("instantiating AnnotationModel");
                 annotationModel = new AnnotationModel(sliceSample, currentWorkspace);
                 Events.getInstance().registerOnEventBus(annotationModel);
-                viewUI =  QuadViewUiProvider.createQuadViewUi(FrameworkAccess.getMainFrame(), initialObject, false, annotationModel);
+                JadeServiceClient jadeServiceClient = new JadeServiceClient(
+                        ConsoleProperties.getString("jadestorage.rest.url"),
+                        () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
+                );
+                viewUI =  QuadViewUiProvider.createQuadViewUi(FrameworkAccess.getMainFrame(), initialObject, false, annotationModel, jadeServiceClient);
             }
             
             removeAll();

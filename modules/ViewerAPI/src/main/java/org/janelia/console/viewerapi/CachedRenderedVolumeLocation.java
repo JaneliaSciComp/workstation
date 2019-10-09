@@ -163,6 +163,16 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
     }
 
     @Override
+    public String getContentURIFromRelativePath(String relativePath) {
+        return delegate.getContentURIFromRelativePath(relativePath);
+    }
+
+    @Override
+    public String getContentURIFromAbsolutePath(String absolutePath) {
+        return delegate.getContentURIFromAbsolutePath(absolutePath);
+    }
+
+    @Override
     public Streamable<InputStream> getContentFromRelativePath(String relativePath) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getBaseDataStoragePath())
                 .withRelativePath(relativePath)

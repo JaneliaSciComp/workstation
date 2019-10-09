@@ -47,6 +47,9 @@ import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.rendering.RenderedVolumeLoader;
+import org.janelia.rendering.RenderedVolumeLoaderImpl;
+import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.workstation.common.gui.dialogs.MemoryCheckDialog;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
@@ -443,7 +446,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
                     result.add(addFileMenuItem());
                     result.add(addCopyMicronLocMenuItem());
                     result.add(addCopyTileLocMenuItem());
-                    result.add(addCopyTileFileLocMenuItem());
+                    result.add(addCopyRawTileFileLocMenuItem(statusLabel, tileFormat, annotationModel.getCurrentSample()));
                     result.add(addCopyOctreePathMenuItem());
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
@@ -1255,13 +1258,18 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return mnCopyTileInx;
     }
 
-    private JMenuItem addCopyTileFileLocMenuItem() {
+    JMenuItem addCopyRawTileFileLocMenuItem(JLabel statusLabel, TileFormat tileFormat, TmSample tmSample) {
         JMenuItem mnCopyTileFileLoc = new JMenuItem(
                 new RawFileLocToClipboardAction(
-                        statusLabel, tileFormat, volumeImage, camera, CoordinateAxis.Z
-                )
+                        statusLabel, tileFormat, tmSample.getTwoPhotonAcquisitionFilepath(), getRenderedVolumeLocation(tmSample), getRenderedVolumeLoader())
         );
         return mnCopyTileFileLoc;
+    }
+
+    abstract RenderedVolumeLocation getRenderedVolumeLocation(TmSample tmSample);
+
+    private RenderedVolumeLoader getRenderedVolumeLoader() {
+        return new RenderedVolumeLoaderImpl();
     }
 
     /**

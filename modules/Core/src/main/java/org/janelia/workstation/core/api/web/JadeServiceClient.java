@@ -3,12 +3,16 @@ package org.janelia.workstation.core.api.web;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -16,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.rendering.DataLocation;
+import org.janelia.rendering.JADEBasedDataLocation;
 import org.janelia.rendering.Streamable;
 import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.rendering.utils.HttpClientProvider;
@@ -47,7 +53,22 @@ public class JadeServiceClient {
     )
     private static class JadeStorageVolume {
         @JsonProperty
+        private String id;
+        @JsonProperty
         private String storageServiceURL;
+        @JsonProperty
+        private String baseStorageRootDir;
+        @JsonProperty
+        private String storageVirtualPath;
+
+        String getVolumeStorageURI() {
+            try {
+                return UriBuilder.fromUri(new URI(storageServiceURL)).path("agent_storage/storage_volume").path(id).build().toString();
+            } catch (URISyntaxException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+
     }
 
     private final String jadeURL; // jade master node URL
@@ -80,6 +101,48 @@ public class JadeServiceClient {
         } finally {
             httpClient.close();
         }
+    }
+
+    public Optional<JADEBasedDataLocation> findDataLocation(String storagePathParam) {
+        Preconditions.checkArgument(storagePathParam != null && storagePathParam.trim().length() > 0);
+        String storagePath = storagePathParam.replace('\\', '/');
+        ClientProxy httpClient = getHttpClient();
+        try {
+            LOG.debug("Lookup storage for {}", storagePath);
+            WebTarget target = httpClient.target(jadeURL)
+                    .path("storage_volumes")
+                    .queryParam("dataStoragePath", storagePath);
+            Response response = target.request()
+                    .get();
+            int responseStatus = response.getStatus();
+            if (responseStatus != Response.Status.OK.getStatusCode()) {
+                LOG.error("Request to {} returned with status {}", target, responseStatus);
+                return Optional.empty();
+            }
+            JadeResults<JadeStorageVolume> storageContentResults = response.readEntity(new GenericType<JadeResults<JadeStorageVolume>>() {
+            });
+            return storageContentResults.resultList.stream().findFirst()
+                    .map(jadeVolume -> {
+                        String renderedVolumePath;
+                        if (storagePath.startsWith(jadeVolume.storageVirtualPath)) {
+                            renderedVolumePath = Paths.get(jadeVolume.storageVirtualPath).relativize(Paths.get(storagePath)).toString();
+                        } else {
+                            renderedVolumePath = Paths.get(jadeVolume.baseStorageRootDir).relativize(Paths.get(storagePath)).toString();
+                        }
+                        LOG.info("Create JADE volume location with URLs {}, {} and volume path {}", jadeVolume.storageServiceURL, jadeVolume.getVolumeStorageURI(), renderedVolumePath);
+                        return new JADEBasedDataLocation(
+                                jadeVolume.storageServiceURL,
+                                jadeVolume.getVolumeStorageURI(),
+                                renderedVolumePath,
+                                null,
+                                null,
+                                httpClientProvider);
+                    })
+                    ;
+        } finally {
+            httpClient.close();
+        }
+
     }
 
     public Streamable<InputStream> streamContent(String serverURL, String dataPath) {

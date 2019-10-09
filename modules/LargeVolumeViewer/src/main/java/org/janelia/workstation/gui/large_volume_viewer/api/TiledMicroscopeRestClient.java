@@ -435,7 +435,7 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
 
     String getNearestChannelFilesURL(String basePath, int[] viewerCoord) {
         return getMouselightStreamURI(basePath, "closest_raw_tile_stream")
-                    .resolve(String.format("?x=%d&y=%dz=%d", viewerCoord[0], viewerCoord[1], viewerCoord[2]))
+                    .resolve(String.format("?x=%d&y=%d&z=%d", viewerCoord[0], viewerCoord[1], viewerCoord[2]))
                     .toString();
     }
 

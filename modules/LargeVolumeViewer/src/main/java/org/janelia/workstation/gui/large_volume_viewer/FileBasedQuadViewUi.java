@@ -1,19 +1,28 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
+import org.janelia.console.viewerapi.OsFilePathRemapper;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.rendering.FileBasedRenderedVolumeLocation;
+import org.janelia.rendering.RenderedVolumeLoader;
+import org.janelia.rendering.RenderedVolumeLoaderImpl;
+import org.janelia.rendering.RenderedVolumeLocation;
+import org.janelia.workstation.gui.large_volume_viewer.action.RawFileLocToClipboardAction;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Vector;
 
@@ -154,6 +163,10 @@ public class FileBasedQuadViewUi extends QuadViewUi {
         }
         initializeSnapshot3dLauncher(url);
         return loadDataFromURL(url);
+    }
+
+    RenderedVolumeLocation getRenderedVolumeLocation(TmSample tmSample) {
+        return new FileBasedRenderedVolumeLocation(Paths.get(tmSample.getLargeVolumeOctreeFilepath()), p -> Paths.get(OsFilePathRemapper.remapLinuxPath(p.toString())));
     }
 
 }

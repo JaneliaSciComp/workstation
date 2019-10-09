@@ -15,6 +15,7 @@ import com.google.common.base.Objects;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringUtils;
+import org.janelia.console.viewerapi.OsFilePathRemapper;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -164,7 +165,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 getMethod.releaseConnection();
             }
         } else {
-            renderedVolumeLocation = new FileBasedRenderedVolumeLocation(Paths.get(renderedOctreeUri));
+            renderedVolumeLocation = new FileBasedRenderedVolumeLocation(Paths.get(renderedOctreeUri), p -> Paths.get(OsFilePathRemapper.remapLinuxPath(p.toString())));
             renderedVolumeMetadata = nttc.getRenderedVolumeLoader().loadVolume(renderedVolumeLocation).orElseThrow(() -> new IllegalStateException("No rendering information found for " + renderedVolumeLocation.getDataStorageURI()));
         }
 

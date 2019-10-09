@@ -22,7 +22,8 @@ public class FileBasedTileLoader implements TileLoader {
 
     @Override
     public Optional<String> findStorageLocation(String tileLocation) {
-        return Optional.of(tileLocation);
+        Path tilePath = Paths.get(OsFilePathRemapper.remapLinuxPath(tileLocation));
+        return Optional.of(tilePath.toString());
     }
 
     @Override
