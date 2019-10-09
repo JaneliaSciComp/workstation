@@ -1,7 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
-import java.net.URL;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -9,6 +8,7 @@ import javax.swing.JLabel;
 
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 public class OctreeFilePathToClipboardAction extends AbstractAction {
     private final JLabel statusLabel;
-    private final URL volumeBaseURL;
+    private final RenderedVolumeLocation renderedVolumeLocation;
     private final TileFormat tileFormat;
     private final BasicObservableCamera3d camera;
     private final CoordinateAxis axis;
@@ -29,14 +29,14 @@ public class OctreeFilePathToClipboardAction extends AbstractAction {
 
     public OctreeFilePathToClipboardAction(
             JLabel statusLabel,
-            URL volumeBaseURL,
             TileFormat tileFormat,
+            RenderedVolumeLocation renderedVolumeLocation,
             BasicObservableCamera3d camera, 
             CoordinateAxis axis
     ) {
         this.statusLabel = statusLabel;
         this.tileFormat = tileFormat;
-        this.volumeBaseURL = volumeBaseURL;
+        this.renderedVolumeLocation = renderedVolumeLocation;
         this.camera = camera;
         this.axis = axis;
         putValue(Action.NAME, "Copy Octree Filepath to Clipboard");
@@ -56,8 +56,7 @@ public class OctreeFilePathToClipboardAction extends AbstractAction {
                 filePathStr = filePathStr.substring(colonPos+1);
             }
         }
-        filePathStr = volumeBaseURL + filePathStr; // FIXME
-        ClipboardActionHelper.setClipboard(filePathStr);
+        ClipboardActionHelper.setClipboard(renderedVolumeLocation.getContentURIFromRelativePath(filePathStr));
         log.info("For location {}, camera={}. File path string {}.", content, vec, filePathStr);
     }
 }

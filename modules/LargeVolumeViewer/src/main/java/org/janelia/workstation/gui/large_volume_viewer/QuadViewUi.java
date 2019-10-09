@@ -446,8 +446,8 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
                     result.add(addFileMenuItem());
                     result.add(addCopyMicronLocMenuItem());
                     result.add(addCopyTileLocMenuItem());
-                    result.add(addCopyRawTileFileLocMenuItem(statusLabel, tileFormat, annotationModel.getCurrentSample()));
-                    result.add(addCopyOctreePathMenuItem());
+                    result.add(addCopyRawTileFileLocMenuItem(annotationModel.getCurrentSample()));
+                    result.add(addCopyOctreePathMenuItem(annotationModel.getCurrentSample()));
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.addAll(taskWorkflowViewLauncher.getMenuItems());
@@ -1240,10 +1240,14 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return mnCopyMicron;
     }
 
-    private JMenuItem addCopyOctreePathMenuItem() {
+    private JMenuItem addCopyOctreePathMenuItem(TmSample tmSample) {
         JMenuItem menuItem = new JMenuItem(
                 new OctreeFilePathToClipboardAction(
-                        statusLabel, tileServer.getSharedVolumeImage().getVolumeBaseURL(), tileFormat, camera, CoordinateAxis.Z
+                        statusLabel,
+                        tileFormat,
+                        getRenderedVolumeLocation(tmSample),
+                        camera,
+                        CoordinateAxis.Z
                 )
         );
         return menuItem;
@@ -1258,10 +1262,14 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return mnCopyTileInx;
     }
 
-    JMenuItem addCopyRawTileFileLocMenuItem(JLabel statusLabel, TileFormat tileFormat, TmSample tmSample) {
+    JMenuItem addCopyRawTileFileLocMenuItem(TmSample tmSample) {
         JMenuItem mnCopyTileFileLoc = new JMenuItem(
                 new RawFileLocToClipboardAction(
-                        statusLabel, tileFormat, tmSample.getTwoPhotonAcquisitionFilepath(), getRenderedVolumeLocation(tmSample), getRenderedVolumeLoader())
+                        statusLabel,
+                        tileFormat,
+                        tmSample.getTwoPhotonAcquisitionFilepath(),
+                        getRenderedVolumeLocation(tmSample),
+                        getRenderedVolumeLoader())
         );
         return mnCopyTileFileLoc;
     }
