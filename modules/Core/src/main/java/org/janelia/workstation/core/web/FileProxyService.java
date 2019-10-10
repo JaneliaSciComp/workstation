@@ -29,7 +29,7 @@ public class FileProxyService extends AbstractHandler {
 
     private static final Logger log = LoggerFactory.getLogger(FileProxyService.class);
     
-    private static final int BUFFER_SIZE = 1024;
+    private static final int BUFFER_SIZE = 8196;
 
     public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
@@ -67,6 +67,7 @@ public class FileProxyService extends AbstractHandler {
         }
         
         FileProxy fileProxy;
+        InputStream input = null;
         OutputStream output = null;
         try {
             fileProxy = FileMgr.getFileMgr().getFile(standardPath, false);
@@ -82,7 +83,7 @@ public class FileProxyService extends AbstractHandler {
                 // This method is supported, but there is nothing more to do
             } else if ("GET".equals(method)) {
                 log.debug("Writing {} bytes", nbytes);
-                InputStream input = fileProxy.openContentStream();
+                input = fileProxy.openContentStream();
                 output = response.getOutputStream();
                 Utils.copyNio(input, output, BUFFER_SIZE);
             } else {
@@ -101,11 +102,17 @@ public class FileProxyService extends AbstractHandler {
             e.printStackTrace(response.getWriter());
             FrameworkAccess.handleExceptionQuietly(e);
         } finally {
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException e) {
+                    log.warn("Failed to close input stream", e);
+                }
+            }
             if (output != null) {
                 try {
                     output.close();
-                } 
-                catch (IOException e) {
+                } catch (IOException e) {
                     log.warn("Failed to close output stream", e);
                 }
             }

@@ -363,15 +363,24 @@ public class Utils {
     public static void copyNio(InputStream input, OutputStream output, int bufferSize) throws IOException {
         final ReadableByteChannel inputChannel = Channels.newChannel(input);
         final WritableByteChannel outputChannel = Channels.newChannel(output);
-        fastChannelCopy(inputChannel, outputChannel, bufferSize);
-        inputChannel.close();
-        outputChannel.close();
+        try {
+            fastChannelCopy(inputChannel, outputChannel, bufferSize);
+        } finally {
+            try {
+                inputChannel.close();
+            } catch (Exception ignore) {
+            }
+            try {
+                outputChannel.close();
+            } catch (Exception ignore) {
+            }
+        }
     }
 
     /**
      * Adapted from http://thomaswabner.wordpress.com/2007/10/09/fast-stream-copy-using-javanio-channels/
      */
-    public static void fastChannelCopy(final ReadableByteChannel src, final WritableByteChannel dest, int bufferSize) throws IOException {
+    private static void fastChannelCopy(final ReadableByteChannel src, final WritableByteChannel dest, int bufferSize) throws IOException {
         final ByteBuffer buffer = ByteBuffer.allocateDirect(bufferSize);
         while (src.read(buffer) != -1) {
             // prepare the buffer to be drained
