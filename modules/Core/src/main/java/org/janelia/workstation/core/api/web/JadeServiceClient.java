@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.rendering.DataLocation;
 import org.janelia.rendering.JADEBasedDataLocation;
@@ -105,7 +106,7 @@ public class JadeServiceClient {
 
     public Optional<JADEBasedDataLocation> findDataLocation(String storagePathParam) {
         Preconditions.checkArgument(storagePathParam != null && storagePathParam.trim().length() > 0);
-        String storagePath = storagePathParam.replace('\\', '/');
+        String storagePath = RegExUtils.replaceFirst(StringUtils.replaceChars(storagePathParam, '\\', '/'), "^((.+:)?/+)+", "/");
         ClientProxy httpClient = getHttpClient();
         try {
             LOG.debug("Lookup storage for {}", storagePath);
