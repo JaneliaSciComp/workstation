@@ -1,4 +1,4 @@
-// 8.3
+// 8.4
 
 In this major release, the Workstation has been refactored to allow for containerized deployment and open source
 distribution. The full source code is now available on GitHub under the Janelia Open Source License:
