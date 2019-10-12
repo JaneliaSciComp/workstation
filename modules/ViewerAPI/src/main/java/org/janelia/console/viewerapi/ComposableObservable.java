@@ -13,8 +13,7 @@ import java.util.Observable;
  * 
  * @author cmbruns
  */
-public class ComposableObservable extends Observable 
-implements ObservableInterface
+public class ComposableObservable extends Observable implements ObservableInterface
 {
     /**
      * Potentially slow notification of all listeners. For efficiency,

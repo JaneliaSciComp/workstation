@@ -83,12 +83,14 @@ public class CachedTileLoader implements TileLoader {
         private final TileLoader tileLoader;
         private final String tileStorageURL;
         private final String tileLocation;
+        private Long length;
         private Streamable<InputStream> streamableContent;
 
         RawTileFileProxy(TileLoader tileLoader, String tileStorageURL, String tileLocation) {
             this.tileLoader = tileLoader;
             this.tileStorageURL = tileStorageURL;
             this.tileLocation = tileLocation;
+            this.length = null;
             this.streamableContent = null;
         }
 
@@ -99,8 +101,10 @@ public class CachedTileLoader implements TileLoader {
 
         @Override
         public Long estimateSizeInBytes() {
-            fetchContent();
-            return streamableContent.getSize();
+            if (length == null) {
+                fetchContent();
+            }
+            return length;
         }
 
         @Nullable
@@ -122,6 +126,7 @@ public class CachedTileLoader implements TileLoader {
             if (streamableContent == null) {
                 LOG.debug("Fetch content {} / {}", tileStorageURL, tileLocation);
                 streamableContent = tileLoader.streamTileContent(tileStorageURL, tileLocation);
+                length = streamableContent.getSize();
             }
         }
 

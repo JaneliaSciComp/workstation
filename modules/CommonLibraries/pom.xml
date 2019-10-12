@@ -185,6 +185,11 @@
             <version>1.3.3</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>4.4.12</version>
+        </dependency>
+        <dependency>
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
             <version>3.1</version>
@@ -583,6 +588,7 @@
                         <publicPackage>org.apache.commons.logging</publicPackage>
                         <publicPackage>org.apache.jackrabbit.*</publicPackage>
                         <publicPackage>org.apache.http</publicPackage>
+                        <publicPackage>org.apache.http.util</publicPackage>
                         <publicPackage>org.apache.http.*</publicPackage>
                         <publicPackage>org.apache.log4j</publicPackage>
                         <publicPackage>org.apache.log4j.*</publicPackage>

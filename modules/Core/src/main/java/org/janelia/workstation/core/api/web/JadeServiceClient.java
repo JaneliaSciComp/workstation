@@ -1,7 +1,5 @@
 package org.janelia.workstation.core.api.web;
 
-import java.io.FilterInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -21,7 +19,6 @@ import com.google.common.base.Preconditions;
 
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.rendering.DataLocation;
 import org.janelia.rendering.JADEBasedDataLocation;
 import org.janelia.rendering.Streamable;
 import org.janelia.rendering.utils.ClientProxy;
@@ -159,29 +156,11 @@ public class JadeServiceClient {
                     .get();
             int responseStatus = response.getStatus();
             if (responseStatus == Response.Status.OK.getStatusCode()) {
-                InputStream is = response.readEntity(InputStream.class);
-                int length = response.getLength();
-                return Streamable.of(
-                        new FilterInputStream(is) {
-                            @Override
-                            public void close() throws IOException {
-                                try {
-                                    super.close();
-                                } finally {
-                                    // when closing the stream make sure this "connection" gets closed
-                                    response.close();
-                                }
-                            }
-                        },
-                        length);
+                InputStream is = (InputStream) response.getEntity();
+                return Streamable.of(is, response.getLength());
             } else {
                 LOG.warn("Request to {} in order to get {} returned with status {}", target, dataPath, responseStatus);
-                try {
-                    return Streamable.empty();
-                } finally {
-                    // in this case it's ok to close the response right away
-                    response.close();
-                }
+                return Streamable.empty();
             }
         } finally {
             httpClient.close();

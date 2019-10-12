@@ -56,13 +56,13 @@ public class KtxBlockLoadRunner
                 long endTime = System.currentTimeMillis();
                 LOG.info("Loading ktx tile {} from {} took {} ms", ktxOctreeBlockTileKey, sourceURI, endTime-startTime);
             });
-        } catch (IOException ex) {
-            LOG.warn("IOException loading tile {} from block source", ktxOctreeBlockTileKey, ex);
-            state = State.FAILED;
         } catch (IllegalStateException ex) {
             // these are 404 errors for files which are missing (possibly correctly, our octree
             //  isn't 100% complete) on disk
             LOG.warn("IllegalStateException loading tile {} from block source", ktxOctreeBlockTileKey, ex);
+            state = State.FAILED;
+        } catch (IOException ex) {
+            LOG.warn("Exception loading tile {} from block source", ktxOctreeBlockTileKey, ex);
             state = State.FAILED;
         }
     }
@@ -72,7 +72,6 @@ public class KtxBlockLoadRunner
         loadStream(ktxStreamDataSource.openInputStream(), ktxData -> {
             long endTime = System.currentTimeMillis();
             LOG.info("Loading ktx tile {} from datasource {} took {} ms", ktxOctreeBlockTileKey, ktxStreamDataSource.getFileName(), endTime-startTime);
-
         });
     }
 

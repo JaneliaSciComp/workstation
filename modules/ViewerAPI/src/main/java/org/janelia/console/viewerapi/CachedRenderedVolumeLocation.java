@@ -76,6 +76,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         private String fileId;
         private final Supplier<Streamable<T>> streamableContentSupplier;
         private final Function<T, InputStream> contentToStreamMapper;
+        private Long length;
         private Streamable<T> streamableContent;
 
         private RenderedVolumeContentFileProxy(String fileId,
@@ -84,6 +85,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
             this.fileId = fileId;
             this.streamableContentSupplier = streamableContentSupplier;
             this.contentToStreamMapper = contentToStreamMapper;
+            this.length = null;
             this.streamableContent = null;
         }
 
@@ -94,8 +96,10 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
 
         @Override
         public Long estimateSizeInBytes() {
-            fetchContent();
-            return streamableContent.getSize();
+            if (length == null) {
+                fetchContent();
+            }
+            return length;
         }
 
         @Override
@@ -118,6 +122,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         private void fetchContent() {
             if (streamableContent == null) {
                 streamableContent = streamableContentSupplier.get();
+                length = streamableContent.getSize();
             }
         }
 
