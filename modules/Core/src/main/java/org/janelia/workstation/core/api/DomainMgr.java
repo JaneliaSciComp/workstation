@@ -182,7 +182,7 @@ public class DomainMgr {
     }
 
     /**
-     * Queries the backend and returns the list of preferences for the given subject.
+     * Returns the preference for the specified category and key for the current preference subject.
      *
      * @param category
      * @param key
@@ -190,10 +190,18 @@ public class DomainMgr {
      */
     synchronized Preference getPreference(String category, String key) throws Exception {
         loadPreferences();
-        String mapKey = category + ":" + key;
-        return preferenceMap.get(mapKey);
+        return preferenceMap.get(getPreferenceMapKey(category, key));
     }
 
+    /**
+     * Returns the value of the specified preference for the current preference subject.
+     * @param category category of preference
+     * @param key key of preference
+     * @param defaultValue default value to use if the preference is not set
+     * @param <T> expected type of the preference value
+     * @return value of the specified preference
+     * @throws Exception
+     */
     @SuppressWarnings("unchecked")
     synchronized <T> T getPreferenceValue(String category, String key, T defaultValue) throws Exception {
         Preference preference = getPreference(category, key);
@@ -201,6 +209,12 @@ public class DomainMgr {
         return (T) preference.getValue();
     }
 
+    /**
+     * Returns all the preferences in the given category, regardless who owns them.
+     * @param category
+     * @return
+     * @throws Exception
+     */
     public synchronized List<Preference> getPreferencesByCategory(String category) throws Exception {
         loadPreferences();
         List<Preference> categoryPreferences = new ArrayList<>();
@@ -234,17 +248,12 @@ public class DomainMgr {
         return updated;
     }
 
-    public static String getPreferenceSubject() {
-        if (!AccessManager.loggedIn()) throw new SystemError("Not logged in");
-        return ApplicationOptions.getInstance().isUseRunAsUserPreferences() ? AccessManager.getSubjectKey() : AccessManager.getAccessManager().getAuthenticatedSubject().getKey();
-    }
-
     /**
      * Set the given preference value, creating the preference if necessary.
      *
-     * @param category
-     * @param key
-     * @param value
+     * @param category preference category
+     * @param key preference key
+     * @param value preference value
      * @throws Exception
      */
     public void setPreference(String category, String key, Object value) throws Exception {
@@ -257,10 +266,18 @@ public class DomainMgr {
         savePreference(preference);
     }
 
+    /**
+     * Calls getPreferencesByCategory and maps the resulting preferences which have non-null values into
+     * a map by their key.
+     * @param category preference category
+     * @param <T> expected value type
+     * @return
+     * @throws Exception
+     */
     public <T> Map<String, T> loadPreferencesAsMap(String category) throws Exception {
-        List<Preference> titlePreferences = DomainMgr.getDomainMgr().getPreferencesByCategory(category);
+        List<Preference> preferences = DomainMgr.getDomainMgr().getPreferencesByCategory(category);
         Map<String, T> map = new HashMap<>();
-        for (Preference preference : titlePreferences) {
+        for (Preference preference : preferences) {
             if (preference.getValue() != null) {
                 map.put(preference.getKey(), (T)preference.getValue());
             }
@@ -268,6 +285,12 @@ public class DomainMgr {
         return map;
     }
 
+    /**
+     * Given a map of String-valued preferences, saves them into a category.
+     * @param map
+     * @param category
+     * @throws Exception
+     */
     public void saveMapAsPreferences(Map<String, String> map, String category) throws Exception {
         for (String key : map.keySet()) {
             String value = map.get(key);
@@ -285,7 +308,11 @@ public class DomainMgr {
     }
 
     private String getPreferenceMapKey(Preference preference) {
-        return preference.getCategory() + ":" + preference.getKey();
+        return preference.getSubjectKey() + ":" + preference.getCategory() + ":" + preference.getKey();
+    }
+
+    private String getPreferenceMapKey(String category, String key) {
+        return getPreferenceSubject() + ":" + category + ":" + key;
     }
 
     private void notifyPreferenceChanged(Preference preference) {
@@ -293,5 +320,15 @@ public class DomainMgr {
             log.trace("Generating PreferenceChangeEvent for {}", preference);
         }
         Events.getInstance().postOnEventBus(new PreferenceChangeEvent(preference));
+    }
+
+    /**
+     * Returns the subject key for the subject which owns the preferences currently being used. This might be the
+     * authenticated user, or the run-as user, according to the related ApplicationOptions setting.
+     * @return subject to user for persisting preferences
+     */
+    public static String getPreferenceSubject() {
+        if (!AccessManager.loggedIn()) throw new SystemError("Not logged in");
+        return ApplicationOptions.getInstance().isUseRunAsUserPreferences() ? AccessManager.getSubjectKey() : AccessManager.getAccessManager().getAuthenticatedSubject().getKey();
     }
 }
