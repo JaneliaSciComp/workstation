@@ -68,28 +68,6 @@ public class RestJsonClientManager {
     }
 
     private Client buildClient(boolean auth) {
-        ClientConfig clientConfig = new ClientConfig();
-        // values are in milliseconds
-        clientConfig.property(ClientProperties.READ_TIMEOUT, 2000);
-        clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 500);
-        clientConfig.property(ClientProperties.FOLLOW_REDIRECTS, false);
-
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(100);
-        connectionManager.setDefaultMaxPerRoute(20);
-        connectionManager.closeExpiredConnections();
-        connectionManager.closeIdleConnections(50, TimeUnit.MILLISECONDS);
-        connectionManager.setValidateAfterInactivity(50);
-
-        // tell the config about the connection manager
-        clientConfig.property(ApacheClientProperties.CONNECTION_MANAGER, connectionManager);
-
-        // tell the connector about the config, which includes the connection manager and timeouts
-        ApacheConnectorProvider connectorProvider = new ApacheConnectorProvider();
-
-        // tell the config about the connector
-        clientConfig.connectorProvider(connectorProvider);
-
         JacksonJsonProvider jsonProvider = new JacksonJaxbJsonProvider()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
@@ -132,11 +110,11 @@ public class RestJsonClientManager {
         };
 
         return ClientBuilder.newBuilder()
-                .withConfig(clientConfig)
                 .register(MultiPartFeature.class)
                 .register(jsonProvider)
                 .register(headerFilter)
                 .register(followRedirectFilter)
+                .property(ClientProperties.FOLLOW_REDIRECTS, Boolean.FALSE) // because we use the followRedirectFilter we set this to false
                 .build();
     }
 
