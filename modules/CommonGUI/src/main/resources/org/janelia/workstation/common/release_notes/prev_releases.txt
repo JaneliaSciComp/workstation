@@ -1,3 +1,8 @@
+// 8.4
+
+* Fixed issue with saving preferences
+* Fixed issues with file cache and downloads
+
 // 8.3
 
 Data Browser
