@@ -488,7 +488,7 @@ public class Utils {
         FileProxy fileProxy = FileMgr.getFileMgr().getFile(standardPath, false);
 
         Long length;
-        log.info("copyURLToFile {} to {}", standardPath, destination);
+        log.info("Copying {} to {}", standardPath, destination);
 
         int estimatedCompressionFactor;
         InputStream fileProxyStream = fileProxy.openContentStream();
@@ -496,6 +496,7 @@ public class Utils {
             if (standardPath.endsWith(EXTENSION_BZ2) &&
                     (!destination.getName().endsWith(EXTENSION_BZ2))) {
                 input = new BZip2CompressorInputStream(fileProxyStream, true);
+                log.info("Using BZip2CompressorInputStream to decompress while streaming");
                 estimatedCompressionFactor = 3;
                 length = null;
             } else {

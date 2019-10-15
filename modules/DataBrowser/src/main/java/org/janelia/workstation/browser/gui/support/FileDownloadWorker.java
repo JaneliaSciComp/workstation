@@ -141,13 +141,8 @@ public class FileDownloadWorker {
                         String resultFiles = null;
                         Task task = getTask();
                         List<TaskMessage> messages = new ArrayList<>(task.getMessages());
-                        if (! messages.isEmpty()) {
-                            Collections.sort(messages, new Comparator<TaskMessage>() {
-                                @Override
-                                public int compare(TaskMessage o1, TaskMessage o2) {
-                                    return o2.getMessageId().compareTo(o1.getMessageId());
-                                }
-                            });
+                        if (!messages.isEmpty()) {
+                            messages.sort((o1, o2) -> o2.getMessageId().compareTo(o1.getMessageId()));
                             resultFiles = messages.get(0).getMessage();
                         }
     
@@ -298,7 +293,7 @@ public class FileDownloadWorker {
     private void transferAndConvertLocallyAsNeeded(DownloadFileItem downloadItem, BackgroundWorker worker, boolean hasProgress) throws Exception {
         final String remoteFile = downloadItem.getSourceFile();
         final Path localFile = downloadItem.getTargetFile();
-        log.info("Transferring {} to {}",remoteFile,localFile);
+        log.debug("Transferring {} to {}",remoteFile,localFile);
         if (worker!=null) worker.throwExceptionIfCancelled();
         copyFile(remoteFile, localFile.toFile(), worker, hasProgress);
         if (worker!=null) worker.throwExceptionIfCancelled();
