@@ -2,7 +2,10 @@ package org.janelia.horta.loader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.zip.GZIPInputStream;
+
+import net.jpountz.lz4.LZ4FrameInputStream;
 import org.apache.commons.io.FilenameUtils;
 
 /**
@@ -27,9 +30,14 @@ public class GZIPFileLoader implements FileTypeLoader
     public boolean load(DataSource source, FileHandler handler) throws IOException
     {
         // Delegate to uncompressed datasource
-        InputStream uncompressedStream = new GZIPInputStream(source.getInputStream());
         String uncompressedName = FilenameUtils.getBaseName(source.getFileName());
-        DataSource uncompressed = new BasicDataSource(uncompressedStream, uncompressedName);
+        DataSource uncompressed = new BasicDataSource(() -> {
+            try {
+                return new GZIPInputStream(source.openInputStream());
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }, uncompressedName);
         return handler.handleDataSource(uncompressed);
     }
     

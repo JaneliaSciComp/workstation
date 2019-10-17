@@ -1,11 +1,11 @@
 package org.janelia.console.viewerapi;
 
 import java.util.List;
-import java.util.function.Supplier;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.filecacheutils.FileProxy;
+
+import static org.apache.commons.lang3.StringUtils.replaceChars;
 
 class RenderedVolumeFileKeyBuilder {
 
@@ -19,7 +19,7 @@ class RenderedVolumeFileKeyBuilder {
         this.renderedVolumePath = renderedVolumePath;
     }
 
-    RenderedVolumeFileKey build(Supplier<FileProxy> fileProxySupplier) {
+    RenderedVolumeFileKey build(RenderedVolumeFileToProxyMapper fileProxyMapper) {
         StringBuilder builder = new StringBuilder();
         builder.append(normalizePath(renderedVolumePath));
         appendPath(builder, absolutePath);
@@ -40,7 +40,7 @@ class RenderedVolumeFileKeyBuilder {
         if (pageNumber >= 0) {
             builder.append('.').append(pageNumber);
         }
-        return new RenderedVolumeFileKey(builder.toString(), fileProxySupplier);
+        return new RenderedVolumeFileKey(builder.toString(), fileProxyMapper);
     }
 
 
@@ -66,8 +66,8 @@ class RenderedVolumeFileKeyBuilder {
 
     private String normalizePath(String p) {
         // remove the start and the end '/' if it exists
-        return StringUtils.removeStart(
-                StringUtils.removeEnd(StringUtils.replaceChars(p, '\\', '/'), "/"),
+        return StringUtils.removeEnd(
+                RegExUtils.removeFirst(StringUtils.replaceChars(p, '\\', '/'), "^((.+:)?/+)+"), // replace patterns like C://, file:///D:/
                 "/"
         );
     }

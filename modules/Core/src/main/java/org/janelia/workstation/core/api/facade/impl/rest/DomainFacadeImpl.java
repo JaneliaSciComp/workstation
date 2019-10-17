@@ -11,6 +11,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.client.ClientProperties;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;

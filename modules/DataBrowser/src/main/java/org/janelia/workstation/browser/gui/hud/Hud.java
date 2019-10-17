@@ -1,6 +1,7 @@
 package org.janelia.workstation.browser.gui.hud;
 
 import org.apache.commons.io.FilenameUtils;
+import org.janelia.filecacheutils.FileProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
@@ -388,11 +389,14 @@ public class Hud extends ModalDialog {
                     if (image == null) {
                         try {
                             log.debug("Must load image.");
-                            try (InputStream imageStream = FileMgr.getFileMgr().getFile(filepath, false).openContentStream()) {
-                                image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(filepath));
-                            }
-                            if (ic != null) {
-                                ic.put(filepath, image);
+                            FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(filepath, false);
+                            if (imageFileProxy != null) {
+                                try (InputStream imageStream = imageFileProxy.openContentStream()) {
+                                    image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(filepath));
+                                }
+                                if (ic != null) {
+                                    ic.put(filepath, image);
+                                }
                             }
                         }
                         catch (FileNotFoundException e) {
@@ -409,8 +413,7 @@ public class Hud extends ModalDialog {
 
                 @Override
                 protected void hadSuccess() {
-                    
-                    if (image!=null) {
+                    if (image != null) {
                         previewLabel.setIcon(new ImageIcon(image));
                         dirtyEntityFor3D = true;
                         if (render3DCheckbox != null) {
@@ -426,14 +429,13 @@ public class Hud extends ModalDialog {
                         width = Math.min(image.getWidth()+5, width);
                         height = Math.min(image.getHeight()+5, height);
                         scrollPane.setSize(new Dimension(width, height));
-                    }
-                    
-                    if (toggle) {
-                        toggleDialog();
-                    }
-                    else {
-                        pack();
-                    }
+                        if (toggle) {
+                            toggleDialog();
+                        }
+                        else {
+                            pack();
+                        }
+                    } // do nothing if image is null which can happen if the file is missing
                 }
 
                 @Override
@@ -443,12 +445,11 @@ public class Hud extends ModalDialog {
             };
                     
             worker.execute();
-            
         }
         if (mip3d!=null) mip3d.repaint();
     }
     
-    public String getFast3dFile() {
+    String getFast3dFile() {
         
         FileType type = null;
         if (imageType==FileType.AllMip) {

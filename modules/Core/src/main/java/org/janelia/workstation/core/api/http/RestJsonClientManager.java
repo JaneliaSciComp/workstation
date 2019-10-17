@@ -11,6 +11,8 @@ import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -25,6 +27,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,10 +97,14 @@ public class RestJsonClientManager {
         };
 
         ClientResponseFilter followRedirectFilter = (clientRequestContext, clientResponseContext) -> {
-            if (clientResponseContext.getStatusInfo().getFamily() != Response.Status.Family.REDIRECTION)
+            if (clientResponseContext.getStatusInfo().getFamily() != Response.Status.Family.REDIRECTION) {
                 return;
+            }
 
-            Response resp = clientRequestContext.getClient().target(clientResponseContext.getLocation()).request().method(clientRequestContext.getMethod());
+            Response resp = clientRequestContext.getClient()
+                    .target(clientResponseContext.getLocation())
+                    .request()
+                    .method(clientRequestContext.getMethod());
 
             clientResponseContext.setEntityStream((InputStream) resp.getEntity());
             clientResponseContext.setStatusInfo(resp.getStatusInfo());
@@ -109,6 +116,7 @@ public class RestJsonClientManager {
                 .register(jsonProvider)
                 .register(headerFilter)
                 .register(followRedirectFilter)
+                .property(ClientProperties.FOLLOW_REDIRECTS, Boolean.FALSE) // because we use the followRedirectFilter we set this to false
                 .build();
     }
 

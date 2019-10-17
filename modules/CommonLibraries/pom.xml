@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.2</version>
+        <version>8.3.2</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>CommonLibraries</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>libraries</artifactId>
-    <version>8.2</version>
+    <version>8.3.2</version>
     <packaging>nbm</packaging>
 
     <properties>
@@ -166,7 +166,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.3.2</version>
+            <version>3.9</version>
         </dependency>
         <!-- TODO: We should move everything to lang3 to eliminate this dependency -->
         <dependency>

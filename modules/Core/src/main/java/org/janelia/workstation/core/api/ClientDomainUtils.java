@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.interfaces.HasName;
 import org.janelia.workstation.core.model.ImageModel;
 
@@ -28,8 +29,18 @@ public class ClientDomainUtils {
         if (!AccessManager.loggedIn()) return false;
         if (domainObject==null) return false;
         return DomainUtils.isOwner(domainObject, AccessManager.getSubjectKey());
-    } 
-    
+    }
+
+    /**
+     * Returns true if the current user owns the given preference.
+     * @return
+     */
+    public static boolean isOwner(Preference preference) {
+        if (!AccessManager.loggedIn()) return false;
+        if (preference==null) return false;
+        return preference.getSubjectKey().equals(AccessManager.getSubjectKey());
+    }
+
     /**
      * Returns true if the current user has read access to the given domain object.
      * Always returns true if the current user is an admin.

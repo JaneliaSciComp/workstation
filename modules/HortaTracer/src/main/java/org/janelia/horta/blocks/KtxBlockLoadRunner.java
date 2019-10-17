@@ -49,21 +49,22 @@ public class KtxBlockLoadRunner
 
     private void loadFromBlockSource() {
         long startTime = System.currentTimeMillis();
-        try (InputStream blockStream = ktxBlockTileSource.streamKeyBlock(ktxOctreeBlockTileKey)) {
-            URI sourceURI = ktxBlockTileSource.getKeyBlockAbsolutePathURI(ktxOctreeBlockTileKey);
+        URI sourceURI = ktxBlockTileSource.getKeyBlockAbsolutePathURI(ktxOctreeBlockTileKey);
+        LOG.debug("Load ktx tile {} from {}", ktxOctreeBlockTileKey, sourceURI);
+        try (InputStream blockStream = ktxBlockTileSource.streamKeyBlock(ktxOctreeBlockTileKey).get()) {
             loadStream(blockStream, ktxData -> {
                 long endTime = System.currentTimeMillis();
                 LOG.info("Loading ktx tile {} from {} took {} ms", ktxOctreeBlockTileKey, sourceURI, endTime-startTime);
             });
         } catch (IOException ex) {
-            LOG.warn("IOException loading tile {} from block source", ktxOctreeBlockTileKey, ex);
+            LOG.info("IOException loading tile {} from block source", ktxOctreeBlockTileKey, ex);
             state = State.FAILED;
         }
     }
 
     private void loadFromDataSource() {
         long startTime = System.currentTimeMillis();
-        loadStream(ktxStreamDataSource.getInputStream(), ktxData -> {
+        loadStream(ktxStreamDataSource.openInputStream(), ktxData -> {
             long endTime = System.currentTimeMillis();
             LOG.info("Loading ktx tile {} from datasource {} took {} ms", ktxOctreeBlockTileKey, ktxStreamDataSource.getFileName(), endTime-startTime);
 

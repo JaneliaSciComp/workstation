@@ -1,4 +1,4 @@
-// 8.2
+// 8.3
 
 In this major release, the Workstation has been refactored to allow for containerized deployment and open source
 distribution. The full source code is now available on GitHub under the Janelia Open Source License:
@@ -20,6 +20,7 @@ Color Depth Search
 * Added search options for XY shift and mask mirroring
 * Color Depth Search results now shows mask and result side-by-side with a synchronized mouse cursor
 * Added scrolling to the color depth mask creation dialog
+* Added color depth search presets for EM/LM
 
 MouseLight Tools
 * Both Horta and LVV were modified to pull data from the JADE storage service, eliminating the previous

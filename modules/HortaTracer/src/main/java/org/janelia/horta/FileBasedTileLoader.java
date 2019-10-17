@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+import org.janelia.console.viewerapi.OsFilePathRemapper;
 import org.janelia.rendering.Streamable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,7 @@ public class FileBasedTileLoader implements TileLoader {
 
     @Override
     public Streamable<InputStream> streamTileContent(String storageLocation, String tileLocation) {
-        Path tilePath = Paths.get(tileLocation);
+        Path tilePath = Paths.get(OsFilePathRemapper.remapLinuxPath(tileLocation));
 
         if (Files.notExists(tilePath)) {
             return Streamable.empty();

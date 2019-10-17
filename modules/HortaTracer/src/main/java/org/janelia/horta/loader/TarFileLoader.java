@@ -27,7 +27,7 @@ public class TarFileLoader implements FileTypeLoader
     @Override
     public boolean load(DataSource source, FileHandler handler) throws IOException
     {
-        TarArchiveInputStream tarStream = new TarArchiveInputStream(source.getInputStream());
+        TarArchiveInputStream tarStream = new TarArchiveInputStream(source.openInputStream());
         TarArchiveEntry entry = null;
         while ( (entry = tarStream.getNextTarEntry()) != null) 
         {
@@ -38,8 +38,7 @@ public class TarFileLoader implements FileTypeLoader
             int size = (int)entry.getSize();
             byte[] content = new byte[size];
             tarStream.read(content, 0, size);
-            InputStream is = new ByteArrayInputStream(content);
-            DataSource entrySource = new BasicDataSource(is, entry.getName());
+            DataSource entrySource = new BasicDataSource(() -> new ByteArrayInputStream(content), entry.getName());
             handler.handleDataSource(entrySource);
         }
         return true;

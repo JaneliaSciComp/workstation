@@ -1,3 +1,23 @@
+// 8.3
+
+Data Browser
+* Added color depth search presets for EM/LM
+* Added default sort by id for new searches
+* Fixed issue with annotations updates not being searchable
+* Fixed WSDL library issue when opening in Neuron Annotator
+* Fixed caching issue with opening in external tools
+
+// 8.2
+
+Color Depth Search
+* File cache has been refactored and optimized for network performance
+* Color Depth Libraries and Searches are now accessible as top-level items in the Data Explorer
+* Color Depth Search results now shows mask and result side-by-side with a synchronized mouse cursor
+
+MouseLight Tools
+* Local file cache is now used for all MouseLight data
+* Octree, KTX, and RAW data paths are now set explicitly on the sample
+
 // 8.1.1
 
 Data Browser

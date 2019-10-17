@@ -43,7 +43,7 @@ public class SwcLoader implements FileTypeLoader
             public void run()
             {
                 try {
-                    NeuronModel neuron = new BasicNeuronModel(source.getInputStream(), source.getFileName(), neuronSet);
+                    NeuronModel neuron = new BasicNeuronModel(source.openInputStream(), source.getFileName(), neuronSet);
                     synchronized(neuronSet) {
                         if (neuronSet.add(neuron))
                             neuronSet.getMembershipChangeObservable().setChanged();

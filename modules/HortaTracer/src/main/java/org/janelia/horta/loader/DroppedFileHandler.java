@@ -26,17 +26,9 @@ public class DroppedFileHandler implements FileHandler
     {
         DataSource source = new FileDataSource(f);
         boolean result = handleDataSource(source);
-        // source.getInputStream().close();
         return result;
     }
-    
-    public boolean handleStream(InputStream stream, String fileName) 
-            throws IOException 
-    {
-        DataSource source = new BasicDataSource(stream, fileName);
-        return handleDataSource(source);
-    }
-    
+
     @Override
     public boolean handleDataSource(DataSource source) 
             throws IOException 

@@ -19,6 +19,7 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.TmNeuronUtils;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -200,8 +201,10 @@ public class NeuronManager {
      */
     public void loadWorkspaceNeurons(TmWorkspace workspace) throws Exception {
         neuronMap.clear();
+        StopWatch stopWatch = new StopWatch();
         neuronModelAdapter.loadNeurons(workspace)
                 .forEach(n -> addNeuron(n));
+        LOG.info("NEURON TOTAL LOAD {} ms", stopWatch.getElapsedTime());
     }
 
     /**

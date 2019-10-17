@@ -20,5 +20,4 @@ public class DomainMgrPreferenceModel implements PreferenceModel {
     public <T> T getPreferenceValue(String category, String key, T defaultValue) throws Exception {
         return DomainMgr.getDomainMgr().getPreferenceValue(category, key, defaultValue);
     }
-    
 }

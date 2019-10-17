@@ -289,7 +289,8 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
     
     public void remove(TmNeuronMetadata neuronMetadata) {
         WebTarget target = getMouselightDataEndpoint("/workspace/neuron")
-                .queryParam("neuronId", neuronMetadata.getId());
+                .queryParam("neuronId", neuronMetadata.getId())
+                .queryParam("isLarge", neuronMetadata.isLargeNeuron());
         Response response = target
                 .request()
                 .delete();

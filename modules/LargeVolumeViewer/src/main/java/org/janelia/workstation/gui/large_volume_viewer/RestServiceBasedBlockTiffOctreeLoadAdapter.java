@@ -104,18 +104,18 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
     @Override
     public TextureData2d loadToRam(TileIndex tileIndex)
             throws TileLoadError {
+        TileInfo tileInfo = getTileInfo(tileIndex);
+        TileKey tileKey = TileKey.fromRavelerTileCoord(tileIndex.getX(), tileIndex.getY(), tileIndex.getZ(),
+                tileIndex.getZoom(),
+                tileInfo.getSliceAxis(),
+                tileInfo);
+        LOG.trace("Loading tile {} using key {}", tileIndex, tileKey);
         try {
-            TileInfo tileInfo = getTileInfo(tileIndex);
-            TileKey tileKey = TileKey.fromRavelerTileCoord(tileIndex.getX(), tileIndex.getY(), tileIndex.getZ(),
-                    tileIndex.getZoom(),
-                    tileInfo.getSliceAxis(),
-                    tileInfo);
-            LOG.trace("Loading tile {} using key {}", tileIndex, tileKey);
             byte[] textureBytes =renderedVolumeLoader.loadSlice(renderedVolumeLocation, renderedVolumeMetadata, tileKey)
                     .getContent();
             return textureBytes != null ? new TextureData2d(textureBytes) : null;
         } catch (Exception ex) {
-            LOG.error("Error getting sample 2d tile from {}", renderedVolumeMetadata.getDataStorageURI(), ex);
+            LOG.error("Error getting sample 2d tile {} based on tileIndex {} using http based on {}", tileKey, tileIndex, renderedVolumeMetadata.getDataStorageURI(), ex);
             throw new TileLoadError(ex);
         }
     }

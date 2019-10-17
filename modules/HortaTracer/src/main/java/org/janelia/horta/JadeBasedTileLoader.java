@@ -31,6 +31,7 @@ public class JadeBasedTileLoader implements TileLoader {
     public Streamable<InputStream> streamTileContent(String storageLocation, String tileLocation) {
         long startTime = System.currentTimeMillis();
         try {
+            LOG.debug("Open stream for reading tile bytes from {} for {}", storageLocation, tileLocation);
             return jadeClient.streamContent(storageLocation, tileLocation);
         } finally {
             LOG.info("Opened content for reading tile bytes from {} for {} in {} ms",

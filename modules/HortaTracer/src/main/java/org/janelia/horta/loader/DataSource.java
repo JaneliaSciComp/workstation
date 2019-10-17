@@ -9,8 +9,7 @@ import java.io.InputStream;
  * and important file type information might be in the file name.
  * @author Christopher Bruns
  */
-public interface DataSource
-{
-    InputStream getInputStream(); // Where to get the bytes
+public interface DataSource {
+    InputStream openInputStream(); // Where to get the bytes
     String getFileName(); // Used to help identify file type
 }

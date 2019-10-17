@@ -3,6 +3,7 @@ package org.janelia.horta.blocks;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -11,13 +12,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.prefs.PreferenceChangeEvent;
 import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
-import org.eclipse.jetty.util.ConcurrentHashSet;
+
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.horta.options.TileLoadingPanel;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
-import org.openide.util.Exceptions;
 import org.openide.util.NbPreferences;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
@@ -32,14 +32,14 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
 
-    public static interface LoadRunner<TILE_KEY, TILE_DATA> {
+    public interface LoadRunner<TILE_KEY, TILE_DATA> {
         TILE_DATA loadTile(TILE_KEY key) throws InterruptedException, IOException;
     }
 
     private final Map<TILE_KEY, RequestProcessor.Task> queuedTiles = new ConcurrentHashMap<>();
     private final Map<TILE_KEY, RequestProcessor.Task> loadingTiles = new ConcurrentHashMap<>();
 
-    private final Set<TILE_KEY> nearVolumeMetadata = new ConcurrentHashSet<>();
+    private final Set<TILE_KEY> nearVolumeMetadata = new HashSet<>();
 
     final Map<TILE_KEY, TILE_DATA> nearVolumeInRam = new ConcurrentHashMap<>();
     final Map<TILE_KEY, TILE_DATA> obsoleteTiles = new ConcurrentHashMap<>();
@@ -51,7 +51,7 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public BasicTileCache() {
+    BasicTileCache() {
         Preferences pref = NbPreferences.forModule(TileLoadingPanel.class);
 
         String concurrentLoadsStr = pref.get(TileLoadingPanel.PREFERENCE_CONCURRENT_LOADS, TileLoadingPanel.PREFERENCE_CONCURRENT_LOADS_DEFAULT);
@@ -139,9 +139,7 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
         return result;
     }
 
-    private synchronized boolean queueLoad(
-            final TILE_KEY key,
-            final LoadRunner<TILE_KEY, TILE_DATA> loadRunner) {
+    private synchronized boolean queueLoad(final TILE_KEY key, final LoadRunner<TILE_KEY, TILE_DATA> loadRunner) {
         if (queuedTiles.containsKey(key)) {
             return false; // already queued
         }
@@ -151,12 +149,6 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
         Runnable loadTask = new Runnable() {
             @Override
             public void run() {
-//                if (Thread.currentThread().isInterrupted()) {
-//                    log.info("loadTask was interrupted before it began");
-//                    queuedTiles.remove(key);
-//                    return;
-//                }
-
                 // Move from "queued" to "loading" state
                 synchronized (queuedTiles) {
                     RequestProcessor.Task task = queuedTiles.get(key);
@@ -164,6 +156,7 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                         log.warn("Tile has no task: " + key.toString());
                         return;
                     }
+                    log.info("Tile has loaded: {}",key.toString());
                     loadingTiles.put(key, task);
                     queuedTiles.remove(key);
                 }
@@ -179,6 +172,8 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                     progress.start();
                     progress.setDisplayName("Loading Tile " + key.toString() + " ...");
                     progress.switchToIndeterminate();
+
+                    log.debug("Tile cache load tile data for {}", key);
 
                     TILE_DATA tileTexture = loadRunner.loadTile(key);
 
@@ -207,9 +202,8 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                 } finally {
                     loadingTiles.remove(key);
                     // figure out if there are tiles we need to remove after successful load of a tile
-                    Map<TILE_KEY, TILE_DATA> obsoleteTiles = blockStrategy.chooseObsoleteTiles(nearVolumeInRam, queuedTiles,
-                            (BlockTileKey)key);
-                    if (obsoleteTiles!=null) {
+                    Map<TILE_KEY, TILE_DATA> obsoleteTiles = blockStrategy.chooseObsoleteTiles(nearVolumeInRam, queuedTiles, (BlockTileKey)key);
+                    if (obsoleteTiles != null) {
                         for (TILE_KEY key : obsoleteTiles.keySet()) {
                             nearVolumeInRam.remove(key);
                         }
@@ -217,11 +211,9 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                     progress.finish();
                 }
             }
-        ;
         };
 
         // Submit load task asynchronously
-
         synchronized (queuedTiles) {
             log.info("Queueing brick {} (queued={}, loading={})", key.toString(), queuedTiles.size(), loadingTiles.size());
             queuedTiles.put(key, loadProcessor.post(loadTask));

@@ -14,7 +14,7 @@ import org.janelia.workstation.browser.actions.ExportPickedGUIDs;
 import org.janelia.workstation.browser.actions.ExportPickedLineNames;
 import org.janelia.workstation.browser.actions.ExportPickedNames;
 import org.janelia.workstation.browser.actions.ExportPickedToSplitGenWebsite;
-import org.janelia.workstation.browser.actions.RemoveItemsFromFolderAction;
+import org.janelia.workstation.browser.actions.RemoveItemsActionListener;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.browser.gui.dialogs.IconGridViewerConfigDialog;
 import org.janelia.workstation.browser.gui.hud.Hud;
@@ -547,7 +547,7 @@ public class DomainObjectIconGridViewer
                 Node node = (Node)parent;
                 if (ClientDomainUtils.hasWriteAccess(node)) {
                     List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-                    RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(node, selectedObjects);
+                    RemoveItemsActionListener action = new RemoveItemsActionListener(node, selectedObjects);
                     action.actionPerformed(null);
                 }
             }

@@ -1,21 +1,22 @@
 package org.janelia.console.viewerapi;
 
 import java.nio.file.Path;
-import java.util.function.Supplier;
+import java.nio.file.Paths;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.filecacheutils.FileKey;
-import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCacheStorage;
 
 public class RenderedVolumeFileKey implements FileKey {
     private final String localName;
-    private final Supplier<FileProxy> fileProxySupplier;
+    private final RenderedVolumeFileToProxyMapper fileProxyMapperDelegate;
 
-    RenderedVolumeFileKey(String localName, Supplier<FileProxy> fileProxySupplier) {
-        this.localName = localName;
-        this.fileProxySupplier = fileProxySupplier;
+    RenderedVolumeFileKey(String localName, RenderedVolumeFileToProxyMapper fileProxyMapperDelegate) {
+        // we don't want to keep the root (especially windows root - <drive>:\) because it resolves to an absolute path
+        Path localPath = Paths.get(localName);
+        this.localName = localPath.getRoot() != null ? localPath.subpath(1, localPath.getNameCount()).toString() : localName;
+        this.fileProxyMapperDelegate = fileProxyMapperDelegate;
     }
 
     @Override
@@ -23,8 +24,12 @@ public class RenderedVolumeFileKey implements FileKey {
         return localFileCacheStorage.getLocalFileCacheDir().resolve(localName);
     }
 
-    Supplier<FileProxy> getFileProxySupplier() {
-        return fileProxySupplier;
+    String getLocalName() {
+        return localName;
+    }
+
+    RenderedVolumeFileToProxyMapper getFileProxyMapperDelegate() {
+        return fileProxyMapperDelegate;
     }
 
     @Override

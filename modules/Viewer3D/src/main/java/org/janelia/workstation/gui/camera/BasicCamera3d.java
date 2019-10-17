@@ -16,7 +16,6 @@ public class BasicCamera3d
     private double pixelsPerSceneUnit = 1.0; // zoom
 
     public BasicCamera3d() {
-        // System.out.println("construct camera");
     }
 
     public Vec3 getFocus() {
@@ -65,12 +64,8 @@ public class BasicCamera3d
         if (f == focus) {
             return false; // no change
         }
-        if (Double.isNaN(f.getX())) {
-            log.warn("Camera NaN");
-            return false;
-        }
+        // This used to return false if the previous focus was not a number
         focus = f;
-        // System.out.println(f);
         return true;
     }
 

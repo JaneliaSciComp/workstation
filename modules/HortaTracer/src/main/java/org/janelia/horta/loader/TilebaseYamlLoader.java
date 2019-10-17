@@ -32,7 +32,7 @@ public class TilebaseYamlLoader implements FileTypeLoader
 
     @Override
     public boolean load(DataSource source, FileHandler handler) throws IOException {
-        try (InputStream yamlStream = source.getInputStream()) {
+        try (InputStream yamlStream = source.openInputStream()) {
             nttc.loadDroppedYaml(source.getFileName(), yamlStream);
             return true;
         }

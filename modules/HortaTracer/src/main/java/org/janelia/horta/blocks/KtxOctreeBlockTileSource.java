@@ -1,6 +1,5 @@
 package org.janelia.horta.blocks;
 
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -10,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -78,7 +78,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
 
     private KtxHeader loadKtxHeader(KtxOctreeBlockTileKey octreeRootKey) {
         KtxHeader ktxHeader = new KtxHeader();
-        try (InputStream blockStream = streamKeyBlock(octreeRootKey)) {
+        try (InputStream blockStream = streamKeyBlock(octreeRootKey).get()) {
             ktxHeader.loadStream(blockStream);
             return ktxHeader;
         } catch (IOException e) {
@@ -141,9 +141,16 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
         );
     }
 
-    InputStream streamKeyBlock(KtxOctreeBlockTileKey octreeKey) {
+    /**
+     *
+     * @param octreeKey
+     * @return a supplier of an input stream instead of a stream to be used practically as a lazy stream that
+     * only opens when it is actually needed. Since this is used asynchronously I don't want to open it here just
+     * in case the connection has some timeout and by the time the caller uses it, it actually "expired"
+     */
+    Supplier<InputStream> streamKeyBlock(KtxOctreeBlockTileKey octreeKey) {
         String octreeKeyBlockAbsolutePath = getKeyBlockAbsolutePathURI(octreeKey).toString();
-        return tileLoader.findStorageLocation(sampleKtxTilesBaseDir)
+        return () -> tileLoader.findStorageLocation(sampleKtxTilesBaseDir)
                 .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, octreeKeyBlockAbsolutePath).asOptional())
                 .orElse(null)
                 ;
@@ -160,7 +167,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
         return rootBlockSize.multiplyScalar(1.0f / scale);
     }
 
-    public ConstVector3 getBlockSize(KtxOctreeResolution resolution) {
+    ConstVector3 getBlockSize(KtxOctreeResolution resolution) {
         Vector3 rootBlockSize = outerCorner.minus(origin);
         float scale = (float) Math.pow(2.0, resolution.getResolution());
         return rootBlockSize.multiplyScalar(1.0f / scale);
@@ -245,7 +252,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
 
     @Override
     public BlockTileData loadBlock(KtxOctreeBlockTileKey key) throws IOException, InterruptedException {
-        try (InputStream blockStream = streamKeyBlock(key)) {
+        try (InputStream blockStream = streamKeyBlock(key).get()) {
             KtxOctreeBlockTileData data = new KtxOctreeBlockTileData();
             data.loadStream(blockStream);
             return data;

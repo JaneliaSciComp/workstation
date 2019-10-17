@@ -61,6 +61,7 @@ public class JadeServiceClient {
         Preconditions.checkArgument(storagePath != null && storagePath.trim().length() > 0);
         ClientProxy httpClient = getHttpClient();
         try {
+            LOG.debug("Lookup storage for {}", storagePath);
             WebTarget target = httpClient.target(jadeURL)
                     .path("storage_volumes")
                     .queryParam("dataStoragePath", storagePath);
@@ -93,7 +94,7 @@ public class JadeServiceClient {
             if (responseStatus == Response.Status.OK.getStatusCode()) {
                 return Streamable.of(response.readEntity(InputStream.class), response.getLength());
             } else {
-                LOG.error("Request to {} returned with status {}", target, responseStatus);
+                LOG.warn("Request to {} in order to get {} returned with status {}", target, dataPath, responseStatus);
                 return Streamable.empty();
             }
         } finally {

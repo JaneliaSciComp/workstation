@@ -4,7 +4,6 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -12,10 +11,10 @@ import javax.swing.SwingUtilities;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.lang.StringUtils;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -36,11 +35,7 @@ import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
-import org.janelia.workstation.core.api.web.JadeServiceClient;
-import org.janelia.workstation.core.options.ApplicationOptions;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
@@ -50,7 +45,6 @@ import org.slf4j.LoggerFactory;
 public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private static final Logger LOG = LoggerFactory.getLogger(SampleLocationAcceptor.class);
     private static final HttpClientHelper HTTP_HELPER = new HttpClientHelper();
-    private static final int CACHE_CONCURRENCY = 10;
 
     private final NeuronTraceLoader loader;
     private final NeuronTracerTopComponent nttc;
@@ -96,7 +90,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         progress.setDisplayName("Centering on location...");
                         setCameraLocation(sampleLocation);
                         // use ktx tiles
-                        KtxOctreeBlockTileSource ktxSource = createKtxSource(renderedVolume, url, sample);
+                        KtxOctreeBlockTileSource ktxSource = createKtxSource(url, sample);
                         nttc.setKtxSource(ktxSource);
                         // start loading ktx tiles
                         progress.switchToIndeterminate(); // TODO: enhance tile loading with a progress listener
@@ -143,7 +137,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private RenderedVolume getVolumeInfo(URI renderedOctreeUri) {
         RenderedVolumeLocation renderedVolumeLocation;
         RenderedVolumeMetadata renderedVolumeMetadata;
-        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
+        if (StringUtils.equalsIgnoreCase(renderedOctreeUri.getScheme(), "http") || StringUtils.equalsIgnoreCase(renderedOctreeUri.getScheme(), "https")) {
             String url = renderedOctreeUri.resolve("volume_info").toString();
             LOG.trace("Getting volume metadata from: {}", url);
             GetMethod getMethod = new GetMethod(url);
@@ -164,7 +158,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
                 );
             } catch (Exception e) {
-                LOG.error("Error getting sample volume info from {}", url, e);
+                LOG.error("Error getting sample volume info from {} for renderedOctree at {}", url, renderedOctreeUri, e);
                 throw new IllegalStateException(e);
             } finally {
                 getMethod.releaseConnection();
@@ -177,7 +171,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         return new RenderedVolume(renderedVolumeLocation, renderedVolumeMetadata);
     }
 
-    private KtxOctreeBlockTileSource createKtxSource(RenderedVolume renderedVolume, URL renderedOctreeUrl, TmSample sample) {
+    private KtxOctreeBlockTileSource createKtxSource(URL renderedOctreeUrl, TmSample sample) {
         KtxOctreeBlockTileSource previousSource = nttc.getKtxSource();
         if (previousSource != null) {
             LOG.trace("previousUrl: {}", previousSource.getOriginatingSampleURL());
@@ -185,31 +179,13 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                 return previousSource; // Source did not change
             }
         }
-        return new KtxOctreeBlockTileSource(renderedOctreeUrl, getTileLoader()).init(sample);
+        return new KtxOctreeBlockTileSource(renderedOctreeUrl, nttc.getTileLoader()).init(sample);
     }
 
     private StaticVolumeBrickSource createStaticVolumeBrickSource(RenderedVolume renderedVolume, TmSample sample, ProgressHandle progress) {
         progress.switchToDeterminate(100);
         List<RawImage> rawTiles = nttc.getRenderedVolumeLoader().loadVolumeRawImageTiles(renderedVolume.getVolumeLocation());
-        return new RawVolumeBrickSource(getTileLoader()).init(sample, rawTiles, progress::progress);
-    }
-
-    private TileLoader getTileLoader() {
-        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
-            return new CachedTileLoader(
-                    new JadeBasedTileLoader(new JadeServiceClient(ConsoleProperties.getString("jadestorage.rest.url"), () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false))),
-                    LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
-                    CACHE_CONCURRENCY,
-                    Executors.newFixedThreadPool(
-                            CACHE_CONCURRENCY,
-                            new ThreadFactoryBuilder()
-                                    .setNameFormat("HortaTileCacheWriter-%d")
-                                    .setDaemon(true)
-                                    .build())
-            );
-        } else {
-            return new FileBasedTileLoader();
-        }
+        return new RawVolumeBrickSource(nttc.getTileLoader()).init(sample, rawTiles, progress::progress);
     }
 
     private void setCameraLocation(SampleLocation sampleLocation) {

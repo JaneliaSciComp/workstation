@@ -15,7 +15,6 @@ import org.janelia.messaging.core.MessageConnection;
 import org.janelia.messaging.core.MessageSender;
 import org.janelia.messaging.core.impl.MessageSenderImpl;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;

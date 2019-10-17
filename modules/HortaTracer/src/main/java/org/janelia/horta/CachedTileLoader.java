@@ -2,6 +2,7 @@
 package org.janelia.horta;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -92,7 +93,7 @@ public class CachedTileLoader implements TileLoader {
         private final String tileLocation;
         private Streamable<InputStream> streamableContent;
 
-        public RawTileFileProxy(TileLoader tileLoader, String tileStorageURL, String tileLocation) {
+        RawTileFileProxy(TileLoader tileLoader, String tileStorageURL, String tileLocation) {
             this.tileLoader = tileLoader;
             this.tileStorageURL = tileStorageURL;
             this.tileLocation = tileLocation;
@@ -105,20 +106,29 @@ public class CachedTileLoader implements TileLoader {
         }
 
         @Override
-        public Optional<Long> estimateSizeInBytes() {
+        public Long estimateSizeInBytes() {
             fetchContent();
-            return Optional.of(streamableContent.getSize());
+            return streamableContent.getSize();
         }
 
         @Nullable
         @Override
         public InputStream openContentStream() {
+            LOG.debug("Open content stream {} / {}", tileStorageURL, tileLocation);
             fetchContent();
-            return streamableContent.getContent();
+            try {
+                return streamableContent.getContent();
+            } finally {
+                // since the file proxy is being cached we don't want to keep this
+                // around once it was consumed because if some other thread tries to read it again the stream pointer most likely will
+                // not be where the caller expects it
+                streamableContent = null;
+            }
         }
 
         private void fetchContent() {
             if (streamableContent == null) {
+                LOG.debug("Fetch content {} / {}", tileStorageURL, tileLocation);
                 streamableContent = tileLoader.streamTileContent(tileStorageURL, tileLocation);
             }
         }
@@ -153,7 +163,7 @@ public class CachedTileLoader implements TileLoader {
         this.rawTileFileCache = new LocalFileCache<>(
                 localFileCacheStorage,
                 cacheConcurrency,
-                fileKey -> () -> new RawTileFileProxy(delegate, fileKey.tileStorageURL, fileKey.tileLocation),
+                fileKey -> new RawTileFileProxy(delegate, fileKey.tileStorageURL, fileKey.tileLocation),
                 Executors.newFixedThreadPool(4,
                         new ThreadFactoryBuilder()
                                 .setNameFormat("RenderedVolumeFileCacheEvictor-%d")
@@ -174,16 +184,14 @@ public class CachedTileLoader implements TileLoader {
 
     @Override
     public Streamable<InputStream> streamTileContent(String storageLocation, String tileLocation) {
-        FileProxy f = rawTileFileCache.getCachedFileEntry(new RawTileFileKey(storageLocation, tileLocation), false);
-        if (f == null) {
+        LOG.debug("Stream tile content {} / {}", storageLocation, tileLocation);
+        try {
+            FileProxy fp = rawTileFileCache.getCachedFileEntry(new RawTileFileKey(storageLocation, tileLocation), false);
+            InputStream contentStream = fp.openContentStream();
+            return Streamable.of(contentStream, fp.estimateSizeInBytes());
+        } catch (FileNotFoundException e) {
+            LOG.error("File not found for {} / {}", storageLocation, tileLocation, e);
             return Streamable.empty();
-        } else {
-            InputStream contentStream = f.openContentStream();
-            if (contentStream == null) {
-                return Streamable.empty();
-            } else {
-                return Streamable.of(contentStream, f.estimateSizeInBytes().orElse(-1L));
-            }
         }
     }
 

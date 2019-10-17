@@ -8,7 +8,6 @@ import org.janelia.messaging.core.MessageHandler;
 import org.janelia.messaging.core.impl.AsyncMessageConsumerImpl;
 import org.janelia.messaging.utils.MessagingUtils;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.gui.large_volume_viewer.model_adapter.NeuronMessageConstants;

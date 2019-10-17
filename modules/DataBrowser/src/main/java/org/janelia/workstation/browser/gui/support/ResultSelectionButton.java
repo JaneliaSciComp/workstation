@@ -1,9 +1,6 @@
 package org.janelia.workstation.browser.gui.support;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,21 +11,20 @@ import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Ordering;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.sample.SamplePostProcessingResult;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.model.ResultCategory;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.sample.SamplePostProcessingResult;
-
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Ordering;
 
 /**
  * Drop-down button for selecting the result to use. Currently it only supports Samples,

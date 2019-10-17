@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.UncheckedIOException;
 
 /**
  *
@@ -12,8 +13,14 @@ import java.io.FileNotFoundException;
 public class FileDataSource extends BasicDataSource implements DataSource {
     private File file;
     
-    public FileDataSource(File file) throws FileNotFoundException {
-        super(new BufferedInputStream(new FileInputStream(file)), file.getName());
+    FileDataSource(File file) {
+        super(() -> {
+            try {
+                return new BufferedInputStream(new FileInputStream(file));
+            } catch (FileNotFoundException e) {
+                throw new UncheckedIOException(e);
+            }
+        }, file.getName());
         this.file = file;
     }
     

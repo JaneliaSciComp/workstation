@@ -46,10 +46,6 @@ public class OsFilePathRemapper
         String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
             path = replaceViaMapping(path, sWinPrefixMappings);
-        // path = path.replace("/tier2/mousebrainmicro/mousebrainmicro/", "X:/");
-//            path = path.replace("/nobackup/mousebrainmicro/", "\\\\fxt\\nobackup\\mousebrainmicro\\");
-//            path = path.replace("/groups/mousebrainmicro/mousebrainmicro/", "\\\\dm11\\mousebrainmicro\\");
-//            path = path.replace("/tier2/mousebrainmicro/mousebrainmicro/", "\\\\tier2\\mousebrainmicro\\mousebrainmicro\\");
         }
         else if (os.contains("mac")) {
             path = replaceViaMapping(path, sMacPrefixMappings);
