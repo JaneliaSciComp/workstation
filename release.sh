@@ -37,7 +37,7 @@ git pull
 
 echo "Changing version numbers to ${JWVER}"
 mvn versions:set -DnewVersion=${JWVER} -DgenerateBackupPoms=false
-git commit -a -m "Updated version to ${JWVER}"
+git commit -a -m 'Updated version to ${JWVER}'
 
 echo "Creating git tag for ${JWVER}"
 git tag ${JWVER}

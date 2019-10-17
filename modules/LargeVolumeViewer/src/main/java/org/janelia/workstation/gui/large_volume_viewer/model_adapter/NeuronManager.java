@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.janelia.model.access.domain.IdSource;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
@@ -19,6 +19,7 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.TmNeuronUtils;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -200,11 +201,10 @@ public class NeuronManager {
      */
     public void loadWorkspaceNeurons(TmWorkspace workspace) throws Exception {
         neuronMap.clear();
-        // addNeurons() must be done serially, so flatten the stream:
-        for (TmNeuronMetadata n: neuronModelAdapter.loadNeurons(workspace).collect(Collectors.toList())) {
-            addNeuron(n);
-        }
-        LOG.info("NeuronManager.loadWorkspaceNeurons() loaded {} neurons", neuronMap.size());
+        StopWatch stopWatch = new StopWatch();
+        neuronModelAdapter.loadNeurons(workspace)
+                .forEach(n -> addNeuron(n));
+        LOG.info("NEURON TOTAL LOAD {} ms", stopWatch.getElapsedTime());
     }
 
     /**
@@ -461,10 +461,6 @@ public class NeuronManager {
 
     public void saveNeuronData(TmNeuronMetadata neuron) throws Exception {
         neuronModelAdapter.asyncSaveNeuron(neuron);
-    }
-
-    public void saveNeuronMetadata(TmNeuronMetadata neuron) throws Exception {
-        neuronModelAdapter.asyncSaveNeuronMetadata(neuron);
     }
 
     public void splitNeurite(TmNeuronMetadata tmNeuronMetadata, TmGeoAnnotation newRoot) throws Exception {

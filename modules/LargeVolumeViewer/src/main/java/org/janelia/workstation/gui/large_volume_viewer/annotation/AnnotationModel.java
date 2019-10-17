@@ -359,7 +359,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // Neurons need to be loaded en masse from raw data from server.
         log.info("Loading neurons for workspace {}", workspace.getId());
         neuronManager.loadWorkspaceNeurons(workspace);
-        log.info("{} neurons loaded", neuronManager.getNeurons().size());
 
         // if workspace contains more system-owned fragments than a threshold , enable filter
         String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
@@ -527,7 +526,6 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                             updates = neuronFilter.deleteNeuron(neuron);
                             break;
                         case NEURON_SAVE_NEURONDATA:
-                        case NEURON_SAVE_METADATA:
                         case NEURON_OWNERSHIP_DECISION:
                             updates = neuronFilter.updateNeuron(neuron);
                             break;
@@ -1904,7 +1902,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public synchronized void setNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) throws Exception {
         neuron.setColor(style.getColor());
         setNeuronVisibility(neuron, style.isVisible());
-        neuronManager.saveNeuronMetadata(neuron);
+        neuronManager.saveNeuronData(neuron);
         SwingUtilities.invokeLater(() -> fireNeuronStyleChanged(neuron, style));
         activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
     }

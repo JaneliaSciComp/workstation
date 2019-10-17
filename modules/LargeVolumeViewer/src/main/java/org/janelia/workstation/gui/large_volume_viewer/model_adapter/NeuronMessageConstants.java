@@ -10,7 +10,6 @@ public class NeuronMessageConstants {
         public static final String NEURONIDS = "targetIds";
         public static final String WORKSPACE = "workspace";
         public static final String TYPE = "msgType";
-        public static final String METADATA = "metadata";
         public static final String DECISION = "decision";
         public static final String DESCRIPTION = "description";
     }
@@ -18,7 +17,6 @@ public class NeuronMessageConstants {
     public enum MessageType {
         NEURON_CREATE,
         NEURON_SAVE_NEURONDATA,
-        NEURON_SAVE_METADATA,
         NEURON_DELETE,
         REQUEST_NEURON_OWNERSHIP,
         REQUEST_NEURON_ASSIGNMENT,

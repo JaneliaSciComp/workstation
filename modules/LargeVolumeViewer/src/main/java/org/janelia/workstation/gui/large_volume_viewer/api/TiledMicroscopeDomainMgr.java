@@ -13,7 +13,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObjectComparator;
@@ -22,7 +21,6 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
@@ -216,30 +214,24 @@ public class TiledMicroscopeDomainMgr {
     
     public Stream<TmNeuronMetadata> streamWorkspaceNeurons(Long workspaceId) {
         LOG.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
-        TmProtobufExchanger exchanger = new TmProtobufExchanger();
         Spliterator<Stream<TmNeuronMetadata>> workspaceNeuronsSupplier = new Spliterator<Stream<TmNeuronMetadata>>() {
             volatile long offset = 0L;
             int defaultLength = 100000;
             @Override
             public boolean tryAdvance(Consumer<? super Stream<TmNeuronMetadata>> action) {
-                Collection<Pair<TmNeuronMetadata, InputStream>> neuronsWithPoints = client.getWorkspaceNeuronPairs(workspaceId, offset, defaultLength);
-                long lastEntryOffset = offset + neuronsWithPoints.size();
-                LOG.trace("Retrieved {} entries ({} - {}) from {} -> {}", neuronsWithPoints.size(), offset, lastEntryOffset);
-                if (neuronsWithPoints.isEmpty()) {
+                Collection<TmNeuronMetadata> neurons= client.getWorkspaceNeurons(workspaceId, offset, defaultLength);
+
+                // make sure to initialize cross references
+                for (TmNeuronMetadata neuron: neurons) {
+                    neuron.initNeuronData();
+                }
+
+                long lastEntryOffset = offset + neurons.size();
+                LOG.trace("Retrieved {} entries ({} - {}) from {} -> {}", neurons.size(), offset, lastEntryOffset);
+                if (neurons.isEmpty()) {
                     return false;
                 } else {
                     offset = lastEntryOffset;
-                    List<TmNeuronMetadata> neurons = new ArrayList<>();
-                    for(Pair<TmNeuronMetadata, InputStream> pair : neuronsWithPoints) {
-                        TmNeuronMetadata neuronMetadata = pair.getLeft();
-                        try {
-                            exchanger.deserializeNeuron(pair.getRight(), neuronMetadata);
-                        } catch (Exception e) {
-                            throw new IllegalStateException(e);
-                        }
-                        LOG.trace("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);
-                        neurons.add(neuronMetadata);
-                    }
                     action.accept(neurons.stream());
                     return neurons.size() == defaultLength;
                 }
@@ -260,18 +252,18 @@ public class TiledMicroscopeDomainMgr {
                 return ORDERED;
             }
         };
-        return StreamSupport.stream(workspaceNeuronsSupplier, false).flatMap(Function.identity());
+        return StreamSupport.stream(workspaceNeuronsSupplier, true).flatMap(Function.identity());
     }
 
     public TmNeuronMetadata saveMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
         LOG.debug("save({})", neuronMetadata);
         TmNeuronMetadata savedMetadata;
         if (neuronMetadata.getId()==null) {
-            savedMetadata = client.createMetadata(neuronMetadata);
+            savedMetadata = client.create(neuronMetadata);
             getModel().notifyDomainObjectCreated(savedMetadata);
         }
         else {
-            savedMetadata = client.updateMetadata(neuronMetadata);
+            savedMetadata = client.update(neuronMetadata);
             getModel().notifyDomainObjectChanged(savedMetadata);
         }
         return savedMetadata;
@@ -284,7 +276,7 @@ public class TiledMicroscopeDomainMgr {
                 throw new IllegalArgumentException("Bulk neuron creation is currently unsupported");
             }
         }
-        List<TmNeuronMetadata> updatedMetadata = client.updateMetadata(neuronList);
+        List<TmNeuronMetadata> updatedMetadata = client.update(neuronList);
         for(TmNeuronMetadata tmNeuronMetadata : updatedMetadata) {
             getModel().notifyDomainObjectChanged(tmNeuronMetadata);
         }
@@ -293,20 +285,18 @@ public class TiledMicroscopeDomainMgr {
     
     public TmNeuronMetadata save(TmNeuronMetadata neuronMetadata) throws Exception {
         LOG.debug("save({})", neuronMetadata);
-        TmProtobufExchanger exchanger = new TmProtobufExchanger();
-        InputStream protobufStream = new ByteArrayInputStream(exchanger.serializeNeuron(neuronMetadata));
         TmNeuronMetadata savedMetadata;
         if (neuronMetadata.getId()==null) {
-            savedMetadata = client.create(neuronMetadata, protobufStream);
+            savedMetadata = client.create(neuronMetadata);
             getModel().notifyDomainObjectCreated(savedMetadata);
         }
         else {
-            savedMetadata = client.update(neuronMetadata, protobufStream);
+            savedMetadata = client.update(neuronMetadata);
             getModel().notifyDomainObjectChanged(savedMetadata);
         }
         // We assume that the neuron data was saved on the server, but it only returns metadata for efficiency. We
         // already have the data, so let's copy it over into the new object.
-        exchanger.copyNeuronData(neuronMetadata, savedMetadata);
+       // exchanger.copyNeuronData(neuronMetadata, savedMetadata);
         return savedMetadata;
     }
     

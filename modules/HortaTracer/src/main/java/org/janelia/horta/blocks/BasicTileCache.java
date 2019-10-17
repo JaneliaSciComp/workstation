@@ -156,6 +156,7 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                         log.warn("Tile has no task: " + key.toString());
                         return;
                     }
+                    log.info("Tile has loaded: {}",key.toString());
                     loadingTiles.put(key, task);
                     queuedTiles.remove(key);
                 }
