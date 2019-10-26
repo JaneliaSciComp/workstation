@@ -8,6 +8,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.cdmip.ColorDepthFilepathParser;
 import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
@@ -569,14 +571,13 @@ public class ColorDepthSearchEditorPanel
         ColorDepthImage image = imageModel.getImage(match);
 
         String libraries = StringUtils.getCommaDelimited(image.getLibraries());
-        String owner = libraries.split("_")[0];
 
         values.put("Channel Number", image.getChannelNumber());
         values.put("Score (Pixels)", match.getScore());
         values.put("Score (Percent)", MaskUtils.getFormattedScorePct(match));
         values.put("Color Depth Libraries", libraries);
-        values.put("Owner", owner);
-        
+        values.put("Owner", image.getOwnerName());
+
         try {
             values.put("Name", image.getName());
             values.put("Filepath", image.getFilepath());
