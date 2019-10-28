@@ -808,7 +808,8 @@ public class FilterEditorPanel
     private void reload() throws Exception {
         
         if (filter==null || filter.getId()==null) {
-            // Nothing to reload
+            // Nothing to reload, just rerun the search
+            restoreState(saveState());
             return;
         }
         
