@@ -42,4 +42,11 @@ public class FileBasedTileLoader implements TileLoader {
             }
         }
     }
+
+    @Override
+    public boolean checkStorageLocation(String tileLocation) {
+        Path tilePath = Paths.get(OsFilePathRemapper.remapLinuxPath(tileLocation));
+
+        return Files.exists(tilePath);
+    }
 }

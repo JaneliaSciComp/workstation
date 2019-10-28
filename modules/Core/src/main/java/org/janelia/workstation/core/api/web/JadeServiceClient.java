@@ -167,6 +167,28 @@ public class JadeServiceClient {
         }
     }
 
+    public boolean checkStoragePath(String storagePath) {
+        Preconditions.checkArgument(storagePath != null && storagePath.trim().length() > 0);
+        ClientProxy httpClient = getHttpClient();
+        try {
+            LOG.debug("Check if storage path exists {}", storagePath);
+            WebTarget target = httpClient.target(jadeURL)
+                    .path("storage_content/storage_path_redirect")
+                    .path(storagePath);
+            Response response = target.request()
+                    .head();
+            int responseStatus = response.getStatus();
+            if (responseStatus != Response.Status.OK.getStatusCode()) {
+                LOG.error("Request to {} returned with status {}", target, responseStatus);
+                return false;
+            } else {
+                return true;
+            }
+        } finally {
+            httpClient.close();
+        }
+    }
+
     private ClientProxy getHttpClient() {
         return httpClientProvider.getClient();
     }

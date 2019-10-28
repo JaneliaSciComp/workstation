@@ -76,15 +76,18 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         private String fileId;
         private final Supplier<Streamable<T>> streamableContentSupplier;
         private final Function<T, InputStream> contentToStreamMapper;
+        private final Supplier<Boolean> contentCheckMapper;
         private Long length;
         private Streamable<T> streamableContent;
 
         private RenderedVolumeContentFileProxy(String fileId,
                                                Supplier<Streamable<T>> streamableContentSupplier,
-                                               Function<T, InputStream> contentToStreamMapper) {
+                                               Function<T, InputStream> contentToStreamMapper,
+                                               Supplier<Boolean> contentCheckMapper) {
             this.fileId = fileId;
             this.streamableContentSupplier = streamableContentSupplier;
             this.contentToStreamMapper = contentToStreamMapper;
+            this.contentCheckMapper = contentCheckMapper;
             this.length = null;
             this.streamableContent = null;
         }
@@ -132,6 +135,11 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         }
 
         @Override
+        public boolean exists() {
+            return contentCheckMapper.get();
+        }
+
+        @Override
         public boolean deleteProxy() {
             return false;
         }
@@ -144,7 +152,11 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                 .withRelativePath(imageRelativePath)
                 .withChannelImageNames(channelImageNames)
                 .withPageNumber(pageNumber)
-                .build(renderedVolumeFileKey -> new RenderedVolumeContentFileProxy<>(renderedVolumeFileKey.getLocalName(), () -> delegate.readTiffPageAsTexturedBytes(imageRelativePath, channelImageNames, pageNumber), bytes -> new ByteArrayInputStream(bytes)))
+                .build(renderedVolumeFileKey -> new RenderedVolumeContentFileProxy<>(
+                        renderedVolumeFileKey.getLocalName(),
+                        () -> delegate.readTiffPageAsTexturedBytes(imageRelativePath, channelImageNames, pageNumber),
+                        bytes -> new ByteArrayInputStream(bytes),
+                        () -> delegate.checkContentAtRelativePath(imageRelativePath)))
                 ;
         return streamableContentFromFileProxy(
                 fileKey,
@@ -181,7 +193,11 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
     public Streamable<InputStream> getContentFromRelativePath(String relativePath) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getBaseDataStoragePath())
                 .withRelativePath(relativePath)
-                .build(renderedVolumeFileKey -> new RenderedVolumeContentFileProxy<>(renderedVolumeFileKey.getLocalName(), () -> delegate.getContentFromRelativePath(relativePath), Function.identity()))
+                .build(renderedVolumeFileKey -> new RenderedVolumeContentFileProxy<>(
+                        renderedVolumeFileKey.getLocalName(),
+                        () -> delegate.getContentFromRelativePath(relativePath),
+                        Function.identity(),
+                        () -> delegate.checkContentAtRelativePath(relativePath)))
                 ;
         return streamableContentFromFileProxy(fileKey, Function.identity());
     }
@@ -190,7 +206,11 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
     public Streamable<InputStream> getContentFromAbsolutePath(String absolutePath) {
         RenderedVolumeFileKey fileKey = new RenderedVolumeFileKeyBuilder(getBaseDataStoragePath())
                 .withAbsolutePath(absolutePath)
-                .build(renderedVolumeFileKey -> new RenderedVolumeContentFileProxy<>(renderedVolumeFileKey.getLocalName(), () -> delegate.getContentFromAbsolutePath(absolutePath), Function.identity()))
+                .build(renderedVolumeFileKey -> new RenderedVolumeContentFileProxy<>(
+                        renderedVolumeFileKey.getLocalName(),
+                        () -> delegate.getContentFromAbsolutePath(absolutePath),
+                        Function.identity(),
+                        () -> delegate.checkContentAtAbsolutePath(absolutePath)))
                 ;
         return streamableContentFromFileProxy(fileKey, Function.identity());
     }

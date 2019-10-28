@@ -136,11 +136,17 @@ public class CachedTileLoader implements TileLoader {
         }
 
         @Override
+        public boolean exists() {
+            return tileLoader.checkStorageLocation(tileLocation);
+        }
+
+        @Override
         public boolean deleteProxy() {
             return false;
         }
     }
 
+    private final TileLoader delegate;
     private final LoadingCache<String, Optional<String>> storageURLCache;
     private final LocalFileCache<RawTileFileKey> rawTileFileCache;
 
@@ -148,6 +154,7 @@ public class CachedTileLoader implements TileLoader {
                      LocalFileCacheStorage localFileCacheStorage,
                      int cacheConcurrency,
                      ExecutorService localCachedFileWriteExecutor) {
+        this.delegate = delegate;
         this.storageURLCache = CacheBuilder.newBuilder()
                 .maximumSize(10)
                 .build(new CacheLoader<String, Optional<String>>() {
@@ -192,4 +199,8 @@ public class CachedTileLoader implements TileLoader {
         }
     }
 
+    @Override
+    public boolean checkStorageLocation(String tileLocation) {
+        return delegate.checkStorageLocation(tileLocation);
+    }
 }

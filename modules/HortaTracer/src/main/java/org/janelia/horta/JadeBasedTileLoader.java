@@ -39,4 +39,9 @@ public class JadeBasedTileLoader implements TileLoader {
                     System.currentTimeMillis() - startTime);
         }
     }
+
+    @Override
+    public boolean checkStorageLocation(String tileLocation) {
+        return jadeClient.checkStoragePath(tileLocation);
+    }
 }

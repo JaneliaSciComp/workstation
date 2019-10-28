@@ -13,4 +13,6 @@ public interface TileLoader {
     Optional<String> findStorageLocation(String tileLocation);
 
     Streamable<InputStream> streamTileContent(String storageLocation, String tileLocation);
+
+    boolean checkStorageLocation(String tileLocation);
 }
