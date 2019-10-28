@@ -577,6 +577,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     
     private boolean showMatch(ColorDepthMatch match) {
         ColorDepthImage image = imageModel.getImage(match);
+        if (image==null) {
+            log.warn("Image not found for match: "+match.getImageRef());
+            return false;
+        }
         if (image.getSampleRef()==null) return true; // Match is not bound to a sample
         Sample sample = imageModel.getSample(match);
         // If match is bound to a sample, we need access to it
