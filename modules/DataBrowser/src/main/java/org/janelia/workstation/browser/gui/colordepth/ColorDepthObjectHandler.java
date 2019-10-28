@@ -1,6 +1,5 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
-import java.util.Arrays;
 import java.util.Collections;
 
 import org.janelia.model.domain.DomainObject;
@@ -45,7 +44,10 @@ public class ColorDepthObjectHandler implements DomainObjectHandler {
 
     @Override
     public Node getNode(DomainObject domainObject, ChildFactory parentChildFactory) throws Exception {
-        if (domainObject instanceof ColorDepthSearch) {
+        if (domainObject instanceof ColorDepthMask) {
+            return null;
+        }
+        else if (domainObject instanceof ColorDepthSearch) {
             return new ColorDepthSearchNode(parentChildFactory, (ColorDepthSearch)domainObject);
         }
         else if (domainObject instanceof ColorDepthLibrary) {
