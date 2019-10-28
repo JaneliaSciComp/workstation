@@ -3,6 +3,7 @@ package org.janelia.workstation.core.filecache;
 import java.io.FileNotFoundException;
 
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.HeadMethod;
 import org.janelia.filecacheutils.FileKeyToProxyMapper;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.HttpFileProxy;
@@ -30,20 +31,35 @@ public class WebDavFileKeyProxyMapper implements FileKeyToProxyMapper<WebdavCach
                 return new LocalFileProxy(fileKey.getRemoteFileName());
             case "http":
                 return new HttpFileProxy(
-                    fileKey.getRemoteFileName(),
-                    (String url) -> {
-                        try {
-                            GetMethod httpGet = new GetMethod(url);
-                            int responseCode = httpClient.executeMethod(httpGet);
-                            LOG.trace("GET {} from {}", responseCode, url);
-                            if (responseCode != 200) {
-                                throw new IllegalStateException("Response code "+responseCode+" returned for call to "+url);
+                        fileKey.getRemoteFileName(),
+                        url -> {
+                            try {
+                                GetMethod httpGet = new GetMethod(url);
+                                int responseCode = httpClient.executeMethod(httpGet);
+                                LOG.trace("GET {} from {}", responseCode, url);
+                                if (responseCode != 200) {
+                                    throw new IllegalStateException("Response code "+responseCode+" returned for call to "+url);
+                                }
+                                return httpGet.getResponseBodyAsStream();
+                            } catch (Exception e) {
+                                throw new IllegalStateException(e);
                             }
-                            return httpGet.getResponseBodyAsStream();
-                        } catch (Exception e) {
-                            throw new IllegalStateException(e);
-                        }
-                    });
+                        },
+                        url -> {
+                            try {
+                                HeadMethod httpHead = new HeadMethod(url);
+                                int responseCode = httpClient.executeMethod(httpHead);
+                                if (responseCode > 200) {
+                                    LOG.info("HEAD {} from {}", responseCode, url);
+                                    return false;
+                                } else {
+                                    LOG.debug("HEAD {} from {}", responseCode, url);
+                                    return true;
+                                }
+                            } catch (Exception e) {
+                                throw new IllegalStateException(e);
+                            }
+                        });
             default:
                 return getWebDavFileProxy(fileKey.getRemoteFileName());
         }
@@ -56,10 +72,7 @@ public class WebDavFileKeyProxyMapper implements FileKeyToProxyMapper<WebdavCach
         } catch (FileNotFoundException e) {
             throw e;
         }
-        if (webDavFile.isDirectory()) {
-            throw new IllegalArgumentException(
-                    "Requested load of directory " + webDavFile.getRemoteFileUrl() + ".  Only files may be requested.");
-        }
+        LOG.debug("Loading {} from {}", webDavFile.isDirectory() ? "directory" : "file", webDavFile.getRemoteFileUrl());
         return new WebDavFileProxy(httpClient, webDavFile);
     }
 

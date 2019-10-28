@@ -72,16 +72,19 @@ public class FileProxyService extends AbstractHandler {
         try {
             fileProxy = FileMgr.getFileMgr().getFile(standardPath, false);
             log.info("Proxying {} for: {}", method, fileProxy.getFileId());
-            response.setContentType("application/octet-stream");
-            Long nbytes = fileProxy.estimateSizeInBytes();
-            if (nbytes != null) {
-                response.addHeader("Content-length", nbytes.toString());
-            }
-            response.setStatus(200);
-
             if ("HEAD".equals(method)) {
-                // This method is supported, but there is nothing more to do
+                if (fileProxy.exists()) {
+                    response.setStatus(200);
+                } else {
+                    response.setStatus(404);
+                }
             } else if ("GET".equals(method)) {
+                response.setContentType("application/octet-stream");
+                Long nbytes = fileProxy.estimateSizeInBytes();
+                if (nbytes != null) {
+                    response.addHeader("Content-length", nbytes.toString());
+                }
+                response.setStatus(200);
                 log.debug("Writing {} bytes", nbytes);
                 input = fileProxy.openContentStream();
                 output = response.getOutputStream();
@@ -89,6 +92,7 @@ public class FileProxyService extends AbstractHandler {
             } else {
                 throw new IllegalStateException("Unsupported method for Workstation file proxy service: "+method);
             }
+
         }  catch (FileNotFoundException e) {
             log.error("File not found: "+standardPath);
             response.setContentType("text/plain");

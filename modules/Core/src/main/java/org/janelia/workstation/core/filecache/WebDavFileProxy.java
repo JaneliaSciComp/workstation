@@ -31,7 +31,7 @@ public class WebDavFileProxy implements FileProxy {
 
     @Override
     public Long estimateSizeInBytes() {
-        return webDavFile.getSizeInBytes();
+        return webDavFile.isDirectory() ? null : webDavFile.getSizeInBytes();
     }
 
     @Override
@@ -65,6 +65,11 @@ public class WebDavFileProxy implements FileProxy {
     @Override
     public File getLocalFile() {
         return null;
+    }
+
+    @Override
+    public boolean exists() {
+        return webDavFile != null;
     }
 
     @Override
