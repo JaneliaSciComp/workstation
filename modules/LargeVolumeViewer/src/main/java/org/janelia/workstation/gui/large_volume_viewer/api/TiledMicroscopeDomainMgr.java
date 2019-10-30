@@ -221,13 +221,16 @@ public class TiledMicroscopeDomainMgr {
             public boolean tryAdvance(Consumer<? super Stream<TmNeuronMetadata>> action) {
                 Collection<TmNeuronMetadata> neurons= client.getWorkspaceNeurons(workspaceId, offset, defaultLength);
 
+                long lastEntryOffset = offset + neurons.size();
+                int count = (int)lastEntryOffset;
                 // make sure to initialize cross references
                 for (TmNeuronMetadata neuron: neurons) {
                     neuron.initNeuronData();
+                    if (count %100==0) {
+                        LOG.info("count:{}",count++);
+                    }
                 }
-
-                long lastEntryOffset = offset + neurons.size();
-                LOG.trace("Retrieved {} entries ({} - {}) from {} -> {}", neurons.size(), offset, lastEntryOffset);
+                LOG.info("Retrieved {} entries ({} - {}) from {} -> {}", neurons.size(), offset, lastEntryOffset);
                 if (neurons.isEmpty()) {
                     return false;
                 } else {

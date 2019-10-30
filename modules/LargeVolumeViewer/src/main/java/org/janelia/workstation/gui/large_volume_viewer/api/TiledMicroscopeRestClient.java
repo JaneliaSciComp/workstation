@@ -289,6 +289,7 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
     
     public void remove(TmNeuronMetadata neuronMetadata) {
         WebTarget target = getMouselightDataEndpoint("/workspace/neuron")
+                .queryParam("workspaceId", neuronMetadata.getWorkspaceId())
                 .queryParam("neuronId", neuronMetadata.getId())
                 .queryParam("isLarge", neuronMetadata.isLargeNeuron());
         Response response = target
@@ -300,7 +301,9 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
     void changeTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) {
         if (neurons.isEmpty()) return;
         List<Long> neuronIds = DomainUtils.getIds(neurons);
+        Long workspaceId = neurons.get(0).getWorkspaceId();
         WebTarget target = getMouselightDataEndpoint("/workspace/neuronTags")
+                .queryParam("workspaceId", workspaceId)
                 .queryParam("tags", StringUtils.join(tags, ","))
                 .queryParam("tagState", tagState);
         Response response = target
