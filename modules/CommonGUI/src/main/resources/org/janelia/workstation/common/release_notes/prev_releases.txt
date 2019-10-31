@@ -1,6 +1,16 @@
-// 8.4
+// 8.5.1
+
+* Samples now refresh to show correct status after marking for reprocessing
+* Fixed ownership display for color depth images
+* Fixed IllegalArgumentException when browsing color depth masks
+* Fixed bug with Open in Neuron Annotator
+
+// 8.5
 
 * Fixed issue with saving preferences
+
+// 8.4
+
 * Fixed issues with file cache and downloads
 
 // 8.3
@@ -14,7 +24,7 @@ Data Browser
 
 // 8.2
 
-Color Depth Search
+Data Browser
 * File cache has been refactored and optimized for network performance
 * Color Depth Libraries and Searches are now accessible as top-level items in the Data Explorer
 * Color Depth Search results now shows mask and result side-by-side with a synchronized mouse cursor
@@ -27,8 +37,10 @@ MouseLight Tools
 
 Data Browser
 * All context menu items are now also found in the main menu under Actions
-* Streamlined publishing workflow (right-click and choose "Stage Samples for Publishing")
-* Data Sets and Fly Line Releases are now accessible as top-level items in the Data Explorer
+* Streamlined publishing workflow (right-click and choose "Stage for Publishing")
+* All public data releases are now found at the top level of the Data Explorer in the folder “Fly Line Releases”.
+* All data sets are also found at the top level of the Data Explorer, and can now be easily shared using the
+  right-click "Change Permissions” action.
 * Added warning when no publishing names are found
 
 MouseLight Tools
@@ -54,13 +66,16 @@ In this major release, the Workstation has been refactored to allow for containe
 distribution. The full source code is now available on GitHub under the Janelia Open Source License:
 https://github.com/JaneliaSciComp/workstation
 
+You can now cite this software using a DOI: https://doi.org/10.25378/janelia.8182256.v1
+
 MouseLight Tools
 * Both Horta and LVV were modified to pull data from the JADE storage service, eliminating the previous
   dependency on internal Samba drive mounts. It is no longer necessary to mount external drives to use these tools.
 
 Data Browser
-* You can now create and manage user groups using the Administration Tool (Window->Core)
+* You can now create and manage user groups with a new tool found under Window->Core->Administration Tool.
 * Core browser functionality was refactored into multiple modules for better maintainability and extensibility
+* Many improvements were made to the color depth search, including the addition of XY shift and mask mirroring
 * Improved dependency management, application installers and distribution
 * Many performance improvements and bug fixes
 
