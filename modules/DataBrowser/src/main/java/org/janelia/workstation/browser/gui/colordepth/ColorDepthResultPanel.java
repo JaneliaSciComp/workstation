@@ -283,18 +283,18 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
                 loadPreferences();
                 
                 newResultPreference = getPreference(PREFERENCE_CATEGORY_CDS_NEW_RESULTS);
-                log.debug("Got new result preference: "+newResultPreference);
+                log.info("Got new result preference: "+newResultPreference);
 
                 resultsPerLinePreference = getPreference(PREFERENCE_CATEGORY_CDS_RESULTS_PER_LINE);
-                log.debug("Got results per line preference: "+resultsPerLinePreference);
+                log.info("Got results per line preference: "+resultsPerLinePreference);
                 
                 if (getPreference(PREFERENCE_CATEGORY_CDS_SPLITHALFTYPES, SplitHalfType.AD.getName(), false)) {
-                    log.debug("Got split halfs filter preference: AD");
+                    log.info("Got split half filter preference: AD");
                     selectedSplitTypes.add(SplitHalfType.AD);
                 }
                 
                 if (getPreference(PREFERENCE_CATEGORY_CDS_SPLITHALFTYPES, SplitHalfType.DBD.getName(), false)) {
-                    log.debug("Got split halfs filter preference: DBD");
+                    log.info("Got split half filter preference: DBD");
                     selectedSplitTypes.add(SplitHalfType.DBD);
                 }
             }
@@ -443,7 +443,9 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         // Create and set image model
         this.imageModel = new ColorDepthResultImageModel(mask, maskMatches, images, samples, splitInfos);
         resultsPanel.setImageModel(imageModel);
-        
+
+        log.info("selectedSplitTypes: {}",selectedSplitTypes);
+
         // Filter matches
         maskMatches = maskMatches.stream()
                 .filter(match -> showMatch(match))
@@ -581,10 +583,20 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             log.warn("Image not found for match: "+match.getImageRef());
             return false;
         }
-        if (image.getSampleRef()==null) return true; // Match is not bound to a sample
+
+        if (image.getSampleRef()==null) {
+            return true; // Match is not bound to a sample
+        }
+
         Sample sample = imageModel.getSample(match);
         // If match is bound to a sample, we need access to it
-        return sample != null;
+        boolean sampleRead = sample != null;
+        if (!sampleRead) {
+            log.warn("User cannot access {}", image.getSampleRef());
+            return false;
+        }
+
+        return true;
     }
 
     private class LineMatches {
