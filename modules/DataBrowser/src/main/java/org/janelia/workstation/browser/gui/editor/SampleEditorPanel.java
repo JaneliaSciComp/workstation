@@ -1,11 +1,14 @@
 package org.janelia.workstation.browser.gui.editor;
 
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainObjectAttribute;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.SampleUtils;
@@ -83,16 +86,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 /**
@@ -836,7 +830,7 @@ public class SampleEditorPanel
 
     private void prepareAlignmentSpaces() {
         
-        Set<String> alignmentSpaces = new TreeSet<>();
+        Set<String> alignmentSpaceSet = new TreeSet<>();
         
         for (ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
 
@@ -866,7 +860,7 @@ public class SampleEditorPanel
                         if (hasColorDepthMips) {
                             String alignmentSpace = result.getAlignmentSpace();
                             if (ColorDepthUtils.isAlignmentSpaceVisible(alignmentSpace)) {
-                                alignmentSpaces.add(alignmentSpace);
+                                alignmentSpaceSet.add(alignmentSpace);
                             }
                         }
                     }
@@ -874,8 +868,20 @@ public class SampleEditorPanel
             }
         }
         
-        this.alignmentSpaces = new ArrayList<>(alignmentSpaces);
+        this.alignmentSpaces = new ArrayList<>(alignmentSpaceSet);
+
         if (currAlignmentSpace==null || !alignmentSpaces.contains(currAlignmentSpace)) {
+
+            List<String> defaultAlignmentSpaces = new ArrayList<>(alignmentSpaceSet);
+            // Make unisex/HR spaces default if possible, since they are the most useful for color depth searching
+            alignmentSpaces.sort((o1, o2) -> {
+                return ComparisonChain.start()
+                        .compare(o1.endsWith("_HR"), o2.endsWith("_HR"), Ordering.natural().reversed())
+                        .compare(o1.contains("Unisex"), o2.contains("Unisex"), Ordering.natural().reversed())
+                        .compare(o1, o2)
+                        .result();
+            });
+
             // select first alignment space as default
             this.currAlignmentSpace = alignmentSpaces.isEmpty() ? null : alignmentSpaces.iterator().next();
         }
