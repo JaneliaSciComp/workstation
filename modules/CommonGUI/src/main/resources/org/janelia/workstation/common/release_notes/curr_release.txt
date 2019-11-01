@@ -1,4 +1,5 @@
-// 8.6
+// 8.5.2
 
+* Fixed progressive loading in Neuron Annotator
 * Default to unisex alignment when possible
 * Minor bug fixes
