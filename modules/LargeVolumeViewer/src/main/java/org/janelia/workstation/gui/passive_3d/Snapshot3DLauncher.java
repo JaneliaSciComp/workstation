@@ -171,13 +171,13 @@ public class Snapshot3DLauncher {
     }
 
     /** Launches a 3D popup containing raw data represented by camera position. */
-    public void launchRaw3dViewer( int cubicDimension ) {
+    public void launchRaw3dViewer(int cubicDimension) {
         int[] dimensions = new int[] { cubicDimension, cubicDimension, cubicDimension };
         launchRaw3dViewer( dimensions );
     }
     
     /** Launches a 3D popup containing raw data represented by camera position. */
-    public void launchRaw3dViewer(int[] dimensions) {
+    private void launchRaw3dViewer(int[] dimensions) {
         saveColorPreference();
         try {
             RawTiffVolumeSource collector = new RawTiffVolumeSource(

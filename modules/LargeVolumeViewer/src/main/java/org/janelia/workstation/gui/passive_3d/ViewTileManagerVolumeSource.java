@@ -38,7 +38,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     private byte[] dataVolume;
     private double[] voxelMicrometers;
     
-    private int[] brickDimensions = new int[] { DEFAULT_BRICK_CUBIC_DIMENSION, DEFAULT_BRICK_CUBIC_DIMENSION, DEFAULT_BRICK_CUBIC_DIMENSION,  };
+    private int[] brickDimensions = new int[] { DEFAULT_BRICK_CUBIC_DIMENSION, DEFAULT_BRICK_CUBIC_DIMENSION, DEFAULT_BRICK_CUBIC_DIMENSION };
 
     private VolumeAcceptor volumeAcceptor;
     private TextureDataI textureDataFor3D;
@@ -46,12 +46,11 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
 
     private final Logger logger = LoggerFactory.getLogger( ViewTileManagerVolumeSource.class );
 
-    public ViewTileManagerVolumeSource(Camera3d camera,
-                                       int[] dimensions,
-                                       SubvolumeProvider subvolumeProvider,
-                                       double[] voxelMicrometers,
-                                       URL dataUrl) throws Exception {
-
+    ViewTileManagerVolumeSource(Camera3d camera,
+                                int[] dimensions,
+                                SubvolumeProvider subvolumeProvider,
+                                double[] voxelMicrometers,
+                                URL dataUrl) throws Exception {
         init(camera, subvolumeProvider, dimensions, voxelMicrometers, dataUrl);
     }
 

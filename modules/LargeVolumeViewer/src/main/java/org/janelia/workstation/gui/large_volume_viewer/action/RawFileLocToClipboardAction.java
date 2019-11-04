@@ -66,7 +66,7 @@ public class RawFileLocToClipboardAction extends AbstractAction {
                         )
                 );
 
-        String imageLocationURI = renderedVolumeLoader.findClosestRawImageFromVoxelCoord(renderedVolumeLocation, voxelCoords.getX(), voxelCoords.getY(), voxelCoords.getY())
+        String imageLocationURI = renderedVolumeLoader.findClosestRawImageFromVoxelCoord(renderedVolumeLocation, voxelCoords.getX(), voxelCoords.getY(), voxelCoords.getZ())
                 .map(rawImage -> {
                     String acquisitionPath = StringUtils.defaultIfBlank(sampleAcquisitionPath, rawImage.getAcquisitionPath());
                     rawImage.setAcquisitionPath(acquisitionPath);

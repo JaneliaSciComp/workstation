@@ -17,8 +17,7 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class RawTiffVolumeSource implements MonitoredVolumeSource {
-    public static final int DEPT_STD_GRAPH_CARD_MAX_DEPTH = 172;
-    public static final int UNSET_DIMENSION = -1;
+    private static final int UNSET_DIMENSION = -1;
     private static final Double[] SPIN_ABOUT_Z = new Double[] {
         -1.0,    0.0,    0.0,
         0.0,    -1.0,    0.0,
@@ -41,11 +40,9 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
      * @param camera tells user's chosen point.
      * @param baseDirectoryPath info for finding specific data set.
      */
-    public RawTiffVolumeSource(
-            TileFormat tileFormat,
-            Camera3d camera,
-            String baseDirectoryPath
-    ) {
+    RawTiffVolumeSource(TileFormat tileFormat,
+                        Camera3d camera,
+                        String baseDirectoryPath) {
         // Cloning the camera, to leave the original as was found.
         Camera3d iterationCamera = new BasicObservableCamera3d();
         iterationCamera.setFocus(camera.getFocus());
