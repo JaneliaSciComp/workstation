@@ -78,7 +78,7 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
         }
     }
 
-    private void insertVbo(NeuronVbo vbo) {
+    synchronized private void insertVbo(NeuronVbo vbo) {
         Integer vboSize = vboSize(vbo);
         if (!vbos.containsKey(vboSize)) {
             vbos.put(vboSize, new ConcurrentLinkedDeque<NeuronVbo>());
@@ -93,14 +93,10 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
         return vbo.getVertexCount();
     }
 
-    private NeuronVbo popEmptiestVbo() {
+    synchronized private NeuronVbo popEmptiestVbo() {
         Map.Entry<Integer, Deque<NeuronVbo>> entry = vbos.firstEntry();
         Integer vboSize = entry.getKey();
         Deque<NeuronVbo> vboDeque = entry.getValue();
-        // trying to debug JW-39811, a NoSuchElement error in the vboDeque.removeFirst() line
-        if (vboSize == 0 || vboDeque.size() == 0) {
-            log.info("NeuronVboPool.popEmptiestVbo(): vboSize = " + vboSize + "; vboDeque size = " + vboDeque.size());
-        }
         NeuronVbo vbo = vboDeque.removeFirst();
         if (vboDeque.isEmpty()) {
             vbos.remove(vboSize); // That was the last of its kind
@@ -186,7 +182,7 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
         }
     }
 
-    void add(NeuronModel neuron) {
+    synchronized void add(NeuronModel neuron) {
         // To keep the vbos balanced, always insert into the emptiest vbo
         NeuronVbo emptiestVbo = popEmptiestVbo();
         final boolean doLogStats = false;
@@ -206,7 +202,7 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
         insertVbo(emptiestVbo); // Reinsert into its new sorted location
     }
 
-    boolean remove(NeuronModel neuron) {
+    synchronized boolean remove(NeuronModel neuron) {
         for (NeuronVbo vbo : new VboIterable()) {
             if (vbo.remove(neuron)) {
                 return true;
@@ -224,7 +220,7 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
         return true;
     }
 
-    public void clear() {
+    synchronized public void clear() {
         for (Iterator<NeuronVbo> it = new VboIterator(); it.hasNext();) {
             NeuronVbo vbo = it.next();
             vbo.clear();
