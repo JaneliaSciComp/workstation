@@ -116,7 +116,9 @@ public class ShowingHook implements Runnable {
             // Connect to the data server
             StatusDisplayer.getDefault().setStatusText("Connecting to server...");
             String connectionString = ConnectionMgr.getConnectionMgr().getConnectionString();
+
             if (StringUtils.isBlank(connectionString)) {
+                log.debug("Connection string is blank, asking for user input");
                 ConnectDialog connectDialog = new ConnectDialog();
                 connectDialog.showDialog();
             }
