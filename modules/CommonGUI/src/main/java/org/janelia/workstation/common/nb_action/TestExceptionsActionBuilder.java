@@ -10,6 +10,7 @@ import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
 
 import org.janelia.workstation.core.actions.PopupMenuGenerator;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.spi.actions.AdminActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.Exceptions;
@@ -96,6 +97,14 @@ public final class TestExceptionsActionBuilder implements AdminActionBuilder {
                     throw new RuntimeException("No space left on device");
                 });
                 subMenu.add(noSpaceItem);
+
+                JMenuItem noSpaceItem2 = new JMenuItem("No Space Left Exception (on worker thread)");
+                noSpaceItem2.addActionListener(e -> {
+                    SimpleWorker.runInBackground(() -> {
+                        throw new RuntimeException("No space left on device");
+                    });
+                });
+                subMenu.add(noSpaceItem2);
 
                 JMenuItem nbExceptionItem = new JMenuItem("NetBeans-style Exceptions.printStackTrace");
                 nbExceptionItem.addActionListener(e -> Exceptions.printStackTrace(new Exception("Test Exception")));

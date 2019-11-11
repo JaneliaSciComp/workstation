@@ -6,6 +6,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.hibernate.exception.ExceptionUtils;
+import org.janelia.workstation.common.logging.ExceptionTriage;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.integration.api.ErrorHandler;
 import org.janelia.workstation.core.model.LoginErrorType;
@@ -52,6 +53,9 @@ public class ConsoleErrorHandler implements ErrorHandler {
             SwingUtilities.invokeLater(() -> {
                 LoginDialog.getInstance().showDialog(LoginErrorType.TokenExpiredError);
             });
+        }
+        else if (ExceptionTriage.isKnownHarmlessIssue(t)) {
+            logger.log(CustomLoggingLevel.WARNING, message, t);
         }
         else {
             logger.log(CustomLoggingLevel.USER_ERROR, message, t);
