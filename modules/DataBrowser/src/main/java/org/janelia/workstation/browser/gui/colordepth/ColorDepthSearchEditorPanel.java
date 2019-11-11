@@ -567,37 +567,42 @@ public class ColorDepthSearchEditorPanel
 
         Map<String,Object> values = new HashMap<>();
 
-        ColorDepthResultImageModel imageModel = colorDepthResultPanel.getImageModel();
-        ColorDepthImage image = imageModel.getImage(match);
-
-        String libraries = StringUtils.getCommaDelimited(image.getLibraries());
-
-        values.put("Channel Number", image.getChannelNumber());
-        values.put("Score (Pixels)", match.getScore());
-        values.put("Score (Percent)", MaskUtils.getFormattedScorePct(match));
-        values.put("Color Depth Libraries", libraries);
-        values.put("Owner", image.getOwnerName());
-
         try {
-            values.put("Name", image.getName());
-            values.put("Filepath", image.getFilepath());
-            if (image.getSampleRef()!=null) {
-                Sample sample = imageModel.getSample(match);
-                if (sample!=null) {
-                    values.put("Sample Name", sample.getName());
-                    values.put("Line", sample.getLine());
-                    values.put("VT Line", sample.getVtLine());
-                }
-                else {
-                    // Hide the filepath if user can't access the sample
-                    values.remove("Filepath");
-                }
+            ColorDepthResultImageModel imageModel = colorDepthResultPanel.getImageModel();
+
+            values.put("Score (Pixels)", match.getScore());
+            values.put("Score (Percent)", MaskUtils.getFormattedScorePct(match));
+
+            ColorDepthImage image = imageModel.getImage(match);
+            if (image!=null) {
+
+                    values.put("Channel Number", image.getChannelNumber());
+                    values.put("Owner", image.getOwnerName());
+                    values.put("Name", image.getName());
+                    values.put("Filepath", image.getFilepath());
+
+                    String libraries = StringUtils.getCommaDelimited(image.getLibraries());
+                    values.put("Color Depth Libraries", libraries);
+
+                    if (image.getSampleRef() != null) {
+                        Sample sample = imageModel.getSample(match);
+                        if (sample != null) {
+                            values.put("Sample Name", sample.getName());
+                            values.put("Line", sample.getLine());
+                            values.put("VT Line", sample.getVtLine());
+                        }
+                        else {
+                            // Hide the filepath if user can't access the sample
+                            values.remove("Filepath");
+                        }
+                    }
             }
+
         }
         catch (Exception e) {
             FrameworkAccess.handleExceptionQuietly(e);
         }
-        
+
         return values;
     }
     
