@@ -171,11 +171,11 @@ public class StateMgr {
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(AccessManager.getSubjectKey(), ontologyId);
         for (Preference pref : prefs) {
             if (pref.getValue()!=null) {
-                log.debug("Found preference: {}", pref);
+                log.debug("Loaded preference: {}", pref);
                 ontologyKeyBindings.addBinding(pref.getKey(), Long.parseLong((String)pref.getValue()));
             }
         }
-        log.debug("Loaded {} key bindings for ontology {}", ontologyKeyBindings.getKeybinds().size(), ontologyKeyBindings.getOntologyId());
+        log.info("Loaded {} key binding for ontology {}", ontologyKeyBindings.getKeybinds().size(), ontologyKeyBindings.getOntologyId());
         return ontologyKeyBindings;
     }
 

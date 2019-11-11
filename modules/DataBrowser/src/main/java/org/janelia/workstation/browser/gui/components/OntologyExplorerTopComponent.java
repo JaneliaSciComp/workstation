@@ -876,8 +876,12 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                         OntologyTerm ontologyTerm = ontology.findTerm(bind.getOntologyTermId());
                         if (ontologyTerm!=null) {
                             OntologyElementAction action = getActionForTerm(ontologyTerm);
-                            log.debug("  Loading binding {} = {}", shortcut, action.getOntologyTerm().getName());
+                            log.info("  Binding {} to {}", action.getOntologyTerm().getName(), shortcut);
                             KeyBindings.getKeyBindings().setBinding(shortcut, action, false);
+                        }
+                        else {
+                            log.info("  Could not find OntologyTerm#{} for binding {}", bind.getOntologyTermId(), shortcut);
+                            // TODO: in the future we should clean these up
                         }
                     }
                     catch (Exception e) {
