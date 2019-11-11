@@ -36,8 +36,8 @@ public class EJBFactory {
         String interactiveServerUrl = "jnp://"+interactiveServer+":1199";
         String pipelineServerUrl = "jnp://"+pipelineServer+":1199";
 
-        log.info("Using interactive server: "+interactiveServerUrl);
-        log.info("Using pipeline server: "+pipelineServerUrl);
+        log.debug("Using interactive server: "+interactiveServerUrl);
+        log.debug("Using pipeline server: "+pipelineServerUrl);
 
         Properties icInteractiveServerProperties = new Properties();
         icInteractiveServerProperties.put(Context.PROVIDER_URL, interactiveServerUrl);
