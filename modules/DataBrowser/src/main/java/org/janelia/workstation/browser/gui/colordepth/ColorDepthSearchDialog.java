@@ -8,30 +8,24 @@ import java.util.List;
 
 import javax.swing.*;
 
-import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
-import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.core.api.web.AsyncServiceClient;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
-import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
-import net.miginfocom.swing.MigLayout;
 
 /**
  * Add a newly created mask to a ColorDepthSearch.
@@ -323,15 +317,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
                 
                 if (execute) {
                     ActivityLogHelper.logUserAction("ColorDepthSearchDialog.executeSearch", search);
-
-                    AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
-                    Long serviceId = asyncServiceClient.invokeService("colorDepthObjectSearch",
-                            ImmutableList.of("-searchId", search.getId().toString()),
-                            null,
-                            ImmutableMap.of());
-                    
-                    AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(search, serviceId);
-                    executeWorker.executeWithEvents();
+                    DomainMgr.getDomainMgr().getAsyncFacade().executeColorDepthService(search);
                 }
                 else {
                     ActivityLogHelper.logUserAction("ColorDepthSearchDialog.processSave", search);

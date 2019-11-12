@@ -15,11 +15,13 @@ import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.core.api.exceptions.SystemError;
+import org.janelia.workstation.core.api.facade.impl.rest.AsyncServiceFacadeImpl;
 import org.janelia.workstation.core.api.facade.impl.rest.DomainFacadeImpl;
 import org.janelia.workstation.core.api.facade.impl.rest.OntologyFacadeImpl;
 import org.janelia.workstation.core.api.facade.impl.rest.SampleFacadeImpl;
 import org.janelia.workstation.core.api.facade.impl.rest.SubjectFacadeImpl;
 import org.janelia.workstation.core.api.facade.impl.rest.WorkspaceFacadeImpl;
+import org.janelia.workstation.core.api.facade.interfaces.AsyncServiceFacade;
 import org.janelia.workstation.core.api.facade.interfaces.DomainFacade;
 import org.janelia.workstation.core.api.facade.interfaces.OntologyFacade;
 import org.janelia.workstation.core.api.facade.interfaces.SampleFacade;
@@ -65,6 +67,7 @@ public class DomainMgr {
     private SampleFacade sampleFacade;
     private SubjectFacade subjectFacade;
     private WorkspaceFacade workspaceFacade;
+    private AsyncServiceFacade asyncFacade;
     private SageRestClient sageClient;
     private PropertyChangeListener listener;
 
@@ -90,6 +93,7 @@ public class DomainMgr {
             sampleFacade = new SampleFacadeImpl(domainFacadeURL, legacyDomainFacadeURL);
             subjectFacade = new SubjectFacadeImpl(domainFacadeURL);
             workspaceFacade = new WorkspaceFacadeImpl(domainFacadeURL);
+            asyncFacade = new AsyncServiceFacadeImpl();
             sageClient = new SageRestClient();
             model = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
         }
@@ -127,6 +131,10 @@ public class DomainMgr {
 
     public WorkspaceFacade getWorkspaceFacade() {
         return workspaceFacade;
+    }
+
+    public AsyncServiceFacade getAsyncFacade() {
+        return asyncFacade;
     }
 
     public SageRestClient getSageClient() {

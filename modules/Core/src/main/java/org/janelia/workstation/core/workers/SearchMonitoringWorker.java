@@ -1,10 +1,16 @@
-package org.janelia.workstation.browser.gui.colordepth;
+package org.janelia.workstation.core.workers;
+
+import java.util.concurrent.Callable;
 
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
+/**
+ * Monitor a color depth search being executed on the backend.
+ */
 public class SearchMonitoringWorker extends AsyncServiceMonitoringWorker {
     
     private ColorDepthSearch search;
@@ -24,9 +30,26 @@ public class SearchMonitoringWorker extends AsyncServiceMonitoringWorker {
     }
 
     protected void completed() {
-        // Ensure that search object get refreshed with results once the search is complete
+        forceInvalidate();
+    }
+
+    @Override
+    public Callable<Void> getSuccessCallback() {
+        return () -> {
+            // Refresh and load the search which is completed
+            forceInvalidate();
+            return null;
+        };
+    }
+
+    private void forceInvalidate() {
         SimpleWorker.runInBackground(() -> {
-           DomainMgr.getDomainMgr().getModel().invalidate(search);
+            try {
+                DomainMgr.getDomainMgr().getModel().invalidate(search);
+            }
+            catch (Exception ex) {
+                FrameworkAccess.handleExceptionQuietly(ex);
+            }
         });
     }
 }

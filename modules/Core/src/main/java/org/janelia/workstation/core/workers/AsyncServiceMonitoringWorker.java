@@ -112,7 +112,11 @@ public class AsyncServiceMonitoringWorker extends BackgroundWorker {
     public String getName() {
         return serviceName;
     }
-    
+
+    public Long getServiceId() {
+        return serviceId;
+    }
+
     /**
      * Adapted from SimpleWorker so that we can use a separate thread pool and customize the number of threads
      */
