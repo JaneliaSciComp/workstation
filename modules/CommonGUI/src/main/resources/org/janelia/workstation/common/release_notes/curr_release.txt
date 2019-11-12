@@ -1,3 +1,5 @@
 // 8.6
 
+Data Browser
+* Added "rerun all masks" option for color depth search. By default, only the currently selected mask is searched.
 * Minor bug fixes
