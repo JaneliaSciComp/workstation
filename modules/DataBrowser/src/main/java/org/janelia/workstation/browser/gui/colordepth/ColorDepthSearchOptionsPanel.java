@@ -81,6 +81,7 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
     private final SingleSelectionButton<LabeledValue> xyShiftButton;
     private final SingleSelectionButton<LabeledValue> pixFlucButton;
     private final JCheckBox mirrorCheckbox;
+    private final JCheckBox allMasks;
     private final SelectionButton<ColorDepthLibrary> libraryButton;
     
     // State
@@ -156,6 +157,9 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         xyShiftButton.setToolTipText(XY_SHIFT_TOOLTIP);
 
         mirrorCheckbox = new JCheckBox("Mirror mask");
+
+        allMasks = new JCheckBox("Rerun all masks");
+        allMasks.setToolTipText("Rerun all masks or just the currently selected mask?");
 
         libraryButton = new SelectionButton<ColorDepthLibrary>("Color Depth Libraries") {
             
@@ -309,6 +313,10 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         return search;
     }
 
+    public boolean isAllMasks() {
+        return allMasks.isSelected();
+    }
+
     public void setSearch(ColorDepthSearch colorDepthSearch) {
         this.search = colorDepthSearch;
         setTitle(colorDepthSearch.getName()+" ("+colorDepthSearch.getAlignmentSpace()+")");
@@ -356,6 +364,7 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         addConfigComponent(pixFlucButton);
         addConfigComponent(xyShiftButton);
         addConfigComponent(mirrorCheckbox);
+        addConfigComponent(allMasks);
         addConfigComponent(libraryButton);
     }
 

@@ -241,8 +241,9 @@ public class ColorDepthSearchEditorPanel
             @Override
             protected void doStuff() throws Exception {
                 search = searchOptionsPanel.saveChanges();
+                boolean allMasks = searchOptionsPanel.isAllMasks();
                 ActivityLogHelper.logUserAction("ColorDepthSearchEditorPanel.executeSearch", search);
-                DomainMgr.getDomainMgr().getAsyncFacade().executeColorDepthService(search);
+                DomainMgr.getDomainMgr().getAsyncFacade().executeColorDepthService(search, allMasks?null:selectedMaskRef);
             }
 
             @Override
@@ -273,7 +274,6 @@ public class ColorDepthSearchEditorPanel
                 }
                 this.search = updatedSearch;
                 restoreState(saveState());
-                //loadDomainObject(updatedSearch, false, null);
             }
             else {
                 // The search no longer exists, or we no longer have access to it (perhaps running as a different user?) 

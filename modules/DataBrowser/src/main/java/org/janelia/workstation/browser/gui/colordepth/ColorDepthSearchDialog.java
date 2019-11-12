@@ -10,6 +10,7 @@ import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
@@ -292,10 +293,11 @@ public class ColorDepthSearchDialog extends ModalDialog {
                 return;
             }
         }
-        
+
         SimpleWorker worker = new SimpleWorker() {
-            
+
             ColorDepthSearch search = searchOptionsPanel.getSearch();
+            boolean allMasks = searchOptionsPanel.isAllMasks();
 
             @Override
             protected void doStuff() throws Exception {
@@ -317,7 +319,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
                 
                 if (execute) {
                     ActivityLogHelper.logUserAction("ColorDepthSearchDialog.executeSearch", search);
-                    DomainMgr.getDomainMgr().getAsyncFacade().executeColorDepthService(search);
+                    DomainMgr.getDomainMgr().getAsyncFacade().executeColorDepthService(search, allMasks?null: Reference.createFor(mask));
                 }
                 else {
                     ActivityLogHelper.logUserAction("ColorDepthSearchDialog.processSave", search);

@@ -1,5 +1,6 @@
 package org.janelia.workstation.core.api.facade.interfaces;
 
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
 
@@ -10,5 +11,5 @@ import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
  */
 public interface AsyncServiceFacade {
 
-    AsyncServiceMonitoringWorker executeColorDepthService(ColorDepthSearch search);
+    AsyncServiceMonitoringWorker executeColorDepthService(ColorDepthSearch search, Reference maskRef);
 }

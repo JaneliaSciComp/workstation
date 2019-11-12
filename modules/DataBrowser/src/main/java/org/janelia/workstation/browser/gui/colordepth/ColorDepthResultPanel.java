@@ -36,6 +36,7 @@ import org.janelia.workstation.common.gui.support.MouseForwarder;
 import org.janelia.workstation.common.gui.support.PreferenceSupport;
 import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.workstation.common.gui.support.WrapLayout;
+import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -82,6 +83,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private final PaginatedResultsPanel<ColorDepthMatch,Reference> resultsPanel;
     private final JLabel noRunLabel;
     private final JLabel noMatchesLabel;
+    private final SelectionButton<SplitHalfType> splitTypeButton;
 
     // State
     private ColorDepthSearch search;
@@ -180,8 +182,8 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         JPanel perLinePanel = new JPanel(new BorderLayout());
         perLinePanel.add(resultsPerLineField, BorderLayout.WEST);
         perLinePanel.add(new JLabel("results per line"), BorderLayout.CENTER);
-        
-        SelectionButton<SplitHalfType> splitTypeButton = new SelectionButton<SplitHalfType>("Split Types") {
+
+        splitTypeButton = new SelectionButton<SplitHalfType>("Split Types") {
 
             @Override
             public Collection<SplitHalfType> getValues() {
@@ -196,12 +198,56 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             @Override
             protected void selectAll() {
                 selectedSplitTypes.addAll(ALL_SPLIT_TYPES);
-                refreshView();
+
+                SimpleWorker worker = new SimpleWorker() {
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        for (SplitHalfType value : SplitHalfType.values()) {
+                            setPreference(PREFERENCE_CATEGORY_CDS_SPLITHALFTYPES, value.getName(), true);
+                        }
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        log.info("Saved split half preference: all");
+                        refreshView();
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        FrameworkAccess.handleException(error);
+                    }
+                };
+
+                worker.execute();
             }
             @Override
             protected void clearSelected() {
                 selectedSplitTypes.clear();
-                refreshView();
+
+                SimpleWorker worker = new SimpleWorker() {
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        for (SplitHalfType value : SplitHalfType.values()) {
+                            setPreference(PREFERENCE_CATEGORY_CDS_SPLITHALFTYPES, value.getName(), false);
+                        }
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        log.info("Saved split half preference: none");
+                        refreshView();
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        FrameworkAccess.handleException(error);
+                    }
+                };
+
+                worker.execute();
             }
 
             @Override
@@ -212,11 +258,13 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
                 else {
                     selectedSplitTypes.remove(value);
                 }
-                setPreferenceAsync(PREFERENCE_CATEGORY_CDS_SPLITHALFTYPES, value.getName(), selected);
-                refreshView();
+                setPreferenceAsync(PREFERENCE_CATEGORY_CDS_SPLITHALFTYPES, value.getName(), selected).addListener(() -> {
+                    log.info("Saved split half preference {}={}", value.getName(), selected);
+                    refreshView();
+                });
             }
         };
-        
+
         this.topPanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 8, 5));
         topPanel.add(new JLabel("History:"));
         topPanel.add(historyButton);
@@ -268,9 +316,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         this.imageModel = null;
 
         log.info("Preparing matching results from {} results", resultList.size());
-        
+
+        // Filter down to relevant results for the current mask
         results.clear();
-        results.addAll(resultList);
+        results.addAll(resultList.stream().filter(r -> r.getParameters().getMasks().contains(Reference.createFor(mask))).collect(Collectors.toList()));
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -301,6 +350,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
 
             @Override
             protected void hadSuccess() {
+                splitTypeButton.update();
                 if (newResultPreference != null) {
                     boolean newResults = Boolean.parseBoolean(newResultPreference);
                     newOnlyCheckbox.setSelected(newResults);
