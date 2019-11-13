@@ -1,12 +1,6 @@
 package org.janelia.horta;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.FileDialog;
-import java.awt.Frame;
-import java.awt.Point;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -43,19 +37,8 @@ import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.ActionMap;
-import javax.swing.InputMap;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComponent;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.MouseInputListener;
 import javax.swing.text.Keymap;
@@ -1241,6 +1224,30 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // Annotators want "Reset Rotation" on the top level menu
                 // Issue JW-25370
                 topMenu.add(resetRotationAction);
+
+                JMenu snapMenu = new JMenu("Snap To Signal Radius");
+                topMenu.add(snapMenu);
+
+                JPanel snapPanel = new JPanel(new FlowLayout());
+
+                JTextField snapSelectionText = new JTextField();
+                snapSelectionText.setText(Integer.toString(tracingInteractor.getSnapRadius()));
+                snapSelectionText.setEnabled(false);
+
+                JSlider snapSelectionSlider = new JSlider(JSlider.HORIZONTAL);
+                snapSelectionSlider.setMinimum(1);
+                snapSelectionSlider.setMaximum(20);
+                snapSelectionSlider.setValue(tracingInteractor.getSnapRadius());
+                ChangeListener cl = e -> {
+                    JSlider x = (JSlider) e.getSource();
+                    tracingInteractor.setSnapRadius(x.getValue());
+                    snapSelectionText.setText(Integer.toString(x.getValue()));
+                };
+                snapSelectionSlider.addChangeListener(cl);
+                snapPanel.add(snapSelectionSlider);
+                snapPanel.add(snapSelectionText);
+
+                snapMenu.add(snapPanel);
 
                 JMenu viewMenu = new JMenu("View");
                 topMenu.add(viewMenu);

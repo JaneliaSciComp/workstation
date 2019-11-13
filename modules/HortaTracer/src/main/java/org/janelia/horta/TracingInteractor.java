@@ -87,7 +87,7 @@ public class TracingInteractor extends MouseAdapter
 {
     private final VolumeProjection volumeProjection;
     private HortaMetaWorkspace metaWorkspace;
-    private final int max_tol = 5; // pixels
+    private int snapRadius = 5; // pixels
         
     // For selection affordance
     // For GUI feedback on existing model, contains zero or one vertex.
@@ -810,8 +810,8 @@ public class TracingInteractor extends MouseAdapter
 
     private Point optimizePosition(Point screenPoint) {
         // TODO - this method is pretty crude; but maybe good enough?
-        screenPoint = optimizeX(screenPoint, max_tol);
-        screenPoint = optimizeY(screenPoint, max_tol);
+        screenPoint = optimizeX(screenPoint, getSnapRadius());
+        screenPoint = optimizeY(screenPoint, getSnapRadius());
         // Refine to local maximum
         Point prevPoint = new Point(screenPoint.x, screenPoint.y);
         int stepCount = 0;
@@ -910,7 +910,15 @@ public class TracingInteractor extends MouseAdapter
         }
     }
 
-    
+    public int getSnapRadius() {
+        return snapRadius;
+    }
+
+    public void setSnapRadius(int snapRadius) {
+        this.snapRadius = snapRadius;
+    }
+
+
     // Cached state of interactor at one moment in time, so hovered density, for
     // example, does not go stale before the user selects a menu option.
     public class InteractorContext
