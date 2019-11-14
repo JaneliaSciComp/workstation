@@ -1,6 +1,7 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
@@ -89,11 +90,9 @@ public class ColorDepthObjectHandler implements DomainObjectHandler {
     public boolean supportsRemoval(DomainObject domainObject) {
         if (domainObject instanceof ColorDepthMask) {
             return true;
-        }
-        else if (domainObject instanceof ColorDepthSearch) {
+        } else if (domainObject instanceof ColorDepthSearch) {
             return true;
-        }
-        else if (domainObject instanceof ColorDepthLibrary) {
+        } else if (domainObject instanceof ColorDepthLibrary) {
             return true;
         }
         return false;
@@ -103,15 +102,14 @@ public class ColorDepthObjectHandler implements DomainObjectHandler {
     public void remove(DomainObject domainObject) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         if (domainObject instanceof ColorDepthMask) {
-            model.remove(Collections.singletonList((ColorDepthMask) domainObject));
-        }
-        else if (domainObject instanceof ColorDepthSearch) {
+            ColorDepthMask cdm = (ColorDepthMask) domainObject;
+            model.remove(Collections.singletonList(cdm));
+            model.removeStorage(cdm.getFiles().entrySet().stream().map(e -> e.getValue()).collect(Collectors.toList()));
+        } else if (domainObject instanceof ColorDepthSearch) {
             model.remove(Collections.singletonList(((ColorDepthSearch) domainObject)));
-        }
-        else if (domainObject instanceof ColorDepthLibrary) {
+        } else if (domainObject instanceof ColorDepthLibrary) {
             model.remove(Collections.singletonList((ColorDepthLibrary) domainObject));
-        }
-        else {
+        } else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);
         }
     }
