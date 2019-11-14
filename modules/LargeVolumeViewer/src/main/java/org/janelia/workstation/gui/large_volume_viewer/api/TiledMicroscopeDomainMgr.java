@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Spliterator;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -215,26 +216,26 @@ public class TiledMicroscopeDomainMgr {
     public Stream<TmNeuronMetadata> streamWorkspaceNeurons(Long workspaceId) {
         LOG.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         Spliterator<Stream<TmNeuronMetadata>> workspaceNeuronsSupplier = new Spliterator<Stream<TmNeuronMetadata>>() {
-            volatile long offset = 0L;
+            AtomicLong offset = new AtomicLong(0L);
             int defaultLength = 100000;
             @Override
             public boolean tryAdvance(Consumer<? super Stream<TmNeuronMetadata>> action) {
-                Collection<TmNeuronMetadata> neurons= client.getWorkspaceNeurons(workspaceId, offset, defaultLength);
+                long currentOffset = offset.getAndAdd(defaultLength);
+                Collection<TmNeuronMetadata> neurons= client.getWorkspaceNeurons(workspaceId, currentOffset, defaultLength);
 
-                long lastEntryOffset = offset + neurons.size();
-                int count = (int)lastEntryOffset;
+                long count = currentOffset;
                 // make sure to initialize cross references
                 for (TmNeuronMetadata neuron: neurons) {
                     neuron.initNeuronData();
-                    if (count %100==0) {
-                        LOG.info("count:{}",count++);
+                    if (count % 100 == 0) {
+                        LOG.info("count:{}", count++);
                     }
                 }
-                LOG.info("Retrieved {} entries ({} - {}) from {} -> {}", neurons.size(), offset, lastEntryOffset);
                 if (neurons.isEmpty()) {
+                    LOG.info("No neurons retrieved starting at {}", currentOffset);
                     return false;
                 } else {
-                    offset = lastEntryOffset;
+                    LOG.info("Retrieved {} entries from {} -> {}", neurons.size(), currentOffset, currentOffset + neurons.size());
                     action.accept(neurons.stream());
                     return neurons.size() == defaultLength;
                 }

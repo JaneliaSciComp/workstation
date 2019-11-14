@@ -237,10 +237,12 @@ public class ImportImageFilesDialog extends ModalDialog {
 
     private boolean isSupportedFileType(File f) {
         return f.getName().endsWith(".lsm")
-            || f.getName().endsWith(".tif")
-            || f.getName().endsWith(".tiff")
-            || f.getName().endsWith(".v3draw")
-            || f.getName().endsWith(".v3dpbd");
+                || f.getName().endsWith(".tif")
+                || f.getName().endsWith(".tiff")
+                || f.getName().endsWith(".v3draw")
+                || f.getName().endsWith(".v3dpbd")
+                || f.getName().endsWith(".h5j")
+                ;
     }
     
     public void showDialog() {
