@@ -204,7 +204,7 @@ public class NeuronManager {
         StopWatch stopWatch = new StopWatch();
         neuronModelAdapter.loadNeurons(workspace)
                 .forEach(n -> addNeuron(n));
-        LOG.info("NEURON TOTAL LOAD {} ms", stopWatch.getElapsedTime());
+        LOG.info("NEURON TOTAL LOAD {} ms for {} neurons", stopWatch.getElapsedTime(), neuronMap.size());
     }
 
     /**

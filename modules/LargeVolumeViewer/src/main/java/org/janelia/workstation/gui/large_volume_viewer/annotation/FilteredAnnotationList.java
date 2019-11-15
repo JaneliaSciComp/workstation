@@ -170,8 +170,8 @@ public class FilteredAnnotationList extends JPanel {
                             if (panListener != null) {
                                 if (ann != null) {
                                     panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
-                                    annotationModel.selectPoint(ann.getNeuronId(), ann.getId());
-                                   Vec3 location = annotationMgr.getTileFormat().micronVec3ForVoxelVec3Centered(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                                    //annotationModel.selectPoint(ann.getNeuronId(), ann.getId());
+                                    Vec3 location = annotationMgr.getTileFormat().micronVec3ForVoxelVec3Centered(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
                                     // send event to Horta to also center on this item
                                     
                                     try {
@@ -190,7 +190,7 @@ public class FilteredAnnotationList extends JPanel {
                                     } catch (Exception e) {
                                         FrameworkAccess.handleException(e);
                                     }
-                                    
+
                                 }
                             }
                         }

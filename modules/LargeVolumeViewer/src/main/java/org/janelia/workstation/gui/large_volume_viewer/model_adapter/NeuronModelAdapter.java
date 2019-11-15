@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  */
 class NeuronModelAdapter {
 
-    private static final int MAX_NEURONS = 4000000;
+    private static final int MAX_NEURONS = 1000000;
     private static Logger LOG = LoggerFactory.getLogger(NeuronModelAdapter.class);
 
     private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
