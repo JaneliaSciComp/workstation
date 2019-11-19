@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.janelia.model.access.domain.IdSource;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
@@ -201,10 +201,11 @@ public class NeuronManager {
      */
     public void loadWorkspaceNeurons(TmWorkspace workspace) throws Exception {
         neuronMap.clear();
-        StopWatch stopWatch = new StopWatch();
-        neuronModelAdapter.loadNeurons(workspace)
-                .forEach(n -> addNeuron(n));
-        LOG.info("NEURON TOTAL LOAD {} ms for {} neurons", stopWatch.getElapsedTime(), neuronMap.size());
+        // addNeurons() must be done serially, so flatten the stream:
+        for (TmNeuronMetadata n: neuronModelAdapter.loadNeurons(workspace).collect(Collectors.toList())) {
+            addNeuron(n);
+        }
+        LOG.info("NeuronManager.loadWorkspaceNeurons() loaded {} neurons", neuronMap.size());
     }
 
     /**
