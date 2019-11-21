@@ -132,13 +132,15 @@ class InfoTableModel extends AbstractTableModel {
             double length = 0.0;
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                 for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
-                    // branch counting
-                    if (ann.isBranch()) {
-                        nBranches++;
-                    }
-                    // length calculation
-                    if  (!ann.isRoot()) {
-                        length += distance(ann, neuron.getParentOf(ann), exchanger);
+                    if (ann != null) {
+                        // branch counting
+                        if (ann.isBranch()) {
+                            nBranches++;
+                        }
+                        // length calculation
+                        if (!ann.isRoot()) {
+                            length += distance(ann, neuron.getParentOf(ann), exchanger);
+                        }
                     }
                 }
             }
