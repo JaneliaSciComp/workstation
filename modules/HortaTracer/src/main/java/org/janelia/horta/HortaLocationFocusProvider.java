@@ -67,7 +67,10 @@ public class HortaLocationFocusProvider implements Tiled3dSampleLocationProvider
     public void setSampleLocation(SampleLocation sampleLocation) {
         NeuronTracerTopComponent nttc = getNeuronTracer();
         if (nttc == null) {
-            throw new IllegalStateException("Failed to find Neuron Tracer.");
+            // not an actual error; on some platforms, the Neuron Tracer (aka Horta) may
+            //  not be available
+            logger.warn("Failed to find Neuron Tracer.");
+            return;
         }
         if (! nttc.isOpened()) {
            return;
