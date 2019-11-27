@@ -58,6 +58,9 @@ public class MaskContextMenu extends PopupContextMenu {
         add(getOpenWithAppItem());
 
         setNextAddRequiresSeparator(true);
+        add(getCreateMaskAction());
+
+        setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
     }
         
@@ -122,6 +125,10 @@ public class MaskContextMenu extends PopupContextMenu {
         if (path==null) return null;
         if (!OpenWithDefaultAppAction.isSupported()) return null;
         return getNamedActionItem(new OpenWithDefaultAppAction(path));
+    }
+
+    protected JMenuItem getCreateMaskAction() {
+        return getNamedActionItem(new CreateMaskFromImageAction(mask));
     }
 
     protected JMenuItem getHudMenuItem() {

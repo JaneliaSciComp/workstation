@@ -147,10 +147,10 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         setNextAddRequiresSeparator(true);
         add(getOpenInFinderItem());
         add(getOpenWithAppItem());
+        add(getOpenWithNeuprintItem());
 
         setNextAddRequiresSeparator(true);
         add(getDownloadItem());
-        add(getOpenWithNeuprintItem());
         add(getCreateMaskAction());
 
         setNextAddRequiresSeparator(true);

@@ -4,3 +4,4 @@ Color Depth Search
 * Added right-click option to copy multiple skeleton ids when searching EM
 * Added right-click option to download color depth matches
 * Added all attributes to table view
+* Added ability to create refined masks from existing masks
