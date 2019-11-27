@@ -3,8 +3,10 @@ package org.janelia.workstation.browser.gui.colordepth;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
@@ -21,6 +23,7 @@ import org.janelia.workstation.browser.actions.context.AddToFolderAction;
 import org.janelia.workstation.browser.gui.components.DomainViewerManager;
 import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
+import org.janelia.workstation.browser.gui.dialogs.download.DownloadWizardAction;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.core.actions.NodeContext;
@@ -55,7 +58,9 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     protected ColorDepthImage image;
     protected Sample sample;
     protected String matchName;
-    
+    protected boolean flyem;
+    protected String bodyId;
+
     public ColorDepthMatchContextMenu(ColorDepthResult result, List<ColorDepthMatch> matches, ColorDepthResultImageModel imageModel, 
             ChildSelectionModel<ColorDepthMatch,Reference> editSelectionModel) {
         this.contextObject = result;
@@ -73,6 +78,23 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
             else {
                 this.matchName = sample.getName();
             }
+        }
+        // Are any FlyEM skeletons selected?
+        this.flyem = false;
+        OUTER: for (ColorDepthMatch match : matches) {
+            ColorDepthImage matchImage = imageModel.getImage(match);
+            if (matchImage != null && matchImage.getLibraries() != null) {
+                for (String library : matchImage.getLibraries()) {
+                    if (library.startsWith("flyem_")) {
+                        this.flyem = true;
+                        break OUTER;
+                    }
+                }
+            }
+        }
+
+        if (flyem) {
+            this.bodyId = getBodyId(image);
         }
         ActivityLogHelper.logUserAction("ColorDepthMatchContextMenu.create", match);
     }
@@ -93,6 +115,13 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         }
     }
 
+    private String getBodyId(ColorDepthImage image) {
+        if (image==null || image.getName()==null) return null;
+        Pattern p = Pattern.compile(".*?(\\d{9,}).*?");
+        Matcher m = p.matcher(image.getName());
+        return m.matches() ? m.group(1) : null;
+    }
+
     public void addMenuItems() {
 
         if (matches.isEmpty()) {
@@ -104,6 +133,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
 
         add(getTitleItem());
         add(getCopyNameToClipboardItem());
+        add(getCopyBodyIdsToClipboardItem());
         setNextAddRequiresSeparator(true);
 
         if (editSelectionModel != null) {
@@ -119,6 +149,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         add(getOpenWithAppItem());
 
         setNextAddRequiresSeparator(true);
+        add(getDownloadItem());
         add(getOpenWithNeuprintItem());
         add(getCreateMaskAction());
 
@@ -138,6 +169,20 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         return getNamedActionItem(new CopyToClipboardAction("Name",matchName));
     }
 
+    protected JMenuItem getCopyBodyIdsToClipboardItem() {
+        if (!flyem) return null;
+        if (multiple) {
+            // Collect all the body ids delimited by whitespace
+            String bodyIds = matches.stream()
+                    .map(m -> getBodyId(imageModel.getImage(m)))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.joining(" "));
+            return getNamedActionItem(new CopyToClipboardAction("FlyEM Body Ids", bodyIds));
+        }
+        else {
+            return getNamedActionItem(new CopyToClipboardAction("FlyEM Body Id", bodyId));
+        }
+    }
     protected JMenuItem getCheckItem(boolean check) {
         String title = check ? "Check" : "Uncheck";
         JMenuItem menuItem = new JMenuItem(title+" Selected");
@@ -206,21 +251,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
 
     protected JMenuItem getOpenWithNeuprintItem() {
         if (multiple) return null;
-        String path = image.getFilepath();
-        if (path==null) return null;
-
-        boolean flyem = false;
-        for (String library : image.getLibraries()) {
-            if (library.startsWith("flyem")) {
-                flyem = true;
-            }
-        }
-
         if (!flyem) return null;
-
-        Pattern p = Pattern.compile(".*?(\\d{9,}).*?");
-        Matcher m = p.matcher(image.getName());
-        String bodyId = m.matches() ? m.group(1) : "";
 
         final String neuprintUrl = ConsoleProperties.getInstance().getProperty("neuprint.url");
         final String fullUrl = neuprintUrl+"?bodyid="+bodyId;
@@ -231,7 +262,7 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
             Utils.openUrlInBrowser(fullUrl);
         });
 
-        if (!m.matches()) {
+        if (bodyId==null) {
             item.setEnabled(false);
         }
 
@@ -241,6 +272,22 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
     protected JMenuItem getCreateMaskAction() {
         if (multiple) return null;
         return getNamedActionItem(new CreateMaskFromImageAction(image));
+    }
+
+    protected JMenuItem getDownloadItem() {
+
+        // Get all images selected
+        List<ColorDepthImage> images = matches.stream()
+                .map(m -> imageModel.getImage(m))
+                .filter(Objects::nonNull).collect(Collectors.toList());
+
+        if (!images.isEmpty()) {
+            JMenuItem downloadItem = new JMenuItem("Download...");
+            downloadItem.addActionListener(new DownloadWizardAction(images, null));
+            return downloadItem;
+        }
+        
+        return null;
     }
 
     protected JMenuItem getCompareHudMenuItem() {

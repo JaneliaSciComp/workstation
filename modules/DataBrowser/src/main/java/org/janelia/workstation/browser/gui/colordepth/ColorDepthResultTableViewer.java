@@ -20,6 +20,7 @@ import org.janelia.model.domain.DomainObjectAttribute;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.DynamicDomainObjectProxy;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.model.domain.gui.cdmip.ColorDepthResult;
 import org.janelia.model.domain.sample.Sample;
@@ -36,6 +37,7 @@ import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.workstation.common.gui.table.DynamicColumn;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.model.AnnotatedObjectList;
+import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -57,9 +59,12 @@ public class ColorDepthResultTableViewer
     private TableViewerConfiguration config;
     private final DomainObjectAttribute ATTR_SCORE = new DomainObjectAttribute("score","Score (Pixels)",null,null,true,null,null);
     private final DomainObjectAttribute ATTR_SCORE_PCT = new DomainObjectAttribute("score_pct","Score (Percent)",null,null,true,null,null);
-    private final DomainObjectAttribute ATTR_CHANNEL = new DomainObjectAttribute("match_channel","Match Channel",null,null,true,null,null);
-    private final DomainObjectAttribute ATTR_FILENAME = new DomainObjectAttribute("filename","Filename",null,null,true,null,null);
-    
+    private final DomainObjectAttribute ATTR_CHANNEL = new DomainObjectAttribute("match_channel","Channel Number",null,null,true,null,null);
+    private final DomainObjectAttribute ATTR_OWNER = new DomainObjectAttribute("owner","Owner",null,null,true,null,null);
+    private final DomainObjectAttribute ATTR_FILE_NAME = new DomainObjectAttribute("filename","File Name",null,null,true,null,null);
+    private final DomainObjectAttribute ATTR_FILE_PATH = new DomainObjectAttribute("filepath","File Path",null,null,true,null,null);
+
+    private final DomainObjectAttribute ATTR_LIBRARIES = new DomainObjectAttribute("libraries","Color Depth Libraries",null,null,true,null,null);
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
 
     // State
@@ -153,11 +158,14 @@ public class ColorDepthResultTableViewer
         List<DomainObject> samples = new ArrayList<>(model.getSamples());
         
         attrs = DomainUtils.getDisplayAttributes(samples);
-        attrs.add(0, ATTR_CHANNEL);
-        attrs.add(0, ATTR_FILENAME);
-        attrs.add(0, ATTR_SCORE_PCT);
         attrs.add(0, ATTR_SCORE);
-        
+        attrs.add(0, ATTR_SCORE_PCT);
+        attrs.add(0, ATTR_OWNER);
+        attrs.add(0, ATTR_FILE_PATH);
+        attrs.add(0, ATTR_FILE_NAME);
+        attrs.add(0, ATTR_LIBRARIES);
+        attrs.add(0, ATTR_CHANNEL);
+
         getDynamicTable().clearColumns();
         for(DomainObjectAttribute attr : attrs) {
             attributeMap.put(attr.getName(), attr);
@@ -210,9 +218,9 @@ public class ColorDepthResultTableViewer
                     }
                 });
                 popupMenu.add(copyMenuItem);
+                popupMenu.addSeparator();
             }
 
-            popupMenu.addSeparator();
             popupMenu.addMenuItems();
 
             return popupMenu;
@@ -353,14 +361,27 @@ public class ColorDepthResultTableViewer
 
     public Object getValue(AnnotatedObjectList<ColorDepthMatch,Reference> domainObjectList, ColorDepthMatch match, String columnName) {
         ColorDepthResultImageModel model = (ColorDepthResultImageModel)getImageModel();
+
         if (ATTR_SCORE.getName().equals(columnName)) {
             return match.getScore();
         }
         else if (ATTR_SCORE_PCT.getName().equals(columnName)) {
             return MaskUtils.getFormattedScorePct(match);
         }
-        else if (ATTR_FILENAME.getName().equals(columnName)) {
+        else if (ATTR_FILE_NAME.getName().equals(columnName)) {
             return model.getImage(match).getName();
+        }
+        else if (ATTR_FILE_PATH.getName().equals(columnName)) {
+            return model.getImage(match).getFilepath();
+        }
+        else if (ATTR_LIBRARIES.getName().equals(columnName)) {
+            ColorDepthImage image = model.getImage(match);
+            if (image!=null) {
+                return StringUtils.getCommaDelimited(image.getLibraries());
+            }
+        }
+        else if (ATTR_OWNER.getName().equals(columnName)) {
+            return model.getImage(match).getOwnerName();
         }
         else if (ATTR_CHANNEL.getName().equals(columnName)) {
             return model.getImage(match).getChannelNumber();
@@ -380,6 +401,7 @@ public class ColorDepthResultTableViewer
                 return proxy.get(attr.getLabel());
             }
         }
+        return null;
     }
 
     @Override

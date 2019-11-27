@@ -1,3 +1,20 @@
+// 8.6.1
+
+Large Volume Viewer
+* Fixed issue with neuron fragment count being off; reverted fix to sequentially process fragments
+
+// 8.6
+
+Data Browser
+* Added "rerun all masks" option for color depth search. By default, only the currently selected mask is searched.
+* Minor bug fixes
+
+Large Volume Viewer
+* Moved neuron skeleton data into mongo from mysql database
+
+Horta
+* Added parameter for controlling the Signal Snap Radius (accessible through right-click menu)
+
 // 8.5.2
 
 * Fixed progressive loading in Neuron Annotator

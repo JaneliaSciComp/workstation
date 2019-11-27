@@ -32,6 +32,6 @@ public class MaskUtils {
     }
 
     static String getFormattedScorePct(ColorDepthMatch match) {
-        return String.format("%2.0f%%", match.getScorePercent()*100);
+        return String.format("%.0f%%", match.getScorePercent()*100);
     }
 }

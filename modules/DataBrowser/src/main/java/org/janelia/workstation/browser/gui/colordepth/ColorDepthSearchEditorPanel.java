@@ -563,8 +563,8 @@ public class ColorDepthSearchEditorPanel
 
                     values.put("Channel Number", image.getChannelNumber());
                     values.put("Owner", image.getOwnerName());
-                    values.put("Name", image.getName());
-                    values.put("Filepath", image.getFilepath());
+                    values.put("File Name", image.getName());
+                    values.put("File Path", image.getFilepath());
 
                     String libraries = StringUtils.getCommaDelimited(image.getLibraries());
                     values.put("Color Depth Libraries", libraries);

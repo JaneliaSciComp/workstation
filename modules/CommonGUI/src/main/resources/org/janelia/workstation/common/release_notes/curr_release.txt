@@ -1,5 +1,6 @@
-// 8.6.1
+// 8.7
 
-Large Volume Viewer
-* fixed issue with neuron fragment count being off; reverted fix to sequentially process fragments
-
+Color Depth Search
+* Added right-click option to copy multiple skeleton ids when searching EM
+* Added right-click option to download color depth matches
+* Added all attributes to table view
