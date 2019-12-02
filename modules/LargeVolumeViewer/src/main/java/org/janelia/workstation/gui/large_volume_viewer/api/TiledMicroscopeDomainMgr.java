@@ -8,6 +8,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Spliterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -212,15 +215,79 @@ public class TiledMicroscopeDomainMgr {
         client.remove(workspace);
         getModel().notifyDomainObjectRemoved(workspace);
     }
+
+    class RetrieveNeuronsTask extends RecursiveTask<List<TmNeuronMetadata>> {
+        double defaultLength = 100000.0;
+        int start;
+        int end;
+        long workspaceId;
+
+        RetrieveNeuronsTask(long workspaceId,
+                                 int start, int end) {
+            this.start = start;
+            this.end = end;
+            this.workspaceId = workspaceId;
+        }
+
+        @Override
+        public List<TmNeuronMetadata> compute() {
+            if ((end-start)>defaultLength) {
+                List<RetrieveNeuronsTask> tasks = new ArrayList<>();
+                // break up into defaultLength chunks
+                int numChunks = (int)Math.ceil((end-start)/defaultLength);
+                for (int i=0; i<numChunks; i++) {
+                    int newStart = i*(int)defaultLength;
+                    int newEnd = newStart + (int)defaultLength;
+                    if ((newStart+defaultLength)>end) {
+                        newEnd = end;
+                    }
+                    RetrieveNeuronsTask task = new RetrieveNeuronsTask(workspaceId, newStart,
+                            newEnd);
+                    tasks.add(task);
+                    task.fork();
+                }
+
+                List<TmNeuronMetadata> neuronList = new ArrayList<>();
+                for (RetrieveNeuronsTask subtask : tasks) {
+                    neuronList.addAll(subtask.join());
+                    LOG.info("Collating results - Neuron count: {}", neuronList.size());
+                }
+                return neuronList;
+
+            } else {
+                LOG.info("Retrieving {} - {} block from server", start, end);
+                List<TmNeuronMetadata> neurons = new ArrayList<>();
+                neurons.addAll(client.getWorkspaceNeurons(workspaceId, start, end - start));
+
+                if (neurons.isEmpty()) {
+                    LOG.info("No neurons retrieved starting at {}", start);
+                } else {
+                    LOG.info("Retrieved {} entries from {} -> {}", neurons.size(), start, end);
+                }
+                return neurons;
+            }
+        }
+    }
     
     public Stream<TmNeuronMetadata> streamWorkspaceNeurons(Long workspaceId) {
         LOG.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
-        Spliterator<Stream<TmNeuronMetadata>> workspaceNeuronsSupplier = new Spliterator<Stream<TmNeuronMetadata>>() {
+        long neuronCount = client.getWorkspaceNeuronCount(workspaceId);
+        ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors()-1);
+        List<TmNeuronMetadata> neurons = pool.invoke(new RetrieveNeuronsTask(workspaceId, 0, (int)neuronCount));
+
+        // make sure to initialize cross references
+        for (TmNeuronMetadata neuron : neurons) {
+            neuron.initNeuronData();
+        }
+        return neurons.stream();
+        /*Spliterator<Stream<TmNeuronMetadata>> workspaceNeuronsSupplier = new Spliterator<Stream<TmNeuronMetadata>>() {
             AtomicLong offset = new AtomicLong(0L);
-            int defaultLength = 100000;
+
             @Override
             public boolean tryAdvance(Consumer<? super Stream<TmNeuronMetadata>> action) {
                 long currentOffset = offset.getAndAdd(defaultLength);
+                LOG.info("Retrieving {} - {} block from server", currentOffset-defaultLength, currentOffset);
+
                 Collection<TmNeuronMetadata> neurons= client.getWorkspaceNeurons(workspaceId, currentOffset, defaultLength);
 
                 long count = currentOffset;
@@ -256,7 +323,8 @@ public class TiledMicroscopeDomainMgr {
                 return ORDERED;
             }
         };
-        return StreamSupport.stream(workspaceNeuronsSupplier, true).flatMap(Function.identity());
+
+         */
     }
 
     public TmNeuronMetadata saveMetadata(TmNeuronMetadata neuronMetadata) throws Exception {

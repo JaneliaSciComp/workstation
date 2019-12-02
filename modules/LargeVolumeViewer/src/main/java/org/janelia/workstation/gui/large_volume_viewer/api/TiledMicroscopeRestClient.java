@@ -229,6 +229,18 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         checkBadResponse(target, response);
     }
 
+    public Long getWorkspaceNeuronCount(Long workspaceId) {
+        WebTarget target = getMouselightDataEndpoint("/neurons/totals")
+                .queryParam("workspaceId", workspaceId)
+                .queryParam("subjectKey", AccessManager.getSubjectKey());
+
+        Response response = target
+                .request("application/json")
+                .get();
+        checkBadResponse(target, response);
+        return response.readEntity(Long.class);
+    }
+
     Collection<TmNeuronMetadata> getWorkspaceNeurons(Long workspaceId, long offset, int length) {
         WebTarget target = getMouselightDataEndpoint("/workspace/neuron")
                 .queryParam("workspaceId", workspaceId)
