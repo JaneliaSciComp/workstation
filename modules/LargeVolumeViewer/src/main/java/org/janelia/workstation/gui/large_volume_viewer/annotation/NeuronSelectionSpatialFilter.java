@@ -13,6 +13,8 @@ import org.janelia.workstation.gui.large_volume_viewer.neuron_api.NeuronProximit
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     NeuronProximitySpatialIndex index;
@@ -20,6 +22,7 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     Set<Long> fragments = new HashSet<>();
     Set<Long> userNeuronIds;
     int numTotalNeurons;
+    private static final Logger log = LoggerFactory.getLogger(NeuronSelectionSpatialFilter.class);
 
     private double distance = 450; // distance from the neuron to include for proximity
 
@@ -34,18 +37,23 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
 
     @Override
     public void initFilter(Collection<TmNeuronMetadata> neuronList) {
+        log.info("Starting to build spatial filter");
         numTotalNeurons = neuronList.size();
         // load all the neuron points into the index
         index = new NeuronProximitySpatialIndex();
         userNeuronIds = new HashSet<>();
+        String systemGroup = ConsoleProperties.getInstance()
+                .getProperty("console.LVVHorta.tracersgroup").trim();
+        int count = 0;
         for (TmNeuronMetadata neuron: neuronList) {
-            if (!neuron.getOwnerKey().equals(ConsoleProperties.getInstance()
-                    .getProperty("console.LVVHorta.tracersgroup").trim())) {
+            count++;
+            if (!neuron.getOwnerKey().equals(systemGroup)) {
                 userNeuronIds.add(neuron.getId());
             } else {
                 index.addToIndex(neuron);
             }
         }
+        log.info("Finished building spatial filter");
     }
 
     @Override

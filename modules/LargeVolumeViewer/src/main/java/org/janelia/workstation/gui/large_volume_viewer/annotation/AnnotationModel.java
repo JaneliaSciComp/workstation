@@ -373,6 +373,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                 }
             }
         }
+        log.info("Spatial Filtering applied: {}", applyFilter);
 
         // if spatial filter is applied, use it to filter neurons
         if (applyFilter) {

@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class TiledMicroscopeDomainMgr {
-
+    private final int NUM_PARALLEL_NEURONSTREAMS = 4;
     private static final Logger LOG = LoggerFactory.getLogger(TiledMicroscopeDomainMgr.class);
 
     // Singleton
@@ -272,7 +272,7 @@ public class TiledMicroscopeDomainMgr {
     public Stream<TmNeuronMetadata> streamWorkspaceNeurons(Long workspaceId) {
         LOG.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         long neuronCount = client.getWorkspaceNeuronCount(workspaceId);
-        ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors()-1);
+        ForkJoinPool pool = new ForkJoinPool(NUM_PARALLEL_NEURONSTREAMS);
         List<TmNeuronMetadata> neurons = pool.invoke(new RetrieveNeuronsTask(workspaceId, 0, (int)neuronCount));
 
         // make sure to initialize cross references
