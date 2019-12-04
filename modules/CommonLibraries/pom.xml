@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.6.1</version>
+        <version>8.7</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>CommonLibraries</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>libraries</artifactId>
-    <version>8.6.1</version>
+    <version>8.7</version>
     <packaging>nbm</packaging>
 
     <properties>
