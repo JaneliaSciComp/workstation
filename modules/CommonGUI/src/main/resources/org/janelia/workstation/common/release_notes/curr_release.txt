@@ -5,3 +5,6 @@ Color Depth Search
 * Added right-click option to download color depth matches
 * Added all attributes to table view
 * Added ability to create refined masks from existing masks
+
+Large Volume Viewer
+* Added threads for loading large fragment workspaces in parallel
