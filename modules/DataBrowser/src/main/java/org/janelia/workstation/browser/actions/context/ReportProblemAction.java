@@ -7,7 +7,6 @@ import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
-import org.janelia.it.jacs.shared.utils.domain.DataReporter;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
@@ -17,6 +16,7 @@ import org.janelia.workstation.common.actions.BaseContextualPopupAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.core.util.MailHelper;
 import org.janelia.workstation.core.workers.SimpleListenableFuture;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
@@ -118,5 +118,55 @@ public class ReportProblemAction extends BaseContextualPopupAction {
 
         DataReporter reporter = new DataReporter(fromEmail, toEmail, webstationUrl);
         reporter.reportData(domainObject, annotation.getName());
+    }
+
+    public class DataReporter {
+
+        private String fromEmail;
+        private String toEmail;
+        private String webstationUrl;
+
+        public DataReporter(String fromEmail, String toEmail) {
+            this(fromEmail, toEmail, null);
+        }
+
+        public DataReporter(String fromEmail, String toEmail, String webstationUrl) {
+            this.fromEmail = fromEmail;
+            this.toEmail = toEmail;
+            this.webstationUrl = webstationUrl;
+        }
+
+        private String createEntityReport(DomainObject domainObject, String annotation) {
+            StringBuilder sBuf = new StringBuilder();
+
+            String link = domainObject.getName();
+            if (webstationUrl!=null) {
+                String url = webstationUrl+"/do/"+domainObject.getType()+":"+domainObject.getId();
+                link = "["+domainObject.getName()+"|"+url+"]";
+            }
+            sBuf.append("Name: ").append(link).append("\n");
+            sBuf.append("Type: ").append(domainObject.getType()).append("\n");
+            sBuf.append("Owner: ").append(domainObject.getOwnerKey()).append("\n");
+            sBuf.append("ID: ").append(domainObject.getId().toString()).append("\n");
+            if (annotation!=null) {
+                sBuf.append("Annotation: ").append(annotation).append("\n\n");
+            }
+            return sBuf.toString();
+        }
+
+        public void reportData(DomainObject domainObject, String annotation) {
+            String subject = "Reported Data: " + domainObject.getName();
+            if (annotation!=null) {
+                subject += " ("+annotation+")";
+            }
+            String report = createEntityReport(domainObject, annotation);
+            MailHelper helper = new MailHelper();
+            helper.sendEmail(fromEmail, toEmail, subject, report);
+        }
+
+        public void reportData(DomainObject domainObject) {
+            reportData(domainObject, null);
+        }
+
     }
 }
