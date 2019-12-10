@@ -14,6 +14,7 @@ import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -216,8 +217,8 @@ public class TiledMicroscopeDomainMgr {
         getModel().notifyDomainObjectRemoved(workspace);
     }
 
-    class RetrieveNeuronsTask extends RecursiveTask<List<TmNeuronMetadata>> {
-        double defaultLength = 100000.0;
+    class RetrieveNeuronsTask extends RecursiveTask<Stream<TmNeuronMetadata>> {
+        double defaultLength = 50000.0;
         int start;
         int end;
         long workspaceId;
@@ -230,7 +231,7 @@ public class TiledMicroscopeDomainMgr {
         }
 
         @Override
-        public List<TmNeuronMetadata> compute() {
+        public Stream<TmNeuronMetadata> compute() {
             if ((end-start)>defaultLength) {
                 List<RetrieveNeuronsTask> tasks = new ArrayList<>();
                 // break up into defaultLength chunks
@@ -247,24 +248,10 @@ public class TiledMicroscopeDomainMgr {
                     task.fork();
                 }
 
-                List<TmNeuronMetadata> neuronList = new ArrayList<>();
-                for (RetrieveNeuronsTask subtask : tasks) {
-                    neuronList.addAll(subtask.join());
-                    LOG.info("Collating results - Neuron count: {}", neuronList.size());
-                }
-                return neuronList;
-
+                return tasks.stream().flatMap(subtask -> subtask.join());
             } else {
-                LOG.info("Retrieving {} - {} block from server", start, end);
-                List<TmNeuronMetadata> neurons = new ArrayList<>();
-                neurons.addAll(client.getWorkspaceNeurons(workspaceId, start, end - start));
-
-                if (neurons.isEmpty()) {
-                    LOG.info("No neurons retrieved starting at {}", start);
-                } else {
-                    LOG.info("Retrieved {} entries from {} -> {}", neurons.size(), start, end);
-                }
-                return neurons;
+                LOG.info("Retrieving results - Neuron block: {} - {}", start, end);
+                return client.getWorkspaceNeurons(workspaceId, start, end - start).stream();
             }
         }
     }
@@ -273,58 +260,8 @@ public class TiledMicroscopeDomainMgr {
         LOG.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         long neuronCount = client.getWorkspaceNeuronCount(workspaceId);
         ForkJoinPool pool = new ForkJoinPool(NUM_PARALLEL_NEURONSTREAMS);
-        List<TmNeuronMetadata> neurons = pool.invoke(new RetrieveNeuronsTask(workspaceId, 0, (int)neuronCount));
-
-        // make sure to initialize cross references
-        for (TmNeuronMetadata neuron : neurons) {
-            neuron.initNeuronData();
-        }
-        return neurons.stream();
-        /*Spliterator<Stream<TmNeuronMetadata>> workspaceNeuronsSupplier = new Spliterator<Stream<TmNeuronMetadata>>() {
-            AtomicLong offset = new AtomicLong(0L);
-
-            @Override
-            public boolean tryAdvance(Consumer<? super Stream<TmNeuronMetadata>> action) {
-                long currentOffset = offset.getAndAdd(defaultLength);
-                LOG.info("Retrieving {} - {} block from server", currentOffset-defaultLength, currentOffset);
-
-                Collection<TmNeuronMetadata> neurons= client.getWorkspaceNeurons(workspaceId, currentOffset, defaultLength);
-
-                long count = currentOffset;
-                // make sure to initialize cross references
-                for (TmNeuronMetadata neuron: neurons) {
-                    neuron.initNeuronData();
-                    if (count % 100 == 0) {
-                        LOG.info("count:{}", count++);
-                    }
-                }
-                if (neurons.isEmpty()) {
-                    LOG.info("No neurons retrieved starting at {}", currentOffset);
-                    return false;
-                } else {
-                    LOG.info("Retrieved {} entries from {} -> {}", neurons.size(), currentOffset, currentOffset + neurons.size());
-                    action.accept(neurons.stream());
-                    return neurons.size() == defaultLength;
-                }
-            }
-
-            @Override
-            public Spliterator<Stream<TmNeuronMetadata>> trySplit() {
-                return null;
-            }
-
-            @Override
-            public long estimateSize() {
-                return Long.MAX_VALUE;
-            }
-
-            @Override
-            public int characteristics() {
-                return ORDERED;
-            }
-        };
-
-         */
+        Stream<TmNeuronMetadata> neurons = pool.invoke(new RetrieveNeuronsTask(workspaceId, 0, (int)neuronCount));
+        return neurons;
     }
 
     public TmNeuronMetadata saveMetadata(TmNeuronMetadata neuronMetadata) throws Exception {

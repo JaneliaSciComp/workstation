@@ -79,6 +79,8 @@ class NeuronModelAdapter {
                                 }
                             }
                         }
+                        // make sure to initialize cross references
+                        neuron.initNeuronData();
                         return neuron;
                     })
                     ;

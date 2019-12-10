@@ -2,12 +2,7 @@ package org.janelia.workstation.gui.large_volume_viewer.api;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
@@ -16,8 +11,13 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.media.multipart.BodyPart;
@@ -34,6 +34,7 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.exceptions.RemoteServiceException;
 import org.janelia.workstation.core.api.http.RESTClientBase;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -242,18 +243,30 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
     }
 
     Collection<TmNeuronMetadata> getWorkspaceNeurons(Long workspaceId, long offset, int length) {
-        WebTarget target = getMouselightDataEndpoint("/workspace/neuron")
-                .queryParam("workspaceId", workspaceId)
-                .queryParam("offset", offset)
-                .queryParam("length", length)
-                ;
+        try {
+            List<TmNeuronMetadata> neuronList = new ArrayList<>();
+            WebTarget target = getMouselightDataEndpoint("/workspace/neuron")
+                    .queryParam("workspaceId", workspaceId)
+                    .queryParam("offset", offset)
+                    .queryParam("length", length);
+            ObjectMapper mapper = new ObjectMapper();
+            InputStream is = target
+                    .request("application/octet-stream")
+                    .get(InputStream.class);
+            JsonFactory factory = new JsonFactory();
+            factory.setCodec(mapper);
+            JsonParser parser  = factory.createParser(is);
+            Iterator<TmNeuronMetadata> neurons = parser.readValuesAs(TmNeuronMetadata.class);
+            while(neurons.hasNext()) {
+                neuronList.add(neurons.next());
+            }
+            return neuronList;
 
-        Response response = target
-                .request("application/json")
-                .get();
-        checkBadResponse(target, response);
-        List<TmNeuronMetadata> neurons = response.readEntity(new GenericType<List<TmNeuronMetadata>>() {});
-        return neurons;
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOG.error ("Problems parsing the neuron stream from the server for workspace id {}",workspaceId);
+            throw new RemoteServiceException("Client had problems processing Neuron Server Stream");
+        }
     }
 
     public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata) {
