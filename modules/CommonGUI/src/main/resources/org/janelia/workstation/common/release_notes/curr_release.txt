@@ -1,10 +1,4 @@
-// 8.7
-
-Color Depth Search
-* Added right-click option to copy multiple skeleton ids when searching EM
-* Added right-click option to download color depth matches
-* Added all attributes to table view
-* Added ability to create refined masks from existing masks
+// 8.7.1
 
 Large Volume Viewer
-* Added threads for loading large fragment workspaces in parallel
+* Added streaming support for reducing the load on the server during workspace initialization
