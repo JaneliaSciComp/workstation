@@ -467,6 +467,16 @@ public class FilteredAnnotationList extends JPanel {
         buttonGroup.add(endsButton);
         buttonGroup.add(branchButton);
 
+        // need a second row of these:
+        JPanel filterButtons2 = new JPanel();
+        filterButtons2.setLayout(new BoxLayout(filterButtons2, BoxLayout.LINE_AXIS));
+
+        JButton reviewButton = new JButton();
+        filterButtons2.add(reviewButton);
+
+        // same button group:
+        buttonGroup.add(reviewButton);
+
         GridBagConstraints c4 = new GridBagConstraints();
         c4.gridx = 0;
         c4.gridy = GridBagConstraints.RELATIVE;
@@ -474,6 +484,7 @@ public class FilteredAnnotationList extends JPanel {
         c4.anchor = GridBagConstraints.PAGE_START;
         c4.fill = GridBagConstraints.HORIZONTAL;
         add(filterButtons, c4);
+        add(filterButtons2, c4);
 
 
         // hook buttons to filter menu
@@ -493,6 +504,12 @@ public class FilteredAnnotationList extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 filterMenu.setSelectedItem("branches");
+            }
+        });
+        reviewButton.setAction(new AbstractAction("Review") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                filterMenu.setSelectedItem("review");
             }
         });
 
