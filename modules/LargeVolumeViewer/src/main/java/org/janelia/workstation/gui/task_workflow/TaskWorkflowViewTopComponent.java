@@ -1087,7 +1087,11 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
      * takes current point lists and generates a ReviewTask object for persistence.
      */
     public void createNewTask() {
-        currTask = new TmReviewTask();   
+        currTask = new TmReviewTask();
+        if (currNeuron == null) {
+            // user clicked button with no neuron/task loaded
+            return;
+        }
         currTask.setWorkspaceRef(currNeuron.getWorkspaceRef().toString());
         currTask.setCategory(currCategory.toString());
         currTask.setOwnerKey(AccessManager.getSubjectKey());
