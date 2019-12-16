@@ -613,6 +613,22 @@ public class NeuronSetAdapter
     }
 
     @Override
+    public void addUnique1Note(NeuronVertex anchor) {
+        if (anchor instanceof NeuronVertexAdapter) {
+            TmGeoAnnotation annotation = ((NeuronVertexAdapter) anchor).getTmGeoAnnotation();
+            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNote(annotation.getNeuronId(), annotation.getId(), PredefinedNote.UNIQUE_1.getNoteText());
+        }
+    }
+
+    @Override
+    public void addUnique2Note(NeuronVertex anchor) {
+        if (anchor instanceof NeuronVertexAdapter) {
+            TmGeoAnnotation annotation = ((NeuronVertexAdapter) anchor).getTmGeoAnnotation();
+            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNote(annotation.getNeuronId(), annotation.getId(), PredefinedNote.UNIQUE_2.getNoteText());
+        }
+    }
+
+    @Override
     public void setSelectMode(boolean select) {
         annotationModel.setSelectMode(select);
     }

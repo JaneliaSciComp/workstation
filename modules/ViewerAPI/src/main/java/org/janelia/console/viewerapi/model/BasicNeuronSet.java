@@ -216,9 +216,19 @@ implements NeuronSet
     public void addEditNote(NeuronVertex anchor) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-        
+
     @Override
     public void addTraceEndNote(NeuronVertex anchor) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void addUnique1Note(NeuronVertex anchor) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void addUnique2Note(NeuronVertex anchor) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

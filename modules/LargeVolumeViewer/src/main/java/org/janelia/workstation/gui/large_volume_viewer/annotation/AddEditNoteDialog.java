@@ -54,7 +54,7 @@ public class AddEditNoteDialog extends JDialog {
         //      the geometry of the neuron
 
         JPanel predefinedPanel = new JPanel();
-        for (final PredefinedNote predefNote: PredefinedNote.values()) {
+        for (final PredefinedNote predefNote: PredefinedNote.getButtonList()) {
             JButton predefButton = new JButton(predefNote.getNoteText());
             predefButton.addActionListener(new ActionListener() {
                 @Override

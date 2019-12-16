@@ -339,6 +339,8 @@ public class FilteredAnnotationList extends JPanel {
         // interesting and review tags
         filters.put("interesting", new PredefNoteFilter(PredefinedNote.POINT_OF_INTEREST));
         filters.put("review", new PredefNoteFilter(PredefinedNote.REVIEW));
+        filters.put("unique 1", new PredefNoteFilter(PredefinedNote.UNIQUE_1));
+        filters.put("unique 2", new PredefNoteFilter(PredefinedNote.UNIQUE_2));
 
     }
 
@@ -426,7 +428,7 @@ public class FilteredAnnotationList extends JPanel {
         filterMenuPanel.setLayout(new BorderLayout(2, 2));
         filterMenuPanel.add(new JLabel("Filter:"), BorderLayout.LINE_START);
         String[] filterNames = {"default", "ends", "branches", "roots", "notes",
-            "geometry", "interesting", "review"};
+            "geometry", "interesting", "review", "unique 1", "unique 2"};
         final JComboBox<String> filterMenu = new JComboBox<>(filterNames);
         filterMenu.addActionListener(new ActionListener() {
             @Override
@@ -472,7 +474,11 @@ public class FilteredAnnotationList extends JPanel {
         filterButtons2.setLayout(new BoxLayout(filterButtons2, BoxLayout.LINE_AXIS));
 
         JButton reviewButton = new JButton();
+        JButton unique1Button = new JButton();
+        JButton unique2Button = new JButton();
         filterButtons2.add(reviewButton);
+        filterButtons2.add(unique1Button);
+        filterButtons2.add(unique2Button);
 
         // same button group:
         buttonGroup.add(reviewButton);
@@ -510,6 +516,18 @@ public class FilteredAnnotationList extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 filterMenu.setSelectedItem("review");
+            }
+        });
+        unique1Button.setAction(new AbstractAction("Unique 1") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                filterMenu.setSelectedItem("unique 1");
+            }
+        });
+        unique2Button.setAction(new AbstractAction("Unique 2") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                filterMenu.setSelectedItem("unique 2");
             }
         });
 

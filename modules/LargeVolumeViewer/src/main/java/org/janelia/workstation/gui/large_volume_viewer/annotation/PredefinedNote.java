@@ -1,6 +1,7 @@
 package org.janelia.workstation.gui.large_volume_viewer.annotation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -24,14 +25,17 @@ public enum PredefinedNote {
     // interesting point to return to later
     POINT_OF_INTEREST ("interesting"),
 
-    // somethign that needs review
+    // something that needs review
     REVIEW          ("review"),
 
     // end of branch that can't be traced further but
     //  is clearly not complete (biologically)
     PROBLEM_END     ("problem end"),
 
-    // requested for new workflow in July 2019
+    // requested for new workflow in second half 2019
+    UNIQUE_1        ("unique 1"),
+    UNIQUE_2        ("unique 2"),
+    // deprecated, replaced by unique 1 and 2:
     UNIQUE          ("unique")
     ;
 
@@ -49,6 +53,22 @@ public enum PredefinedNote {
             }
         }
         return foundNotes;
+    }
+
+    public static List<PredefinedNote> getButtonList() {
+        // return a list of predefined notes that should have dedicated buttons
+        //  in the add/edit note dialog box; for example, there's a deprecated note now
+        // the order of this list is the order in which the buttons will appear
+        List<PredefinedNote> buttons = Arrays.asList(
+                TRACED_END,
+                FUTURE_BRANCH,
+                POINT_OF_INTEREST,
+                REVIEW,
+                PROBLEM_END,
+                UNIQUE_1,
+                UNIQUE_2
+                );
+        return buttons;
     }
 
     PredefinedNote(String noteText) {

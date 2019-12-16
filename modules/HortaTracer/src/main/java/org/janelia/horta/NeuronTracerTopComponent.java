@@ -473,6 +473,18 @@ public final class NeuronTracerTopComponent extends TopComponent
         activeNeuronSet.addTraceEndNote(anchor);
     }
 
+    public void addUnique1Note() {
+        // automatically set the traced end note for this anchor
+        NeuronVertex anchor = activeNeuronSet.getPrimaryAnchor();
+        activeNeuronSet.addUnique1Note(anchor);
+    }
+
+    public void addUnique2Note() {
+        // automatically set the traced end note for this anchor
+        NeuronVertex anchor = activeNeuronSet.getPrimaryAnchor();
+        activeNeuronSet.addUnique2Note(anchor);
+    }
+
     // UNDO
     @Override
     public UndoRedo getUndoRedo() {
