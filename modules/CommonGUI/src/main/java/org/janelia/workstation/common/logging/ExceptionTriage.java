@@ -59,7 +59,7 @@ public class ExceptionTriage {
         }
 
         // Ignore all disk space issues, these do not represent bugs.
-        if (e.getMessage()!=null && e.getMessage().contains("No space left on device")) {
+        if (e.getMessage()!=null && (e.getMessage().contains("No space left on device") || e.getMessage().contains("There is not enough space on the disk"))) {
             SwingUtilities.invokeLater(() -> {
                 JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                         "<html>There is no space left on the disk you are using.</html>",
