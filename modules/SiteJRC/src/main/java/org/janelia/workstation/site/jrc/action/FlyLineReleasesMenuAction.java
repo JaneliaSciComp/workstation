@@ -6,21 +6,20 @@ import javax.swing.AbstractAction;
 
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.site.jrc.gui.dialogs.LineReleaseListDialog;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
+import org.openide.awt.ActionRegistration;
+import org.openide.util.NbBundle.Messages;
 
-/**
- * This is deprecated and no longer shows up in the Services menu. At some point we can probably delete it, but I'm
- * keeping it for now in case we need to go back to some of the functionality quickly when 8.x is released.
- */
-//@ActionID(
-//        category = "Services",
-//        id = "FlyLineReleasesMenuAction"
-//)
-//@ActionRegistration(
-//        displayName = "#CTL_FlyLineReleasesMenuAction"
-//)
-//@ActionReference(path = "Menu/Services", position = 200)
-//@Messages("CTL_FlyLineReleasesMenuAction=Fly Line Releases")
-@Deprecated
+@ActionID(
+        category = "Services",
+        id = "FlyLineReleasesMenuAction"
+)
+@ActionRegistration(
+        displayName = "#CTL_FlyLineReleasesMenuAction"
+)
+@ActionReference(path = "Menu/Services", position = 200)
+@Messages("CTL_FlyLineReleasesMenuAction=Fly Line Releases")
 public final class FlyLineReleasesMenuAction extends AbstractAction {
 
     @Override
