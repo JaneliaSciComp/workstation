@@ -297,8 +297,8 @@ public class DataSetDialog extends ModalDialog {
                 java.util.List<String> pipelineProcesses = new ArrayList<>();
                 pipelineProcesses.add(getRadioButtonValues(processCheckboxes));
                 dataSet.setPipelineProcesses(pipelineProcesses);
-                dataSet.setSageSync(new Boolean(sageSyncCheckbox.isSelected()));
-                dataSet.setNeuronSeparationSupported(new Boolean(neuronSeparationCheckbox.isSelected()));
+                dataSet.setSageSync(sageSyncCheckbox.isSelected());
+                dataSet.setNeuronSeparationSupported(neuronSeparationCheckbox.isSelected());
                 dataSet.setSageConfigPath(sageConfigPath);
                 dataSet.setSageGrammarPath(sageGrammarPath);
                 
