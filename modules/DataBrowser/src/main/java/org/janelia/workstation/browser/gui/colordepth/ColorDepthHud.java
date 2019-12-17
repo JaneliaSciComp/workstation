@@ -309,17 +309,16 @@ public class ColorDepthHud extends ModalDialog {
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 int width = (int)Math.round((double)screenSize.width*(0.9/2));
                 int height = (int)Math.round((double)screenSize.height*0.9);
+                log.info("Got screen size: {}x{}", width, height);
                 width = Math.min(image1.getWidth(), width);
                 height = Math.min(image1.getHeight(), height);
+                log.info("Setting scroll pane size: {}x{}", width, height);
 
-                scrollPane1.setSize(new Dimension(width, height));
-                scrollPane2.setSize(new Dimension(width, height));
+                scrollPane1.setPreferredSize(new Dimension(width, height));
+                scrollPane2.setPreferredSize(new Dimension(width, height));
 
                 if (toggle) {
                     toggleDialog();
-                }
-                else {
-                    pack();
                 }
             }
 

@@ -437,12 +437,7 @@ public class ColorDepthResultIconGridViewer
                        log.debug("Restoring maxImageWidth={}",maxImageWidth);
                        getToolbar().getImageSizeSlider().setValue(maxImageWidth);
                        // Wait until slider resizes images, then fix scroll:
-                       SwingUtilities.invokeLater(new Runnable() {
-                           @Override
-                           public void run() {
-                               scrollSelectedObjectsToCenter();
-                           }
-                       });
+                       SwingUtilities.invokeLater(() -> scrollSelectedObjectsToCenter());
                    }
                }
             );
@@ -469,7 +464,7 @@ public class ColorDepthResultIconGridViewer
         }  
         catch (Exception e) {
             FrameworkAccess.handleException(e);
-            return null;
+            return Collections.emptyList();
         }
     }
 }
