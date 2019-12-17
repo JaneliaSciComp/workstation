@@ -445,15 +445,17 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
         result += dynamicTiles.getBlockCount();
         return result;
     }
-    
+
+    // clear all blocks for both RAW and KTX
     public void clearAllBlocks() {
-        dynamicTiles.updateDesiredTiles(Collections.<KtxOctreeBlockTileKey>emptyList());
+        /*dynamicTiles.updateDesiredTiles(Collections.<KtxOctreeBlockTileKey>emptyList());
         for (Object3d actor : getChildren()) {
             if (! (actor instanceof GL3Resource))
                 continue;
             GL3Resource res = (GL3Resource)actor;
             obsoleteActors.add(res);
-        }
+        }*/
+        dynamicTiles.clearAllTiles();
         getChildren().clear();
     }
 

@@ -7,6 +7,8 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+
+import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.horta.actions.LoadHortaTileAtFocusAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.slf4j.Logger;
@@ -34,7 +36,7 @@ class KtxBlockMenuBuilder {
         JMenu tilesMenu = new JMenu("Tiles");
         context.topMenu.add(tilesMenu);
         
-         tilesMenu.add(new AbstractAction("Load Horta Tile At Cursor") {
+         tilesMenu.add(new AbstractAction("Load KTX Tile At Cursor") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 logger.info("Load Horta Cursor Tile Action invoked");
@@ -42,6 +44,7 @@ class KtxBlockMenuBuilder {
                 if (nttc == null)
                     return;
                 try {
+                    nttc.setPreferKtx(true);
                     nttc.loadPersistentTileAtLocation(context.mouseXyz);
                 } catch (IOException ex) {
                     logger.info("Tile load failed");
@@ -49,7 +52,7 @@ class KtxBlockMenuBuilder {
             }
         });       
         
-       tilesMenu.add(new AbstractAction("Load Horta Tile At Focus") {
+       tilesMenu.add(new AbstractAction("Load KTX Tile At Focus") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 new LoadHortaTileAtFocusAction().actionPerformed(e);
@@ -68,7 +71,9 @@ class KtxBlockMenuBuilder {
             {
                 JCheckBoxMenuItem item = (JCheckBoxMenuItem)e.getSource();
                 preferKtx = item.isSelected();
+                NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
                 item.setSelected(preferKtx);
+                nttc.reloadSampleLocation();
             }
         });
         /* */
@@ -79,8 +84,10 @@ class KtxBlockMenuBuilder {
             @Override
             public void actionPerformed(ActionEvent e) {
                 TetVolumeActor.getInstance().clearAllBlocks();
-                context.renderer.setIntensityBufferDirty();
-                context.sceneWindow.getInnerComponent().repaint();
+                NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
+                TetVolumeActor.getInstance().clearAllBlocks();
+                nttc.getNeuronMPRenderer().clearVolumeActors();
+                nttc.clearAllTiles();
             }
         }));
 

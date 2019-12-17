@@ -189,6 +189,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     // Cache latest hover information
     private Vector3 mouseStageLocation = null;
+    private SampleLocation currLocation = null;
     private final Observer cursorCacheDestroyer;
 
     private TracingInteractor tracingInteractor;
@@ -266,19 +267,19 @@ public final class NeuronTracerTopComponent extends TopComponent
         neuronEditDispatcher.addNeuronVertexCreationListener(new NeuronVertexCreationListener() {
             @Override
             public void neuronVertexCreated(VertexWithNeuron vertexWithNeuron) {
-                neuronMPRenderer.setIntensityBufferDirty();
+                getNeuronMPRenderer().setIntensityBufferDirty();
             }
         });
         neuronEditDispatcher.addNeuronVertexDeletionListener(new NeuronVertexDeletionListener() {
             @Override
             public void neuronVertexesDeleted(VertexCollectionWithNeuron vertexesWithNeurons) {
-                neuronMPRenderer.setIntensityBufferDirty();
+                getNeuronMPRenderer().setIntensityBufferDirty();
             }
         });
         neuronEditDispatcher.addNeuronVertexUpdateListener(new NeuronVertexUpdateListener() {
             @Override
             public void neuronVertexUpdated(VertexWithNeuron vertexWithNeuron) {
-                neuronMPRenderer.setIntensityBufferDirty();
+                getNeuronMPRenderer().setIntensityBufferDirty();
             }
         });
 
@@ -294,7 +295,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             @Override
             public void actionPerformed(ActionEvent e) {
                 boolean bChanged = false;
-                if (neuronMPRenderer.setHideAll(true))
+                if (getNeuronMPRenderer().setHideAll(true))
                     bChanged = true;
                 // Use "v" key to show/hide primary "P" anchor
                 for (GL3Actor actor : tracingActors) {
@@ -311,7 +312,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             @Override
             public void actionPerformed(ActionEvent e) {
                 boolean bChanged = false;
-                if (neuronMPRenderer.setHideAll(false))
+                if (getNeuronMPRenderer().setHideAll(false))
                     bChanged = true;
                 // Use "v" key to show/hide primary "P" anchor
                 for (GL3Actor actor : tracingActors) {
@@ -356,7 +357,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     return; // Tile is stale, so don't load it
 
                 // Undisplay stale tiles and upload to GPU
-                Iterator<GL3Actor> iter = neuronMPRenderer.getVolumeActors().iterator();
+                Iterator<GL3Actor> iter = getNeuronMPRenderer().getVolumeActors().iterator();
                 boolean tileAlreadyDisplayed = false;
                 while (iter.hasNext()) {
                     GL3Actor actor = iter.next();
@@ -372,12 +373,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                     // Remove displayed tiles that are no longer current
                     if (!allTiles.contains(actorInfo)) {
                         iter.remove(); // Safe member deletion via iterator
-                        neuronMPRenderer.queueObsoleteResource(brickActor);
+                        getNeuronMPRenderer().queueObsoleteResource(brickActor);
                     }
                 }
                 // Upload up to one tile per update call
                 if (!tileAlreadyDisplayed) {
-                    neuronMPRenderer.addVolumeActor(newTile);
+                    getNeuronMPRenderer().addVolumeActor(newTile);
                     redrawNow();
                 }
             }
@@ -387,7 +388,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         TetVolumeActor.getInstance().getDynamicTileUpdateObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
-                neuronMPRenderer.setIntensityBufferDirty();
+                getNeuronMPRenderer().setIntensityBufferDirty();
                 redrawNow();
             }
         });
@@ -432,7 +433,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         neuronTraceLoader = new NeuronTraceLoader(
                 NeuronTracerTopComponent.this,
-                neuronMPRenderer,
+                getNeuronMPRenderer(),
                 sceneWindow);
 
         // Default to compressed voxels, per user request February 2016
@@ -564,6 +565,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     steps = 1;
             } else {
                 acceptor.acceptLocation(sampleLocation);
+                currLocation = sampleLocation;
                 Vantage vantage = sceneWindow.getVantage();
                 if (sampleLocation.getRotationAsQuaternion() != null) {
                     vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
@@ -815,10 +817,10 @@ public final class NeuronTracerTopComponent extends TopComponent
         double intensity = 0;
 
         PerspectiveCamera camera = (PerspectiveCamera) sceneWindow.getCamera();
-        double relDepthF = neuronMPRenderer.depthOffsetForScreenXy(event.getPoint(), camera);
+        double relDepthF = getNeuronMPRenderer().depthOffsetForScreenXy(event.getPoint(), camera);
         worldXyz = worldXyzForScreenXy(event.getPoint(), camera, relDepthF);
-        intensity = neuronMPRenderer.coreIntensityForScreenXy(event.getPoint());
-        double volOpacity = neuronMPRenderer.volumeOpacityForScreenXy(event.getPoint());
+        intensity = getNeuronMPRenderer().coreIntensityForScreenXy(event.getPoint());
+        double volOpacity = getNeuronMPRenderer().volumeOpacityForScreenXy(event.getPoint());
 
         mouseStageLocation = worldXyz;
         msg.append(String.format("[% 7.1f, % 7.1f, % 7.1f] \u00B5m",
@@ -995,8 +997,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         vantage.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
-                neuronMPRenderer.setIntensityBufferDirty();
-                neuronMPRenderer.setOpaqueBufferDirty();
+                getNeuronMPRenderer().setIntensityBufferDirty();
+                getNeuronMPRenderer().setOpaqueBufferDirty();
             }
         });
 
@@ -1005,8 +1007,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         imageColorModel.addColorModelListener(new ColorModelListener() {
             @Override
             public void colorModelChanged() {
-                if (neuronMPRenderer != null)
-                    neuronMPRenderer.setIntensityBufferDirty();
+                if (getNeuronMPRenderer() != null)
+                    getNeuronMPRenderer().setIntensityBufferDirty();
             }
         });
 
@@ -1017,7 +1019,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         imageColorModel.addColorModelListener(new ColorModelListener() {
             @Override
             public void colorModelChanged() {
-                neuronMPRenderer.setIntensityBufferDirty();
+                getNeuronMPRenderer().setIntensityBufferDirty();
                 redrawNow();
             }
         });
@@ -1049,7 +1051,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 Viewport vp = sceneWindow.getCamera().getViewport();
                 // logger.info("zNearRelative = " + vp.getzNearRelative());
                 // TODO: should that be updateRelativeSlabThickness?
-                neuronMPRenderer.setRelativeSlabThickness(vp.getzNearRelative(), vp.getzFarRelative());
+                getNeuronMPRenderer().setRelativeSlabThickness(vp.getzNearRelative(), vp.getzFarRelative());
                 redrawNow();
             }
         });
@@ -1081,11 +1083,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         droppedFileHandler.addLoader(new TgzFileLoader());
         droppedFileHandler.addLoader(new TilebaseYamlLoader(this));
         droppedFileHandler.addLoader(new ObjMeshLoader(this));
-        droppedFileHandler.addLoader(new HortaKtxLoader(this.neuronMPRenderer));
+        droppedFileHandler.addLoader(new HortaKtxLoader(this.getNeuronMPRenderer()));
         // Put dropped neuron models into "Temporary neurons"
         WorkspaceUtil ws = new WorkspaceUtil(metaWorkspace);
         NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
-        final HortaSwcLoader swcLoader = new HortaSwcLoader(ns, neuronMPRenderer);
+        final HortaSwcLoader swcLoader = new HortaSwcLoader(ns, getNeuronMPRenderer());
         droppedFileHandler.addLoader(swcLoader);
 
         // Allow user to drop tilebase.cache.yml on this window
@@ -1193,7 +1195,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         popupMenuScreenPoint,
                         mouseXyz,
                         focusXyz,
-                        neuronMPRenderer,
+                        getNeuronMPRenderer(),
                         sceneWindow
                 );
 
@@ -1300,13 +1302,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                             TetVolumeActor.getInstance().setAutoUpdate(doesUpdateVolumeCache());
                         }
                     });
-
-                    topMenu.add(new AbstractAction("Load Image Tile At Focus") {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            loadTileAtCurrentFocusAsynchronous();
-                        }
-                    });
                 }
 
                 if (volumeState != null) {
@@ -1324,7 +1319,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             volumeState.projectionMode = 0;
-                            neuronMPRenderer.setIntensityBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1339,7 +1334,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             volumeState.projectionMode = 1;
-                            neuronMPRenderer.setIntensityBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1357,7 +1352,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             volumeState.filteringOrder = 0;
-                            neuronMPRenderer.setIntensityBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1372,7 +1367,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             volumeState.filteringOrder = 1;
-                            neuronMPRenderer.setIntensityBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1387,7 +1382,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             volumeState.filteringOrder = 3;
-                            neuronMPRenderer.setIntensityBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1405,7 +1400,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 public void actionPerformed(ActionEvent e) {
                                     volumeState.blockStrategy = 0;
                                     TetVolumeActor.getInstance().changeStrategy(VolumeMipMaterial.VolumeState.BLOCK_STRATEGY_FINEST_8_MAX);
-                                    neuronMPRenderer.setIntensityBufferDirty();
+                                    getNeuronMPRenderer().setIntensityBufferDirty();
                                     redrawNow();
                                 }
                             }));
@@ -1421,7 +1416,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 public void actionPerformed(ActionEvent e) {
                                     volumeState.blockStrategy = 1;
                                     TetVolumeActor.getInstance().changeStrategy(VolumeMipMaterial.VolumeState.BLOCK_STRATEGY_OCTTREE);
-                                    neuronMPRenderer.setIntensityBufferDirty();
+                                    getNeuronMPRenderer().setIntensityBufferDirty();
                                     redrawNow();
                                 }
                             }));
@@ -1443,8 +1438,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.MONO);
-                            neuronMPRenderer.setIntensityBufferDirty();
-                            neuronMPRenderer.setOpaqueBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
+                            getNeuronMPRenderer().setOpaqueBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1461,8 +1456,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.LEFT);
-                            neuronMPRenderer.setIntensityBufferDirty();
-                            neuronMPRenderer.setOpaqueBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
+                            getNeuronMPRenderer().setOpaqueBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1479,8 +1474,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.RIGHT);
-                            neuronMPRenderer.setIntensityBufferDirty();
-                            neuronMPRenderer.setOpaqueBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
+                            getNeuronMPRenderer().setOpaqueBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1497,8 +1492,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.RED_CYAN);
-                            neuronMPRenderer.setIntensityBufferDirty();
-                            neuronMPRenderer.setOpaqueBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
+                            getNeuronMPRenderer().setOpaqueBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1515,8 +1510,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             sceneWindow.getRenderer().setStereo3dMode(
                                     SceneRenderer.Stereo3dMode.GREEN_MAGENTA);
-                            neuronMPRenderer.setIntensityBufferDirty();
-                            neuronMPRenderer.setOpaqueBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
+                            getNeuronMPRenderer().setOpaqueBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1547,7 +1542,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             TetVolumeActor.getInstance().unmixChannelOne();
-                            neuronMPRenderer.setIntensityBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1557,7 +1552,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             TetVolumeActor.getInstance().unmixChannelTwo();
-                            neuronMPRenderer.setIntensityBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1567,7 +1562,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             TetVolumeActor.getInstance().traceChannelOneTwoAverage();
-                            neuronMPRenderer.setIntensityBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1577,7 +1572,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             TetVolumeActor.getInstance().traceChannelOneRaw();
-                            neuronMPRenderer.setIntensityBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1587,7 +1582,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             TetVolumeActor.getInstance().traceChannelTwoRaw();
-                            neuronMPRenderer.setIntensityBufferDirty();
+                            getNeuronMPRenderer().setIntensityBufferDirty();
                             redrawNow();
                         }
                     }));
@@ -1878,13 +1873,13 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     @Override
     public double getIntensity(Point2D xy) {
-        return neuronMPRenderer.coreIntensityForScreenXy(xy);
+        return getNeuronMPRenderer().coreIntensityForScreenXy(xy);
     }
 
     @Override
     public Vector3 worldXyzForScreenXy(Point2D xy) {
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-        double depthOffset = neuronMPRenderer.depthOffsetForScreenXy(xy, pCam);
+        double depthOffset = getNeuronMPRenderer().depthOffsetForScreenXy(xy, pCam);
         return worldXyzForScreenXy(xy, pCam, depthOffset);
     }
 
@@ -1966,7 +1961,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     private void setBackgroundColor(Color topColor, Color bottomColor) {
-        neuronMPRenderer.setBackgroundColor(topColor, bottomColor);
+        getNeuronMPRenderer().setBackgroundColor(topColor, bottomColor);
         float[] bf = bottomColor.getColorComponents(new float[3]);
         double bottomLuma = 0.30 * bf[0] + 0.59 * bf[1] + 0.11 * bf[2];
         if (bottomLuma > 0.25) { // sRGB luma 0.5 == lRGB luma 0.25...
@@ -1998,7 +1993,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         // clear out SWCbuffers; exceptions should not be allowed to
         //  escape, and in the past, they have
         try {
-            neuronMPRenderer.clearNeuronReconstructions();
+            getNeuronMPRenderer().clearNeuronReconstructions();
         } catch (Exception e) {
             logger.warn("exception suppressed when closing Horta top component", e);
         }
@@ -2006,25 +2001,32 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     @Override
     public boolean isNeuronModelAt(Point2D xy) {
-        return neuronMPRenderer.isNeuronModelAt(xy);
+        return getNeuronMPRenderer().isNeuronModelAt(xy);
     }
 
     @Override
     public boolean isVolumeDensityAt(Point2D xy) {
-        return neuronMPRenderer.isVolumeDensityAt(xy);
+        return getNeuronMPRenderer().isVolumeDensityAt(xy);
     }
 
     void registerLoneDisplayedTile(BrickActor boxMesh) {
         volumeCache.registerLoneDisplayedTile(boxMesh);
     }
 
+    public void clearAllTiles() {
+        // this is a workaround for clearing RAW tiles until we can clean up the controllers for Horta
+        setPreferKtx(true);
+        TetVolumeActor.getInstance().setAutoUpdate(false);
+        reloadSampleLocation();
+    }
+
     // API for use by external HortaMovieSource class
     public List<MeshActor> getMeshActors() {
-        return neuronMPRenderer.getMeshActors();
+        return getNeuronMPRenderer().getMeshActors();
     }
 
     public ObservableInterface getMeshObserver() {
-        return neuronMPRenderer.getMeshObserver();
+        return getNeuronMPRenderer().getMeshObserver();
     }
 
     public boolean setVisibleActors(Collection<String> visibleActorNames) {
@@ -2053,7 +2055,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             if (bWas == bIs)
                 continue;
             meshActor.setVisible(bIs);
-            neuronMPRenderer.setOpaqueBufferDirty();
+            getNeuronMPRenderer().setOpaqueBufferDirty();
         }
     }
 
@@ -2114,11 +2116,11 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     public void addMeshActor(MeshActor meshActor) {
-        neuronMPRenderer.addMeshActor(meshActor);
+        getNeuronMPRenderer().addMeshActor(meshActor);
     }
     
     public void removeMeshActor(MeshActor meshActor) {
-        neuronMPRenderer.removeMeshActor(meshActor);        
+        getNeuronMPRenderer().removeMeshActor(meshActor);
         activeNeuronSet.removeObjectMesh(meshActor.getMeshName());
     }
     
@@ -2214,7 +2216,16 @@ public final class NeuronTracerTopComponent extends TopComponent
         return ktxBlockMenuBuilder.isPreferKtx();
     }
 
-    private void setPreferKtx(boolean doPreferKtx) {
+    public void setPreferKtx(boolean doPreferKtx) {
         ktxBlockMenuBuilder.setPreferKtx(doPreferKtx);
+    }
+
+    public NeuronMPRenderer getNeuronMPRenderer() {
+        return neuronMPRenderer;
+    }
+
+    public void reloadSampleLocation() {
+        if (currLocation!=null)
+            setSampleLocation(currLocation);
     }
 }

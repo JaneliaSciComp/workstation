@@ -32,11 +32,12 @@ public final class LoadHortaTileAtFocusAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        LOG.info("Load Horta Central Tile Action invoked");
+        LOG.info("Load KTX Central Tile Action invoked");
         NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
         if (nttc == null)
             return;
         try {
+            nttc.setPreferKtx(true);
             nttc.loadPersistentTileAtFocus();
         } catch (IOException ex) {
             LOG.info("Tile load failed", ex);

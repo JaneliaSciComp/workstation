@@ -158,6 +158,12 @@ public class HortaVolumeCache {
             actualDisplayTiles.put(actor.getBrainTile(), actor);
         }
     }
+
+    public void clearAllTiles() {
+        nearVolumeMetadata.clear();
+        nearVolumeInRam.clear();
+        actualDisplayTiles.clear();
+    }
     
     public boolean isUpdateCache() {
         return doUpdateCache;

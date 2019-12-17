@@ -139,6 +139,11 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
         return result;
     }
 
+    public void clearAllTiles() {
+        obsoleteTiles.clear();
+        nearVolumeInRam.clear();
+    }
+
     private synchronized boolean queueLoad(final TILE_KEY key, final LoadRunner<TILE_KEY, TILE_DATA> loadRunner) {
         if (queuedTiles.containsKey(key)) {
             return false; // already queued
