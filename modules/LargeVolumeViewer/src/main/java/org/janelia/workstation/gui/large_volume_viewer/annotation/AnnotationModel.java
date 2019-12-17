@@ -634,6 +634,34 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         return getNeuriteRootAnnotation(ann1).getId().equals(getNeuriteRootAnnotation(ann2).getId());
     }
 
+    /** given two annotations, find the first common shared ancestor, or null if
+     * there isn't one
+     */
+    public TmGeoAnnotation findCommonParent(TmGeoAnnotation ann1, TmGeoAnnotation ann2) {
+        // get the list of ancestors for the first annotation
+        Set<TmGeoAnnotation> path1 = new HashSet<>();
+        path1.add(ann1);
+        TmGeoAnnotation temp = ann1;
+        while (!temp.isRoot()) {
+            temp = getGeoAnnotationFromID(temp.getNeuronId(), temp.getParentId());
+            path1.add(temp);
+        }
+
+        // now traverse up the list of ancestors of the second annotation and look for a match
+        temp = ann2;
+        if (path1.contains(temp)) {
+            return temp;
+        }
+        while (!temp.isRoot()) {
+            temp = getGeoAnnotationFromID(temp.getNeuronId(), temp.getParentId());
+            if (path1.contains(temp)) {
+                return temp;
+            }
+        }
+        // no common root found
+        return null;
+    }
+
     /**
      * find the annotation closest to the input location, excluding
      * the input annotation (null = don't exclude any)

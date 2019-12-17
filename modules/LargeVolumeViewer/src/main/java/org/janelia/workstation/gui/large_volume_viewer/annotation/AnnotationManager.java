@@ -1,20 +1,14 @@
 package org.janelia.workstation.gui.large_volume_viewer.annotation;
 
-import java.awt.Color;
-import java.awt.Frame;
-import java.awt.HeadlessException;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -725,12 +719,22 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return false;
         }
 
-        // can't merge with same neurite (don't create cycles!)
-        if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
-            log.debug("Can't merge with same neurite");
+        // test if merge would create a loop; if so, report common parent in dialog and to
+        //  clipboard, so "go to" can be used
+        TmGeoAnnotation common = annotationModel.findCommonParent(sourceAnnotation, targetAnnotation);
+        if (common != null) {
+            // loop found
+            Vec3 tempLocation = getTileFormat().micronVec3ForVoxelVec3Centered(
+                    new Vec3(common.getX(), common.getY(), common.getZ()));
+            String locationString =  tempLocation.getX() + "," + tempLocation.getY() + "," + tempLocation.getZ();
+            StringSelection selection = new StringSelection(locationString);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(selection, selection);
+            JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+        "Merge would create a loop; first common ancestor is at location "
+                + locationString + " (copied to clipboard).");
             return false;
         }
-
         return true;
     }
 
