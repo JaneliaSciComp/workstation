@@ -1,8 +1,10 @@
 // 8.8
 
 Data Browser
-* Fixed "Report a problem with this data"
 * Added "Configure Line Release" right-click option for Line Releases
+* Remember folder name when uploading image files
+* Fixed "Report a problem with this data"
+* Fixed "Sage Synced" setting for data sets
 
 Color Depth Search
 * Fixed resizing of HUD when viewing results

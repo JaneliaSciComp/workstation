@@ -90,9 +90,9 @@ public class ImportImageFilesDialog extends ModalDialog {
     );
 
     private GroupedKeyValuePanel attrPanel;
-    private JTextField folderField;
     private TreeNode rootFolder;
     private JTextField pathTextField;
+    private JTextField folderField;
     private JComboBox<String> storageChoice;
     private FilenameFilter selectedChildrenFilter;
     private JCheckBox histCheckbox;
@@ -124,31 +124,28 @@ public class ImportImageFilesDialog extends ModalDialog {
         }
 
         JButton chooseFileButton = new JButton(chooseFileText, chooseFileIcon);
-        chooseFileButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                File currentDir = new File(pathTextField.getText());
-                if (! currentDir.exists()) {
-                    currentDir = null;
+        chooseFileButton.addActionListener(e -> {
+            File currentDir = new File(pathTextField.getText());
+            if (! currentDir.exists()) {
+                currentDir = null;
+            }
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+            fileChooser.setFileFilter(new FileFilter() {
+                @Override
+                public String getDescription() {
+                    return "TIFF or Vaa3D";
                 }
-                JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-                fileChooser.setFileFilter(new FileFilter() {
-                    @Override
-                    public String getDescription() {
-                        return "TIFF or Vaa3D";
-                    }
-                    @Override
-                    public boolean accept(File f) {
-                        return f.isDirectory() || isSupportedFileType(f);
-                    }
-                });
-                
-                fileChooser.setCurrentDirectory(currentDir);
-                int returnVal = fileChooser.showOpenDialog(ImportImageFilesDialog.this);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    pathTextField.setText(fileChooser.getSelectedFile().getAbsolutePath());
+                @Override
+                public boolean accept(File f) {
+                    return f.isDirectory() || isSupportedFileType(f);
                 }
+            });
+
+            fileChooser.setCurrentDirectory(currentDir);
+            int returnVal = fileChooser.showOpenDialog(ImportImageFilesDialog.this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                pathTextField.setText(fileChooser.getSelectedFile().getAbsolutePath());
             }
         });
 
@@ -202,21 +199,11 @@ public class ImportImageFilesDialog extends ModalDialog {
 
         this.okButton = new JButton("Import");
         okButton.setToolTipText("Import the selected file or directory");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleOkPress();
-            }
-        });
+        okButton.addActionListener(e -> handleOkPress());
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
+        cancelButton.addActionListener(e -> setVisible(false));
         
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
@@ -257,7 +244,10 @@ public class ImportImageFilesDialog extends ModalDialog {
                 pathTextField.setText(importSourceFolder.getAbsolutePath());
             }
         }
-        
+
+        final String importTargetFolder = FrameworkAccess.getModelProperty(PREF_IMPORT_TARGET_FOLDER, "");
+        folderField.setText(importTargetFolder);
+
         final Boolean generateMovies = FrameworkAccess.getModelProperty(PREF_IMPORT_MOVIES, true);
         generateMoviesCheckbox.setSelected(generateMovies);
 
@@ -486,9 +476,8 @@ public class ImportImageFilesDialog extends ModalDialog {
                     explorer.refresh(true, true, () -> {
 
                             if (rootFolder!=null) {
-
                                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                                rootFolder = (TreeNode) model.getDomainObject(Reference.createFor(rootFolder));
+                                rootFolder = model.getDomainObject(Reference.createFor(rootFolder));
                                 List<DomainObject> children = model.getDomainObjects(rootFolder.getChildren());
                                 DomainObject importFolder = null;
                                 for (DomainObject child : children) {
@@ -497,14 +486,16 @@ public class ImportImageFilesDialog extends ModalDialog {
                                         break;
                                     }
                                 }
-                                final Long[] idPath = NodeUtils.createIdPath(rootFolder, importFolder);
-                                SwingUtilities.invokeLater(new Runnable() {
-                                    @Override
-                                    public void run() {
+                                if (importFolder!=null) {
+                                    final Long[] idPath = NodeUtils.createIdPath(rootFolder, importFolder);
+                                    SwingUtilities.invokeLater(() -> {
                                         explorer.selectAndNavigateNodeByPath(idPath);
                                         setVisible(false);
-                                    }
-                                });
+                                    });
+                                }
+                                else {
+                                    log.warn("Could not find import folder {} in {}", importFolderName, rootFolder);
+                                }
                             }
 
                             return null;
