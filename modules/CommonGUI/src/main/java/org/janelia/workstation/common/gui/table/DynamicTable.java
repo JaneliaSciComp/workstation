@@ -196,12 +196,17 @@ public abstract class DynamicTable extends JPanel {
                 int row = table.rowAtPoint(e.getPoint());
                 if (row>=0) {
                     int col = table.columnAtPoint(e.getPoint());
-                    DynamicColumn dc = getColumn(col);
-                    // Don't process clicking on editable columns
-                    if (dc != null && dc.isEditable()) {
-                        return;
+                    if (col>=0) {
+                        DynamicColumn dc = getColumn(col);
+                        // Don't process clicking on editable columns
+                        if (dc != null && dc.isEditable()) {
+                            return;
+                        }
+                        cellClicked(row, col);
                     }
-                    cellClicked(row, col);
+                    else {
+                        log.warn("User clicked table out of bounds: {}", e.getPoint());
+                    }
                 }
                 else {
                     backgroundClicked();
