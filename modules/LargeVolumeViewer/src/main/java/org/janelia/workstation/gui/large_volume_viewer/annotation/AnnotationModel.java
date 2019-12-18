@@ -1845,14 +1845,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         log.info("Set note on annotation {} in neuron {}", geoAnnotation.getId(),  neuron);
         
         final TmWorkspace workspace = getCurrentWorkspace();
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireNotesUpdated(geoAnnotation);
-                activityLog.logSetNote(workspace.getId(), geoAnnotation.getId(), noteString);
-            }
-        });
-
+        fireNotesUpdated(geoAnnotation);
+        activityLog.logSetNote(workspace.getId(), geoAnnotation.getId(), noteString);
     }
 
     public synchronized void removeNote(final Long neuronID, final TmStructuredTextAnnotation textAnnotation) throws Exception {
@@ -2233,6 +2227,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                         NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
                         updateFrags(updates);
                     }
+                    fireNeuronDeleted(neuron);
+                    fireNeuronCreated(neuron);
+                    fireNeuronSelected(neuron);
                 }
             }
             
