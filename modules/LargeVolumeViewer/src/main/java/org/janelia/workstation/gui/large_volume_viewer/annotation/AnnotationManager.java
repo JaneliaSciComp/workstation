@@ -312,7 +312,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 } catch (TimeoutException e) {
                     presentError("Ownership change request for neuron " + neuron.getName() +
                             " apparently timed out. Check to see if operation actually succeeded.", "Ownership change timed out");
-                    String errorMessage = "Roundtrip request for ownership of System-owned neuron timed out";
+                    String errorMessage = "Roundtrip request for ownership of System-owned neuron " + neuron.getName() + " timed out";
                     log.error(errorMessage);
                     e.printStackTrace();
                     FrameworkAccess.handleException(e);
