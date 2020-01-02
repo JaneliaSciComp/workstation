@@ -2115,7 +2115,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         
         // Must create the neuron up front, because we need the id when adding the linked geometric annotations below.
         CompletableFuture<TmNeuronMetadata> future = neuronManager.createTiledMicroscopeNeuron(tmWorkspace, neuronName);
-        if (future==null) 
+        if (future==null)
             return;
         try {
             TmNeuronMetadata updatedNeuron = future.get(2, TimeUnit.SECONDS);
@@ -2130,11 +2130,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         TmNeuronMetadata neuron = (TmNeuronMetadata)neuronData.get("neuron");
         if (neuron==null)
             return;
-        
+
         SWCData swcData = (SWCData)neuronData.get("swc");
         if (swcData==null)
             return;
-        
+
         File swcFile = (File)neuronData.get("file");
         // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
         //  so he added an OFFSET header and recentered on zero when exporting
@@ -2169,7 +2169,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     internalPoint[0], internalPoint[1], internalPoint[2], node.getRadius(),
                     now, now
             );
-            
+
             annotations.put(node.getIndex(), unserializedAnnotation);
             nodeParentLinkage.put(node.getIndex(), node.getParentIndex());
         }
@@ -2177,7 +2177,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // Fire off the bulk update.  The "un-serialized" or
         // db-unknown annotations could be swapped for "blessed" versions.
         neuronManager.addLinkedGeometricAnnotationsInMemory(nodeParentLinkage, annotations, neuron);
-        
+
         // Set neuron color
         float[] colorArr = swcData.parseColorFloats();
         if (colorArr != null) {
@@ -2227,12 +2227,11 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                         NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
                         updateFrags(updates);
                     }
-                    fireNeuronDeleted(neuron);
-                    fireNeuronCreated(neuron);
+                    fireNeuronChanged(neuron);
                     fireNeuronSelected(neuron);
                 }
             }
-            
+
             postWorkspaceUpdate(neuron);
         } catch (Exception e) {
             log.info("Error saving neurons", e);
