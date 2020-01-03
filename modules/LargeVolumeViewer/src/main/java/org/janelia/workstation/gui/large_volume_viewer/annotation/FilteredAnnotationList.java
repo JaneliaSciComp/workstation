@@ -7,11 +7,13 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.EditNoteRequestedListener;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.perf4j.StopWatch;
 
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
@@ -169,28 +171,38 @@ public class FilteredAnnotationList extends JPanel {
                             // everyone else, shift camera to annotation
                             if (panListener != null) {
                                 if (ann != null) {
-                                    panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
-                                    //annotationModel.selectPoint(ann.getNeuronId(), ann.getId());
-                                    Vec3 location = annotationMgr.getTileFormat().micronVec3ForVoxelVec3Centered(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
-                                    // send event to Horta to also center on this item
-                                    
-                                    try {
-                                        SynchronizationHelper helper = new SynchronizationHelper();
-                                        Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                                        SampleLocation sampleLocation = originator.getSampleLocation();
-                                        sampleLocation.setFocusUm(location.getX(), location.getY(), location.getZ());
-                                        sampleLocation.setNeuronId(ann.getNeuronId());
-                                        sampleLocation.setNeuronVertexId(ann.getId());
-                                        Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                                        for (Tiled3dSampleLocationProviderAcceptor acceptor: locationAcceptors) {
-                                            if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
-                                                acceptor.setSampleLocation(sampleLocation);
+                                    SimpleWorker syncher = new SimpleWorker() {
+                                        @Override
+                                        protected void doStuff() throws Exception {
+                                            panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                                            Vec3 location = annotationMgr.getTileFormat().micronVec3ForVoxelVec3Centered(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+
+                                            // send event to Horta to also center on this item
+                                            SynchronizationHelper helper = new SynchronizationHelper();
+                                            Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                                            SampleLocation sampleLocation = originator.getSampleLocation();
+                                            sampleLocation.setFocusUm(location.getX(), location.getY(), location.getZ());
+                                            sampleLocation.setNeuronId(ann.getNeuronId());
+                                            sampleLocation.setNeuronVertexId(ann.getId());
+                                            Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                                            for (Tiled3dSampleLocationProviderAcceptor acceptor: locationAcceptors) {
+                                                if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
+                                                    acceptor.setSampleLocation(sampleLocation);
+                                                }
                                             }
                                         }
-                                    } catch (Exception e) {
-                                        FrameworkAccess.handleException(e);
-                                    }
 
+                                        @Override
+                                        protected void hadSuccess() {
+                                            annotationModel.selectPoint(ann.getNeuronId(), ann.getId());
+                                        }
+
+                                        @Override
+                                        protected void hadError(Throwable error) {
+                                            FrameworkAccess.handleException(error);
+                                        }
+                                    };
+                                    syncher.execute();
                                 }
                             }
                         }
