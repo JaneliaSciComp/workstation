@@ -390,6 +390,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         for (TmNeuronMetadata neuron: deleteList) {
             this.neuronModelDeleted(neuron);
         }
+        largeVolumeViewer.getCamera().fireViewChanged();
     }
 
     @Override
