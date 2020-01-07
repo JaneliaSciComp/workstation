@@ -118,7 +118,7 @@ public class ProgressMeterPanel extends JPanel {
     public void workerEnded(BackgroundWorker worker) {
         MonitoredWorkerPanel workerPanel = getWorkerPanel(worker);
         if (workerPanel!=null) {
-            log.debug("Worker ended: {}",worker.getName());
+            log.info("Worker ended: {}",worker.getName());
             workerPanel.update();
             Throwable error = worker.getError();
             if (error!=null) {
