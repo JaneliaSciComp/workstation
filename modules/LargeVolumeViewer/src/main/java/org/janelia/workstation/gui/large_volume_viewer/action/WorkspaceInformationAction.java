@@ -130,6 +130,10 @@ class InfoTableModel extends AbstractTableModel {
             npoints += neuron.getGeoAnnotationMap().size();
             int nBranches = 0;
             double length = 0.0;
+            boolean correctLength = true;
+
+            // if you're going to use a labeled break, at least get a good pun out of it...
+            rootLoop:
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                 for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
                     if (ann != null) {
@@ -139,20 +143,35 @@ class InfoTableModel extends AbstractTableModel {
                         }
                         // length calculation
                         if (!ann.isRoot()) {
-                            length += distance(ann, neuron.getParentOf(ann), exchanger);
+                            // unfortunately, unfixed concurrency problems can cause parent
+                            //  to be null, which means we can't calculate the length correctly
+                            TmGeoAnnotation parent = neuron.getParentOf(ann);
+                            if (parent == null) {
+                                correctLength = false;
+                                break rootLoop;
+                            } else {
+                                length += distance(ann, neuron.getParentOf(ann), exchanger);
+                            }
                         }
                     }
                 }
             }
-            branchMap.put(neuronID, nBranches);
-            lengthMap.put(neuronID, length);
+            if (!correctLength) {
+                lengthMap.put(neuronID, -1.0);
+                branchMap.put(neuronID, -1);
+            } else {
+                lengthMap.put(neuronID, length);
+                branchMap.put(neuronID, nBranches);
+            }
         }
 
         for (Integer count: branchMap.values()) {
             nbranches += count;
         }
         for (Double length: lengthMap.values()) {
-            totalLength += length;
+            if (length >= 0.0) {
+                totalLength += length;
+            }
         }
 
         fireTableDataChanged();
