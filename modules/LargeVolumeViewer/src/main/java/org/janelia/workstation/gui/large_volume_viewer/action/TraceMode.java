@@ -216,7 +216,7 @@ implements MouseMode, KeyListener
         }
 
         stopwatch.stop();
-        
+
         if (spatial != null) {
             logger.trace("Found closest anchor in spatial index: {} (elapsed = {} ms)", spatial.getGuid(), stopwatch.getElapsedTime());
         }
@@ -762,6 +762,7 @@ implements MouseMode, KeyListener
                 List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
                 // set toggle state
                 String property =(String)fooMap.get("toggleprop");
+                logger.info("TraceMode: toggling property " + property);
                 if (property!=null) {
                     try {
                         Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
