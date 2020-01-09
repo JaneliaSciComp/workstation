@@ -373,28 +373,28 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchor.getLocation(),
                 annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid()));
 
-        // test if merge would create a loop; if so, report common parent in dialog and to
-        //  clipboard, so "go to" can be used
-        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
-        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(closest.getNeuronId(), closest.getId());
-        TmGeoAnnotation common = annotationModel.findCommonParent(sourceAnnotation, targetAnnotation);
-        if (common != null) {
-            // loop found
-            Vec3 loopLocation = getTileFormat().micronVec3ForVoxelVec3Centered(
-                    new Vec3(common.getX(), common.getY(), common.getZ()));
-            String locationString =  loopLocation.getX() + "," + loopLocation.getY() + "," + loopLocation.getZ();
-            StringSelection selection = new StringSelection(locationString);
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clipboard.setContents(selection, selection);
-            JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
-                    "Merge would create a loop; first common ancestor is at location "
-                            + locationString + " (copied to clipboard).");
-            annotationModel.fireAnnotationNotMoved(annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid()));
-            return;
-        }
-
         // check distance and other restrictions
         if (closest != null && canMergeNeurite(anchor.getNeuronID(), anchor.getGuid(), anchorVoxelLocation, closest.getNeuronId(), closest.getId())) {
+            // test if merge would create a loop; if so, report common parent in dialog and to
+            //  clipboard, so "go to" can be used
+            TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
+            TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(closest.getNeuronId(), closest.getId());
+            TmGeoAnnotation common = annotationModel.findCommonParent(sourceAnnotation, targetAnnotation);
+            if (common != null) {
+                // loop found
+                Vec3 loopLocation = getTileFormat().micronVec3ForVoxelVec3Centered(
+                        new Vec3(common.getX(), common.getY(), common.getZ()));
+                String locationString =  loopLocation.getX() + "," + loopLocation.getY() + "," + loopLocation.getZ();
+                StringSelection selection = new StringSelection(locationString);
+                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                clipboard.setContents(selection, selection);
+                JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                        "Merge would create a loop; first common ancestor is at location "
+                                + locationString + " (copied to clipboard).");
+                annotationModel.fireAnnotationNotMoved(annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid()));
+                return;
+            }
+
             // check if user wants to merge (expensive to undo) or move (near something that
             //  is valid to merge with), or nothing (undo drag)
             Object[] options = {"Merge", "Move, don't merge", "Cancel"};

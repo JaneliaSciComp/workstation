@@ -762,7 +762,6 @@ implements MouseMode, KeyListener
                 List<TmNeuronMetadata> neuronList = new ArrayList<TmNeuronMetadata>(neurons);
                 // set toggle state
                 String property =(String)fooMap.get("toggleprop");
-                logger.info("TraceMode: toggling property " + property);
                 if (property!=null) {
                     try {
                         Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
