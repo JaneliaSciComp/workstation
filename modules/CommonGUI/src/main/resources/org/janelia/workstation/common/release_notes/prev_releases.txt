@@ -1,3 +1,23 @@
+// 8.8
+
+Data Browser
+* Added "Configure Line Release" right-click option for Line Releases
+* Remember folder name when uploading image files
+* Fixed "Report a problem with this data"
+* Fixed "Sage Synced" setting for data sets
+
+Color Depth Search
+* Fixed resizing of HUD when viewing results
+
+Large Volume Viewer
+* Added "review" predefined filter button
+* Predefined note "unique" > "unique 1" and "unique 2"; added buttons, filters, and assignable keyboard shortcuts
+* When a merge in LVV would create a loop, dialog box pops up, and location is copied to clipboard (to use in "Go to")
+
+Horta
+* Fixed "Prefer KTX Tiles" checkbox and Clear All Tiles to work for RAW tiles without a workspace reload
+* Fixed disconnected points for imported SWC neurons
+
 // 8.7.1
 
 Color Depth Search
