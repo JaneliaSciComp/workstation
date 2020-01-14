@@ -26,7 +26,6 @@ import org.janelia.filecacheutils.FileKey;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
 import org.janelia.filecacheutils.LocalFileCacheStorage;
-import org.janelia.filecacheutils.SourceContentStream;
 import org.janelia.rendering.Streamable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -111,9 +110,9 @@ public class CachedTileLoader implements TileLoader {
 
         @Nullable
         @Override
-        public ContentStream openContentStream() {
+        public InputStream openContentStream() {
             LOG.debug("Open content stream {} / {}", tileStorageURL, tileLocation);
-            return new SourceContentStream(() -> {
+            return new ContentStream(() -> {
                 fetchContent();
                 try {
                     return streamableContent.getContent();
@@ -195,8 +194,8 @@ public class CachedTileLoader implements TileLoader {
         LOG.debug("Stream tile content {} / {}", storageLocation, tileLocation);
         try {
             FileProxy fp = rawTileFileCache.getCachedFileEntry(new RawTileFileKey(storageLocation, tileLocation), false);
-            ContentStream contentStream = fp.openContentStream();
-            return Streamable.of(contentStream.asInputStream(), fp.estimateSizeInBytes());
+            InputStream contentStream = fp.openContentStream();
+            return Streamable.of(contentStream, fp.estimateSizeInBytes());
         } catch (FileNotFoundException e) {
             LOG.error("File not found for {} / {}", storageLocation, tileLocation, e);
             return Streamable.empty();

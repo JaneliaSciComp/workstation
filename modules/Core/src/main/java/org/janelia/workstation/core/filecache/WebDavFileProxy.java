@@ -2,16 +2,13 @@ package org.janelia.workstation.core.filecache;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
-import org.janelia.filecacheutils.SourceContentStream;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +35,7 @@ public class WebDavFileProxy implements FileProxy {
     }
 
     @Override
-    public ContentStream openContentStream() throws FileNotFoundException {
+    public InputStream openContentStream() throws FileNotFoundException {
         GetMethod httpGet;
         try {
             httpGet = new GetMethod(webDavFile.getRemoteFileUrl());
@@ -47,7 +44,7 @@ public class WebDavFileProxy implements FileProxy {
             webDavFile.handleError(e);
             throw new IllegalStateException(e);
         }
-        return new SourceContentStream(
+        return new ContentStream(
                 () -> {
                     try {
                         final int responseCode = httpClientProxy.executeMethod(httpGet);

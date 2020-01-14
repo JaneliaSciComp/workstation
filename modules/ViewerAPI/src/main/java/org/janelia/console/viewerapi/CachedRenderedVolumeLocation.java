@@ -1,9 +1,9 @@
 package org.janelia.console.viewerapi;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
@@ -21,7 +21,6 @@ import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
 import org.janelia.filecacheutils.LocalFileCacheStorage;
-import org.janelia.filecacheutils.SourceContentStream;
 import org.janelia.rendering.RenderedImageInfo;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.Streamable;
@@ -108,8 +107,8 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         }
 
         @Override
-        public ContentStream openContentStream() throws FileNotFoundException {
-            return new SourceContentStream(() -> {
+        public InputStream openContentStream() throws FileNotFoundException {
+            return new ContentStream(() -> {
                 fetchContent();
                 try {
                     if (streamableContent.getContent() == null) {
@@ -166,11 +165,14 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                 fileKey,
                 contentStream -> {
                     try {
-                        return ByteStreams.toByteArray(contentStream.asInputStream());
+                        return ByteStreams.toByteArray(contentStream);
                     } catch (Exception e) {
                         throw new IllegalStateException(e);
                     } finally {
-                        contentStream.close();
+                        try {
+                            contentStream.close();
+                        } catch (IOException ignore) {
+                        }
                     }
                 });
    }
@@ -200,9 +202,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                         Function.identity(),
                         () -> delegate.checkContentAtRelativePath(relativePath)))
                 ;
-        return streamableContentFromFileProxy(
-                fileKey,
-                contentStream -> contentStream.asInputStream());
+        return streamableContentFromFileProxy(fileKey, Function.identity());
     }
 
     @Override
@@ -215,15 +215,13 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                         Function.identity(),
                         () -> delegate.checkContentAtAbsolutePath(absolutePath)))
                 ;
-        return streamableContentFromFileProxy(
-                fileKey,
-                contentStream -> contentStream.asInputStream());
+        return streamableContentFromFileProxy(fileKey, Function.identity());
     }
 
-    private <T> Streamable<T> streamableContentFromFileProxy(RenderedVolumeFileKey fileKey, Function<ContentStream, T> streamToContentMapper) {
+    private <T> Streamable<T> streamableContentFromFileProxy(RenderedVolumeFileKey fileKey, Function<InputStream, T> streamToContentMapper) {
         try {
             FileProxy fileProxy = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
-            ContentStream contentStream = fileProxy.openContentStream();
+            InputStream contentStream = fileProxy.openContentStream();
             return Streamable.of(streamToContentMapper.apply(contentStream), fileProxy.estimateSizeInBytes());
         } catch (FileNotFoundException e) {
             return Streamable.empty();

@@ -1,7 +1,39 @@
 package org.janelia.workstation.browser.gui.hud;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
+
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
@@ -28,28 +60,6 @@ import org.janelia.workstation.gui.viewer3d.Mip3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 
 
 /**
@@ -392,8 +402,8 @@ public class Hud extends ModalDialog {
                             log.debug("Must load image.");
                             FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(filepath, false);
                             if (imageFileProxy != null) {
-                                try (ContentStream imageStream = imageFileProxy.openContentStream()) {
-                                    image = Utils.readImageFromInputStream(imageStream.asInputStream(), FilenameUtils.getExtension(filepath));
+                                try (InputStream imageStream = imageFileProxy.openContentStream()) {
+                                    image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(filepath));
                                 }
                                 if (ic != null) {
                                     ic.put(filepath, image);

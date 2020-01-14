@@ -9,7 +9,6 @@ import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
@@ -67,8 +66,8 @@ public class CreateMaskFromImageAction extends AbstractAction {
             @Override
             protected void doStuff() throws Exception {
                 FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(imagePath, false);
-                try (ContentStream imageStream = imageFileProxy.openContentStream()) {
-                    this.image = Utils.readImageFromInputStream(imageStream.asInputStream(), FilenameUtils.getExtension(imageFileProxy.getFileId()));
+                try (InputStream imageStream = imageFileProxy.openContentStream()) {
+                    this.image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFileProxy.getFileId()));
                 }
                 alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();
             }

@@ -10,8 +10,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
+
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.core.api.FileMgr;
@@ -84,9 +84,9 @@ public abstract class LoadImageWorker extends SimpleWorker {
             Stopwatch stopwatch = Stopwatch.createStarted();
             // Async cache-behind
             FileProxy proxy = FileMgr.getFileMgr().getFile(imageFilename, false);
-            try (ContentStream imageStream = proxy.openContentStream()) {
+            try (InputStream imageStream = proxy.openContentStream()) {
                 log.trace("Async cache-behind loading: {}",imageFilename);
-                maxSizeImage = Utils.readImageFromInputStream(imageStream.asInputStream(), FilenameUtils.getExtension(imageFilename));
+                maxSizeImage = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFilename));
                 log.info("Took {} ms to load {}", stopwatch.elapsed(TimeUnit.MILLISECONDS), imageFilename);
             }
             if (maxSizeImage != null && imageCache != null) {
@@ -95,9 +95,9 @@ public abstract class LoadImageWorker extends SimpleWorker {
         }
         else {
             // Sync cache-ahead
-            try (ContentStream imageStream = FileMgr.getFileMgr().getFile(imageFilename, false).openContentStream()) {
+            try (InputStream imageStream = FileMgr.getFileMgr().getFile(imageFilename, false).openContentStream()) {
                 log.trace("Cache-ahead loading: {}", imageFilename);
-                maxSizeImage = Utils.readImageFromInputStream(imageStream.asInputStream(), FilenameUtils.getExtension(imageFilename));
+                maxSizeImage = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFilename));
             }
         }
 

@@ -127,7 +127,7 @@ public class FileMgr {
      */
     public InputStream openFileInputStream(String standardPathName, boolean forceRefresh) throws IOException {
         FileProxy fileProxy = getFile(standardPathName, forceRefresh);
-        return fileProxy.openContentStream().asInputStream();
+        return fileProxy.openContentStream();
     }
 
 }

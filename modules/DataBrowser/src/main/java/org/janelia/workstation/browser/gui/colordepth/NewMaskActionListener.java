@@ -14,7 +14,6 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -63,8 +62,8 @@ public final class NewMaskActionListener implements ActionListener {
                 protected void doStuff() throws Exception {
                     uploadPath = MaskUtils.uploadMask(localFile);
                     FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(uploadPath, false);
-                    try (ContentStream imageStream = imageFileProxy.openContentStream()) {
-                        this.image = Utils.readImageFromInputStream(imageStream.asInputStream(), FilenameUtils.getExtension(imageFileProxy.getFileId()));
+                    try (InputStream imageStream = imageFileProxy.openContentStream()) {
+                        this.image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFileProxy.getFileId()));
                     }
                     alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();
                 }

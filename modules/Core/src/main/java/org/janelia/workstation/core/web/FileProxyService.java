@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.util.Utils;
@@ -67,7 +66,7 @@ public class FileProxyService extends AbstractHandler {
         }
         
         FileProxy fileProxy;
-        ContentStream input = null;
+        InputStream input = null;
         OutputStream output = null;
         try {
             fileProxy = FileMgr.getFileMgr().getFile(standardPath, false);
@@ -88,7 +87,7 @@ public class FileProxyService extends AbstractHandler {
                 log.debug("Writing {} bytes", nbytes);
                 input = fileProxy.openContentStream();
                 output = response.getOutputStream();
-                input.copyTo(output);
+                Utils.copyNio(input, output, BUFFER_SIZE);
             } else {
                 throw new IllegalStateException("Unsupported method for Workstation file proxy service: "+method);
             }
@@ -107,7 +106,11 @@ public class FileProxyService extends AbstractHandler {
             FrameworkAccess.handleExceptionQuietly(e);
         } finally {
             if (input != null) {
-                input.close();
+                try {
+                    input.close();
+                } catch (IOException e) {
+                    log.warn("Failed to close input stream", e);
+                }
             }
             if (output != null) {
                 try {
