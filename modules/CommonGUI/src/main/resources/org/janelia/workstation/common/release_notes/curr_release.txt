@@ -1,19 +1,9 @@
-// 8.8
-
-Data Browser
-* Added "Configure Line Release" right-click option for Line Releases
-* Remember folder name when uploading image files
-* Fixed "Report a problem with this data"
-* Fixed "Sage Synced" setting for data sets
-
-Color Depth Search
-* Fixed resizing of HUD when viewing results
+// 8.8.1
 
 Large Volume Viewer
-* Added "review" predefined filter button
-* Predefined note "unique" > "unique 1" and "unique 2"; added buttons, filters, and assignable keyboard shortcuts
-* When a merge in LVV would create a loop, dialog box pops up, and location is copied to clipboard (to use in "Go to")
-
-Horta
-* Fixed "Prefer KTX Tiles" checkbox and Clear All Tiles to work for RAW tiles without a workspace reload
-* Fixed disconnected points for imported SWC neurons
+* Improved saving of very large neurons to db
+* Fixed repeated "index out of bounds" error
+* When merge is rejected due to a loop, dragged point returns to original location
+* Reduced delay when navigating from LVV to Horta using annotation List click
+* In neuron table, if neuron's length can't be calculated, display -1.0 instead of error
+* LVV display should update promptly when moving to a new location and new fragments are unloaded/loaded
