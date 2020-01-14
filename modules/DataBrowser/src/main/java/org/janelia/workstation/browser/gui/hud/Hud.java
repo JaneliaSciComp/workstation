@@ -1,6 +1,7 @@
 package org.janelia.workstation.browser.gui.hud;
 
 import org.apache.commons.io.FilenameUtils;
+import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
@@ -391,8 +392,8 @@ public class Hud extends ModalDialog {
                             log.debug("Must load image.");
                             FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(filepath, false);
                             if (imageFileProxy != null) {
-                                try (InputStream imageStream = imageFileProxy.openContentStream()) {
-                                    image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(filepath));
+                                try (ContentStream imageStream = imageFileProxy.openContentStream()) {
+                                    image = Utils.readImageFromInputStream(imageStream.asInputStream(), FilenameUtils.getExtension(filepath));
                                 }
                                 if (ic != null) {
                                     ic.put(filepath, image);

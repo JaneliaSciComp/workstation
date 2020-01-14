@@ -44,6 +44,7 @@ import loci.formats.in.TiffReader;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.options.OptionConstants;
@@ -491,21 +492,21 @@ public class Utils {
         log.info("Copying {} to {}", standardPath, destination);
 
         int estimatedCompressionFactor;
-        InputStream fileProxyStream = fileProxy.openContentStream();
+        ContentStream fileProxyStream = fileProxy.openContentStream();
         try {
             if (standardPath.endsWith(EXTENSION_BZ2) &&
                     (!destination.getName().endsWith(EXTENSION_BZ2))) {
-                input = new BZip2CompressorInputStream(fileProxyStream, true);
+                input = new BZip2CompressorInputStream(fileProxyStream.asInputStream(), true);
                 log.info("Using BZip2CompressorInputStream to decompress while streaming");
                 estimatedCompressionFactor = 3;
                 length = null;
             } else {
-                input = fileProxyStream;
+                input = fileProxyStream.asInputStream();
                 estimatedCompressionFactor = 1;
                 length = fileProxy.estimateSizeInBytes();
             }
         } catch (Exception e) {
-            IOUtils.closeQuietly(fileProxyStream);
+            fileProxyStream.close();
             throw e;
         }
 

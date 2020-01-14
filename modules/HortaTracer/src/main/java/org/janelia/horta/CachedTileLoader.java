@@ -21,10 +21,12 @@ import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileKey;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
 import org.janelia.filecacheutils.LocalFileCacheStorage;
+import org.janelia.filecacheutils.SourceContentStream;
 import org.janelia.rendering.Streamable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,17 +111,19 @@ public class CachedTileLoader implements TileLoader {
 
         @Nullable
         @Override
-        public InputStream openContentStream() {
+        public ContentStream openContentStream() {
             LOG.debug("Open content stream {} / {}", tileStorageURL, tileLocation);
-            fetchContent();
-            try {
-                return streamableContent.getContent();
-            } finally {
-                // since the file proxy is being cached we don't want to keep this
-                // around once it was consumed because if some other thread tries to read it again the stream pointer most likely will
-                // not be where the caller expects it
-                streamableContent = null;
-            }
+            return new SourceContentStream(() -> {
+                fetchContent();
+                try {
+                    return streamableContent.getContent();
+                } finally {
+                    // since the file proxy is being cached we don't want to keep this
+                    // around once it was consumed because if some other thread tries to read it again the stream pointer most likely will
+                    // not be where the caller expects it
+                    streamableContent = null;
+                }
+            });
         }
 
         private void fetchContent() {
@@ -191,8 +195,8 @@ public class CachedTileLoader implements TileLoader {
         LOG.debug("Stream tile content {} / {}", storageLocation, tileLocation);
         try {
             FileProxy fp = rawTileFileCache.getCachedFileEntry(new RawTileFileKey(storageLocation, tileLocation), false);
-            InputStream contentStream = fp.openContentStream();
-            return Streamable.of(contentStream, fp.estimateSizeInBytes());
+            ContentStream contentStream = fp.openContentStream();
+            return Streamable.of(contentStream.asInputStream(), fp.estimateSizeInBytes());
         } catch (FileNotFoundException e) {
             LOG.error("File not found for {} / {}", storageLocation, tileLocation, e);
             return Streamable.empty();

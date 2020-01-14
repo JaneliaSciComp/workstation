@@ -1,9 +1,9 @@
 package org.janelia.console.viewerapi;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
@@ -17,9 +17,11 @@ import javax.annotation.Nullable;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
 import org.janelia.filecacheutils.LocalFileCacheStorage;
+import org.janelia.filecacheutils.SourceContentStream;
 import org.janelia.rendering.RenderedImageInfo;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.Streamable;
@@ -106,20 +108,22 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         }
 
         @Override
-        public InputStream openContentStream() throws FileNotFoundException {
-            fetchContent();
-            try {
-                if (streamableContent.getContent() == null) {
-                    throw new FileNotFoundException("No content found for " + fileId);
-                } else {
-                    return contentToStreamMapper.apply(streamableContent.getContent());
+        public ContentStream openContentStream() throws FileNotFoundException {
+            return new SourceContentStream(() -> {
+                fetchContent();
+                try {
+                    if (streamableContent.getContent() == null) {
+                        throw new FileNotFoundException("No content found for " + fileId);
+                    } else {
+                        return contentToStreamMapper.apply(streamableContent.getContent());
+                    }
+                } finally {
+                    // since the file proxy is being cached we don't want to keep this
+                    // around once it was consumed because if some other thread tries to read it again the stream pointer most likely will
+                    // not be where the caller expects it
+                    streamableContent = null;
                 }
-            } finally {
-                // since the file proxy is being cached we don't want to keep this
-                // around once it was consumed because if some other thread tries to read it again the stream pointer most likely will
-                // not be where the caller expects it
-                streamableContent = null;
-            }
+            });
         }
 
         private void fetchContent() {
@@ -162,14 +166,11 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                 fileKey,
                 contentStream -> {
                     try {
-                        return ByteStreams.toByteArray(contentStream);
+                        return ByteStreams.toByteArray(contentStream.asInputStream());
                     } catch (Exception e) {
                         throw new IllegalStateException(e);
                     } finally {
-                        try {
-                            contentStream.close();
-                        } catch (IOException ignore) {
-                        }
+                        contentStream.close();
                     }
                 });
    }
@@ -199,7 +200,9 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                         Function.identity(),
                         () -> delegate.checkContentAtRelativePath(relativePath)))
                 ;
-        return streamableContentFromFileProxy(fileKey, Function.identity());
+        return streamableContentFromFileProxy(
+                fileKey,
+                contentStream -> contentStream.asInputStream());
     }
 
     @Override
@@ -212,13 +215,15 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                         Function.identity(),
                         () -> delegate.checkContentAtAbsolutePath(absolutePath)))
                 ;
-        return streamableContentFromFileProxy(fileKey, Function.identity());
+        return streamableContentFromFileProxy(
+                fileKey,
+                contentStream -> contentStream.asInputStream());
     }
 
-    private <T> Streamable<T> streamableContentFromFileProxy(RenderedVolumeFileKey fileKey, Function<InputStream, T> streamToContentMapper) {
+    private <T> Streamable<T> streamableContentFromFileProxy(RenderedVolumeFileKey fileKey, Function<ContentStream, T> streamToContentMapper) {
         try {
             FileProxy fileProxy = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
-            InputStream contentStream = fileProxy.openContentStream();
+            ContentStream contentStream = fileProxy.openContentStream();
             return Streamable.of(streamToContentMapper.apply(contentStream), fileProxy.estimateSizeInBytes());
         } catch (FileNotFoundException e) {
             return Streamable.empty();

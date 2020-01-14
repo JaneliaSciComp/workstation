@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.util.Utils;
@@ -66,7 +67,7 @@ public class FileProxyService extends AbstractHandler {
         }
         
         FileProxy fileProxy;
-        InputStream input = null;
+        ContentStream input = null;
         OutputStream output = null;
         try {
             fileProxy = FileMgr.getFileMgr().getFile(standardPath, false);
@@ -77,8 +78,7 @@ public class FileProxyService extends AbstractHandler {
                 } else {
                     response.setStatus(404);
                 }
-            }
-            else if ("GET".equals(method)) {
+            } else if ("GET".equals(method)) {
                 response.setContentType("application/octet-stream");
                 Long nbytes = fileProxy.estimateSizeInBytes();
                 if (nbytes != null) {
@@ -88,34 +88,26 @@ public class FileProxyService extends AbstractHandler {
                 log.debug("Writing {} bytes", nbytes);
                 input = fileProxy.openContentStream();
                 output = response.getOutputStream();
-                Utils.copyNio(input, output, BUFFER_SIZE);
-            }
-            else {
+                input.copyTo(output);
+            } else {
                 throw new IllegalStateException("Unsupported method for Workstation file proxy service: "+method);
             }
 
-        }
-        catch (FileNotFoundException e) {
+        } catch (FileNotFoundException e) {
             log.warn("File not found: "+standardPath);
             response.setContentType("text/plain");
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().print("File not found\n");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.warn("Error proxying file: "+standardPath,e);
             response.setContentType("text/plain");
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().print("Error proxying file\n");
             e.printStackTrace(response.getWriter());
             FrameworkAccess.handleExceptionQuietly(e);
-        }
-        finally {
+        } finally {
             if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    log.warn("Failed to close input stream", e);
-                }
+                input.close();
             }
             if (output != null) {
                 try {
