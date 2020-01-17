@@ -163,7 +163,8 @@ implements MouseMode, KeyListener
 	public void mouseDragged(MouseEvent event) {
 		super.mouseDragged(event);
 		// We might be moving an anchor
-		if (dragAnchor != null && controller.checkOwnership(dragAnchor.getNeuronID())) {
+		if (dragAnchor != null && controller.checkOwnership(dragAnchor.getNeuronID()) &&
+            !skeletonActor.getModel().anchorIsNonInteractable(dragAnchor)) {
                     
 			Vec3 loc = worldFromPixel(event.getPoint());
 			skeletonActor.getModel().lightweightPlaceAnchor(dragAnchor, loc);
@@ -231,6 +232,11 @@ implements MouseMode, KeyListener
 				hoverAnchor = closest;
 				skeletonActor.getModel().setHoverAnchor(hoverAnchor);
 			}
+			if (skeletonActorModel.anchorIsNonInteractable(closest)) {
+			    // be sure anchor is not hovered if it's non-interactable; doesn't solve all issues,
+                //  but does improve things
+                skeletonActor.getModel().setHoverAnchor(null);
+            }
 		}
 
 		checkShiftPlusCursor(event);
