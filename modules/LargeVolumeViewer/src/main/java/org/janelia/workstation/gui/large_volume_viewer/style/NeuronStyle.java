@@ -83,11 +83,19 @@ public class NeuronStyle {
      * get a default style for a neuron
      */
     public static NeuronStyle getStyleForNeuron(Long neuronID) {
-        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true, false);
+        if (neuronID == null) {
+            return new NeuronStyle(neuronColors[0], true, false);
+        } else {
+            return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true, false);
+        }
     }
 
     public static NeuronStyle getStyleForNeuron(Long neuronID, boolean visible, boolean noninteractable) {
-        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], visible, noninteractable);
+        if (neuronID == null) {
+            return new NeuronStyle(neuronColors[0], visible, noninteractable);
+        } else {
+            return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], visible, noninteractable);
+        }
     }
 
     /**
