@@ -184,9 +184,15 @@ public class DomainObjectIconGridViewer
 
         JMenuItem exportLinesMenuItem = new JMenuItem("Export line names");
         exportLinesMenuItem.addActionListener((e) -> {
-            new ExportPickedLineNames(getPickedItems()).actionPerformed(e);
+            new ExportPickedLineNames(getPickedItems(), false).actionPerformed(e);
         });
         editOkButton.addMenuItem(exportLinesMenuItem);
+
+        JMenuItem exportVtLinesMenuItem = new JMenuItem("Export VT line names");
+        exportVtLinesMenuItem.addActionListener((e) -> {
+            new ExportPickedLineNames(getPickedItems(), true).actionPerformed(e);
+        });
+        editOkButton.addMenuItem(exportVtLinesMenuItem);
 
         JMenuItem splitGenMenuItem = new JMenuItem("Send to split generation website");
         splitGenMenuItem.addActionListener((e) -> {

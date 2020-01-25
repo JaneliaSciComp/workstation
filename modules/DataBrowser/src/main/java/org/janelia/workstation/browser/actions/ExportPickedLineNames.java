@@ -14,19 +14,22 @@ import org.janelia.model.domain.sample.Sample;
  */
 public class ExportPickedLineNames extends AbstractExportPickedAction {
 
-    public ExportPickedLineNames(List<Reference> refs) {
+    private boolean vtline;
+
+    public ExportPickedLineNames(List<Reference> refs, boolean vtline) {
         super(refs);
+        this.vtline = vtline;
     }
 
     @Override
     protected String export(DomainObject domainObject) {
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
-            return sample.getLine();
+            return vtline ? sample.getVtLine() : sample.getLine();
         }
         else if (domainObject instanceof LSMImage) {
             LSMImage image = (LSMImage)domainObject;
-            return image.getLine();
+            return vtline ? image.getVtLine() : image.getLine();
         }
         else {
             return "Item has no associated line: "+domainObject;
