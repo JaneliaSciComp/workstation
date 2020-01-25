@@ -24,30 +24,24 @@ public abstract class TableViewerToolbar extends ViewerToolbar {
     public TableViewerToolbar() {
         super();
 
-        chooseColumnsButton = new JButton("Columns...");
+        chooseColumnsButton = new JButton("Columns");
         chooseColumnsButton.setIcon(Icons.getIcon("cog.png"));
         chooseColumnsButton.setFocusable(false);
         chooseColumnsButton.setToolTipText("Select columns to display.");
-        chooseColumnsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ActivityLogHelper.logUserAction("TableViewerToolbar.chooseColumnsButtonPressed");
-                chooseColumnsButtonPressed();
-            }
+        chooseColumnsButton.addActionListener(e -> {
+            ActivityLogHelper.logUserAction("TableViewerToolbar.chooseColumnsButtonPressed");
+            chooseColumnsButtonPressed();
         });
         chooseColumnsButton.addMouseListener(new MouseForwarder(toolbar, "ChooseColumnsButton->JToolBar"));
         toolbar.add(chooseColumnsButton);
 
-        exportButton = new JButton();
+        exportButton = new JButton("Export");
         exportButton.setIcon(Icons.getIcon("table_save.png"));
         exportButton.setFocusable(false);
         exportButton.setToolTipText("Export results to a tab-delimited text file.");
-        exportButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ActivityLogHelper.logUserAction("TableViewerToolbar.exportButtonPressed");
-                exportButtonPressed();
-            }
+        exportButton.addActionListener(e -> {
+            ActivityLogHelper.logUserAction("TableViewerToolbar.exportButtonPressed");
+            exportButtonPressed();
         });
         exportButton.addMouseListener(new MouseForwarder(toolbar, "ExportButton->JToolBar"));
         toolbar.add(exportButton);
