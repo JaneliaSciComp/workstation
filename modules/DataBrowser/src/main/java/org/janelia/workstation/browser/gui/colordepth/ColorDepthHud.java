@@ -52,8 +52,8 @@ public class ColorDepthHud extends ModalDialog {
         return instance != null;
     }
 
-    private static final int CROSSHAIR_OFFSET = 4;
-    private static final int CROSSHAIR_SIZE = 5;
+    private static final int CROSSHAIR_OFFSET = 5;
+    private static final int CROSSHAIR_SIZE = 7;
 
     // Input Handling
     private final Point pp = new Point();
@@ -84,6 +84,7 @@ public class ColorDepthHud extends ModalDialog {
                 int s = CROSSHAIR_SIZE;
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setColor(Color.red);
+                g2.setStroke(new BasicStroke(2.0f));
                 g2.drawLine(point.x-s-o, point.y, point.x-o, point.y);
                 g2.drawLine(point.x+s+o, point.y, point.x+o, point.y);
                 g2.drawLine(point.x, point.y-s-o, point.x, point.y-o);
@@ -302,24 +303,26 @@ public class ColorDepthHud extends ModalDialog {
                 headPanel.removeAll();
                 headPanel.add(titlePanel, "al left center");
                 headPanel.add(new JLabel(subtitle), "al right center");
+                headPanel.updateUI();
 
                 previewLabel1.setIcon(image1 == null ? null : new ImageIcon(image1));
                 previewLabel2.setIcon(image2 == null ? null : new ImageIcon(image2));
 
-                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-                int width = (int)Math.round((double)screenSize.width*(0.9/2));
-                int height = (int)Math.round((double)screenSize.height*0.9);
-                log.info("Got screen size: {}x{}", width, height);
-                width = Math.min(image1.getWidth(), width);
-                height = Math.min(image1.getHeight(), height);
-                log.info("Setting scroll pane size: {}x{}", width, height);
-
-                scrollPane1.setPreferredSize(new Dimension(width, height));
-                scrollPane2.setPreferredSize(new Dimension(width, height));
-
                 if (toggle) {
+                    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                    int width = (int)Math.round((double)screenSize.width*(0.9/2));
+                    int height = (int)Math.round((double)screenSize.height*0.9);
+                    log.info("Got screen size: {}x{}", width, height);
+                    width = Math.min(image1.getWidth(), width);
+                    height = Math.min(image1.getHeight(), height);
+                    log.info("Setting scroll pane size: {}x{}", width, height);
+
+                    scrollPane1.setPreferredSize(new Dimension(width, height));
+                    scrollPane2.setPreferredSize(new Dimension(width, height));
+
                     toggleDialog();
                 }
+
             }
 
             @Override
