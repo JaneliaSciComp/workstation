@@ -302,7 +302,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                                 ".", "Ownership change failed");
                         return false;
                     }
-                    Boolean ownershipDecision = future.get(2, TimeUnit.SECONDS);
+                    Boolean ownershipDecision = future.get(5, TimeUnit.SECONDS);
                     if (!ownershipDecision) {
                         presentError("Ownership change request for neuron " + neuron.getName() +
                                 " with current owner " + neuron.getOwnerName() +

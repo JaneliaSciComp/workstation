@@ -1216,7 +1216,7 @@ public class TracingInteractor extends MouseAdapter
             if (future==null) 
                 return false;
             try {
-                Boolean ownershipDecision = future.get(2, TimeUnit.SECONDS);
+                Boolean ownershipDecision = future.get(5, TimeUnit.SECONDS);
                 return ownershipDecision.booleanValue();
             } catch (TimeoutException e) {
                 String errorMessage = "Request for ownership of System-owned neuron " + neuron.getName() +

@@ -2118,7 +2118,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         if (future==null)
             return;
         try {
-            TmNeuronMetadata updatedNeuron = future.get(2, TimeUnit.SECONDS);
+            TmNeuronMetadata updatedNeuron = future.get(5, TimeUnit.SECONDS);
             parameters.put("neuron", updatedNeuron);
             finishBulkSWCData(parameters);
         } catch (Exception error) {
