@@ -1,15 +1,6 @@
-// 8.8.1
+// 8.9
 
-Administration Module
-* Fixed error where default workspace was not being created for new users
-
-Large Volume Viewer
-* Improved saving of very large neurons to db
-* Fixed repeated "index out of bounds" error
-* When merge is rejected due to a loop, dragged point returns to original location
-* Reduced delay when navigating from LVV to Horta using annotation List click
-* In neuron table, if neuron's length can't be calculated, display -1.0 instead of error
-* LVV display should update promptly when moving to a new location and new fragments are unloaded/loaded
-
-Horta
-* Fixed disconnected points on neurons when importing SWC
+Color Depth Search
+* Added "Max Results" option
+* Any masks that have never been run are now run when a search is executed
+* Allow export of VT line names with "Pick" button
