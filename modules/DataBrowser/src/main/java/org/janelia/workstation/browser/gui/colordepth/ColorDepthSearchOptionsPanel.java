@@ -65,7 +65,8 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         maxResultsValues = ImmutableList.of(
                 new LabeledValue("100", 100),
                 defaultMaxResults,
-                new LabeledValue("500", 500));
+                new LabeledValue("500", 500),
+                new LabeledValue("1000", 500));
     }
 
     // UI Components
