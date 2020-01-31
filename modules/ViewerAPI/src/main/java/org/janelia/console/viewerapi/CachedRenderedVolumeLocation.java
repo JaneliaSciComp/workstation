@@ -17,15 +17,18 @@ import javax.annotation.Nullable;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
 import org.janelia.filecacheutils.LocalFileCacheStorage;
 import org.janelia.rendering.RenderedImageInfo;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.Streamable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CachedRenderedVolumeLocation.class);
 
     private final RenderedVolumeLocation delegate;
     private final LocalFileCache<RenderedVolumeFileKey> renderedVolumeFileCache;
@@ -108,21 +111,19 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
 
         @Override
         public InputStream openContentStream() throws FileNotFoundException {
-            return new ContentStream(() -> {
-                fetchContent();
-                try {
-                    if (streamableContent.getContent() == null) {
-                        throw new FileNotFoundException("No content found for " + fileId);
-                    } else {
-                        return contentToStreamMapper.apply(streamableContent.getContent());
-                    }
-                } finally {
-                    // since the file proxy is being cached we don't want to keep this
-                    // around once it was consumed because if some other thread tries to read it again the stream pointer most likely will
-                    // not be where the caller expects it
-                    streamableContent = null;
+            fetchContent();
+            try {
+                if (streamableContent.getContent() == null) {
+                    throw new FileNotFoundException("No content found for " + fileId);
+                } else {
+                    return contentToStreamMapper.apply(streamableContent.getContent());
                 }
-            });
+            } finally {
+                // since the file proxy is being cached we don't want to keep this
+                // around once it was consumed because if some other thread tries to read it again the stream pointer most likely will
+                // not be where the caller expects it
+                streamableContent = null;
+            }
         }
 
         private void fetchContent() {
@@ -166,6 +167,11 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                 contentStream -> {
                     try {
                         return ByteStreams.toByteArray(contentStream);
+                    } catch (FileNotFoundException e) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.error("File not found for {}/{} page {}", imageRelativePath, channelImageNames, pageNumber, e);
+                        }
+                        return null;
                     } catch (Exception e) {
                         throw new IllegalStateException(e);
                     } finally {

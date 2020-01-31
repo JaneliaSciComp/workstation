@@ -7,7 +7,6 @@ import java.io.InputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.methods.GetMethod;
-import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.slf4j.Logger;
@@ -44,24 +43,24 @@ public class WebDavFileProxy implements FileProxy {
             webDavFile.handleError(e);
             throw new IllegalStateException(e);
         }
-        return new ContentStream(
-                () -> {
-                    try {
-                        final int responseCode = httpClientProxy.executeMethod(httpGet);
-                        if (responseCode != HttpServletResponse.SC_OK) {
-                            LOG.error("GET {} returned {}", webDavFile.getRemoteFileUrl(), responseCode);
-                            webDavFile.handleError(new WebDavException("GET " + webDavFile.getRemoteFileUrl(), responseCode));
-                            return null;
-                        }
-                        LOG.trace("GET {} returned {}", webDavFile.getRemoteFileUrl(), responseCode);
-                        return httpGet.getResponseBodyAsStream();
-                    } catch (Exception e) {
-                        LOG.error("GET {} error", webDavFile.getRemoteFileUrl(), e);
-                        webDavFile.handleError(e);
-                        return null;
-                    }
-                },
-                (v) -> httpGet.releaseConnection());
+        try {
+            final int responseCode = httpClientProxy.executeMethod(httpGet);
+            if (responseCode != HttpServletResponse.SC_OK) {
+                LOG.error("GET {} returned {}", webDavFile.getRemoteFileUrl(), responseCode);
+                throw new WebDavException("GET " + webDavFile.getRemoteFileUrl(), responseCode);
+            }
+            LOG.trace("GET {} returned {}", webDavFile.getRemoteFileUrl(), responseCode);
+            return httpGet.getResponseBodyAsStream();
+        } catch (WebDavException e) {
+            webDavFile.handleError(e);
+            httpGet.releaseConnection();
+            throw e;
+        } catch (Exception e) {
+            LOG.error("GET {} error", webDavFile.getRemoteFileUrl(), e);
+            webDavFile.handleError(e);
+            httpGet.releaseConnection();
+            throw new WebDavException("failed to open " + webDavFile.getRemoteFileUrl(), e);
+        }
     }
 
     @Override

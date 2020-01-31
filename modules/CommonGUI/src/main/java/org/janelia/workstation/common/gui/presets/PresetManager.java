@@ -9,7 +9,6 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import org.apache.commons.lang3.SerializationException;
 import org.janelia.model.domain.Preference;
-import org.janelia.model.domain.gui.cdmip.ColorDepthParameters;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;

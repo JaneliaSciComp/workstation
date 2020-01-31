@@ -21,7 +21,6 @@ import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.janelia.filecacheutils.ContentStream;
 import org.janelia.filecacheutils.FileKey;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
@@ -112,17 +111,15 @@ public class CachedTileLoader implements TileLoader {
         @Override
         public InputStream openContentStream() {
             LOG.debug("Open content stream {} / {}", tileStorageURL, tileLocation);
-            return new ContentStream(() -> {
-                fetchContent();
-                try {
-                    return streamableContent.getContent();
-                } finally {
-                    // since the file proxy is being cached we don't want to keep this
-                    // around once it was consumed because if some other thread tries to read it again the stream pointer most likely will
-                    // not be where the caller expects it
-                    streamableContent = null;
-                }
-            });
+            fetchContent();
+            try {
+                return streamableContent.getContent();
+            } finally {
+                // since the file proxy is being cached we don't want to keep this
+                // around once it was consumed because if some other thread tries to read it again the stream pointer most likely will
+                // not be where the caller expects it
+                streamableContent = null;
+            }
         }
 
         private void fetchContent() {
