@@ -1,6 +1,7 @@
 package org.janelia.workstation.common.logging;
 
 import java.awt.IllegalComponentStateException;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.logging.Logger;
 
@@ -65,6 +66,11 @@ public class ExceptionTriage {
                         "<html>There is no space left on the disk you are using.</html>",
                         "No Space on Disk", JOptionPane.ERROR_MESSAGE);
             });
+            return true;
+        }
+
+        // Ignore missing files on remote server
+        if (e instanceof FileNotFoundException && e.getMessage().contains("404")) {
             return true;
         }
 
