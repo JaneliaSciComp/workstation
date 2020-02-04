@@ -415,7 +415,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             @Override
             protected void doStuff() throws Exception {
                 List<ColorDepthMatch> maskMatches = currResult.getMaskMatches(mask);
-                log.info("Found {} matches for {}", maskMatches.size(), mask);
+                log.info("Found {} matches for {} in {}", maskMatches.size(), mask, search);
                 searchResults = prepareResults(maskMatches);
             }
 
