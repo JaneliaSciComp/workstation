@@ -1935,7 +1935,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         BulkNeuronStyleUpdate bulkNeuronStyleUpdate = new BulkNeuronStyleUpdate();
         bulkNeuronStyleUpdate.setNeuronIds(DomainUtils.getIds(neuronList));
         bulkNeuronStyleUpdate.setColorHex(ModelTranslation.getColorHex(color));
-        tmDomainMgr.updateNeuronStyles(bulkNeuronStyleUpdate);
+        tmDomainMgr.updateNeuronStyles(bulkNeuronStyleUpdate,neuronList.get(0).getWorkspaceId());
 
         Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
         for (TmNeuronMetadata neuron : neuronList) {

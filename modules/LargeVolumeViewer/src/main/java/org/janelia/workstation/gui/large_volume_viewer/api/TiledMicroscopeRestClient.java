@@ -303,9 +303,10 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         return list;
     }
 
-    void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate) {
+    void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate, Long workspaceId) {
         if (bulkNeuronStyleUpdate.getNeuronIds()==null || bulkNeuronStyleUpdate.getNeuronIds().isEmpty()) return;
-        WebTarget target = getMouselightDataEndpoint("/workspace/neuronStyle");
+        WebTarget target = getMouselightDataEndpoint("/workspace/neuronStyle")
+                .queryParam("workspaceId", workspaceId);
         Response response = target
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(bulkNeuronStyleUpdate));
