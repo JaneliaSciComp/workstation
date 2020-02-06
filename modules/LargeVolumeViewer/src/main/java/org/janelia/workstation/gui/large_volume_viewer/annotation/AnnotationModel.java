@@ -2222,15 +2222,15 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     }
                     // now save again, with the note data
                     neuronManager.saveNeuronData(neuron);
-
-                    if (applyFilter) {
-                        NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
-                        updateFrags(updates);
-                    }
-                    fireNeuronChanged(neuron);
-                    fireNeuronSelected(neuron);
                 }
             }
+            if (applyFilter) {
+                NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                updateFrags(updates);
+            }
+
+            fireNeuronChanged(neuron);
+            fireNeuronSelected(neuron);
 
             postWorkspaceUpdate(neuron);
         } catch (Exception e) {
