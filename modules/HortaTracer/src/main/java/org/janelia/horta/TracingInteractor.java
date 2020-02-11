@@ -641,6 +641,11 @@ public class TracingInteractor extends MouseAdapter
     private boolean moveAnchor(NeuronModel neuron, NeuronVertex anchor, ConstVector3 newLocation) 
     {
         if (!checkOwnership(neuron)) {
+            JOptionPane.showMessageDialog(
+                volumeProjection.getMouseableComponent(),
+                "Could not gain ownership of neuron " + neuron.getName() + " owned by " + neuron.getOwnerKey(),
+                "Failed to move neuron anchor",
+                JOptionPane.WARNING_MESSAGE);
             return false;
         }
         MoveNeuronAnchorCommand cmd = new MoveNeuronAnchorCommand(

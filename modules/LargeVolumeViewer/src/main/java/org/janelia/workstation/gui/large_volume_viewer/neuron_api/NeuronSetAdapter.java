@@ -119,6 +119,9 @@ public class NeuronSetAdapter
     public CompletableFuture<Boolean> changeNeuronOwnership(Long neuronId) {
         try {
             TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
+            if (neuron == null) {
+                return null;
+            }
             return LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().getNeuronManager().requestOwnershipChange(neuron);
         } catch (Exception error) {
             FrameworkAccess.handleException(error);
