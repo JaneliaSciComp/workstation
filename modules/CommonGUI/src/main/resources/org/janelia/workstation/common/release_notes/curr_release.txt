@@ -1,10 +1,6 @@
-// 8.9
+// 8.10
 
-Color Depth Search
-* Added "Max Results" option
-* Any masks that have never been run are now run when a search is executed
-* Allow export of VT line names with "Pick" button
-* Fixed HUD updates when paging through color depth results
-
-LVV: 
-* Made message server timeouts uniform and longer
+LVV/Horta: 
+* Imported SWC files should show connected skeletons in Horta
+* Message server memory increased
+* Bulk neuron color change should work again

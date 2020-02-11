@@ -1,3 +1,14 @@
+// 8.9
+
+Color Depth Search
+* Added "Max Results" option
+* Any masks that have never been run are now run when a search is executed
+* Allow export of VT line names with "Pick" button
+* Fixed HUD updates when paging through color depth results
+
+LVV: 
+* Made message server timeouts uniform and longer
+
 // 8.8.1
 
 Administration Module
