@@ -440,17 +440,14 @@ public class Utils {
      * remote file system is mounted, or after caching the file locally.
      */
     public static void processStandardFilepath(final String filePath, final FileCallable callback) {
-        
         final File file = new File(PathTranslator.convertPath(filePath));
         if (file.canRead()) {
             try {
                 callback.call(file);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 FrameworkAccess.handleException(e);
             }
-        }
-        else {
+        } else {
             Utils.cacheAndProcessFileAsync(filePath, new FileCallable() {
                 @Override
                 public void call(File file) throws Exception {
@@ -467,7 +464,6 @@ public class Utils {
     }
 
     public static void copyURLToFile(String standardPath, File destination, SimpleWorker worker, boolean hasProgress) throws Exception {
-
         if (worker != null) {
             worker.throwExceptionIfCancelled();
         }
@@ -523,8 +519,6 @@ public class Utils {
     }
 
     public static void copyFileToFile(File source, File destination, SimpleWorker worker, boolean hasProgress) throws Exception {
-
-
         if (worker != null) {
             worker.throwExceptionIfCancelled();
         }
@@ -614,10 +608,8 @@ public class Utils {
                     finalBackgroundWorker.setStatus(finalBackgroundStatus + message);
                 }
             });
-            output.getChannel().transferFrom(rbc, 0, length);
-            totalBytesWritten = rbc.getTotalBytesRead();
-        }
-        else {
+            totalBytesWritten = output.getChannel().transferFrom(rbc, 0, length);
+        } else {
             log.warn("No length given, falling back on inefficient copy method");
 
             // 10-15 MB/s (Windows to NAS)

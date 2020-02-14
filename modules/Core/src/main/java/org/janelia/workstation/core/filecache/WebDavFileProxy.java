@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class WebDavFileProxy implements FileProxy {
+    private static final int WBEDAV_SO_TIMEOUT_INMILLIS = 180000;
     private static final Logger LOG = LoggerFactory.getLogger(WebDavFileProxy.class);
 
     private final HttpClientProxy httpClientProxy;
@@ -38,6 +39,7 @@ public class WebDavFileProxy implements FileProxy {
         GetMethod httpGet;
         try {
             httpGet = new GetMethod(webDavFile.getRemoteFileUrl());
+            httpGet.getParams().setSoTimeout(WBEDAV_SO_TIMEOUT_INMILLIS);
         } catch (Exception e) {
             LOG.error("Could not create GET method for {}", webDavFile.getRemoteFileUrl(), e);
             webDavFile.handleError(e);
