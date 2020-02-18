@@ -475,7 +475,7 @@ public class Utils {
             Files.createDirectories(destinationDir.toPath());
         }
 
-        //make sure we can write to destination
+        // make sure we can write to destination
         if (destination.exists() && !destination.canWrite()) {
             throw new IOException("Unable to open " + destination.getAbsolutePath() + " for writing.");
         }
@@ -483,9 +483,8 @@ public class Utils {
         InputStream input;
         FileProxy fileProxy = FileMgr.getFileMgr().getFile(standardPath, false);
 
+        log.info("Copying {} ({}) to {}", standardPath, fileProxy.getFileId(), destination);
         Long length;
-        log.info("Copying {} to {}", standardPath, destination);
-
         int estimatedCompressionFactor;
         InputStream fileProxyStream = fileProxy.openContentStream();
         try {
@@ -508,6 +507,7 @@ public class Utils {
         FileOutputStream output = new FileOutputStream(destination);
         try {
             final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
+            log.info("Finished copy from {} ({}) to {}", standardPath, fileProxy.getFileId(), destination);
             if (length != null && totalBytesWritten < length) {
                 throw new CancellationException("Bytes written (" + totalBytesWritten + ") for " + fileProxy.getFileId() +
                                       " is less than source length (" + length + ")");
