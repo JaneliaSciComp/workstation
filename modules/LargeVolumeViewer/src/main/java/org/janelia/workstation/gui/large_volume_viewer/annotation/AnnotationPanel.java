@@ -462,13 +462,6 @@ public class AnnotationPanel extends JPanel
         neuriteButtonsPanel.add(centerAnnotationButton);
 
 
-        // developer panel, only shown to me; used for various testing things
-        if (AccessManager.getAccessManager().getActualSubject().getName().equals("olbrisd")) {
-            lvvDevPanel = new LVVDevPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
-            add(lvvDevPanel, cVert);
-        }
-
-
         // the bilge...
         GridBagConstraints cBottom = new GridBagConstraints();
         cBottom.gridx = 0;
