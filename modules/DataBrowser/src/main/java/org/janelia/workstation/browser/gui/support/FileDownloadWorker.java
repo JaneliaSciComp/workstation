@@ -208,10 +208,10 @@ public class FileDownloadWorker {
                             // If any error occurred during download, we need to delete the file which was being downloaded
                             cleanFile(downloadItem.getTargetFile().toFile());
                             if (e instanceof CancellationException) {
-                                log.error("Download was cancelled: {}", filename);
+                                log.error("Download of {} was cancelled because of previous cancellation exception: {}", filename, e.getMessage());
                                 throw (CancellationException) e;
                             } else if (e instanceof InterruptedException || e instanceof ClosedByInterruptException) {
-                                log.error("Download was cancelled: {}", filename);
+                                log.error("Download of {} was cancelled because of previous interrupt exception: {}", filename, e.getMessage());
                                 throw new CancellationException();
                             } else {
                                 if (errors == 1) {
@@ -293,7 +293,7 @@ public class FileDownloadWorker {
         try {
             copySemaphore.acquire();
         } catch (InterruptedException e) {
-            log.error("Download was cancelled: {}", localFile);
+            log.error("Download of {} was cancelled while acquiring the lock", localFile);
             throw new CancellationException();
         }
         try {
