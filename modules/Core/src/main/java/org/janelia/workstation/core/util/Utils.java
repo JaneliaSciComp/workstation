@@ -609,6 +609,9 @@ public class Utils {
                 }
             });
             totalBytesWritten = output.getChannel().transferFrom(rbc, 0, length);
+            if (totalBytesWritten < length) {
+                log.warn("Transferred {} bytes but expected to transfer {} bytes", totalBytesWritten, length);
+            }
         } else {
             log.warn("No length given, falling back on inefficient copy method");
 
