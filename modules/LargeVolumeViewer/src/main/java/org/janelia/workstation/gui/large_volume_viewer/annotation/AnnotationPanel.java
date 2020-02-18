@@ -63,7 +63,6 @@ public class AnnotationPanel extends JPanel
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
     private ViewStateListener viewStateListener;
-    private LVVDevPanel lvvDevPanel;
 
     // other UI stuff
     private static final int width = 250;
