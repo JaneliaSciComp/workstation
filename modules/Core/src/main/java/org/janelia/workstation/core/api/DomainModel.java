@@ -1046,8 +1046,8 @@ public class DomainModel {
         return subjectFacade.getSubjectByNameOrKey(subjectKey);
     }
 
-    public Subject getOrCreateUser(String username) throws Exception {
-        return subjectFacade.getOrCreateUser(username);
+    public Subject getUser(String username) throws Exception {
+        return subjectFacade.getUser(username);
     }
 
     public String dispatchSamples(SampleReprocessingRequest request) throws Exception {

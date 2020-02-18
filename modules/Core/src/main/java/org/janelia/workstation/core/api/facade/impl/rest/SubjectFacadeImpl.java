@@ -59,8 +59,8 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
     }
     
     @Override
-    public User getOrCreateUser(String username) throws Exception {
-        WebTarget target = service.path("data/user/getorcreate");
+    public User getUser(String username) throws Exception {
+        WebTarget target = service.path("data/user");
         Response response = target
                 .queryParam("subjectKey", "user:"+username)
                 .request("application/json")
@@ -93,7 +93,15 @@ public class SubjectFacadeImpl extends RESTClientBase implements SubjectFacade {
         return response.readEntity(Preference.class);
     }
 
-
+    @Override
+    public User createUser(User user) throws Exception {
+        WebTarget target = service.path("data/user");
+        Response response = target
+                .request("application/json")
+                .put(Entity.json(user));
+        checkBadResponse(target, response);
+        return response.readEntity(User.class);
+    }
 
     @Override
     public User updateUser(User user) throws Exception {

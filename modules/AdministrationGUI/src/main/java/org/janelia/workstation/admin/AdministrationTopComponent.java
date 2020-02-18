@@ -184,7 +184,7 @@ public final class AdministrationTopComponent extends TopComponent {
         try {
             SubjectFacade subjectFacade = DomainMgr.getDomainMgr().getSubjectFacade();
             log.info("Saving user {}", user);
-            User updatedUser = subjectFacade.updateUser(user);
+            User updatedUser = user.getId()==null ? subjectFacade.createUser(user) : subjectFacade.updateUser(user);
             log.info("Updated user: {}", updatedUser);
             if (plaintextPassword != null) {
                 updatedUser = subjectFacade.changeUserPassword(user.getName(), plaintextPassword);

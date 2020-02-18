@@ -109,11 +109,6 @@ public class UserManagementPanel extends JPanel implements Refreshable {
 
     private void newUser() {
         User newUser = new User();
-        // add the workstation role by default
-        Set<UserGroupRole> roles = newUser.getUserGroupRoles();
-        UserGroupRole newRole = new UserGroupRole("group:workstation_users", GroupRole.Reader);
-        roles.add(newRole);
-        newUser.setUserGroupRoles(roles);
         parent.viewUserDetails(newUser);
     }
 
