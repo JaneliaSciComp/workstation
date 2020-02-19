@@ -507,7 +507,7 @@ public class Utils {
         FileOutputStream output = new FileOutputStream(destination);
         try {
             final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
-            log.info("Finished copy from {} ({}) to {}", standardPath, fileProxy.getFileId(), destination);
+            log.info("Finished copy {} bytes from {} ({}) to {}", totalBytesWritten, standardPath, fileProxy.getFileId(), destination);
             if (length != null && totalBytesWritten < length) {
                 throw new CancellationException("Bytes written (" + totalBytesWritten + ") for " + fileProxy.getFileId() +
                                       " is less than source length (" + length + ")");
