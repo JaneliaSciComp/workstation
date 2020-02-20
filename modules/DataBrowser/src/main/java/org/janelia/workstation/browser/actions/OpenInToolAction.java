@@ -70,7 +70,7 @@ public class OpenInToolAction extends AbstractAction {
                     // TODO: this should be one step, download and decompress
                     
                     setStatus("Downloading LSM...");
-                    File file = FileMgr.getFileMgr().getFile(path, false).getLocalFile();
+                    File file = FileMgr.getFileMgr().getFile(path, false).getLocalFile(false);
                     uncompressedFilepath = file.getAbsolutePath().replaceFirst(Utils.EXTENSION_LSM_BZ2, Utils.EXTENSION_LSM);
 
                     File uncompressedFile = new File(uncompressedFilepath);

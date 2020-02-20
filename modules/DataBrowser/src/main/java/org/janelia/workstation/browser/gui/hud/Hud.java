@@ -402,7 +402,7 @@ public class Hud extends ModalDialog {
                             log.debug("Must load image.");
                             FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(filepath, false);
                             if (imageFileProxy != null) {
-                                try (InputStream imageStream = imageFileProxy.openContentStream()) {
+                                try (InputStream imageStream = imageFileProxy.openContentStream(false)) {
                                     image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(filepath));
                                 }
                                 if (ic != null) {

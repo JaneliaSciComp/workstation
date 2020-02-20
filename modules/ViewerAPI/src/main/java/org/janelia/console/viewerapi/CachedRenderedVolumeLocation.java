@@ -102,7 +102,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         }
 
         @Override
-        public Long estimateSizeInBytes() {
+        public Long estimateSizeInBytes(boolean alwaysCheck) {
             if (length == null) {
                 fetchContent();
             }
@@ -110,7 +110,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         }
 
         @Override
-        public InputStream openContentStream() throws FileNotFoundException {
+        public InputStream openContentStream(boolean alwaysDownload) throws FileNotFoundException {
             fetchContent();
             try {
                 if (streamableContent.getContent() == null) {
@@ -134,12 +134,12 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         }
 
         @Override
-        public File getLocalFile() {
+        public File getLocalFile(boolean alwaysDownload) {
             return null;
         }
 
         @Override
-        public boolean exists() {
+        public boolean exists(boolean alwaysCheck) {
             return contentCheckMapper.get();
         }
 
@@ -180,7 +180,8 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                         } catch (IOException ignore) {
                         }
                     }
-                });
+                },
+                false);
    }
 
     @Override
@@ -208,7 +209,7 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                         Function.identity(),
                         () -> delegate.checkContentAtRelativePath(relativePath)))
                 ;
-        return streamableContentFromFileProxy(fileKey, Function.identity());
+        return streamableContentFromFileProxy(fileKey, Function.identity(), false);
     }
 
     @Override
@@ -221,14 +222,14 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
                         Function.identity(),
                         () -> delegate.checkContentAtAbsolutePath(absolutePath)))
                 ;
-        return streamableContentFromFileProxy(fileKey, Function.identity());
+        return streamableContentFromFileProxy(fileKey, Function.identity(), false);
     }
 
-    private <T> Streamable<T> streamableContentFromFileProxy(RenderedVolumeFileKey fileKey, Function<InputStream, T> streamToContentMapper) {
+    private <T> Streamable<T> streamableContentFromFileProxy(RenderedVolumeFileKey fileKey, Function<InputStream, T> streamToContentMapper, boolean alwaysDownload) {
         try {
             FileProxy fileProxy = renderedVolumeFileCache.getCachedFileEntry(fileKey, false);
-            InputStream contentStream = fileProxy.openContentStream();
-            return Streamable.of(streamToContentMapper.apply(contentStream), fileProxy.estimateSizeInBytes());
+            InputStream contentStream = fileProxy.openContentStream(alwaysDownload);
+            return Streamable.of(streamToContentMapper.apply(contentStream), fileProxy.estimateSizeInBytes(alwaysDownload));
         } catch (FileNotFoundException e) {
             return Streamable.empty();
         }

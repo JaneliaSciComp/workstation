@@ -100,7 +100,7 @@ public class CachedTileLoader implements TileLoader {
         }
 
         @Override
-        public Long estimateSizeInBytes() {
+        public Long estimateSizeInBytes(boolean alwaysCheck) {
             if (length == null) {
                 fetchContent();
             }
@@ -109,7 +109,7 @@ public class CachedTileLoader implements TileLoader {
 
         @Nullable
         @Override
-        public InputStream openContentStream() {
+        public InputStream openContentStream(boolean alwaysDownload) {
             LOG.debug("Open content stream {} / {}", tileStorageURL, tileLocation);
             fetchContent();
             try {
@@ -131,12 +131,12 @@ public class CachedTileLoader implements TileLoader {
         }
 
         @Override
-        public File getLocalFile() {
+        public File getLocalFile(boolean alwaysDownload) {
             return null;
         }
 
         @Override
-        public boolean exists() {
+        public boolean exists(boolean alwaysCheck) {
             return tileLoader.checkStorageLocation(tileLocation);
         }
 
@@ -191,8 +191,8 @@ public class CachedTileLoader implements TileLoader {
         LOG.debug("Stream tile content {} / {}", storageLocation, tileLocation);
         try {
             FileProxy fp = rawTileFileCache.getCachedFileEntry(new RawTileFileKey(storageLocation, tileLocation), false);
-            InputStream contentStream = fp.openContentStream();
-            return Streamable.of(contentStream, fp.estimateSizeInBytes());
+            InputStream contentStream = fp.openContentStream(false);
+            return Streamable.of(contentStream, fp.estimateSizeInBytes(false));
         } catch (FileNotFoundException e) {
             LOG.error("File not found for {} / {}", storageLocation, tileLocation, e);
             return Streamable.empty();

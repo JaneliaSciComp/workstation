@@ -410,7 +410,7 @@ public class Utils {
             @Override
             protected void doStuff() throws Exception {
                 FileProxy fileProxy = FileMgr.getFileMgr().getFile(filePath, false);
-                file = fileProxy.getLocalFile();
+                file = fileProxy.getLocalFile(false);
             }
 
             @Override
@@ -463,9 +463,9 @@ public class Utils {
         }
     }
 
-    public static void copyURLToFile(String standardPath, File destination, SimpleWorker worker, boolean hasProgress) throws Exception {
-        if (worker != null) {
-            worker.throwExceptionIfCancelled();
+    public static void copyURLToFile(String standardPath, File destination, SimpleWorker worker1, boolean hasProgress, boolean alwaysDownload) throws Exception {
+        if (worker1 != null) {
+            worker1.throwExceptionIfCancelled();
         }
         
         log.trace("copyURLToFile: standardPath={}, destination={}", standardPath, destination);
@@ -486,7 +486,7 @@ public class Utils {
         log.info("Copying {} ({}) to {}", standardPath, fileProxy.getFileId(), destination);
         Long length;
         int estimatedCompressionFactor;
-        InputStream fileProxyStream = fileProxy.openContentStream();
+        InputStream fileProxyStream = fileProxy.openContentStream(alwaysDownload);
         try {
             if (standardPath.endsWith(EXTENSION_BZ2) &&
                     (!destination.getName().endsWith(EXTENSION_BZ2))) {
@@ -497,7 +497,7 @@ public class Utils {
             } else {
                 input = fileProxyStream;
                 estimatedCompressionFactor = 1;
-                length = fileProxy.estimateSizeInBytes();
+                length = fileProxy.estimateSizeInBytes(alwaysDownload);
             }
         } catch (Exception e) {
             IOUtils.closeQuietly(fileProxyStream);
@@ -506,7 +506,7 @@ public class Utils {
 
         FileOutputStream output = new FileOutputStream(destination);
         try {
-            final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
+            final long totalBytesWritten = copy(input, output, length, worker1, estimatedCompressionFactor, hasProgress);
             log.info("Finished copy {} bytes from {} ({}) to {}", totalBytesWritten, standardPath, fileProxy.getFileId(), destination);
             if (length != null && totalBytesWritten < length) {
                 throw new CancellationException("Bytes written (" + totalBytesWritten + ") for " + fileProxy.getFileId() +
@@ -576,21 +576,22 @@ public class Utils {
                              SimpleWorker worker, int estimatedCompressionFactor, 
                              boolean hasProgress) throws IOException {
 
-        BackgroundWorker backgroundWorker = null;
-        String backgroundStatus = null;
-        if (hasProgress && worker!=null) {
+        BackgroundWorker backgroundWorker;
+        String backgroundStatus;
+        if (hasProgress && worker != null) {
             if (worker instanceof BackgroundWorker) {
                 backgroundWorker = (BackgroundWorker) worker;
-                backgroundStatus = backgroundWorker.getStatus();
-                if (backgroundStatus == null) {
-                    backgroundStatus = "Copying file - ";
-                } else {
-                    backgroundStatus = backgroundStatus + " - ";
-                }
+                backgroundStatus = backgroundWorker.getStatus() == null
+                        ? "Copying file - "
+                        : backgroundWorker.getStatus() + " - ";
+            } else {
+                backgroundWorker = null;
+                backgroundStatus = null;
             }
+        } else {
+            backgroundWorker = null;
+            backgroundStatus = null;
         }
-        final BackgroundWorker finalBackgroundWorker = backgroundWorker;
-        final String finalBackgroundStatus = backgroundStatus;
 
         final long startTime = System.currentTimeMillis();
         final long estimatedLength = length == null ? 1 : estimatedCompressionFactor * length;
@@ -600,12 +601,12 @@ public class Utils {
             // 30 MB/s on Windows (Windows to NAS)
             CallbackByteChannel rbc = new CallbackByteChannel(Channels.newChannel(input), (long bytesWritten) -> {
                 worker.setProgress(bytesWritten, estimatedLength);
-                if (finalBackgroundWorker != null) {
+                if (backgroundWorker != null) {
                     final long elapsedTime = System.currentTimeMillis() - startTime;
                     TransferSpeed speed = new TransferSpeed(elapsedTime, bytesWritten);
                     String message = String.format("Wrote %.2f %s (%.2f MB/s)", 
                             speed.getAmountWritten(), speed.getAmountUnits(), speed.getMbps());
-                    finalBackgroundWorker.setStatus(finalBackgroundStatus + message);
+                    backgroundWorker.setStatus(backgroundStatus + message);
                 }
             });
             totalBytesWritten = output.getChannel().transferFrom(rbc, 0, length);
@@ -641,7 +642,7 @@ public class Utils {
                                 TransferSpeed speed = new TransferSpeed(elapsedTime, totalBytesWritten);
                                 String message = String.format("Wrote %.2f %s (%.2f MB/s)", 
                                         speed.getAmountWritten(), speed.getAmountUnits(), speed.getMbps());
-                                finalBackgroundWorker.setStatus(finalBackgroundStatus + message);
+                                backgroundWorker.setStatus(backgroundStatus + message);
                             }
                         }
                     }

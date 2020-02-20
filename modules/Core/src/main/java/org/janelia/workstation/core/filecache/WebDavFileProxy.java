@@ -30,12 +30,12 @@ public class WebDavFileProxy implements FileProxy {
     }
 
     @Override
-    public Long estimateSizeInBytes() {
+    public Long estimateSizeInBytes(boolean alwaysCheck) {
         return webDavFile.getSizeInBytes();
     }
 
     @Override
-    public InputStream openContentStream() throws FileNotFoundException {
+    public InputStream openContentStream(boolean alwaysDownload) throws FileNotFoundException {
         GetMethod httpGet;
         try {
             httpGet = new GetMethod(webDavFile.getRemoteFileUrl());
@@ -66,12 +66,12 @@ public class WebDavFileProxy implements FileProxy {
     }
 
     @Override
-    public File getLocalFile() {
+    public File getLocalFile(boolean alwaysDownload) {
         return null;
     }
 
     @Override
-    public boolean exists() {
+    public boolean exists(boolean alwaysCheck) {
         return webDavFile != null;
     }
 
