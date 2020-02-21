@@ -39,11 +39,7 @@ import org.janelia.console.viewerapi.actions.CreateNeuronAction;
 import org.janelia.console.viewerapi.actions.DeleteNeuronAction;
 import org.janelia.console.viewerapi.actions.RecolorNeuronAction;
 import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
-import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
-import org.janelia.console.viewerapi.commands.MergeNeuriteCommand;
-import org.janelia.console.viewerapi.commands.MoveNeuronAnchorCommand;
-import org.janelia.console.viewerapi.commands.SplitNeuriteCommand;
-import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
+import org.janelia.console.viewerapi.commands.*;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
@@ -1226,12 +1222,8 @@ public class TracingInteractor extends MouseAdapter
             } catch (TimeoutException e) {
                 String errorMessage = "Request for ownership of System-owned neuron " + neuron.getName() +
                         " apparently timed out. Check to see if operation actually succeeded.";
-                log.error(errorMessage, e);
-                JOptionPane.showMessageDialog(
-                        volumeProjection.getMouseableComponent(),
-                        errorMessage,
-                        "Ownership change timed out",
-                        JOptionPane.WARNING_MESSAGE);
+                StartMessagingDiagnosticsCommand cmd = new StartMessagingDiagnosticsCommand(neuron, defaultWorkspace);
+                cmd.execute();
             } catch (Exception e) {
                 String errorMessage = "Request for ownership of neuron " + neuron.getName() +
                         "had an unspecified roundtrip failure.";
