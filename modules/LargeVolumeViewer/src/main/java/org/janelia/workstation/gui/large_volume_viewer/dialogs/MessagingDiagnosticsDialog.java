@@ -5,12 +5,23 @@ import java.awt.BorderLayout;
 import java.awt.Dialog;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.UndoableEditEvent;
 import javax.swing.table.AbstractTableModel;
 
+import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
+import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -20,34 +31,17 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MessagingDiagnosticsDialog extends ModalDialog {
+public class MessagingDiagnosticsDialog extends JOptionPane
+{
+    JPanel infoPanel;
 
-    private static final Logger log = LoggerFactory.getLogger(MessagingDiagnosticsDialog.class);
+    public MessagingDiagnosticsDialog(TmNeuronMetadata targetNeuron)
+    {
 
-    private final JButton closeButton;
-    private final JPanel infoPanel;
+        setOptionType(JOptionPane.OK_CANCEL_OPTION);
 
-    private final AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-    private AnnotationModel annotationModel;
-    private MessagingDiagnosticsDialog dialog;
-
-    public MessagingDiagnosticsDialog(TmNeuronMetadata ownershipProblem) {
-        super(FrameworkAccess.getMainFrame());
-        dialog = this;
-        setTitle("Messaging Diagnostics");
-        // set to modeless
-        setModalityType(Dialog.ModalityType.MODELESS);
-
-
-        closeButton = new JButton("Close");
-        closeButton.setToolTipText("Close this window");
-        closeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // remove dialog being updated by refreshhandler
-                setVisible(false);
-            }
-        });
+        JDialog dialog = createDialog("Messaging Diagnostics");
+        dialog.setVisible(true);
 
         infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.LINE_AXIS));
@@ -57,12 +51,8 @@ public class MessagingDiagnosticsDialog extends ModalDialog {
                 " Running diagnostics to determine how severe the problem is and assess why you are experiencing network delays.");
 
         infoPanel.add(instructions1);
-        infoPanel.add(closeButton);
+        add (infoPanel);
 
-    }
-
-    public void showDialog() {
-        packAndShow();
     }
 }
 
