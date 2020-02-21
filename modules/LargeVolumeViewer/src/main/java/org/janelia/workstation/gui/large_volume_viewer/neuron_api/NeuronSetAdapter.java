@@ -29,6 +29,7 @@ import org.janelia.workstation.gui.large_volume_viewer.controller.BackgroundAnno
 import org.janelia.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.TaskReviewListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
+import org.janelia.workstation.gui.large_volume_viewer.dialogs.MessagingDiagnosticsDialog;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -641,6 +642,12 @@ public class NeuronSetAdapter
         TmGeoAnnotation annotation = getAnnotationForAnchor(anchor);
         if (annotation!=null)
             annotationModel.selectPoint(annotation.getNeuronId(), annotation.getId());
+    }
+
+    @Override
+    public void startUpMessagingDiagnostics(NeuronModel neuron) {
+        TmNeuronMetadata neuronMetadata = annotationModel.getNeuronFromNeuronID(neuron.getNeuronId());
+        MessagingDiagnosticsDialog dialog = new MessagingDiagnosticsDialog(neuronMetadata);
     }
 
     private class NeuronSetBackgroundAnnotationListener implements BackgroundAnnotationListener {
