@@ -4,32 +4,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.util.PermissionTemplate;
-import org.janelia.workstation.browser.actions.context.ApplyAnnotationAction;
+import org.janelia.workstation.browser.actions.NewOntologyActionListener;
 import org.janelia.workstation.browser.actions.OntologyElementAction;
 import org.janelia.workstation.browser.actions.context.ApplyAnnotationActionListener;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.dialogs.AutoAnnotationPermissionDialog;
-import org.janelia.workstation.browser.gui.dialogs.BulkAnnotationPermissionDialog;
+import org.janelia.workstation.browser.gui.dialogs.BulkChangePermissionDialog;
 import org.janelia.workstation.browser.gui.dialogs.KeyBindDialog;
 import org.janelia.workstation.browser.gui.find.FindContext;
 import org.janelia.workstation.browser.gui.find.FindContextManager;
 import org.janelia.workstation.browser.gui.find.FindToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.workstation.browser.gui.tree.CustomTreeView;
-import org.janelia.workstation.browser.actions.NewOntologyActionListener;
 import org.janelia.workstation.browser.nodes.OntologyNode;
 import org.janelia.workstation.browser.nodes.OntologyRootNode;
 import org.janelia.workstation.browser.nodes.OntologyTermNode;
-import org.janelia.workstation.common.gui.support.Debouncer;
-import org.janelia.workstation.common.gui.support.ExpandedTreeState;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.JScrollPopupMenu;
-import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.common.gui.support.WindowLocator;
+import org.janelia.workstation.common.gui.support.*;
 import org.janelia.workstation.common.nodes.NodeUtils;
 import org.janelia.workstation.core.actions.Action;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -43,6 +38,7 @@ import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.events.selection.OntologySelectionEvent;
 import org.janelia.workstation.core.keybind.KeyBindChangedEvent;
 import org.janelia.workstation.core.keybind.KeyBindings;
@@ -67,36 +63,13 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.ActionMap;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JSeparator;
-import javax.swing.JToggleButton;
-import javax.swing.JToolBar;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 /**
@@ -147,7 +120,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     private final ExplorerManager mgr = new ExplorerManager();
     private final KeyListener keyListener;
     private final KeyBindDialog keyBindDialog;
-    private final BulkAnnotationPermissionDialog bulkAnnotationDialog;
+    private final BulkChangePermissionDialog bulkAnnotationDialog;
     private final AutoAnnotationPermissionDialog autoAnnotationDialog;
     private final Debouncer debouncer = new Debouncer();
 
@@ -190,7 +163,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             }
         };
 
-        this.bulkAnnotationDialog = new BulkAnnotationPermissionDialog();
+        this.bulkAnnotationDialog = new BulkChangePermissionDialog();
         this.autoAnnotationDialog = new AutoAnnotationPermissionDialog();
         
         this.treePanel = new JPanel(new BorderLayout());
@@ -645,46 +618,41 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         ontologyButton.setIcon(Icons.getIcon("open_action.png"));
         ontologyButton.setToolTipText("Open ontology");
         ontologyButton.setFocusable(false);
-        ontologyButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        ontologyButton.addActionListener(e -> {
 
-                final JScrollPopupMenu ontologyListMenu = new JScrollPopupMenu();
-                ontologyListMenu.setMaximumVisibleRows(50);
+            final JScrollPopupMenu ontologyListMenu = new JScrollPopupMenu();
+            ontologyListMenu.setMaximumVisibleRows(50);
 
-                Long currOntologyId = StateMgr.getStateMgr().getCurrentOntologyId();
-                for (final Ontology ontology : ontologies) {
-                    Subject subject = null;
-                    try {
-                        // TODO: this should happen in a background thread
-                        subject = AccessManager.getSubjectByNameOrKey(ontology.getOwnerKey());
-                    }
-                    catch (Exception ex) {
-                        log.error("Error getting subject: "+ontology.getOwnerKey(),ex);
-                    }
-                    String owner = subject==null?ontology.getOwnerKey():subject.getFullName();
-                    boolean checked = currOntologyId != null && ontology.getId().equals(currOntologyId);
-                    JMenuItem roleMenuItem = new JRadioButtonMenuItem(ontology.getName() + " (" + owner + ")", checked);
-                    String iconName = ClientDomainUtils.isOwner(ontology)?"folder.png":"folder_blue.png";
-                    roleMenuItem.setIcon(Icons.getIcon(iconName));
-                    roleMenuItem.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.openOntology", ontology);
-                            StateMgr.getStateMgr().setCurrentOntologyId(ontology.getId());
-                        }
-                    });
-                    ontologyListMenu.add(roleMenuItem);
+            Long currOntologyId = StateMgr.getStateMgr().getCurrentOntologyId();
+            for (final Ontology ontology : ontologies) {
+                Subject subject = null;
+                try {
+                    // TODO: this should happen in a background thread
+                    subject = AccessManager.getSubjectByNameOrKey(ontology.getOwnerKey());
                 }
-
-                ontologyListMenu.add(new JSeparator());
-
-                JMenuItem addMenuItem = new JMenuItem("Create New Ontology...");
-                addMenuItem.setIcon(Icons.getIcon("page_add.png"));
-                addMenuItem.addActionListener(new NewOntologyActionListener());
-                ontologyListMenu.add(addMenuItem);
-
-                ontologyListMenu.show(ontologyButton, 0, ontologyButton.getHeight());
+                catch (Exception ex) {
+                    log.error("Error getting subject: "+ontology.getOwnerKey(),ex);
+                }
+                String owner = subject==null?ontology.getOwnerKey():subject.getFullName();
+                boolean checked = currOntologyId != null && ontology.getId().equals(currOntologyId);
+                JMenuItem roleMenuItem = new JRadioButtonMenuItem(ontology.getName() + " (" + owner + ")", checked);
+                String iconName = ClientDomainUtils.isOwner(ontology)?"folder.png":"folder_blue.png";
+                roleMenuItem.setIcon(Icons.getIcon(iconName));
+                roleMenuItem.addActionListener(e1 -> {
+                    ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.openOntology", ontology);
+                    StateMgr.getStateMgr().setCurrentOntologyId(ontology.getId());
+                });
+                ontologyListMenu.add(roleMenuItem);
             }
+
+            ontologyListMenu.add(new JSeparator());
+
+            JMenuItem addMenuItem = new JMenuItem("Create New Ontology...");
+            addMenuItem.setIcon(Icons.getIcon("page_add.png"));
+            addMenuItem.addActionListener(new NewOntologyActionListener());
+            ontologyListMenu.add(addMenuItem);
+
+            ontologyListMenu.show(ontologyButton, 0, ontologyButton.getHeight());
         });
         ontologyButton.addMouseListener(new MouseForwarder(toolBar, "OntologyButton->JToolBar"));
         toolBar.add(ontologyButton);
@@ -693,23 +661,21 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         keyBindButton.setIcon(Icons.getIcon("keyboard_add.png"));
         keyBindButton.setToolTipText("Enter key binding mode");
         keyBindButton.setFocusable(false);
-        keyBindButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                OntologyNode ontologyNode = getOntologyNode();
-                if (ontologyNode!=null) {
-                    if (keyBindButton.isSelected()) {
-                        keyBindButton.setToolTipText("Exit key binding mode");
-                        recordingKeyBinds = true;
-                        // Transfer focus to a node in the tree in preparation for key presses
-                        beanTreeView.grabFocus();
-                        ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.enterKeyBindingMode");
-                    }
-                    else {
-                        keyBindButton.setToolTipText("Enter key binding mode");
-                        recordingKeyBinds = false;
-                        saveOntologyKeybinds(ontologyNode.getOntology());
-                        ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.exitKeyBindingMode");
-                    }
+        keyBindButton.addActionListener(actionEvent -> {
+            OntologyNode ontologyNode = getOntologyNode();
+            if (ontologyNode!=null) {
+                if (keyBindButton.isSelected()) {
+                    keyBindButton.setToolTipText("Exit key binding mode");
+                    recordingKeyBinds = true;
+                    // Transfer focus to a node in the tree in preparation for key presses
+                    beanTreeView.grabFocus();
+                    ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.enterKeyBindingMode");
+                }
+                else {
+                    keyBindButton.setToolTipText("Enter key binding mode");
+                    recordingKeyBinds = false;
+                    saveOntologyKeybinds(ontologyNode.getOntology());
+                    ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.exitKeyBindingMode");
                 }
             }
         });
@@ -719,30 +685,26 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         autoShareButton.setIcon(Icons.getIcon("group_gear.png"));
         autoShareButton.setToolTipText("Configure annotation auto-sharing");
         autoShareButton.setFocusable(false);
-        autoShareButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (autoShareButton.isSelected()) {
-                    boolean pressedOk = autoAnnotationDialog.showAutoAnnotationConfiguration();
-                    if (pressedOk) {
-                        PermissionTemplate template = DataBrowserMgr.getDataBrowserMgr().getAutoShareTemplate();
-                        if (template!=null) {
-                            JOptionPane.showMessageDialog(mainFrame,
-                                "Auto-sharing annotation with "+
-                               DomainUtils.getNameFromSubjectKey(template.getSubjectKey()),
-                                "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
-                        }
+        autoShareButton.addActionListener(e -> {
+            if (autoShareButton.isSelected()) {
+                boolean pressedOk = autoAnnotationDialog.showAutoAnnotationConfiguration();
+                if (pressedOk) {
+                    PermissionTemplate template = DataBrowserMgr.getDataBrowserMgr().getAutoShareTemplate();
+                    if (template!=null) {
+                        JOptionPane.showMessageDialog(mainFrame,
+                            "Auto-sharing annotation with "+
+                           DomainUtils.getNameFromSubjectKey(template.getSubjectKey()),
+                            "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
                     }
                 }
-                else {
-                    DataBrowserMgr.getDataBrowserMgr().setAutoShareTemplate(null);
-                    JOptionPane.showMessageDialog(mainFrame,
-                        "No longer auto-sharing annotations", "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
-                }
-
-                autoShareButton.setSelected(DataBrowserMgr.getDataBrowserMgr().getAutoShareTemplate()!=null);
+            }
+            else {
+                DataBrowserMgr.getDataBrowserMgr().setAutoShareTemplate(null);
+                JOptionPane.showMessageDialog(mainFrame,
+                    "No longer auto-sharing annotations", "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
             }
 
+            autoShareButton.setSelected(DataBrowserMgr.getDataBrowserMgr().getAutoShareTemplate()!=null);
         });
         autoShareButton.setSelected(DataBrowserMgr.getDataBrowserMgr().getAutoShareTemplate()!=null);
         toolBar.add(autoShareButton);
@@ -751,10 +713,43 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         bulkPermissionsButton.setIcon(Icons.getIcon("group_edit.png"));
         bulkPermissionsButton.setToolTipText("Bulk-edit permissions for annotations on selected entities");
         bulkPermissionsButton.setFocusable(false);
-        bulkPermissionsButton.addActionListener(e -> bulkAnnotationDialog.showForSelectedDomainObjects());
+        bulkPermissionsButton.addActionListener(e -> {
+
+            DomainListViewTopComponent listView = DomainListViewManager.getInstance().getActiveViewer();
+            if (listView==null || listView.getEditor()==null) {
+                showSelectionMessage();
+                return;
+            }
+
+            ChildSelectionModel<?,?> selectionModel = listView.getEditor().getSelectionModel();
+            if (selectionModel==null) {
+                showSelectionMessage();
+                return;
+            }
+
+            List<Reference> selected = new ArrayList<>();
+            for(Object id : selectionModel.getSelectedIds()) {
+                if (id instanceof Reference) {
+                    selected.add((Reference)id);
+                }
+            }
+
+            if (selected.isEmpty()) {
+                showSelectionMessage();
+                return;
+            }
+
+            bulkAnnotationDialog.showForDomainObjects(selected, true);
+
+        });
         toolBar.add(bulkPermissionsButton);
         
         return toolBar;
+    }
+
+    private void showSelectionMessage() {
+        JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                "Select some items to bulk-edit permissions", "Error", JOptionPane.ERROR_MESSAGE);
     }
 
     private void runDefaultNodeAction(Node node) {
