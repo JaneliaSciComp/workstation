@@ -172,18 +172,24 @@ public final class ImportIdentifiersAction extends CallableSystemAction {
         SolrQueryBuilder builder = new SolrQueryBuilder();
 
         for (String subjectKey : AccessManager.getReaderSet()) {
-            log.trace("Adding query owner key: {}",subjectKey);
+            log.info("Adding query owner key: {}",subjectKey);
             builder.addOwnerKey(subjectKey);
         }
 
+        log.info("Search string: {}",builder.getSearchString());
         builder.setSearchString(searchString);
 
         final Map<String, Set<String>> filters = new HashMap<>();
+        // TODO: allow for batch searching any target type
         SearchType searchTypeAnnot = Sample.class.getAnnotation(SearchType.class);
         String searchType = searchTypeAnnot.key();
         filters.put(SearchConfiguration.SOLR_TYPE_FIELD,Sets.newHashSet(searchType));
-        
+        log.debug("Adding facet filters: {}",filters);
+        builder.getFilters().putAll(filters);
+
         SolrQuery query = builder.getQuery();
+        log.info("query={}", query);
+
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         SolrParams queryParams = SolrQueryBuilder.serializeSolrQuery(query);
         SolrJsonResults results = model.search(queryParams);
