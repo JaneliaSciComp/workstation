@@ -21,7 +21,7 @@ import java.util.Collection;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "ApplyAnnotationAction"
 )
 @ActionRegistration(
@@ -29,7 +29,7 @@ import java.util.Collection;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Ontology", position = 650, separatorBefore = 649)
+        @ActionReference(path = "Menu/actions/Ontology", position = 650, separatorBefore = 649)
 })
 @NbBundle.Messages("CTL_ApplyAnnotationAction=Apply To Selected Objects")
 public class ApplyAnnotationAction extends BaseContextualNodeAction {

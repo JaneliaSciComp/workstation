@@ -47,6 +47,12 @@
             <artifactId>jogl213lib</artifactId>
         </dependency>
 
+        <!-- Viewer Controller -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewercontroller</artifactId>
+        </dependency>
+
         <!-- Viewer API --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>

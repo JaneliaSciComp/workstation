@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "StageForPublishingAction"
 )
 @ActionRegistration(
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/Actions/Sample", position = 540)
+    @ActionReference(path = "Menu/actions/Sample", position = 540)
 })
 @Messages("CTL_StageForPublishingAction=Stage for Publishing...")
 public final class StageForPublishingAction extends BaseContextualNodeAction {

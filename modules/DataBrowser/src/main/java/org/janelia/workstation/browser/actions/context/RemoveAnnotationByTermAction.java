@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "RemoveAnnotationByTermAction"
 )
 @ActionRegistration(
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Ontology", position = 660)
+        @ActionReference(path = "Menu/actions/Ontology", position = 660)
 })
 @NbBundle.Messages("CTL_RemoveAnnotationByTermAction=Remove From Selected Objects")
 public class RemoveAnnotationByTermAction extends BaseContextualNodeAction {

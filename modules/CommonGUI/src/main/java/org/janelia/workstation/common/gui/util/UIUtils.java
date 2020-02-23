@@ -23,7 +23,7 @@ public class UIUtils {
     private static final Logger log = LoggerFactory.getLogger(UIUtils.class);
 
     /**
-     * Load an image that is found in the /images directory within the classpath.
+     * Load an image that is found in the /images dialog within the classpath.
      */
     public static ImageIcon getClasspathImage(Class loader, String filename) {
         URL picURL = loader.getResource(filename);
@@ -35,7 +35,7 @@ public class UIUtils {
     }
 
     /**
-     * Load an image that is found in the /images directory within the classpath.
+     * Load an image that is found in the /images dialog within the classpath.
      */
     public static ImageIcon getClasspathImage(String filename) throws FileNotFoundException {
         try {

@@ -72,7 +72,7 @@ public class WebDavFileKeyProxyMapper implements FileKeyToProxyMapper<WebdavCach
         } catch (FileNotFoundException e) {
             throw e;
         }
-        LOG.debug("Loading {} from {}", webDavFile.isDirectory() ? "directory" : "file", webDavFile.getRemoteFileUrl());
+        LOG.debug("Loading {} from {}", webDavFile.isDirectory() ? "dialog" : "file", webDavFile.getRemoteFileUrl());
         return new WebDavFileProxy(httpClient, webDavFile);
     }
 

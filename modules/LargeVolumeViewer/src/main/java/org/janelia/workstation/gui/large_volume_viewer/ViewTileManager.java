@@ -14,7 +14,7 @@ import org.janelia.workstation.geom.Rotation3d;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.gui.camera.Camera3d;
-import org.janelia.workstation.gui.large_volume_viewer.controller.StatusUpdateListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.StatusUpdateListener;
 import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

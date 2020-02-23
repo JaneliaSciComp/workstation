@@ -28,7 +28,7 @@ import org.openide.util.NbBundle;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "PasteAnnotationTermAction"
 )
 @ActionRegistration(
@@ -36,7 +36,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 10)
+        @ActionReference(path = "Menu/actions", position = 10)
 })
 @NbBundle.Messages("CTL_PasteAnnotationTermAction=Paste Annotation")
 public class PasteAnnotationTermAction extends BaseContextualNodeAction {

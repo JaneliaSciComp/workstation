@@ -14,7 +14,7 @@ import org.openide.util.NbBundle;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "AddToColorDepthSearchAction"
 )
 @ActionRegistration(
@@ -22,7 +22,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Sample", position = 580)
+        @ActionReference(path = "Menu/actions/Sample", position = 580)
 })
 @NbBundle.Messages("CTL_AddToColorDepthSearchAction=Add Mask to Color Depth Search...")
 public class AddToColorDepthSearchAction extends BaseContextualNodeAction {

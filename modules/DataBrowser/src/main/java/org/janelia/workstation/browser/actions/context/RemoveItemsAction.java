@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "RemoveItemsAction"
 )
 @ActionRegistration(
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 160, separatorAfter = 199)
+        @ActionReference(path = "Menu/actions", position = 160, separatorAfter = 199)
 })
 @NbBundle.Messages("CTL_RemoveItemsAction=Remove Items")
 public class RemoveItemsAction extends BaseContextualNodeAction {

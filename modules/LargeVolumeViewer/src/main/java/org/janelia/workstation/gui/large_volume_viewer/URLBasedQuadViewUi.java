@@ -64,7 +64,6 @@ public class URLBasedQuadViewUi extends QuadViewUi {
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }
-        initializeSnapshot3dLauncher(url);
         return loadDataFromURL(url);
     }
 

@@ -40,7 +40,7 @@ public class StereoModeChooser
     {
     	this.glPanel = glPanel;
     	
-    	// Create a series of swing Actions.
+    	// Create a series of swing actions.
     	stereoActions.add(new StereoAction(new MonoStereoMode(), "Off (Monoscopic)"));
     	stereoActions.add(new StereoAction(new LeftEyeStereoMode(), "Left Eye View"));
     	stereoActions.add(new StereoAction(new RightEyeStereoMode(), "Right Eye View"));

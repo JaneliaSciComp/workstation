@@ -37,7 +37,7 @@ public class SimpleIcons {
     }
     
     /**
-     * Load an image that is found in the /images directory within the classpath.
+     * Load an image that is found in the /images dialog within the classpath.
      * Borrowed from Utils class from main console module.  Any further
      * borrowings imply a need to move Utils down to this module.
      * LLF

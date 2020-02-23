@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.task_workflow;
 
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.workstation.controller.AnnotationModel;
 
 public interface TaskDataSourceI {
     AnnotationModel getAnnotationModel();

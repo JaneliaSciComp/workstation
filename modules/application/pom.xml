@@ -58,6 +58,12 @@
             <artifactId>browser</artifactId>
         </dependency>
 
+        <!-- Viewer Controller -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewercontroller</artifactId>
+        </dependency>
+
         <!-- Large Volume Viewer --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>

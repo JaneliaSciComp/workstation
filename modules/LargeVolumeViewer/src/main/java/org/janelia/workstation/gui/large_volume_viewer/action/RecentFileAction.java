@@ -4,7 +4,7 @@ import java.awt.event.ActionEvent;
 import java.net.URL;
 
 import javax.swing.AbstractAction;
-import org.janelia.workstation.gui.large_volume_viewer.controller.UrlLoadListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.UrlLoadListener;
 
 /**
  * Menu item to load a particular file from a URL

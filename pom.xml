@@ -278,6 +278,13 @@
                 <artifactId>horta</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <!-- Viewer Controller -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>viewercontroller</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             
             <!-- Viewer 3D -->
             <dependency>
@@ -1047,6 +1054,7 @@
         <module>modules/LargeVolumeViewer</module>
         <module>modules/Viewer3D</module>
         <module>modules/ViewerAPI</module>
+        <module>modules/ViewerController</module>
         <module>modules/GLViewerTools</module>
         <module>modules/Geometry3d</module>
         <module>modules/SceneWindow</module>

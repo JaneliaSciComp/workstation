@@ -33,7 +33,7 @@ import org.openide.util.NbBundle;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "MergeSelectedNeuronsAction"
 )
 @ActionRegistration(
@@ -41,7 +41,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Sample", position = 560)
+        @ActionReference(path = "Menu/actions/Sample", position = 560)
 })
 @NbBundle.Messages("CTL_MergeSelectedNeuronsAction=Merge Selected Neurons")
 public class MergeSelectedNeuronsAction extends BaseContextualNodeAction {

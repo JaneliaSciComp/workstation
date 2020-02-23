@@ -153,7 +153,7 @@ public class FileBasedOctreeMetadataSniffer {
             tileFormat.setHasYSlices(new File(topFolder, "ZX.0.tif").exists());
             tileFormat.setHasZSlices(new File(topFolder, CHANNEL_0_STD_TIFF_NAME).exists());
 
-            // Deduce octree depth from directory structure depth
+            // Deduce octree depth from dialog structure depth
             int octreeDepth = 0;
             File deepFolder = topFolder;
             File deepFile = new File(topFolder, CHANNEL_0_STD_TIFF_NAME);

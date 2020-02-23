@@ -753,7 +753,7 @@ public class Utils {
             }
         }
         catch (Exception e) {
-            log.error("Error trying to test and create a download directory", e);
+            log.error("Error trying to test and create a download dialog", e);
         }
 
         return fileDownloadsPath;

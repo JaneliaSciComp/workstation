@@ -4,7 +4,7 @@ import javax.swing.JFrame;
 
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.options.ApplicationOptions;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.model.domain.DomainObject;
 
 class QuadViewUiProvider {

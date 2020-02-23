@@ -12,7 +12,7 @@ import org.openide.util.NbBundle;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "OpenInFijiViewerAction"
 )
 @ActionRegistration(
@@ -20,7 +20,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 250)
+        @ActionReference(path = "Menu/actions", position = 250)
 })
 @NbBundle.Messages("CTL_OpenInFijiViewerBuilder=Open With Fiji")
 public class OpenInFijiViewerAction extends BaseOpenExternallyAction {

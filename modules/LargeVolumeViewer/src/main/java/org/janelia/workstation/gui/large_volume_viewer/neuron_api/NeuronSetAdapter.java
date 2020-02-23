@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import com.google.common.base.Stopwatch;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
@@ -20,14 +21,14 @@ import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.workstation.controller.spatialfilter.SpatialFilter;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.PredefinedNote;
-import org.janelia.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.TaskReviewListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
-import org.janelia.workstation.gui.large_volume_viewer.dialogs.MessagingDiagnosticsDialog;
+import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.model.PredefinedNote;
+import org.janelia.workstation.controller.listener.BackgroundAnnotationListener;
+import org.janelia.workstation.controller.listener.GlobalAnnotationListener;
+import org.janelia.workstation.controller.listener.TaskReviewListener;
+import org.janelia.workstation.controller.listener.TmGeoAnnotationModListener;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -91,12 +92,12 @@ public class NeuronSetAdapter
 
     // see note in loadUserPreferences() re: calling back into annmgr for this stuff!
     public void changeNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
-        annotationModel.setNeuronVisibility(neuron, visibility);
+      //  annotationModel.setNeuronVisibility(neuron, visibility);
     }
 
     @Override
     public void changeNeuronVisibility(List<TmNeuronMetadata> neuronList, boolean visible) {
-        annotationModel.setNeuronVisibility(neuronList, visible);
+        //annotationModel.setNeuronVisibility(neuronList, visible);
     }
 
     @Override
@@ -115,20 +116,15 @@ public class NeuronSetAdapter
     }
 
     @Override
-    public void changeNeuronOwnership(Long neuronId) {
+    public CompletableFuture<Boolean> changeNeuronOwnership(Long neuronId) {
         try {
             TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
-            if (neuron == null) {
-                return;
-            }
-            neuron.setOwnerKey(AccessManager.getSubjectKey());
-            annotationModel.getNeuronManager().saveNeuronData(neuron, "Change Ownership");
-            //return LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().getNeuronManager().requestOwnershipChange(neuron);
+            return LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().getNeuronManager().requestOwnershipChange(neuron);
         } catch (Exception error) {
             FrameworkAccess.handleException(error);
         }
+        return null;
     }
-
 
     private void updateVoxToMicronMatrices(TmSample sample) {
         // If we try to get the matrix too early, it comes back null, so populate just-in-time
@@ -396,11 +392,11 @@ public class NeuronSetAdapter
     }
 
     @Override
-    public void neuronBranchReviewed(TmNeuronMetadata neuron, List<TmGeoAnnotation> annList, boolean reviewed) {
+    public void neuronBranchReviewed(TmNeuronMetadata neuron, List<TmGeoAnnotation> annList) {
         // determine the neuronvertices for each of these and add them to the model
         NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
         if (!neuronModel.getReviewMode())
-            neuronModel.setReviewMode(reviewed);
+            neuronModel.setReviewMode(true);
         List<NeuronVertex> vertexList = new ArrayList<>();
         if (annList!=null && annList.size()>0) {
             for (TmGeoAnnotation annotation : annList) {
@@ -408,10 +404,7 @@ public class NeuronSetAdapter
                 if (vertex!=null)
                     vertexList.add(vertex);
             }
-            if (reviewed)
-                neuronModel.addReviewedVertices(vertexList);
-            else
-                neuronModel.removeReviewedVertices(vertexList);
+            neuronModel.addReviewedVertices(vertexList);
         }
         neuronModel.getColorChangeObservable().hasChanged();
         neuronModel.getColorChangeObservable().notifyObservers();
@@ -645,12 +638,6 @@ public class NeuronSetAdapter
         TmGeoAnnotation annotation = getAnnotationForAnchor(anchor);
         if (annotation!=null)
             annotationModel.selectPoint(annotation.getNeuronId(), annotation.getId());
-    }
-
-    @Override
-    public void startUpMessagingDiagnostics(NeuronModel neuron) {
-        TmNeuronMetadata neuronMetadata = annotationModel.getNeuronFromNeuronID(neuron.getNeuronId());
-        MessagingDiagnosticsDialog dialog = new MessagingDiagnosticsDialog(neuronMetadata);
     }
 
     private class NeuronSetBackgroundAnnotationListener implements BackgroundAnnotationListener {
@@ -907,7 +894,7 @@ public class NeuronSetAdapter
             repaintHorta(neuronModel);
         }
 
-        @Override
+       // @Override
         public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
             // log.info("neuronStyleChanged");
             if (updateOneNeuronStyle(neuron, style)) {
@@ -967,7 +954,7 @@ public class NeuronSetAdapter
             return result;
         }
 
-        @Override
+     //   @Override
         public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStylemap) {
             // log.info("neuronStylesChanged");
             if (neuronStylemap == null)

@@ -33,7 +33,7 @@ public class ExportResultsAction<T,S> extends AbstractAction {
     private static final Logger log = LoggerFactory.getLogger(ExportResultsAction.class);
     
     /**
-     * Default directory for exports
+     * Default dialog for exports
      */
     protected static final String DEFAULT_EXPORT_DIR = System.getProperty("user.home");
     

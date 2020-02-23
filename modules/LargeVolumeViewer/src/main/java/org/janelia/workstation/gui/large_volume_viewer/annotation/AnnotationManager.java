@@ -20,12 +20,23 @@ import java.util.stream.Collectors;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.janelia.console.viewerapi.dialogs.NeuronGroupsDialog;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
+import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.workstation.tracing.*;
+import org.janelia.workstation.gui.large_volume_viewer.QuadViewUi;
+import org.janelia.workstation.gui.large_volume_viewer.TileServer;
+import org.janelia.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
+import org.janelia.workstation.gui.large_volume_viewer.skeleton.UpdateAnchorListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.VolumeLoadListener;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.workstation.gui.large_volume_viewer.controller.PathTraceListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
+import org.janelia.workstation.gui.task_workflow.NeuronTree;
+import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.core.api.AccessManager;
@@ -36,25 +47,10 @@ import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleListenableFuture;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.workstation.gui.large_volume_viewer.QuadViewUi;
-import org.janelia.workstation.gui.large_volume_viewer.TileServer;
-import org.janelia.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
-import org.janelia.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.gui.large_volume_viewer.api.ModelTranslation;
-import org.janelia.workstation.gui.large_volume_viewer.dialogs.AdminHistoryDialog;
-import org.janelia.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
-import org.janelia.workstation.gui.large_volume_viewer.dialogs.NeuronGroupsDialog;
+import org.janelia.workstation.controller.action.NeuronTagsAction;
+import org.janelia.workstation.controller.network.ModelTranslation;
+import org.janelia.console.viewerapi.dialogs.EditWorkspaceNameDialog;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
-import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
-import org.janelia.workstation.gui.task_workflow.NeuronTree;
-import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
-import org.janelia.workstation.tracing.AnchoredVoxelPath;
-import org.janelia.workstation.tracing.PathTraceToParentRequest;
-import org.janelia.workstation.tracing.PathTraceToParentWorker;
-import org.janelia.workstation.tracing.VoxelPosition;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
@@ -84,16 +80,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
  * by events generated at AnnotationModel.
  */
 {
+
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
+
+    private ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
 
     private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     // annotation model object
-    private AnnotationModel annotationModel;
-
-    private ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
-
-    // quad view ui object
     private QuadViewUi quadViewUi;
 
     private DomainObject initialObject;
@@ -102,7 +96,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     private LargeVolumeViewerTranslator lvvTranslator;
 
+
     private File swcDirectory;
+    private AnnotationModel annotationModel;
 
 
     public boolean isTempOwnershipAdmin() {
@@ -127,9 +123,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
-    public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi,
-        LargeVolumeViewerTranslator lvvTranslator, TileServer tileServer) {
-        this.annotationModel = annotationModel;
+    public AnnotationManager(QuadViewUi quadViewUi, TileServer tileServer, LargeVolumeViewerTranslator lvvTranslator) {
+        this.annotationModel = AnnotationModel.getInstance();
         this.quadViewUi = quadViewUi;
         this.tileServer = tileServer;
         this.lvvTranslator = lvvTranslator;
@@ -231,7 +226,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             setNeuronRadius(anchor.getNeuronID());
         }
     }
-    
+
     public void editNeuronGroups() {
         NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
         ngDialog.showDialog();
@@ -281,17 +276,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             parentNode.addChild(childNode);
         return childNode;
     }
-    
-    public void showNeuronHistory() {
-        AdminHistoryDialog historyDialog = new AdminHistoryDialog();
-        historyDialog.showDialog();
-    }
 
-
-    public void anchorAdded(AnchorSeed seed) {
+    public void anchorAdded(Skeleton.AnchorSeed seed) {
         addAnnotation(seed.getLocation(), seed.getParentGuid());
     }
-    
+
     public boolean checkOwnership(TmNeuronMetadata neuron)  {
         if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
             if (neuron.getOwnerKey().equals(TRACERS_GROUP)) {
@@ -1913,11 +1902,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
     
     public void setNeuronVisibility(Collection<TmNeuronMetadata> bulkNeurons, boolean visibility) {
-        annotationModel.setNeuronVisibility(bulkNeurons, visibility);
+        //annotationModel.setNeuronVisibility(bulkNeurons, visibility);
     }
     
     public void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
-        annotationModel.setNeuronVisibility(neuron, visibility);
+     //   annotationModel.setNeuronVisibility(neuron, visibility);
     }
     
     public void setNeuronNonInteractable(List<TmNeuronMetadata> neuronList, boolean nonInteractable) {
@@ -1927,7 +1916,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
              style.setNonInteractable(nonInteractable);
              styleUpdater.put(neuronList.get(i), style);
         }
-        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+        //this.annotationModel.fireNeuronStylesChanged(styleUpdater);
     } 
         
     public void setNeuronUserToggleRadius(List<TmNeuronMetadata> neuronList, boolean toggleRadius) {
@@ -1937,7 +1926,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
              style.setUserToggleRadius(toggleRadius);
              styleUpdater.put(neuronList.get(i), style);
         }
-        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+      //  this.annotationModel.fireNeuronStylesChanged(styleUpdater);
     }
     
     public void setNeuronUserProperties(List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle) {
@@ -1949,20 +1938,21 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
              }
              styleUpdater.put(neuronList.get(i), style);
         }
-        this.annotationModel.fireNeuronStylesChanged(styleUpdater);
+      //  this.annotationModel.fireNeuronStylesChanged(styleUpdater);
     }
 
     public NeuronStyle getNeuronStyle(TmNeuronMetadata neuron) {
         // simple pass through; I want get/set to look the same, and set is *not*
         //  just a pass through
-        return annotationModel.getNeuronStyle(neuron);
+       // return annotationModel.getNeuronStyle(neuron);
+        return null;
     }
 
     public void setNeuronStyle(final TmNeuronMetadata neuron, final NeuronStyle style) {
         SimpleWorker setter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.setNeuronStyle(neuron, style);
+        //        annotationModel.setNeuronStyle(neuron, style);
             }
 
             @Override
@@ -2193,9 +2183,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return annotationModel;
     }
 
-    public NeuronSet getNeuronSet() {
-        return annotationModel.getNeuronSet();
-    }
+   // public NeuronSet getNeuronSet() {
+       // return annotationModel.getNeuronSet();
+  //  }
     
     
 }

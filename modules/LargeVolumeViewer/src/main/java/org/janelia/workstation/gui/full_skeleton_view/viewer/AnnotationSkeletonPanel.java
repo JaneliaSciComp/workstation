@@ -21,7 +21,7 @@ import javax.swing.filechooser.FileFilter;
 
 import org.janelia.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.workstation.gui.large_volume_viewer.controller.SkeletonController;
+import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.AxesActor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.DirectionalReferenceAxesActor;
@@ -426,7 +426,7 @@ public class AnnotationSkeletonPanel extends JPanel {
 
                     @Override
                     public String getDescription() {
-                        return "Please choose an output directory and filename root.  Output file will have '.obj' suffix, and will include the id of an anchor from the current workspace.";
+                        return "Please choose an output dialog and filename root.  Output file will have '.obj' suffix, and will include the id of an anchor from the current workspace.";
                     }
                     
                 });

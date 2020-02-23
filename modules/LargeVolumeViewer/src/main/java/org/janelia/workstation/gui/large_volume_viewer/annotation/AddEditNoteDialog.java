@@ -16,6 +16,7 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.controller.model.PredefinedNote;
 
 /**
  * allow the user to add a note to an annotation, including selecting

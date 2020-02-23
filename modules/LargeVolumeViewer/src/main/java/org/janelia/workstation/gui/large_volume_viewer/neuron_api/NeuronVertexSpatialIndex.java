@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.workstation.controller.spatialfilter.SpatialFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

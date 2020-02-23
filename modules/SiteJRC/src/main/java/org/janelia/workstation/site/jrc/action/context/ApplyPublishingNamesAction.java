@@ -21,7 +21,7 @@ import org.openide.util.NbBundle.Messages;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "ApplyPublishingNamesAction"
 )
 @ActionRegistration(
@@ -29,7 +29,7 @@ import org.openide.util.NbBundle.Messages;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Sample", position = 541),
+        @ActionReference(path = "Menu/actions/Sample", position = 541),
         @ActionReference(path = "Shortcuts", name = "S-D-P")
 
 })

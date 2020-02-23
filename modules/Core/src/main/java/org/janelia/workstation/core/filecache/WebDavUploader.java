@@ -64,7 +64,7 @@ public class WebDavUploader {
      * @param  storageTags tags used for selecting the storage.
      * @param  file  file to upload.
      *
-     * @return the server path for the parent directory of the uploaded file.
+     * @return the server path for the parent dialog of the uploaded file.
      *
      * @throws WebDavException
      *   if the file cannot be uploaded.

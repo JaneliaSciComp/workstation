@@ -22,7 +22,7 @@ import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.network.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;

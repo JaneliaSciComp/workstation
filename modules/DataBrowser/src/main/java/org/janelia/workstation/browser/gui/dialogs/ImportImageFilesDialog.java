@@ -185,7 +185,7 @@ public class ImportImageFilesDialog extends ModalDialog {
         add(attrPanel, BorderLayout.CENTER);
 
         this.okButton = new JButton("Import");
-        okButton.setToolTipText("Import the selected file or directory");
+        okButton.setToolTipText("Import the selected file or dialog");
         okButton.addActionListener(e -> handleOkPress());
 
         JButton cancelButton = new JButton("Cancel");
@@ -320,7 +320,7 @@ public class ImportImageFilesDialog extends ModalDialog {
 
         } 
         else {
-            JOptionPane.showMessageDialog(ImportImageFilesDialog.this, "Please specify a valid file or directory to import.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(ImportImageFilesDialog.this, "Please specify a valid file or dialog to import.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 

@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * 
  * Adapted from MightPork's class here:
  * http://stackoverflow.com/questions/18004150
- * /desktop-api-is-not-supported-on-the-current-platform
+ * /desktop-network-is-not-supported-on-the-current-platform
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

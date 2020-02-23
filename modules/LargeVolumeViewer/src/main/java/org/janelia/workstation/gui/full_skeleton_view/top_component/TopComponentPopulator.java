@@ -9,7 +9,7 @@ import org.janelia.workstation.gui.full_skeleton_view.data_source.AnnotationSkel
 import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonPanel;
 import org.janelia.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;

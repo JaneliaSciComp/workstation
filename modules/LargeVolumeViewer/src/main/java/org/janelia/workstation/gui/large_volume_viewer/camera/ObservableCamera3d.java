@@ -2,7 +2,7 @@ package org.janelia.workstation.gui.large_volume_viewer.camera;
 
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.camera.Camera3d;
-import org.janelia.workstation.gui.large_volume_viewer.controller.CameraListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.CameraListener;
 
 public interface ObservableCamera3d
 extends Camera3d

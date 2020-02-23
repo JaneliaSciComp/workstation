@@ -360,11 +360,11 @@ public class NeuronModelAdapter implements NeuronModel {
         // set yet at WorkspaceLoaded time.
         if (cachedColor != null)
             return cachedColor;
-        NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
+        /*NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
         if (style != null) {
             cachedColor = style.getColor();
             return cachedColor;
-        }
+        }*/
         return defaultColor;
     }
 
@@ -379,18 +379,18 @@ public class NeuronModelAdapter implements NeuronModel {
         // Set color in actual wrapped Style
         boolean vis = true;
         Color deepColor = null;
-        NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
+        /*NeuronStyle style = neuronSet.annotationModel.getNeuronStyle(neuron);
         if (style != null) {
             vis = style.isVisible();
             deepColor = style.getColor();
         } else {
             vis = isVisible();
-        }
+        }*/
 
         // Avoid multiple style setting calls
         if (!color.equals(deepColor)) {
             try {
-                neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis, isNonInteractable()));
+               // neuronSet.annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis, isNonInteractable()));
             } catch (Exception ex) {
                 logger.error("Error setting neuron style", ex);
             }

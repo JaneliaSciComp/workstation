@@ -737,7 +737,7 @@ public class DarculaLFCustoms extends LFCustoms {
     /**
      * JSP completion colors
      */
-    private static final String JSP_COMPLETION_ITEM_CLASS = "org.netbeans.modules.web.core.syntax.completion.api.JspCompletionItem";
+    private static final String JSP_COMPLETION_ITEM_CLASS = "org.netbeans.modules.web.core.syntax.completion.network.JspCompletionItem";
     private static final String JSP_COLOR_BASE_COMPLETION = "COLOR_BASE_COMPLETION";
     private void replaceJSPCompletionColor() {
         replaceFieldValue(JSP_COMPLETION_ITEM_CLASS, JSP_COLOR_BASE_COMPLETION, new Color(204, 105, 50));
@@ -747,7 +747,7 @@ public class DarculaLFCustoms extends LFCustoms {
      * #106
      * HTML completion colors for HTML Tags and Custom Tags
      */
-    private static final String HTML_COMPLETION_ITEM_CLASS = "org.netbeans.modules.html.editor.api.completion.HtmlCompletionItem$Tag";
+    private static final String HTML_COMPLETION_ITEM_CLASS = "org.netbeans.modules.html.editor.network.completion.HtmlCompletionItem$Tag";
     private static final String CUSTOM_TAG_COMPLETION_ITEM_CLASS = "org.netbeans.modules.html.custom.CustomTagCompletionItem";
     private static final String HTML_DEFAULT_FG_COLOR = "DEFAULT_FG_COLOR";
     private void replaceHTMLCompletionColor() {
