@@ -7,11 +7,11 @@ import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.WheelMode;
 import org.janelia.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
-import org.janelia.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
-import org.janelia.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
-import org.janelia.workstation.gui.large_volume_viewer.controller.MessageListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
+import org.janelia.console.viewerapi.components.SpinnerCalculationValue;
+import org.janelia.workstation.gui.large_volume_viewer.listener.CameraListenerAdapter;
+import org.janelia.workstation.gui.large_volume_viewer.listener.MessageListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.MouseWheelModeListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.VolumeLoadListener;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;

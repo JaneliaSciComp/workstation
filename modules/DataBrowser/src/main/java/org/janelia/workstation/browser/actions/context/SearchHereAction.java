@@ -27,7 +27,7 @@ import org.openide.util.NbBundle;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 //@ActionID(
-//        category = "Actions",
+//        category = "actions",
 //        id = "SearchHereAction"
 //)
 //@ActionRegistration(
@@ -35,7 +35,7 @@ import org.openide.util.NbBundle;
 //        lazy = false
 //)
 //@ActionReferences({
-//        @ActionReference(path = "Menu/Actions", position = 450, separatorAfter = 499)
+//        @ActionReference(path = "Menu/actions", position = 450, separatorAfter = 499)
 //})
 //@NbBundle.Messages("CTL_SearchHereAction=Search Here")
 public class SearchHereAction extends BaseContextualNodeAction {

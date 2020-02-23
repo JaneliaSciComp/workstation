@@ -82,9 +82,9 @@ public class GracefulBrick {
         JOptionPane.showOptionDialog(FrameworkAccess.getMainFrame(), html,
               "Manual Update Required", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE, null, buttons, buttons[0]);
         
-        // Delete any logs to ensure that the install directory is properly cleaned up
+        // Delete any logs to ensure that the install dialog is properly cleaned up
         if (uninstaller!=null) {
-            log.info("Deleting logs in install directory: "+uninstaller.getParentFile());
+            log.info("Deleting logs in install dialog: "+uninstaller.getParentFile());
             deleteLogs(uninstaller.getParentFile());
         }
         

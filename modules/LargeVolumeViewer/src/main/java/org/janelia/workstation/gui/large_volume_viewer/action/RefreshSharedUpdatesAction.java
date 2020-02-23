@@ -2,7 +2,8 @@ package org.janelia.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
 
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.action.EditAction;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 
 public class RefreshSharedUpdatesAction extends EditAction {

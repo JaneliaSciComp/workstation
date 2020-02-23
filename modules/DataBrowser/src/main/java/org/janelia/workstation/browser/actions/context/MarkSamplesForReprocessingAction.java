@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "MarkSamplesForReprocessingAction"
 )
 @ActionRegistration(
@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Sample", position = 510)
+        @ActionReference(path = "Menu/actions/Sample", position = 510)
 })
 @NbBundle.Messages("CTL_MarkSamplesForReprocessingAction=Mark Samples for Reprocessing...")
 public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {

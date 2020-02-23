@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A class which unifies normal Swing Actions (manipulating domain objects) with the NetBeans NodeAction model
+ * A class which unifies normal Swing actions (manipulating domain objects) with the NetBeans NodeAction model
  * of acting on selected Nodes. This action can then be returned from both getAction and getNodeAction of
  * a ContextualActionBuilder.
  *

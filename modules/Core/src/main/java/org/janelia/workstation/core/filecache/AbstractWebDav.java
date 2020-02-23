@@ -108,7 +108,7 @@ class AbstractWebDav {
     }
 
     /**
-     * @return true if the file si a directory; otherwise false.
+     * @return true if the file si a dialog; otherwise false.
      */
     public boolean isDirectory() {
         return isDirectory;

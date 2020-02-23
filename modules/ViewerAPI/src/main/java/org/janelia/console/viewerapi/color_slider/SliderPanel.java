@@ -294,7 +294,7 @@ public class SliderPanel extends JPanel {
 
     public File getDefaultColorModelDirectory() {
         // at Janelia, users store their saved color models in a shared, standard
-        //  location; if it's reachable, start the file dialogs in that directory
+        //  location; if it's reachable, start the file dialogs in that dialog
         // do a brute force search, similar to AnnotationManager.getDefaultSwcDirectory()
         String osName = System.getProperty("os.name").toLowerCase();
         List<Path> prefixesToTry = new Vector<>();

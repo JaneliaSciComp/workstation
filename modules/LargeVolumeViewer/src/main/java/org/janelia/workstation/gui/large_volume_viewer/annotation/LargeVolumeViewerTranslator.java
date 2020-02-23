@@ -3,19 +3,20 @@ package org.janelia.workstation.gui.large_volume_viewer.annotation;
 import Jama.Matrix;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.workstation.gui.large_volume_viewer.controller.AnchoredVoxelPathListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.NeuronStyleChangeListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.NextParentListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.SkeletonController;
-import org.janelia.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationAnchorListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.ViewStateListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.AnchoredVoxelPathListener;
+import org.janelia.workstation.controller.listener.BackgroundAnnotationListener;
+import org.janelia.workstation.controller.listener.GlobalAnnotationListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.NeuronStyleChangeListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.NextParentListener;
+import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
+import org.janelia.workstation.controller.listener.TmAnchoredPathListener;
+import org.janelia.workstation.controller.listener.TmGeoAnnotationAnchorListener;
+import org.janelia.workstation.controller.listener.TmGeoAnnotationModListener;
+import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -274,7 +275,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         updateNeuronRadius(neuron);
     }
 
-    @Override
+   /* @Override
     public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
         fireNeuronStyleChangeEvent(neuron, style);
     }
@@ -282,7 +283,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     @Override
     public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
         fireNeuronStylesChangedEvent(neuronStyleMap);
-    }
+    }*/
 
     @Override
     public void neuronTagsChanged(List<TmNeuronMetadata> neuronList) {
@@ -345,8 +346,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 // (we used to retrieve global color here; replaced by styles)
                 // set styles for our neurons; if a neuron isn't in the saved map,
                 //  use a default style
-                NeuronStyle style = annModel.getNeuronStyle(neuron);
-                updateNeuronStyleMap.put(neuron, style);
+               /// NeuronStyle style = annModel.getNeuronStyle(neuron);
+               // updateNeuronStyleMap.put(neuron, style);
 
                 // note that we must add annotations in parent-child sequence
                 //  so lines get drawn correctly; we must send this as one big
@@ -401,8 +402,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
         List<TmAnchoredPath> annList = new ArrayList<>();
 
-        NeuronStyle style = annModel.getNeuronStyle(neuron);
-        updateNeuronStyleMap.put(neuron, style);
+      //  NeuronStyle style = annModel.getNeuronStyle(neuron);
+      //  updateNeuronStyleMap.put(neuron, style);
 
         for (TmGeoAnnotation root : neuron.getRootAnnotations()) {
             addedAnchorList.addAll(neuron.getSubTreeList(root));
@@ -700,8 +701,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
         List<TmAnchoredPath> annList = new ArrayList<>();
 
-        NeuronStyle style = annModel.getNeuronStyle(neuron);
-        updateNeuronStyleMap.put(neuron, style);
+     //   NeuronStyle style = annModel.getNeuronStyle(neuron);
+     //   updateNeuronStyleMap.put(neuron, style);
 
         for (TmGeoAnnotation root : neuron.getRootAnnotations()) {
             addedAnchorList.addAll(neuron.getSubTreeList(root));

@@ -12,7 +12,7 @@ import org.openide.util.NbBundle;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "OpenInVaa3dTriViewAction"
 )
 @ActionRegistration(
@@ -20,7 +20,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 230)
+        @ActionReference(path = "Menu/actions", position = 230)
 })
 @NbBundle.Messages("CTL_OpenInVaa3dTriViewAction=Open With Default App")
 public class OpenInVaa3dTriViewAction extends BaseOpenExternallyAction {

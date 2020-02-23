@@ -7,7 +7,6 @@ import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
 import org.janelia.workstation.core.workers.BackgroundWorker;
 import org.janelia.workstation.gui.large_volume_viewer.Subvolume;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.workstation.gui.large_volume_viewer.controller.PathTraceListener;
 
 import java.util.ArrayList;
 import java.util.Collection;

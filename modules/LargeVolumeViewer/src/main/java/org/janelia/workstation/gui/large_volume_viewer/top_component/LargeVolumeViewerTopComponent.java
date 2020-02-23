@@ -21,9 +21,8 @@ import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.network.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
-import org.janelia.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -117,7 +116,6 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     public void openLargeVolumeViewer(DomainObject domainObject) {
         log.info("openLargeVolumeViewer({})",domainObject);
         setCurrent(domainObject);
-        Snapshot3DLauncher.removeStaleViewer();
         getLvvv().loadDomainObject(domainObject);
         initialObjectReference = Reference.createFor(domainObject);
     }
@@ -197,7 +195,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     }
 
     /**
-     * A safe way to ask if editing functions (such as Actions) should be enabled. Returns false if the quad view has not yet been initialized.
+     * A safe way to ask if editing functions (such as actions) should be enabled. Returns false if the quad view has not yet been initialized.
      */
     public boolean editsAllowed() {
         return lvvv.hasQuadViewUi() && lvvv.getQuadViewUi().getAnnotationMgr().editsAllowed();

@@ -15,7 +15,7 @@ import org.openide.util.NbBundle;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "OntologyShortcutAction"
 )
 @ActionRegistration(
@@ -23,7 +23,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Ontology", position = 620, separatorBefore = 599)
+        @ActionReference(path = "Menu/actions/Ontology", position = 620, separatorBefore = 599)
 })
 @NbBundle.Messages("CTL_OntologyShortcutAction=Assign Shortcut...")
 public class OntologyShortcutAction extends BaseContextualNodeAction {

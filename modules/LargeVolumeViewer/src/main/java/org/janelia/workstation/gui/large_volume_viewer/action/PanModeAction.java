@@ -5,7 +5,7 @@ import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.MouseWheelModeListener;
 
 // PanModeAction puts the large volume viewer into Pan mode.
 public class PanModeAction extends AbstractAction 

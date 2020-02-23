@@ -8,7 +8,6 @@ import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.workstation.tracing.SegmentIndex;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

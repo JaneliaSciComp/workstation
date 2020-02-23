@@ -5,7 +5,7 @@ import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import org.janelia.workstation.gui.large_volume_viewer.controller.RepaintListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.RepaintListener;
 
 import org.janelia.workstation.gui.viewer3d.interfaces.AwtActor;
 //import Signal;

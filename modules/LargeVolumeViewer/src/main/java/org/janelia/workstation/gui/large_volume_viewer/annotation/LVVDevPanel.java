@@ -14,6 +14,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;

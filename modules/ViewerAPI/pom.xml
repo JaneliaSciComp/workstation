@@ -28,7 +28,21 @@
             <groupId>org.janelia.workstation</groupId>
             <artifactId>integration</artifactId>
         </dependency>
-        
+
+
+        <!-- CommonGUI -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>common-gui</artifactId>
+        </dependency>
+
+        <!-- Core -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+
+
         <!-- NetBeans Modules -->
         <dependency>
             <groupId>org.netbeans.api</groupId>

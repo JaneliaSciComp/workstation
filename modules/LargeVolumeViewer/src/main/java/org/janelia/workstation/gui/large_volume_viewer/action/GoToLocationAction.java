@@ -3,7 +3,7 @@ package org.janelia.workstation.gui.large_volume_viewer.action;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.CameraPanToListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;

@@ -29,7 +29,7 @@ public class TestExtractSubvolume {
             wholeImage.loadURL(new File(octreeFolder).toURI().toURL());
         } catch (MalformedURLException e) {
             e.printStackTrace();
-            fail("Error opening octree directory "+octreeFolder);
+            fail("Error opening octree dialog "+octreeFolder);
         }
         // Create some padding around the neurite ends
         ZoomedVoxelIndex v1pad = new ZoomedVoxelIndex(

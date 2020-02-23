@@ -8,7 +8,7 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.workstation.core.api.SessionMgr;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 
 import java.util.Date;

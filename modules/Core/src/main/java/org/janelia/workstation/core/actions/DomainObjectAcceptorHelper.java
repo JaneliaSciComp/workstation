@@ -88,7 +88,7 @@ public class DomainObjectAcceptorHelper {
 
         List<Action> actions = new ArrayList<>();
         try {
-            FileObject actionsFile = FileUtil.getConfigFile("Menu/Actions");
+            FileObject actionsFile = FileUtil.getConfigFile("Menu/actions");
             DataObject actionsObject = DataObject.find(actionsFile);
             DataFolder actionsFolder = actionsObject.getLookup().lookup(DataFolder.class);
             walkActionTree(actionsFolder, actions);

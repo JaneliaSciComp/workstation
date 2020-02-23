@@ -55,26 +55,24 @@ import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.workstation.gui.large_volume_viewer.action.*;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
+import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.infopanel.AnnotationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
-import org.janelia.workstation.gui.large_volume_viewer.api.ModelTranslation;
+import org.janelia.workstation.controller.network.ModelTranslation;
 import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
-import org.janelia.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
-import org.janelia.workstation.gui.large_volume_viewer.components.TileStackCacheStatusPanel;
-import org.janelia.workstation.gui.large_volume_viewer.controller.CameraListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.QuadViewController;
-import org.janelia.workstation.gui.large_volume_viewer.controller.SkeletonController;
-import org.janelia.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
+import org.janelia.console.viewerapi.components.SpinnerCalculationValue;
+import org.janelia.workstation.gui.large_volume_viewer.listener.CameraListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.PathTraceRequestListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.QuadViewController;
+import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
+import org.janelia.workstation.gui.large_volume_viewer.listener.VolumeLoadListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.WorkspaceClosureListener;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
-import org.janelia.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewLauncher;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.tracing.PathTraceToParentRequest;
@@ -160,7 +158,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     private final LargeVolumeViewerTranslator largeVolumeViewerTranslator;
     private AnnotationPanel annotationPanel;
 
-    // Actions
+    // actions
     private final Action openFolderAction = new OpenFolderAction(largeVolumeViewer.getComponent(), this);
     private RecentFileList recentFileList = new RecentFileList(new JMenu("Open Recent"));
     private final Action resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
@@ -198,7 +196,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     private final BacktrackNeuronAction backtrackNeuronAction = new BacktrackNeuronAction(this);
     private TileFormat tileFormat;
 
-    private Snapshot3DLauncher snapshot3dLauncher;
     private SkeletonController skeletonController;
     private AnnotationSkeletonViewLauncher annotationSkeletonViewLauncher;
     private TaskWorkflowViewLauncher taskWorkflowViewLauncher;
@@ -310,7 +307,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
 
         this.annotationModel = annotationModel;
         this.largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
-        this.annotationMgr = new AnnotationManager(annotationModel, this, largeVolumeViewerTranslator, tileServer);
+        this.annotationMgr = new AnnotationManager(this, tileServer, largeVolumeViewerTranslator);
 
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
@@ -448,7 +445,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
                     result.add(addCopyTileLocMenuItem());
                     result.add(addCopyRawTileFileLocMenuItem(annotationModel.getCurrentSample()));
                     result.add(addCopyOctreePathMenuItem(annotationModel.getCurrentSample()));
-                    result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.addAll(taskWorkflowViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());
@@ -532,22 +528,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return tileFormat;
     }
 
-    Snapshot3DLauncher initializeSnapshot3dLauncher(URL volumeBaseURL) {
-        snapshot3dLauncher = new Snapshot3DLauncher(
-                largeVolumeViewer.getTileServer(),
-                largeVolumeViewer.getSliceAxis(),
-                camera,
-                getSubvolumeProvider(),
-                volumeBaseURL,
-                imageColorModel
-        );
-        snapshot3dLauncher.setAnnotationManager(annotationMgr);
-        annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
-        taskWorkflowViewLauncher = new TaskWorkflowViewLauncher();
-        volumeImage.setVolumeBaseURL(volumeBaseURL);
-        return snapshot3dLauncher;
-    }
-
     private void updateRanges() {
         // Z range
         double zMin = volumeImage.getBoundingBox3d().getMin().getZ();
@@ -601,9 +581,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
             zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
             zScanScrollModeAction.setEnabled(false);
         }
-
-        snapshot3dLauncher.setMaxIntensity(volumeImage.getMaximumIntensity());
-        snapshot3dLauncher.setNumberOfChannels(volumeImage.getNumberOfChannels());
     }
 
     private double getMaxZoom() {
@@ -920,7 +897,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         resetColorsButton.setAction(resetColorsAction);
         buttonsPanel.add(resetColorsButton);
 
-        annotationPanel = new AnnotationPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
         controlsPanel.add(annotationPanel);
 
         JPanel statusBar = new JPanel();

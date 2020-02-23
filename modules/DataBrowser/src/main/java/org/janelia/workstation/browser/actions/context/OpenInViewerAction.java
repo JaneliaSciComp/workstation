@@ -20,7 +20,7 @@ import org.openide.util.NbBundle;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "OpenInViewerAction"
 )
 @ActionRegistration(
@@ -28,7 +28,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 50, separatorBefore = 49)
+        @ActionReference(path = "Menu/actions", position = 50, separatorBefore = 49)
 })
 @NbBundle.Messages("CTL_OpenInViewerAction=Open In Viewer")
 public class OpenInViewerAction extends BaseContextualNodeAction {

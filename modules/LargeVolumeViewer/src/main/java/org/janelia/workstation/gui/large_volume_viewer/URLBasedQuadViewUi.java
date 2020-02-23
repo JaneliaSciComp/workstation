@@ -1,24 +1,16 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolumeLoader;
-import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.rendering.utils.ClientProxy;
-import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.gui.large_volume_viewer.action.RawFileLocToClipboardAction;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.workstation.controller.AnnotationModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -64,7 +56,6 @@ public class URLBasedQuadViewUi extends QuadViewUi {
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }
-        initializeSnapshot3dLauncher(url);
         return loadDataFromURL(url);
     }
 

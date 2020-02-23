@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "ReportProblemAction"
 )
 @ActionRegistration(
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Sample", position = 500, separatorBefore = 499)
+        @ActionReference(path = "Menu/actions/Sample", position = 500, separatorBefore = 499)
 })
 @NbBundle.Messages("CTL_ReportProblemAction=Report A Problem With This Data")
 public class ReportProblemAction extends BaseContextualPopupAction {

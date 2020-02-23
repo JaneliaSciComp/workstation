@@ -11,7 +11,7 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "ContextualLabelAction"
 )
 @ActionRegistration(
@@ -19,7 +19,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 1)
+        @ActionReference(path = "Menu/actions", position = 1)
 })
 @NbBundle.Messages("CTL_ContextualLabelAction=(Nothing selected)")
 public class ContextualLabelAction extends BaseContextualNodeAction {

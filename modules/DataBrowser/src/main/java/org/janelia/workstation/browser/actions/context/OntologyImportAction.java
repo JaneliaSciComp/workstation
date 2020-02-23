@@ -37,7 +37,7 @@ import org.yaml.snakeyaml.Yaml;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "OntologyImportAction"
 )
 @ActionRegistration(
@@ -45,7 +45,7 @@ import org.yaml.snakeyaml.Yaml;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Ontology", position = 601, separatorBefore = 599)
+        @ActionReference(path = "Menu/actions/Ontology", position = 601, separatorBefore = 599)
 })
 @NbBundle.Messages("CTL_OntologyImportAction=Import Ontology Here...")
 public class OntologyImportAction extends BaseContextualNodeAction {

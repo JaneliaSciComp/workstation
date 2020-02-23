@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.janelia.workstation.gui.large_volume_viewer.controller.StatusUpdateListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.StatusUpdateListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

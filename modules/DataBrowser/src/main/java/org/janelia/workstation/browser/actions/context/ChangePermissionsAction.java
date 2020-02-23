@@ -12,7 +12,7 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "ChangePermissionsAction"
 )
 @ActionRegistration(
@@ -20,7 +20,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 110)
+        @ActionReference(path = "Menu/actions", position = 110)
 })
 @NbBundle.Messages("CTL_ChangePermissionsAction=Change Permissions")
 public class ChangePermissionsAction extends BaseContextualNodeAction {

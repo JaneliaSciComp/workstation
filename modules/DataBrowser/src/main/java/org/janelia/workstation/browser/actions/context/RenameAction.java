@@ -23,7 +23,7 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "RenameAction"
 )
 @ActionRegistration(
@@ -31,7 +31,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 120)
+        @ActionReference(path = "Menu/actions", position = 120)
 })
 @NbBundle.Messages("CTL_RenameAction=Rename")
 public class RenameAction extends BaseContextualNodeAction {

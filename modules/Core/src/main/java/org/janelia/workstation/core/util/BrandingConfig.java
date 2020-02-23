@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * at ConsoleApplication/harness/etc/app.conf
  * 
  * Within the Workstation, we provide a way for the user to change their max memory setting, 
- * which must be done in a customized ${APPNAME}.conf within the netbeans user directory.
+ * which must be done in a customized ${APPNAME}.conf within the netbeans user dialog.
  * 
  * This class is responsible for the following:
  * 
@@ -107,7 +107,7 @@ public class BrandingConfig {
                 log.info("Loaded {} properties from {}", systemSettings.size(), sysWideConfig);
             }
             else {
-                log.error("Error locating system configuration in resources directory: "+configFile);
+                log.error("Error locating system configuration in resources dialog: "+configFile);
             }
         }
         catch (IOException e) {

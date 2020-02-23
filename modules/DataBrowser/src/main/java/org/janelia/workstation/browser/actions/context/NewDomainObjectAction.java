@@ -25,7 +25,7 @@ import org.openide.util.NbBundle;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "NewDomainObjectAction"
 )
 @ActionRegistration(
@@ -33,7 +33,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 130)
+        @ActionReference(path = "Menu/actions", position = 130)
 })
 @NbBundle.Messages("CTL_NewDomainObjectAction=New")
 public class NewDomainObjectAction extends BaseContextualPopupAction {

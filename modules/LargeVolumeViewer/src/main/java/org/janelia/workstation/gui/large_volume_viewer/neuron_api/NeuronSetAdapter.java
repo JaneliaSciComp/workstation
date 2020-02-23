@@ -21,14 +21,14 @@ import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.workstation.controller.spatialfilter.SpatialFilter;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.NeuronUpdates;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.PredefinedNote;
-import org.janelia.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.TaskReviewListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
+import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.model.PredefinedNote;
+import org.janelia.workstation.controller.listener.BackgroundAnnotationListener;
+import org.janelia.workstation.controller.listener.GlobalAnnotationListener;
+import org.janelia.workstation.controller.listener.TaskReviewListener;
+import org.janelia.workstation.controller.listener.TmGeoAnnotationModListener;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -92,12 +92,12 @@ public class NeuronSetAdapter
 
     // see note in loadUserPreferences() re: calling back into annmgr for this stuff!
     public void changeNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
-        annotationModel.setNeuronVisibility(neuron, visibility);
+      //  annotationModel.setNeuronVisibility(neuron, visibility);
     }
 
     @Override
     public void changeNeuronVisibility(List<TmNeuronMetadata> neuronList, boolean visible) {
-        annotationModel.setNeuronVisibility(neuronList, visible);
+        //annotationModel.setNeuronVisibility(neuronList, visible);
     }
 
     @Override
@@ -894,7 +894,7 @@ public class NeuronSetAdapter
             repaintHorta(neuronModel);
         }
 
-        @Override
+       // @Override
         public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
             // log.info("neuronStyleChanged");
             if (updateOneNeuronStyle(neuron, style)) {
@@ -954,7 +954,7 @@ public class NeuronSetAdapter
             return result;
         }
 
-        @Override
+     //   @Override
         public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStylemap) {
             // log.info("neuronStylesChanged");
             if (neuronStylemap == null)

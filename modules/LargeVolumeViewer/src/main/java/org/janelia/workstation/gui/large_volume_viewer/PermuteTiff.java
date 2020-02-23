@@ -60,7 +60,7 @@ public class PermuteTiff {
         for ( File f : list ) {
             if ( f.isDirectory() ) {
             	// only want subdirectories "1", "2", ..., "8"
-            	// (we get top directory files automatically)
+            	// (we get top dialog files automatically)
             	if (! (f.getName().length() == 1))
             		continue;
             	int ix = Integer.parseInt(f.getName());

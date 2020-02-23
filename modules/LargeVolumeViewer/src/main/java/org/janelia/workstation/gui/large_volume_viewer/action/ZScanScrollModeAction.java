@@ -4,7 +4,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.MouseWheelModeListener;
 
 public class ZScanScrollModeAction extends AbstractAction
 {

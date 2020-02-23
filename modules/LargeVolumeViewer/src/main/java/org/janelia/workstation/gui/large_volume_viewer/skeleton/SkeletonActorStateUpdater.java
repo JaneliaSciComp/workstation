@@ -2,8 +2,7 @@ package org.janelia.workstation.gui.large_volume_viewer.skeleton;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.janelia.workstation.gui.large_volume_viewer.controller.RepaintListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.RepaintListener;
 
 /**
  * Relay for updating state listeners.  This removes the verbiage from the

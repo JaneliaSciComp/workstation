@@ -13,7 +13,7 @@ import org.openide.util.NbBundle;
  */
 
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "CheckFalseAction"
 )
 @ActionRegistration(
@@ -21,7 +21,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 21)
+        @ActionReference(path = "Menu/actions", position = 21)
 })
 @NbBundle.Messages("CTL_CheckFalseAction=Uncheck Selected")
 public class CheckFalseAction extends BaseCheckAction {

@@ -8,7 +8,7 @@ import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.workstation.controller.AnnotationModel;
 
 public class QuadViewApp extends JFrame {
 

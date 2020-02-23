@@ -17,7 +17,7 @@ import org.openide.util.NbBundle;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "ChangeSampleCompressionAction"
 )
 @ActionRegistration(
@@ -25,7 +25,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Sample", position = 520)
+        @ActionReference(path = "Menu/actions/Sample", position = 520)
 })
 @NbBundle.Messages("CTL_ChangeSampleCompressionAction=Change Sample Compression Strategy...")
 public class ChangeSampleCompressionAction extends BaseContextualNodeAction {

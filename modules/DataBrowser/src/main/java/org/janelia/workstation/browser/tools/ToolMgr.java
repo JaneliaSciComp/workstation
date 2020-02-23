@@ -106,7 +106,7 @@ public class ToolMgr extends PreferenceManager {
         this.filenameFilter = "_Tools.properties";
         this.defaultFilename = "";
 
-        // Check for the existence of the group directory property and/or set values.
+        // Check for the existence of the group dialog property and/or set values.
         String groupDir = "";
         if (FrameworkAccess.getModelProperty(GROUP_DIR) == null) {
             FrameworkAccess.setModelProperty(GROUP_DIR, groupDir);

@@ -21,7 +21,7 @@ public abstract class BaseContextualPopupAction extends BaseContextualNodeAction
 
     @Override
     public void performAction() {
-        // Actions are performed by the popup
+        // actions are performed by the popup
     }
 
     @Override

@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "RemoveOntologyTermAction"
 )
 @ActionRegistration(
@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Ontology", position = 160, separatorAfter = 199)
+        @ActionReference(path = "Menu/actions/Ontology", position = 160, separatorAfter = 199)
 })
 @NbBundle.Messages("CTL_RemoveOntologyTermAction=Delete Item")
 public class RemoveOntologyTermAction extends BaseContextualNodeAction {

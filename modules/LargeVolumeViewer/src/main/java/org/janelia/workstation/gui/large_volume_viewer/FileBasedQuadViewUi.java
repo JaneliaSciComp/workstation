@@ -2,21 +2,14 @@ package org.janelia.workstation.gui.large_volume_viewer;
 
 import org.janelia.console.viewerapi.OsFilePathRemapper;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.FileBasedRenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolumeLoader;
-import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.workstation.gui.large_volume_viewer.action.RawFileLocToClipboardAction;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.workstation.controller.AnnotationModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import java.io.File;
 import java.net.MalformedURLException;
@@ -142,15 +135,15 @@ public class FileBasedQuadViewUi extends QuadViewUi {
             return false;
         }
 
-        // for Mac/Win, must be a directory (symlinks work on Linux,
+        // for Mac/Win, must be a dialog (symlinks work on Linux,
         //  but don't work when mounted on Mac/Win
         if (System.getProperty("os.name").contains("Mac OS X") ||
             System.getProperty("os.name").contains("Windows")) {
             if (!testFile.isDirectory()) {
                 JOptionPane.showMessageDialog(this.getParent(),
                         "Error opening Linux sample path " + canonicalLinuxPath +
-                                " \nAre you sure this is a directory?",
-                        "Not a directory?",
+                                " \nAre you sure this is a dialog?",
+                        "Not a dialog?",
                         JOptionPane.ERROR_MESSAGE);
                 return false;
             }
@@ -161,7 +154,6 @@ public class FileBasedQuadViewUi extends QuadViewUi {
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }
-        initializeSnapshot3dLauncher(url);
         return loadDataFromURL(url);
     }
 
