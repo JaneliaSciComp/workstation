@@ -1,9 +1,14 @@
 package org.janelia.workstation.gui.large_volume_viewer.dialogs;
 
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
@@ -15,35 +20,34 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 public class LVVDebugTestDialog extends JDialog {
 
     private static final Logger log = LoggerFactory.getLogger(GenerateNeuronsDialog.class);
 
-    private final AnnotationManager annMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+    private AnnotationManager annMgr;
     private AnnotationModel annModel;
 
     // UI things
     private Frame parent;
 
+    // for info area
     JTextField sampleIDField;
     JTextField sampleNameField;
     JTextField workspaceIDField;
     JTextField workspaceNameField;
 
-
     public LVVDebugTestDialog(Frame parent) {
         super(parent, "LVV/Horta testing and debug dialog");
 
-
         this.parent = parent;
 
-
-
+        annMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+        annModel = annMgr.getAnnotationModel();
 
         setupUI();
-
-
     }
 
     private void setupUI() {
@@ -82,19 +86,34 @@ public class LVVDebugTestDialog extends JDialog {
         infoPanel.add(workspaceIDPanel);
 
 
-
-
-
         add(infoPanel);
-
-
 
 
         // testing area
         add(new JSeparator());
         JPanel testPanel = new JPanel();
-        testPanel.setLayout(new BoxLayout(testPanel, BoxLayout.LINE_AXIS));
+        testPanel.setLayout(new BoxLayout(testPanel, BoxLayout.PAGE_AXIS));
         testPanel.add(new JLabel("TESTING"));
+
+        // add points
+        testPanel.add(new JLabel("Create neuron and add points:"));
+        JPanel addPointsPanel = new JPanel();
+        addPointsPanel.setLayout(new BoxLayout(addPointsPanel, BoxLayout.LINE_AXIS));
+        addPointsPanel.add(new JLabel("npoints:"));
+        JTextField nptsField = new JTextField(4);
+        addPointsPanel.add(nptsField);
+        addPointsPanel.add(new JLabel("dt (ms):"));
+        JTextField dtField = new JTextField(5);
+        addPointsPanel.add(dtField);
+        JButton addPointsButton = new JButton("Go");
+        addPointsButton.addActionListener(e->{
+            addNeuronPoints(Integer.parseInt(nptsField.getText()),
+                Integer.parseInt(dtField.getText()));
+        });
+        addPointsPanel.add(addPointsButton);
+
+
+        testPanel.add(addPointsPanel);
 
 
         add(testPanel);
@@ -155,6 +174,91 @@ public class LVVDebugTestDialog extends JDialog {
 
     private void doCancel() {
         dispose();
+    }
+
+    /**
+     * create a neuron and add points to it at some time interval
+     *
+     * npoints = number of points
+     * dt = time in milliseconds between each point addition
+     *
+     * returns neuron ID or -1 if fail
+     */
+    private Long addNeuronPoints(int nPoints, int dt) {
+        // yes, I'm doing this in one massive exception handler; it's for testing...
+        try {
+            log.info("addNeuronPoints():");
+
+            TmNeuronMetadata neuron = annModel.createNeuron("test neuron");
+            // minimal testing...
+            if (neuron == null) {
+                log.info("neuron creation failed");
+                return -1L;
+            }
+            log.info("neuron created");
+
+            // need to find the bounds of the image and pick a spot for the root
+            // origin is in nm and is the corner of the volume; add some typical
+            //  offsets to move it to the middle-ish, with a substantial random spread
+            // NOTE: we're working in micron coordinates right now
+            TmSample sample = annModel.getCurrentSample();
+
+            Random r = new Random();
+            double x0 = sample.getOrigin().get(0) / 1000.0 + 5000.0 + 3000.0 * (r.nextDouble() * 2 - 1);
+            double y0 = sample.getOrigin().get(1) / 1000.0 + 4000.0 + 3000.0 * (r.nextDouble() * 2 - 1);
+            double z0 = sample.getOrigin().get(2) / 1000.0 + 6000.0 + 1000.0 * (r.nextDouble() * 2 - 1);
+
+            log.info("neuron root: " + x0 + ", " + y0 + ", " + z0);
+
+            Vec3 micronCoords = new Vec3(x0, y0, z0);
+            TmGeoAnnotation root = annModel.addRootAnnotation(neuron, toVoxelCoords(micronCoords));
+            if (root == null) {
+                log.info("root creation failed");
+                return -1L;
+            }
+
+            // loop and place points; make a nice spiral:
+            double radius = 500.0;
+            double dTheta = Math.PI / 4.0;
+            double dz = 50.0;
+            TmGeoAnnotation parent = root;
+            for (int n = 0; n < nPoints; n++) {
+                Vec3 micronLocation = new Vec3(
+                        x0 + radius * Math.sin(n * dTheta),
+                        y0 + radius * Math.cos(n * dTheta),
+                        z0 + dz);
+                TmGeoAnnotation next = annModel.addChildAnnotation(parent, toVoxelCoords(micronLocation));
+                if (next == null) {
+                    log.info("child annotation failed at n = " + n);
+                }
+                parent = next;
+                TimeUnit.MILLISECONDS.sleep(dt);
+            }
+            return neuron.getId();
+        } catch (InterruptedException e) {
+            presentError("Sleep interrupted", "Error");
+            return -1L;
+        } catch (Exception e) {
+            log.error("Exception while adding neuron points", e);
+            presentError("Exception while adding neuron points", "Error");
+            return -1L;
+        }
+    }
+
+    private Vec3 toVoxelCoords(Vec3 micronCoords) {
+        TileFormat.VoxelXyz tempLocation = annMgr.getTileFormat().voxelXyzForMicrometerXyz(
+                new TileFormat.MicrometerXyz(micronCoords.getX(),
+                        micronCoords.getY(), micronCoords.getZ()));
+        return new Vec3(tempLocation.getX(),
+                tempLocation.getY(), tempLocation.getZ());
+    }
+
+    private void presentError(String message, String title) throws HeadlessException {
+        JOptionPane.showMessageDialog(
+            ComponentUtil.getLVVMainWindow(),
+            message,
+            title,
+            JOptionPane.ERROR_MESSAGE);
     }
 
     private ActionListener escapeListener = new ActionListener() {
