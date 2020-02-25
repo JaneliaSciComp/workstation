@@ -1,3 +1,10 @@
+// 8.10
+
+LVV/Horta:
+* Imported SWC files should show connected skeletons in Horta
+* Message server memory increased
+* Bulk neuron color change should work again
+
 // 8.9
 
 Color Depth Search

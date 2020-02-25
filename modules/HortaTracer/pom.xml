@@ -53,6 +53,11 @@
             <artifactId>gltools</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>common-gui</artifactId>
+        </dependency>
+
         <!-- Geometry 3D --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>

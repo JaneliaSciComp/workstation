@@ -4,15 +4,7 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.workstation.gui.large_volume_viewer.action.BulkChangeNeuronColorAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.BulkChangeNeuronOwnerAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.BulkExportNeuronAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.NeuronCreateAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.NeuronDeleteAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.NeuronExportAllAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.WorkspaceInformationAction;
-import org.janelia.workstation.gui.large_volume_viewer.action.WorkspaceSaveAsAction;
+import org.janelia.workstation.gui.large_volume_viewer.action.*;
 import org.janelia.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 
@@ -63,7 +55,6 @@ public class AnnotationPanel extends JPanel
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
     private ViewStateListener viewStateListener;
-    private LVVDevPanel lvvDevPanel;
 
     // other UI stuff
     private static final int width = 250;
@@ -108,6 +99,8 @@ public class AnnotationPanel extends JPanel
     private AbstractAction bulkNeuronTagAction;
     private AbstractAction bulkNeuronOwnerAction;
     private AbstractAction bulkExportNeuronAction;
+
+    private LVVDebugTestDialogAction lvvDebugTestDialogAction;
     
 
     private JMenu sortSubmenu;
@@ -462,13 +455,6 @@ public class AnnotationPanel extends JPanel
         neuriteButtonsPanel.add(centerAnnotationButton);
 
 
-        // developer panel, only shown to me; used for various testing things
-        if (AccessManager.getAccessManager().getActualSubject().getName().equals("olbrisd")) {
-            lvvDevPanel = new LVVDevPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
-            add(lvvDevPanel, cVert);
-        }
-
-
         // the bilge...
         GridBagConstraints cBottom = new GridBagConstraints();
         cBottom.gridx = 0;
@@ -478,6 +464,16 @@ public class AnnotationPanel extends JPanel
         cTop.weightx = 1.0;
         cBottom.weighty = 1.0;
         add(Box.createVerticalGlue(), cBottom);
+
+
+        // launch a dialog with some testing/debugging tools on it; show only to me (djo)
+        //  for now; could widen this to all admins later
+        if (AccessManager.getAccessManager().getActualSubject().getName().equals("olbrisd")) {
+            JButton devButton = new JButton("Debug/test dialog...");
+            lvvDebugTestDialogAction = new LVVDebugTestDialogAction();
+            devButton.setAction(lvvDebugTestDialogAction);
+            add(devButton, cVert);
+        }
     }
 
 //    /**

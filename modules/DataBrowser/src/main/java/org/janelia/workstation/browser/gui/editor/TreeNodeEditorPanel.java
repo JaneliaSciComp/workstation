@@ -205,7 +205,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
             return "Folder Editor";
         }
         else {
-            return "Folder: "+StringUtils.abbreviate(node.getName(), 15);
+            return StringUtils.abbreviate(node.getName(), 15);
         }
     }
 

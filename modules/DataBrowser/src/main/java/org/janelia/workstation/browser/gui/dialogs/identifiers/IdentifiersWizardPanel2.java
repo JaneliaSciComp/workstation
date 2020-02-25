@@ -1,14 +1,14 @@
 package org.janelia.workstation.browser.gui.dialogs.identifiers;
 
-import javax.swing.event.ChangeListener;
-
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.openide.WizardDescriptor;
 import org.openide.WizardValidationException;
 import org.openide.util.ChangeSupport;
 import org.openide.util.HelpCtx;
 
-public class IdentifiersWizardPanel1 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
+import javax.swing.event.ChangeListener;
+
+public class IdentifiersWizardPanel2 implements WizardDescriptor.ValidatingPanel<WizardDescriptor> {
 
     private final ChangeSupport changeSupport = new ChangeSupport(this);    
     private WizardDescriptor wiz;
@@ -17,12 +17,12 @@ public class IdentifiersWizardPanel1 implements WizardDescriptor.ValidatingPanel
      * The visual component that displays this panel. If you need to access the
      * component from this class, just use getComponent().
      */
-    private IdentifiersVisualPanel1 component;
+    private IdentifiersVisualPanel2 component;
 
     @Override
-    public IdentifiersVisualPanel1 getComponent() {
+    public IdentifiersVisualPanel2 getComponent() {
         if (component == null) {
-            component = new IdentifiersVisualPanel1(this);
+            component = new IdentifiersVisualPanel2(this);
         }
         return component;
     }
@@ -39,12 +39,12 @@ public class IdentifiersWizardPanel1 implements WizardDescriptor.ValidatingPanel
     
     @Override
     public void validate() throws WizardValidationException {
-        isValid = !component.getText().isEmpty();
+        isValid = !component.isSearching();
         if (isValid) {
             wiz.putProperty(WizardDescriptor.PROP_ERROR_MESSAGE, null);
         }
         else {
-            throw new WizardValidationException(null, "Enter at least one identifier to search for", null);
+            throw new WizardValidationException(null, null, null);
         }
     }
     
@@ -90,8 +90,7 @@ public class IdentifiersWizardPanel1 implements WizardDescriptor.ValidatingPanel
     public void storeSettings(WizardDescriptor wiz) {
         ActivityLogHelper.logUserAction("IdentifiersWizard.storeSettings", 1);
         IdentifiersWizardState state = (IdentifiersWizardState)wiz.getProperty(IdentifiersWizardIterator.PROP_WIZARD_STATE);
-        state.setSearchClass(getComponent().getCurrSearchClass());
-        state.setText(getComponent().getText());
+        state.setResults(getComponent().getResults());
     }
 
 }

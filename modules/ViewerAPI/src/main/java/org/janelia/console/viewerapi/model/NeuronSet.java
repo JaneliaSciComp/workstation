@@ -53,4 +53,6 @@ public interface NeuronSet extends Collection<NeuronModel>
     void updateObjectMeshName(String oldName, String updatedName);
     void setSelectMode(boolean select);
     void selectVertex (NeuronVertex anchor);
+
+    void startUpMessagingDiagnostics(NeuronModel neuron);
 }
