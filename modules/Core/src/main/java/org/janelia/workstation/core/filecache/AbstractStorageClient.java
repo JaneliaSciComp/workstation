@@ -1,7 +1,9 @@
 package org.janelia.workstation.core.filecache;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.httpclient.HttpClient;
@@ -30,6 +32,14 @@ abstract class AbstractStorageClient {
         this.baseUrl = validateUrl(baseUrl);
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
+    }
+
+    String getUrlEncodedPath(String p) {
+        try {
+            return URLEncoder.encode(p, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     private String validateUrl(String urlString) {

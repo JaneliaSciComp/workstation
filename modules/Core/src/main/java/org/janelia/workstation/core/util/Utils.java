@@ -27,10 +27,14 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.FileImageInputStream;
+import javax.imageio.stream.ImageInputStream;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
 import com.google.common.io.ByteStreams;
+import com.twelvemonkeys.imageio.stream.ByteArrayImageInputStream;
+
 import loci.common.ByteArrayHandle;
 import loci.common.Location;
 import loci.formats.FormatException;
@@ -85,35 +89,19 @@ public class Utils {
     }
 
     public static BufferedImage readImageFromInputStream(InputStream inputStream, String format) {
-        String selectedRenderer = FrameworkAccess.getModelProperty(
-                OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.LOCI.toString());
-        RendererType2D renderer = RendererType2D.valueOf(selectedRenderer);
         BufferedImage image;
-        if (renderer == RendererType2D.IMAGE_IO) {
-            try {
-                image = readWithImageIOFromInputStream(inputStream);
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Invalid image stream", e);
-            }
-        } else {
-            try {
-                byte[] imageBytes = ByteStreams.toByteArray(inputStream);
-                String streamId = "inBytes." + format;
-                Location.mapFile(streamId, new ByteArrayHandle(imageBytes));
-                image = readWithLociReaderFromStreamId(streamId, format);
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Invalid image stream", e);
-            }
+        try {
+            byte[] imageBytes = ByteStreams.toByteArray(inputStream);
+            String streamId = "inputStream-" + imageBytes.hashCode() + "." + format;
+            Location.mapFile(streamId, new ByteArrayHandle(imageBytes));
+            image = readWithLociReaderFromStreamId(streamId, format);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Invalid image stream", e);
         }
         if (image == null) {
             throw new IllegalArgumentException("File format is not supported: " + format);
         }
         return image;
-    }
-
-    private static BufferedImage readWithImageIOFromInputStream(InputStream inputStream) throws IOException {
-        // Supports GIF, PNG, JPEG, BMP, and WBMP
-        return ImageIO.read(inputStream);
     }
 
     private static BufferedImage readWithLociReaderFromStreamId(String streamId, String format) {
@@ -147,35 +135,6 @@ public class Utils {
             imageReader.close();
         } catch (IOException | FormatException e) {
             throw new IllegalArgumentException("Invalid image stream id", e);
-        }
-        return image;
-    }
-
-    public static BufferedImage readImageFromLocalFile(String localFilePath) {
-        String format = FilenameUtils.getExtension(localFilePath);
-        String selectedRenderer = FrameworkAccess.getModelProperty(
-                OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.LOCI.toString());
-        RendererType2D renderer = RendererType2D.valueOf(selectedRenderer);
-        BufferedImage image;
-        if (renderer == RendererType2D.IMAGE_IO) {
-            InputStream imageStream;
-            try {
-                imageStream = new FileInputStream(localFilePath);
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Cannot open local image file " + localFilePath, e);
-            }
-            try {
-                image = readWithImageIOFromInputStream(imageStream);
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Invalid local image file " + localFilePath, e);
-            } finally {
-                try {
-                    imageStream.close();
-                } catch (IOException ignore) {
-                }
-            }
-        } else {
-            image = readWithLociReaderFromStreamId(localFilePath, format);
         }
         return image;
     }
