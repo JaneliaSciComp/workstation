@@ -191,6 +191,11 @@ public class RefreshHandler implements MessageHandler {
                 return;
             }
 
+            if (action == NeuronMessageConstants.MessageType.NETWORK_DIAGNOSTICS) {
+                annotationModel.getNeuronManager().completeTestRequest(msgHeaders);
+                return;
+            }
+
             if (action == NeuronMessageConstants.MessageType.ERROR_PROCESSING) {
                 if (user != null && user.equals(AccessManager.getSubjectKey())) {
                     log.info("Error message received from server");

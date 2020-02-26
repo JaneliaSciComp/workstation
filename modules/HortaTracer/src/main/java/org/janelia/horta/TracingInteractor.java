@@ -77,7 +77,7 @@ import org.slf4j.LoggerFactory;
  * @author Christopher Bruns
  */
 public class TracingInteractor extends MouseAdapter
-        implements MouseInputListener, KeyListener, 
+        implements MouseInputListener, KeyListener,
         NeuronVertexDeletionListener, NeuronVertexCreationListener,
         NeuronVertexUpdateListener
 {
@@ -1217,7 +1217,7 @@ public class TracingInteractor extends MouseAdapter
             if (future==null) 
                 return false;
             try {
-                Boolean ownershipDecision = future.get(5, TimeUnit.SECONDS);
+                Boolean ownershipDecision = future.get(100, TimeUnit.MILLISECONDS);
                 return ownershipDecision.booleanValue();
             } catch (TimeoutException e) {
                 String errorMessage = "Request for ownership of System-owned neuron " + neuron.getName() +

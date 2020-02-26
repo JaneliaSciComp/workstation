@@ -755,6 +755,18 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
 
     /**
+     * test roundtrips on
+     */
+    public Map<String,Map<String,Object>> testMessagingRoundtrips (TmNeuronMetadata neuron) throws Exception {
+        final int NUM_TESTS = 1;
+        for (int i=0; i<NUM_TESTS; i++) {
+            CompletableFuture<Boolean> future = getNeuronManager().sendTestRoundtripMessage(neuron);
+            future.get();
+        }
+        return getNeuronManager().getTestResults();
+    }
+
+    /**
      * change the ownership of the input neuron
      */
     public synchronized void changeNeuronOwner(Long neuronID, Subject newOwner) throws Exception {

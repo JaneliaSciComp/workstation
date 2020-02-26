@@ -1,6 +1,8 @@
 package org.janelia.workstation.gui.large_volume_viewer.neuron_api;
 
 import java.awt.Color;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -11,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
@@ -48,6 +51,8 @@ import org.openide.util.LookupListener;
 import org.openide.util.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
 
 /**
  * Expose NeuronSet interface, using in-memory data resident in LVV
@@ -647,7 +652,14 @@ public class NeuronSetAdapter
     @Override
     public void startUpMessagingDiagnostics(NeuronModel neuron) {
         TmNeuronMetadata neuronMetadata = annotationModel.getNeuronFromNeuronID(neuron.getNeuronId());
-        MessagingDiagnosticsDialog dialog = new MessagingDiagnosticsDialog(neuronMetadata);
+        MessagingDiagnosticsDialog dialog = new MessagingDiagnosticsDialog(annotationModel, neuronMetadata);
+
+        JOptionPane.showConfirmDialog(null,
+                dialog.getDiagnosticsPanel(),
+                "JOptionPane Example : ",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
+        dialog.kickOffTest();
     }
 
     private class NeuronSetBackgroundAnnotationListener implements BackgroundAnnotationListener {

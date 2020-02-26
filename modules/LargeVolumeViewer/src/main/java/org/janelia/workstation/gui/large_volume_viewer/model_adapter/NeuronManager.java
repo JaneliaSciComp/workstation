@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Stopwatch;
 import org.janelia.model.access.domain.IdSource;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
@@ -19,7 +20,6 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.TmNeuronUtils;
-import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +30,9 @@ public class NeuronManager {
     private final IdSource idSource;
     private final Map<Long, TmNeuronMetadata> neuronMap = new HashMap<>();
     private CompletableFuture<Boolean> ownershipRequest;
+    private CompletableFuture<Boolean> testRoundtrip;
+    private Stopwatch testStopwatch;
+    private Map<String,Map<String,Object>> testResults;
     private CompletableFuture<TmNeuronMetadata> createNeuronRequest;
 
     public NeuronManager() {
@@ -359,6 +362,28 @@ public class NeuronManager {
         if (newParentAnnotation != null) {
             newParentAnnotation.getChildIds().add(annotation.getId());
         }
+    }
+
+    public CompletableFuture<Boolean> sendTestRoundtripMessage (TmNeuronMetadata neuron) throws Exception {
+        if (testResults==null)
+            testResults = new HashMap<>();
+        testStopwatch.start();
+        testRoundtrip = neuronModelAdapter.sendTest(neuron);
+        return testRoundtrip;
+    }
+
+    public void completeTestRequest(Map<String,Object> messageInfo) {
+        testStopwatch.stop();
+        messageInfo.put("Roundtrip time", Long.toString(testStopwatch.elapsed().toMillis()));
+        int iteration = testResults.keySet().size() + 1;
+        testResults.put(Integer.toString(iteration), messageInfo);
+        if (testRoundtrip != null) {
+            testRoundtrip.complete(new Boolean(true));
+        }
+    }
+
+    public Map<String, Map<String,Object>> getTestResults() {
+        return testResults;
     }
 
     /**

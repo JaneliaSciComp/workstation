@@ -1,5 +1,7 @@
 package org.janelia.workstation.gui.large_volume_viewer.model_adapter;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -150,6 +152,11 @@ class NeuronModelAdapter {
 
     CompletableFuture<Boolean> requestOwnership(TmNeuronMetadata neuron) throws Exception {
         sendMessage(neuron, NeuronMessageConstants.MessageType.REQUEST_NEURON_OWNERSHIP, null);
+        return new CompletableFuture<>();
+    }
+
+    CompletableFuture<Boolean> sendTest(TmNeuronMetadata neuron) throws Exception {
+        sendMessage(neuron, NeuronMessageConstants.MessageType.NETWORK_DIAGNOSTICS, null);
         return new CompletableFuture<>();
     }
 
