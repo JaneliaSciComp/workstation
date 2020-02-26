@@ -553,10 +553,13 @@ public class ColorDepthSearchEditorPanel
         Map<String,Object> values = new HashMap<>();
 
         try {
-            ColorDepthResultImageModel imageModel = colorDepthResultPanel.getImageModel();
-
             values.put("Score (Pixels)", match.getScore());
             values.put("Score (Percent)", MaskUtils.getFormattedScorePct(match));
+
+            ColorDepthResultImageModel imageModel = colorDepthResultPanel.getImageModel();
+            if (imageModel==null) {
+                throw new IllegalStateException("Image model was not initialized");
+            }
 
             ColorDepthImage image = imageModel.getImage(match);
             if (image!=null) {
