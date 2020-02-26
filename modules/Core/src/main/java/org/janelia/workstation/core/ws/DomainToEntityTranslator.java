@@ -1,28 +1,21 @@
 package org.janelia.workstation.core.ws;
 
 import org.hibernate.HibernateException;
-import org.janelia.model.access.domain.TimebasedIdentifierGenerator;
-import org.janelia.model.domain.DomainUtils;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.util.PathTranslator;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasImageStack;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
-import org.janelia.model.domain.sample.CuratedNeuron;
-import org.janelia.model.domain.sample.NeuronFragment;
-import org.janelia.model.domain.sample.NeuronSeparation;
-import org.janelia.model.domain.sample.PipelineResult;
-import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.sample.SampleAlignmentResult;
-import org.janelia.model.domain.sample.SampleProcessingResult;
+import org.janelia.model.domain.sample.*;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.core.util.PathTranslator;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -218,10 +211,10 @@ public class DomainToEntityTranslator {
             return PathTranslator.translatePathsToCurrentPlatform(entity);
         }
     }
-    
+
     private Long getNewId() {
         try {
-            return TimebasedIdentifierGenerator.generateIdList(1).get(0);
+            return FrameworkAccess.generateGUID();
         }
         catch (HibernateException e) {
             log.error("Error generating a real GUID, falling back on dummy id", e);

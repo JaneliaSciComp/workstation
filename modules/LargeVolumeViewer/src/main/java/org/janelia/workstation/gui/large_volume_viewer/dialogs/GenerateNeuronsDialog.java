@@ -1,46 +1,37 @@
 package org.janelia.workstation.gui.large_volume_viewer.dialogs;
 
-import java.awt.BorderLayout;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.StateMgr;
+import org.janelia.workstation.core.workers.BackgroundWorker;
+import org.janelia.workstation.core.workers.TaskMonitoringWorker;
+import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
+import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.workstation.gui.large_volume_viewer.model_adapter.IdSource;
+import org.janelia.workstation.gui.large_volume_viewer.model_adapter.RandomNeuronGenerator;
+import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-
-import org.janelia.model.access.domain.IdSource;
-import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.janelia.workstation.gui.large_volume_viewer.model_adapter.RandomNeuronGenerator;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.StateMgr;
-import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
-import org.janelia.workstation.core.workers.BackgroundWorker;
-import org.janelia.workstation.core.workers.TaskMonitoringWorker;
-import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Dialog for generating random neurons in the LVV.

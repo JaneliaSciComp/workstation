@@ -1,19 +1,13 @@
 package org.janelia.workstation.integration.util;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.swing.JFrame;
 
-import org.janelia.workstation.integration.api.FileAccessController;
-import org.janelia.workstation.integration.api.FrameModel;
-import org.janelia.workstation.integration.api.InspectionController;
-import org.janelia.workstation.integration.api.PreferenceModel;
+import org.janelia.workstation.integration.api.*;
 import org.janelia.workstation.integration.spi.compression.CompressedFileResolverI;
-import org.janelia.workstation.integration.api.ActivityLogging;
-import org.janelia.workstation.integration.api.BrowsingController;
-import org.janelia.workstation.integration.api.ErrorHandler;
-import org.janelia.workstation.integration.api.ProgressController;
-import org.janelia.workstation.integration.api.SettingsModel;
 import org.openide.util.Lookup;
 import org.openide.util.NbPreferences;
 import org.openide.util.lookup.Lookups;
@@ -64,6 +58,10 @@ public class FrameworkAccess {
 
     public static BrowsingController getBrowsingController() {
         return getProvider(BrowsingController.class);
+    }
+
+    public static DataController getDataController() {
+        return getProvider(DataController.class);
     }
 
     private static <T> T getProvider(Class<T> clazz) {
@@ -217,5 +215,13 @@ public class FrameworkAccess {
     
     public static void setLocalPreferenceValue(Class<?> moduleClass, String key, double value) {
         NbPreferences.forModule(moduleClass).putDouble(key, value);
+    }
+
+    public static Long generateGUID() {
+        return getDataController().generateGUIDs(1).get(0).longValue();
+    }
+
+    public static List<Long> generateGUIDs(int count) {
+        return getDataController().generateGUIDs(count).stream().map(Number::longValue).collect(Collectors.toList());
     }
 }

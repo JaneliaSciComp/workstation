@@ -1,14 +1,14 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
-import java.io.File;
-
-import org.janelia.model.access.domain.TimebasedIdentifierGenerator;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.filecache.RemoteLocation;
 import org.janelia.workstation.core.filecache.WebDavUploader;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+
+import java.io.File;
 
 public class MaskUtils {
 
@@ -26,7 +26,7 @@ public class MaskUtils {
                 AccessManager.getSubjectName(),
                 importStorageDefaultTags);
 
-        Long guid = TimebasedIdentifierGenerator.generateIdList(1).get(0);
+        Long guid = FrameworkAccess.generateGUID();
         RemoteLocation location = uploader.uploadFile("UserGeneratedMask_"+guid, uploadContext, importStorageDefaultTags, localFile);
         return location.getRealFilePath();
     }

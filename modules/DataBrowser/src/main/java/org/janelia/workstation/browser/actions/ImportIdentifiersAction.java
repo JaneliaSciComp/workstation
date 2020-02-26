@@ -1,7 +1,5 @@
 package org.janelia.workstation.browser.actions;
 
-import org.janelia.model.access.domain.TimebasedIdentifierGenerator;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.workstation.browser.gui.components.DomainListViewManager;
 import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
@@ -24,10 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import java.awt.*;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Action which brings up the Import Identifiers wizard 
@@ -101,7 +96,9 @@ public final class ImportIdentifiersAction extends CallableSystemAction {
 
                 @Override
                 protected void doStuff() throws Exception {
-                    guid = TimebasedIdentifierGenerator.generateIdList(1).get(0);
+                    log.info("Ready..");
+                    guid = FrameworkAccess.generateGUID();
+                    log.info("DONE "+guid);
                 }
 
                 @Override

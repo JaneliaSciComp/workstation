@@ -43,10 +43,6 @@
         </dependency>
         <dependency>
             <groupId>org.janelia.jacs-model</groupId>
-            <artifactId>jacs-model-access</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.jacs-model</groupId>
             <artifactId>jacs-model-rendering</artifactId>
         </dependency>
         <dependency>
