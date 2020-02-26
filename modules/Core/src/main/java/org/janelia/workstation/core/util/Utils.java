@@ -89,19 +89,36 @@ public class Utils {
     }
 
     public static BufferedImage readImageFromInputStream(InputStream inputStream, String format) {
+        String selectedRenderer = FrameworkAccess.getModelProperty(
+                OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.LOCI.toString());
+        RendererType2D renderer = RendererType2D.valueOf(selectedRenderer);
         BufferedImage image;
+        byte[] imageBytes;
         try {
-            byte[] imageBytes = ByteStreams.toByteArray(inputStream);
+            imageBytes = ByteStreams.toByteArray(inputStream);
+        } catch (Exception e) {
+            throw new IllegalStateException("Error reading the image stream", e);
+        }
+        if (renderer == RendererType2D.IMAGE_IO) {
+            try {
+                image = readWithImageIOFromInputStream(new ByteArrayImageInputStream(imageBytes));
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Invalid image stream", e);
+            }
+        } else {
             String streamId = "inputStream-" + imageBytes.hashCode() + "." + format;
             Location.mapFile(streamId, new ByteArrayHandle(imageBytes));
             image = readWithLociReaderFromStreamId(streamId, format);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Invalid image stream", e);
         }
         if (image == null) {
             throw new IllegalArgumentException("File format is not supported: " + format);
         }
         return image;
+    }
+
+    private static BufferedImage readWithImageIOFromInputStream(ImageInputStream imageInputStream) throws IOException {
+        // Supports GIF, PNG, JPEG, BMP, and WBMP
+        return ImageIO.read(imageInputStream);
     }
 
     private static BufferedImage readWithLociReaderFromStreamId(String streamId, String format) {
