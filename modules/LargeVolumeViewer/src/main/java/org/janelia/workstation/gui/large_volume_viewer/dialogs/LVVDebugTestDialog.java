@@ -42,6 +42,9 @@ public class LVVDebugTestDialog extends JDialog {
     JTextField workspaceIDField;
     JTextField workspaceNameField;
 
+    // results
+    JTextArea resultsText;
+
     public LVVDebugTestDialog(Frame parent) {
         super(parent, "LVV/Horta testing and debug dialog");
 
@@ -87,7 +90,6 @@ public class LVVDebugTestDialog extends JDialog {
         workspaceNameField = new JTextField(20);
         workspaceIDPanel.add(workspaceNameField);
         infoPanel.add(workspaceIDPanel);
-
 
         add(infoPanel);
 
@@ -144,6 +146,24 @@ public class LVVDebugTestDialog extends JDialog {
 
 
 
+        // results
+        JPanel resultsPanel = new JPanel();
+        resultsPanel.setLayout(new BoxLayout(resultsPanel, BoxLayout.PAGE_AXIS));
+        resultsPanel.add(new JLabel("RESULTS"));
+
+        resultsText = new JTextArea(20, 40);
+        JScrollPane resultsScrollPane = new JScrollPane(resultsText);
+        resultsPanel.add(resultsScrollPane);
+
+
+
+        add(resultsPanel);
+
+
+
+
+
+
         // the bottom
         add(new JSeparator());
         JButton closeButton = new JButton("Close");
@@ -172,6 +192,7 @@ public class LVVDebugTestDialog extends JDialog {
         }
         if (obj != null) {
             sampleNameField.setText(obj.getName());
+            addResults("sample ID " + sampleIDstring + " has name " + obj.getName());
         } else {
             sampleNameField.setText("domain object is null");
         }
@@ -190,6 +211,7 @@ public class LVVDebugTestDialog extends JDialog {
         }
         if (obj != null) {
             workspaceNameField.setText(obj.getName());
+            addResults("workspace ID " + workspaceIDstring + " has name " + obj.getName());
         } else {
             workspaceNameField.setText("domain object is null");
         }
@@ -207,10 +229,10 @@ public class LVVDebugTestDialog extends JDialog {
      *
      * returns neuron ID or -1 if fail
      */
-    private Long addNeuronPoints(int nPoints, int dt) {
+    private void addNeuronPoints(int nPoints, int dt) {
         // yes, I'm doing this in one massive exception handler; it's for testing...
         try {
-            log.info("addNeuronPoints():");
+            addResults("addNeuronPoints():");
 
             Long neuronID = createNeuronRoot("test add points");
 
@@ -233,19 +255,17 @@ public class LVVDebugTestDialog extends JDialog {
                         z0 + dz);
                 TmGeoAnnotation next = annModel.addChildAnnotation(parent, location);
                 if (next == null) {
-                    log.info("child annotation failed at n = " + n);
+                    addResults("child annotation failed at n = " + n);
                 }
                 parent = next;
                 TimeUnit.MILLISECONDS.sleep(dt);
             }
-            return neuronID;
+            addResults(nPoints + " points added");
         } catch (InterruptedException e) {
             presentError("Sleep interrupted", "Error");
-            return -1L;
         } catch (Exception e) {
             log.error("Exception while adding neuron points", e);
             presentError("Exception while adding neuron points", "Error");
-            return -1L;
         }
     }
 
@@ -257,12 +277,10 @@ public class LVVDebugTestDialog extends JDialog {
      * dt = time in milliseconds between each ownership change
      *
      * returns neuron ID or -1 if fail
-     */    private Long changeNeuronOwner(int ntimes, int dt) {
-
-
+     */
+    private void changeNeuronOwner(int ntimes, int dt) {
         try {
-            log.info("changeNeuronOwner():");
-
+            addResults("changeNeuronOwner():");
 
             Long neuronID = createNeuronRoot("test change owner");
 
@@ -283,8 +301,7 @@ public class LVVDebugTestDialog extends JDialog {
             Subject tracersSubject = DomainMgr.getDomainMgr().getSubjectFacade().getSubjectByNameOrKey(tracersGroup);
 
             for (int i=0; i<ntimes; i++) {
-                // we're just flip-flopping between the two; since we just created the neuron,
-                //  owner should be "owner"
+                // we're just flip-flopping between the two
                 annModel.changeNeuronOwner(neuronID, tracersSubject);
                 TimeUnit.MILLISECONDS.sleep(dt);
 
@@ -294,15 +311,12 @@ public class LVVDebugTestDialog extends JDialog {
             // change one last time to demonstrate that it has been changed
             //  (at least this once)
             annModel.changeNeuronOwner(neuronID, tracersSubject);
-
-            return neuronID;
+            addResults("changed owner " + (ntimes + 1) + " times");
         } catch (InterruptedException e) {
             presentError("Sleep interrupted", "Error");
-            return -1L;
         } catch (Exception e) {
             log.error("Exception while changing owner", e);
             presentError("Exception while changing owner", "Error");
-            return -1L;
         }
     }
 
@@ -310,7 +324,7 @@ public class LVVDebugTestDialog extends JDialog {
         TmNeuronMetadata neuron = annModel.createNeuron(name);
         // minimal testing...
         if (neuron == null) {
-            log.info("neuron creation failed");
+            addResults("neuron creation failed");
             return -1L;
         }
 
@@ -326,14 +340,19 @@ public class LVVDebugTestDialog extends JDialog {
         double z0 = sample.getOrigin().get(2) / 1000.0 + 6000.0 + 1000.0 * (r.nextDouble() * 2 - 1);
 
         Vec3 micronCoords = new Vec3(x0, y0, z0);
-        log.info("neuron root: " + x0 + ", " + y0 + ", " + z0);
+        addResults("neuron root: " + x0 + ", " + y0 + ", " + z0);
         TmGeoAnnotation root = annModel.addRootAnnotation(neuron, toVoxelCoords(micronCoords));
         if (root == null) {
-            log.info("root creation failed");
+            addResults("root creation failed");
             return -1L;
         }
 
         return neuron.getId();
+    }
+
+    private void addResults(String result) {
+        // mostly this method is because I keep forgetting to add the carriage return!
+        resultsText.append(result + "\n");
     }
 
     private Vec3 toVoxelCoords(Vec3 micronCoords) {
