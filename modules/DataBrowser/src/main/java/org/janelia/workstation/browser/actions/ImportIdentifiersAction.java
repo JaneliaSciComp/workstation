@@ -90,37 +90,16 @@ public final class ImportIdentifiersAction extends CallableSystemAction {
 
             IdentifiersWizardState endState = (IdentifiersWizardState) wiz.getProperty(IdentifiersWizardIterator.PROP_WIZARD_STATE);
 
-            SimpleWorker worker = new SimpleWorker() {
+            Long guid = FrameworkAccess.generateGUID();
 
-                Long guid;
+            TreeNode node = new TreeNode();
+            node.setId(guid);
+            node.setName("Batch Search Results");
+            node.setChildren(endState.getResults());
 
-                @Override
-                protected void doStuff() throws Exception {
-                    log.info("Ready..");
-                    guid = FrameworkAccess.generateGUID();
-                    log.info("DONE "+guid);
-                }
-
-                @Override
-                protected void hadSuccess() {
-                    TreeNode node = new TreeNode();
-                    node.setId(guid);
-                    node.setName("Batch Search Results");
-                    node.setChildren(endState.getResults());
-
-                    DomainListViewTopComponent targetViewer = ViewerUtils.provisionViewer(DomainListViewManager.getInstance(), "editor");
-                    // If we are reacting to a selection event in another viewer, then this load is not user driven.
-                    targetViewer.loadDomainObject(node, true);
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    FrameworkAccess.handleException(error);
-                }
-            };
-
-            worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Preparing results...", ""));
-            worker.execute();
+            DomainListViewTopComponent targetViewer = ViewerUtils.provisionViewer(DomainListViewManager.getInstance(), "editor");
+            // If we are reacting to a selection event in another viewer, then this load is not user driven.
+            targetViewer.loadDomainObject(node, true);
         }
     }
 
