@@ -1,18 +1,11 @@
 package org.janelia.workstation.common.services;
 
-import java.util.logging.Logger;
-
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
-import org.hibernate.exception.ExceptionUtils;
-import org.janelia.workstation.common.logging.ExceptionTriage;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.integration.api.ErrorHandler;
-import org.janelia.workstation.core.model.LoginErrorType;
-import org.janelia.workstation.common.gui.dialogs.LoginDialog;
+import org.janelia.workstation.common.logging.ErrorPopups;
 import org.janelia.workstation.core.logging.CustomLoggingLevel;
+import org.janelia.workstation.integration.api.ErrorHandler;
 import org.openide.util.lookup.ServiceProvider;
+
+import java.util.logging.Logger;
 
 /**
  * This error-handler impl defers to the NetBeans logging framework.
@@ -32,29 +25,7 @@ public class ConsoleErrorHandler implements ErrorHandler {
 
     @Override
     public void handleException(String message, Throwable t) {
-        Throwable rootCause = ExceptionUtils.getRootCause(t);
-
-        if (rootCause instanceof java.net.ConnectException 
-                || rootCause instanceof java.net.SocketTimeoutException) {
-            
-            handleExceptionQuietly(message, t);
-            SwingUtilities.invokeLater(() -> {
-                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                        "<html>The server is currently unreachable. There may be a <br>"
-                        + "network issue, or the system may be down for maintenance.</html>", 
-                        "Network error", JOptionPane.ERROR_MESSAGE);
-            });
-            
-        }
-        else if ("HTTP 401 Unauthorized".equalsIgnoreCase(t.getMessage())) {
-            // These happen if the token expires and cannot be refreshed. 
-            handleExceptionQuietly(message, t);
-            // Show the login dialog and allow the user to re-authenticate.
-            SwingUtilities.invokeLater(() -> {
-                LoginDialog.getInstance().showDialog(LoginErrorType.TokenExpiredError);
-            });
-        }
-        else if (ExceptionTriage.isKnownHarmlessIssue(t)) {
+        if (ErrorPopups.attemptExceptionHandling(t)) {
             logger.log(CustomLoggingLevel.WARNING, message, t);
         }
         else {

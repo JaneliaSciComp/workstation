@@ -4,3 +4,6 @@ Data Browser
 * Many improvements to "Services -> Batch Search"
 * You can now select multiple items and edit all their permissions at once
 * Added more options for reprocessing
+* Improved image loading performance
+* Fixed bug with user creation so that default workspace is correctly generated
+* Fixed bug with image caching which caused files to be cached in corrupted state

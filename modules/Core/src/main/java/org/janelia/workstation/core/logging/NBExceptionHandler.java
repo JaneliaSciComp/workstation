@@ -1,18 +1,5 @@
 package org.janelia.workstation.core.logging;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Iterator;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-
-import javax.swing.JButton;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
 import com.google.common.base.Charsets;
 import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.Multiset;
@@ -21,13 +8,22 @@ import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.RateLimiter;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.exceptions.AuthenticationException;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.MailDialogueBox;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Iterator;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 
 /**
  * Override NetBeans' exception handling to tie into the workstation's error handler.
@@ -53,14 +49,10 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
     private static final int COOLDOWN_TIME_SEC = 300; // Allow one auto exception report every 5 minutes
     private static final int MAX_STACKTRACE_CACHE_SIZE = 1000; // Keep track of a max number of unique stacktraces
 
-    // email address from which automated reports to the issue tracker will originate;
-    //  this address has an account in JIRA that has right permissions to create tickets
-
-
     private final HashFunction hf = Hashing.md5();
-    
-    private boolean notified = false;
-    
+
+    // State
+    private boolean notifiedAboutAutoSend = false;
     private Throwable throwable;
     private JButton newFunctionButton;
 
@@ -97,8 +89,8 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         }
         
         if (!ConsoleProperties.getBoolean("console.AutoSendExceptions", false)) {
-            if (!notified) {
-                notified = true;
+            if (!notifiedAboutAutoSend) {
+                notifiedAboutAutoSend = true;
                 log.warn("Auto-sending exceptions is not configured. To configure auto-send, set console.AutoSendExceptions=true in console.properties.");
             }
             return;
@@ -164,36 +156,10 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
      * can still report them manually. 
      */
     private boolean isIgnoredForAutoSend(Throwable throwable, String stacktrace) {
-        
-        // Ignore auth issues
-        if (stacktrace.contains(AuthenticationException.class.getName()+": Invalid username or password")) {
-            return true;
+        switch (ExceptionTriage.getExceptionCategory(throwable, stacktrace)) {
+            case UNKNOWN: return false;
+            default: return true;
         }
-        
-        // Ignore all broken pipes, because these are usually caused by user initiated cancellation or network issues.
-        if (stacktrace.contains("Caused by: java.io.IOException: Broken pipe")) {
-            return true;
-        }
-        
-        // Ignore network and data issues. If it's in fact a problem on our end, the user will let us know. 
-        if (stacktrace.contains("java.io.IOException: unexpected end of stream") 
-                || stacktrace.contains("java.net.ConnectException: Connection refused")
-                || stacktrace.contains("java.net.ConnectException: Connection timed out")
-                || stacktrace.contains("java.io.IOException: stream is closed")) {
-            return true;
-        }
-        
-        // Ignore older ArtifactDescriptor deserialization issues. These older ArtifactDescriptors are no longer usable, but the user can overwrite them with new preferences.
-        if (stacktrace.contains("com.fasterxml.jackson.databind.JsonMappingException: Unexpected token") && stacktrace.contains("ArtifactDescriptor")) {
-            return true;
-        }
-        
-        // Ignore problems with local disks 
-        if (throwable instanceof java.nio.file.AccessDeniedException) {
-            return true;
-        }
-        
-        return false;
     }
     
     @Override
@@ -248,10 +214,8 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
                 }
             }
 
-            if (stacktrace!=null) {
-                mailDialogueBox.append("\n\nStack Trace:\n");
-                mailDialogueBox.append(stacktrace);
-            }
+            mailDialogueBox.append("\n\nStack Trace:\n");
+            mailDialogueBox.append(stacktrace);
             
             mailDialogueBox.sendEmail();
         }
