@@ -6,7 +6,10 @@ import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.security.Subject;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
@@ -96,9 +99,9 @@ public class LVVDebugTestDialog extends JDialog {
         testPanel.add(new JLabel("TESTING"));
 
         // add points
-        testPanel.add(new JLabel("Create neuron and add points:"));
         JPanel addPointsPanel = new JPanel();
         addPointsPanel.setLayout(new BoxLayout(addPointsPanel, BoxLayout.LINE_AXIS));
+        addPointsPanel.add(new JLabel("Create neuron and add points: "));
         addPointsPanel.add(new JLabel("npoints:"));
         JTextField nptsField = new JTextField(4);
         addPointsPanel.add(nptsField);
@@ -111,9 +114,29 @@ public class LVVDebugTestDialog extends JDialog {
                 Integer.parseInt(dtField.getText()));
         });
         addPointsPanel.add(addPointsButton);
-
-
         testPanel.add(addPointsPanel);
+
+
+        // change owner
+        JPanel changeOwnerPanel = new JPanel();
+        changeOwnerPanel.setLayout(new BoxLayout(changeOwnerPanel, BoxLayout.LINE_AXIS));
+        changeOwnerPanel.add(new JLabel("Create neuron and repeatedly change owner: "));
+        changeOwnerPanel.add(new JLabel("ntimes:"));
+        JTextField ntimesField = new JTextField(4);
+        changeOwnerPanel.add(ntimesField);
+        changeOwnerPanel.add(new JLabel("dt (ms):"));
+        JTextField dtField2 = new JTextField(5);
+        changeOwnerPanel.add(dtField2);
+        JButton changeOwnerButton = new JButton("Go");
+        changeOwnerButton.addActionListener(e->{
+            changeNeuronOwner(Integer.parseInt(ntimesField.getText()),
+                    Integer.parseInt(dtField2.getText()));
+        });
+        changeOwnerPanel.add(changeOwnerButton);
+        testPanel.add(changeOwnerPanel);
+
+
+
 
 
         add(testPanel);
@@ -189,33 +212,14 @@ public class LVVDebugTestDialog extends JDialog {
         try {
             log.info("addNeuronPoints():");
 
-            TmNeuronMetadata neuron = annModel.createNeuron("test neuron");
-            // minimal testing...
-            if (neuron == null) {
-                log.info("neuron creation failed");
-                return -1L;
-            }
-            log.info("neuron created");
+            Long neuronID = createNeuronRoot("test add points");
 
-            // need to find the bounds of the image and pick a spot for the root
-            // origin is in nm and is the corner of the volume; add some typical
-            //  offsets to move it to the middle-ish, with a substantial random spread
-            // NOTE: we're working in micron coordinates right now
-            TmSample sample = annModel.getCurrentSample();
-
-            Random r = new Random();
-            double x0 = sample.getOrigin().get(0) / 1000.0 + 5000.0 + 3000.0 * (r.nextDouble() * 2 - 1);
-            double y0 = sample.getOrigin().get(1) / 1000.0 + 4000.0 + 3000.0 * (r.nextDouble() * 2 - 1);
-            double z0 = sample.getOrigin().get(2) / 1000.0 + 6000.0 + 1000.0 * (r.nextDouble() * 2 - 1);
-
-            log.info("neuron root: " + x0 + ", " + y0 + ", " + z0);
-
-            Vec3 micronCoords = new Vec3(x0, y0, z0);
-            TmGeoAnnotation root = annModel.addRootAnnotation(neuron, toVoxelCoords(micronCoords));
-            if (root == null) {
-                log.info("root creation failed");
-                return -1L;
-            }
+            TmNeuronMetadata neuron = annModel.getNeuronFromNeuronID(neuronID);
+            TmGeoAnnotation root = neuron.getFirstRoot();
+            // these are voxel coordinates
+            double x0 = root.getX();
+            double y0 = root.getY();
+            double z0 = root.getZ();
 
             // loop and place points; make a nice spiral:
             double radius = 500.0;
@@ -223,18 +227,18 @@ public class LVVDebugTestDialog extends JDialog {
             double dz = 50.0;
             TmGeoAnnotation parent = root;
             for (int n = 0; n < nPoints; n++) {
-                Vec3 micronLocation = new Vec3(
+                Vec3 location = new Vec3(
                         x0 + radius * Math.sin(n * dTheta),
                         y0 + radius * Math.cos(n * dTheta),
                         z0 + dz);
-                TmGeoAnnotation next = annModel.addChildAnnotation(parent, toVoxelCoords(micronLocation));
+                TmGeoAnnotation next = annModel.addChildAnnotation(parent, location);
                 if (next == null) {
                     log.info("child annotation failed at n = " + n);
                 }
                 parent = next;
                 TimeUnit.MILLISECONDS.sleep(dt);
             }
-            return neuron.getId();
+            return neuronID;
         } catch (InterruptedException e) {
             presentError("Sleep interrupted", "Error");
             return -1L;
@@ -243,6 +247,93 @@ public class LVVDebugTestDialog extends JDialog {
             presentError("Exception while adding neuron points", "Error");
             return -1L;
         }
+    }
+
+    /**
+     * create a neuron, add points; then change owner repeatedly
+     *
+     * ntimes = number of times to change from owner to group and back
+     *      (eg 2 * ntimes total changes)
+     * dt = time in milliseconds between each ownership change
+     *
+     * returns neuron ID or -1 if fail
+     */    private Long changeNeuronOwner(int ntimes, int dt) {
+
+
+        try {
+            log.info("changeNeuronOwner():");
+
+
+            Long neuronID = createNeuronRoot("test change owner");
+
+            TmNeuronMetadata neuron = annModel.getNeuronFromNeuronID(neuronID);
+            TmGeoAnnotation root = neuron.getFirstRoot();
+            // these are voxel coordinates
+            double x0 = root.getX();
+            double y0 = root.getY();
+            double z0 = root.getZ();
+
+            // make it a two-point neuron:
+            Vec3 location = new Vec3(x0,y0 + 500, z0);
+            TmGeoAnnotation next = annModel.addChildAnnotation(root, location);
+
+            // the owners we're going to swap between:
+            Subject owner = AccessManager.getAccessManager().getActualSubject();
+            String tracersGroup = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+            Subject tracersSubject = DomainMgr.getDomainMgr().getSubjectFacade().getSubjectByNameOrKey(tracersGroup);
+
+            for (int i=0; i<ntimes; i++) {
+                // we're just flip-flopping between the two; since we just created the neuron,
+                //  owner should be "owner"
+                annModel.changeNeuronOwner(neuronID, tracersSubject);
+                TimeUnit.MILLISECONDS.sleep(dt);
+
+                annModel.changeNeuronOwner(neuronID, owner);
+                TimeUnit.MILLISECONDS.sleep(dt);
+            }
+            // change one last time to demonstrate that it has been changed
+            //  (at least this once)
+            annModel.changeNeuronOwner(neuronID, tracersSubject);
+
+            return neuronID;
+        } catch (InterruptedException e) {
+            presentError("Sleep interrupted", "Error");
+            return -1L;
+        } catch (Exception e) {
+            log.error("Exception while changing owner", e);
+            presentError("Exception while changing owner", "Error");
+            return -1L;
+        }
+    }
+
+    private Long createNeuronRoot(String name) throws Exception {
+        TmNeuronMetadata neuron = annModel.createNeuron(name);
+        // minimal testing...
+        if (neuron == null) {
+            log.info("neuron creation failed");
+            return -1L;
+        }
+
+        // need to find the bounds of the image and pick a spot for the root
+        // origin is in nm and is the corner of the volume; add some typical
+        //  offsets to move it to the middle-ish, with a substantial random spread
+        // NOTE: we're working in micron coordinates right now
+        TmSample sample = annModel.getCurrentSample();
+
+        Random r = new Random();
+        double x0 = sample.getOrigin().get(0) / 1000.0 + 5000.0 + 3000.0 * (r.nextDouble() * 2 - 1);
+        double y0 = sample.getOrigin().get(1) / 1000.0 + 4000.0 + 3000.0 * (r.nextDouble() * 2 - 1);
+        double z0 = sample.getOrigin().get(2) / 1000.0 + 6000.0 + 1000.0 * (r.nextDouble() * 2 - 1);
+
+        Vec3 micronCoords = new Vec3(x0, y0, z0);
+        log.info("neuron root: " + x0 + ", " + y0 + ", " + z0);
+        TmGeoAnnotation root = annModel.addRootAnnotation(neuron, toVoxelCoords(micronCoords));
+        if (root == null) {
+            log.info("root creation failed");
+            return -1L;
+        }
+
+        return neuron.getId();
     }
 
     private Vec3 toVoxelCoords(Vec3 micronCoords) {
