@@ -7,3 +7,6 @@ Data Browser
 * Improved image loading performance
 * Fixed bug with user creation so that default workspace is correctly generated
 * Fixed bug with image caching which caused files to be cached in corrupted state
+
+Large Volume Viewer
+* Added AutoAck for clearing temporary message queues
