@@ -23,6 +23,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -137,6 +138,24 @@ public class LVVDebugTestDialog extends JDialog {
         changeOwnerPanel.add(changeOwnerButton);
         testPanel.add(changeOwnerPanel);
 
+
+        // merge fragments
+        JPanel mergePanel = new JPanel();
+        mergePanel.setLayout(new BoxLayout(mergePanel, BoxLayout.LINE_AXIS));
+        mergePanel.add(new JLabel("Create fragments and merge them: "));
+        mergePanel.add(new JLabel("nfrags:"));
+        JTextField nfragsField = new JTextField(4);
+        mergePanel.add(nfragsField);
+        mergePanel.add(new JLabel("dt (ms):"));
+        JTextField dtField3 = new JTextField(5);
+        mergePanel.add(dtField3);
+        JButton mergeButton = new JButton("Go");
+        mergeButton.addActionListener(e->{
+            createMergeFragments(Integer.parseInt(nfragsField.getText()),
+                    Integer.parseInt(dtField3.getText()));
+        });
+        mergePanel.add(mergeButton);
+        testPanel.add(mergePanel);
 
 
 
@@ -282,18 +301,7 @@ public class LVVDebugTestDialog extends JDialog {
         try {
             addResults("changeNeuronOwner():");
 
-            Long neuronID = createNeuronRoot("test change owner");
-
-            TmNeuronMetadata neuron = annModel.getNeuronFromNeuronID(neuronID);
-            TmGeoAnnotation root = neuron.getFirstRoot();
-            // these are voxel coordinates
-            double x0 = root.getX();
-            double y0 = root.getY();
-            double z0 = root.getZ();
-
-            // make it a two-point neuron:
-            Vec3 location = new Vec3(x0,y0 + 500, z0);
-            TmGeoAnnotation next = annModel.addChildAnnotation(root, location);
+            Long neuronID = createDimer("test change owner", getRandomSampleLocation(), 0.0, 500.0);
 
             // the owners we're going to swap between:
             Subject owner = AccessManager.getAccessManager().getActualSubject();
@@ -320,7 +328,71 @@ public class LVVDebugTestDialog extends JDialog {
         }
     }
 
+    /**
+     *  create nfrags fragments, then merge them together, at
+     *  intervals of dt milliseconds
+     */
+    private void createMergeFragments(int nfrags, int dt) {
+        try {
+            addResults("createMergeFragments():");
+
+            // these are all micron coordinates
+            // length of frag:
+            double fragx = 0.0;
+            double fragy = 50.0;
+
+            // distance between roots of two frags:
+            Vec3 dist = new Vec3(0.0, 75.0, 0.0);
+
+            Vec3 nextRootLocation = getRandomSampleLocation();
+            String name = "test merge neuron ";
+
+            ArrayList<TmNeuronMetadata> frags = new ArrayList<>();
+            for (int i=0; i<nfrags; i++) {
+                Long neuronID = createDimer(name + i, nextRootLocation, fragx, fragy);
+                TmNeuronMetadata neuron = annModel.getNeuronFromNeuronID(neuronID);
+                frags.add(neuron);
+                nextRootLocation.plusEquals(dist);
+                // I saw the select loop bug here once but it didn't recur
+            }
+
+            // merge fragments successively into the first frag at the endpoint
+            TmNeuronMetadata targetNeuron = frags.get(0);
+            Long targetNeuronID = targetNeuron.getId();
+            Long targetAnnID = targetNeuron.getFirstRoot().getChildIds().get(0);
+
+            for (int i=1; i<nfrags; i++) {
+                TmNeuronMetadata sourceNeuron = frags.get(i);
+                Long sourceNeuronID = sourceNeuron.getId();
+                Long sourceAnnID = sourceNeuron.getFirstRoot().getId();
+                Long nextTargetAnnID = sourceNeuron.getFirstRoot().getChildIds().get(0);
+                annModel.mergeNeurite(sourceNeuronID, sourceAnnID, targetNeuronID, targetAnnID);
+
+                TimeUnit.MILLISECONDS.sleep(dt);
+                // target neuron remains the same, but the target annotation moves to the
+                //  child annotation of the root of the neuron we just merged
+                targetAnnID = nextTargetAnnID;
+            }
+        } catch (InterruptedException e) {
+            presentError("Sleep interrupted", "Error");
+        } catch (Exception e) {
+            log.error("Exception while merging fragments", e);
+            presentError("Exception while merging fragments", "Error");
+        }
+    }
+
+    /**
+     * create a neuron with the input name; returns neuron ID
+     */
     private Long createNeuronRoot(String name) throws Exception {
+        return createNeuronRoot(name, getRandomSampleLocation());
+    }
+
+    /**
+     * create neuron with input name and root location (µm);
+     * returns neuron ID
+     */
+    private Long createNeuronRoot(String name, Vec3 rootLocation) throws Exception {
         TmNeuronMetadata neuron = annModel.createNeuron(name);
         // minimal testing...
         if (neuron == null) {
@@ -328,6 +400,42 @@ public class LVVDebugTestDialog extends JDialog {
             return -1L;
         }
 
+        addResults("neuron root (µm): " + rootLocation);
+        TmGeoAnnotation root = annModel.addRootAnnotation(neuron, toVoxelCoords(rootLocation));
+        if (root == null) {
+            addResults("root creation failed");
+            return -1L;
+        }
+
+        return neuron.getId();
+    }
+
+    /**
+     * create a two-point neuron with given name; root is at location, and
+     * second point is at location plus (dx, dy) (thus has the same z)
+     * (all in µm); returns neuron ID
+     */
+    private Long createDimer(String name, Vec3 location, double dx, double dy) throws Exception {
+        Long neuronID = createNeuronRoot(name, location);
+        TmNeuronMetadata neuron = annModel.getNeuronFromNeuronID(neuronID);
+        TmGeoAnnotation root = neuron.getFirstRoot();
+
+        Vec3 location2 = new Vec3(
+                location.getX() + dx,
+                location.getY() + dy,
+                location.getZ());
+        TmGeoAnnotation next = annModel.addChildAnnotation(root, toVoxelCoords(location2));
+        if (next == null) {
+            addResults("child annotation failed while creating dimer");
+        }
+        return neuronID;
+    }
+
+    /**
+     * return a random point within the sample, near the middle-ish;
+     * result is in micron coordinates
+     */
+    private Vec3 getRandomSampleLocation() {
         // need to find the bounds of the image and pick a spot for the root
         // origin is in nm and is the corner of the volume; add some typical
         //  offsets to move it to the middle-ish, with a substantial random spread
@@ -339,15 +447,7 @@ public class LVVDebugTestDialog extends JDialog {
         double y0 = sample.getOrigin().get(1) / 1000.0 + 4000.0 + 3000.0 * (r.nextDouble() * 2 - 1);
         double z0 = sample.getOrigin().get(2) / 1000.0 + 6000.0 + 1000.0 * (r.nextDouble() * 2 - 1);
 
-        Vec3 micronCoords = new Vec3(x0, y0, z0);
-        addResults("neuron root: " + x0 + ", " + y0 + ", " + z0);
-        TmGeoAnnotation root = annModel.addRootAnnotation(neuron, toVoxelCoords(micronCoords));
-        if (root == null) {
-            addResults("root creation failed");
-            return -1L;
-        }
-
-        return neuron.getId();
+        return new Vec3(x0, y0, z0);
     }
 
     private void addResults(String result) {
