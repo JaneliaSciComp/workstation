@@ -139,7 +139,7 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
                 }
 
                 StringBuilder extraOptions = new StringBuilder();
-                extraOptions.append(dialog.getExtraOptions());
+                extraOptions.append("source=Workstation");
                 if (dialog.isSkipCorrection()) {
                     extraOptions.append(",skip correction=true");
                 }
@@ -148,6 +148,9 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
                 }
                 if (!StringUtils.isBlank(dialog.getRunObjectives())) {
                     extraOptions.append(",run objectives="+dialog.getRunObjectives());
+                }
+                if (!StringUtils.isBlank(dialog.getRunObjectives())) {
+                    extraOptions.append(",").append(dialog.getExtraOptions());
                 }
 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
