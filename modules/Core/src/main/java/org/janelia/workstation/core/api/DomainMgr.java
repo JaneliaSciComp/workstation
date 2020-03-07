@@ -73,6 +73,7 @@ public class DomainMgr {
 
     private DomainModel model;
     private Map<String, Preference> preferenceMap;
+    private Subject subject;
 
     private DomainMgr() {
     }
@@ -104,9 +105,14 @@ public class DomainMgr {
 
     @Subscribe
     public synchronized void runAsUserChanged(SessionStartEvent event) {
-        log.info("User changed, resetting model");
-        this.preferenceMap = null;
-        model.invalidateAll();
+        if (subject != event.getSubject()) {
+            this.subject = event.getSubject();
+            log.info("User changed to {}, clearing data caches", subject.getName());
+            // Clear the user preferences, they'll be loaded on demand
+            this.preferenceMap = null;
+            // Clear the current model cache
+            model.invalidateAll();
+        }
     }
 
     AuthServiceClient getAuthClient() {
