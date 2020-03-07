@@ -537,6 +537,7 @@ public class DomainModel {
     }
 
     public List<Workspace> getWorkspaces() throws Exception {
+        Collection<Workspace> values;
         synchronized (modelLock) {
             if (workspaceCache == null) {
                 log.info("Caching workspaces from database...");
@@ -550,8 +551,9 @@ public class DomainModel {
                 }
                 if (TIMER) w.stop("getWorkspaces");
             }
+            values = workspaceCache.values();
         }
-        return new ArrayList<>(workspaceCache.values());
+        return new ArrayList<>(values);
     }
 
     public Workspace getDefaultWorkspace() throws Exception {
@@ -725,6 +727,7 @@ public class DomainModel {
      * @return collection of ontologies
      */
     public List<Ontology> getOntologies() {
+        Collection<Ontology> values;
         synchronized (modelLock) {
             if (ontologyCache == null) {
                 log.debug("Getting ontologies from database");
@@ -737,8 +740,9 @@ public class DomainModel {
                 }
                 if (TIMER) w.stop("getOntologies");
             }
+            values = ontologyCache.values();
         }
-        return new ArrayList<>(ontologyCache.values());
+        return new ArrayList<>(values);
     }
 
     /**
