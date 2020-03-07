@@ -518,12 +518,15 @@ public class ColorDepthSearchEditorPanel
     
     @Subscribe
     public void processEvent(WorkerEndedEvent e) {
-        if (e.getWorker() instanceof SearchMonitoringWorker) {
-            SearchMonitoringWorker worker = (SearchMonitoringWorker)e.getWorker();
-            log.info("Got worker ended event: "+worker.getSearch().getId());
-            if (worker.getSearch().getId().equals(search.getId())) {
-                setProcessing(false);
-                setError(worker.getError() != null);
+        ColorDepthSearch search = this.search;
+        if (search!=null) {
+            if (e.getWorker() instanceof SearchMonitoringWorker) {
+                SearchMonitoringWorker worker = (SearchMonitoringWorker) e.getWorker();
+                log.info("Got worker ended event: " + worker.getSearch().getId());
+                if (worker.getSearch().getId().equals(this.search.getId())) {
+                    setProcessing(false);
+                    setError(worker.getError() != null);
+                }
             }
         }
     }

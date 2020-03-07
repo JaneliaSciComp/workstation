@@ -1,12 +1,10 @@
 package org.janelia.workstation.core.workers;
 
-import java.util.concurrent.Callable;
-
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
-import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
+import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
+
+import java.util.concurrent.Callable;
 
 /**
  * Monitor a color depth search being executed on the backend.
