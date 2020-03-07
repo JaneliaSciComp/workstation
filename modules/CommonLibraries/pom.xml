@@ -16,8 +16,16 @@
     <packaging>nbm</packaging>
 
     <properties>
+        <!--
+            We would like to move past this version due to the issue of masking SSL issues:
+            https://github.com/jersey/jersey/issues/3000
+            Unfortunately, newer Jersey versions have a different, more serious, issue with
+            ignoring FAIL_ON_UNKNOWN_PROPERTIES. We should revisit this later to see if it gets
+            fixed in Jersey.
+        -->
         <jaxrs.jersey.version>2.21</jaxrs.jersey.version>
     </properties>
+
     <dependencies>
 
         <!-- Jars from Workstation Maven Repo -->
