@@ -216,12 +216,14 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
 
         return tileLoader.findStorageLocation(basePath)
-                .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, rawImage.getRawImagePath(colorChannelIndex)).asOptional())
+                .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, rawImage.getRawImagePath(colorChannelIndex,"-ngc.%s.mj2" )).asOptional())
                 .map(rawImageStream -> {
                     String tileStack = rawImage.toString() + "-ch-" + colorChannelIndex;
                     try {
+                        if (!texture.loadMJ2Stack(tileStack, rawImageStream)) {
+                        /*
                         if (!texture.loadTiffStack(tileStack, rawImageStream)) {
-                            return null;
+                         */   return null;
                         } else {
                             return texture;
                         }

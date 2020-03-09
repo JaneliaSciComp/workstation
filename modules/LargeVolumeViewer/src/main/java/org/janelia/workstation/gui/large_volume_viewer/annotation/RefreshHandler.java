@@ -83,6 +83,7 @@ public class RefreshHandler implements MessageHandler {
                             log.error(error, exc);
                         });
         msgReceiver = new AsyncMessageConsumerImpl(messageConnection);
+        ((AsyncMessageConsumerImpl)msgReceiver).setAutoAck(true);
         // create a temporary binding to ModelRefresh exchange and listen on that channel for the replies
         msgReceiver.bindAndConnectTo("ModelRefresh", "", null);
         msgReceiver.subscribe(this);

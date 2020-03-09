@@ -26,6 +26,7 @@ import com.sun.media.jai.codec.SeekableStream;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.gltools.GL3Resource;
+import org.janelia.gltools.MJ2Parser;
 import org.janelia.gltools.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.slf4j.Logger;
@@ -126,7 +127,7 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         LOG.debug("Tiff load to RenderedImages took {} ms", t1);
 
         if (slices.length > 0) {
-            Pair<Raster[], ColorModel> slicePair = loadStack(slices);
+            Pair<Raster[], ColorModel> slicePair = prepTiffStack(slices);
 
             float t2=timer.reportMsAndRestart();
             LOG.debug("Tiff RenderedImages to raster took {} ms", t2);
@@ -143,6 +144,27 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         }
     }
 
+    public boolean loadMJ2Stack(String stackName, InputStream stackStream) throws IOException {
+        if (stackStream == null) {
+            return false;
+        }
+        MJ2Parser parser = new MJ2Parser();
+        Pair<Raster[], ColorModel> slicePair = parser.extractSlices(stackStream);
+        Raster[] slices = slicePair.getLeft();
+        if (slices==null) return false;
+
+        if (slices.length > 0) {
+            depth = slices.length;
+            width = slices[0].getWidth();
+            height = slices[0].getHeight();
+            loadStack(slicePair.getLeft(), slicePair.getRight());
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
     private void allocatePixels() {
         int byteCount = numberOfComponents * bytesPerIntensity * width * height * depth;
         pixelBytes = new byte[byteCount];
@@ -151,7 +173,7 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         pixels.rewind();
     }
 
-    private Pair<Raster[], ColorModel> loadStack(RenderedImage[] stack) {
+    private Pair<Raster[], ColorModel> prepTiffStack(RenderedImage[] stack) {
         PerformanceTimer timer = new PerformanceTimer();
 
         depth = stack.length;

@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.10</version>
+        <version>8.12</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>GLViewerTools</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>gltools</artifactId>
-    <version>8.10</version>
+    <version>8.12</version>
     <packaging>nbm</packaging>
 
     <dependencies>
@@ -83,6 +83,25 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+        </dependency>
+
+        <!-- MJ2 Compression Tools -->
+        <dependency>
+            <groupId>com.github.jai-imageio</groupId>
+            <artifactId>jai-imageio-core</artifactId>
+            <version>1.3.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.jai-imageio</groupId>
+            <artifactId>jai-imageio-jpeg2000</artifactId>
+            <version>1.3.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.bitplan</groupId>
+            <artifactId>com.bitplan.mjpegstreamer</artifactId>
+            <version>0.0.6</version>
         </dependency>
 
     </dependencies>
