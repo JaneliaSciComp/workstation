@@ -1,4 +1,8 @@
 // 8.12
 
+Data Browser
+* Fixed bug with "Export Folder Structure" action
+* Modified export so that Excel does not truncate the GUID
+
 Large Volume Viewer
 * Neuron name is more distinct when out-of-sync
