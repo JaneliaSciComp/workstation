@@ -10,6 +10,7 @@ import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 import javax.swing.filechooser.FileFilter;
 
+import org.janelia.model.domain.Reference;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.jacs.shared.utils.Progress;
@@ -147,7 +148,15 @@ public class ExportResultsAction<T,S> extends AbstractAction {
                             buf.append("\t");
                         }
                         if (value != null) {
-                            buf.append(sanitize(value.toString()));
+                            if (column.getName().equals("id")) {
+                                // Excel truncates longs, so we prefix the type to force it into string mode
+                                String type = (String)tableViewer.getValue(resultPage, object, "type");
+                                Reference ref = Reference.createFor(type, Long.parseLong(value.toString()));
+                                buf.append(ref.toString());
+                            }
+                            else {
+                                buf.append(sanitize(value.toString()));
+                            }
                         }
     
                     }

@@ -135,7 +135,7 @@ public class ExportFolderStructureAction extends BaseContextualNodeAction {
             }
         };
 
-        worker.setProgressMonitor(new IndeterminateNoteProgressMonitor(FrameworkAccess.getMainFrame(), "Exporting data", ""));
+        worker.setProgressMonitor(new IndeterminateNoteProgressMonitor(FrameworkAccess.getMainFrame(), "Exporting folder structure and annotations", ""));
         worker.execute();
     }
 
@@ -144,7 +144,6 @@ public class ExportFolderStructureAction extends BaseContextualNodeAction {
         try (FileWriter writer = new FileWriter(destFile)) {
 
             writer.write("GUID\t");
-            writer.write("Type\t");
             writer.write("Name\t");
             writer.write("Annotations\t");
             writer.write("Folder Path\n");
@@ -200,8 +199,7 @@ public class ExportFolderStructureAction extends BaseContextualNodeAction {
                     sb.append(annotation.getName().replaceAll("\\s+", " "));
                 }
 
-                writer.write(child.getId()+"\t");
-                writer.write(child.getType()+"\t");
+                writer.write(Reference.createFor(child)+"\t");
                 writer.write(child.getName()+"\t");
                 writer.write(sb.toString());
                 writer.write(path+"\t"+node.getName()+"\n");
