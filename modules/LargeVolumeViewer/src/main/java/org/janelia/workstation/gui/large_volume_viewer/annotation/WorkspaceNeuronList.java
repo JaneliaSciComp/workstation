@@ -1157,15 +1157,25 @@ class SyncLevelRenderer extends DefaultTableCellRenderer {
         int modelRow = tableData.convertRowIndexToModel(row);
         TmNeuronMetadata targetNeuron = ((NeuronTableModel) tableData.getModel()).getNeuronAtRow(modelRow);
 
-        // default settings (needed so we reset after changing for unsynced neurons)
-        cellComponent.setFont(cellComponent.getFont().deriveFont(Font.PLAIN));
-        cellComponent.setForeground(tableData.getForeground());
-        cellComponent.setBackground(tableData.getBackground());
-
         if (targetNeuron.getSyncLevel() >= NeuronTableModel.SYNC_WARN_LEVEL) {
             cellComponent.setFont(cellComponent.getFont().deriveFont(Font.ITALIC));
-            cellComponent.setForeground(tableData.getBackground());
-            cellComponent.setBackground(tableData.getForeground());
+            if (isSelected) {
+                cellComponent.setForeground(tableData.getBackground());
+                cellComponent.setBackground(tableData.getSelectionBackground());
+            } else {
+                cellComponent.setForeground(tableData.getBackground());
+                cellComponent.setBackground(tableData.getForeground());
+            }
+        } else {
+            // default settings
+            cellComponent.setFont(cellComponent.getFont().deriveFont(Font.PLAIN));
+            if (isSelected) {
+                cellComponent.setForeground(tableData.getSelectionForeground());
+                cellComponent.setBackground(tableData.getSelectionBackground());
+            } else {
+                cellComponent.setForeground(tableData.getForeground());
+                cellComponent.setBackground(tableData.getBackground());
+            }
         }
         return cellComponent;
     }
