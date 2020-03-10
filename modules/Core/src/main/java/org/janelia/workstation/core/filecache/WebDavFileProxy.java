@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class WebDavFileProxy implements FileProxy {
+    private static final int WBEDAV_SO_TIMEOUT_INMILLIS = 180000;
     private static final Logger LOG = LoggerFactory.getLogger(WebDavFileProxy.class);
 
     private final HttpClientProxy httpClientProxy;
@@ -29,15 +30,16 @@ public class WebDavFileProxy implements FileProxy {
     }
 
     @Override
-    public Long estimateSizeInBytes() {
+    public Long estimateSizeInBytes(boolean alwaysCheck) {
         return webDavFile.getSizeInBytes();
     }
 
     @Override
-    public InputStream openContentStream() throws FileNotFoundException {
+    public InputStream openContentStream(boolean alwaysDownload) throws FileNotFoundException {
         GetMethod httpGet;
         try {
             httpGet = new GetMethod(webDavFile.getRemoteFileUrl());
+            httpGet.getParams().setSoTimeout(WBEDAV_SO_TIMEOUT_INMILLIS);
         } catch (Exception e) {
             LOG.error("Could not create GET method for {}", webDavFile.getRemoteFileUrl(), e);
             webDavFile.handleError(e);
@@ -64,12 +66,12 @@ public class WebDavFileProxy implements FileProxy {
     }
 
     @Override
-    public File getLocalFile() {
+    public File getLocalFile(boolean alwaysDownload) {
         return null;
     }
 
     @Override
-    public boolean exists() {
+    public boolean exists(boolean alwaysCheck) {
         return webDavFile != null;
     }
 

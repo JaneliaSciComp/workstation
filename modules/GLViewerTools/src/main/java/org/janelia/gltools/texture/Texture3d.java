@@ -148,21 +148,29 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         if (stackStream == null) {
             return false;
         }
-        MJ2Parser parser = new MJ2Parser();
-        Pair<Raster[], ColorModel> slicePair = parser.extractSlices(stackStream);
-        Raster[] slices = slicePair.getLeft();
-        if (slices==null) return false;
+        try {
+            PerformanceTimer timer = new PerformanceTimer();
+            MJ2Parser parser = new MJ2Parser();
+            Pair<Raster[], ColorModel> slicePair = parser.extractSlices(stackStream);
+            Raster[] slices = slicePair.getLeft();
+            if (slices==null) return false;
 
-        if (slices.length > 0) {
-            depth = slices.length;
-            width = slices[0].getWidth();
-            height = slices[0].getHeight();
-            loadStack(slicePair.getLeft(), slicePair.getRight());
-            return true;
-        } else {
-            return false;
+            if (slices.length > 0) {
+                depth = slices.length;
+                width = slices[0].getWidth();
+                height = slices[0].getHeight();
+                loadStack(slicePair.getLeft(), slicePair.getRight());
+
+                float t1 = timer.reportMsAndRestart();
+                LOG.info(">>> loadTiffStack() total time = {} ms", (t1));
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Unable to parse", e);
         }
-
     }
 
     private void allocatePixels() {

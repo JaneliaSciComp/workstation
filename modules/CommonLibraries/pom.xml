@@ -339,6 +339,18 @@
             <version>1.2.17</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.jai-imageio</groupId>
+            <artifactId>jai-imageio-core</artifactId>
+            <version>1.3.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.jai-imageio</groupId>
+            <artifactId>jai-imageio-jpeg2000</artifactId>
+            <version>1.3.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -463,6 +475,8 @@
                         <publicPackage>com.twelvemonkeys.imageio.metadata.tiff</publicPackage>
                         <publicPackage>com.twelvemonkeys.imageio.plugins</publicPackage>
                         <publicPackage>com.twelvemonkeys.imageio.plugins.tiff</publicPackage>
+                        <publicPackage>com.github.jaiimageio.jpeg2000</publicPackage>
+                        <publicPackage>com.github.jaiimageio.jpeg2000.impl</publicPackage>
                         <publicPackage>com.xuggle.*</publicPackage>
                         <publicPackage>edu.wlu.cs.levy.CG</publicPackage>
                         <publicPackage>javax.inject</publicPackage>

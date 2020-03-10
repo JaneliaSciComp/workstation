@@ -12,7 +12,7 @@ public class CoreFileAccessController implements FileAccessController {
 
     @Override
     public File getCachedFile(String standardPath, boolean forceRefresh) throws FileNotFoundException {
-        return FileMgr.getFileMgr().getFile(standardPath, forceRefresh).getLocalFile();
+        return FileMgr.getFileMgr().getFile(standardPath, forceRefresh).getLocalFile(false);
     }
     
 }

@@ -481,13 +481,11 @@ public class FilterEditorPanel
         for (final Class<? extends DomainObject> searchClass : DomainUtils.getSearchClasses()) {
             final String type = DomainUtils.getTypeName(searchClass);
             JMenuItem menuItem = new JRadioButtonMenuItem(type, searchClass.equals(searchConfig.getSearchClass()));
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    dirty = true;
-                    searchConfig.setSearchClass(searchClass);
-                    updateView();
-                    refreshSearchResults(true);
-                }
+            menuItem.addActionListener(e -> {
+                dirty = true;
+                searchConfig.setSearchClass(searchClass);
+                updateView();
+                refreshSearchResults(true);
             });
             typeGroup.add(menuItem);
             typeCriteriaButton.addMenuItem(menuItem);

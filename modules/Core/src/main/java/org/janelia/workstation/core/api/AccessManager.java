@@ -239,8 +239,9 @@ public final class AccessManager {
         renewToken();
         // We're now authenticated. Get or create the Workstation user object.
         try {
-            return DomainMgr.getDomainMgr().getModel().getOrCreateUser(username);
-        } catch (Exception e) {
+            return DomainMgr.getDomainMgr().getModel().getUser(username);
+        }
+        catch (Exception e) {
             throw new ServiceException("Error getting or creating user "+username, e);
         }
     }

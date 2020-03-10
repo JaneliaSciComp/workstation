@@ -13,6 +13,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.geometry3d.Box3;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
+import org.janelia.gltools.MJ2Parser;
 import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.VoxelIndex;
@@ -214,7 +215,6 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setBytesPerIntensity(bytesPerIntensity);
         rawImage.setTileDims(Arrays.stream(pixelDims).boxed().toArray(Integer[]::new));
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
-
         return tileLoader.findStorageLocation(basePath)
                 .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, rawImage.getRawImagePath(colorChannelIndex,"-ngc.%s.mj2" )).asOptional())
                 .map(rawImageStream -> {

@@ -49,7 +49,7 @@ class MasterStorageClient extends AbstractStorageClient {
     WebDavStorage findStorage(String storagePath) throws WebDavException, FileNotFoundException {
         MultiStatusResponse[] multiStatusResponses = StorageClientResponseHelper.getResponses(
                 httpClient,
-                StorageClientResponseHelper.getStorageLookupURL(baseUrl, "data_storage_path", storagePath),
+                StorageClientResponseHelper.getStorageLookupURL(baseUrl, "data_storage_path", getUrlEncodedPath(storagePath)),
                 DavConstants.DEPTH_0,
                 0
         );

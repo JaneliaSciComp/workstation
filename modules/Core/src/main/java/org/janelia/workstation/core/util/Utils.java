@@ -27,10 +27,14 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.FileImageInputStream;
+import javax.imageio.stream.ImageInputStream;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
 import com.google.common.io.ByteStreams;
+import com.twelvemonkeys.imageio.stream.ByteArrayImageInputStream;
+
 import loci.common.ByteArrayHandle;
 import loci.common.Location;
 import loci.formats.FormatException;
@@ -85,35 +89,19 @@ public class Utils {
     }
 
     public static BufferedImage readImageFromInputStream(InputStream inputStream, String format) {
-        String selectedRenderer = FrameworkAccess.getModelProperty(
-                OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.LOCI.toString());
-        RendererType2D renderer = RendererType2D.valueOf(selectedRenderer);
         BufferedImage image;
-        if (renderer == RendererType2D.IMAGE_IO) {
-            try {
-                image = readWithImageIOFromInputStream(inputStream);
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Invalid image stream", e);
-            }
-        } else {
-            try {
-                byte[] imageBytes = ByteStreams.toByteArray(inputStream);
-                String streamId = "inBytes." + format;
-                Location.mapFile(streamId, new ByteArrayHandle(imageBytes));
-                image = readWithLociReaderFromStreamId(streamId, format);
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Invalid image stream", e);
-            }
+        try {
+            byte[] imageBytes = ByteStreams.toByteArray(inputStream);
+            String streamId = "inputStream-" + imageBytes.hashCode() + "." + format;
+            Location.mapFile(streamId, new ByteArrayHandle(imageBytes));
+            image = readWithLociReaderFromStreamId(streamId, format);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Invalid image stream", e);
         }
         if (image == null) {
             throw new IllegalArgumentException("File format is not supported: " + format);
         }
         return image;
-    }
-
-    private static BufferedImage readWithImageIOFromInputStream(InputStream inputStream) throws IOException {
-        // Supports GIF, PNG, JPEG, BMP, and WBMP
-        return ImageIO.read(inputStream);
     }
 
     private static BufferedImage readWithLociReaderFromStreamId(String streamId, String format) {
@@ -147,35 +135,6 @@ public class Utils {
             imageReader.close();
         } catch (IOException | FormatException e) {
             throw new IllegalArgumentException("Invalid image stream id", e);
-        }
-        return image;
-    }
-
-    public static BufferedImage readImageFromLocalFile(String localFilePath) {
-        String format = FilenameUtils.getExtension(localFilePath);
-        String selectedRenderer = FrameworkAccess.getModelProperty(
-                OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.LOCI.toString());
-        RendererType2D renderer = RendererType2D.valueOf(selectedRenderer);
-        BufferedImage image;
-        if (renderer == RendererType2D.IMAGE_IO) {
-            InputStream imageStream;
-            try {
-                imageStream = new FileInputStream(localFilePath);
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Cannot open local image file " + localFilePath, e);
-            }
-            try {
-                image = readWithImageIOFromInputStream(imageStream);
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Invalid local image file " + localFilePath, e);
-            } finally {
-                try {
-                    imageStream.close();
-                } catch (IOException ignore) {
-                }
-            }
-        } else {
-            image = readWithLociReaderFromStreamId(localFilePath, format);
         }
         return image;
     }
@@ -410,7 +369,7 @@ public class Utils {
             @Override
             protected void doStuff() throws Exception {
                 FileProxy fileProxy = FileMgr.getFileMgr().getFile(filePath, false);
-                file = fileProxy.getLocalFile();
+                file = fileProxy.getLocalFile(false);
             }
 
             @Override
@@ -440,17 +399,14 @@ public class Utils {
      * remote file system is mounted, or after caching the file locally.
      */
     public static void processStandardFilepath(final String filePath, final FileCallable callback) {
-        
         final File file = new File(PathTranslator.convertPath(filePath));
         if (file.canRead()) {
             try {
                 callback.call(file);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 FrameworkAccess.handleException(e);
             }
-        }
-        else {
+        } else {
             Utils.cacheAndProcessFileAsync(filePath, new FileCallable() {
                 @Override
                 public void call(File file) throws Exception {
@@ -466,10 +422,9 @@ public class Utils {
         }
     }
 
-    public static void copyURLToFile(String standardPath, File destination, SimpleWorker worker, boolean hasProgress) throws Exception {
-
-        if (worker != null) {
-            worker.throwExceptionIfCancelled();
+    public static void copyURLToFile(String standardPath, File destination, SimpleWorker worker1, boolean hasProgress, boolean alwaysDownload) throws Exception {
+        if (worker1 != null) {
+            worker1.throwExceptionIfCancelled();
         }
         
         log.trace("copyURLToFile: standardPath={}, destination={}", standardPath, destination);
@@ -479,7 +434,7 @@ public class Utils {
             Files.createDirectories(destinationDir.toPath());
         }
 
-        //make sure we can write to destination
+        // make sure we can write to destination
         if (destination.exists() && !destination.canWrite()) {
             throw new IOException("Unable to open " + destination.getAbsolutePath() + " for writing.");
         }
@@ -487,11 +442,10 @@ public class Utils {
         InputStream input;
         FileProxy fileProxy = FileMgr.getFileMgr().getFile(standardPath, false);
 
+        log.info("Copying {} ({}) to {}", standardPath, fileProxy.getFileId(), destination);
         Long length;
-        log.info("Copying {} to {}", standardPath, destination);
-
         int estimatedCompressionFactor;
-        InputStream fileProxyStream = fileProxy.openContentStream();
+        InputStream fileProxyStream = fileProxy.openContentStream(alwaysDownload);
         try {
             if (standardPath.endsWith(EXTENSION_BZ2) &&
                     (!destination.getName().endsWith(EXTENSION_BZ2))) {
@@ -502,7 +456,7 @@ public class Utils {
             } else {
                 input = fileProxyStream;
                 estimatedCompressionFactor = 1;
-                length = fileProxy.estimateSizeInBytes();
+                length = fileProxy.estimateSizeInBytes(alwaysDownload);
             }
         } catch (Exception e) {
             IOUtils.closeQuietly(fileProxyStream);
@@ -511,7 +465,8 @@ public class Utils {
 
         FileOutputStream output = new FileOutputStream(destination);
         try {
-            final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
+            final long totalBytesWritten = copy(input, output, length, worker1, estimatedCompressionFactor, hasProgress);
+            log.info("Finished copy {} bytes from {} ({}) to {}", totalBytesWritten, standardPath, fileProxy.getFileId(), destination);
             if (length != null && totalBytesWritten < length) {
                 throw new CancellationException("Bytes written (" + totalBytesWritten + ") for " + fileProxy.getFileId() +
                                       " is less than source length (" + length + ")");
@@ -523,8 +478,6 @@ public class Utils {
     }
 
     public static void copyFileToFile(File source, File destination, SimpleWorker worker, boolean hasProgress) throws Exception {
-
-
         if (worker != null) {
             worker.throwExceptionIfCancelled();
         }
@@ -582,21 +535,22 @@ public class Utils {
                              SimpleWorker worker, int estimatedCompressionFactor, 
                              boolean hasProgress) throws IOException {
 
-        BackgroundWorker backgroundWorker = null;
-        String backgroundStatus = null;
-        if (hasProgress && worker!=null) {
+        BackgroundWorker backgroundWorker;
+        String backgroundStatus;
+        if (hasProgress && worker != null) {
             if (worker instanceof BackgroundWorker) {
                 backgroundWorker = (BackgroundWorker) worker;
-                backgroundStatus = backgroundWorker.getStatus();
-                if (backgroundStatus == null) {
-                    backgroundStatus = "Copying file - ";
-                } else {
-                    backgroundStatus = backgroundStatus + " - ";
-                }
+                backgroundStatus = backgroundWorker.getStatus() == null
+                        ? "Copying file - "
+                        : backgroundWorker.getStatus() + " - ";
+            } else {
+                backgroundWorker = null;
+                backgroundStatus = null;
             }
+        } else {
+            backgroundWorker = null;
+            backgroundStatus = null;
         }
-        final BackgroundWorker finalBackgroundWorker = backgroundWorker;
-        final String finalBackgroundStatus = backgroundStatus;
 
         final long startTime = System.currentTimeMillis();
         final long estimatedLength = length == null ? 1 : estimatedCompressionFactor * length;
@@ -606,18 +560,19 @@ public class Utils {
             // 30 MB/s on Windows (Windows to NAS)
             CallbackByteChannel rbc = new CallbackByteChannel(Channels.newChannel(input), (long bytesWritten) -> {
                 worker.setProgress(bytesWritten, estimatedLength);
-                if (finalBackgroundWorker != null) {
+                if (backgroundWorker != null) {
                     final long elapsedTime = System.currentTimeMillis() - startTime;
                     TransferSpeed speed = new TransferSpeed(elapsedTime, bytesWritten);
                     String message = String.format("Wrote %.2f %s (%.2f MB/s)", 
                             speed.getAmountWritten(), speed.getAmountUnits(), speed.getMbps());
-                    finalBackgroundWorker.setStatus(finalBackgroundStatus + message);
+                    backgroundWorker.setStatus(backgroundStatus + message);
                 }
             });
-            output.getChannel().transferFrom(rbc, 0, length);
-            totalBytesWritten = rbc.getTotalBytesRead();
-        }
-        else {
+            totalBytesWritten = output.getChannel().transferFrom(rbc, 0, length);
+            if (totalBytesWritten < length) {
+                log.warn("Transferred {} bytes but expected to transfer {} bytes", totalBytesWritten, length);
+            }
+        } else {
             log.warn("No length given, falling back on inefficient copy method");
 
             // 10-15 MB/s (Windows to NAS)
@@ -646,7 +601,7 @@ public class Utils {
                                 TransferSpeed speed = new TransferSpeed(elapsedTime, totalBytesWritten);
                                 String message = String.format("Wrote %.2f %s (%.2f MB/s)", 
                                         speed.getAmountWritten(), speed.getAmountUnits(), speed.getMbps());
-                                finalBackgroundWorker.setStatus(finalBackgroundStatus + message);
+                                backgroundWorker.setStatus(backgroundStatus + message);
                             }
                         }
                     }

@@ -1,6 +1,6 @@
-// 8.10
+// 8.11
 
-LVV/Horta: 
-* Imported SWC files should show connected skeletons in Horta
-* Message server memory increased
-* Bulk neuron color change should work again
+Data Browser
+* Many improvements to "Services -> Batch Search"
+* You can now select multiple items and edit all their permissions at once
+* Added more options for reprocessing

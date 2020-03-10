@@ -66,6 +66,8 @@ public class ReportProblemAction extends BaseContextualPopupAction {
 
         DomainObject domainObject = selectedObject;
 
+        // TODO: this can cause a chain of exceptions if the user is not logged in
+        // These items should be lazy loaded after login, not on startup
         OntologyTerm errorOntology = StateMgr.getStateMgr().getErrorOntology();
         if (errorOntology==null) return items;
 

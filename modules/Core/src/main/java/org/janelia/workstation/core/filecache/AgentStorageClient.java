@@ -5,8 +5,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.function.Consumer;
 
 import javax.servlet.http.HttpServletResponse;
@@ -64,7 +66,7 @@ class AgentStorageClient extends AbstractStorageClient {
     WebDavFile findFile(String remoteFileName) throws WebDavException, FileNotFoundException {
         MultiStatusResponse[] multiStatusResponses = StorageClientResponseHelper.getResponses(
                 httpClient,
-                StorageClientResponseHelper.getStorageLookupURL(baseUrl, "data_storage_path", remoteFileName),
+                StorageClientResponseHelper.getStorageLookupURL(baseUrl, "data_storage_path", getUrlEncodedPath(remoteFileName)),
                 DavConstants.DEPTH_0,
                 0
         );

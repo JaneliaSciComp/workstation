@@ -1,5 +1,6 @@
 package org.janelia.gltools;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.imageio.ImageIO;
@@ -7,9 +8,11 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.Raster;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class MJ2Parser {
     enum BOXTYPE {
@@ -211,30 +214,36 @@ public class MJ2Parser {
         return true;
     }
 
-    public Pair<Raster[], ColorModel> extractSlices (InputStream dataStream) throws IOException {
-        if (dataStream.markSupported()) {
-            // parse header
-            dataStream.mark(1000000000);
-            if (parseHeader(dataStream)) {
-                dataStream.reset();
-            }
+    public Pair<Raster[], ColorModel> extractSlices (InputStream in) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        IOUtils.copy(in, baos);
+        byte[] dataStreamBytes = baos.toByteArray();
 
-            if (numFrames>0) {
-                Raster[] slices = new Raster[numFrames];
-                ColorModel cm = null;
-                for (int i = 0; i < numFrames; i++) {
-                    dataStream.skip(sampleOffset[i] + 8);
-                    byte[] jp2Slice = new byte[sampleSize[i] - 8];
-                    dataStream.read(jp2Slice);
+        // parse header
+        ByteArrayInputStream dataStream = new ByteArrayInputStream(dataStreamBytes);
+        parseHeader(dataStream);
+        dataStream.close();
 
-                    BufferedImage image = ImageIO.read(new ByteArrayInputStream(jp2Slice));
-                    if (i==0)
-                        cm = image.getColorModel();
-                    slices[i] = image.getData();
-                }
-                return Pair.of(slices, cm);
+        // extract slices
+        BufferedImage image0 = null;
+        dataStream = new ByteArrayInputStream(dataStreamBytes);
+        if (numFrames>0) {
+            Raster[] slices = new Raster[numFrames];
+            ColorModel cm = null;
+            for (int i = 0; i < numFrames; i++) {
+                long start = sampleOffset[i] + 8;
+                long end = start + sampleSize[i] - 8;
+                byte[] jp2Slice = Arrays.copyOfRange(dataStreamBytes,(int)start, (int)end);
+                BufferedImage image = ImageIO.read(new ByteArrayInputStream(jp2Slice));
+                slices[i] = image.getData();
+                if (i==0)
+                    image0 = image;
             }
+            cm = image0.getColorModel();
+            dataStream.close();
+            return Pair.of(slices, cm);
         }
+
         return null;
     }
 

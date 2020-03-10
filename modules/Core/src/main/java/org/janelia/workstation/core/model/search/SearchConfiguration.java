@@ -5,23 +5,14 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrDocument;
-import org.janelia.it.jacs.shared.solr.FacetValue;
-import org.janelia.it.jacs.shared.solr.SolrJsonResults;
-import org.janelia.it.jacs.shared.solr.SolrParams;
-import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
-import org.janelia.it.jacs.shared.solr.SolrUtils;
+import org.janelia.it.jacs.shared.solr.*;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectAttribute;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filter;
-import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
-import org.janelia.model.domain.gui.search.criteria.AttributeValueCriteria;
-import org.janelia.model.domain.gui.search.criteria.Criteria;
-import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
-import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
-import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
+import org.janelia.model.domain.gui.search.criteria.*;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.support.SearchType;
 import org.janelia.workstation.core.api.AccessManager;
@@ -32,18 +23,8 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.SwingUtilities;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import javax.swing.*;
+import java.util.*;
 
 /**
  * A faceted search for domain objects of a certain type. 
@@ -53,6 +34,8 @@ import java.util.Set;
 public class SearchConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(SearchConfiguration.class);
+
+    private static final boolean LOG_TIME_ELAPSED = false;
 
     public static final String SOLR_TYPE_FIELD = "search_type";
     
@@ -70,6 +53,9 @@ public class SearchConfiguration {
     // Actual query
     private SolrQuery query;
     private String displayQueryString;
+
+    // Options
+    private boolean fetchAnnotations = true;
     
     public SearchConfiguration(Filter filter, int pageSize) {
         this.filter = filter;
@@ -87,6 +73,14 @@ public class SearchConfiguration {
 
     public void setSortCriteria(String sortCriteria) {
         this.sortCriteria = sortCriteria;
+    }
+
+    public boolean isFetchAnnotations() {
+        return fetchAnnotations;
+    }
+
+    public void setFetchAnnotations(boolean fetchAnnotations) {
+        this.fetchAnnotations = fetchAnnotations;
     }
 
     public final void setSearchClass(Class<? extends DomainObject> searchClass) {
@@ -397,10 +391,10 @@ public class SearchConfiguration {
             }
         }
 
-        stopWatch.lap("performSolrSearch");
+        if (LOG_TIME_ELAPSED) stopWatch.lap("performSolrSearch");
 
         List<DomainObject> domainObjects = model.getDomainObjects(refs);
-        List<Annotation> annotations = model.getAnnotations(refs);
+        List<Annotation> annotations = fetchAnnotations ? model.getAnnotations(refs) : Collections.emptyList();
         log.info("Search found {} objects. Current page {} includes {} objects and {} annotations.", numFound, page, domainObjects.size(), annotations.size());
 
         if (refs.size()>domainObjects.size()) {
@@ -415,7 +409,7 @@ public class SearchConfiguration {
             }
         }
         
-        stopWatch.stop("performMongoSearch");
+        if (LOG_TIME_ELAPSED) stopWatch.stop("performMongoSearch");
 
         return new DomainObjectResultPage(domainObjects, annotations, numFound);
     }
