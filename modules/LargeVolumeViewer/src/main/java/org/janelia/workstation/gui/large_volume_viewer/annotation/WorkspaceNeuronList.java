@@ -1156,10 +1156,16 @@ class SyncLevelRenderer extends DefaultTableCellRenderer {
         // draw attention to the neuron if its sync level gets too far from zero:
         int modelRow = tableData.convertRowIndexToModel(row);
         TmNeuronMetadata targetNeuron = ((NeuronTableModel) tableData.getModel()).getNeuronAtRow(modelRow);
-        if (targetNeuron.getSyncLevel() < NeuronTableModel.SYNC_WARN_LEVEL) {
-            cellComponent.setFont(cellComponent.getFont().deriveFont(Font.PLAIN));
-        } else {
+
+        // default settings (needed so we reset after changing for unsynced neurons)
+        cellComponent.setFont(cellComponent.getFont().deriveFont(Font.PLAIN));
+        cellComponent.setForeground(tableData.getForeground());
+        cellComponent.setBackground(tableData.getBackground());
+
+        if (targetNeuron.getSyncLevel() >= NeuronTableModel.SYNC_WARN_LEVEL) {
             cellComponent.setFont(cellComponent.getFont().deriveFont(Font.ITALIC));
+            cellComponent.setForeground(tableData.getBackground());
+            cellComponent.setBackground(tableData.getForeground());
         }
         return cellComponent;
     }
