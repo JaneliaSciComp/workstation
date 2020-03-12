@@ -1267,7 +1267,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
                 new RawFileLocToClipboardAction(
                         statusLabel,
                         tileFormat,
-                        tmSample.getTwoPhotonAcquisitionFilepath(),
+                        tmSample.getAcquisitionFilepath(),
                         getRenderedVolumeLocation(tmSample),
                         getRenderedVolumeLoader())
         );

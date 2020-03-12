@@ -198,13 +198,13 @@ public class BrainTileInfo implements BrickInfo {
      * Returns null if the load is interrupted. It would be better to use an InterruptedIOException for that,
      * but it's too slow.
      */
-    public Texture3d loadBrick(double maxEdgePadWidth, int colorChannel) {
+    public Texture3d loadBrick(double maxEdgePadWidth, int colorChannel, String fileExtension) {
         setColorChannelIndex(colorChannel);
-        return loadBrick(maxEdgePadWidth);
+        return loadBrick(maxEdgePadWidth, fileExtension);
     }
 
     @Override
-    public Texture3d loadBrick(double maxEdgePadWidth) {
+    public Texture3d loadBrick(double maxEdgePadWidth, String fileExtension) {
         Texture3d texture = new Texture3d();
 
         RawImage rawImage = new RawImage();
@@ -216,14 +216,15 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setTileDims(Arrays.stream(pixelDims).boxed().toArray(Integer[]::new));
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
         return tileLoader.findStorageLocation(basePath)
-                .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, rawImage.getRawImagePath(colorChannelIndex,"-ngc.%s.mj2" )).asOptional())
+                .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, rawImage.getRawImagePath(colorChannelIndex,fileExtension)).asOptional())
                 .map(rawImageStream -> {
                     String tileStack = rawImage.toString() + "-ch-" + colorChannelIndex;
                     try {
-                        if (!texture.loadMJ2Stack(tileStack, rawImageStream)) {
-                        /*
-                        if (!texture.loadTiffStack(tileStack, rawImageStream)) {
-                         */   return null;
+                        if (fileExtension.equals("mj2")) {
+                            texture.loadMJ2Stack(tileStack, rawImageStream);
+                            return texture;
+                        } else if (!texture.loadTiffStack(tileStack, rawImageStream)) {
+                            return null;
                         } else {
                             return texture;
                         }

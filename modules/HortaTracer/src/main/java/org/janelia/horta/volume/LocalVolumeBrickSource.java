@@ -82,4 +82,9 @@ public class LocalVolumeBrickSource implements StaticVolumeBrickSource {
         }
     }
 
+    @Override
+    public FileType getFileType() {
+        return null;
+    }
+
 }

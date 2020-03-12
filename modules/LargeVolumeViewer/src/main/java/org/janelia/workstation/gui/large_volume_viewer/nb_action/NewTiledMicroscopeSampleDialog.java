@@ -5,15 +5,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.io.File;
 
-import javax.swing.Action;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
@@ -28,6 +20,7 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 	private JTextField pathToOctreeTextField = new JTextField(40);
 	private JTextField pathToKTXTextField = new JTextField(40);
 	private JTextField pathToRawTextField = new JTextField(40);
+	private JCheckBox rawCompressedField = new JCheckBox();
 
 	private TmSample sample;
 
@@ -72,6 +65,13 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 		c.gridx = 1;
 		attrPanel.add(pathToRawTextField, c);
 
+		// Show whether the path is compressed or not
+		c.gridx = 0;
+		c.gridy = 4;
+		attrPanel.add(new JLabel( "RAW Tiles Compressed (MJ2):"), c);
+		c.gridx = 1;
+		attrPanel.add(rawCompressedField, c);
+
 		mainPanel.add(attrPanel);
 		add(mainPanel, BorderLayout.CENTER);
 
@@ -105,7 +105,8 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 
 		String octreePath = sample.getLargeVolumeOctreeFilepath();
 		String ktxPath = sample.getLargeVolumeKTXFilepath();
-		String rawPath = sample.getTwoPhotonAcquisitionFilepath();
+		String rawPath = sample.getAcquisitionFilepath();
+		boolean rawCompressed = sample.hasCompressedAcquisition();
 
 		if (octreePath!=null) {
 			pathToOctreeTextField.setText(octreePath);
@@ -119,6 +120,10 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 			pathToRawTextField.setText(rawPath);
 		}
 
+		if (rawCompressed) {
+			rawCompressedField.setSelected(true);
+		}
+
 		packAndShow();
 	}
 
@@ -128,7 +133,6 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 		String octree = pathToOctreeTextField.getText();
 		String ktx = StringUtils.isBlank(pathToKTXTextField.getText()) ? null : pathToKTXTextField.getText();
 		String raw = StringUtils.isBlank(pathToRawTextField.getText()) ? null : pathToRawTextField.getText();
-
 		if (octree.isEmpty()) {
 			JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
 					"You must specify both a sample name and location!",
@@ -142,7 +146,7 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 			name = file.getName();
 		}
 
-		Action action = new SaveTiledMicroscopeSampleAction(sample, name, octree, ktx, raw);
+		Action action = new SaveTiledMicroscopeSampleAction(sample, name, octree, ktx, raw, rawCompressedField.isSelected());
 		action.actionPerformed(null);
 		NewTiledMicroscopeSampleDialog.this.dispose();
 	}

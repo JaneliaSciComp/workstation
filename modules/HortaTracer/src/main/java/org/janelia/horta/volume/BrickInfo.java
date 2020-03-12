@@ -20,7 +20,7 @@ public interface BrickInfo {
     int getBytesPerIntensity(); // Number of bytes per intensity
     double getResolutionMicrometers(); // Finest resolution
     Box3 getBoundingBox();
-    Texture3d loadBrick(double maxEdgePadWidth) throws IOException;
+    Texture3d loadBrick(double maxEdgePadWidth, String fileExtension) throws IOException;
     boolean isSameBrick(BrickInfo other);
     Matrix getStageCoordToTexCoord(); // Matrix that transforms stage coordinates to local texture coordinates
 }
