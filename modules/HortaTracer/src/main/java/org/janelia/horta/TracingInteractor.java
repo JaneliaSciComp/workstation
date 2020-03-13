@@ -1212,9 +1212,14 @@ public class TracingInteractor extends MouseAdapter
     
      public boolean checkOwnership(NeuronModel neuron) {
         // create a future to hopefully 
-        if (neuron.getOwnerKey().equals(ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim())) {
-            CompletableFuture<Boolean> future = defaultWorkspace.changeNeuronOwnership(neuron.getNeuronId());
-            if (future==null) 
+         if (neuron.getOwnerKey().equals(ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim())) {
+             // PATCH change owner to user and save neuron
+             neuron.setOwnerKey(AccessManager.getSubjectKey());
+             defaultWorkspace.changeNeuronOwnership(neuron.getNeuronId());
+
+
+            /*CompletableFuture<Boolean> future = defaultWorkspace.changeNeuronOwnership(neuron.getNeuronId());
+            if (future==null)
                 return false;
             try {
                 Boolean ownershipDecision = future.get(5, TimeUnit.SECONDS);
@@ -1233,9 +1238,10 @@ public class TracingInteractor extends MouseAdapter
                         errorMessage,
                         "Failed to request neuron ownership",
                         JOptionPane.WARNING_MESSAGE);
-            }
-            return false;
-        }
+            }*/
+
+             return true;
+         }
         if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
             JOptionPane.showMessageDialog(
                     volumeProjection.getMouseableComponent(),

@@ -6,3 +6,10 @@ Data Browser
 
 Large Volume Viewer
 * Neuron name is more distinct when out-of-sync
+* Simplified merge to assume ownership
+* Added autoack for message broadcasts
+* Fixed issue with cache maxing causing performance issues
+
+Horta
+* Added support for MJ2 (MotionJpeg2000) compression
+

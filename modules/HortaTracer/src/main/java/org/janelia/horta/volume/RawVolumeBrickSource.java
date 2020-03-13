@@ -1,5 +1,6 @@
 package org.janelia.horta.volume;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
@@ -16,19 +17,24 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.RawImage;
 
 public class RawVolumeBrickSource implements StaticVolumeBrickSource {
-
     private final TileLoader tileLoader;
     private Double resolution;
     private BrickInfoSet brickInfoSet;
+    private FileType fileType;
 
     public RawVolumeBrickSource(TileLoader tileLoader) {
         this.tileLoader = tileLoader;
     }
 
     public RawVolumeBrickSource init(TmSample sample, List<RawImage> rawTiles, Consumer<Integer> progressUpdater) {
-        Pair<Double, BrickInfoSet> volumeBricksMetadata = loadVolumeBricksMetadata(sample.getTwoPhotonAcquisitionFilepath(), rawTiles, progressUpdater);
+        Pair<Double, BrickInfoSet> volumeBricksMetadata = loadVolumeBricksMetadata(sample.getAcquisitionFilepath(), rawTiles, progressUpdater);
         this.resolution = volumeBricksMetadata.getLeft();
         this.brickInfoSet = volumeBricksMetadata.getRight();
+        if (sample.hasCompressedAcquisition())
+            fileType = FileType.MJ2;
+        else
+            fileType = FileType.TIFF;
+
         return this;
     }
 
@@ -79,5 +85,10 @@ public class RawVolumeBrickSource implements StaticVolumeBrickSource {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public FileType getFileType() {
+        return fileType;
     }
 }

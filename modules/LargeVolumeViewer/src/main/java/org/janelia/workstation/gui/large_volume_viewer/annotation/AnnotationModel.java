@@ -39,6 +39,7 @@ import org.janelia.it.jacs.shared.swc.SWCNode;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
@@ -708,8 +709,12 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
      * @throws Exception
      */
     public synchronized TmNeuronMetadata createNeuron(String name) throws Exception {
-        CompletableFuture<TmNeuronMetadata> future = neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
-        TmNeuronMetadata neuron = future.get(5, TimeUnit.SECONDS);
+        TmNeuronMetadata newNeuron = new TmNeuronMetadata();
+        newNeuron.setOwnerKey(AccessManager.getSubjectKey());
+        newNeuron.setWorkspaceRef(Reference.createFor(TmWorkspace.class, currentWorkspace.getId()));
+        newNeuron.setName(name);
+        TmNeuronMetadata neuron = tmDomainMgr.save(newNeuron);
+        neuronManager.completeCreateNeuron(neuron);
 
         // Update local workspace
         log.info("Neuron was created: "+neuron);

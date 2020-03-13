@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 import com.google.common.base.Stopwatch;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
@@ -23,7 +22,6 @@ import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.NeuronUpdates;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.PredefinedNote;
 import org.janelia.workstation.gui.large_volume_viewer.controller.BackgroundAnnotationListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
@@ -117,18 +115,20 @@ public class NeuronSetAdapter
     }
 
     @Override
-    public CompletableFuture<Boolean> changeNeuronOwnership(Long neuronId) {
+    public void changeNeuronOwnership(Long neuronId) {
         try {
             TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
             if (neuron == null) {
-                return null;
+                return;
             }
-            return LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().getNeuronManager().requestOwnershipChange(neuron);
+            neuron.setOwnerKey(AccessManager.getSubjectKey());
+            annotationModel.getNeuronManager().saveNeuronData(neuron);
+            //return LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().getNeuronManager().requestOwnershipChange(neuron);
         } catch (Exception error) {
             FrameworkAccess.handleException(error);
         }
-        return null;
     }
+
 
     private void updateVoxToMicronMatrices(TmSample sample) {
         // If we try to get the matrix too early, it comes back null, so populate just-in-time

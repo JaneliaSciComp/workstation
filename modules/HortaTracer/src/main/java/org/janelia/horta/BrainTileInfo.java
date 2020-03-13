@@ -13,6 +13,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.geometry3d.Box3;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
+import org.janelia.gltools.MJ2Parser;
 import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.VoxelIndex;
@@ -197,13 +198,13 @@ public class BrainTileInfo implements BrickInfo {
      * Returns null if the load is interrupted. It would be better to use an InterruptedIOException for that,
      * but it's too slow.
      */
-    public Texture3d loadBrick(double maxEdgePadWidth, int colorChannel) {
+    public Texture3d loadBrick(double maxEdgePadWidth, int colorChannel, String fileExtension) {
         setColorChannelIndex(colorChannel);
-        return loadBrick(maxEdgePadWidth);
+        return loadBrick(maxEdgePadWidth, fileExtension);
     }
 
     @Override
-    public Texture3d loadBrick(double maxEdgePadWidth) {
+    public Texture3d loadBrick(double maxEdgePadWidth, String fileExtension) {
         Texture3d texture = new Texture3d();
 
         RawImage rawImage = new RawImage();
@@ -214,13 +215,15 @@ public class BrainTileInfo implements BrickInfo {
         rawImage.setBytesPerIntensity(bytesPerIntensity);
         rawImage.setTileDims(Arrays.stream(pixelDims).boxed().toArray(Integer[]::new));
         rawImage.setTransform(Arrays.stream(transform.getRowPackedCopy()).boxed().toArray(Double[]::new));
-
         return tileLoader.findStorageLocation(basePath)
-                .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, rawImage.getRawImagePath(colorChannelIndex)).asOptional())
+                .flatMap(serverURL -> tileLoader.streamTileContent(serverURL, rawImage.getRawImagePath(colorChannelIndex,fileExtension)).asOptional())
                 .map(rawImageStream -> {
                     String tileStack = rawImage.toString() + "-ch-" + colorChannelIndex;
                     try {
-                        if (!texture.loadTiffStack(tileStack, rawImageStream)) {
+                        if (fileExtension.equals("mj2")) {
+                            texture.loadMJ2Stack(tileStack, rawImageStream);
+                            return texture;
+                        } else if (!texture.loadTiffStack(tileStack, rawImageStream)) {
                             return null;
                         } else {
                             return texture;
