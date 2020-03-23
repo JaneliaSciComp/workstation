@@ -285,10 +285,7 @@ public class FilterEditorPanel
                 refreshSearchResults(true);
             }
         };
-        
-        getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
-        getActionMap().put("enterAction", mySearchAction);
-        
+
         this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), getEditSelectionModel(), this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
@@ -306,7 +303,9 @@ public class FilterEditorPanel
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->FilterEditorPanel"));
 
         configPanel = new ConfigPanel(true);
-        
+        configPanel.getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
+        configPanel.getActionMap().put("enterAction", mySearchAction);
+
         setLayout(new BorderLayout());
         add(configPanel, BorderLayout.NORTH);
         add(resultsPanel, BorderLayout.CENTER);
