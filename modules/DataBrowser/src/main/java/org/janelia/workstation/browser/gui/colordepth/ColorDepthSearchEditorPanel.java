@@ -561,7 +561,8 @@ public class ColorDepthSearchEditorPanel
 
             ColorDepthResultImageModel imageModel = colorDepthResultPanel.getImageModel();
             if (imageModel==null) {
-                throw new IllegalStateException("Image model was not initialized");
+                log.warn("Image model is not ready, no image properties could be loaded for {}", match.getImageRef());
+                return values;
             }
 
             ColorDepthImage image = imageModel.getImage(match);
