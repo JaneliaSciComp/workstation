@@ -37,7 +37,6 @@ import javax.swing.table.TableColumnModel;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.shared.utils.Constants;
 import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
@@ -67,6 +66,14 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
     public static final String WHOLE_AA_IMPLICATIONS_PROP = "SecondaryDataRemoval.aa_rm_implications";
     public static final String STITCHED_IMPLICATIONS_PROP = "SecondaryDataRemoval.stitched_file_rm_implications";
     public static final String NEURON_SEP_IMPLICATIONS_PROP = "SecondaryDataRemoval.neuron_sep_rm_implications";
+
+    private static final String SAMPLE_ID_DISPLAYABLE_PARM = "sample entity id";
+    private static final String SAMPLE_AREAS_DISPLAYABLE_PARM = "sample areas";
+    private static final String TRIM_DEPTH_DISPLAYABLE_PARAM = "trim depth";
+
+    private static final String TRIM_DEPTH_AREA_IMAGE_VALUE = "TRIM_AREA_IMAGE";
+    private static final String TRIM_DEPTH_WHOLE_AREA_VALUE = "TRIM_WHOLE_AREA";
+    private static final String TRIM_DEPTH_NEURON_SEPARATION_VALUE = "TRIM_NEURON_SEPARATION";
 
     // For now, keeping it simple.
     private static final String[] COLUMN_HEADERS = new String[] {
@@ -265,9 +272,9 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
             }
 
             String stringifiedAreas = bldr.toString();
-            taskParameters.add(new TaskParameter(Constants.SAMPLE_ID_DISPLAYABLE_PARM, sample.getId().toString(), null));
-            taskParameters.add(new TaskParameter(Constants.SAMPLE_AREAS_DISPLAYABLE_PARM, stringifiedAreas, null));
-            taskParameters.add(new TaskParameter(Constants.TRIM_DEPTH_DISPLAYABLE_PARAM, trimDepth, null));
+            taskParameters.add(new TaskParameter(SAMPLE_ID_DISPLAYABLE_PARM, sample.getId().toString(), null));
+            taskParameters.add(new TaskParameter(SAMPLE_AREAS_DISPLAYABLE_PARM, stringifiedAreas, null));
+            taskParameters.add(new TaskParameter(TRIM_DEPTH_DISPLAYABLE_PARAM, trimDepth, null));
             task = StateMgr.getStateMgr().submitJob("ConsoleTrimSample", "Remove Partial Secondary Data", taskParameters);
 
             log.info("Submitting task {}, {} \n( {}\n{} ).",  task.getJobName(), task.getObjectId(), trimDepth, stringifiedAreas);
@@ -319,13 +326,13 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
     }
 
     private String getDeletionWarning(StringBuilder subpartNames) {
-        if (trimDepth.equals(Constants.TRIM_DEPTH_AREA_IMAGE_VALUE)) {
+        if (trimDepth.equals(TRIM_DEPTH_AREA_IMAGE_VALUE)) {
             return getStitchedFileDeletionWarning(subpartNames);
         }
-        else if (trimDepth.equals(Constants.TRIM_DEPTH_WHOLE_AREA_VALUE)) {
+        else if (trimDepth.equals(TRIM_DEPTH_WHOLE_AREA_VALUE)) {
             return getWholeAADeletionWarning(subpartNames);
         }
-        else if (trimDepth.equals(Constants.TRIM_DEPTH_NEURON_SEPARATION_VALUE)) {
+        else if (trimDepth.equals(TRIM_DEPTH_NEURON_SEPARATION_VALUE)) {
             return getNeuronSeparationDeletionWarning(subpartNames);
         }
         else {

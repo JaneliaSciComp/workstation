@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Iterator;
 
 import com.google.common.collect.Sets;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.util.ConsoleProperties;

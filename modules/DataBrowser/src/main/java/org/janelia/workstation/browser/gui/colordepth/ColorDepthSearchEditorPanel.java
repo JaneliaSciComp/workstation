@@ -1,40 +1,10 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.MouseEvent;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.SwingConstants;
-
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
-import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
-import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
-import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
-import org.janelia.model.domain.gui.cdmip.ColorDepthResult;
-import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
+import org.janelia.model.domain.gui.cdmip.*;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.progress.ProgressMeterMgr;
@@ -64,6 +34,7 @@ import org.janelia.workstation.core.events.workers.WorkerEndedEvent;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.util.HelpTextUtils;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.core.workers.BackgroundWorker;
 import org.janelia.workstation.core.workers.SearchMonitoringWorker;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -71,6 +42,15 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
+import java.util.List;
+import java.util.*;
+import java.util.concurrent.Callable;
 
 /**
  * Specialized component for executing color depth searches on the cluster and viewing their results.
@@ -573,7 +553,7 @@ public class ColorDepthSearchEditorPanel
                     values.put("File Name", image.getName());
                     values.put("File Path", image.getFilepath());
 
-                    String libraries = StringUtils.getCommaDelimited(image.getLibraries());
+                    String libraries = StringUtilsExtra.getCommaDelimited(image.getLibraries());
                     values.put("Color Depth Libraries", libraries);
 
                     if (image.getSampleRef() != null) {
@@ -689,7 +669,7 @@ public class ColorDepthSearchEditorPanel
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
-                    if (StringUtils.areEqual(domainObject.getId(), search.getId())) {
+                    if (StringUtilsExtra.areEqual(domainObject.getId(), search.getId())) {
                         log.info("Search invalidated, reloading...");
                         reload();
                         break;
@@ -705,7 +685,7 @@ public class ColorDepthSearchEditorPanel
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
         if (search==null) return;
-        if (StringUtils.areEqual(event.getDomainObject().getId(), search.getId())) {
+        if (StringUtilsExtra.areEqual(event.getDomainObject().getId(), search.getId())) {
             this.search = null;
             showNothing();
         }

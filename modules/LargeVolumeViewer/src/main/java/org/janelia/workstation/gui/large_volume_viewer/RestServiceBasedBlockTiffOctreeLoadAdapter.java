@@ -12,7 +12,6 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
-import org.janelia.it.jacs.shared.utils.HttpClientHelper;
 import org.janelia.model.security.AppAuthorization;
 import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeLoader;
@@ -24,6 +23,7 @@ import org.janelia.rendering.TileKey;
 import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
+import org.janelia.workstation.util.HttpClientHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

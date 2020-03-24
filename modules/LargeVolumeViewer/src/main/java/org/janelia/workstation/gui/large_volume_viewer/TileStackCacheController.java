@@ -2,7 +2,7 @@ package org.janelia.workstation.gui.large_volume_viewer;
 
 import java.util.Collection;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 
 
 public class TileStackCacheController extends BlockTiffOctreeLoadAdapter {

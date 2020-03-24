@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.janelia.it.jacs.shared.geom.UnitVec3;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.UnitVec3;
+import org.janelia.workstation.geom.Vec3;
 
 public class PolygonalMesh {
     private List<Face> faces = new Vector<Face>();

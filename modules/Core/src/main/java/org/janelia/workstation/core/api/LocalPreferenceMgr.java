@@ -14,8 +14,10 @@ import javax.swing.JOptionPane;
 
 import org.janelia.filecacheutils.LocalFileCacheStorage;
 import org.janelia.workstation.core.options.OptionConstants;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ApplicationClosing;
 import org.janelia.workstation.core.events.prefs.LocalPreferenceChanged;
@@ -169,7 +171,7 @@ public class LocalPreferenceMgr {
     public Object setModelProperty(Object key, Object newValue) {
         if (modelProperties == null) throw new IllegalStateException("Local preferences have not yet been initialized");
         Object oldValue = modelProperties.put(key, newValue);
-        if (!StringUtils.areEqual(oldValue, newValue)) {
+        if (!StringUtilsExtra.areEqual(oldValue, newValue)) {
             writeSettings();
             if (!key.toString().toLowerCase().contains("password")) {
                 log.info("Saved local preference {} = {} (was {})",key,newValue,oldValue);

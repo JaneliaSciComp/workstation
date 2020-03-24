@@ -14,7 +14,6 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.StateMgr;
@@ -145,7 +144,6 @@ public class ConsoleDataServiceImpl {
     public Entity getEntityTree(long entityId) throws Exception {
         log.info("Get entity tree {}", entityId);
         Entity entity = ExternalClientMgr.getInstance().getCachedEntity(entityId);
-        EntityUtils.logEntity(entity);
         return entity;
     }
     

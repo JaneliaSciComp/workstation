@@ -2,8 +2,7 @@ package org.janelia.workstation.browser.actions.context;
 
 import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.it.jacs.shared.file_chooser.FileChooser;
-import org.janelia.it.jacs.shared.utils.Progress;
+import org.janelia.workstation.core.util.Progress;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
@@ -81,7 +80,7 @@ public class ExportFolderStructureAction extends BaseContextualNodeAction {
 
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select File Destination");
-        chooser.setFileSelectionMode(FileChooser.FILES_ONLY);
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         File defaultFile = new File(DEFAULT_EXPORT_DIR, filePrefix + ".xls");
 
         int i = 1;
@@ -103,7 +102,7 @@ public class ExportFolderStructureAction extends BaseContextualNodeAction {
             }
         });
 
-        if (chooser.showDialog(FrameworkAccess.getMainFrame(), "OK") == FileChooser.CANCEL_OPTION) {
+        if (chooser.showDialog(FrameworkAccess.getMainFrame(), "OK") == JFileChooser.CANCEL_OPTION) {
             return;
         }
 

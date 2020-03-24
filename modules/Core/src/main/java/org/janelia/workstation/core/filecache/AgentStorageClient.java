@@ -23,7 +23,8 @@ import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.janelia.workstation.core.util.PathUtil;
 import org.slf4j.Logger;

@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer.camera;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.controller.CameraListener;
 

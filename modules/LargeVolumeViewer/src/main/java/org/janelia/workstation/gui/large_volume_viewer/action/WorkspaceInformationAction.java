@@ -17,8 +17,8 @@ import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
 import Jama.Matrix;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
+import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.swc.MatrixDrivenSWCExchanger;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.NeuronListProvider;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;

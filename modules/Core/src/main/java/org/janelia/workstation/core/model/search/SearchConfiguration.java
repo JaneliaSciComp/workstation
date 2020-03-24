@@ -5,8 +5,9 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrDocument;
-import org.janelia.it.jacs.shared.solr.*;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
+import org.janelia.model.access.domain.search.*;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectAttribute;
 import org.janelia.model.domain.DomainUtils;
@@ -356,8 +357,8 @@ public class SearchConfiguration {
         query.setStart(pageSize * page);
         query.setRows(pageSize);
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        SolrParams queryParams = SolrQueryBuilder.serializeSolrQuery(query);
-        SolrJsonResults results = model.search(queryParams);
+        DocumentSearchParams queryParams = SolrQueryBuilder.serializeSolrQuery(query);
+        DocumentSearchResults results = model.search(queryParams);
 
         List<Reference> refs = new ArrayList<>();
         long numFound = 0;

@@ -14,7 +14,7 @@ import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.SeekableStream;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.workstation.geom.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -3,7 +3,7 @@ package org.janelia.workstation.gui.large_volume_viewer.annotation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 

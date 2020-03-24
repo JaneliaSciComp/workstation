@@ -27,7 +27,7 @@ import org.janelia.workstation.gui.large_volume_viewer.controller.PathTraceListe
 import org.janelia.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.janelia.workstation.core.util.ConsoleProperties;

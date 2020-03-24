@@ -1,7 +1,7 @@
 package org.janelia.workstation.gui.camera;
 
-import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Rotation3d;
+import org.janelia.workstation.geom.Vec3;
 
 // Camera3d manages rotation, translation, and scale in 3 dimensions.
 public interface Camera3d

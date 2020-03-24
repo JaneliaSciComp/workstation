@@ -8,9 +8,12 @@ import java.util.concurrent.Callable;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.user_data.UserToolEvent;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+
+import org.janelia.workstation.integration.activity_logging.ActionString;
+
+import org.janelia.workstation.integration.activity_logging.CategoryString;
+
+import org.janelia.workstation.integration.activity_logging.ToolString;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionEndEvent;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
@@ -273,8 +276,6 @@ public class SessionMgr {
      * threshold, definitely log.  Also, will check number-of-issues against
      * a granularity map.  Only issue the message at a preset
      * granularity.
-     * 
-     * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long, double, double) 
      * @param elapsedMs
      * @param thresholdMs 
      */

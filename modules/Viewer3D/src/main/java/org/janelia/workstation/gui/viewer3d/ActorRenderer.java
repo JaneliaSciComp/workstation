@@ -1,8 +1,9 @@
 package org.janelia.workstation.gui.viewer3d;
 
-import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.jacs.shared.geom.UnitVec3;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.workstation.geom.Rotation3d;
+import org.janelia.workstation.geom.UnitVec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.workstation.gui.opengl.GL2Adapter;
 import org.janelia.workstation.gui.opengl.GL2AdapterFactory;
@@ -69,7 +70,7 @@ public abstract class ActorRenderer
 
     public void resetView() {
         // Adjust view to fit the actual objects present
-        org.janelia.it.jacs.shared.viewer3d.BoundingBox3d boundingBox = getBoundingBox();
+        BoundingBox3d boundingBox = getBoundingBox();
         getVolumeModel().getCamera3d().setFocus(boundingBox.getCenter());
         getVolumeModel().getCamera3d().resetRotation();
         resetCameraDepth(boundingBox);
@@ -90,7 +91,7 @@ public abstract class ActorRenderer
 
         double previousFocusDistance = getVolumeModel().getCameraFocusDistance();
         if ( previousFocusDistance == DEFAULT_CAMERA_FOCUS_DISTANCE ) {
-            org.janelia.it.jacs.shared.viewer3d.BoundingBox3d boundingBox = getBoundingBox();
+            BoundingBox3d boundingBox = getBoundingBox();
             resetCameraDepth(boundingBox);
         }
     }
@@ -217,7 +218,7 @@ public abstract class ActorRenderer
         this.heightInPixels = heightInPixels;
     }
 
-    private double maxAspectRatio(org.janelia.it.jacs.shared.viewer3d.BoundingBox3d boundingBox) {
+    private double maxAspectRatio(BoundingBox3d boundingBox) {
 
         double boundingAspectRatio = Math.max(
                 boundingBox.getWidth() / boundingBox.getHeight(), boundingBox.getHeight() / boundingBox.getWidth()
@@ -241,7 +242,7 @@ public abstract class ActorRenderer
 
     }
 
-    protected void resetCameraDepth(org.janelia.it.jacs.shared.viewer3d.BoundingBox3d boundingBox) {
+    protected void resetCameraDepth(BoundingBox3d boundingBox) {
         double heightInMicrometers = boundingBox.getHeight();
         if (heightInMicrometers <= 0.0) { // watch for NaN!
             logger.warn("Adjusted height to account for zero-height bounding box.");
@@ -263,8 +264,8 @@ public abstract class ActorRenderer
         getVolumeModel().setCameraPixelsPerSceneUnit(DISTANCE_TO_SCREEN_IN_PIXELS, getVolumeModel().getCameraFocusDistance());
     }
 
-    private org.janelia.it.jacs.shared.viewer3d.BoundingBox3d getBoundingBox() {
-        org.janelia.it.jacs.shared.viewer3d.BoundingBox3d boundingBox = new org.janelia.it.jacs.shared.viewer3d.BoundingBox3d();
+    private BoundingBox3d getBoundingBox() {
+        BoundingBox3d boundingBox = new BoundingBox3d();
         for (GLActor actor : actors) {
             boundingBox.include(actor.getBoundingBox3d());
         }

@@ -1,10 +1,13 @@
 package org.janelia.workstation.gui.large_volume_viewer.activity_logging;
 
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
+
+import org.janelia.workstation.integration.activity_logging.ActionString;
+
+import org.janelia.workstation.integration.activity_logging.CategoryString;
+
+import org.janelia.workstation.integration.activity_logging.ToolString;
+import org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.core.api.SessionMgr;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.TileIndex;

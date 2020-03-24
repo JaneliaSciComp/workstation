@@ -9,7 +9,7 @@ import java.util.List;
 import javax.swing.ProgressMonitor;
 
 import com.google.common.collect.Multimap;
-import org.janelia.it.jacs.shared.utils.Progress;
+import org.janelia.workstation.core.util.Progress;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;

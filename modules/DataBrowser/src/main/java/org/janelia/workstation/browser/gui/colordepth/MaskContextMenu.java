@@ -8,7 +8,8 @@ import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.workstation.browser.actions.OpenWithDefaultAppAction;
 import org.janelia.workstation.browser.gui.hud.Hud;

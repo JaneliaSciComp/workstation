@@ -51,6 +51,7 @@
                 <configuration>
                     <publicPackages>
                         <publicPackage>org.janelia.workstation.integration</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.activity_logging</publicPackage>
                         <publicPackage>org.janelia.workstation.integration.api</publicPackage>
                         <publicPackage>org.janelia.workstation.integration.spi.actions</publicPackage>
                         <publicPackage>org.janelia.workstation.integration.spi.compression</publicPackage>

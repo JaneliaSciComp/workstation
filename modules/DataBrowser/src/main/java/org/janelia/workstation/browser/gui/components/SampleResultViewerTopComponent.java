@@ -17,7 +17,8 @@ import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
 import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.browser.gui.editor.FileGroupEditorPanel;
 import org.janelia.workstation.browser.gui.editor.NeuronSeparationEditorPanel;
 import org.janelia.workstation.browser.gui.find.FindContext;

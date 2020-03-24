@@ -1,7 +1,6 @@
 package org.janelia.workstation.gui.viewer3d.buffering;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.utils.NotThreadSafe;
+import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.gui.viewer3d.texture.TextureMediator;
 import org.janelia.workstation.gui.viewer3d.OpenGLUtils;
 import org.slf4j.Logger;
@@ -13,8 +12,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
-
-import static org.janelia.workstation.gui.viewer3d.OpenGLUtils.reportError;
 
 /**
  * Created with IntellrowJ IDEA.
@@ -322,8 +319,10 @@ public class VtxCoordBufMgr {
         gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
     }
 
-    /** Convenience method to cut down on repeated code. */
-    @NotThreadSafe(why="glBufferData uses glBindBuffer result as state, and should only be called from GL thread")
+    /**
+     * Convenience method to cut down on repeated code.
+     * This method is not threadsafe because glBufferData uses glBindBuffer result as state, and should only be called from GL thread.
+     */
     private int[] enableBuffersOfType(GL2 gl, Buffer[] buffers, int type, int classSize ) {		
         // Make handles for subsequent use.
         int[] rtnVal = new int[ NUM_BUFFERS_PER_TYPE ];

@@ -10,9 +10,9 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-import org.janelia.it.jacs.shared.solr.SolrJsonResults;
-import org.janelia.it.jacs.shared.solr.SolrParams;
-import org.janelia.it.jacs.shared.utils.DomainQuery;
+import org.janelia.model.access.domain.search.DocumentSearchResults;
+import org.janelia.model.access.domain.search.DocumentSearchParams;
+import org.janelia.model.domain.dto.DomainQuery;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.Reference;
@@ -47,13 +47,13 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
      * @throws Exception something went wrong
      */
     @Override
-    public SolrJsonResults performSearch(SolrParams query) throws Exception {
+    public DocumentSearchResults performSearch(DocumentSearchParams query) throws Exception {
         WebTarget target = service.path("data/search");
         Response response = target
                 .request("application/json")
                 .post(Entity.json(query));
         checkBadResponse(target, response);
-        return response.readEntity(SolrJsonResults.class);
+        return response.readEntity(DocumentSearchResults.class);
     }
 
     @Override

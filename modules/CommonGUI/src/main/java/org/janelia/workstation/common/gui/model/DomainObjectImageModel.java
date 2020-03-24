@@ -1,6 +1,7 @@
 package org.janelia.workstation.common.gui.model;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.DynamicDomainObjectProxy;
@@ -12,6 +13,7 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
 import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -64,7 +66,7 @@ public abstract class DomainObjectImageModel implements ImageModel<DomainObject,
         String titlePattern = getTitlePattern(domainObject.getClass());
         if (StringUtils.isEmpty(titlePattern)) return domainObject.getName();
         DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
-        return StringUtils.replaceVariablePattern(titlePattern, proxy);
+        return StringUtilsExtra.replaceVariablePattern(titlePattern, proxy);
     }
 
     @Override
@@ -72,7 +74,7 @@ public abstract class DomainObjectImageModel implements ImageModel<DomainObject,
         String subtitlePattern = getSubtitlePattern(domainObject.getClass());
         if (StringUtils.isEmpty(subtitlePattern)) return null;
         DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
-        return StringUtils.replaceVariablePattern(subtitlePattern, proxy);
+        return StringUtilsExtra.replaceVariablePattern(subtitlePattern, proxy);
     }
 
     protected String getTitlePattern(Class<? extends DomainObject> clazz) {

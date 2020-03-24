@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.JADEBasedRenderedVolumeLocation;

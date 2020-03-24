@@ -1,15 +1,35 @@
 package org.janelia.workstation.core.util;
 
+import com.google.common.io.ByteStreams;
+import com.twelvemonkeys.imageio.stream.ByteArrayImageInputStream;
+import loci.common.ByteArrayHandle;
+import loci.common.Location;
+import loci.formats.FormatException;
+import loci.formats.IFormatReader;
+import loci.formats.gui.BufferedImageReader;
+import loci.formats.in.*;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.commons.io.IOUtils;
+import org.janelia.filecacheutils.FileProxy;
+import org.janelia.workstation.core.api.FileMgr;
+import org.janelia.workstation.core.options.OptionConstants;
+import org.janelia.workstation.core.workers.BackgroundWorker;
+import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.perf4j.LoggingStopWatch;
+import org.perf4j.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageInputStream;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.PixelGrabber;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.URI;
@@ -25,40 +45,8 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
-
-import javax.imageio.ImageIO;
-import javax.imageio.stream.FileImageInputStream;
-import javax.imageio.stream.ImageInputStream;
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
-
-import com.google.common.io.ByteStreams;
-import com.twelvemonkeys.imageio.stream.ByteArrayImageInputStream;
-
-import loci.common.ByteArrayHandle;
-import loci.common.Location;
-import loci.formats.FormatException;
-import loci.formats.IFormatReader;
-import loci.formats.gui.BufferedImageReader;
-import loci.formats.in.APNGReader;
-import loci.formats.in.BMPReader;
-import loci.formats.in.GIFReader;
-import loci.formats.in.JPEGReader;
-import loci.formats.in.TiffReader;
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.janelia.filecacheutils.FileProxy;
-import org.janelia.workstation.core.api.FileMgr;
-import org.janelia.workstation.core.options.OptionConstants;
-import org.janelia.workstation.core.workers.BackgroundWorker;
-import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.perf4j.LoggingStopWatch;
-import org.perf4j.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Common utilities for loading images, copying files, testing strings, etc.
@@ -782,4 +770,29 @@ public class Utils {
         BrandingConfig.getBrandingConfig().setMemoryAllocationGB(memoryInGb);
     }
 
+    private static final String FILE_PATTERN = "^(.*?)\\.((([^./]+)(\\.(bz2|gz))?))$";
+
+    /**
+     * Get the basename of a filepath, without the extension. This method also removes compound extensions (lsm.bz2, tar.gz).
+     * @param path
+     * @return
+     */
+    public static String getBasename(String path) {
+        Pattern p = Pattern.compile(FILE_PATTERN);
+        Matcher m = p.matcher(path);
+        if (m.matches()) return m.group(1);
+        return path;
+    }
+
+    /**
+     * Get the extension of a filepath. This method also returns compound extensions (lsm.bz2, tar.gz).
+     * @param path
+     * @return
+     */
+    public static String getExtension(String path) {
+        Pattern p = Pattern.compile(FILE_PATTERN);
+        Matcher m = p.matcher(path);
+        if (m.matches()) return m.group(3);
+        return "";
+    }
 }

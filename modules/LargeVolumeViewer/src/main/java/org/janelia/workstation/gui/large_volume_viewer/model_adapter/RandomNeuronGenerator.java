@@ -1,10 +1,10 @@
 package org.janelia.workstation.gui.large_volume_viewer.model_adapter;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.jacs.shared.geom.UnitVec3;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.geom.Rotation3d;
+import org.janelia.workstation.geom.UnitVec3;
+import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.slf4j.Logger;

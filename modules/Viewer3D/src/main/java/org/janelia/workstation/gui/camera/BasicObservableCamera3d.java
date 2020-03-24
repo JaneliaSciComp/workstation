@@ -2,8 +2,8 @@ package org.janelia.workstation.gui.camera;
 
 import java.util.Observable;
 
-import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Rotation3d;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.signal.Signal;
 import org.janelia.workstation.signal.Signal1;
 

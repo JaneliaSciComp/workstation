@@ -1,7 +1,7 @@
 package org.janelia.workstation.gui.large_volume_viewer.skeleton;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.workstation.gui.viewer3d.text.AxisLabel;
 import org.janelia.workstation.gui.viewer3d.text.FontInfo;

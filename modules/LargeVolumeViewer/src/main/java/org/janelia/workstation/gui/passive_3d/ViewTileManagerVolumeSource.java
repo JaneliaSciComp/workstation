@@ -10,13 +10,10 @@ import org.janelia.workstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import javax.media.opengl.GL2;
 
-import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
 import org.janelia.workstation.gui.viewer3d.VolumeDataAcceptor;
 
 /**
@@ -131,7 +128,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
      * 
      * @param stdVals checked for consistency.
      */
-    private byte[] fetchTextureData(StandardizedValues stdVals) throws URISyntaxException, IOException, DataSourceInitializeException {
+    private byte[] fetchTextureData(StandardizedValues stdVals) {
         progressMonitor.setNote("Fetching texture data...");
         int zoomFactor = 0; // TEMP
 

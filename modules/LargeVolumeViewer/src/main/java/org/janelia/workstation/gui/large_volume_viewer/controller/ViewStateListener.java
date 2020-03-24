@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer.controller;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 
 /**

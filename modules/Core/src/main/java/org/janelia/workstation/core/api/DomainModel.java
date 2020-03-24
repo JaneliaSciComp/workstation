@@ -10,8 +10,8 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.ComparisonChain;
 import org.janelia.it.jacs.model.entity.json.JsonTask;
-import org.janelia.it.jacs.shared.solr.SolrJsonResults;
-import org.janelia.it.jacs.shared.solr.SolrParams;
+import org.janelia.model.access.domain.search.DocumentSearchResults;
+import org.janelia.model.access.domain.search.DocumentSearchParams;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
@@ -872,9 +872,9 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public SolrJsonResults search(SolrParams query) throws Exception {
+    public DocumentSearchResults search(DocumentSearchParams query) throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        SolrJsonResults results = workspaceFacade.performSearch(query);
+        DocumentSearchResults results = workspaceFacade.performSearch(query);
         if (TIMER) w.stop("search(query)");
         return results;
     }

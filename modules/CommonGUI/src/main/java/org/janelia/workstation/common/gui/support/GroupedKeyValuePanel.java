@@ -9,7 +9,7 @@ import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * A simple panel which lays out some components vertical with labels and optional group separators.

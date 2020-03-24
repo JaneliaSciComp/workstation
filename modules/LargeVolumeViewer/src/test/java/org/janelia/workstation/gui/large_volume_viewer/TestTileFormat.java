@@ -3,11 +3,11 @@ package org.janelia.workstation.gui.large_volume_viewer;
 import static org.junit.Assert.*;
 
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.jacs.shared.octree.ZoomLevel;
-import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
+import org.janelia.workstation.octree.ZoomLevel;
+import org.janelia.workstation.octree.ZoomedVoxelIndex;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

@@ -1,13 +1,13 @@
 package org.janelia.workstation.gui.large_volume_viewer.skeleton_mesh;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
-import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
-import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
-import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
-import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
-import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
+import org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.mesh_loader.BufferPackager;
+import org.janelia.workstation.mesh_loader.NormalCompositor;
+import org.janelia.workstation.mesh_loader.RenderBuffersBean;
+import org.janelia.workstation.mesh_loader.TriangleSource;
+import org.janelia.workstation.mesh_loader.VertexAttributeSourceI;
+import org.janelia.workstation.mesh_loader.wavefront_obj.OBJWriter;
 import org.janelia.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationGeometry;

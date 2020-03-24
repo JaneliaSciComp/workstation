@@ -21,8 +21,9 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import net.miginfocom.swing.MigLayout;
-import org.janelia.it.jacs.shared.utils.Progress;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.workstation.core.util.Progress;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;

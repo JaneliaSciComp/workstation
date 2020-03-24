@@ -1,7 +1,8 @@
 package org.janelia.workstation.browser.gui.editor;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
@@ -43,6 +44,7 @@ import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.core.model.search.SearchResults;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
@@ -528,7 +530,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
-                    if (StringUtils.areEqual(domainObject.getId(), groupedFolder.getId())) {
+                    if (StringUtilsExtra.areEqual(domainObject.getId(), groupedFolder.getId())) {
                         log.info("Grouped folder invalidated, reloading...");
                         reload();
                         break;
@@ -544,7 +546,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
         if (groupedFolder==null) return;
-        if (StringUtils.areEqual(event.getDomainObject().getId(), groupedFolder.getId())) {
+        if (StringUtilsExtra.areEqual(event.getDomainObject().getId(), groupedFolder.getId())) {
             this.groupedFolder = null;
             showNothing();
         }

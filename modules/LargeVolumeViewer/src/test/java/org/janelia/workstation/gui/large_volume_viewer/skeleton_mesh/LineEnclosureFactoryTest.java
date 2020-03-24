@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer.skeleton_mesh;
 
-import org.janelia.it.jacs.shared.mesh_loader.VertexInfoBean;
+import org.janelia.workstation.mesh_loader.VertexInfoBean;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

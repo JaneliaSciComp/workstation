@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.it.jacs.shared.swc.SWCDataConverter;
+import org.janelia.workstation.swc.SWCDataConverter;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;

@@ -5,7 +5,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 import net.miginfocom.swing.MigLayout;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectAttribute;
@@ -71,6 +72,7 @@ import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.core.model.search.SearchResults;
 import org.janelia.workstation.core.util.ColorDepthUtils;
 import org.janelia.workstation.core.util.ConcurrentUtils;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
@@ -554,11 +556,11 @@ public class SampleEditorPanel
 
             boolean display = true;
 
-            if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !areEqualOrEmpty(currObjective, lsm.getObjective())) {
+            if (!StringUtilsExtra.areEqual(currObjective, ALL_VALUE) && !areEqualOrEmpty(currObjective, lsm.getObjective())) {
                 display = false;
             }
 
-            if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, lsm.getAnatomicalArea())) {
+            if (!StringUtilsExtra.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, lsm.getAnatomicalArea())) {
                 display = false;
             }
 
@@ -622,7 +624,7 @@ public class SampleEditorPanel
             for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
                 
                 String objective = objectiveSample.getObjective();
-                if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !StringUtils.areEqual(currObjective, objective)) {
+                if (!StringUtilsExtra.areEqual(currObjective, ALL_VALUE) && !StringUtilsExtra.areEqual(currObjective, objective)) {
                     continue;
                 }
     
@@ -632,7 +634,7 @@ public class SampleEditorPanel
                 for(PipelineResult result : run.getResults()) {
     
                     String area = getArea(result);
-                    if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
+                    if (!StringUtilsExtra.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
                         continue;
                     }
                     
@@ -691,7 +693,7 @@ public class SampleEditorPanel
                 for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
 
                     String objective = objectiveSample.getObjective();
-                    if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !StringUtils.areEqual(currObjective, objective)) {
+                    if (!StringUtilsExtra.areEqual(currObjective, ALL_VALUE) && !StringUtilsExtra.areEqual(currObjective, objective)) {
                         continue;
                     }
                     
@@ -699,12 +701,12 @@ public class SampleEditorPanel
                         for (SampleAlignmentResult result : run.getAlignmentResults()) {
 
                             String area = getArea(result);
-                            if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
+                            if (!StringUtilsExtra.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
                                 continue;
                             }
                             
                             String alignmentSpace = result.getAlignmentSpace();
-                            if (!StringUtils.areEqual(currAlignmentSpace, ALL_VALUE) && !StringUtils.areEqual(currAlignmentSpace, alignmentSpace)) {
+                            if (!StringUtilsExtra.areEqual(currAlignmentSpace, ALL_VALUE) && !StringUtilsExtra.areEqual(currAlignmentSpace, alignmentSpace)) {
                                 continue;
                             }
                             
@@ -835,7 +837,7 @@ public class SampleEditorPanel
         for (ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
 
             String objective = objectiveSample.getObjective();
-            if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !StringUtils.areEqual(currObjective, objective)) {
+            if (!StringUtilsExtra.areEqual(currObjective, ALL_VALUE) && !StringUtilsExtra.areEqual(currObjective, objective)) {
                 continue;
             }
 
@@ -843,7 +845,7 @@ public class SampleEditorPanel
                 for (SampleAlignmentResult result : run.getAlignmentResults()) {
                     
                     String area = getArea(result);
-                    if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
+                    if (!StringUtilsExtra.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
                         continue;
                     }
                     
@@ -1155,7 +1157,7 @@ public class SampleEditorPanel
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
-                    if (StringUtils.areEqual(domainObject.getId(), sample.getId())) {
+                    if (StringUtilsExtra.areEqual(domainObject.getId(), sample.getId())) {
                         log.info("Sample invalidated, reloading...");
                         Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
                         if (updatedSample!=null) {
@@ -1165,7 +1167,7 @@ public class SampleEditorPanel
                     }
                     else if (lsms!=null) {
                         for(LSMImage lsm : lsms) {
-                            if (StringUtils.areEqual(domainObject.getId(), lsm.getId())) {
+                            if (StringUtilsExtra.areEqual(domainObject.getId(), lsm.getId())) {
                                 log.info("LSM invalidated, reloading...");
                                 Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
                                 if (updatedSample!=null) {
@@ -1185,7 +1187,7 @@ public class SampleEditorPanel
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
         if (sample==null) return;
-        if (StringUtils.areEqual(event.getDomainObject().getId(), sample.getId())) {
+        if (StringUtilsExtra.areEqual(event.getDomainObject().getId(), sample.getId())) {
             this.sample = null;
             if (currRunMap!=null) currRunMap.clear();
             if (lsms!=null) lsms.clear();

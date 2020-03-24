@@ -8,9 +8,9 @@ import javax.media.opengl.GLAutoDrawable;
 import com.google.common.base.Preconditions;
 import com.jogamp.opengl.util.texture.TextureCoords;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.slf4j.Logger;

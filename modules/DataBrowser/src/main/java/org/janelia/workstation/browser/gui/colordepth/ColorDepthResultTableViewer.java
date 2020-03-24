@@ -14,7 +14,8 @@ import java.util.concurrent.Callable;
 import javax.swing.*;
 import javax.swing.table.TableModel;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectAttribute;
 import org.janelia.model.domain.DomainUtils;
@@ -40,6 +41,7 @@ import org.janelia.workstation.core.model.AnnotatedObjectList;
 import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.search.ResultPage;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -377,7 +379,7 @@ public class ColorDepthResultTableViewer
         else if (ATTR_LIBRARIES.getName().equals(columnName)) {
             ColorDepthImage image = model.getImage(match);
             if (image!=null) {
-                return StringUtils.getCommaDelimited(image.getLibraries());
+                return StringUtilsExtra.getCommaDelimited(image.getLibraries());
             }
         }
         else if (ATTR_OWNER.getName().equals(columnName)) {

@@ -55,10 +55,6 @@
         </dependency>
         <dependency>
             <groupId>org.janelia.legacy</groupId>
-            <artifactId>shared</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.legacy</groupId>
             <artifactId>model</artifactId>
         </dependency>
         <!-- TODO: This is a legacy dependency needs to be purged from the code base -->
@@ -749,40 +745,6 @@
                         <publicPackage>org.janelia.it.jacs.model.user_data.validation</publicPackage>
                         <publicPackage>org.janelia.it.jacs.model.util</publicPackage>
                         <publicPackage>org.janelia.it.jacs.model.vo</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.annotation</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.annotation.metrics_logging</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.blast</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.blast.blastxmlparser</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.blast.blastxmlparser.jaxb</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.exception</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.export</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.fasta</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.ffmpeg</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.file_chooser</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.genomics</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.geom</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.geometric_search</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.hibernate</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.image.stream</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.img_3d_loader</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.lvv</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.mesh_loader</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.mesh_loader.wavefront_obj</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.node</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.octree</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.perf</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.sample_discovery</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.screen</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.solr</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.swc</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.tasks</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.units</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.utils</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.utils.domain</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.utils.entity</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.utils.genbank</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.utils.zeiss</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.shared.viewer3d</publicPackage>
                         <publicPackage>org.janelia.rendering</publicPackage>
                         <publicPackage>org.janelia.rendering.utils</publicPackage>
                         <publicPackage>org.janelia.rendering.ymlrepr</publicPackage>

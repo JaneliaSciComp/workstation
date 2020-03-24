@@ -1,7 +1,8 @@
 package org.janelia.workstation.core.api;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.api.exceptions.AuthenticationException;
 import org.janelia.workstation.core.api.exceptions.ServiceException;
 import org.janelia.workstation.core.api.exceptions.SystemError;

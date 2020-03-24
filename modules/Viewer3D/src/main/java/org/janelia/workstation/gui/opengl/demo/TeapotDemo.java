@@ -12,7 +12,7 @@ import javax.media.opengl.awt.GLCanvas;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.FullScreenMode;
 import org.janelia.workstation.gui.TrackballInteractor;
 import org.janelia.workstation.gui.camera.ObservableCamera3d;

@@ -8,9 +8,11 @@ import javax.swing.ToolTipManager;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.janelia.workstation.integration.activity_logging.ToolString;
+import org.janelia.workstation.geom.Vec3;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmSample;

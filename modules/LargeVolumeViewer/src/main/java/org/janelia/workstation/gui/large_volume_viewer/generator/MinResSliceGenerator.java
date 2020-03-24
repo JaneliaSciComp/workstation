@@ -2,7 +2,7 @@ package org.janelia.workstation.gui.large_volume_viewer.generator;
 
 import java.util.Iterator;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
 

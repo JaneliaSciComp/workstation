@@ -9,7 +9,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.openide.modules.InstalledFileLocator;
 import org.openide.modules.Places;
 import org.slf4j.Logger;
@@ -270,7 +271,7 @@ public class BrandingConfig {
                         brandingSettings.put(brandingKey, systemValue);
                         dirty = true;
                     }   
-                    else if (!StringUtils.areEqual(brandingValue, systemValue)) {
+                    else if (!StringUtilsExtra.areEqual(brandingValue, systemValue)) {
                         // We allow customized options. 
                         // TODO: Perhaps it would make sense to track if the default changes?
                         log.info("Branding config has customized value for {}={} (default: {})", brandingKey, brandingValue, systemValue);
@@ -325,7 +326,7 @@ public class BrandingConfig {
             log.info("After applying checkUpdates, customDefaultOpts="+customDefaultOpts);
         }
         
-        if (!StringUtils.areEqual(brandingValue, customDefaultOpts)) {
+        if (!StringUtilsExtra.areEqual(brandingValue, customDefaultOpts)) {
             log.info("Updating branding config for {}\nfrom {}\n  to {}", DEFAULT_OPTIONS_PROP, brandingValue, customDefaultOpts);
             brandingSettings.put(DEFAULT_OPTIONS_PROP, customDefaultOpts);
             // If the branding value has changed, we'll need to restart to pick it up.

@@ -12,8 +12,7 @@ import javax.swing.filechooser.FileFilter;
 
 import org.janelia.model.domain.Reference;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.file_chooser.FileChooser;
-import org.janelia.it.jacs.shared.utils.Progress;
+import org.janelia.workstation.core.util.Progress;
 import org.janelia.workstation.common.gui.table.DynamicColumn;
 import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.core.model.search.SearchResults;
@@ -59,7 +58,7 @@ public class ExportResultsAction<T,S> extends AbstractAction {
 
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select File Destination");
-        chooser.setFileSelectionMode(FileChooser.FILES_ONLY);
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         File defaultFile = Utils.getOutputFile(DEFAULT_EXPORT_DIR, "WorkstationSearchResults", "xls");
 
         chooser.setSelectedFile(defaultFile);
@@ -75,7 +74,7 @@ public class ExportResultsAction<T,S> extends AbstractAction {
             }
         });
 
-        if (chooser.showDialog(FrameworkAccess.getMainFrame(), "OK") == FileChooser.CANCEL_OPTION) {
+        if (chooser.showDialog(FrameworkAccess.getMainFrame(), "OK") == JFileChooser.CANCEL_OPTION) {
             return;
         }
 

@@ -1,10 +1,6 @@
 package org.janelia.workstation.core.model.descriptors;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.core.api.DomainMgr;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.interfaces.HasFiles;
@@ -12,8 +8,11 @@ import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleTile;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LSMArtifactDescriptor extends ArtifactDescriptor {
 
@@ -57,7 +56,7 @@ public class LSMArtifactDescriptor extends ArtifactDescriptor {
             ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
             if (objectiveSample!=null) {
                 for(SampleTile tile : objectiveSample.getTiles()) {
-                    if (StringUtils.areEqual(tile.getAnatomicalArea(), area)) {
+                    if (StringUtilsExtra.areEqual(tile.getAnatomicalArea(), area)) {
                         refs.addAll(tile.getLsmReferences());
                     }
                 }

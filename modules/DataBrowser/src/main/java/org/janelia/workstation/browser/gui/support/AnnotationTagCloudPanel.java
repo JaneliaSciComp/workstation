@@ -1,6 +1,7 @@
 package org.janelia.workstation.browser.gui.support;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.workstation.common.gui.support.AnnotationView;

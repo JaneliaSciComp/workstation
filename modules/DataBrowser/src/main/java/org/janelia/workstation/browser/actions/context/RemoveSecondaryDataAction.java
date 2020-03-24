@@ -6,7 +6,6 @@ import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
-import org.janelia.it.jacs.shared.utils.Constants;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.dialogs.SecondaryDataRemovalDialog;
 import org.janelia.workstation.common.actions.BaseContextualPopupAction;
@@ -39,6 +38,10 @@ public class RemoveSecondaryDataAction extends BaseContextualPopupAction {
     private static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
     private static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
     private static final String NEURON_SEP_REMOVAL_MSG = "Remove/preclude Neuron Separation(s)";
+
+    private static final String TRIM_DEPTH_AREA_IMAGE_VALUE = "TRIM_AREA_IMAGE";
+    private static final String TRIM_DEPTH_WHOLE_AREA_VALUE = "TRIM_WHOLE_AREA";
+    private static final String TRIM_DEPTH_NEURON_SEPARATION_VALUE = "TRIM_NEURON_SEPARATION";
 
     private Sample sample;
 
@@ -80,7 +83,7 @@ public class RemoveSecondaryDataAction extends BaseContextualPopupAction {
                         FrameworkAccess.getMainFrame(),
                         sample,
                         WHOLE_AA_REMOVAL_MSG,
-                        Constants.TRIM_DEPTH_WHOLE_AREA_VALUE
+                        TRIM_DEPTH_WHOLE_AREA_VALUE
 
                 );
                 dialog.setVisible(true);
@@ -95,7 +98,7 @@ public class RemoveSecondaryDataAction extends BaseContextualPopupAction {
                     FrameworkAccess.getMainFrame(),
                     sample,
                     STITCHED_IMG_REMOVAL_MSG,
-                    Constants.TRIM_DEPTH_AREA_IMAGE_VALUE
+                    TRIM_DEPTH_AREA_IMAGE_VALUE
             );
             dialog.setVisible(true);
         });
@@ -109,7 +112,7 @@ public class RemoveSecondaryDataAction extends BaseContextualPopupAction {
                     FrameworkAccess.getMainFrame(),
                     sample,
                     NEURON_SEP_REMOVAL_MSG,
-                    Constants.TRIM_DEPTH_NEURON_SEPARATION_VALUE
+                    TRIM_DEPTH_NEURON_SEPARATION_VALUE
             );
             dialog.setVisible(true);
         });

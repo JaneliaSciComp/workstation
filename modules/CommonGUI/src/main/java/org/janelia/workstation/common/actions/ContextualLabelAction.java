@@ -2,7 +2,8 @@ package org.janelia.workstation.common.actions;
 
 import java.util.Collection;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.interfaces.HasName;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;

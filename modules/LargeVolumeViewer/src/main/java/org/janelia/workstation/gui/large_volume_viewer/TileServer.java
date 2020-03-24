@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.gui.large_volume_viewer.controller.LoadStatusListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.StatusUpdateListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;

@@ -1,7 +1,8 @@
 package org.janelia.workstation.core.model;
 
 import com.google.common.collect.Lists;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
@@ -15,6 +16,7 @@ import org.janelia.model.domain.sample.SamplePipelineRun;
 import org.janelia.model.domain.sample.SampleProcessingResult;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -188,7 +190,7 @@ public class DomainObjectMapper {
     
             for (SampleAlignmentResult alignedResult : Lists.reverse(parentRun.getAlignmentResults())) {
                 
-                if (StringUtils.areEqual(alignedResult.getAnatomicalArea(), unaligned.getAnatomicalArea())) {
+                if (StringUtilsExtra.areEqual(alignedResult.getAnatomicalArea(), unaligned.getAnatomicalArea())) {
                     
                     if (alignmentSpace==null || alignedResult.getAlignmentSpace().equals(alignmentSpace)) {
                         
@@ -224,7 +226,7 @@ public class DomainObjectMapper {
 
             for (SampleProcessingResult unalignedResult : Lists.reverse(parentRun.getSampleProcessingResults())) {
 
-                if (StringUtils.areEqual(unalignedResult.getAnatomicalArea(), aligned.getAnatomicalArea())) {
+                if (StringUtilsExtra.areEqual(unalignedResult.getAnatomicalArea(), aligned.getAnatomicalArea())) {
         
                     NeuronSeparation separation = unalignedResult.getLatestSeparationResult();
                     if (separation != null) {

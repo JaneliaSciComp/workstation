@@ -7,7 +7,8 @@ import java.util.Collection;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 
 /**

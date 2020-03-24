@@ -2,8 +2,8 @@ package org.janelia.workstation.gui.passive_3d;
 
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.workstation.common.gui.support.WindowLocator;
 import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;

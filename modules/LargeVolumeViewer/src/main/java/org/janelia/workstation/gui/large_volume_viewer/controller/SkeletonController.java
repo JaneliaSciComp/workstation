@@ -13,7 +13,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.large_volume_viewer.action.TraceMode;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;

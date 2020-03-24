@@ -29,8 +29,9 @@ import javax.swing.SwingUtilities;
 
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.shared.solr.FacetValue;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
+import org.janelia.model.access.domain.search.FacetValue;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectAttribute;
@@ -45,7 +46,6 @@ import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
 import org.janelia.model.domain.interfaces.HasIdentifier;
-import org.janelia.model.domain.interfaces.HasName;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.ExportResultsAction;
@@ -82,6 +82,7 @@ import org.janelia.workstation.core.model.search.SearchConfiguration;
 import org.janelia.workstation.core.model.search.SearchResults;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.util.ConcurrentUtils;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -408,7 +409,7 @@ public class FilterEditorPanel
         log.trace("refresh");
         
         String inputFieldValue = searchBox.getText();
-        if (!StringUtils.areEqual(filter.getSearchString(), inputFieldValue)) {
+        if (!StringUtilsExtra.areEqual(filter.getSearchString(), inputFieldValue)) {
             dirty = true;
         }
         

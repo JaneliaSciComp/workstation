@@ -15,7 +15,8 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.ontology.Annotation;
@@ -31,6 +32,7 @@ import org.janelia.workstation.core.model.keybind.OntologyKeyBind;
 import org.janelia.workstation.core.model.keybind.OntologyKeyBindings;
 import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.core.util.RendererType2D;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -198,7 +200,7 @@ public class StateMgr {
                 log.info("Creating new preference: {}", pref);
                 DomainMgr.getDomainMgr().savePreference(pref);
             }
-            else if (!StringUtils.areEqual(pref.getValue(), value)) {
+            else if (!StringUtilsExtra.areEqual(pref.getValue(), value)) {
                 // Update
                 log.info("Updating value for preference {}: {}={}", pref.getId(), pref.getKey(), value);
                 pref.setValue(value);

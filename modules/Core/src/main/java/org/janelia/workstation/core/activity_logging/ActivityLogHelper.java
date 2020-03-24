@@ -1,10 +1,10 @@
 package org.janelia.workstation.core.activity_logging;
 
+import org.janelia.workstation.integration.activity_logging.ActionString;
+import org.janelia.workstation.integration.activity_logging.CategoryString;
+import org.janelia.workstation.integration.activity_logging.ToolString;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.integration.api.ActivityLogging;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.core.util.Utils;

@@ -11,7 +11,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 import org.janelia.it.jacs.model.entity.json.JsonTask;
-import org.janelia.it.jacs.shared.utils.DomainQuery;
+import org.janelia.model.domain.dto.DomainQuery;
 import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
@@ -22,7 +22,6 @@ import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.facade.interfaces.SampleFacade;
 import org.janelia.workstation.core.api.http.RESTClientBase;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
