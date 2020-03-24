@@ -3,7 +3,9 @@ package org.janelia.workstation.gui.large_volume_viewer.annotation;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -2115,9 +2117,27 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             log.info("exporting " + neurons.size() + " out-of-sync neurons to " + neuronDir);
 
             try {
-                // clean out old ones
+                String formatString = "yyyy-MM-dd-HHmm";
+                int formatLength = formatString.length();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatString);
+
                 if (exportDir.exists()) {
-                    FileUtils.cleanDirectory(exportDir);
+                    // clean out old ones; delete anything older than 7 days
+                    try {
+                        for (File f: exportDir.listFiles()) {
+                            LocalDateTime createDate = LocalDateTime.parse(f.getName().substring(0, formatLength), formatter);
+                            Duration duration = Duration.between(createDate, LocalDateTime.now());
+                            if (duration.toDays() > 7) {
+                                if (f.isDirectory()) {
+                                    FileUtils.cleanDirectory(f);
+                                }
+                                Files.delete(f.toPath());
+                            }
+                        }
+                    } catch (IOException e) {
+                        log.warn("could not empty directory " + neuronDir);
+                        // don't return, though; we'll just keep throwing stuff in there if we can
+                    }
                 } else {
                     boolean status = exportDir.mkdirs();
                     if (!status) {
@@ -2126,8 +2146,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                     }
                 }
 
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm");
-                File swcFile = new File(exportDir, LocalDateTime.now().format(formatter) + ".swc");
+                File swcFile = new File(exportDir, LocalDateTime.now().format(formatter) + "h.swc");
                 exportSWCData(swcFile, 0, neurons, true,
                         new Progress() {
                             // dummy progress indicator
@@ -2148,7 +2167,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
             } catch (Exception e) {
                 // do nothing; this is already a last-gasp try to save some data we're
                 //  potentially losing, so failure is an option
-                log.error("failed to write out-of-sync neurons", e);
+                // plus, there will always be a NullPointerException because things
+                //  are in the process of closing already when this is called
             }
         }
     }
