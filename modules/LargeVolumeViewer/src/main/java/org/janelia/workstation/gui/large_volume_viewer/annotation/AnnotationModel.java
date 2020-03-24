@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import javax.swing.SwingUtilities;
 
@@ -26,6 +29,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import Jama.Matrix;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
@@ -2090,6 +2094,63 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         progress.setProgress(total, total);
         progress.setStatus("Done");
+    }
+
+    public void exportOutOfSyncNeurons() {
+        List<TmNeuronMetadata> neurons = getNeuronList().stream()
+                // testing:
+                .filter(n -> n.getName().contains("1"))
+                // .filter(n -> n.getSyncLevel() >= NeuronTableModel.SYNC_WARN_LEVEL)
+                .collect(Collectors.toList());
+
+
+        // testing
+
+        log.info("found " + neurons.size() + " out-of-sync neurons");
+
+
+        if (neurons.size() > 0) {
+            String neuronDir = ConsoleProperties.getOutOfSyncNeuronDir();
+            File exportDir = new File(neuronDir);
+            log.info("exporting " + neurons.size() + " out-of-sync neurons to " + neuronDir);
+
+            try {
+                // clean out old ones
+                if (exportDir.exists()) {
+                    FileUtils.cleanDirectory(exportDir);
+                } else {
+                    boolean status = exportDir.mkdirs();
+                    if (!status) {
+                        log.warn("could not create directory " + neuronDir);
+                        return;
+                    }
+                }
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm");
+                File swcFile = new File(exportDir, LocalDateTime.now().format(formatter) + ".swc");
+                exportSWCData(swcFile, 0, neurons, true,
+                        new Progress() {
+                            // dummy progress indicator
+                            @Override
+                            public boolean isCancelled() {
+                                return false;
+                            }
+                            @Override
+                            public void setProgress(long l, long l1) {
+                                // does nothing
+                            }
+                            @Override
+                            public void setStatus(String s) {
+                                // does nothing
+                            }
+                        });
+
+            } catch (Exception e) {
+                // do nothing; this is already a last-gasp try to save some data we're
+                //  potentially losing, so failure is an option
+                log.error("failed to write out-of-sync neurons", e);
+            }
+        }
     }
 
     public synchronized void importBulkSWCData(final File swcFile, TmWorkspace tmWorkspace) throws Exception {
