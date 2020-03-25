@@ -1,24 +1,16 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolumeLoader;
-import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.rendering.utils.ClientProxy;
-import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.gui.large_volume_viewer.action.RawFileLocToClipboardAction;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -40,7 +32,7 @@ public class URLBasedQuadViewUi extends QuadViewUi {
     /**
      * Create the frame.
      */
-    URLBasedQuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel, JadeServiceClient jadeServiceClient) {
+    URLBasedQuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, NeuronManager annotationModel, JadeServiceClient jadeServiceClient) {
         super(parentFrame, initialObject, overrideFrameMenuBar, annotationModel);
         this.jadeServiceClient = jadeServiceClient;
     }

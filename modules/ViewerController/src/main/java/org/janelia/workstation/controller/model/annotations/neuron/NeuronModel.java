@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.model;
+package org.janelia.workstation.controller.model.annotations.neuron;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,21 +19,24 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.TmNeuronUtils;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NeuronManager {
+public class NeuronModel {
 
-    private static final Logger LOG = LoggerFactory.getLogger(NeuronManager.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NeuronModel.class);
     private final NeuronModelAdapter neuronModelAdapter;
     private final IdSource idSource;
     private final Map<Long, TmNeuronMetadata> neuronMap = new HashMap<>();
     private CompletableFuture<Boolean> ownershipRequest;
     private CompletableFuture<TmNeuronMetadata> createNeuronRequest;
+    TmModelManager modelManager;
 
-    public NeuronManager() {
+    public NeuronModel(TmModelManager modelManager) {
         this.neuronModelAdapter = new NeuronModelAdapter();
         this.idSource = new IdSource();
+        this.modelManager = modelManager;
     }
 
     public Collection<TmNeuronMetadata> getNeurons() {
@@ -204,7 +207,7 @@ public class NeuronManager {
         for (TmNeuronMetadata n: neuronModelAdapter.loadNeurons(workspace).collect(Collectors.toList())) {
             addNeuron(n);
         }
-        LOG.info("NeuronManager.loadWorkspaceNeurons() loaded {} neurons", neuronMap.size());
+        LOG.info("NeuronModel.loadWorkspaceNeurons() loaded {} neurons", neuronMap.size());
     }
 
     /**
@@ -494,7 +497,7 @@ public class NeuronManager {
 
     public void updateStructuredTextAnnotation(TmNeuronMetadata neuron, TmStructuredTextAnnotation annotation, String jsonString) throws Exception {
         // note for the future: this method and the delete one below ought to be just
-        //  in-lined in AnnotationModel; maybe the add method above, too
+        //  in-lined in NeuronManager; maybe the add method above, too
         annotation.setDataString(jsonString);
         neuron.getStructuredTextAnnotationMap().put(annotation.getParentId(), annotation);
     }

@@ -8,8 +8,8 @@ import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
 import org.janelia.workstation.controller.ComponentUtil;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +22,10 @@ public class BulkChangeNeuronColorAction extends AbstractAction {
 
     private static final Logger logger = LoggerFactory.getLogger(BulkChangeNeuronColorAction.class);
 
-    private AnnotationModel annModel;
+    private NeuronManager annModel;
     private NeuronListProvider listProvider;
 
-    public BulkChangeNeuronColorAction(AnnotationModel annotationModel, NeuronListProvider listProvider) {
+    public BulkChangeNeuronColorAction(NeuronManager annotationModel, NeuronListProvider listProvider) {
         this.annModel = annotationModel;
         this.listProvider = listProvider;
 

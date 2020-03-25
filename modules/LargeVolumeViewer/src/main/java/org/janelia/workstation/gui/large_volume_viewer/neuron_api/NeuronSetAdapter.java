@@ -21,10 +21,12 @@ import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.workstation.controller.TmViewerManager;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.spatialfilter.SpatialFilter;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.controller.AnnotationModel;
-import org.janelia.workstation.controller.model.PredefinedNote;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
 import org.janelia.workstation.controller.listener.BackgroundAnnotationListener;
 import org.janelia.workstation.controller.listener.GlobalAnnotationListener;
 import org.janelia.workstation.controller.listener.TaskReviewListener;
@@ -60,7 +62,7 @@ public class NeuronSetAdapter
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     TmWorkspace workspace; // LVV workspace, as opposed to Horta workspace
-    AnnotationModel annotationModel;
+    NeuronManager annotationModel;
     private final GlobalAnnotationListener globalAnnotationListener;
     private final TmGeoAnnotationModListener annotationModListener;
     private HortaMetaWorkspace metaWorkspace = null;
@@ -87,7 +89,7 @@ public class NeuronSetAdapter
 
     @Override
     public boolean isReadOnly() {
-        return !annotationModel.editsAllowed();
+        return true;
     }
 
     // see note in loadUserPreferences() re: calling back into annmgr for this stuff!
@@ -150,14 +152,14 @@ public class NeuronSetAdapter
     Jama.Matrix getVoxToMicronMatrix() {
         if (voxToMicronMatrix != null)
             return voxToMicronMatrix;
-        updateVoxToMicronMatrices(annotationModel.getCurrentSample());
+        updateVoxToMicronMatrices(TmModelManager.getInstance().getCurrentSample());
         return voxToMicronMatrix;
     }
 
     Jama.Matrix getMicronToVoxMatrix() {
         if (micronToVoxMatrix != null)
             return micronToVoxMatrix;
-        updateVoxToMicronMatrices(annotationModel.getCurrentSample());
+        updateVoxToMicronMatrices(TmModelManager.getInstance().getCurrentSample());
         return micronToVoxMatrix;
     }
 
@@ -223,23 +225,23 @@ public class NeuronSetAdapter
         return new NeuronModelAdapter(neuron, this);
     }
 
-    public void observe(AnnotationModel annotationModel) {
+    public void observe(NeuronManager annotationModel) {
         if (annotationModel == null)
             return; // can't watch nothing?
         if (this.annotationModel == annotationModel)
             return; // already watching this model
         // Stop listening to whatever we were listening to earlier
-        AnnotationModel oldAnnotationModel = this.annotationModel;
+        NeuronManager oldAnnotationModel = this.annotationModel;
         this.annotationModel = annotationModel;
         if (oldAnnotationModel != null) {
-            oldAnnotationModel.removeGlobalAnnotationListener(globalAnnotationListener);
-            oldAnnotationModel.removeTmGeoAnnotationModListener(annotationModListener);
+            //oldAnnotationModel.removeGlobalAnnotationListener(globalAnnotationListener);
+           // oldAnnotationModel.removeTmGeoAnnotationModListener(annotationModListener);
         }
         sanityCheckWorkspace();
-        annotationModel.addGlobalAnnotationListener(globalAnnotationListener);
-        annotationModel.addBackgroundAnnotationListener(backgroundAnnotationListener);
-        annotationModel.addTmGeoAnnotationModListener(annotationModListener);
-        annotationModel.addTaskReviewListener(this);
+       // annotationModel.addGlobalAnnotationListener(globalAnnotationListener);
+       // annotationModel.addBackgroundAnnotationListener(backgroundAnnotationListener);
+       // annotationModel.addTmGeoAnnotationModListener(annotationModListener);
+       // annotationModel.addTaskReviewListener(this);
         getMembershipChangeObservable().notifyObservers();
         LOG.info("Observing new Annotation Model {}", annotationModel);
     }
@@ -248,7 +250,7 @@ public class NeuronSetAdapter
     // In this case, we need to scramble to distribute the new object instances
     // behind our stable NeuronSet/NeuronMode/NeuronVertex facade.
     private void sanityCheckWorkspace() {
-        TmWorkspace w = this.annotationModel.getCurrentWorkspace();
+        TmWorkspace w = TmModelManager.getInstance().getCurrentWorkspace();
         if (w == workspace) return; // unchanged
         LOG.info("Workspace changed");
         setWorkspace(w);
@@ -284,7 +286,7 @@ public class NeuronSetAdapter
         if (!workspace.getName().equals(getName()))
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
-        TmSample sample = annotationModel.getCurrentSample();
+        TmSample sample = TmModelManager.getInstance().getCurrentSample();
         if (this.metaWorkspace != null)
             this.metaWorkspace.setSample(sample);
         updateVoxToMicronMatrices(sample);
@@ -299,8 +301,8 @@ public class NeuronSetAdapter
         if (this.metaWorkspace == metaWorkspace)
             return;
         this.metaWorkspace = metaWorkspace;
-        this.metaWorkspace.setSample(annotationModel.getCurrentSample());
-        this.metaWorkspace.setTagMetadata(annotationModel.getAllTagMeta());
+        this.metaWorkspace.setSample(TmModelManager.getInstance().getCurrentSample());
+        this.metaWorkspace.setTagMetadata(TmModelManager.getInstance().getAllTagMeta());
 
         getMetaWorkspace().setChanged();
         getMetaWorkspace().notifyObservers();
@@ -349,8 +351,8 @@ public class NeuronSetAdapter
     @Override
     public void addObjectMesh(TmObjectMesh mesh) {
         try {
-            annotationModel.getCurrentWorkspace().addObjectMesh(mesh);
-            annotationModel.saveCurrentWorkspace();
+            TmModelManager.getInstance().getCurrentWorkspace().addObjectMesh(mesh);
+         //   annotationModel.saveCurrentWorkspace();
         } catch (Exception error) {
             FrameworkAccess.handleException(error);
         }
@@ -360,15 +362,15 @@ public class NeuronSetAdapter
     public void removeObjectMesh(String meshName) {
         try {
             TmObjectMesh deleteMesh = null;
-            List<TmObjectMesh> meshList = annotationModel.getCurrentWorkspace().getObjectMeshList();
+            List<TmObjectMesh> meshList = TmModelManager.getInstance().getCurrentWorkspace().getObjectMeshList();
             for (TmObjectMesh mesh: meshList) {
                 if (mesh.getName().equals(meshName)) {
                     deleteMesh = mesh;
                 }
             }
             if (deleteMesh!=null) {
-                annotationModel.getCurrentWorkspace().removeObjectMesh(deleteMesh);
-                annotationModel.saveCurrentWorkspace();
+                TmModelManager.getInstance().getCurrentWorkspace().removeObjectMesh(deleteMesh);
+               // annotationModel.saveCurrentWorkspace();
             }
         } catch (Exception error) {
             FrameworkAccess.handleException(error);
@@ -378,11 +380,11 @@ public class NeuronSetAdapter
     @Override
     public void updateObjectMeshName(String oldName, String updatedName) {
         try {
-            List<TmObjectMesh> objectMeshes = annotationModel.getCurrentWorkspace().getObjectMeshList();
+            List<TmObjectMesh> objectMeshes = TmModelManager.getInstance().getCurrentWorkspace().getObjectMeshList();
             for (TmObjectMesh objectMesh : objectMeshes) {
                 if (objectMesh.getName().equals(oldName)) {
                     objectMesh.setName(updatedName);
-                    annotationModel.saveCurrentWorkspace();
+                   // annotationModel.saveCurrentWorkspace();
                     break;
                 }
             }
@@ -745,7 +747,7 @@ public class NeuronSetAdapter
                         annotationModel.fireSpatialIndexReady(workspace);
                         // load user preferences
                         try {
-                            annotationModel.loadUserPreferences();
+                            TmViewerManager.getInstance().loadUserPreferences();
                             repaintHorta();
                         } catch (Exception error) {
                             FrameworkAccess.handleException(error);
@@ -983,7 +985,7 @@ public class NeuronSetAdapter
         // private TmSample sample;
         private NeuronSetAdapter neuronSet;
         private final Map<Long, NeuronModelAdapter> cachedNeurons = new HashMap<>();
-        // private AnnotationModel annotationModel;
+        // private NeuronManager annotationModel;
         private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
         NeuronModelAdapter neuronModelForTmNeuron(TmNeuronMetadata tmNeuron) {

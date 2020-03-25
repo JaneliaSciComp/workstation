@@ -8,6 +8,7 @@ import org.janelia.messaging.core.MessageHandler;
 import org.janelia.messaging.core.impl.AsyncMessageConsumerImpl;
 import org.janelia.messaging.utils.MessagingUtils;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.spatialfilter.NeuronMessageConstants;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -34,12 +35,13 @@ public class RefreshHandler implements MessageHandler {
     private static final String MESSAGESERVER_PASSWORD = ConsoleProperties.getInstance().getProperty("domain.msgserver.password").trim();
     private static final String MESSAGESERVER_REFRESHEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.refresh").trim();
 
-    private AnnotationModel annotationModel;
+    private NeuronManager annotationModel;
     private AsyncMessageConsumer msgReceiver;
     static RefreshHandler handler;
     private boolean receiveUpdates = true;
     private boolean freezeUpdates = false;
     private Map<Long, Map<String, Object>> updatesMap = new HashMap<>();
+    private TmModelManager modelManager;
 
     /**
      * @return the receiveUpdates
@@ -58,6 +60,10 @@ public class RefreshHandler implements MessageHandler {
     private RefreshHandler() {
     }
 
+    public void setModel(TmModelManager modelManager) {
+        this.modelManager = modelManager;
+    }
+
     public static Optional<RefreshHandler> getInstance() {
         if (handler == null) {
             RefreshHandler uninitializedHandler = new RefreshHandler();
@@ -68,6 +74,7 @@ public class RefreshHandler implements MessageHandler {
         }
         return Optional.of(handler);
     }
+
 
     private boolean init() {
         MessageConnection messageConnection = ConnectionManager.getInstance()
@@ -181,8 +188,8 @@ public class RefreshHandler implements MessageHandler {
 
             // flag to suppress shared updates
             if (!receiveUpdates && !freezeUpdates && !user.equals(AccessManager.getSubjectKey())) {
-                if (workspace != null && annotationModel != null && annotationModel.getCurrentWorkspace() != null
-                        && workspace.longValue() == annotationModel.getCurrentWorkspace().getId().longValue()) {
+                if (workspace != null && annotationModel != null && modelManager.getCurrentWorkspace() != null
+                        && workspace.longValue() == modelManager.getCurrentWorkspace().getId().longValue()) {
                     addNeuronUpdate(msgHeaders, msgBody, action, user);
                     log.debug("SHARED UPDATE TIME: {}", stopWatch.getElapsedTime());
                 }
@@ -212,8 +219,8 @@ public class RefreshHandler implements MessageHandler {
             // if not this workspace or user isn't looking at a workspace right now or workspace not relating to a workspace update, filter out message
 
             log.debug("PRE-WORKSPACE TIME: {}", stopWatch.getElapsedTime());
-            if (workspace == null || annotationModel.getCurrentWorkspace() == null
-                    || workspace.longValue() != annotationModel.getCurrentWorkspace().getId().longValue()) {
+            if (workspace == null || modelManager.getCurrentWorkspace() == null
+                    || workspace.longValue() != modelManager.getCurrentWorkspace().getId().longValue()) {
                 return;
             }
 
@@ -247,7 +254,7 @@ public class RefreshHandler implements MessageHandler {
                     public void run() {
                         try {
                             StopWatch stopWatch2 = new StopWatch();
-                            // fire notice to AnnotationModel
+                            // fire notice to NeuronManager
                             // change relevant to this workspace and not executed on this client,
                             // update model or process request
                             switch (action) {
@@ -338,11 +345,11 @@ public class RefreshHandler implements MessageHandler {
         log.info("The messaging system might have canceled the consumer");
     }
 
-    public AnnotationModel getAnnotationModel() {
+    public NeuronManager getAnnotationModel() {
         return annotationModel;
     }
 
-    public void setAnnotationModel(AnnotationModel annotationModel) {
+    public void setAnnotationModel(NeuronManager annotationModel) {
         this.annotationModel = annotationModel;
     }
 

@@ -1,19 +1,19 @@
 package org.janelia.workstation.gui.large_volume_viewer.skeleton_mesh;
 
-import org.janelia.workstation.geom.CoordinateAxis;
-import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.mesh_loader.BufferPackager;
-import org.janelia.workstation.mesh_loader.NormalCompositor;
-import org.janelia.workstation.mesh_loader.RenderBuffersBean;
-import org.janelia.workstation.mesh_loader.TriangleSource;
-import org.janelia.workstation.mesh_loader.VertexAttributeSourceI;
-import org.janelia.workstation.mesh_loader.wavefront_obj.OBJWriter;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
+import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
+import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
+import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
+import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
+import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.controller.infopanel.AnnotationGeometry;
-import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.workstation.controller.infopanel.FilteredAnnotationModel;
-import org.janelia.workstation.controller.model.InterestingAnnotation;
+import org.janelia.workstation.controller.model.annotations.neuron.InterestingAnnotation;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -472,7 +472,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
 	}
 	
     protected void calculateInterestingAnnotationVertices(TileFormat tileFormat, PointEnclosureFactory interestingAnnotationEnclosureFactory) {
-        AnnotationModel annoMdl = dataSource.getAnnotationModel();
+        NeuronManager annoMdl = dataSource.getAnnotationModel();
         if (annoMdl != null) {
             float[] id = null;
             FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();

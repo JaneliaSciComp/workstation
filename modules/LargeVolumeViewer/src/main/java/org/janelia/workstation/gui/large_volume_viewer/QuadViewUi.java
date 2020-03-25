@@ -52,10 +52,11 @@ import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.workstation.common.gui.dialogs.MemoryCheckDialog;
 import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.workstation.gui.large_volume_viewer.action.*;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.workstation.controller.infopanel.AnnotationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.workstation.controller.network.ModelTranslation;
@@ -153,7 +154,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     private ZScanMode zScanMode = new ZScanMode(volumeImage);
 
     // annotation things
-    private final AnnotationModel annotationModel;
+    private final NeuronManager annotationModel;
     private final AnnotationManager annotationMgr;
     private final LargeVolumeViewerTranslator largeVolumeViewerTranslator;
     private AnnotationPanel annotationPanel;
@@ -302,7 +303,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     /**
      * Create the frame.
      */
-    public QuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel) {
+    public QuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, NeuronManager annotationModel) {
         new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, FrameworkAccess.getMainFrame());
 
         this.annotationModel = annotationModel;
@@ -355,7 +356,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         // Nb: skeleton.anchorMovedSilentSignal intentionally does *not* connect to annotationMgr!
         largeVolumeViewerTranslator.setViewStateListener(quadViewController);
         annotationPanel.setViewStateListener(quadViewController);
-        annotationModel.setViewStateListener(quadViewController);
+       // annotationModel.setViewStateListener(quadViewController);
 
         // Toggle skeleton actor with v key
         // see note in interceptModeChangeGestures() regarding which input map
@@ -443,8 +444,8 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
                     result.add(addFileMenuItem());
                     result.add(addCopyMicronLocMenuItem());
                     result.add(addCopyTileLocMenuItem());
-                    result.add(addCopyRawTileFileLocMenuItem(annotationModel.getCurrentSample()));
-                    result.add(addCopyOctreePathMenuItem(annotationModel.getCurrentSample()));
+                    result.add(addCopyRawTileFileLocMenuItem(TmModelManager.getInstance().getCurrentSample()));
+                    result.add(addCopyOctreePathMenuItem(TmModelManager.getInstance().getCurrentSample()));
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.addAll(taskWorkflowViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());
@@ -508,7 +509,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return neuronStyleModel;
     }
 
-    public AnnotationModel getAnnotationModel() {
+    public NeuronManager getAnnotationModel() {
         return annotationModel;
     }
 
@@ -846,11 +847,11 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.DESELECTED) {
                     receiveSharedUpdatesCheckbox.setSelected(false);
-                    annotationModel.setReceiveUpdates(false);
+                  //  annotationModel.setReceiveUpdates(false);
                     loadUpdatesButton.setEnabled(true);
                 } else if (e.getStateChange() == ItemEvent.SELECTED) {
                     receiveSharedUpdatesCheckbox.setSelected(true);
-                    annotationModel.setReceiveUpdates(true);
+                   // annotationModel.setReceiveUpdates(true);
                     loadUpdatesButton.setEnabled(false);
                 }
             }
@@ -1340,7 +1341,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         result.setSampleUrl(loadedUrl);
 
         result.setSampleId(getSampleId());
-        result.setSample(this.annotationModel.getCurrentSample());
+        result.setSample(TmModelManager.getInstance().getCurrentSample());
         result.setWorkspaceId(getWorkspaceId());
 
         // Use the pointer location, not camera focus
@@ -1388,18 +1389,18 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     }
 
     private Long getWorkspaceId() {
-        if (this.annotationModel.getCurrentWorkspace() != null) {
-            return this.annotationModel.getCurrentWorkspace().getId();
+        if (TmModelManager.getInstance().getCurrentWorkspace() != null) {
+            return TmModelManager.getInstance().getCurrentWorkspace().getId();
         } else {
             return null;
         }
     }
 
     private Long getSampleId() {
-        if (annotationModel == null || annotationModel.getCurrentWorkspace() == null) {
+        if (annotationModel == null || TmModelManager.getInstance().getCurrentWorkspace() == null) {
             return null;
         }
-        return this.annotationModel.getCurrentWorkspace().getSampleRef().getTargetId();
+        return TmModelManager.getInstance().getCurrentWorkspace().getSampleRef().getTargetId();
     }
 
     static class LoadStatusLabel extends JLabel {

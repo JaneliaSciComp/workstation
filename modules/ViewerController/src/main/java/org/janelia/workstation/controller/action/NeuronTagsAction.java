@@ -22,8 +22,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -93,7 +93,7 @@ public class NeuronTagsAction extends EditAction {
 
     private TmNeuronMetadata getTargetNeuron() {
         if (targetNeuron == null) {
-            AnnotationModel annModel = AnnotationModel.getInstance();
+            NeuronManager annModel = NeuronManager.getInstance();
             return annModel.getCurrentNeuron();
         }
         return targetNeuron;
@@ -104,7 +104,7 @@ public class NeuronTagsAction extends EditAction {
      */
     private void addTag(final String tag) {
 
-        AnnotationModel annModel = AnnotationModel.getInstance();
+        NeuronManager annModel = NeuronManager.getInstance();
         final TmNeuronMetadata target = getTargetNeuron();
         SimpleWorker adder = new SimpleWorker() {
             @Override
@@ -131,7 +131,7 @@ public class NeuronTagsAction extends EditAction {
      */
     private void removeTag(final String tag) {
 
-        AnnotationModel annModel = AnnotationModel.getInstance();
+        NeuronManager annModel = NeuronManager.getInstance();
         final TmNeuronMetadata target = getTargetNeuron();
         SimpleWorker remover = new SimpleWorker() {
             @Override
@@ -164,7 +164,7 @@ public class NeuronTagsAction extends EditAction {
      */
     private void onRemoveAllButton() {
 
-        AnnotationModel annModel = AnnotationModel.getInstance();
+        NeuronManager annModel = NeuronManager.getInstance();
         final TmNeuronMetadata target = getTargetNeuron();
         SimpleWorker remover = new SimpleWorker() {
             @Override
@@ -198,7 +198,7 @@ public class NeuronTagsAction extends EditAction {
         // OMG Java makes everything hard...JList can't take List<>, only
         //  arrays and vectors
 
-        AnnotationModel annModel = AnnotationModel.getInstance();
+        NeuronManager annModel = NeuronManager.getInstance();
         final TmNeuronMetadata target = getTargetNeuron();
         Set<String> appliedTagSet = annModel.getNeuronTags(target);
         String[] appliedTags = appliedTagSet.toArray(new String[appliedTagSet.size()]);

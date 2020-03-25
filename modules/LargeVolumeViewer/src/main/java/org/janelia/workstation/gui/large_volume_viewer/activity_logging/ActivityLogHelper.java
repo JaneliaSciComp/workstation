@@ -1,17 +1,16 @@
 package org.janelia.workstation.gui.large_volume_viewer.activity_logging;
 
-
-import org.janelia.workstation.integration.activity_logging.ActionString;
-
-import org.janelia.workstation.integration.activity_logging.CategoryString;
-
-import org.janelia.workstation.integration.activity_logging.ToolString;
-import org.janelia.workstation.geom.CoordinateAxis;
-import org.janelia.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.controller.TmViewerManager;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.api.SessionMgr;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 
 import java.util.Date;
@@ -284,12 +283,12 @@ public class ActivityLogHelper {
         );
     }
 
-    public void logLandmarkViewPick(AnnotationModel annotationModel, Long annotationId) {
+    public void logLandmarkViewPick(NeuronManager annotationModel, Long annotationId) {
         String action = "Unknown";
         if (annotationModel != null
-                && annotationModel.getCurrentWorkspace() != null
-                && annotationModel.getCurrentWorkspace().getId() != null) {
-            action = "Sample/Annotation:" + annotationModel.getCurrentWorkspace().getSampleRef().getTargetId() + ":" + annotationId;
+                && TmModelManager.getInstance().getCurrentWorkspace() != null
+                && TmModelManager.getInstance().getCurrentWorkspace().getId() != null) {
+            action = "Sample/Annotation:" + TmModelManager.getInstance().getCurrentWorkspace().getSampleRef().getTargetId() + ":" + annotationId;
         }
         SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,

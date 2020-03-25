@@ -15,8 +15,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ public class BulkNeuronTagAction extends AbstractAction {
 
     private static final Logger logger = LoggerFactory.getLogger(BulkNeuronTagAction.class);
 
-    private AnnotationModel annModel;
+    private NeuronManager annModel;
     private NeuronListProvider listProvider;
 
     private JPanel mainPanel;
@@ -41,7 +41,7 @@ public class BulkNeuronTagAction extends AbstractAction {
     private JTextField newTagField;
 
 
-    public BulkNeuronTagAction(AnnotationModel annotationModel, NeuronListProvider listProvider) {
+    public BulkNeuronTagAction(NeuronManager annotationModel, NeuronListProvider listProvider) {
         this.annModel = annotationModel;
         this.listProvider = listProvider;
 

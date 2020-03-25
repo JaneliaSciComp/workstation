@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.action;
+package org.janelia.workstation.controller.action;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
@@ -17,13 +17,13 @@ import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
 import Jama.Matrix;
-import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.swc.MatrixDrivenSWCExchanger;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.NeuronListProvider;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.util.MatrixUtilities;
+import org.janelia.workstation.controller.model.TmModelManager;
 
 /**
  * this action opens a dialog in which information on the neurons
@@ -32,11 +32,11 @@ import org.janelia.model.util.MatrixUtilities;
  */
 public class WorkspaceInformationAction extends AbstractAction {
 
-    private AnnotationModel annotationModel;
+    private TmModelManager modelManager;
     private NeuronListProvider listProvider;
 
-    public WorkspaceInformationAction(AnnotationModel annotationModel, NeuronListProvider listProvider) {
-        this.annotationModel = annotationModel;
+    public WorkspaceInformationAction(TmModelManager modelManager, NeuronListProvider listProvider) {
+        this.modelManager = modelManager;
         this.listProvider = listProvider;
 
         putValue(NAME, "Show neuron table...");
@@ -46,10 +46,10 @@ public class WorkspaceInformationAction extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent action) {
-        if (annotationModel.getCurrentWorkspace() != null) {
+        if (modelManager.getCurrentWorkspace() != null) {
 
             final InfoTableModel tableModel = new InfoTableModel();
-            tableModel.setAnnotationModel(annotationModel);
+            tableModel.setAnnotationModel(modelManager);
             JTable table = new JTable(tableModel) {
                 public String getToolTipText(MouseEvent event) {
                     String tip = null;
@@ -95,7 +95,7 @@ public class WorkspaceInformationAction extends AbstractAction {
 
 class InfoTableModel extends AbstractTableModel {
 
-    private AnnotationModel annotationModel;
+    private TmModelManager modelManager;
 
     private String[] columnNames = {"Neuron name", "# points", "# branches", "length (mm)"};
 
@@ -107,16 +107,16 @@ class InfoTableModel extends AbstractTableModel {
     private Map<Long, Integer> branchMap = new HashMap<>();
     private Map<Long, Double> lengthMap = new HashMap<>();
 
-    public void setAnnotationModel(AnnotationModel annotationModel) {
-        this.annotationModel = annotationModel;
+    public void setAnnotationModel(TmModelManager annotationModel) {
+        this.modelManager = annotationModel;
     }
 
     public void addNeurons(List<TmNeuronMetadata> neuronList) {
         neurons.addAll(neuronList);
 
         // get ready for length calculation
-        Matrix voxToMicronMatrix = MatrixUtilities.deserializeMatrix(annotationModel.getCurrentSample().getVoxToMicronMatrix(), "voxToMicronMatrix");
-        Matrix micronToVoxMatrix = MatrixUtilities.deserializeMatrix(annotationModel.getCurrentSample().getMicronToVoxMatrix(), "micronToVoxMatrix");
+        Matrix voxToMicronMatrix = MatrixUtilities.deserializeMatrix(modelManager.getCurrentSample().getVoxToMicronMatrix(), "voxToMicronMatrix");
+        Matrix micronToVoxMatrix = MatrixUtilities.deserializeMatrix(modelManager.getCurrentSample().getMicronToVoxMatrix(), "micronToVoxMatrix");
         MatrixDrivenSWCExchanger exchanger = new MatrixDrivenSWCExchanger(micronToVoxMatrix, voxToMicronMatrix);
 
         // do pre-calcs

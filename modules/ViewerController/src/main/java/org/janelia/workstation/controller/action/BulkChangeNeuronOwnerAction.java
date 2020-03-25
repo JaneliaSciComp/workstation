@@ -9,10 +9,10 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.workstation.controller.ComponentUtil;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.console.viewerapi.dialogs.ChangeNeuronOwnerDialog;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.security.Subject;
@@ -27,10 +27,10 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
 
     private static final Logger logger = LoggerFactory.getLogger(BulkChangeNeuronColorAction.class);
 
-    private AnnotationModel annModel;
+    private NeuronManager annModel;
     private NeuronListProvider listProvider;
 
-    public BulkChangeNeuronOwnerAction(AnnotationModel annModel, NeuronListProvider listProvider) {
+    public BulkChangeNeuronOwnerAction(NeuronManager annModel, NeuronListProvider listProvider) {
         this.annModel = annModel;
         this.listProvider = listProvider;
 

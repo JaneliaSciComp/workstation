@@ -1,6 +1,6 @@
 package org.janelia.workstation.controller.infopanel;
 
-import org.janelia.workstation.controller.model.InterestingAnnotation;
+import org.janelia.workstation.controller.model.annotations.neuron.InterestingAnnotation;
 
 import java.util.ArrayList;
 import java.util.Date;

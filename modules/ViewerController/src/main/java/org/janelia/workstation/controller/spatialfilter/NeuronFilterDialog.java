@@ -11,7 +11,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.slf4j.Logger;
@@ -31,10 +31,10 @@ public class NeuronFilterDialog extends ModalDialog {
     JComboBox strategySelection;
     NeuronSpatialFilter currentFilter;
 
-    AnnotationModel annModel;
+    NeuronManager annModel;
     final Map<String,String> strategyLabels = new HashMap<>();
        
-    public NeuronFilterDialog(AnnotationModel annModel) {
+    public NeuronFilterDialog(NeuronManager annModel) {
     	super(FrameworkAccess.getMainFrame());
         this.annModel = annModel;
         setTitle("Set Neuron Filter Strategy");

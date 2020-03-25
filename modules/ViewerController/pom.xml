@@ -57,6 +57,18 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <version>2.4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.spockframework</groupId>
+            <artifactId>spock-core</artifactId>
+            <version>1.1-groovy-2.4</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- NetBeans Modules --> 
         <dependency>
@@ -113,6 +125,7 @@
             <artifactId>org-netbeans-libs-junit4</artifactId>
             <scope>test</scope>
         </dependency>
+
         
     </dependencies>
 
@@ -122,7 +135,9 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
             </plugin>
+
         </plugins>
+
     </build>
 
 </project>

@@ -1,10 +1,9 @@
 package org.janelia.workstation.controller.infopanel;
 
 import java.util.List;
-import java.util.Map;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.listener.*;
 //import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -50,21 +49,21 @@ public class PanelController {
         this.filteredAnnotationList.setAnnoSelectListener(ptgsl);
     }
     
-    public void registerForEvents(AnnotationModel annotationModel) {
+    public void registerForEvents(NeuronManager annotationModel) {
         
         globalListener = new PanelGlobalListener();
         //annotationModel.addGlobalAnnotationListener(globalListener);
-        annotationModel.addGlobalNeuronSpatialFilterListener(globalListener);
+        //annotationModel.addGlobalNeuronSpatialFilterListener(globalListener);
         
         backgroundListener = new PanelBackgroundAnnotationListener();
         
-        annotationModel.addBackgroundAnnotationListener(backgroundListener);
+       // annotationModel.addBackgroundAnnotationListener(backgroundListener);
         
         notesListener = new PanelNotesUpdateListener();
-        annotationModel.setNotesUpdateListener(notesListener);
+       // annotationModel.setNotesUpdateListener(notesListener);
 
         annotationListener = new PanelAnnotationListener();
-        annotationModel.addTmGeoAnnotationModListener(annotationListener);
+       // annotationModel.addTmGeoAnnotationModListener(annotationListener);
         
         PanelNeuronSelectedListener pnsl = new PanelNeuronSelectedListener(annotationModel);
        // wsNeuronList.setNeuronSelectedListener(pnsl);
@@ -80,10 +79,10 @@ public class PanelController {
         this.wsInfoPanel = wsip;
     }
     
-    public void unregisterForEvents(AnnotationModel annotationModel) {
+    public void unregisterForEvents(NeuronManager annotationModel) {
        // annotationModel.removeGlobalAnnotationListener(globalListener);
-        annotationModel.removeTmGeoAnnotationModListener(annotationListener);
-        annotationModel.setNotesUpdateListener(null);
+       // annotationModel.removeTmGeoAnnotationModListener(annotationListener);
+      //  annotationModel.setNotesUpdateListener(null);
         this.globalListener = null;
         this.notesListener = null;
         this.annotationListener = null;
@@ -246,9 +245,9 @@ public class PanelController {
     
     private class PanelNeuronSelectedListener implements NeuronSelectedListener {
 
-        private AnnotationModel model;
+        private NeuronManager model;
         
-        public PanelNeuronSelectedListener(AnnotationModel model) {
+        public PanelNeuronSelectedListener(NeuronManager model) {
             this.model = model;
         }
         

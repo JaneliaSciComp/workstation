@@ -19,7 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
 public class SwcExport {
@@ -38,7 +38,7 @@ public class SwcExport {
         //JFileChooser chooser = new JFileChooser(annotationMgr.getSwcDirectory());
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Save SWC file");
-        chooser.setSelectedFile(new File(seedName + AnnotationModel.STD_SWC_EXTENSION));
+        chooser.setSelectedFile(new File(seedName + NeuronManager.STD_SWC_EXTENSION));
         JPanel panel = new JPanel();
         panel.setBorder(new EmptyBorder(10, 5, 10, 5));
 

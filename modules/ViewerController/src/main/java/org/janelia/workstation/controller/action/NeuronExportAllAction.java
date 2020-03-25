@@ -4,8 +4,9 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.infopanel.SwcExport;
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -30,10 +31,10 @@ public class NeuronExportAllAction extends AbstractAction {
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        AnnotationModel annotationModel = AnnotationModel.getInstance();
-        if (annotationModel.getCurrentWorkspace()==null) return;
+        NeuronManager annotationModel = NeuronManager.getInstance();
+        if (TmModelManager.getInstance().getCurrentWorkspace()==null) return;
         SwcExport export = new SwcExport();
-        SwcExport.ExportParameters params = export.getExportParameters(annotationModel.getCurrentWorkspace().getName());
+        SwcExport.ExportParameters params = export.getExportParameters(TmModelManager.getInstance().getCurrentWorkspace().getName());
         if ( params != null ) {
             //annotationMgr.exportNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo(),
               //  annotationModel.getNeuronList(), params.getExportNotes());

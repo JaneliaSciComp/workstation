@@ -8,7 +8,7 @@ import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 
 public class QuadViewApp extends JFrame {
 
@@ -40,7 +40,7 @@ public class QuadViewApp extends JFrame {
                             ConsoleProperties.getString("jadestorage.rest.url"),
                             () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
                     );
-                    app.setContentPane(QuadViewUiProvider.createQuadViewUi(app, null, true, new AnnotationModel(null, null), jadeServiceClient));
+                    app.setContentPane(QuadViewUiProvider.createQuadViewUi(app, null, true, new NeuronManager(null), jadeServiceClient));
                     app.setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();

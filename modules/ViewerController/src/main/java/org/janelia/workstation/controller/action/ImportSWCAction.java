@@ -12,10 +12,12 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.infopanel.AnnotationPanel;
 import org.janelia.workstation.controller.infopanel.SwcDirAndFileFilter;
 import org.janelia.workstation.controller.infopanel.SwcDirListFilter;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
 /**
@@ -37,22 +39,24 @@ public class ImportSWCAction extends AbstractAction {
 
     private boolean neuronPerRoot = false;
     private AnnotationPanel annotationPanel;
-    private AnnotationModel annotationModel;
+    private TmModelManager model;
+    private NeuronManager neuronManager;
 
-    public ImportSWCAction(boolean neuronPerRoot, AnnotationPanel annotationPanel, AnnotationModel annotationModel) {
+    public ImportSWCAction(boolean neuronPerRoot, AnnotationPanel annotationPanel, NeuronManager neuronManager,
+                           TmModelManager model) {
         this.neuronPerRoot = neuronPerRoot;
         this.annotationPanel = annotationPanel;
-        this.annotationModel = annotationModel;
+        this.model = model;
     }
 
-    public ImportSWCAction(AnnotationPanel annotationPanel, AnnotationModel annotationModel) {
-        this(false, annotationPanel, annotationModel);
+    public ImportSWCAction(AnnotationPanel annotationPanel, NeuronManager neuronManager, TmModelManager  model) {
+        this(false, annotationPanel, neuronManager, model);
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (model.getCurrentWorkspace() == null) {
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "No workspace is open", "Cannot Import", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -99,7 +103,8 @@ public class ImportSWCAction extends AbstractAction {
             // Now, we traverse list above, breaking any we see as
             // having more than one root, into multiple input files.
             for (File infile : rawFileList) {
-                rtnVal.addAll(annotationModel.breakOutByRoots(infile));
+
+                rtnVal.addAll(neuronManager.breakOutByRoots(infile));
             }
         } 
         else {

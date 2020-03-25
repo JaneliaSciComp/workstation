@@ -22,8 +22,8 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.dialogs.NeuronGroupsDialog;
 import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
@@ -75,9 +75,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
  * the call to the back end, usually spinning off a worker thread to do so.
  *
  * this class's events are usually connected to various UI signals, and it
- * typically fires events for AnnotationModel. this class has no
+ * typically fires events for NeuronManager. this class has no
  * responsibilities in notifying UI elements of what's been done; that's handled
- * by events generated at AnnotationModel.
+ * by events generated at NeuronManager.
  */
 {
 
@@ -98,7 +98,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
 
     private File swcDirectory;
-    private AnnotationModel annotationModel;
+    private NeuronManager annotationModel;
 
 
     public boolean isTempOwnershipAdmin() {
@@ -124,7 +124,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
     public AnnotationManager(QuadViewUi quadViewUi, TileServer tileServer, LargeVolumeViewerTranslator lvvTranslator) {
-        this.annotationModel = AnnotationModel.getInstance();
+        this.annotationModel = NeuronManager.getInstance();
         this.quadViewUi = quadViewUi;
         this.tileServer = tileServer;
         this.lvvTranslator = lvvTranslator;
@@ -184,7 +184,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public boolean editsAllowed() {
-        return annotationModel.editsAllowed();
+        return true;
+        //return annotationModel.editsAllowed();
     }
     
     public void deleteSubtreeRequested(Anchor anchor) {
@@ -533,7 +534,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 }
 
                 StopWatch stopwatch = new StopWatch();
-                final TmWorkspace currentWorkspace = AnnotationManager.this.annotationModel.getCurrentWorkspace();
+                final TmWorkspace currentWorkspace = TmModelManager.getInstance().getCurrentWorkspace();
                 activityLog.logAddAnchor(currentWorkspace.getSampleRef().getTargetId(), currentWorkspace.getId(),
                     currentNeuron.getId(), finalLocation);
                 if (parentID == null) {
@@ -567,7 +568,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * a parent and single child that can be connected up unambiguously
      */
     public void deleteLink(final Long neuronID, final Long annotationID) {
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             // dialog?
             return;
         }
@@ -622,7 +623,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * descendants
      */
     public void deleteSubTree(final Long neuronID, final Long annotationID) {
-        if (annotationModel.getCurrentWorkspace() == null || annotationID == null) {
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null || annotationID == null) {
             // dialog?
             return;
         }
@@ -670,7 +671,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * Activity-logged by caller.
      */
     public void moveAnnotation(final Long neuronID, final Long annotationID, final Vec3 micronLocation) {
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             // dialog?
             return;
         }
@@ -1005,7 +1006,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * no unambiguous location to place the new anchor
      */
     public void splitAnchor(final Long neuronID, Long annotationID) {
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             // dialog?
             return;
         }
@@ -1045,7 +1046,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void rerootNeurite(final Long neuronID, final Long newRootAnnotationID) {
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             return;
         }
         
@@ -1076,7 +1077,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void splitNeurite(final Long neuronID, final Long newRootAnnotationID) {
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             return;
         }
         
@@ -1121,7 +1122,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * before the request gets here
      */
     public void addAnchoredPath(final Long neuronID, final TmAnchoredPathEndpoints endpoints, final List<List<Integer>> points) {
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             // dialog?
             return;
         }
@@ -1304,7 +1305,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * create a new neuron in the current workspace, prompting for name
      */
     public void createNeuron() {
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             // dialog?
             return;
         }
@@ -1583,7 +1584,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
 
         // ask the user if they really want a new workspace if one is active
-        final boolean existingWorkspace = annotationModel.getCurrentWorkspace() != null;
+        final boolean existingWorkspace = TmModelManager.getInstance().getCurrentWorkspace() != null;
         if (existingWorkspace) {
             int ans = JOptionPane.showConfirmDialog(
                     ComponentUtil.getLVVMainWindow(),
@@ -1596,7 +1597,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
 
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
-        final String workspaceName = dialog.showForSample(getAnnotationModel().getCurrentSample());
+        final String workspaceName = dialog.showForSample(TmModelManager.getInstance().getCurrentSample());
         
         if (workspaceName == null) {
             log.info("Aborting workspace creation: no valid name was provided by the user");
@@ -1622,7 +1623,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 // Reuse the existing color model 
                 if (existingWorkspace) {
                     workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
-                    annotationModel.saveWorkspace(workspace);
+                    //annotationModel.saveWorkspace(workspace);
                     log.info("Copied existing color model");
                 }
             }
@@ -1644,7 +1645,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void saveWorkspaceCopy() {
 
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
-        final String workspaceName = dialog.showForSample(getAnnotationModel().getCurrentSample());
+        final String workspaceName = dialog.showForSample(TmModelManager.getInstance().getCurrentSample());
         final String assignOwner = dialog.getAssignOwner();
         
         if (workspaceName==null) {
@@ -1652,7 +1653,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        final TmWorkspace workspace = annotationModel.getCurrentWorkspace();
+        final TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
         
         SimpleWorker creator = new SimpleWorker() {
             
@@ -1771,7 +1772,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      */
     public void chooseNeuronColor() {
         // called from annotation panel neuron gear menu "choose neuron style"
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             return;
         }
         if (annotationModel.getCurrentNeuron() == null) {
@@ -1788,7 +1789,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public void chooseNeuronStyle(final TmNeuronMetadata neuron) {
         // called from neuron list, clicking on color swatch
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             return;
         }
         if (neuron == null) {
@@ -1866,7 +1867,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     
     public void toggleSelectedNeurons() {
         
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             return;
         }
         if (annotationModel.getCurrentNeuron() == null) {
@@ -1882,7 +1883,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * as with chooseNeuronStyle, multiple versions allow for multiple entry points
      */
     public void setCurrentNeuronVisibility(boolean visibility) {
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             return;
         }
         if (annotationModel.getCurrentNeuron() == null) {
@@ -1971,7 +1972,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void saveQuadViewColorModel() {
         log.info("saveQuadViewColorModel()");
         try {
-            if (annotationModel.getCurrentWorkspace() == null) {
+            if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
                 presentError("You must create a workspace to be able to save the color model!", "No workspace");
             }
             else {
@@ -1989,7 +1990,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void saveColorModel3d(ImageColorModel colorModel) {
         log.info("saveColorModel3d()");
         try {
-            if (annotationModel.getCurrentWorkspace() == null) {
+            if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
                 presentError("You must create a workspace to be able to save the color model!", "No workspace");
             }
             else {
@@ -2116,7 +2117,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 int imported = 0;
                 int index = 0;
                 int total = swcFiles.size();
-                TmWorkspace workspace = annotationModel.getCurrentWorkspace();
+                TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
                 for (File swcFile : swcFiles) {
                     setStatus(swcFile.getName());
                     if (swcFile.exists()) {
@@ -2160,26 +2161,26 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     private Long getSampleID() {
-        if (annotationModel.getCurrentWorkspace() != null) {
-            return annotationModel.getCurrentWorkspace().getSampleRef().getTargetId();
+        if (TmModelManager.getInstance().getCurrentWorkspace() != null) {
+            return TmModelManager.getInstance().getCurrentWorkspace().getSampleRef().getTargetId();
         } else {
             return null;
         }
     }
 
     private Long getWorkspaceID() {
-        return annotationModel.getCurrentWorkspace().getId();
+        return TmModelManager.getInstance().getCurrentWorkspace().getId();
     }
 
     public TmWorkspace getCurrentWorkspace() {
-        return annotationModel.getCurrentWorkspace();
+        return TmModelManager.getInstance().getCurrentWorkspace();
     }
     
     public void saveCurrentWorkspace() throws Exception {
-        annotationModel.saveCurrentWorkspace();
+        //annotationModel.saveCurrentWorkspace();
     }
 
-    public AnnotationModel getAnnotationModel() {
+    public NeuronManager getAnnotationModel() {
         return annotationModel;
     }
 

@@ -50,8 +50,8 @@ public class NeuronModelAdapter implements NeuronModel {
             new BasicNeuronVertexUpdateObservable();
     private final NeuronVertexDeletionObservable membersRemovedObservable = 
             new BasicNeuronVertexDeletionObservable();
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
-    // private AnnotationModel annotationModel;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    // private NeuronManager annotationModel;
     private boolean nonInteractable;
     private boolean visible;
     private boolean userToggleRadius;
@@ -450,11 +450,6 @@ public class NeuronModelAdapter implements NeuronModel {
     }
 
     @Override
-    public void removeReviewedVertices(Collection<NeuronVertex> vertexList) {
-        reviewedNodes.removeAll(vertexList);
-    }
-
-    @Override
     public void clearVertices(Collection<NeuronVertex> vertexList) {
         reviewedNodes.removeAll(vertexList);
     }
@@ -578,7 +573,6 @@ public class NeuronModelAdapter implements NeuronModel {
     // TODO: - implement Edges correctly
     private static class EdgeList implements Collection<NeuronEdge> {
 
-        private Logger logger = LoggerFactory.getLogger(this.getClass());
         private final VertexList vertices;
         // Cache edge set for efficient updates
         private final Set<NeuronEdge> cachedEdges = new HashSet<>();

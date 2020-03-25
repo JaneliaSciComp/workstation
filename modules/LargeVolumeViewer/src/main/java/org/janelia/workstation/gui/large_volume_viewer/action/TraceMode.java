@@ -22,7 +22,6 @@ import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.gui.large_volume_viewer.MenuItemGenerator;
-import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
 import org.janelia.console.viewerapi.dialogs.NeuronGroupsDialog;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
