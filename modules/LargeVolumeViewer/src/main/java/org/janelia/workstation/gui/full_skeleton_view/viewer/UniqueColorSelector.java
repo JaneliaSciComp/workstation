@@ -1,10 +1,10 @@
 package org.janelia.workstation.gui.full_skeleton_view.viewer;
 
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.workstation.controller.infopanel.FilteredAnnotationModel;
-import org.janelia.workstation.controller.model.InterestingAnnotation;
+import org.janelia.workstation.controller.model.annotations.neuron.InterestingAnnotation;
 import org.janelia.workstation.gui.viewer3d.picking.IdCoder;
 import org.janelia.workstation.gui.viewer3d.picking.IdCoderProvider;
 import org.janelia.workstation.gui.viewer3d.picking.RenderedIdPicker;
@@ -48,7 +48,7 @@ public class UniqueColorSelector implements RenderedIdPicker.PixelListener {
         final IdCoder idCoder = idCoderProvider.getIdCoder();
         final int row = idCoder.decode(pixel / IdCoder.RAW_RANGE_DIVISOR);
         //DEBUG System.out.println(String.format("ID or Row=%d", row));
-        final AnnotationModel annoMdl = dataSource.getAnnotationModel();
+        final NeuronManager annoMdl = dataSource.getAnnotationModel();
         final FilteredAnnotationModel filteredModel = annoMdl.getFilteredAnnotationModel();
         if (row < filteredModel.getRowCount()  &&  row >= 0) {
             InterestingAnnotation annotation = filteredModel.getAnnotationAtRow(row);

@@ -14,7 +14,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -33,12 +33,12 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 public class LVVDevPanel extends JPanel {
     // these are useful to have around when testing:
     private AnnotationManager annotationMgr;
-    private AnnotationModel annotationModel;
+    private NeuronManager annotationModel;
     private LargeVolumeViewerTranslator largeVolumeViewerTranslator;
 
     // 2016: new neuron persistance
 
-    public LVVDevPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
+    public LVVDevPanel(AnnotationManager annotationMgr, NeuronManager annotationModel,
                        LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
         this.annotationMgr = annotationMgr;
         this.annotationModel = annotationModel;

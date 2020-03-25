@@ -9,7 +9,7 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseHandler;
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.action.NeuronListProvider;
 import org.janelia.workstation.controller.listener.CameraPanToListener;
 import org.janelia.workstation.controller.listener.NeuronSelectedListener;
@@ -26,7 +26,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -36,7 +35,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
-import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -49,7 +47,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -62,7 +59,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -83,7 +79,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private JComboBox<String> tagMenu;
     private JLabel spatialFilterLabel = new JLabel("Disabled");
 
-    private AnnotationModel annotationModel;
+    private NeuronManager annotationModel;
     private CameraPanToListener panListener;
     private NeuronSelectedListener neuronSelectedListener;
 
@@ -109,7 +105,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     public enum NeuronSortOrder {ALPHABETICAL, CREATIONDATE, OWNER};
     private NeuronSortOrder neuronSortOrder = NeuronSortOrder.CREATIONDATE;
 
-    public WorkspaceNeuronList(AnnotationModel annotationModel, int width) {
+    public WorkspaceNeuronList(NeuronManager annotationModel, int width) {
         this.annotationModel = annotationModel;
         this.width = width;
         setupUI();
@@ -854,7 +850,7 @@ class NeuronTableModel extends AbstractTableModel {
     private NeuronTagMode tagMode = NeuronTagMode.NONE;
 
     // need this to retrieve colors, tags
-    private AnnotationModel annotationModel;
+    private NeuronManager annotationModel;
 
     // icons
     private ImageIcon visibleIcon;
@@ -862,7 +858,7 @@ class NeuronTableModel extends AbstractTableModel {
     private ImageIcon peopleIcon;
     private ImageIcon commonIcon;
 
-    public void setAnnotationModel(AnnotationModel annotationModel) {
+    public void setAnnotationModel(NeuronManager annotationModel) {
         this.annotationModel = annotationModel;
 
         // set up icons; yes, we have multiple storage places for icons...

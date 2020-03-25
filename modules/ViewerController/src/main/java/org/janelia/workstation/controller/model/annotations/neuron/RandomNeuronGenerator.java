@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.model;
+package org.janelia.workstation.controller.model.annotations.neuron;
 
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Rotation3d;

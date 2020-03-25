@@ -1,6 +1,6 @@
 package org.janelia.workstation.controller.infopanel;
 
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 
 import java.io.File;
 import javax.swing.filechooser.FileFilter;
@@ -13,11 +13,11 @@ public class SwcDirAndFileFilter extends FileFilter {
 
     @Override
     public boolean accept(File f) {
-        return f.getName().endsWith(AnnotationModel.STD_SWC_EXTENSION) || f.isDirectory();
+        return f.getName().endsWith(NeuronManager.STD_SWC_EXTENSION) || f.isDirectory();
     }
 
     @Override
     public String getDescription() {
-        return "*" + AnnotationModel.STD_SWC_EXTENSION;
+        return "*" + NeuronManager.STD_SWC_EXTENSION;
     }
 }

@@ -5,7 +5,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.FileBasedRenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ public class FileBasedQuadViewUi extends QuadViewUi {
     /**
      * Create the frame.
      */
-    FileBasedQuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel) {
+    FileBasedQuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, NeuronManager annotationModel) {
         super(parentFrame, initialObject, overrideFrameMenuBar, annotationModel);
     }
 

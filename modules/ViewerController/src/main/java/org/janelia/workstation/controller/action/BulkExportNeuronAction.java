@@ -5,7 +5,8 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import org.janelia.workstation.controller.infopanel.SwcExport;
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmModelManager;
 
 /**
  * this class exports selected neurons from the neuron list; it pops a dialog
@@ -13,10 +14,10 @@ import org.janelia.workstation.controller.AnnotationModel;
  */
 public class BulkExportNeuronAction extends AbstractAction{
 
-    private AnnotationModel annModel;
+    private NeuronManager annModel;
     private NeuronListProvider listProvider;
 
-    public BulkExportNeuronAction(AnnotationModel annModel, NeuronListProvider listProvider) {
+    public BulkExportNeuronAction(NeuronManager annModel, NeuronListProvider listProvider) {
         this.annModel = annModel;
         this.listProvider = listProvider;
 
@@ -27,7 +28,7 @@ public class BulkExportNeuronAction extends AbstractAction{
     @Override
     public void actionPerformed(ActionEvent action) {
         SwcExport export = new SwcExport();
-        SwcExport.ExportParameters params = export.getExportParameters(annModel.getCurrentWorkspace().getName());
+        SwcExport.ExportParameters params = export.getExportParameters(TmModelManager.getInstance().getCurrentWorkspace().getName());
         if ( params != null ) {
            // annMgr.exportNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo(),
              //       listProvider.getNeuronList(), params.getExportNotes());

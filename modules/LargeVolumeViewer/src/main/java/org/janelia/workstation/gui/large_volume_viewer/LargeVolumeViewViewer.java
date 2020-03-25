@@ -25,6 +25,7 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.WindowLocator;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.events.Events;
@@ -33,7 +34,6 @@ import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.SimpleListenableFuture;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
-import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.workstation.controller.network.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -59,7 +59,7 @@ public class LargeVolumeViewViewer extends JPanel {
     private TmWorkspace currentWorkspace;
     private Vec3 initialViewFocus;
     private Double initialZoom;
-    private AnnotationModel annotationModel;
+    private NeuronManager annotationModel;
     private QuadViewUi viewUI;
 
     public LargeVolumeViewViewer() {
@@ -132,14 +132,14 @@ public class LargeVolumeViewViewer extends JPanel {
                                 // trying to diagnose how this could happen...
                                 logger.info("found null annotationModel");
                             }
-                            annotationModel.loadComplete();
+                           // annotationModel.loadComplete();
                         } else {
                             // same as onFailure() (code copied):
                             logger.error("LVVV load failed; volume loader failed");
                             try {
                                 if (annotationModel != null) {
                                     annotationModel.clear();
-                                    annotationModel.loadComplete();
+                                  //  annotationModel.loadComplete();
                                 }
                             }
                             catch (Exception e) {
@@ -154,7 +154,7 @@ public class LargeVolumeViewViewer extends JPanel {
                         try {
                             if (annotationModel!=null) {
                                 annotationModel.clear();
-                                annotationModel.loadComplete();
+                               // annotationModel.loadComplete();
                             }
                         }
                         catch (Exception e) {
@@ -183,9 +183,9 @@ public class LargeVolumeViewViewer extends JPanel {
                             // this is a request to clear the workspace
                             annotationModel.clear();
                         } else if (initialObject instanceof TmSample) {
-                            annotationModel.loadSample((TmSample) initialObject);
+                            //annotationModel.loadSample((TmSample) initialObject);
                         } else if (initialObject instanceof TmWorkspace) {
-                            annotationModel.loadWorkspace((TmWorkspace) initialObject);
+                           // annotationModel.loadWorkspace((TmWorkspace) initialObject);
                         }
                     }
 
@@ -333,8 +333,8 @@ public class LargeVolumeViewViewer extends JPanel {
 
             if ( viewUI == null ) {
                 // trying to diagnost how this can be null later
-                logger.info("instantiating AnnotationModel");
-                annotationModel = new AnnotationModel(sliceSample, currentWorkspace);
+                logger.info("instantiating NeuronManager");
+               // annotationModel = new NeuronManager(sliceSample, currentWorkspace);
                 Events.getInstance().registerOnEventBus(annotationModel);
                 JadeServiceClient jadeServiceClient = new JadeServiceClient(
                         ConsoleProperties.getString("jadestorage.rest.url"),

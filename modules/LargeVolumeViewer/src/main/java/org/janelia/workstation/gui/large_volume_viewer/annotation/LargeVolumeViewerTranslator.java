@@ -3,7 +3,8 @@ package org.janelia.workstation.gui.large_volume_viewer.annotation;
 import Jama.Matrix;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
@@ -42,12 +43,12 @@ import java.util.Map;
 /**
  * Created with IntelliJ IDEA. User: olbrisd Date: 7/9/13 Time: 2:06 PM
  *
- * this class translates between the AnnotationModel, which says things like "I
+ * this class translates between the NeuronManager, which says things like "I
  * changed a neuron", and the LargeVolumeViewer proper, which only wants to be
  * told what to draw. this class *only* handles the viewer, not the other
  * traditional UI elements.
  *
- * this class generally observes the AnnotationModel, while its events go out to
+ * this class generally observes the NeuronManager, while its events go out to
  * various UI elements.
  *
  * unfortunately, this class's comments and methods tends to use "anchor" and
@@ -58,7 +59,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     private Logger logger = LoggerFactory.getLogger(LargeVolumeViewerTranslator.class);
 
-    private AnnotationModel annModel;
+    private NeuronManager annModel;
     private LargeVolumeViewer largeVolumeViewer;
     private SkeletonController skeletonController;
     private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<>();
@@ -99,7 +100,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         neuronStyleChangeListeners.remove(l);
     }
 
-    public LargeVolumeViewerTranslator(AnnotationModel annModel, LargeVolumeViewer largeVolumeViewer) {
+    public LargeVolumeViewerTranslator(NeuronManager annModel, LargeVolumeViewer largeVolumeViewer) {
         this.annModel = annModel;
         this.largeVolumeViewer = largeVolumeViewer;
 
@@ -127,10 +128,10 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
 
     private void setupSignals() {
-        annModel.addGlobalAnnotationListener(this);
-        annModel.addBackgroundAnnotationListener(this);
-        annModel.addTmGeoAnnotationModListener(this);
-        annModel.addTmAnchoredPathListener(this);
+      //  annModel.addGlobalAnnotationListener(this);
+      //  annModel.addBackgroundAnnotationListener(this);
+      //  annModel.addTmGeoAnnotationModListener(this);
+      //  annModel.addTmAnchoredPathListener(this);
     }
 
     /**
@@ -312,7 +313,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             // require knowledge of the sample ID, rather than file path.
             TileFormat tileFormat = getTileFormat();
             if (tileFormat != null) {
-                TmSample sample = annModel.getCurrentSample();
+                TmSample sample = TmModelManager.getInstance().getCurrentSample();
                 if (sample.getMicronToVoxMatrix() != null && sample.getVoxToMicronMatrix() != null) {
                     Matrix micronToVoxMatrix = MatrixUtilities.deserializeMatrix(sample.getMicronToVoxMatrix(), "micronToVoxMatrix");
                     Matrix voxToMicronMatrix = MatrixUtilities.deserializeMatrix(sample.getVoxToMicronMatrix(), "voxToMicronMatrix");
@@ -597,7 +598,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             SimpleWorker sw = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annModel.setSampleMatrices(micronToVoxMatrix, voxToMicronMatrix);
+                    //annModel.setSampleMatrices(micronToVoxMatrix, voxToMicronMatrix);
                 }
 
                 @Override

@@ -2,9 +2,10 @@ package org.janelia.workstation.controller.infopanel;
 
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ComponentUtil;
 import org.janelia.workstation.controller.action.*;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.spatialfilter.NeuronFilterAction;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.controller.listener.ViewStateListener;
@@ -42,11 +43,8 @@ import java.awt.event.ItemListener;
 public class AnnotationPanel extends JPanel
 {
     public static final int SUBPANEL_STD_HEIGHT = 150;
-    
-    // things we get data from
-    // not clear these belong here!  should all info be shuffled through signals and actions?
-    // on the other hand, even if so, we still need them just to hook everything up
-    private AnnotationModel annotationModel;
+    private NeuronManager neuronManager;
+    private TmModelManager annotationModel;
    // private LargeVolumeViewerTranslator largeVolumeViewerTranslator;
 
 
@@ -106,8 +104,9 @@ public class AnnotationPanel extends JPanel
     private JMenu sortSubmenu;
 
 
-    public AnnotationPanel(AnnotationModel annotationModel) {
+    public AnnotationPanel(TmModelManager model, NeuronManager neuronManager) {
         this.annotationModel = annotationModel;
+        this.neuronManager = neuronManager;
 
         setupUI();
         setupSignals();
@@ -117,7 +116,7 @@ public class AnnotationPanel extends JPanel
 
     }
 
-    public AnnotationModel getAnnotationModel() {
+    public TmModelManager getAnnotationModel() {
         return annotationModel;
     }
 
@@ -164,8 +163,8 @@ public class AnnotationPanel extends JPanel
         // outgoing from the model:
         PanelController panelController = new PanelController(this,
                 filteredList, workspaceNeuronList);
-        panelController.registerForEvents(annotationModel);
-        panelController.registerForEvents(workspaceInfoPanel);
+       // panelController.registerForEvents(annotationModel);
+      //  panelController.registerForEvents(workspaceInfoPanel);
     }
 
     private void setupUI() {
@@ -236,13 +235,13 @@ public class AnnotationPanel extends JPanel
         exportAllSWCAction = new NeuronExportAllAction();
         workspaceToolMenu.add(new JMenuItem(exportAllSWCAction));
 
-        importSWCAction = new ImportSWCAction(this, annotationModel);
+        importSWCAction = new ImportSWCAction(this, neuronManager, annotationModel);
         importSWCAction.putValue(Action.NAME, "Import SWC file as one neuron...");
         importSWCAction.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCAction));
 
-        importSWCActionMulti = new ImportSWCAction(true, this, annotationModel);
+        importSWCActionMulti = new ImportSWCAction(true, this, neuronManager, annotationModel);
         importSWCActionMulti.putValue(Action.NAME, "Import SWC file as separate neurons...");
         importSWCActionMulti.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
@@ -303,7 +302,7 @@ public class AnnotationPanel extends JPanel
 
 
         // list of neurons in workspace
-        workspaceNeuronList = new WorkspaceNeuronList(annotationModel, width);
+        workspaceNeuronList = new WorkspaceNeuronList(neuronManager, width);
         add(workspaceNeuronList, cVert);
 
         // testing
@@ -340,21 +339,21 @@ public class AnnotationPanel extends JPanel
         };
         neuronToolMenu.add(hideOtherNeuronsAction);
 
-        bulkChangeNeuronStyleAction = new BulkChangeNeuronColorAction(annotationModel, workspaceNeuronList);
+        bulkChangeNeuronStyleAction = new BulkChangeNeuronColorAction(neuronManager, workspaceNeuronList);
         neuronToolMenu.add(bulkChangeNeuronStyleAction);
         
-        bulkNeuronTagAction = new BulkNeuronTagAction(annotationModel, workspaceNeuronList);
+        bulkNeuronTagAction = new BulkNeuronTagAction(neuronManager, workspaceNeuronList);
         neuronToolMenu.add(bulkNeuronTagAction);
 
-        bulkNeuronOwnerAction = new BulkChangeNeuronOwnerAction(annotationModel, workspaceNeuronList);
+        bulkNeuronOwnerAction = new BulkChangeNeuronOwnerAction(neuronManager, workspaceNeuronList);
         neuronToolMenu.add(bulkNeuronOwnerAction);
 
-        bulkExportNeuronAction = new BulkExportNeuronAction(annotationModel, workspaceNeuronList);
+        bulkExportNeuronAction = new BulkExportNeuronAction(neuronManager, workspaceNeuronList);
         neuronToolMenu.add(bulkExportNeuronAction);
 
         neuronToolMenu.add(new JSeparator());
 
-        neuronFilterAction = new NeuronFilterAction(annotationModel);
+        neuronFilterAction = new NeuronFilterAction(neuronManager);
         neuronFilterAction.putValue(Action.NAME, "Set Neuron Filter Strategy...");
         neuronFilterAction.putValue(Action.SHORT_DESCRIPTION,
                 "Sets the filtering strategy for neuron fragments");
@@ -430,7 +429,7 @@ public class AnnotationPanel extends JPanel
 
         // ----- interesting annotations
         add(Box.createRigidArea(new Dimension(0, 20)), cVert);
-        filteredList = FilteredAnnotationList.createInstance(annotationModel, width);
+        filteredList = FilteredAnnotationList.createInstance(neuronManager, width);
         add(filteredList, cVert);
 
 

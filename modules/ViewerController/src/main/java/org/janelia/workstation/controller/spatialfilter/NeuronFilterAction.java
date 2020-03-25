@@ -1,6 +1,6 @@
 package org.janelia.workstation.controller.spatialfilter;
 
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 
 import java.awt.event.ActionEvent;
 
@@ -11,9 +11,9 @@ import javax.swing.AbstractAction;
  */
 public class NeuronFilterAction extends AbstractAction {
 
-    private AnnotationModel annotationModel;
+    private NeuronManager annotationModel;
 
-    public NeuronFilterAction(AnnotationModel annotationModel) {
+    public NeuronFilterAction(NeuronManager annotationModel) {
         this.annotationModel = annotationModel;
     }
 

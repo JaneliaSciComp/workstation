@@ -1,12 +1,11 @@
 package org.janelia.workstation.controller.action;
 
 import java.awt.event.ActionEvent;
-import java.util.Arrays;
 
 import javax.swing.AbstractAction;
 
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.infopanel.SwcExport;
-import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -32,7 +31,7 @@ public class NeuronExportCurrentAction extends AbstractAction {
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        AnnotationModel annotationModel = AnnotationModel.getInstance();
+        NeuronManager annotationModel = NeuronManager.getInstance();
         TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
         if (currentNeuron == null) {
            // annotationMgr.presentError("You must select a neuron prior to performing this action.", "No neuron selected");

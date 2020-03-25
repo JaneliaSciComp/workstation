@@ -5,11 +5,11 @@ import java.awt.BorderLayout;
 import javax.swing.JPanel;
 
 import org.janelia.workstation.common.gui.support.WindowLocator;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonPanel;
 import org.janelia.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
@@ -44,7 +44,7 @@ public class TopComponentPopulator {
 
         private Skeleton skeleton;
         private NeuronStyleModel neuronStyleModel;
-        private AnnotationModel annotationModel;
+        private NeuronManager annotationModel;
 
         public SkeletonDataSource() {
         }
@@ -71,7 +71,7 @@ public class TopComponentPopulator {
         }
         
         @Override
-        public AnnotationModel getAnnotationModel() {
+        public NeuronManager getAnnotationModel() {
             if (annotationModel == null) {
                 cacheValues();
             }

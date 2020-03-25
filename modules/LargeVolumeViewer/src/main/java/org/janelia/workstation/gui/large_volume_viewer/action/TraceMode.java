@@ -22,8 +22,8 @@ import javax.swing.KeyStroke;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.gui.large_volume_viewer.MenuItemGenerator;
-import org.janelia.workstation.controller.AnnotationModel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
 import org.janelia.console.viewerapi.dialogs.NeuronGroupsDialog;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
@@ -748,7 +748,7 @@ implements MouseMode, KeyListener
 		}
                 
         // if not normal key event, check our group toggle events
-        AnnotationModel annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
+        NeuronManager annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
         Map<String, Map<String,Object>> groupMappings = annModel.getTagGroupMappings();
         Iterator<String> groups = groupMappings.keySet().iterator();
         while (groups.hasNext()) {

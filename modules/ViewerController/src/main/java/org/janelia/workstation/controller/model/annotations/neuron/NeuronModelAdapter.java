@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.model;
+package org.janelia.workstation.controller.model.annotations.neuron;
 
 import java.util.ArrayList;
 import java.util.HashMap;

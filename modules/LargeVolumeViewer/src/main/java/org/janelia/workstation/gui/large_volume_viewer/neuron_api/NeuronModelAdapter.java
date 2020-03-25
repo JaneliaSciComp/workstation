@@ -51,7 +51,7 @@ public class NeuronModelAdapter implements NeuronModel {
     private final NeuronVertexDeletionObservable membersRemovedObservable = 
             new BasicNeuronVertexDeletionObservable();
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    // private AnnotationModel annotationModel;
+    // private NeuronManager annotationModel;
     private boolean nonInteractable;
     private boolean visible;
     private boolean userToggleRadius;

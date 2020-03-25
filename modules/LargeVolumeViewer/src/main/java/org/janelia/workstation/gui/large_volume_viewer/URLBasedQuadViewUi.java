@@ -6,7 +6,7 @@ import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.controller.AnnotationModel;
+import org.janelia.workstation.controller.NeuronManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ public class URLBasedQuadViewUi extends QuadViewUi {
     /**
      * Create the frame.
      */
-    URLBasedQuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel, JadeServiceClient jadeServiceClient) {
+    URLBasedQuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, NeuronManager annotationModel, JadeServiceClient jadeServiceClient) {
         super(parentFrame, initialObject, overrideFrameMenuBar, annotationModel);
         this.jadeServiceClient = jadeServiceClient;
     }

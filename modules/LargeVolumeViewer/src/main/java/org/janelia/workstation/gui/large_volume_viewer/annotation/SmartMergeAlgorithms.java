@@ -118,7 +118,7 @@ public class SmartMergeAlgorithms {
      * given an annotation, find the root annotation for the neurite it's on
      */
     private static TmGeoAnnotation getNeuriteRoot(TmGeoAnnotation ann, TmNeuronMetadata neuron) {
-        // adapted from AnnotationModel
+        // adapted from NeuronManager
         TmGeoAnnotation current = ann;
         TmGeoAnnotation parent = neuron.getParentOf(current);
         while (parent !=null) {
