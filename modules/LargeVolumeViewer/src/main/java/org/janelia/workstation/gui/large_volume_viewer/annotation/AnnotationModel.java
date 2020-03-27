@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import Jama.Matrix;
+import com.google.common.eventbus.Subscribe;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.controller.TransactionManager;
@@ -59,6 +60,8 @@ import org.janelia.model.security.Subject;
 import org.janelia.model.util.MatrixUtilities;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.lifecycle.ApplicationClosing;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionSupport;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -175,13 +178,18 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         neuronSetAdapter.observe(this);
         LargeVolumeViewerTopComponent.getInstance().registerNeurons(neuronSetAdapter);
         
+        Events.getInstance().registerOnEventBus(this);
+    }
+
+    @Subscribe
+    public void systemWillExit(ApplicationClosing event) {
+        exportOutOfSyncNeurons();
+
+        // this report appears to be nonfunctional (I never see any output from it), but
+        //  I'll move it over from the old exit handler which also seemed nonfuctional
+
         // Report performance statistics when program closes
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                addTimer.report();
-            }
-        });
+        addTimer.report();
     }
 
     public boolean editsAllowed() {
@@ -2100,16 +2108,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
     public void exportOutOfSyncNeurons() {
         List<TmNeuronMetadata> neurons = getNeuronList().stream()
-                // testing:
-                .filter(n -> n.getName().contains("1"))
-                // .filter(n -> n.getSyncLevel() >= NeuronTableModel.SYNC_WARN_LEVEL)
+                .filter(n -> n.getSyncLevel() >= NeuronTableModel.SYNC_WARN_LEVEL)
                 .collect(Collectors.toList());
-
-
-        // testing
-
         log.info("found " + neurons.size() + " out-of-sync neurons");
-
 
         if (neurons.size() > 0) {
             String neuronDir = ConsoleProperties.getOutOfSyncNeuronDir();
