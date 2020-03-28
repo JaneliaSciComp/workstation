@@ -666,8 +666,7 @@
                         <publicPackage>org.hibernate.*</publicPackage>
                         <publicPackage>org.janelia.configutils</publicPackage>
                         <publicPackage>org.janelia.filecacheutils</publicPackage>
-                        <publicPackage>org.janelia.model.access.domain</publicPackage>
-                        <publicPackage>org.janelia.model.access.tiledMicroscope</publicPackage>
+                        <publicPackage>org.janelia.model.access.domain.search</publicPackage>
                         <publicPackage>org.janelia.model.domain</publicPackage>
                         <publicPackage>org.janelia.model.domain.compartments</publicPackage>
                         <publicPackage>org.janelia.model.domain.compute</publicPackage>
