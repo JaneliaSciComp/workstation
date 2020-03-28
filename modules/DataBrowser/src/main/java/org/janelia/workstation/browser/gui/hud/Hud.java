@@ -326,24 +326,52 @@ public class Hud extends ModalDialog {
         }
 
         log.info("Using file provider: {}", fileProvider);
-        
         final String imagePath = DomainUtils.getFilepath(fileProvider, typeButton.getImageTypeName());
-        
         this.title = domainObject.getName();
+
         setObjectAndToggleDialog(imagePath, toggle, overrideSettings);
     }
 
-    public void setFilepathAndToggleDialog(String imagePath, final boolean toggle, boolean overrideSettings) {
-        setFilepathAndToggleDialog(imagePath, null, toggle, overrideSettings);
-    }
-    
     /**
-     * Display an image in the lightbox viewer.
+     * Display a file from a HasFiles interface, with UI to select the file type.
+     * @param hasFiles
+     * @param typeName
+     * @param toggle
+     * @param overrideSettings
+     */
+    public void setObjectAndToggleDialog(final HasFiles hasFiles, String typeName,
+                                         final boolean toggle, boolean overrideSettings) {
+
+        log.info("setObjectAndToggleDialog - hasFiles, typeName:{}, toggle:{}, overrideSettings:{}",typeName,toggle,overrideSettings);
+
+        this.fileProvider = hasFiles;
+        log.info("Using file provider: {}", fileProvider);
+        final String imagePath = DomainUtils.getFilepath(fileProvider, typeButton.getImageTypeName());
+
+        String currImageType  = (overrideSettings && typeName!=null) ? typeName : typeButton.getImageTypeName();
+        if (currImageType==null) {
+            currImageType = FileType.FirstAvailable2d.name();
+        }
+
+        typeButton.setResultDescriptor(null);
+        typeButton.setImageTypeName(currImageType);
+        typeButton.populate(domainObject);
+
+        this.imageType = FileType.valueOf(currImageType);
+
+        resultButton.setVisible(false);
+        typeButton.setVisible(true);
+        setObjectAndToggleDialog(imagePath, toggle, overrideSettings);
+    }
+
+    /**
+     * Display just an image with no UI.
      * @param imagePath
      * @param toggle
      * @param overrideSettings
      */
     public void setFilepathAndToggleDialog(String imagePath, String title, final boolean toggle, boolean overrideSettings) {
+        log.info("setObjectAndToggleDialog({},title,toggle={},overrideSettings={})",imagePath,title,toggle,overrideSettings);
         if (title!=null) {
             this.title = title;
         }

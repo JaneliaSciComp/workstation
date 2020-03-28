@@ -142,7 +142,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
                     DomainObject proxyObject = ((GroupPanel)resultPanel).getProxyObject();
                     String filepath = getFilepath(proxyObject);
                     if (filepath != null) {
-                        Hud.getSingletonInstance().setFilepathAndToggleDialog(filepath, toggle, false);
+                        Hud.getSingletonInstance().setFilepathAndToggleDialog(filepath, null, toggle, false);
                     }
                 }
             }

@@ -24,6 +24,7 @@ import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
+import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
 import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.workstation.browser.selection.FileGroupSelectionModel;
@@ -343,6 +344,40 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
         @Override
         protected boolean isMustHaveImage() {
             return false;
+        }
+
+        @Override
+        protected void updateHud(boolean toggle) {
+
+            if (!toggle && !Hud.isInitialized()) return;
+
+            Hud hud = Hud.getSingletonInstance();
+            hud.setKeyListener(keyListener);
+
+            try {
+                List<FileGroup> selected = getSelectedObjects();
+
+                if (selected==null || selected.size() != 1) {
+                    hud.hideDialog();
+                    return;
+                }
+
+                FileGroup fileGroup = selected.get(0);
+                hud.setObjectAndToggleDialog(fileGroup, typeButton.getImageTypeName(), toggle, true);
+            }
+            catch (Exception ex) {
+                FrameworkAccess.handleException(ex);
+            }
+        }
+
+        private List<FileGroup> getSelectedObjects() {
+            try {
+                return selectionModel.getObjects();
+            }
+            catch (Exception e) {
+                FrameworkAccess.handleException(e);
+                return null;
+            }
         }
     }
 

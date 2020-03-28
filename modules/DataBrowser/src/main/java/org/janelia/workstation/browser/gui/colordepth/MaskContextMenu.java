@@ -140,7 +140,7 @@ public class MaskContextMenu extends PopupContextMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("MaskContextMenu.showInLightbox", mask);
-                Hud.getSingletonInstance().setFilepathAndToggleDialog(mask.getFilepath(), true, true);
+                Hud.getSingletonInstance().setFilepathAndToggleDialog(mask.getFilepath(), null, true, true);
             }
         });
 

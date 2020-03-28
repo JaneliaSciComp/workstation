@@ -252,7 +252,8 @@ public class SampleEditorPanel
             protected void updateHud(SelectablePanel resultPanel, boolean toggle) {
                 if (resultPanel instanceof PipelineResultPanel) {
                     ArtifactDescriptor resultDescriptor = ((PipelineResultPanel)resultPanel).getResultDescriptor();
-                    Hud.getSingletonInstance().setObjectAndToggleDialog(sample, resultDescriptor, null, toggle, true);
+                    FileType fileType = FileType.SignalMip;
+                    Hud.getSingletonInstance().setObjectAndToggleDialog(sample, resultDescriptor, fileType.toString(), toggle, true);
                 }
                 else if (resultPanel instanceof ColorDepthPanel) {
                     ArtifactDescriptor resultDescriptor = ((ColorDepthPanel)resultPanel).getResultDescriptor();

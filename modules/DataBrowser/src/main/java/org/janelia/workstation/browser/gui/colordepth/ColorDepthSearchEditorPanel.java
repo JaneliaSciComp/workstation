@@ -138,7 +138,7 @@ public class ColorDepthSearchEditorPanel
             protected void updateHud(SelectablePanel resultPanel, boolean toggle) {
                 if (resultPanel instanceof MaskPanel) {
                     ColorDepthMask mask = ((MaskPanel)resultPanel).getMask();
-                    Hud.getSingletonInstance().setFilepathAndToggleDialog(mask.getFilepath(), toggle, false);
+                    Hud.getSingletonInstance().setFilepathAndToggleDialog(mask.getFilepath(), null, toggle, false);
                 }
             }
             
