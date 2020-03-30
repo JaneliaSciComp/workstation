@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.network;
+package org.janelia.workstation.controller.access;
 
 import java.awt.Color;
 

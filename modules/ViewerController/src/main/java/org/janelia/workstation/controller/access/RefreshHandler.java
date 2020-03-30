@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller;
+package org.janelia.workstation.controller.access;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.janelia.messaging.core.AsyncMessageConsumer;
@@ -8,6 +8,7 @@ import org.janelia.messaging.core.MessageHandler;
 import org.janelia.messaging.core.impl.AsyncMessageConsumerImpl;
 import org.janelia.messaging.utils.MessagingUtils;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.spatialfilter.NeuronMessageConstants;
 import org.janelia.workstation.core.api.AccessManager;

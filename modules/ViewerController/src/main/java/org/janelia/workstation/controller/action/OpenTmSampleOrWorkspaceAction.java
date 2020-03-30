@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.network;
+package org.janelia.workstation.controller.action;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
@@ -58,7 +58,7 @@ public class OpenTmSampleOrWorkspaceAction extends BaseContextualNodeAction {
             return;
         }
 
-        TmViewerManager.getInstance().loadDomainObject(domainObject);
+        TmViewerManager.getInstance().loadProject(domainObject);
 
     }
 }

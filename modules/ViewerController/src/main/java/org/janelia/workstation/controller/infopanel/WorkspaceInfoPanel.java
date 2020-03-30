@@ -10,7 +10,7 @@ import javax.swing.JPanel;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.controller.network.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
 

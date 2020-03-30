@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.network;
+package org.janelia.workstation.controller.action;
 
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;

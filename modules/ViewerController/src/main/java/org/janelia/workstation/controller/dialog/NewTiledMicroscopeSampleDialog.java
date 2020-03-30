@@ -18,7 +18,7 @@ import javax.swing.JTextField;
 import org.apache.commons.lang.StringUtils;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.controller.network.SaveTiledMicroscopeSampleAction;
+import org.janelia.workstation.controller.action.SaveTiledMicroscopeSampleAction;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.jdesktop.swingx.VerticalLayout;
 
