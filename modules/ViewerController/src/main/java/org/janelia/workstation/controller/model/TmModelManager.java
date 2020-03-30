@@ -6,10 +6,10 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.MatrixUtilities;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
-import org.janelia.workstation.controller.network.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 
 /**
- * This class is just a convenience as a central location to manage references to all the different model
+ * This class is singleton to manage references to all the different model
  * data that TM viewers might need to access.  This includes stuff like Samples, Workspaces, Meshes,
  * Scripts, ViewState, SelectionState.  Having it in one place gives us an easy way to manage performance,
  * provide concurrent-safe data structures, load/unload data, and add integrations with plugins and 3rd party tools.

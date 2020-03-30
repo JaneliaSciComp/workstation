@@ -3,7 +3,7 @@ package org.janelia.workstation.controller.nodes;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.workstation.controller.network.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.openide.nodes.ChildFactory;

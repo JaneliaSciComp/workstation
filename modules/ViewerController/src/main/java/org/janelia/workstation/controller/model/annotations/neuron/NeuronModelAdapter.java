@@ -20,7 +20,7 @@ import org.janelia.workstation.controller.spatialfilter.NeuronMessageConstants;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.controller.network.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 //import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;

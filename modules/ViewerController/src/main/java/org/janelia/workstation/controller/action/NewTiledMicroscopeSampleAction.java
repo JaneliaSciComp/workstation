@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.network;
+package org.janelia.workstation.controller.action;
 
 import org.janelia.workstation.controller.dialog.NewTiledMicroscopeSampleDialog;
 import org.openide.awt.ActionID;
