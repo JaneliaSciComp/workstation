@@ -1,4 +1,4 @@
-// 8.12
+// 8.13
 
 Data Browser
 * Fixed issue with selecting post-processing results for gen1 samples
@@ -6,3 +6,6 @@ Data Browser
 * Added "View Data Set Settings" as a right-click option for data sets
 * Added "Target Website" as a fly line release option
 * Fixed bug which prevented "Select All" when pressing Enter
+
+Large Volume Viewer
+* Out-of-sync neurons will be saved at LVV or workstation close

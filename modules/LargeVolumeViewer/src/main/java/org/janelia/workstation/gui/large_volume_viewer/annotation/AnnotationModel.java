@@ -3,7 +3,11 @@ package org.janelia.workstation.gui.large_volume_viewer.annotation;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,6 +21,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import javax.swing.SwingUtilities;
 
@@ -26,6 +31,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import Jama.Matrix;
+import com.google.common.eventbus.Subscribe;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
@@ -53,6 +60,8 @@ import org.janelia.model.security.Subject;
 import org.janelia.model.util.MatrixUtilities;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.lifecycle.ApplicationClosing;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionSupport;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -169,13 +178,18 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         neuronSetAdapter.observe(this);
         LargeVolumeViewerTopComponent.getInstance().registerNeurons(neuronSetAdapter);
         
+        Events.getInstance().registerOnEventBus(this);
+    }
+
+    @Subscribe
+    public void systemWillExit(ApplicationClosing event) {
+        exportOutOfSyncNeurons();
+
+        // this report appears to be nonfunctional (I never see any output from it), but
+        //  I'll move it over from the old exit handler which also seemed nonfuctional
+
         // Report performance statistics when program closes
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                addTimer.report();
-            }
-        });
+        addTimer.report();
     }
 
     public boolean editsAllowed() {
@@ -2090,6 +2104,79 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         progress.setProgress(total, total);
         progress.setStatus("Done");
+    }
+
+    public void exportOutOfSyncNeurons() {
+        List<TmNeuronMetadata> neurons = getNeuronList().stream()
+                .filter(n -> n.getSyncLevel() >= NeuronTableModel.SYNC_WARN_LEVEL)
+                .collect(Collectors.toList());
+        log.info("found " + neurons.size() + " out-of-sync neurons");
+
+        if (neurons.size() > 0) {
+            String baseExportDirName = ConsoleProperties.getOutOfSyncNeuronDir();
+            File baseExportDir = new File(baseExportDirName);
+            log.info("exporting " + neurons.size() + " out-of-sync neurons to " + baseExportDirName);
+
+            try {
+                String formatString = "yyyy-MM-dd-HHmm";
+                int formatLength = formatString.length();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatString);
+
+                if (baseExportDir.exists()) {
+                    // clean out old ones; delete anything older than 7 days
+                    try {
+                        for (File f: baseExportDir.listFiles()) {
+                            LocalDateTime createDate = LocalDateTime.parse(f.getName().substring(0, formatLength), formatter);
+                            Duration duration = Duration.between(createDate, LocalDateTime.now());
+                            if (duration.toDays() > 7) {
+                                if (f.isDirectory()) {
+                                    FileUtils.cleanDirectory(f);
+                                }
+                                Files.delete(f.toPath());
+                            }
+                        }
+                    } catch (IOException e) {
+                        log.warn("could not empty directory " + baseExportDirName);
+                        // don't return, though; we'll just keep throwing stuff in there if we can
+                    }
+                } else {
+                    boolean status = baseExportDir.mkdirs();
+                    if (!status) {
+                        log.warn("could not create directory " + baseExportDirName);
+                        return;
+                    }
+                }
+
+                // folder for this export; datetimestamp + workspace name
+                String exportDirName = LocalDateTime.now().format(formatter) + "h - " + getCurrentWorkspace().getName();
+                File exportDir = new File(baseExportDir, exportDirName);
+
+                // finally, export the out-of-sync neurons into that folder
+                File swcFile = new File(exportDir, "out-of-sync-neurons.swc");
+                exportSWCData(swcFile, 0, neurons, true,
+                        new Progress() {
+                            // dummy progress indicator
+                            @Override
+                            public boolean isCancelled() {
+                                return false;
+                            }
+                            @Override
+                            public void setProgress(long l, long l1) {
+                                // does nothing
+                            }
+                            @Override
+                            public void setStatus(String s) {
+                                // does nothing
+                            }
+                        });
+
+            } catch (Exception e) {
+                // do nothing; this is already a last-gasp try to save some data we're
+                //  potentially losing, so failure is an option
+                // plus, there will always be a NullPointerException because things
+                //  are in the process of closing already when this is called
+            }
+        }
     }
 
     public synchronized void importBulkSWCData(final File swcFile, TmWorkspace tmWorkspace) throws Exception {
