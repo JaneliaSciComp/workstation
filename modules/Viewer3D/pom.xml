@@ -98,6 +98,7 @@
                         <publicPackage>org.janelia.workstation.img_3d_loader</publicPackage>
                         <publicPackage>org.janelia.workstation.mesh_loader</publicPackage>
                         <publicPackage>org.janelia.workstation.signal</publicPackage>
+                        <publicPackage>org.janelia.workstation.swc</publicPackage>
                         <publicPackage>org.janelia.workstation.units</publicPackage>
                     </publicPackages>
                 </configuration>
