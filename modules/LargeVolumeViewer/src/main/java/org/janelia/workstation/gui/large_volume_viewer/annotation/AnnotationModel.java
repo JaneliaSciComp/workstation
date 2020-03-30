@@ -2113,19 +2113,19 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         log.info("found " + neurons.size() + " out-of-sync neurons");
 
         if (neurons.size() > 0) {
-            String neuronDir = ConsoleProperties.getOutOfSyncNeuronDir();
-            File exportDir = new File(neuronDir);
-            log.info("exporting " + neurons.size() + " out-of-sync neurons to " + neuronDir);
+            String baseExportDirName = ConsoleProperties.getOutOfSyncNeuronDir();
+            File baseExportDir = new File(baseExportDirName);
+            log.info("exporting " + neurons.size() + " out-of-sync neurons to " + baseExportDirName);
 
             try {
                 String formatString = "yyyy-MM-dd-HHmm";
                 int formatLength = formatString.length();
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formatString);
 
-                if (exportDir.exists()) {
+                if (baseExportDir.exists()) {
                     // clean out old ones; delete anything older than 7 days
                     try {
-                        for (File f: exportDir.listFiles()) {
+                        for (File f: baseExportDir.listFiles()) {
                             LocalDateTime createDate = LocalDateTime.parse(f.getName().substring(0, formatLength), formatter);
                             Duration duration = Duration.between(createDate, LocalDateTime.now());
                             if (duration.toDays() > 7) {
@@ -2136,18 +2136,23 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                             }
                         }
                     } catch (IOException e) {
-                        log.warn("could not empty directory " + neuronDir);
+                        log.warn("could not empty directory " + baseExportDirName);
                         // don't return, though; we'll just keep throwing stuff in there if we can
                     }
                 } else {
-                    boolean status = exportDir.mkdirs();
+                    boolean status = baseExportDir.mkdirs();
                     if (!status) {
-                        log.warn("could not create directory " + neuronDir);
+                        log.warn("could not create directory " + baseExportDirName);
                         return;
                     }
                 }
 
-                File swcFile = new File(exportDir, LocalDateTime.now().format(formatter) + "h.swc");
+                // folder for this export; datetimestamp + workspace name
+                String exportDirName = LocalDateTime.now().format(formatter) + "h - " + getCurrentWorkspace().getName();
+                File exportDir = new File(baseExportDir, exportDirName);
+
+                // finally, export the out-of-sync neurons into that folder
+                File swcFile = new File(exportDir, "out-of-sync-neurons.swc");
                 exportSWCData(swcFile, 0, neurons, true,
                         new Progress() {
                             // dummy progress indicator
