@@ -5,6 +5,7 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.EventBusRegistry;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.eventbus.LoadEvent;
 import org.janelia.workstation.controller.eventbus.WorkspaceEvent;
@@ -55,7 +56,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
             protected void hadSuccess() {
                 LoadEvent event = new LoadEvent(LoadEvent.Type.COMPLETE);
                 event.setSample(sample);
-                TmViewerManager.getInstance().getEventRegistry().get(TmViewerManager.EventBusType.SAMPLEWORKSPACE).post(event);
+                EventBusRegistry.getInstance().getEventRegistry().get(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
                 progress.finish();
             }
 
@@ -171,7 +172,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
             protected void hadSuccess() {
                 // now that data and imagery has been loaded sent out events to refresh the viewers
                 LoadEvent event = new LoadEvent(LoadEvent.Type.COMPLETE);
-                TmViewerManager.getInstance().getEventRegistry().get(TmViewerManager.EventBusType.SAMPLEWORKSPACE).post(event);
+                EventBusRegistry.getInstance().getEventRegistry().get(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
             }
 
             @Override
@@ -188,7 +189,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
         // clear out the current model and send events to viewers to refresh
         WorkspaceEvent event = new WorkspaceEvent();
         event.setEventType(WorkspaceEvent.Type.CLEAR);
-        TmViewerManager.getInstance().getEventRegistry().get(TmViewerManager.EventBusType.SAMPLEWORKSPACE).post(event);
+        EventBusRegistry.getInstance().getEventRegistry().get(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
     }
 
     @Override
