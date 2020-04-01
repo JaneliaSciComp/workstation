@@ -28,22 +28,10 @@ public class TmViewerManager implements GlobalViewerController {
     private static final TmViewerManager instance = new TmViewerManager();
     private TmModelManager modelManager = new TmModelManager();
     private TiledMicroscopeDomainMgr tmDomainMgr;
-    private Map<EventBusType, EventBus> eventRegistry;
     private NeuronManager neuronManager;
     private ProjectInitFacade projectInit;
     private DomainObject currProject;
 
-    public Map<EventBusType, EventBus> getEventRegistry() {
-        return eventRegistry;
-    }
-
-    public void setEventRegistry(Map<EventBusType, EventBus> eventRegistry) {
-        this.eventRegistry = eventRegistry;
-    }
-
-    public enum EventBusType {
-        SAMPLEWORKSPACE, ANNOTATION, VIEWSTATE, SELECTION, IMAGERY, SCENEMANAGEMENT
-    }
     public enum ToolSet {
         NEURON
     }
@@ -53,16 +41,6 @@ public class TmViewerManager implements GlobalViewerController {
     }
 
     public TmViewerManager() {
-        setEventRegistry(new HashMap<>());
-        EventBus sampleWorkspaceBus = new EventBus();
-        getEventRegistry().put(EventBusType.SAMPLEWORKSPACE, sampleWorkspaceBus);
-
-        EventBus annotationBus = new EventBus();
-        getEventRegistry().put(EventBusType.ANNOTATION, annotationBus);
-
-        EventBus viewStateBus = new EventBus();
-        getEventRegistry().put(EventBusType.VIEWSTATE, viewStateBus);
-
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         setNeuronManager(new NeuronManager(modelManager));
     }
@@ -173,10 +151,9 @@ public class TmViewerManager implements GlobalViewerController {
             FrameworkAccess.handleException(error);
         }
         SwingUtilities.invokeLater(() -> {
-            EventBus selectBus = getEventRegistry().get(EventBusType.SELECTION);
-            SelectionEvent evt = new SelectionEvent();
-            evt.setType(SelectionEvent.Type.CLEAR);
-            evt.setCategory(SelectionEvent.Category.NEURON);
+            EventBus selectBus = EventBusRegistry.getInstance().getEventRegistry().get(EventBusRegistry.EventBusType.SELECTION);
+            SelectionEvent evt = new SelectionEvent(SelectionEvent.Type.CLEAR);
+            evt.setCategory(AnnotationCategory.NEURON);
             selectBus.post(evt);
         });
         if (workspace!=null) {
