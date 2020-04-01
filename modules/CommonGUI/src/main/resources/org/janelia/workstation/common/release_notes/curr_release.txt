@@ -7,5 +7,10 @@ Data Browser
 * Added "Target Website" as a fly line release option
 * Fixed bug which prevented "Select All" when pressing Enter
 
+FlyLight Sample Pipeline
+* Post-processing results of samples with 20x Brain/VNC pairs now use the min and max of both images
+* Added a new pipeline for samples with 20x/40x/63x imaging
+* Alignments will no longer produce bridged transformations to older legacy templates (e.g. 2010/2013/2014/2017)
+
 Large Volume Viewer
 * Out-of-sync neurons will be saved at LVV or workstation close
