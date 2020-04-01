@@ -20,12 +20,6 @@ import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 
-/**
- * This is disabled for now, because it was confusing to users. We need to find a different way to
- * make it available.
- *
- * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
- */
 @ActionID(
         category = "Actions",
         id = "SearchHereAction"

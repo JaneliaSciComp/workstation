@@ -6,6 +6,7 @@ Data Browser
 * Added "View Data Set Settings" as a right-click option for data sets
 * Added "Target Website" as a fly line release option
 * Fixed bug which prevented "Select All" when pressing Enter
+* Re-added the "Search Here" function for folders
 
 FlyLight Sample Pipeline
 * Post-processing results of samples with 20x Brain/VNC pairs now use the min and max of both images
