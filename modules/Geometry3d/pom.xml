@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.12</version>
+        <version>8.13</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>Geometry3d</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>geometry3d</artifactId>
-    <version>8.12</version>
+    <version>8.13</version>
     <packaging>nbm</packaging>
 
     <dependencies>
