@@ -15,3 +15,5 @@ FlyLight Sample Pipeline
 
 Large Volume Viewer
 * Out-of-sync neurons will be saved at LVV or workstation close
+* Fixed bug here large neurons that were imported as part of a bulk import failed to import.
+
