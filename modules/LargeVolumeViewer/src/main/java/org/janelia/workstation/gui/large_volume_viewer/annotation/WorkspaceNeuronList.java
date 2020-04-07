@@ -1146,6 +1146,10 @@ class ColorCellRenderer extends JLabel implements TableCellRenderer {
 
 }
 
+/**
+ * change the appearance of out-of-sync neurons; note that this renderer is only
+ * applied to the neuron name column
+ */
 class SyncLevelRenderer extends DefaultTableCellRenderer {
 
     public Component getTableCellRendererComponent(JTable tableData,
@@ -1159,14 +1163,11 @@ class SyncLevelRenderer extends DefaultTableCellRenderer {
         TmNeuronMetadata targetNeuron = ((NeuronTableModel) tableData.getModel()).getNeuronAtRow(modelRow);
 
         if (targetNeuron.getSyncLevel() >= NeuronTableModel.SYNC_WARN_LEVEL) {
+            // note that the out-of-sync formatting is the same for selected and unselected names;
+            //  the selection status of the row can be seen in the other columns, though
             cellComponent.setFont(cellComponent.getFont().deriveFont(Font.ITALIC));
-            if (isSelected) {
-                cellComponent.setForeground(tableData.getBackground());
-                cellComponent.setBackground(tableData.getSelectionBackground());
-            } else {
-                cellComponent.setForeground(tableData.getBackground());
-                cellComponent.setBackground(tableData.getForeground());
-            }
+            cellComponent.setForeground(tableData.getBackground());
+            cellComponent.setBackground(tableData.getForeground());
         } else {
             // default settings
             cellComponent.setFont(cellComponent.getFont().deriveFont(Font.PLAIN));
