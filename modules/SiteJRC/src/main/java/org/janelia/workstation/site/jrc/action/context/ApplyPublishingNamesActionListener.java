@@ -1,46 +1,34 @@
 package org.janelia.workstation.site.jrc.action.context;
 
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.Frame;
-import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-
-import javax.swing.*;
-
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import net.miginfocom.swing.MigLayout;
-import org.janelia.workstation.core.util.Progress;
-
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.workstation.browser.actions.context.ApplyAnnotationAction;
 import org.janelia.workstation.browser.actions.context.ApplyAnnotationActionListener;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.api.web.SageRestClient;
+import org.janelia.workstation.core.util.Progress;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.site.jrc.gui.dialogs.StageForPublishingDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
