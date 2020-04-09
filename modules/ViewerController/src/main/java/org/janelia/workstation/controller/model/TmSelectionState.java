@@ -1,47 +1,62 @@
 package org.janelia.workstation.controller.model;
 
+import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.AnnotationCategory;
+import org.janelia.workstation.controller.eventbus.SelectionEvent;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ *
+ // support the capability to select multiple neurons and multiple annotation points at the same time
+ */
 public class TmSelectionState {
-    private TmWorkspace currWorkspace;
-    private TmSample currSample;
-    private TmNeuronMetadata currNeuron;
-    private List<TmGeoAnnotation> currPoints;
+    private Map<String, List<DomainObject>> selections = new HashMap<>();
+    private AnnotationCategory selectionMode;
+    public enum SelectionCode {
+        PRIMARY, SECONDARY
+    };
 
-    public TmWorkspace getCurrWorkspace() {
-        return currWorkspace;
+    public TmSelectionState() {
+        selections = new HashMap<>();
+        selections.put(SelectionCode.PRIMARY.name(),new CopyOnWriteArrayList());
     }
 
-    public void setCurrWorkspace(TmWorkspace currWorkspace) {
-        this.currWorkspace = currWorkspace;
+    public List<DomainObject> getSelectionGroup(String selectionKey) {
+        return selections.get(selectionKey);
     }
 
-    public TmSample getCurrSample() {
-        return currSample;
+    public void setSelectionGroup(String selectionKey, List<DomainObject> selectionGroup) {
+        selections.put(selectionKey, selectionGroup);
     }
 
-    public void setCurrSample(TmSample currSample) {
-        this.currSample = currSample;
+    public List<DomainObject> getPrimarySelections() {
+        return selections.get(SelectionCode.PRIMARY.name());
     }
 
-    public TmNeuronMetadata getCurrNeuron() {
-        return currNeuron;
+    public DomainObject getCurrentSelection() {
+        List<DomainObject> currentSelections = selections.get(SelectionCode.PRIMARY.name());
+        if (currentSelections.size()==1)
+            return currentSelections.get(0);
+        else
+            return null;
     }
 
-    public void setCurrNeuron(TmNeuronMetadata currNeuron) {
-        this.currNeuron = currNeuron;
+    public void setCurrentSelection(DomainObject selection) {
+        List currentSelections = selections.get(SelectionCode.PRIMARY.name());
+        currentSelections.clear();
+        currentSelections.add(selection);
     }
 
-    public List<TmGeoAnnotation> getCurrPoints() {
-        return currPoints;
-    }
-
-    public void setCurrPoints(List<TmGeoAnnotation> currPoints) {
-        this.currPoints = currPoints;
+    public void clearAllSelections() {
+        selections.clear();
     }
 }

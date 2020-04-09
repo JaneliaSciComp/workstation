@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.eventbus;
+package org.janelia.workstation.controller;
 
 public enum AnnotationCategory {
     NEURON,

@@ -51,6 +51,8 @@ import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
 import org.janelia.workstation.controller.spatialfilter.NeuronMessageConstants;
 import org.janelia.workstation.controller.spatialfilter.NeuronSpatialFilter;
+import org.janelia.workstation.controller.spatialfilter.NeuronUpdates;
+import org.janelia.workstation.controller.tools.NoteExporter;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionSupport;

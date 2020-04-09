@@ -2,11 +2,9 @@ package org.janelia.workstation.controller.eventbus;
 
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.AnnotationCategory;
 
 import java.util.Collection;
-import java.util.List;
 
 public class AnnotationEvent {
     public enum Type {

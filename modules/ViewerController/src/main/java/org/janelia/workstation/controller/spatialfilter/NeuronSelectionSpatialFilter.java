@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.annotation;
+package org.janelia.workstation.controller.spatialfilter;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -7,9 +7,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.geom.BoundingBox3d;
-import org.janelia.workstation.gui.large_volume_viewer.neuron_api.NeuronProximitySpatialIndex;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.core.util.ConsoleProperties;
