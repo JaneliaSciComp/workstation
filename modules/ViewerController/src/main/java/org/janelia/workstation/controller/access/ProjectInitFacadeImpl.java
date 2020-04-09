@@ -107,14 +107,14 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                         // if workspace contains more system-owned fragments than a threshold , enable filter
                         String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
                         boolean applyFilter = false;
-                        modelManager.getCurrentView().setApplyFilter(applyFilter);
+                        modelManager.getCurrentView().setFilter(applyFilter);
                         int nFragments = 0;
                         for (TmNeuronMetadata neuron: manager.getNeurons()) {
                             if (neuron.getOwnerKey().equals(systemNeuron)) {
                                 nFragments += 1;
                                 if (nFragments >= NUMBER_FRAGMENTS_THRESHOLD) {
                                     applyFilter = true;
-                                    modelManager.getCurrentView().setApplyFilter(applyFilter);
+                                    modelManager.getCurrentView().setFilter(applyFilter);
                                     break;
                                 }
                             }
@@ -122,7 +122,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                         log.info("Spatial Filtering applied: {}", applyFilter);
 
                         // if spatial filter is applied, use it to filter neurons
-                        NeuronSpatialFilter neuronFilter = modelManager.getCurrentView().getNeuronFilter();
+                        NeuronSpatialFilter neuronFilter = modelManager.getCurrentView().getSpatialFilter();
                         if (applyFilter) {
                             neuronFilter.initFilter(modelManager.getNeuronDAO().getNeurons());
                         }
@@ -150,7 +150,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
 
                         // Clear neuron selection
                         log.info("Clearing current neuron for workspace {}", currWorkspace.getId());
-                        modelManager.getCurrentSelections().setCurrNeuron(null);
+                        modelManager.getCurrentSelections().setCurrentSelection(null);
                     }
 
                     @Override

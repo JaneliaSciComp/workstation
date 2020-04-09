@@ -2,7 +2,6 @@ package org.janelia.workstation.controller.spatialfilter;
 
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.workstation.controller.NeuronUpdates;
 
 import java.util.Collection;
 import java.util.Set;

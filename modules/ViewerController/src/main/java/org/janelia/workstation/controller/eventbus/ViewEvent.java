@@ -1,12 +1,9 @@
 package org.janelia.workstation.controller.eventbus;
 
-import org.janelia.model.domain.DomainObject;
-import java.util.List;
-
 public class ViewEvent {
 
     public enum Type {
-        SET, RESET, CLOSE;
+        SET, RESET, CLOSE, TRANSLATION, ROTATION, ZOOM, BUFFER
     };
     private Type type;
     private double cameraFocusX;

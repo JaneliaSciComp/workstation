@@ -262,7 +262,7 @@ public class FilteredAnnotationList extends JPanel {
 
         if (currentNeuronCheckbox.isSelected()) {
             // Necessary optimization: only consider current neuron
-            TmNeuronMetadata currentNeuron = TmModelManager.getInstance().getCurrentSelections().getCurrNeuron();
+            TmNeuronMetadata currentNeuron = (TmNeuronMetadata)TmModelManager.getInstance().getCurrentSelections().getCurrentSelection();
             if (currentNeuron!=null) {
                 updateData(currentNeuron);
             }

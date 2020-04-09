@@ -20,13 +20,14 @@ import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 public class TmModelManager {
     private TmSample currentSample;
     private TmWorkspace currentWorkspace;
+    private TmNeuronTagMap currentTagMap;
+
     private TmViewState currentView;
     private TmSelectionState currentSelections;
-    private TmNeuronTagMap currentTagMap;
     private NeuronModel neuronDAO;
     private final TiledMicroscopeDomainMgr tmDomainMgr;
-    private static final TmModelManager instance = new TmModelManager();
 
+    private static final TmModelManager instance = new TmModelManager();
     public static TmModelManager getInstance() {
         return instance;
     }

@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller;
+package org.janelia.workstation.controller.spatialfilter;
 
 import java.util.HashSet;
 import java.util.Set;

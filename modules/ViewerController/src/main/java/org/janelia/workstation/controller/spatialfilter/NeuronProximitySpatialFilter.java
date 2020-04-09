@@ -12,7 +12,6 @@ import java.util.Iterator;
 import com.google.common.collect.Sets;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.workstation.controller.NeuronUpdates;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;

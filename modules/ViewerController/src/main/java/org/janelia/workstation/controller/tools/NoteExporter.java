@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller;
+package org.janelia.workstation.controller.tools;
 
 import java.io.File;
 import java.io.IOException;
