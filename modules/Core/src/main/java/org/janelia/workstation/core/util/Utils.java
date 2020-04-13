@@ -468,6 +468,11 @@ public class Utils {
             throw e;
         }
 
+        if (input == null) {
+            log.error("Remote file stream for {} ({}) is null while trying to copy to {}", standardPath, fileProxy.getFileId(), destination);
+            throw new FileNotFoundException("Could not open " + standardPath);
+        }
+
         FileOutputStream output = new FileOutputStream(destination);
         try {
             final long totalBytesWritten = copy(input, output, length, worker1, estimatedCompressionFactor, hasProgress);

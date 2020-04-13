@@ -30,12 +30,12 @@ import org.slf4j.LoggerFactory;
 public class StorageClientMgr {
 
     private static final Logger LOG = LoggerFactory.getLogger(StorageClientMgr.class);
-    
-    private static final Cache<String, AgentStorageClient> STORAGE_WORKERS_CACHE = CacheBuilder.newBuilder()
+    private static final Consumer<Throwable> NOOP_ERROR_CONN_HANDLER = (t) -> {};
+
+    private final Cache<String, AgentStorageClient> STORAGE_WORKERS_CACHE = CacheBuilder.newBuilder()
             .concurrencyLevel(4)
             .maximumSize(256)
             .build();
-    private static final Consumer<Throwable> NOOP_ERROR_CONN_HANDLER = (t) -> {};
 
     private final HttpClientProxy httpClient;
     private final MasterStorageClient masterStorageClient;
