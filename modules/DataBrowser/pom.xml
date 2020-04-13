@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.13</version>
+        <version>8.14</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>DataBrowser</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>browser</artifactId>
-    <version>8.13</version>
+    <version>8.14</version>
     <packaging>nbm</packaging>
 
     <dependencies>
