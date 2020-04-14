@@ -44,6 +44,7 @@ git tag ${JWVER}
 
 echo "Pushing to Github..."
 git push origin
+git push origin ${JWVER}
 
 echo ""
 echo "Release $JWVER is ready to build"
