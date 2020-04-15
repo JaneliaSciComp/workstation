@@ -48,7 +48,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
             @Override
             protected void doStuff() throws Exception {
                 // move viewUI to ViewerController
-                //success = viewUI.loadData(sliceSample);
+               // success = viewUI.loadData(sliceSample);
                 //volumeLoaded.set(true);
             }
 
@@ -170,7 +170,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
 
             @Override
             protected void hadSuccess() {
-                // now that data and imagery has been loaded sent out events to refresh the viewers
+                // now that data and tileimagery has been loaded sent out events to refresh the viewers
                 LoadEvent event = new LoadEvent(LoadEvent.Type.COMPLETE);
                 EventBusRegistry.getInstance().getEventRegistry().get(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
             }

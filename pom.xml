@@ -552,6 +552,13 @@
                 <version>4.12</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>org.spockframework</groupId>
+                <artifactId>spock-core</artifactId>
+                <version>1.1-groovy-2.4</version>
+                <scope>test</scope>
+            </dependency>
+
 
         </dependencies>
     </dependencyManagement>
@@ -569,14 +576,13 @@
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-all</artifactId>
             <version>2.4.11</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.spockframework</groupId>
             <artifactId>spock-core</artifactId>
             <version>1.1-groovy-2.4</version>
-            <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>
@@ -665,6 +671,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${janeliaws.maven-surefire-plugin.version}</version>
+                    <configuration>
+                        <includes>
+                            <include>*/*Spec.*</include>
+                        </includes>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -783,13 +794,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <useFile>false</useFile>
                     <includes>
-                        <include>**/*Test.java</include>
-                        <include>**/*Spec.java</include>
+                        <include>*/*Spec.*</include>
                     </includes>
-                    <skipTests>true</skipTests>
-                    <trimStackTrace>false</trimStackTrace>
                 </configuration>
             </plugin>
              
@@ -959,7 +966,10 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <skipTests>true</skipTests>
+                            <skipTests>false</skipTests>
+                            <includes>
+                                <include>*/*Spec.*</include>
+                            </includes>
                         </configuration>
                     </plugin>
 

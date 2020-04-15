@@ -4,7 +4,7 @@ import java.awt.event.ActionEvent;
 import java.util.List;
 import javax.swing.AbstractAction;
 import org.janelia.workstation.gui.camera.Camera3d;
-import org.janelia.workstation.gui.large_volume_viewer.TileConsumer;
+import org.janelia.workstation.controller.tileimagery.TileConsumer;
 import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 public class ResetViewAction

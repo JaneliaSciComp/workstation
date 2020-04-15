@@ -8,6 +8,8 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.octree.ZoomLevel;
 import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
+import org.janelia.workstation.controller.tileimagery.TileFormat;
+import org.janelia.workstation.controller.tileimagery.TileIndex;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

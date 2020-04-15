@@ -7,6 +7,7 @@ import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.shader.NumeralShader;
 import org.janelia.workstation.gui.large_volume_viewer.shader.OutlineShader;

@@ -31,7 +31,7 @@ import java.util.prefs.Preferences;
 
 /**
  * Keeps in memory a configurable number of nearby volume tiles.
- * Manages transfer of volume imagery:
+ * Manages transfer of volume tileimagery:
  *   A) from disk/network, 
  *   B) to RAM, 
  *   C) and thence to GPU video memory

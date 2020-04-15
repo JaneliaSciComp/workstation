@@ -3,6 +3,9 @@ package org.janelia.workstation.gui.large_volume_viewer;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
+import org.janelia.workstation.controller.tileimagery.Tile2d;
+import org.janelia.workstation.controller.tileimagery.TileSet;
+import org.janelia.workstation.controller.tileimagery.ViewTileManager;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.shader.OutlineShader;
 import org.janelia.workstation.gui.opengl.GLActor;
