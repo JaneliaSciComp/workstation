@@ -48,6 +48,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewer3d</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.janelia.jacs-messaging</groupId>
             <artifactId>jacs-messaging-core</artifactId>
             <exclusions>
@@ -125,8 +130,24 @@
             <artifactId>org-netbeans-libs-junit4</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewer3d</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewer3d</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewer3d</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewer3d</artifactId>
+        </dependency>
 
-        
+
     </dependencies>
 
     <build>

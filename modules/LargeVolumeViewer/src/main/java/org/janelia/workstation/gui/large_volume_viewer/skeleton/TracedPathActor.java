@@ -3,11 +3,11 @@ package org.janelia.workstation.gui.large_volume_viewer.skeleton;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.geom.BoundingBox3d;
-import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.workstation.tracing.SegmentIndex;
-import org.janelia.workstation.tracing.VoxelPosition;
+import org.janelia.workstation.controller.tileimagery.VoxelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

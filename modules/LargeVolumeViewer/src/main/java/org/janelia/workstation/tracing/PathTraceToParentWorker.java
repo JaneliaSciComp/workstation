@@ -1,12 +1,13 @@
 package org.janelia.workstation.tracing;
 
-import org.janelia.workstation.geom.CoordinateAxis;
-import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.octree.ZoomLevel;
-import org.janelia.workstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.octree.ZoomLevel;
+import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
+import org.janelia.workstation.controller.tileimagery.VoxelPosition;
 import org.janelia.workstation.core.workers.BackgroundWorker;
-import org.janelia.workstation.gui.large_volume_viewer.Subvolume;
-import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.workstation.controller.tileimagery.Subvolume;
+import org.janelia.workstation.controller.tileimagery.TileFormat;
 
 import java.util.ArrayList;
 import java.util.Collection;

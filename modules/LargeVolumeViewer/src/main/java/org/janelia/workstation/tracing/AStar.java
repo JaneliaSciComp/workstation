@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import org.janelia.workstation.gui.large_volume_viewer.Subvolume;
-import org.janelia.workstation.octree.ZoomLevel;
-import org.janelia.workstation.octree.ZoomedVoxelIndex;
+import org.janelia.workstation.controller.tileimagery.Subvolume;
+import org.janelia.it.jacs.shared.octree.ZoomLevel;
+import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
 
 import com.google.common.collect.Lists;
-import org.janelia.workstation.raster.VoxelIndex;
+import org.janelia.workstation.controller.tileimagery.raster.VoxelIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

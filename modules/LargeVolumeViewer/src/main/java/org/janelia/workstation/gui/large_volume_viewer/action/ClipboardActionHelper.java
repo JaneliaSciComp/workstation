@@ -5,12 +5,12 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.nio.file.Path;
 
-import org.janelia.workstation.geom.CoordinateAxis;
-import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.gui.large_volume_viewer.FileBasedOctreeMetadataSniffer;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.controller.tileimagery.FileBasedOctreeMetadataSniffer;
 import org.janelia.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
-import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
+import org.janelia.workstation.controller.tileimagery.TileFormat;
+import org.janelia.workstation.controller.tileimagery.TileIndex;
 import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
