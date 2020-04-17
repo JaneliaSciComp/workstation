@@ -41,14 +41,24 @@ public class ApplyAnnotationActionListener implements ActionListener {
     private final static Logger log = LoggerFactory.getLogger(ApplyAnnotationActionListener.class);
 
     private Collection<OntologyTerm> ontologyTerms;
-    private boolean isDuplicateAnnotationAllowed;
+    private final boolean isDuplicateAnnotationAllowed;
+    private final boolean overrideExisting;
 
     public ApplyAnnotationActionListener() {
         this(new ArrayList<>());
     }
 
+    public ApplyAnnotationActionListener(boolean overrideExisting) {
+        this(new ArrayList<>(), overrideExisting);
+    }
+
     public ApplyAnnotationActionListener(Collection<OntologyTerm> ontologyTerms) {
+        this(ontologyTerms, true);
+    }
+
+    public ApplyAnnotationActionListener(Collection<OntologyTerm> ontologyTerms, boolean overrideExisting) {
         this.ontologyTerms = ontologyTerms;
+        this.overrideExisting = overrideExisting;
         this.isDuplicateAnnotationAllowed = BrowserOptions.getInstance().isDuplicateAnnotationAllowed();
     }
 
@@ -167,10 +177,17 @@ public class ApplyAnnotationActionListener implements ActionListener {
             }
 
             if (existingAnnotation!=null) {
-                log.info("Found existing annotation to update: "+existingAnnotation);
+                if (!overrideExisting) {
+                    createdAnnotations.add(existingAnnotation);
+                }
+                else {
+                    log.info("Found existing annotation to update: "+existingAnnotation);
+                    createdAnnotations.add(doAnnotation(domainObject, existingAnnotation, ontologyTerm, value));
+                }
             }
-
-            createdAnnotations.add(doAnnotation(domainObject, existingAnnotation, ontologyTerm, value));
+            else {
+                createdAnnotations.add(doAnnotation(domainObject, null, ontologyTerm, value));
+            }
 
             // Update progress
             if (progress!=null) {

@@ -25,17 +25,16 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Queue;
+import java.util.stream.Collectors;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ApplyPublishingNamesActionListener implements ActionListener {
 
-    private final static Logger log = LoggerFactory.getLogger(ApplyPublishingNamesAction.class);
+    private static final Logger log = LoggerFactory.getLogger(ApplyPublishingNamesAction.class);
     private static final String PUBLICATION_OWNER = "group:workstation_users";
     private static final String PUBLICATION_ONTOLOGY_NAME = "Publication";
     private static final String ANNOTATION_PUBLISHING_NAME = "PublishingName";
@@ -45,13 +44,17 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
     private final Queue<String> noPublishingNamesFound = new LinkedList<>();
     private final Queue<String> manualAnnotationNecessary = new LinkedList<>();
     private final Collection<Sample> samples;
+    private final boolean overrideExisting;
     private final boolean async;
     private final boolean userInteraction;
-    private int numPublishingNamesApplied = 0;
-    private Window parent;
+    private final Window parent;
 
-    public ApplyPublishingNamesActionListener(Collection<Sample> samples, boolean async, boolean userInteraction, Window parent) {
+    private OntologyTerm publishingNameTerm;
+    private int numPublishingNamesApplied = 0;
+
+    public ApplyPublishingNamesActionListener(Collection<Sample> samples, boolean overrideExisting, boolean async, boolean userInteraction, Window parent) {
         this.samples = samples;
+        this.overrideExisting = overrideExisting;
         this.async = async;
         this.userInteraction = userInteraction;
         this.parent = parent;
@@ -74,6 +77,7 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
 
                     @Override
                     protected void doStuff() throws Exception {
+                        loadPublishingTerm();
                         autoAnnotateWherePossible(this);
                     }
 
@@ -94,37 +98,65 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
                 worker.execute();
             }
             else {
-                autoAnnotateWherePossible(null);
-                if (userInteraction) {
-                    continueWithManualAnnotation();
+                try {
+                    loadPublishingTerm();
+                    autoAnnotateWherePossible(null);
+                    if (userInteraction) {
+                        continueWithManualAnnotation();
+                    }
+                }
+                catch (Exception ex) {
+                    FrameworkAccess.handleException(ex);
                 }
             }
 
     }
 
-    private void autoAnnotateWherePossible(Progress progress) {
+    private void loadPublishingTerm() throws Exception {
+        Ontology publicationOntology = getPublicationOntology();
+        publishingNameTerm = getPublishedTerm(publicationOntology, ANNOTATION_PUBLISHING_NAME);
+    }
+
+    private void autoAnnotateWherePossible(Progress progress) throws Exception {
+
+        Set<Long> hasPublishingName = new HashSet<>();
+        if (!overrideExisting) {
+            log.info("Checking for existing publishing names...");
+            DomainModel model = DomainMgr.getDomainMgr().getModel();
+            for (Annotation annotation : model.getAnnotations(DomainUtils.getReferences(samples))) {
+                if (annotation.getKeyTerm().getOntologyTermId().equals(publishingNameTerm.getId())) {
+                    hasPublishingName.add(annotation.getTarget().getTargetId());
+                }
+            }
+        }
 
         final SageRestClient sageClient = DomainMgr.getDomainMgr().getSageClient();
 
         for(String lineName : sampleByLine.keySet()) {
 
-            try {
-                Collection<String> possibleNames = sageClient.getPublishingNames(lineName);
+            // Samples which need a publishing name annotation
+            List<Sample> lineSamples = sampleByLine.get(lineName).stream().filter(s -> !hasPublishingName.contains(s.getId())).collect(Collectors.toList());
 
-                if (possibleNames.isEmpty()) {
-                    log.warn("No publishing names available for '{}'", lineName);
-                    noPublishingNamesFound.add(lineName);
+            if (!lineSamples.isEmpty()) {
+                try {
+                    Collection<String> possibleNames = sageClient.getPublishingNames(lineName);
+                    log.warn("Possible names for {}: {}", lineName, possibleNames);
+
+                    if (possibleNames.isEmpty()) {
+                        noPublishingNamesFound.add(lineName);
+                    }
+                    else if (possibleNames.size() == 1) {
+                        annotatePublishedName(lineSamples, possibleNames.iterator().next(), progress);
+                    }
+                    else {
+                        manualAnnotationNecessary.add(lineName);
+                    }
+
                 }
-                else if (possibleNames.size() == 1) {
-                    annotatePublishedName((List<Sample>)sampleByLine.get(lineName), possibleNames.iterator().next(), progress);
+                catch (Exception e) {
+                    // Handle exceptions here so that one error with the SAGE responder doesn't prevent other images from being annotated
+                    FrameworkAccess.handleException(e);
                 }
-                else {
-                    manualAnnotationNecessary.add(lineName);
-                }
-            }
-            catch (Exception e) {
-                // Handle exceptions here so that one error with the SAGE responder doesn't prevent other images from being annotated
-                FrameworkAccess.handleException(e);
             }
         }
     }
@@ -199,9 +231,7 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
     }
 
     private void annotatePublishedName(List<Sample> samples, String publishedName, Progress progress) throws Exception {
-        Ontology publicationOntology = getPublicationOntology();
-        OntologyTerm publishingNameTerm = getPublishedTerm(publicationOntology, ANNOTATION_PUBLISHING_NAME);
-        final ApplyAnnotationActionListener action = new ApplyAnnotationActionListener();
+        final ApplyAnnotationActionListener action = new ApplyAnnotationActionListener(overrideExisting);
         List<Annotation> annotations = action.setObjectAnnotations(samples, publishingNameTerm, publishedName, progress);
         if (annotations != null) {
             if (annotations.isEmpty()) {
