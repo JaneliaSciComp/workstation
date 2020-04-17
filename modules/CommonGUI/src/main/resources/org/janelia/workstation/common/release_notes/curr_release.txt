@@ -1,6 +1,6 @@
-// 8.14
+// 8.15
 
 Data Browser
-* Fixed bug with converting files for download
-* Added additional LSM attributes at Sample level
-* Added additional facets for Samples and LSMs
+* Fixed bug with UI lockup when reloading in some cases
+* Staging for publishing no longer overrides existing publishing names
+
