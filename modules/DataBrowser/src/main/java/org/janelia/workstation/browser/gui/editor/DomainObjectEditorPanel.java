@@ -83,30 +83,25 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T> extends
             getResultsPanel().setViewerType(state.getListViewerState().getType());
         }
 
-        // Prepare to restore the selection
-        List<Reference> selectedIds = getSelectionModel().getSelectedIds();
-        selectedIds.clear();
-        selectedIds.addAll(state.getSelectedIds());
-        Collection<T> selectedObjects = ClientDomainUtils.getObjectsFromModel(selectedIds, getResultsPanel().getViewer().getImageModel());
-        
         // Restore the page
         getResultsPanel().setCurrPage(state.getPage());
 
         // Prepare to restore viewer state, after the reload
-        Callable<Void> success = new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                if (state.getListViewerState()!=null) {
-                    log.info("State load completed, restoring viewer state {}", state.getListViewerState());
-                    // Restore viewer state
-                    getResultsPanel().getViewer().restoreState(state.getListViewerState());
-                    // Restore selection
-                    if (selectedObjects != null && !selectedObjects.isEmpty()) {
-                        getResultsPanel().getViewer().select(selectedObjects.stream().filter(o -> o != null).collect(Collectors.toList()), true, true, false, true);
-                    }
+        Callable<Void> success = () -> {
+            if (state.getListViewerState()!=null) {
+                log.info("State load completed, restoring viewer state {}", state.getListViewerState());
+                // Restore viewer state
+                getResultsPanel().getViewer().restoreState(state.getListViewerState());
+                // Restore selection
+                List<Reference> selectedIds = getSelectionModel().getSelectedIds();
+                selectedIds.clear();
+                selectedIds.addAll(state.getSelectedIds());
+                Collection<T> selectedObjects = ClientDomainUtils.getObjectsFromModel(selectedIds, getResultsPanel().getViewer().getImageModel());
+                if (selectedObjects != null && !selectedObjects.isEmpty()) {
+                    getResultsPanel().getViewer().select(selectedObjects.stream().filter(o -> o != null).collect(Collectors.toList()), true, true, false, true);
                 }
-                return null;
             }
+            return null;
         };
                 
         if (state.getDomainObjectNode()==null) {
