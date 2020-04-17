@@ -33,9 +33,6 @@ public class LineReleaseDialog extends ModalDialog {
 
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
 
-    private static final String DEFAULT_WEBSITE = "Split GAL4";
-    private static final String[] WEBSITES = {DEFAULT_WEBSITE, "Gen1 MCFO"};
-
     private final LineReleaseListDialog parentDialog;
 
     private JPanel attrPanel;
@@ -111,10 +108,10 @@ public class LineReleaseDialog extends ModalDialog {
         }
 
         DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) websiteComboBox.getModel();
-        for (String website : WEBSITES) {
+        for (String website : LineRelease.TARGET_WEBSITES) {
             model.addElement(website);
         }
-        model.setSelectedItem(DEFAULT_WEBSITE);
+        model.setSelectedItem(LineRelease.TARGET_WEBSITES[0]);
 
         final JLabel websiteLabel = new JLabel("Target Website: ");
         attrPanel.add(websiteLabel, "gap para");
@@ -163,7 +160,7 @@ public class LineReleaseDialog extends ModalDialog {
                         websiteComboBox.setSelectedItem(release.getTargetWebsite());
                     }
                     else {
-                        websiteComboBox.setSelectedItem(DEFAULT_WEBSITE);
+                        websiteComboBox.setSelectedItem(LineRelease.TARGET_WEBSITES[0]);
                     }
 
                     List<String> annotators = release.getAnnotators();

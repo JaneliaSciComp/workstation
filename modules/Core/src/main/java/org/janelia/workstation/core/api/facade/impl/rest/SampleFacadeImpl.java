@@ -128,6 +128,7 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
         release.setReleaseDate(releaseDate);
         release.setLagTimeMonths(lagTimeMonths);
         release.setDataSets(dataSets);
+        release.setTargetWebsite(LineRelease.TARGET_WEBSITES[0]);
 
         query.setDomainObject(release);
         query.setSubjectKey(AccessManager.getSubjectKey());
