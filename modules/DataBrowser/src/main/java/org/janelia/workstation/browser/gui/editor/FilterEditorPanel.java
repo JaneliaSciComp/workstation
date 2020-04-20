@@ -342,6 +342,8 @@ public class FilterEditorPanel
         
         if (filter.getName()==null) {
             filter.setName(DEFAULT_FILTER_NAME);
+            // TODO: Load cached results because this is a generic new search
+
         }
         
         log.debug("loadDomainObject(Filter:{})",filter.getName());
@@ -362,19 +364,13 @@ public class FilterEditorPanel
             configPanel.addTitleComponent(saveAsButton, false, true);
             configPanel.setExpanded(filter.getId()==null);
             
-            refreshSearchResults(isUserDriven, new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    searchBox.requestFocus();
-                    debouncer.success();
-                    return null;
-                }
-            },new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    debouncer.failure();
-                    return null;
-                }
+            refreshSearchResults(isUserDriven, () -> {
+                searchBox.requestFocus();
+                debouncer.success();
+                return null;
+            }, () -> {
+                debouncer.failure();
+                return null;
             });
         }
         catch (Exception e) {
@@ -390,18 +386,12 @@ public class FilterEditorPanel
     
     private void refreshSearchResults(boolean isUserDriven, final Callable<Void> success) {
         refreshDebouncer.queue(success);
-        refreshSearchResults(isUserDriven, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                refreshDebouncer.success();
-                return null;
-            }
-        },new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                refreshDebouncer.failure();
-                return null;
-            }
+        refreshSearchResults(isUserDriven, () -> {
+            refreshDebouncer.success();
+            return null;
+        }, () -> {
+            refreshDebouncer.failure();
+            return null;
         });
     }
     
@@ -410,10 +400,9 @@ public class FilterEditorPanel
         
         String inputFieldValue = searchBox.getText();
         if (!StringUtilsExtra.areEqual(filter.getSearchString(), inputFieldValue)) {
+            filter.setSearchString(inputFieldValue);
             dirty = true;
         }
-        
-        filter.setSearchString(inputFieldValue);
 
         saveButton.setVisible(dirty && filter.getId()!=null && !filter.getName().equals(DEFAULT_FILTER_NAME));
         
@@ -438,15 +427,11 @@ public class FilterEditorPanel
             @Override
             protected void hadSuccess() {
                 try {
-                    resultsPanel.showSearchResults(searchResults, isUserDriven, new Callable<Void>() {
-                        @Override
-                        public Void call() throws Exception {
-                            updateView();
-                            ConcurrentUtils.invokeAndHandleExceptions(success);
-                            ActivityLogHelper.logElapsed("FilterEditorPanel.performSearch", w);
-                            return null;
-                        }
-                        
+                    resultsPanel.showSearchResults(searchResults, isUserDriven, () -> {
+                        updateView();
+                        ConcurrentUtils.invokeAndHandleExceptions(success);
+                        ActivityLogHelper.logElapsed("FilterEditorPanel.performSearch", w);
+                        return null;
                     });
                 }
                 catch (Exception e) {
