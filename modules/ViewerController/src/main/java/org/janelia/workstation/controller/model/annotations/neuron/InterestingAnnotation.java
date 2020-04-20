@@ -1,7 +1,5 @@
 package org.janelia.workstation.controller.model.annotations.neuron;
 
-import org.janelia.workstation.controller.infopanel.AnnotationGeometry;
-
 import java.util.Date;
 
 /**

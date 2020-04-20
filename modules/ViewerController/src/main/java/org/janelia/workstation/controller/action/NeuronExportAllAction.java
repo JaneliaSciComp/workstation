@@ -5,7 +5,6 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import org.janelia.workstation.controller.NeuronManager;
-import org.janelia.workstation.controller.infopanel.SwcExport;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;

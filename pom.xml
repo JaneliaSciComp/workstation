@@ -279,6 +279,13 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- Viewer Info Panel -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>infopanel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- Viewer Controller -->
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
@@ -1120,6 +1127,7 @@
         <module>modules/Viewer3D</module>
         <module>modules/ViewerAPI</module>
         <module>modules/ViewerController</module>
+        <module>modules/ViewerInfoPanel</module>
         <module>modules/GLViewerTools</module>
         <module>modules/Geometry3d</module>
         <module>modules/SceneWindow</module>

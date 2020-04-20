@@ -3,7 +3,7 @@ package org.janelia.workstation.gui.full_skeleton_view.viewer;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
 import org.janelia.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.controller.infopanel.FilteredAnnotationModel;
+import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
 import org.janelia.workstation.controller.model.annotations.neuron.InterestingAnnotation;
 import org.janelia.workstation.gui.viewer3d.picking.IdCoder;
 import org.janelia.workstation.gui.viewer3d.picking.IdCoderProvider;

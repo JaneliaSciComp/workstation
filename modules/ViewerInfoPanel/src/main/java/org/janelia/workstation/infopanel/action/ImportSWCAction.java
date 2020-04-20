@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.action;
+package org.janelia.workstation.infopanel.action;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -13,11 +13,10 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
 import org.janelia.workstation.controller.NeuronManager;
-import org.janelia.workstation.controller.TmViewerManager;
-import org.janelia.workstation.controller.infopanel.AnnotationPanel;
-import org.janelia.workstation.controller.infopanel.SwcDirAndFileFilter;
-import org.janelia.workstation.controller.infopanel.SwcDirListFilter;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.infopanel.AnnotationPanel;
+import org.janelia.workstation.infopanel.SwcDirAndFileFilter;
+import org.janelia.workstation.infopanel.SwcDirListFilter;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
 /**

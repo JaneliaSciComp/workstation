@@ -3,8 +3,6 @@ package org.janelia.workstation.controller.action;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
-
-import org.janelia.workstation.controller.infopanel.SwcExport;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
 
