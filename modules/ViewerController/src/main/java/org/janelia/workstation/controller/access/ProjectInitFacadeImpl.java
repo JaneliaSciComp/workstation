@@ -5,6 +5,7 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.workstation.controller.EventBusRegistry;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.eventbus.LoadEvent;
@@ -12,6 +13,12 @@ import org.janelia.workstation.controller.eventbus.WorkspaceEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.spatialfilter.NeuronSpatialFilter;
+import org.janelia.workstation.controller.tileimagery.FileBasedTileLoader;
+import org.janelia.workstation.controller.tileimagery.TileLoader;
+import org.janelia.workstation.controller.tileimagery.URLBasedTileLoader;
+import org.janelia.workstation.core.api.http.RestJsonClientManager;
+import org.janelia.workstation.core.api.web.JadeServiceClient;
+import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -28,12 +35,14 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
     DomainObject project;
     TmWorkspace workspace;
     TmViewerManager viewerManager;
+    TmModelManager modelManager;
 
     private static final int NUMBER_FRAGMENTS_THRESHOLD = 1000;
 
     public ProjectInitFacadeImpl(DomainObject project) {
         this.project = project;
         viewerManager = TmViewerManager.getInstance();
+        modelManager = TmModelManager.getInstance();
     }
 
     public void loadImagery(TmSample sample) {
@@ -47,9 +56,18 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
 
             @Override
             protected void doStuff() throws Exception {
-                // move viewUI to ViewerController
-               // success = viewUI.loadData(sliceSample);
-                //volumeLoaded.set(true);
+                JadeServiceClient jadeServiceClient = new JadeServiceClient(
+                        ConsoleProperties.getString("jadestorage.rest.url"),
+                        () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
+                );
+                TileLoader loader;
+                if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
+                    loader = new URLBasedTileLoader(jadeServiceClient);
+                } else {
+                    loader = new FileBasedTileLoader(jadeServiceClient);
+                }
+                modelManager.setTileLoader(loader);
+                loader.loadData(sample);
             }
 
             @Override

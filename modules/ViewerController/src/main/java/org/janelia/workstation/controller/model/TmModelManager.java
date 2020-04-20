@@ -7,6 +7,7 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.MatrixUtilities;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.tileimagery.TileLoader;
 
 /**
  * This class is singleton to manage references to all the different model
@@ -26,6 +27,7 @@ public class TmModelManager {
     private TmSelectionState currentSelections;
     private NeuronModel neuronDAO;
     private final TiledMicroscopeDomainMgr tmDomainMgr;
+    private TileLoader tileLoader;
 
     private static final TmModelManager instance = new TmModelManager();
     public static TmModelManager getInstance() {
@@ -111,5 +113,13 @@ public class TmModelManager {
 
     public void setCurrentTagMap(TmNeuronTagMap currentTagMap) {
         this.currentTagMap = currentTagMap;
+    }
+
+    public TileLoader getTileLoader() {
+        return tileLoader;
+    }
+
+    public void setTileLoader(TileLoader tileLoader) {
+        this.tileLoader = tileLoader;
     }
 }

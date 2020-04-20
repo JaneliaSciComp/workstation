@@ -64,6 +64,12 @@
             <artifactId>viewercontroller</artifactId>
         </dependency>
 
+        <!-- Viewer Info Panel -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>infopanel</artifactId>
+        </dependency>
+
         <!-- Large Volume Viewer --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>

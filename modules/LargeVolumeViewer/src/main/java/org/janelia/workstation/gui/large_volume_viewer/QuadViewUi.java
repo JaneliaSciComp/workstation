@@ -59,7 +59,6 @@ import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.workstation.gui.large_volume_viewer.action.*;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.controller.infopanel.AnnotationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.console.viewerapi.components.SpinnerCalculationValue;
@@ -158,7 +157,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     private final NeuronManager annotationModel;
     private final AnnotationManager annotationMgr;
     private final LargeVolumeViewerTranslator largeVolumeViewerTranslator;
-    private AnnotationPanel annotationPanel;
 
     // actions
     private final Action openFolderAction = new OpenFolderAction(largeVolumeViewer.getComponent(), this);
@@ -356,7 +354,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
 
         // Nb: skeleton.anchorMovedSilentSignal intentionally does *not* connect to annotationMgr!
         largeVolumeViewerTranslator.setViewStateListener(quadViewController);
-        annotationPanel.setViewStateListener(quadViewController);
        // annotationModel.setViewStateListener(quadViewController);
 
         // Toggle skeleton actor with v key
@@ -898,8 +895,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         JButton resetColorsButton = new JButton();
         resetColorsButton.setAction(resetColorsAction);
         buttonsPanel.add(resetColorsButton);
-
-        controlsPanel.add(annotationPanel);
 
         JPanel statusBar = new JPanel();
         statusBar.setMaximumSize(new Dimension(32767, 30));
