@@ -49,6 +49,7 @@ public class TmViewerManager implements GlobalViewerController {
     public TmViewerManager() {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         setNeuronManager(new NeuronManager(modelManager));
+        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).register(this);
     }
 
     public NeuronManager getNeuronManager() {
@@ -73,21 +74,21 @@ public class TmViewerManager implements GlobalViewerController {
     public void loadProject(DomainObject project) {
         projectInit = new ProjectInitFacadeImpl(project);
         projectInit.clearViewers();
+        currProject = project;
         if (currProject instanceof TmWorkspace) {
-            projectInit.loadAnnotationData((TmWorkspace)project);
+            projectInit.loadAnnotationData((TmWorkspace)currProject);
         } else {
-            loadImagery((TmSample)project);
+            loadImagery((TmSample)currProject);
         }
     }
 
     // once the data has been loaded
     @Subscribe
     public void dataLoadComplete(LoadEvent dataEvent) {
-        if (dataEvent.getType()!= LoadEvent.Type.METADATA)
+        if (dataEvent.getType()!= LoadEvent.Type.METADATA_COMPLETE)
             return;
         try {
-            TmSample sample = TiledMicroscopeDomainMgr.getDomainMgr().getSample(dataEvent.getWorkspace());
-            loadImagery(sample);
+            loadImagery(dataEvent.getSample());
         } catch (Exception error) {
             FrameworkAccess.handleException(error);
         }
@@ -138,7 +139,7 @@ public class TmViewerManager implements GlobalViewerController {
 
     @Subscribe
     public void loadComplete(LoadEvent event) {
-        if (event.getType()!= LoadEvent.Type.COMPLETE)
+        if (event.getType()!= LoadEvent.Type.PROJECT_COMPLETE)
             return;
         final TmWorkspace workspace = modelManager.getCurrentWorkspace();
         if (workspace==null) {
@@ -157,7 +158,7 @@ public class TmViewerManager implements GlobalViewerController {
             FrameworkAccess.handleException(error);
         }
         SwingUtilities.invokeLater(() -> {
-            EventBus selectBus = EventBusRegistry.getInstance().getEventRegistry().get(EventBusRegistry.EventBusType.SELECTION);
+            EventBus selectBus = EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SELECTION);
             SelectionEvent evt = new SelectionEvent(SelectionEvent.Type.CLEAR);
             evt.setCategory(AnnotationCategory.NEURON);
             selectBus.post(evt);

@@ -72,9 +72,9 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
 
             @Override
             protected void hadSuccess() {
-                LoadEvent event = new LoadEvent(LoadEvent.Type.COMPLETE);
+                LoadEvent event = new LoadEvent(LoadEvent.Type.PROJECT_COMPLETE);
                 event.setSample(sample);
-                EventBusRegistry.getInstance().getEventRegistry().get(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
+                EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
                 progress.finish();
             }
 
@@ -84,6 +84,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 FrameworkAccess.handleException(error);
             }
         };
+        volumeLoader.execute();
     }
 
 
@@ -95,106 +96,95 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
     @Override
     public void loadAnnotationData(TmWorkspace currProject) {
         log.info("loadAnnotationData({})", project);
+        // independently of the image volume load, we load the annotation data:
+        final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading metadata...");
+        workspace = currProject;
         SimpleWorker worker = new SimpleWorker() {
+            TmSample sample;
+
             @Override
             protected void doStuff() throws Exception {
                 TmModelManager modelManager = TmModelManager.getInstance();
-
-                // independently of the image volume load, we load the annotation data:
-                final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading metadata...");
+                sample = TiledMicroscopeDomainMgr.getDomainMgr().getSample(workspace);
                 progress2.start();
                 progress2.setDisplayName("Loading metadata");
                 progress2.switchToIndeterminate();
 
-                SimpleWorker dataLoader = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
+                log.info("Loading workspace {}", currProject.getId());
+                // determine current toolset
+                // TO DO
+                // for now, just assume neuron toolset
 
+                // Neurons need to be loaded en masse from raw data from server.
+                NeuronModel manager = modelManager.getNeuronDAO();
+                log.info("Loading neurons for workspace {}", workspace.getId());
+                manager.loadWorkspaceNeurons(workspace);
 
-                        log.info("Loading workspace {}", currProject.getId());
-                        // determine current toolset
-                        // TO DO
-                        // for now, just assume neuron toolset
-
-                        // Neurons need to be loaded en masse from raw data from server.
-                        NeuronModel manager = modelManager.getNeuronDAO();
-                        TmWorkspace currWorkspace = (TmWorkspace)currProject;
-                        log.info("Loading neurons for workspace {}", currWorkspace.getId());
-                        manager.loadWorkspaceNeurons(currWorkspace);
-
-                        // if workspace contains more system-owned fragments than a threshold , enable filter
-                        String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
-                        boolean applyFilter = false;
-                        modelManager.getCurrentView().setFilter(applyFilter);
-                        int nFragments = 0;
-                        for (TmNeuronMetadata neuron: manager.getNeurons()) {
-                            if (neuron.getOwnerKey().equals(systemNeuron)) {
-                                nFragments += 1;
-                                if (nFragments >= NUMBER_FRAGMENTS_THRESHOLD) {
-                                    applyFilter = true;
-                                    modelManager.getCurrentView().setFilter(applyFilter);
-                                    break;
-                                }
-                            }
+                // if workspace contains more system-owned fragments than a threshold , enable filter
+                String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+                boolean applyFilter = false;
+                modelManager.getCurrentView().setFilter(applyFilter);
+                int nFragments = 0;
+                for (TmNeuronMetadata neuron: manager.getNeurons()) {
+                    if (neuron.getOwnerKey().equals(systemNeuron)) {
+                        nFragments += 1;
+                        if (nFragments >= NUMBER_FRAGMENTS_THRESHOLD) {
+                            applyFilter = true;
+                            modelManager.getCurrentView().setFilter(applyFilter);
+                            break;
                         }
-                        log.info("Spatial Filtering applied: {}", applyFilter);
-
-                        // if spatial filter is applied, use it to filter neurons
-                        NeuronSpatialFilter neuronFilter = modelManager.getCurrentView().getSpatialFilter();
-                        if (applyFilter) {
-                            neuronFilter.initFilter(modelManager.getNeuronDAO().getNeurons());
-                        }
-                        //  fireNeuronSpatialFilterUpdated(applyFilter, neuronFilter);
-
-                        // Create the local tag map for cached access to tags
-                        log.info("Creating tag map for workspace {}", currWorkspace.getId());
-                        TmNeuronTagMap currentTagMap = new TmNeuronTagMap();
-                        modelManager.setCurrentTagMap(currentTagMap);
-                        Collection<TmNeuronMetadata> neuronList;
-                        if (applyFilter) {
-                            neuronList = new ArrayList<>();
-                            for (Long neuronId : neuronFilter.filterNeurons()) {
-                                TmNeuronMetadata neuron = modelManager.getNeuronDAO().getNeuronById(neuronId);
-                                if (neuron != null)
-                                    neuronList.add(neuron);
-                            }
-                        } else
-                            neuronList = modelManager.getNeuronDAO().getNeurons();
-                        for (TmNeuronMetadata tmNeuronMetadata : neuronList) {
-                            for(String tag : tmNeuronMetadata.getTags()) {
-                                currentTagMap.addTag(tag, tmNeuronMetadata);
-                            }
-                        }
-
-                        // Clear neuron selection
-                        log.info("Clearing current neuron for workspace {}", currWorkspace.getId());
-                        modelManager.getCurrentSelections().setCurrentSelection(null);
                     }
+                }
+                log.info("Spatial Filtering applied: {}", applyFilter);
+                modelManager.getCurrentView().init();
 
-                    @Override
-                    protected void hadSuccess() {
-                        log.info("Metadata loading completed");
-                        progress2.finish();
-                    }
+                // if spatial filter is applied, use it to filter neurons
+                NeuronSpatialFilter neuronFilter = modelManager.getCurrentView().getSpatialFilter();
+                if (applyFilter) {
+                    neuronFilter.initFilter(modelManager.getNeuronDAO().getNeurons());
+                }
+                //  fireNeuronSpatialFilterUpdated(applyFilter, neuronFilter);
 
-                    @Override
-                    protected void hadError(Throwable error) {
-                        log.error("workspace loader failed", error);
-                        progress2.finish();
-                        FrameworkAccess.handleException(error);
+                // Create the local tag map for cached access to tags
+                log.info("Creating tag map for workspace {}", workspace.getId());
+                TmNeuronTagMap currentTagMap = new TmNeuronTagMap();
+                modelManager.setCurrentTagMap(currentTagMap);
+                Collection<TmNeuronMetadata> neuronList;
+                if (applyFilter) {
+                    neuronList = new ArrayList<>();
+                    for (Long neuronId : neuronFilter.filterNeurons()) {
+                        TmNeuronMetadata neuron = modelManager.getNeuronDAO().getNeuronById(neuronId);
+                        if (neuron != null)
+                            neuronList.add(neuron);
                     }
-                };
+                } else
+                    neuronList = modelManager.getNeuronDAO().getNeurons();
+                for (TmNeuronMetadata tmNeuronMetadata : neuronList) {
+                    for(String tag : tmNeuronMetadata.getTags()) {
+                        currentTagMap.addTag(tag, tmNeuronMetadata);
+                    }
+                }
+
+                // Clear neuron selection
+                log.info("Clearing current neuron for workspace {}", workspace.getId());
+                modelManager.getCurrentSelections().setCurrentSelection(null);
             }
 
             @Override
             protected void hadSuccess() {
+                log.info("Metadata loading completed");
+                progress2.finish();
                 // now that data and tileimagery has been loaded sent out events to refresh the viewers
-                LoadEvent event = new LoadEvent(LoadEvent.Type.COMPLETE);
-                EventBusRegistry.getInstance().getEventRegistry().get(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
+                LoadEvent event = new LoadEvent(LoadEvent.Type.METADATA_COMPLETE);
+                event.setWorkspace(workspace);
+                event.setSample(sample);
+                EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
             }
 
             @Override
             protected void hadError(Throwable error) {
+                log.error("workspace loader failed", error);
+                progress2.finish();
                 FrameworkAccess.handleException(error);
             }
         };
@@ -207,7 +197,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
         // clear out the current model and send events to viewers to refresh
         WorkspaceEvent event = new WorkspaceEvent();
         event.setEventType(WorkspaceEvent.Type.CLEAR);
-        EventBusRegistry.getInstance().getEventRegistry().get(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
+        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
     }
 
     @Override

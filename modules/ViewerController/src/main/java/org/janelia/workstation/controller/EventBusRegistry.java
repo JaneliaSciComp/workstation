@@ -14,23 +14,22 @@ public class EventBusRegistry {
     }
 
     public EventBusRegistry() {
-        setEventRegistry(new HashMap<>());
+        eventRegistry = new HashMap<>();
         EventBus sampleWorkspaceBus = new EventBus();
-        getEventRegistry().put(EventBusType.SAMPLEWORKSPACE, sampleWorkspaceBus);
+        eventRegistry.put(EventBusType.SAMPLEWORKSPACE, sampleWorkspaceBus);
 
         EventBus annotationBus = new EventBus();
-        getEventRegistry().put(EventBusType.ANNOTATION, annotationBus);
+        eventRegistry.put(EventBusType.ANNOTATION, annotationBus);
 
         EventBus viewStateBus = new EventBus();
-        getEventRegistry().put(EventBusType.VIEWSTATE, viewStateBus);
+        eventRegistry.put(EventBusType.VIEWSTATE, viewStateBus);
+
+        EventBus selectionStateBus = new EventBus();
+        eventRegistry.put(EventBusType.SELECTION, selectionStateBus);
     }
 
-    public Map<EventBusType, EventBus> getEventRegistry() {
-        return eventRegistry;
-    }
-
-    public void setEventRegistry(Map<EventBusType, EventBus> eventRegistry) {
-        this.eventRegistry = eventRegistry;
+    public EventBus getEventRegistry(EventBusType type) {
+        return eventRegistry.get(type);
     }
 
     public enum EventBusType {
