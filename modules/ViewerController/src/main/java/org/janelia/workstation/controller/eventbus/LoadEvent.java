@@ -5,7 +5,7 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
 public class LoadEvent {
     public enum Type {
-        METADATA, COMPLETE;
+        IMAGERY_COMPLETE, METADATA_COMPLETE, PROJECT_COMPLETE;
     };
     private Type type;
     TmWorkspace workspace;
