@@ -11,11 +11,9 @@ H5J is currently compatible with the following tools:
 
 ## Specification
 
-An H5J file is simply a standard HDF5 (Hierarchical Data Format) file with a specific structure designed for wrapping image stacks compressed with H.265. Within the HDF5 structure, the data is divided into multiple data sets, one per channel. Here is an example of the structure for a 2-channel image stack:
+An H5J file is simply a standard [HDF5 (Hierarchical Data Format)](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) file with a specific structure designed for wrapping compressed image stacks. Within the HDF5 structure, the data is divided into multiple data sets, one per channel. Here is an example of the structure for a 2-channel image stack:
 
 ```
-$ h5ls -v -r tile-2627326651758805030.h5j
-Opened "tile-2627326651758805030.h5j" with sec2 driver.
 / (Group)
     Attribute: area scalar
         Type:  5-byte null-padded ASCII string
@@ -87,11 +85,15 @@ Each channel is encoded separately using FFMPEG and stored in a byte array withi
 
 Metadata is encoded as attributes including the image size and voxel size. Each channel data set has a "content_type" attribute which describes its content, usually "signal" or "reference". . 
 
-You can read the metadata using any HDF5-compliant library, but we have also made a [Docker container](https://github.com/JaneliaSciComp/jacs-tools-docker/tree/master/h5j_metadata) available to dump the metadata to JSON. Alternatively, you can install the [HDF5 Command Line Tools](https://support.hdfgroup.org/products/hdf5_tools/#cmd).
+You can read the metadata using any HDF5-compliant library, but we have also made a [Docker container](https://github.com/JaneliaSciComp/jacs-tools-docker/tree/master/h5j_metadata) available to dump the metadata to JSON. Alternatively, you can install the [HDF5 Command Line Tools](https://support.hdfgroup.org/products/hdf5_tools/#cmd) and run the h5ls command. To get the output shown in the example above, try this:
+
+```
+$ h5ls -v -r tile-2627326651758805030.h5j
+```
 
 ## Converting to H5J Using Vaa3D
 
-The Vaa3D implementation of H5J writer can convert any format supported by Vaa3D into an H5J file. It supports many options including per-channel compression. It does support arbitrary metadata, only some basic metadata inferred from the imagery, such as the image size. To write additional metadata, use the Docker container described above.
+The Vaa3D implementation of the H5J writer can convert any format supported by Vaa3D into an H5J file. It supports many options including per-channel compression. It does not support arbitrary metadata, only some basic metadata inferred from the imagery, such as the image size. To write additional metadata to the H5J, use the Docker container described above.
 
 The syntax for running the command line per channel encoder is similar to the other converter modes. The basic syntax looks like:
 ```
@@ -102,20 +104,25 @@ For the codecs mode, the only output file type allowed is h5j, so make sure the 
 
 For the compression of individual channels, the format is the following:
 
+```
 <channels>:<codec>[:<codec options> [<codec options>]]
+```
 
-channels - a 1-based comma separated list
-codec - only two are currently supported, HEVC (lossy), and FFV1(lossless)
-options - vary based on the codec, but they are a string (including quotation marks) of colon separated token=value pairs.
+where:
+* channels:  a 1-based comma separated list
+* codec: only two are currently supported, HEVC (lossy), and FFV1(lossless)
+* options: vary based on the codec, but they are a string (including quotation marks) of colon separated token=value pairs.
 
 Example:
 
+```
 1,2:FFV1 4:HEVC:"crf=2:psy-rd=1.0"
+```
 
 in this example:
-channels 1 and 2 will be encoded lossless using the default parameters
-channel 3 will use the default lossy codec
-channel 4 will be encoded lossy overriding the default value
+channels 1 and 2 will be encoded lossless using the default parameters  
+channel 3 will use the default lossy codec  
+channel 4 will be encoded lossy overriding the default value  
 
 The Vaa3D H5J implementation supports two compression codecs, described below.
 
@@ -135,9 +142,10 @@ The defaults for HEVC are: "crf=15:psy-rd=1.0"
 
 While their are a large amount of variables that can be passed to the HEVC encoder, the crf (Constant Rate Factor) seems to have the largest impact on compression rate. The lower the crf value the closer the output is to a lossless encoding. A value of 0 invokes the lossless HEVC encoder, but in practice we still see a small amount of difference between the compressed version and the original.
 
-The FFmpeg documentation has a minimal overview of the HEVC options at: https://trac.ffmpeg.org/wiki/Encode/H.265. For a complete list of all the possible options for the encoder see: http://x265.readthedocs.org/en/default/cli.html. Please note that beyond the two options listed above, no other options have been tested. By default, we use the 'medium' preset which gives a good balance between compression efficiency, and compression time. The slower settings do result in a couple of percent increase in compression, but at the expense of extremely long compression times. Currently, the preset is not changeable from the command-line.
+The FFmpeg documentation has a [minimal overview of the HEVC options](https://trac.ffmpeg.org/wiki/Encode/H.265). For a complete list of all the possible options for the encoder see http://x265.readthedocs.org/en/default/cli.html. Please note that beyond the two options listed above, no other options have been tested. By default, we use the 'medium' preset which gives a good balance between compression efficiency, and compression time. The slower settings do result in a couple of percent increase in compression, but at the expense of extremely long compression times. Currently, the preset is not changeable from the command-line.
 
 ## Converting to H5J Using Fiji
 
-The [H5J loader plugin](https://github.com/fiji/H5J_Loader_Plugin) is included with the Fiji distribution, but if you want the H5J writer, you'll need to [download it separately](https://github.com/JaneliaSciComp/H5J_Writer_For_Fiji).
+The [H5J loader plugin](https://github.com/fiji/H5J_Loader_Plugin) is included with the Fiji distribution, but if you want the H5J writer, you'll need to [download it separately](https://github.com/JaneliaSciComp/H5J_Writer_For_Fiji) and install it into your Fiji.
+
 
