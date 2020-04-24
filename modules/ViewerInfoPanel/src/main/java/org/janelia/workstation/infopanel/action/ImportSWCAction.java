@@ -14,7 +14,6 @@ import javax.swing.filechooser.FileFilter;
 
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.infopanel.AnnotationPanel;
 import org.janelia.workstation.infopanel.SwcDirAndFileFilter;
 import org.janelia.workstation.infopanel.SwcDirListFilter;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -37,19 +36,18 @@ public class ImportSWCAction extends AbstractAction {
     }
 
     private boolean neuronPerRoot = false;
-    private AnnotationPanel annotationPanel;
     private TmModelManager model;
     private NeuronManager neuronManager;
 
-    public ImportSWCAction(boolean neuronPerRoot, AnnotationPanel annotationPanel, NeuronManager neuronManager,
+    public ImportSWCAction(boolean neuronPerRoot, NeuronManager neuronManager,
                            TmModelManager model) {
         this.neuronPerRoot = neuronPerRoot;
-        this.annotationPanel = annotationPanel;
         this.model = model;
+        this.neuronManager = neuronManager;
     }
 
-    public ImportSWCAction(AnnotationPanel annotationPanel, NeuronManager neuronManager, TmModelManager  model) {
-        this(false, annotationPanel, neuronManager, model);
+    public ImportSWCAction(NeuronManager neuronManager, TmModelManager  model) {
+        this(false, neuronManager, model);
     }
 
     @Override
