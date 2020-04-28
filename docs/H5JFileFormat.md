@@ -1,6 +1,6 @@
 # H5J File Format
 
-H5J is a “visually lossless” file format, developed at Janelia Research Campus, for storing multichannel 3d image stacks e.g. from confocal microscopy. It uses the [H.265 codec](https://en.wikipedia.org/wiki/High_Efficiency_Video_Coding) (a.k.a. HEVC or High Efficiency Video Coding) and differential compression ratios on a per-channel basis to obtain maximum compression while minimizing visually-relevant artifacts. 
+H5J is a “visually lossless” file format, developed at Janelia Research Campus, for storing multichannel 3d image stacks e.g. from confocal microscopy. It supports both 8-bit and 12-bit depth, and uses the [H.265 codec](https://en.wikipedia.org/wiki/High_Efficiency_Video_Coding) (a.k.a. HEVC or High Efficiency Video Coding) and differential compression ratios on a per-channel basis to obtain maximum compression while minimizing visually-relevant artifacts.
 
 H5J is currently compatible with the following tools:
 * [Fiji](https://fiji.sc/) (read/write)
@@ -81,7 +81,7 @@ An H5J file is simply a standard [HDF5 (Hierarchical Data Format)](https://en.wi
 Each channel is encoded separately using FFMPEG and stored in a byte array within a dataset. Each channel is a byte-exact representation of the FFmpeg data as it would reside on the file system. H5J uses the following x256 params:
 * crf=7 - Constant Rate Factor. Controls the tradeoff between compression and image quality. With a setting of 15, the compressed images are "visually lossless" when compared to the original. For images produced by the Janelia Workstation pipeline, we use crf=7 for neuronal signal channels and crf=21 for the reference (e.g. NC82) channel.
 * psy-rd=1.0 - Psyco-Visual Options - This particular value is designed to reduce blurring when the codec detects motion. Since features move from layer to layer, the codec detects that change of position as motion. The value of 1 is a happy medium between to much blur, and introducing visual artifacts.
-* -pix_fmt +yuv444p - The color space for encoding. HEVC only supports a limited number of the variants offered by FFmpeg, and almost all are some variant of the yuv color space. The 444p color space gives us more bits per pixel than the standard mapping, and therefore, reduces quantization errors.
+* -pix_fmt +yuv444p - The color space for encoding. HEVC only supports a limited number of the variants offered by FFmpeg, and almost all are some variant of the yuv color space. The gray12 color space is used for 12-bit H5J, and gives us more bits per pixel than the standard mapping, and therefore, reduces quantization errors.
 
 Metadata is encoded as attributes including the image size and voxel size. Each channel data set has a "content_type" attribute which describes its content, usually "signal" or "reference". . 
 
