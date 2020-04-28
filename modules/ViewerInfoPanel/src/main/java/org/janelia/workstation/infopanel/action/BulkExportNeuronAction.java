@@ -1,9 +1,10 @@
-package org.janelia.workstation.controller.action;
+package org.janelia.workstation.infopanel.action;
 
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.action.SwcExport;
 import org.janelia.workstation.controller.model.TmModelManager;
 
 /**

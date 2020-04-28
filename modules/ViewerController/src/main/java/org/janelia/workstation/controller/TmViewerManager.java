@@ -48,7 +48,7 @@ public class TmViewerManager implements GlobalViewerController {
 
     public TmViewerManager() {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-        setNeuronManager(new NeuronManager(modelManager));
+        setNeuronManager(NeuronManager.getInstance());
         EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).register(this);
     }
 

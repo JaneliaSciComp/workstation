@@ -5,11 +5,10 @@ import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ComponentUtil;
 import org.janelia.workstation.controller.action.*;
-import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.controller.spatialfilter.NeuronFilterAction;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.infopanel.action.ImportSWCAction;
+import org.janelia.workstation.infopanel.action.*;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -53,7 +52,6 @@ public class AnnotationPanel extends JPanel
     private FilteredAnnotationList filteredList;
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
-    private ViewStateListener viewStateListener;
     //private LVVDevPanel lvvDevPanel;
 
     // other UI stuff
@@ -78,7 +76,7 @@ public class AnnotationPanel extends JPanel
     private final Action centerAnnotationAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            viewStateListener.centerNextParent();
+            //viewStateListener.centerNextParent();
         }
     };
     
@@ -121,9 +119,6 @@ public class AnnotationPanel extends JPanel
         return annotationModel;
     }
 
-    public void setViewStateListener(ViewStateListener listener) {
-        this.viewStateListener = listener;        
-    }
     
     public void loadWorkspace(TmWorkspace workspace) {
         if (workspace != null) {
@@ -150,10 +145,10 @@ public class AnnotationPanel extends JPanel
         deleteNeuronAction.fireEnabledChangeEvent();
         //exportAllSWCAction.fireEnabledChangeEvent();
         saveAsAction.fireEnabledChangeEvent();
-        
+
         updateUI();
     }
-    
+
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(width, 0);
@@ -161,8 +156,8 @@ public class AnnotationPanel extends JPanel
 
     private void setupSignals() {
         // outgoing from the model:
-        PanelController panelController = new PanelController(this,
-                filteredList, workspaceNeuronList);
+        //PanelController panelController = new PanelController(this,
+          //      filteredList, workspaceNeuronList);
     }
 
     private void setupUI() {
@@ -300,7 +295,7 @@ public class AnnotationPanel extends JPanel
 
 
         // list of neurons in workspace
-        workspaceNeuronList = new WorkspaceNeuronList(neuronManager, width);
+        workspaceNeuronList = new WorkspaceNeuronList(width);
         add(workspaceNeuronList, cVert);
 
         // testing

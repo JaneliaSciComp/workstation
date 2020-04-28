@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.spatialfilter;
+package org.janelia.workstation.controller.scripts.spatialfilter;
 
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;

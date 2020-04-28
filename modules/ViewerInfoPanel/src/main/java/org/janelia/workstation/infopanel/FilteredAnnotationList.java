@@ -126,7 +126,7 @@ public class FilteredAnnotationList extends JPanel {
         this.width = width;
 
         // set up model & data-related stuff
-        model = annotationModel.getFilteredAnnotationModel();
+        model = new FilteredAnnotationModel();
         setupFilters();
 
         // GUI stuff

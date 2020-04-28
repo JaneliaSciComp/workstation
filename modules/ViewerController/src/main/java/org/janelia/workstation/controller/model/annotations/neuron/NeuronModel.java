@@ -26,17 +26,18 @@ import org.slf4j.LoggerFactory;
 public class NeuronModel {
 
     private static final Logger LOG = LoggerFactory.getLogger(NeuronModel.class);
-    private final NeuronModelAdapter neuronModelAdapter;
-    private final IdSource idSource;
-    private final Map<Long, TmNeuronMetadata> neuronMap = new HashMap<>();
+    private final NeuronModelAdapter neuronModelAdapter = new NeuronModelAdapter();
+    private final IdSource idSource = new IdSource();
+    private Map<Long, TmNeuronMetadata> neuronMap = new HashMap<>();
     private CompletableFuture<Boolean> ownershipRequest;
     private CompletableFuture<TmNeuronMetadata> createNeuronRequest;
-    TmModelManager modelManager;
+    static NeuronModel modelInstance;
 
-    public NeuronModel(TmModelManager modelManager) {
-        this.neuronModelAdapter = new NeuronModelAdapter();
-        this.idSource = new IdSource();
-        this.modelManager = modelManager;
+    static public NeuronModel getInstance() {
+        if (modelInstance==null) {
+            modelInstance = new NeuronModel();
+        }
+        return modelInstance;
     }
 
     public Collection<TmNeuronMetadata> getNeurons() {
@@ -53,6 +54,10 @@ public class NeuronModel {
 
     public TmNeuronMetadata getNeuronById(Long id) {
         return neuronMap.get(id);
+    }
+
+    public void clearMap() {
+        neuronMap = new HashMap<>();
     }
 
     /**

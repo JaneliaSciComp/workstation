@@ -16,7 +16,7 @@ import org.janelia.messaging.core.MessageSender;
 import org.janelia.messaging.core.impl.MessageSenderImpl;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.workstation.controller.spatialfilter.NeuronMessageConstants;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronMessageConstants;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
