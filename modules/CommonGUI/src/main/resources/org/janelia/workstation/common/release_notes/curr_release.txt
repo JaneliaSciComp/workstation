@@ -1,6 +1,7 @@
 // 8.15
 
 Data Browser
+* Cache SOLR search results to improve performance
 * Fixed bug with UI lockup when reloading in some cases
 * Staging for publishing no longer overrides existing publishing names
-
+* Add right-click option to use VVD's NA Plugin for separated neurons
