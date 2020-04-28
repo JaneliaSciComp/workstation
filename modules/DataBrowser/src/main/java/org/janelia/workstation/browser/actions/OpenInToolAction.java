@@ -102,7 +102,6 @@ public class OpenInToolAction extends AbstractAction {
     }
     
     private void openFile(String filepath) {
-        
         try {
             ToolMgr.openFile(FrameworkAccess.getMainFrame(), tool, filepath, mode);
         } 

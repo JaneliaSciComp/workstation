@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Given an entity with a File Path, reveal the path in Finder.
+ * Given a neuron separation, open it using the Neuron Annotator mode of Vaa3d.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -73,7 +73,7 @@ public class OpenInNeuronAnnotatorActionListener implements ActionListener {
                 if (fragment==null) {
                     throw new IllegalStateException("Both fragment and separation were null");
                 }
-                sample = (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
+                sample = DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
                 if (sample != null) {
                     separation = SampleUtils.getNeuronSeparation(sample, fragment);
                 }

@@ -15,6 +15,7 @@ import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.ExportResultsAction;
 import org.janelia.workstation.browser.actions.OpenInNeuronAnnotatorActionListener;
+import org.janelia.workstation.browser.actions.context.OpenInVvdNAPluginActionListener;
 import org.janelia.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.workstation.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.workstation.browser.selection.PipelineResultSelectionEvent;
@@ -84,6 +85,7 @@ public class NeuronSeparationEditorPanel
     private final ConfigPanel configPanel;
     private final DropDownButton resultButton;
     private final JButton openInNAButton;
+    private final JButton openInVVDNAButton;
     private final JButton fragmentSortButton;
     private final JButton editModeButton;
     private final JButton editOkButton;
@@ -140,7 +142,13 @@ public class NeuronSeparationEditorPanel
         openInNAButton.setFocusable(false);
         openInNAButton.setToolTipText("Open the current separation in Neuron Annotator");
         openInNAButton.addActionListener(e -> new OpenInNeuronAnnotatorActionListener(separation).actionPerformed(e));
-        
+
+        openInVVDNAButton = new JButton();
+        openInVVDNAButton.setIcon(Icons.getIcon("vvd16.svg.png"));
+        openInVVDNAButton.setFocusable(false);
+        openInVVDNAButton.setToolTipText("Open the current separation in VVD");
+        openInVVDNAButton.addActionListener(e -> new OpenInVvdNAPluginActionListener(separation).actionPerformed(e));
+
         configPanel = new ConfigPanel(true) {
             @Override
             protected void titleClicked(MouseEvent e) {
@@ -149,6 +157,7 @@ public class NeuronSeparationEditorPanel
         };
         configPanel.addTitleComponent(fragmentSortButton, true, true);
         configPanel.addTitleComponent(openInNAButton, true, true);
+        configPanel.addTitleComponent(openInVVDNAButton, true, true);
         configPanel.addConfigComponent(resultButton);
         configPanel.addConfigComponent(editModeButton);
         configPanel.addConfigComponent(editOkButton);
