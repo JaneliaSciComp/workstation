@@ -155,10 +155,22 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
+                <configuration>
+                    <publicPackages>
+                        <publicPackage>org.janelia.workstation.controller</publicPackage>
+                        <publicPackage>org.janelia.workstation.controller.access</publicPackage>
+                        <publicPackage>org.janelia.workstation.controller.action</publicPackage>
+                        <publicPackage>org.janelia.workstation.controller.dialog</publicPackage>
+                        <publicPackage>org.janelia.workstation.controller.eventbus</publicPackage>
+                        <publicPackage>org.janelia.workstation.controller.listener</publicPackage>
+                        <publicPackage>org.janelia.workstation.controller.model</publicPackage>
+                        <publicPackage>org.janelia.workstation.controller.model.annotations.neuron</publicPackage>
+                        <publicPackage>org.janelia.workstation.controller.nodes</publicPackage>
+                        <publicPackage>org.janelia.workstation.controller.scripts.spatialfilter</publicPackage>
+                    </publicPackages>
+                </configuration>
             </plugin>
-
         </plugins>
-
     </build>
 
 </project>

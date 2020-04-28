@@ -36,7 +36,7 @@ public class TmModelManager {
 
     public TmModelManager() {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-        neuronDAO = new NeuronModel(this);
+        neuronDAO = NeuronModel.getInstance();
         currentView = new TmViewState();
         currentSelections = new TmSelectionState();
     }

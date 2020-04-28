@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.spatialfilter;
+package org.janelia.workstation.controller.scripts.spatialfilter;
 
 /**
  * Created by schauderd on 11/14/17.

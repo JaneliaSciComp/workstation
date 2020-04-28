@@ -40,7 +40,7 @@ public class QuadViewApp extends JFrame {
                             ConsoleProperties.getString("jadestorage.rest.url"),
                             () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
                     );
-                    app.setContentPane(QuadViewUiProvider.createQuadViewUi(app, null, true, new NeuronManager(null), jadeServiceClient));
+                    app.setContentPane(QuadViewUiProvider.createQuadViewUi(app, null, true, NeuronManager.getInstance(), jadeServiceClient));
                     app.setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();

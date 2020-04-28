@@ -12,7 +12,7 @@ import org.janelia.workstation.controller.eventbus.LoadEvent;
 import org.janelia.workstation.controller.eventbus.WorkspaceEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
-import org.janelia.workstation.controller.spatialfilter.NeuronSpatialFilter;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSpatialFilter;
 import org.janelia.workstation.controller.tileimagery.FileBasedTileLoader;
 import org.janelia.workstation.controller.tileimagery.TileLoader;
 import org.janelia.workstation.controller.tileimagery.URLBasedTileLoader;
@@ -24,6 +24,8 @@ import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
+import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +45,11 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
         this.project = project;
         viewerManager = TmViewerManager.getInstance();
         modelManager = TmModelManager.getInstance();
+        TopComponent tc = WindowManager.getDefault().findTopComponent("InfoPanelTopComponent");
+        if (tc != null) {
+            tc.open();
+            tc.requestActive();
+        }
     }
 
     public void loadImagery(TmSample sample) {

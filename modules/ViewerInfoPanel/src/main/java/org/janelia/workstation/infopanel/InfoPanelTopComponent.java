@@ -64,11 +64,9 @@ public final class InfoPanelTopComponent extends TopComponent {
 
 
     // Annotation Panel Layout
-    private JPanel annotationPanel;
+    private AnnotationPanel annotationPanel;
 
     public InfoPanelTopComponent() {
-        annotationPanel = new AnnotationPanel();
-        add (annotationPanel);
         setName(Bundle.CTL_InfoPanelTopComponentTopComponent());
         setToolTipText(Bundle.HINT_InfoPanelTopComponentTopComponent());
 
@@ -89,7 +87,8 @@ public final class InfoPanelTopComponent extends TopComponent {
     
     @Override
     public void componentOpened() {
-
+        annotationPanel = new AnnotationPanel();
+        add (annotationPanel);
     }
 
     @Override

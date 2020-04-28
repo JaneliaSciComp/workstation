@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.spatialfilter;
+package org.janelia.workstation.controller.scripts.spatialfilter;
 
 import org.janelia.workstation.controller.NeuronManager;
 

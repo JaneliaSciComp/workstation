@@ -23,7 +23,7 @@ import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.controller.spatialfilter.SpatialFilter;
+import org.janelia.workstation.controller.scripts.spatialfilter.SpatialFilter;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;

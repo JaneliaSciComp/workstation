@@ -1,12 +1,7 @@
 package org.janelia.workstation.controller.model;
 
-import org.eclipse.jetty.util.ConcurrentHashSet;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.workstation.controller.spatialfilter.NeuronSelectionSpatialFilter;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
 
-import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 

@@ -13,7 +13,7 @@ import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.controller.AnnotationCategory;
 import org.janelia.workstation.controller.EventBusRegistry;
 import org.janelia.workstation.controller.NeuronManager;
-import org.janelia.workstation.controller.action.NeuronListProvider;
+import org.janelia.workstation.infopanel.action.NeuronListProvider;
 import org.janelia.workstation.controller.eventbus.SelectionEvent;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.core.api.AccessManager;
@@ -98,8 +98,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     public enum NeuronSortOrder {ALPHABETICAL, CREATIONDATE, OWNER};
     private NeuronSortOrder neuronSortOrder = NeuronSortOrder.CREATIONDATE;
 
-    public WorkspaceNeuronList(NeuronManager annotationModel, int width) {
-        this.annotationModel = annotationModel;
+    public WorkspaceNeuronList(int width) {
         this.width = width;
         setupUI();
     }
@@ -115,6 +114,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     private void setupUI() {
+        annotationModel = NeuronManager.getInstance();
         setLayout(new GridBagLayout());
 
         // list of neurons
@@ -559,7 +559,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         updateNeuronLabel();
         updateFilteredNeuronList();
     }
-    
+
     private void updateFilteredNeuronList() {
         annotationModel.setCurrentFilteredNeuronList(this.getNeuronList());
     }

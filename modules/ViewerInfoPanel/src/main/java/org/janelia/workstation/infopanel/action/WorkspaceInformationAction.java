@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.action;
+package org.janelia.workstation.infopanel.action;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
@@ -19,7 +19,6 @@ import javax.swing.table.AbstractTableModel;
 import Jama.Matrix;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
-import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.util.MatrixUtilities;

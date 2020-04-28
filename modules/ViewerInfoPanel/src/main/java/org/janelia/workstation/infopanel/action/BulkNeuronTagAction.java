@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.action;
+package org.janelia.workstation.infopanel.action;
 
 import java.awt.event.ActionEvent;
 import java.util.Arrays;

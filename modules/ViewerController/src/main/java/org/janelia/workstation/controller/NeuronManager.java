@@ -49,9 +49,9 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
-import org.janelia.workstation.controller.spatialfilter.NeuronMessageConstants;
-import org.janelia.workstation.controller.spatialfilter.NeuronSpatialFilter;
-import org.janelia.workstation.controller.spatialfilter.NeuronUpdates;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronMessageConstants;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSpatialFilter;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronUpdates;
 import org.janelia.workstation.controller.tools.NoteExporter;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
@@ -135,6 +135,9 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     private FilteredAnnotationModel filteredAnnotationModel;
 
     public static NeuronManager getInstance() {
+        if (annotationModel==null) {
+            annotationModel = new NeuronManager();
+        }
         return annotationModel;
     }
 
@@ -144,8 +147,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         }
     }
 
-    public NeuronManager(TmModelManager modelManager) {
-        this.modelManager = modelManager;
+    public NeuronManager() {
+        this.modelManager = TmModelManager.getInstance();
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
     }
     
@@ -2382,7 +2385,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }*/
 
     public NeuronModel getNeuronManager() {
-        return neuronManager;
+        return NeuronModel.getInstance();
     }
     
     public boolean getSelectMode() {
