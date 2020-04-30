@@ -5,3 +5,6 @@ Data Browser
 * Fixed bug with UI lockup when reloading in some cases
 * Staging for publishing no longer overrides existing publishing names
 * Add right-click option to use VVD's NA Plugin for separated neurons
+
+Large Volume Viewer
+* Fixed issue with group permissions affecting workspace neuron visibility
