@@ -42,11 +42,11 @@ public class PanelController {
     }
     
     public void registerForEvents() {
+        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).register(this);
         EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.ANNOTATION).register(this);
         EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SELECTION).register(this);
     }
 
-    @Subscribe
     public void workspaceUnloaded(LoadEvent loadEvent) {
         annotationPanel.loadWorkspace(null);
         filteredAnnotationList.loadWorkspace(null);

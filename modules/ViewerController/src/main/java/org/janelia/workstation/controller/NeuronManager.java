@@ -150,6 +150,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public NeuronManager() {
         this.modelManager = TmModelManager.getInstance();
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+        this.neuronManager = NeuronModel.getInstance();
     }
     
     @Override

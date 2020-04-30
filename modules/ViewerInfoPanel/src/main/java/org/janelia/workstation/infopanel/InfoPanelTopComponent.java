@@ -70,6 +70,10 @@ public final class InfoPanelTopComponent extends TopComponent {
         setName(Bundle.CTL_InfoPanelTopComponentTopComponent());
         setToolTipText(Bundle.HINT_InfoPanelTopComponentTopComponent());
 
+        setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+        annotationPanel = new AnnotationPanel();
+        add (annotationPanel);
+
     }
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
@@ -87,16 +91,11 @@ public final class InfoPanelTopComponent extends TopComponent {
     
     @Override
     public void componentOpened() {
-        annotationPanel = new AnnotationPanel();
-        add (annotationPanel);
+
     }
 
     @Override
     public void componentClosed() {
     }
 
-    private void setupUI() {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-    }
 }
