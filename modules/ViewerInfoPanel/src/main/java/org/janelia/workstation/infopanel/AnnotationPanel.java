@@ -98,6 +98,7 @@ public class AnnotationPanel extends JPanel
     private AbstractAction bulkNeuronTagAction;
     private AbstractAction bulkNeuronOwnerAction;
     private AbstractAction bulkExportNeuronAction;
+    PanelController panelController;
     
 
     private JMenu sortSubmenu;
@@ -108,10 +109,8 @@ public class AnnotationPanel extends JPanel
         this.neuronManager = NeuronManager.getInstance();
 
         setupUI();
-        setupSignals();
-
-        // testing; add a border so I can visualize size vs. alignment problems:
-        // showOutline(this);
+        panelController = new PanelController(this,
+                      filteredList, workspaceNeuronList);
 
     }
 
@@ -152,12 +151,6 @@ public class AnnotationPanel extends JPanel
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(width, 0);
-    }
-
-    private void setupSignals() {
-        // outgoing from the model:
-        //PanelController panelController = new PanelController(this,
-          //      filteredList, workspaceNeuronList);
     }
 
     private void setupUI() {

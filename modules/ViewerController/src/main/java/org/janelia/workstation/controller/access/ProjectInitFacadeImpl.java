@@ -81,6 +81,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
             protected void hadSuccess() {
                 LoadEvent event = new LoadEvent(LoadEvent.Type.PROJECT_COMPLETE);
                 event.setSample(sample);
+                event.setWorkspace(workspace);
                 EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
                 progress.finish();
             }
