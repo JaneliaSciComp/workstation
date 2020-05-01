@@ -45,14 +45,11 @@ public class AnnotationPanel extends JPanel
     public static final int SUBPANEL_STD_HEIGHT = 150;
     private NeuronManager neuronManager;
     private TmModelManager annotationModel;
-   // private LargeVolumeViewerTranslator largeVolumeViewerTranslator;
-
 
     // UI components
     private FilteredAnnotationList filteredList;
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
-    //private LVVDevPanel lvvDevPanel;
 
     // other UI stuff
     private static final int width = 250;
@@ -110,7 +107,7 @@ public class AnnotationPanel extends JPanel
 
         setupUI();
         panelController = new PanelController(this,
-                      filteredList, workspaceNeuronList);
+                      filteredList, workspaceNeuronList, workspaceInfoPanel);
 
     }
 
@@ -130,8 +127,8 @@ public class AnnotationPanel extends JPanel
                 //annotationMgr.editsAllowed();
         automaticRefinementMenuItem.setEnabled(enabled);
         automaticTracingMenuItem.setEnabled(enabled);
-        //importSWCAction.setEnabled(enabled);
-       // importSWCActionMulti.setEnabled(enabled);
+        importSWCAction.setEnabled(enabled);
+        importSWCActionMulti.setEnabled(enabled);
         saveColorModelAction.setEnabled(enabled);
         bulkNeuronTagAction.setEnabled(enabled);
         bulkChangeNeuronStyleAction.setEnabled(enabled);
@@ -139,12 +136,12 @@ public class AnnotationPanel extends JPanel
         showAllNeuronsAction.setEnabled(enabled);
         hideAllNeuronsAction.setEnabled(enabled);
         sortSubmenu.setEnabled(enabled);
-        // These actions override isEnabled, but they still need to be set in order to fire the right updates
-        createNeuronAction.fireEnabledChangeEvent();
-        deleteNeuronAction.fireEnabledChangeEvent();
-        //exportAllSWCAction.fireEnabledChangeEvent();
-        saveAsAction.fireEnabledChangeEvent();
 
+        // These actions override isEnabled, but they still need to be set in order to fire the right updates
+        //createNeuronAction.fireEnabledChangeEvent();
+        //deleteNeuronAction.fireEnabledChangeEvent();
+        //exportAllSWCAction.fireEnabledChangeEvent();
+        //saveAsAction.fireEnabledChangeEvent();
         updateUI();
     }
 
@@ -167,9 +164,6 @@ public class AnnotationPanel extends JPanel
         cTop.weightx = 1.0;
         cTop.weighty = 0.0;
         add(workspaceInfoPanel, cTop);
-
-        // testing
-        // showOutline(workspaceInfoPanel, Color.red);
 
         // I want the rest of the components to stack vertically;
         //  components should fill or align left as appropriate
@@ -236,8 +230,7 @@ public class AnnotationPanel extends JPanel
         saveColorModelAction = new AbstractAction("Save color model") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-
-                //annotationMgr.saveQuadViewColorModel();
+                CommonActions.saveQuadViewColorModel();
             }
         };
         workspaceToolMenu.add(new JMenuItem(saveColorModelAction));
@@ -290,9 +283,6 @@ public class AnnotationPanel extends JPanel
         // list of neurons in workspace
         workspaceNeuronList = new WorkspaceNeuronList(width);
         add(workspaceNeuronList, cVert);
-
-        // testing
-        // showOutline(workspaceNeuronList, Color.blue);
 
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();

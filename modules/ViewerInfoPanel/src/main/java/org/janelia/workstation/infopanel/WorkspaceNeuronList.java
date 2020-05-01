@@ -13,6 +13,8 @@ import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.controller.AnnotationCategory;
 import org.janelia.workstation.controller.EventBusRegistry;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.infopanel.action.NeuronListProvider;
 import org.janelia.workstation.controller.eventbus.SelectionEvent;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
@@ -82,6 +84,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private JLabel spatialFilterLabel = new JLabel("Disabled");
 
     private NeuronManager annotationModel;
+    private TmModelManager modelManager;
 
     // for preserving selection across operations
     private TmNeuronMetadata savedSelectedNeuron;
@@ -115,6 +118,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
     private void setupUI() {
         annotationModel = NeuronManager.getInstance();
+        modelManager = TmModelManager.getInstance();
         setLayout(new GridBagLayout());
 
         // list of neurons
@@ -856,10 +860,11 @@ class NeuronTableModel extends AbstractTableModel {
     private ImageIcon invisibleIcon;
     private ImageIcon peopleIcon;
     private ImageIcon commonIcon;
+    private TmModelManager modelManager;
 
     public void setAnnotationModel(NeuronManager annotationModel) {
         this.annotationModel = annotationModel;
-
+        modelManager = TmModelManager.getInstance();
         // set up icons; yes, we have multiple storage places for icons...
         visibleIcon = SimpleIcons.getIcon("eye.png");
         invisibleIcon = SimpleIcons.getIcon("closed_eye.png");
@@ -1075,14 +1080,16 @@ class NeuronTableModel extends AbstractTableModel {
                 }
             case COLUMN_COLOR:
                 // Note that is not the same as targetNeuron.getColor(). If the persisted color is null, it picks a default.
-              //  return annotationModel.getNeuronStyle(targetNeuron).getColor();
-                return null;
+                if (targetNeuron.getColor()!=null)
+                    return targetNeuron.getColor();
+                else
+                    return TmViewState.getColorForNeuron(targetNeuron.getId());
             case COLUMN_VISIBILITY:
-                //if ( annotationManager.getNeuronVisibility(targetNeuron)) {
-                //    return visibleIcon;
-               // } else {
+                if (!modelManager.getCurrentView().isHidden(targetNeuron.getId())) {
+                    return visibleIcon;
+                } else {
                     return invisibleIcon;
-               // }
+                }
             case COLUMN_CREATION_DATE:
                 // creation date, hidden, but there for sorting
                 return targetNeuron.getCreationDate();

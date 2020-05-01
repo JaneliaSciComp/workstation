@@ -10,7 +10,8 @@ public class WorkspaceEvent {
     private long WorkspaceId;
     private TmWorkspace Workspace;
 
-    public WorkspaceEvent() {
+    public WorkspaceEvent(Type type) {
+        this.type = type;
     }
 
     public WorkspaceEvent.Type getEventType() {

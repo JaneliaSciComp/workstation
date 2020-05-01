@@ -6,7 +6,6 @@ import org.janelia.console.viewerapi.dialogs.NeuronGroupsDialog;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
-import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.workstation.controller.access.ProjectInitFacade;
 import org.janelia.workstation.controller.access.ProjectInitFacadeImpl;
 import org.janelia.workstation.controller.access.RefreshHandler;
@@ -16,11 +15,7 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
-import org.janelia.workstation.controller.tileimagery.URLBasedTileLoader;
 import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.core.api.http.RestJsonClientManager;
-import org.janelia.workstation.core.api.web.JadeServiceClient;
-import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
@@ -37,6 +32,7 @@ public class TmViewerManager implements GlobalViewerController {
     private NeuronManager neuronManager;
     private ProjectInitFacade projectInit;
     private DomainObject currProject;
+    private int NUMBER_FRAGMENTS_THRESHOLD = 100;
 
     public enum ToolSet {
         NEURON
@@ -145,13 +141,29 @@ public class TmViewerManager implements GlobalViewerController {
         if (workspace==null) {
             // this is a sample
         }
-        // Update TC, in case the load bypassed it
-        // LargeVolumeViewerTopComponent.getInstance().setCurrent(workspace==null ? getCurrentSample() : workspace);
-        //SwingUtilities.invokeLater(() -> fireWorkspaceLoaded(workspace));
-        // load user preferences
+
+        String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+        modelManager.getCurrentView().setFilter(false);
+        int nFragments = 0;
+        for (TmNeuronMetadata neuron: modelManager.getNeuronModel().getNeurons()) {
+            if (neuron.getOwnerKey().equals(systemNeuron)) {
+                nFragments += 1;
+                if (nFragments >= NUMBER_FRAGMENTS_THRESHOLD) {
+                    modelManager.getCurrentView().setFilter(true);
+
+                    // fire event
+                    EventBus annBus = EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.ANNOTATION);
+                    AnnotationEvent annotationEvent = new AnnotationEvent(AnnotationEvent.Type.SPATIAL_FILTER);
+                    annotationEvent.setCategory(AnnotationCategory.NEURON);
+                    annotationEvent.setEnabled(true);
+                    annBus.post(annotationEvent);
+                    break;
+                }
+            }
+        }
+
         try {
             loadUserPreferences();
-            // register with Message Server to receive async updates
             RefreshHandler.getInstance().ifPresent(rh -> rh.setAnnotationModel(getNeuronManager()));
             //TaskWorkflowViewTopComponent.getInstance().loadHistory();
         } catch (Exception error) {

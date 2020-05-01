@@ -25,7 +25,7 @@ public class TmModelManager {
 
     private TmViewState currentView;
     private TmSelectionState currentSelections;
-    private NeuronModel neuronDAO;
+    private NeuronModel neuronModel;
     private final TiledMicroscopeDomainMgr tmDomainMgr;
     private TileLoader tileLoader;
 
@@ -36,7 +36,7 @@ public class TmModelManager {
 
     public TmModelManager() {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-        neuronDAO = NeuronModel.getInstance();
+        neuronModel = NeuronModel.getInstance();
         currentView = new TmViewState();
         currentSelections = new TmSelectionState();
     }
@@ -95,12 +95,12 @@ public class TmModelManager {
         }
     }
 
-    public NeuronModel getNeuronDAO() {
-        return neuronDAO;
+    public NeuronModel getNeuronModel() {
+        return neuronModel;
     }
 
-    public void setNeuronDAO(NeuronModel neuronDAO) {
-        this.neuronDAO = neuronDAO;
+    public void setNeuronModel(NeuronModel neuronModel) {
+        this.neuronModel = neuronModel;
     }
 
     public TmNeuronTagMap getCurrentTagMap() {
