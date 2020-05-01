@@ -124,7 +124,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 // for now, just assume neuron toolset
 
                 // Neurons need to be loaded en masse from raw data from server.
-                NeuronModel manager = modelManager.getNeuronDAO();
+                NeuronModel manager = modelManager.getNeuronModel();
                 log.info("Loading neurons for workspace {}", workspace.getId());
                 manager.loadWorkspaceNeurons(workspace);
 
@@ -149,7 +149,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 // if spatial filter is applied, use it to filter neurons
                 NeuronSpatialFilter neuronFilter = modelManager.getCurrentView().getSpatialFilter();
                 if (applyFilter) {
-                    neuronFilter.initFilter(modelManager.getNeuronDAO().getNeurons());
+                    neuronFilter.initFilter(modelManager.getNeuronModel().getNeurons());
                 }
                 //  fireNeuronSpatialFilterUpdated(applyFilter, neuronFilter);
 
@@ -161,12 +161,12 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 if (applyFilter) {
                     neuronList = new ArrayList<>();
                     for (Long neuronId : neuronFilter.filterNeurons()) {
-                        TmNeuronMetadata neuron = modelManager.getNeuronDAO().getNeuronById(neuronId);
+                        TmNeuronMetadata neuron = modelManager.getNeuronModel().getNeuronById(neuronId);
                         if (neuron != null)
                             neuronList.add(neuron);
                     }
                 } else
-                    neuronList = modelManager.getNeuronDAO().getNeurons();
+                    neuronList = modelManager.getNeuronModel().getNeurons();
                 for (TmNeuronMetadata tmNeuronMetadata : neuronList) {
                     for(String tag : tmNeuronMetadata.getTags()) {
                         currentTagMap.addTag(tag, tmNeuronMetadata);
@@ -203,8 +203,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
     @Override
     public void clearViewers() {
         // clear out the current model and send events to viewers to refresh
-        WorkspaceEvent event = new WorkspaceEvent();
-        event.setEventType(WorkspaceEvent.Type.CLEAR);
+        WorkspaceEvent event = new WorkspaceEvent(WorkspaceEvent.Type.CLEAR);
         EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
     }
 

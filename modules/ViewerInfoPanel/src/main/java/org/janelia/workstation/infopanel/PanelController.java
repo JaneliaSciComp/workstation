@@ -33,11 +33,13 @@ public class PanelController {
     public PanelController(
             AnnotationPanel annoPanel,
             FilteredAnnotationList filteredAnnotationList,
-            WorkspaceNeuronList wsNeuronList
+            WorkspaceNeuronList wsNeuronList,
+            WorkspaceInfoPanel wsInfoPanel
     ) {
         this.annotationPanel = annoPanel;
         this.filteredAnnotationList = filteredAnnotationList;
         this.wsNeuronList = wsNeuronList;
+        this.wsInfoPanel = wsInfoPanel;
         registerForEvents();
     }
     

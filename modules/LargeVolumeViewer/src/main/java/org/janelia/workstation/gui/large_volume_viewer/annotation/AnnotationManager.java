@@ -287,7 +287,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
             if (neuron.getOwnerKey().equals(TRACERS_GROUP)) {
                 try {
-                    CompletableFuture<Boolean> future = annotationModel.getNeuronManager().requestOwnershipChange(neuron);
+                    CompletableFuture<Boolean> future = annotationModel.getNeuronModel().requestOwnershipChange(neuron);
                     if (future == null) {
                         presentError("Problem requesting ownership change for neuron " + neuron.getName() +
                                 ".", "Ownership change failed");
@@ -857,12 +857,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         merger.execute();
     }
 
-    public void setBranchReviewed(TmNeuronMetadata neuron, List<Long> annIdList, boolean reviewed) {
+    public void setBranchReviewed(TmNeuronMetadata neuron, List<Long> annIdList) {
         List<TmGeoAnnotation> annotationList = new ArrayList<TmGeoAnnotation>();
         for (Long annId: annIdList) {
             annotationList.add(annotationModel.getGeoAnnotationFromID(neuron, annId));
         }
-        annotationModel.branchReviewed(neuron, annotationList, reviewed);
+       // annotationModel.branchReviewed(neuron, annotationList);
     }
 
     private class TmDisplayNeuron {
@@ -1968,24 +1968,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         };
         setter.execute();
-    }
-
-    public void saveQuadViewColorModel() {
-        log.info("saveQuadViewColorModel()");
-        try {
-            if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-                presentError("You must create a workspace to be able to save the color model!", "No workspace");
-            }
-            else {
-                TmWorkspace workspace = getCurrentWorkspace();
-                workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
-                log.info("Setting color model: {}",workspace.getColorModel());
-                saveCurrentWorkspace();
-            }
-        }
-        catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
     }
     
     public void saveColorModel3d(ImageColorModel colorModel) {
