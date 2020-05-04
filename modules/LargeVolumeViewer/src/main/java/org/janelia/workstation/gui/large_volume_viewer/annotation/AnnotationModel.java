@@ -2187,7 +2187,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         SWCData swcData = SWCData.read(swcFile);
         if (!swcData.isValid()) {
             throw new Exception(String.format("invalid SWC file %s; reason: %s",
-                    swcFile.getName(), swcData.getInvalidReason()));
+                    swcFile.getAbsolutePath(), swcData.getInvalidReason()));
         }
 
 
