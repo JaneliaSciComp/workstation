@@ -175,7 +175,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
 
                 // Clear neuron selection
                 log.info("Clearing current neuron for workspace {}", workspace.getId());
-                modelManager.getCurrentSelections().setCurrentSelection(null);
+                modelManager.getCurrentSelections().clearAllSelections();
             }
 
             @Override

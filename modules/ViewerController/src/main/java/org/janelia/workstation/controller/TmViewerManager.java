@@ -46,6 +46,23 @@ public class TmViewerManager implements GlobalViewerController {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         setNeuronManager(NeuronManager.getInstance());
         EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).register(this);
+        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SELECTION).register(this);
+    }
+
+    @Subscribe
+    public void selectAnnotations(SelectionEvent selectionEvent) {
+        switch (selectionEvent.getType()) {
+            case SELECT:
+                List<DomainObject> selections = selectionEvent.getItems();
+                // for now just set selection as one item and set it as multiple shortly
+                modelManager.getCurrentSelections().setCurrentSelection(selections.get(0));
+                break;
+            case CLEAR:
+                break;
+            case DESELECT:
+                break;
+        }
+
     }
 
     public NeuronManager getNeuronManager() {
@@ -72,6 +89,7 @@ public class TmViewerManager implements GlobalViewerController {
         projectInit.clearViewers();
         currProject = project;
         if (currProject instanceof TmWorkspace) {
+            TmModelManager.getInstance().setCurrentWorkspace((TmWorkspace)currProject);
             projectInit.loadAnnotationData((TmWorkspace)currProject);
         } else {
             loadImagery((TmSample)currProject);

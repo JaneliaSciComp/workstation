@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.annotation;
+package org.janelia.workstation.controller.dialog;
 
 import java.awt.Frame;
 import java.awt.GridBagConstraints;

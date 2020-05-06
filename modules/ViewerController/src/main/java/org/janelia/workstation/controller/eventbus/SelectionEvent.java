@@ -1,9 +1,6 @@
 package org.janelia.workstation.controller.eventbus;
 
-import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.controller.AnnotationCategory;
-
-import java.util.Collection;
 import java.util.List;
 
 public class SelectionEvent {
@@ -13,7 +10,7 @@ public class SelectionEvent {
 
     private Type type;
     private AnnotationCategory category;
-    private List<DomainObject> items;
+    private List items;
 
     public SelectionEvent(Type type) {
         this.type = type;
@@ -35,11 +32,11 @@ public class SelectionEvent {
         this.category = category;
     }
 
-    public List<DomainObject> getItems() {
+    public List getItems() {
         return items;
     }
 
-    public void setItems(List<DomainObject> items) {
+    public void setItems(List items) {
         this.items = items;
     }
 }

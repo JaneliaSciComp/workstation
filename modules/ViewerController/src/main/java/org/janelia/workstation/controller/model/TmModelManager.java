@@ -38,7 +38,6 @@ public class TmModelManager {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         neuronModel = NeuronModel.getInstance();
         currentView = new TmViewState();
-        currentSelections = new TmSelectionState();
     }
 
     public TmSample getCurrentSample() {
@@ -75,7 +74,7 @@ public class TmModelManager {
     }
 
     public TmSelectionState getCurrentSelections() {
-        return currentSelections;
+        return TmSelectionState.getInstance();
     }
 
     public void setCurrentSelections(TmSelectionState currentSelections) {

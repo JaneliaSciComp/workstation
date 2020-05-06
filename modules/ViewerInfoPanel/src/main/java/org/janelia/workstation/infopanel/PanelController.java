@@ -155,8 +155,4 @@ public class PanelController {
             filteredAnnotationList.notesChanged(vertex);
         }
     }
-
-        public void editNote(TmGeoAnnotation annotation) {
-          //  mgr.addEditNote(annotation.getNeuronId(), annotation.getId());
-        }
 }

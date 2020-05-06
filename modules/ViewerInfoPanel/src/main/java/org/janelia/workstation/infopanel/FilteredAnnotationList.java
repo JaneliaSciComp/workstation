@@ -3,10 +3,14 @@ package org.janelia.workstation.infopanel;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.AnnotationCategory;
+import org.janelia.workstation.controller.EventBusRegistry;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.action.CommonActions;
+import org.janelia.workstation.controller.eventbus.SelectionEvent;
+import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.listener.AnnotationSelectionListener;
 import org.janelia.workstation.controller.listener.CameraPanToListener;
-import org.janelia.workstation.controller.listener.EditNoteRequestedListener;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.AnnotationGeometry;
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
@@ -41,13 +45,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * this UI element displays a list of annotations according to a
@@ -81,7 +79,7 @@ public class FilteredAnnotationList extends JPanel {
     private JCheckBox currentNeuronCheckbox;
 
     // data stuff
-    private NeuronManager annotationModel;
+    private NeuronManager neuronManager;
     private FilteredAnnotationModel model;
 
     private Map<String, AnnotationFilter> filters = new HashMap<>();
@@ -90,10 +88,6 @@ public class FilteredAnnotationList extends JPanel {
     // interaction
     private CameraPanToListener panListener;
     private AnnotationSelectionListener annoSelectListener;
-
-    // I'm leaving this in for now, even though it's not used; I can
-    //  imagine allowing note editing from this widget in the future
-    private EditNoteRequestedListener editNoteRequestedListener;
 
     private static FilteredAnnotationList theInstance;
     private boolean skipUpdate=false;
@@ -121,8 +115,8 @@ public class FilteredAnnotationList extends JPanel {
         updateData();
     }
 
-    private FilteredAnnotationList(final NeuronManager annotationModel, int width) {
-        this.annotationModel = annotationModel;
+    private FilteredAnnotationList(final NeuronManager neuronManager, int width) {
+        this.neuronManager = neuronManager;
         this.width = width;
 
         // set up model & data-related stuff
@@ -151,57 +145,32 @@ public class FilteredAnnotationList extends JPanel {
                 int viewRow = table.rowAtPoint(me.getPoint());
                 if (viewRow >= 0) {
                     int modelRow = filteredTable.convertRowIndexToModel(viewRow);
+                    InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
+                    TmGeoAnnotation annotation = neuronManager.getGeoAnnotationFromID(ann.getNeuronID(), ann.getAnnotationID());
                     if (me.getClickCount() == 1) {
-                        InterestingAnnotation ann = model.getAnnotationAtRow(modelRow);
                         table.setRowSelectionInterval(viewRow, viewRow);
-                        annoSelectListener.annotationSelected(ann.getAnnotationID());
+                        SelectionEvent selectionEvent = new SelectionEvent(SelectionEvent.Type.SELECT);
+                        selectionEvent.setCategory(AnnotationCategory.VERTEX);
+                        selectionEvent.setItems(Arrays.asList(new TmGeoAnnotation[]{annotation}));
+                        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SELECTION).post(selectionEvent);
                     } else if (me.getClickCount() == 2) {
                         // which column?
                         int viewColumn = table.columnAtPoint(me.getPoint());
                         int modelColumn = table.convertColumnIndexToModel(viewColumn);
                         InterestingAnnotation interestingAnnotation = model.getAnnotationAtRow(modelRow);
-                        TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(interestingAnnotation.getNeuronID(), interestingAnnotation.getAnnotationID());
-                        if (modelColumn == 2) {
+                       if (modelColumn == 2) {
                             // double-click note: edit note dialog
-                            editNoteRequestedListener.editNote(ann);
+                            CommonActions.addEditNote(interestingAnnotation.getNeuronID(), interestingAnnotation.getAnnotationID());
                         } else {
-                            // everyone else, shift camera to annotation
-                            if (panListener != null) {
-                                if (ann != null) {
-                                    SimpleWorker syncher = new SimpleWorker() {
-                                        @Override
-                                        protected void doStuff() throws Exception {
-                                            /*panListener.cameraPanTo(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
-                                            Vec3 location = annotationMgr.getTileFormat().micronVec3ForVoxelVec3Centered(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
-
-                                            // send event to Horta to also center on this item
-                                            SynchronizationHelper helper = new SynchronizationHelper();
-                                            Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                                            SampleLocation sampleLocation = originator.getSampleLocation();
-                                            sampleLocation.setFocusUm(location.getX(), location.getY(), location.getZ());
-                                            sampleLocation.setNeuronId(ann.getNeuronId());
-                                            sampleLocation.setNeuronVertexId(ann.getId());
-                                            Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                                            for (Tiled3dSampleLocationProviderAcceptor acceptor: locationAcceptors) {
-                                                if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
-                                                    acceptor.setSampleLocation(sampleLocation);
-                                                }
-                                            }*/
-                                        }
-
-                                        @Override
-                                        protected void hadSuccess() {
-                                            annotationModel.selectPoint(ann.getNeuronId(), ann.getId());
-                                        }
-
-                                        @Override
-                                        protected void hadError(Throwable error) {
-                                            FrameworkAccess.handleException(error);
-                                        }
-                                    };
-                                    syncher.execute();
-                                }
-                            }
+                           SelectionEvent selectionEvent = new SelectionEvent(SelectionEvent.Type.SELECT);
+                           selectionEvent.setCategory(AnnotationCategory.VERTEX);
+                           selectionEvent.setItems(Arrays.asList(new TmGeoAnnotation[]{annotation}));
+                           EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SELECTION).post(selectionEvent);
+                           ViewEvent viewEvent = new ViewEvent();
+                           viewEvent.setCameraFocusX(annotation.getX());
+                           viewEvent.setCameraFocusY(annotation.getY());
+                           viewEvent.setCameraFocusZ(annotation.getZ());
+                           EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.VIEWSTATE).post(viewEvent);
                         }
                     }
                 }
@@ -271,7 +240,7 @@ public class FilteredAnnotationList extends JPanel {
         }
         else {
             // Consider all neurons
-            for (TmNeuronMetadata neuron: new ArrayList<>(annotationModel.getNeuronList())) {
+            for (TmNeuronMetadata neuron: new ArrayList<>(neuronManager.getNeuronList())) {
                 updateData(neuron);
             }
         }
@@ -301,7 +270,7 @@ public class FilteredAnnotationList extends JPanel {
         
         for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
             for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
-                note = annotationModel.getNote(neuron.getId(), ann.getId());
+                note = neuronManager.getNote(neuron.getId(), ann.getId());
                 if (note.length() == 0) {
                     note = "";
                 }
@@ -640,7 +609,7 @@ public class FilteredAnnotationList extends JPanel {
      * neuron" toggle doesn't explicitly set the filter
      */
     public AnnotationFilter getCurrentFilter() {
-        TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
+        TmNeuronMetadata currentNeuron = neuronManager.getCurrentNeuron();
         if (currentNeuronCheckbox.isSelected() && currentNeuron != null) {
             return new AndFilter(new NeuronFilter(currentNeuron), currentFilter);
         } else {
@@ -665,18 +634,6 @@ public class FilteredAnnotationList extends JPanel {
         } else {
             return AnnotationGeometry.LINK;
         }
-    }
-
-    public void setAnnoSelectListener(AnnotationSelectionListener annoSelectListener) {
-        this.annoSelectListener = annoSelectListener;
-    }
-
-    public void setEditNoteRequestListener(EditNoteRequestedListener editNoteRequestedListener) {
-        this.editNoteRequestedListener = editNoteRequestedListener;
-    }
-
-    public void setPanListener(CameraPanToListener panListener) {
-        this.panListener = panListener;
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.janelia.console.viewerapi.dialogs.NeuronGroupsDialog;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.access.ModelTranslation;
+import org.janelia.workstation.controller.dialog.AddEditNoteDialog;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.tileimagery.VoxelPosition;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
@@ -1163,7 +1164,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void addEditNote(final Long neuronID, final Long annotationID) {
         if (!checkOwnership(neuronID))
             return;
-        
+
         String noteText = getNote(neuronID, annotationID);
 
         AddEditNoteDialog testDialog = new AddEditNoteDialog(
