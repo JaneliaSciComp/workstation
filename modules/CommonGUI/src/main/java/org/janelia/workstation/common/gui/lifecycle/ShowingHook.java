@@ -191,13 +191,13 @@ public class ShowingHook implements Runnable {
         }
 
         // Things that can be done lazily
-        SwingUtilities.invokeLater(() -> {
-            releaseNotesDialog = new ReleaseNotesDialog();
-            releaseNotesDialog.showIfFirstRunSinceUpdate();
-        });
+        SwingUtilities.invokeLater(() -> getReleaseNotesDialog().showIfFirstRunSinceUpdate());
     }
 
-    public static ReleaseNotesDialog getReleaseNotesDialog() {
+    public static synchronized ReleaseNotesDialog getReleaseNotesDialog() {
+        if (releaseNotesDialog==null) {
+            releaseNotesDialog = new ReleaseNotesDialog();
+        }
         return releaseNotesDialog;
     }
 
