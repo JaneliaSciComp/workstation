@@ -5,9 +5,12 @@ import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.integration.api.ActivityLogging;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+
+import org.janelia.workstation.integration.activity_logging.ActionString;
+
+import org.janelia.workstation.integration.activity_logging.CategoryString;
+
+import org.janelia.workstation.integration.activity_logging.ToolString;
 
 /**
  * Centralized logging: any hooks kept in Horta should be here.

@@ -5,10 +5,10 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.controller.tileimagery.TileConsumer;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 public class ResetZoomAction extends AbstractAction {

@@ -1,8 +1,8 @@
 package org.janelia.workstation.gui.viewer3d.loader;
 
 import java.util.List;
-import org.janelia.it.jacs.shared.img_3d_loader.VolumeFileLoaderI;
-import org.janelia.it.jacs.shared.img_3d_loader.AbstractVolumeFileLoader;
+import org.janelia.workstation.img_3d_loader.VolumeFileLoaderI;
+import org.janelia.workstation.img_3d_loader.AbstractVolumeFileLoader;
 import org.janelia.workstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.workstation.gui.viewer3d.volume_builder.PiecewiseVolumeDataBean;

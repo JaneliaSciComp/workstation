@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
@@ -205,7 +206,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
             return "Folder Editor";
         }
         else {
-            return "Folder: "+StringUtils.abbreviate(node.getName(), 15);
+            return StringUtils.abbreviate(node.getName(), 15);
         }
     }
 

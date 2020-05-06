@@ -1,77 +1,68 @@
 package org.janelia.workstation.browser.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.events.selection.ChildSelectionModel;
+import net.miginfocom.swing.MigLayout;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ontology.Annotation;
+import org.janelia.model.security.Subject;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
+import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.browser.gui.components.DomainListViewManager;
-import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
-import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
-import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.security.Subject;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import net.miginfocom.swing.MigLayout;
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
 
 /**
- * A dialog for adding or deleting EntityActorPermissions for all accessible 
- * annotations on a set of entities. 
+ * A dialog for adding or deleting permissions for a set of domain objects, or their annotations.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class BulkAnnotationPermissionDialog extends ModalDialog {
+public class BulkChangePermissionDialog extends ModalDialog {
 
-    private static final String INFO_MESSAGE = "<html>"
+    private static final Logger log = LoggerFactory.getLogger(BulkChangePermissionDialog.class);
+
+    private static final String INFO_MESSAGE_ANNOTATIONS = "<html>"
             + "Will modify permissions for the selected user on all<br>"
             + "accessible annotations across all selected entities</html>";
-    
+
+    private static final String INFO_MESSAGE_OBJECTS = "<html>"
+            + "Will modify permissions for the selected user on all<br>"
+            + "selected entities</html>";
+
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
     
     private final JPanel attrPanel;
+    private final JLabel informationalMessage;
     private final JComboBox<Subject> subjectCombobox;
     private final JCheckBox readCheckbox;
     private final JCheckBox writeCheckbox;
 
-    private final List<Reference> selected = new ArrayList<>();
+    private boolean annotations;
 
-    public BulkAnnotationPermissionDialog() {
+    public BulkChangePermissionDialog() {
 
         setTitle("Add or remove permissions for annotations");
 
         attrPanel = new JPanel(new MigLayout("wrap 2, ins 20"));
         add(attrPanel, BorderLayout.CENTER);
 
-        attrPanel.add(new JLabel(INFO_MESSAGE), "gap para, span 2");
-        
+
+        informationalMessage = new JLabel();
+        attrPanel.add(informationalMessage, "gap para, span 2");
+
         addSeparator(attrPanel, "User");
 
-        subjectCombobox = new JComboBox<Subject>();
+        subjectCombobox = new JComboBox<>();
         subjectCombobox.setEditable(false);
         subjectCombobox.setToolTipText("Choose a user or group");
 
@@ -92,21 +83,11 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
+        cancelButton.addActionListener(e -> setVisible(false));
 
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                saveAndClose();
-            }
-        });
+        okButton.addActionListener(e -> saveAndClose());
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
@@ -118,6 +99,8 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
         add(buttonPane, BorderLayout.SOUTH);
     }
 
+    private List<Reference> selected;
+
     private void addSeparator(JPanel panel, String text) {
         JLabel label = new JLabel(text);
         label.setFont(separatorFont);
@@ -125,36 +108,13 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
         panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
     }
 
-    private void showSelectionMessage() {
-            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                    "Select some items to bulk-edit permissions", "Error", JOptionPane.ERROR_MESSAGE);
-    }
-    public void showForSelectedDomainObjects() {
+    public void showForDomainObjects(List<Reference> selected, boolean annotations) {
 
-        DomainListViewTopComponent listView = DomainListViewManager.getInstance().getActiveViewer();
-        if (listView==null || listView.getEditor()==null) {
-            showSelectionMessage();
-            return;
-        }
-        
-        ChildSelectionModel<?,?> selectionModel = listView.getEditor().getSelectionModel();
-        if (selectionModel==null) {
-            showSelectionMessage();
-            return;
-        }
-        
-        selected.clear();
-        for(Object id : selectionModel.getSelectedIds()) {
-            if (id instanceof Reference) {
-                selected.add((Reference)id);
-            }
-        }
-        
-        if (selected.isEmpty()) {
-            showSelectionMessage();
-            return;
-        } 
-        
+        this.annotations = annotations;
+        this.selected = selected;
+
+        informationalMessage.setText(annotations ? INFO_MESSAGE_ANNOTATIONS : INFO_MESSAGE_OBJECTS);
+
         try {
             DomainMgr mgr = DomainMgr.getDomainMgr();
             List<Subject> subjects = mgr.getSubjects();
@@ -164,7 +124,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
                 model.addElement(subject);
             }
 
-            ActivityLogHelper.logUserAction("BulkAnnotationPermissionDialog.showForSelectedDomainObjects");
+            ActivityLogHelper.logUserAction("BulkChangePermissionDialog.showForSelectedDomainObjects");
             packAndShow();
         }
         catch (Exception e) {
@@ -183,28 +143,41 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
                 
         SimpleWorker worker = new SimpleWorker() {
 
-            private int numAnnotationsModified;
+            private int numObjectsModified;
             
             @Override
             protected void doStuff() throws Exception {
                 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                for(Annotation annotation : model.getAnnotations(selected)) {
-                    
-                    // Must be owner to grant access
-                    if (!ClientDomainUtils.isOwner(annotation)) continue;
 
-                    model.changePermissions(annotation, subject.getKey(), rights);
-                    
-                    numAnnotationsModified++;
+                if (annotations) {
+                    log.info("Modifying permissions for annotations {} items", selected.size());
+                    for (Annotation annotation : model.getAnnotations(selected)) {
+                        // Must be owner to grant access
+                        if (!ClientDomainUtils.isOwner(annotation)) continue;
+                        model.changePermissions(annotation, subject.getKey(), rights);
+                        numObjectsModified++;
+                    }
+                }
+                else {
+                    log.info("Modifying permissions for {} items", selected);
+                    for (DomainObject domainObject : model.getDomainObjects(selected)) {
+                        // Must be owner to grant access
+                        if (!ClientDomainUtils.isOwner(domainObject)) continue;
+                        model.changePermissions(domainObject, subject.getKey(), rights);
+                        numObjectsModified++;
+                    }
                 }
             }
 
             @Override
             protected void hadSuccess() {
+                String message = annotations ?
+                        "Modified permissions for "+ numObjectsModified +" annotations on "+selected.size()+" items" :
+                        "Modified permissions for "+ numObjectsModified +" items";
                 UIUtils.setDefaultCursor(FrameworkAccess.getMainFrame());
                     JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                        "Modified permissions for "+numAnnotationsModified+" annotations on "+selected.size()+" items", "Shared", JOptionPane.INFORMATION_MESSAGE);
+                        message, "Shared", JOptionPane.INFORMATION_MESSAGE);
             }
 
             @Override

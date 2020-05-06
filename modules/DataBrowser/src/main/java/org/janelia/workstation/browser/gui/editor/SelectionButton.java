@@ -10,8 +10,10 @@ import java.util.stream.Collectors;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenuItem;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 
 /**
  * A button which allows the user to select multiple values from a drop-down list. 
@@ -51,7 +53,7 @@ public abstract class SelectionButton<T> extends DropDownButton {
             if (!valueLabels.isEmpty()) {
                 Collections.sort(valueLabels);
                 text.append(" (");
-                text.append(StringUtils.getCommaDelimited(valueLabels, MAX_VALUES_STRING_LENGTH));
+                text.append(StringUtilsExtra.getCommaDelimited(valueLabels, MAX_VALUES_STRING_LENGTH));
                 text.append(")");
             }
         }

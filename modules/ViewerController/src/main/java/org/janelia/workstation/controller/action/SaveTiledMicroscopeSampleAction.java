@@ -22,18 +22,21 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
 
     private TmSample sample;
     private String name, octreePath, ktxPath, rawPath;
+    private boolean rawCompressed;
 
     public SaveTiledMicroscopeSampleAction(TmSample sample) {
         this.sample = sample;
     }
 
-    public SaveTiledMicroscopeSampleAction(TmSample sample, String name, String octreePath, String ktxPath, String rawPath) {
+    public SaveTiledMicroscopeSampleAction(TmSample sample, String name, String octreePath, String ktxPath, String rawPath,
+                                           boolean rawCompressed) {
         super("Create Tiled Microscope Sample");
         this.sample = sample;
         this.name = name;
         this.octreePath = octreePath;
         this.ktxPath = ktxPath;
         this.rawPath = rawPath;
+        this.rawCompressed = rawCompressed;
     }
 
     @Override
@@ -58,7 +61,11 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
                             DomainUtils.setFilepath(sample, FileType.LargeVolumeKTX, ktxPath);
                         }
                         if (rawPath != null) {
-                            DomainUtils.setFilepath(sample, FileType.TwoPhotonAcquisition, rawPath);
+                            if (rawCompressed) {
+                                DomainUtils.setFilepath(sample, FileType.CompressedAcquisition, rawPath);
+                            } else {
+                                DomainUtils.setFilepath(sample, FileType.TwoPhotonAcquisition, rawPath);
+                            }
                         }
                         newSample = TiledMicroscopeDomainMgr.getDomainMgr().save(sample);
                     }

@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 
-import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Rotation3d;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.camera.BasicCamera3d;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.listener.CameraListener;

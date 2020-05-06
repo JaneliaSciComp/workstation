@@ -3,12 +3,14 @@ package org.janelia.workstation.core.workers;
 import java.beans.PropertyChangeEvent;
 import java.util.concurrent.Callable;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.workers.WorkerChangedEvent;
 import org.janelia.workstation.core.events.workers.WorkerEndedEvent;
 import org.janelia.workstation.core.events.workers.WorkerStartedEvent;
 import org.janelia.workstation.core.util.ConcurrentUtils;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +70,7 @@ public abstract class BackgroundWorker extends SimpleWorker {
     public abstract String getName();
 
     public void setStatus(String status) {
-        if (StringUtils.areEqual(status, this.status)) return;
+        if (StringUtilsExtra.areEqual(status, this.status)) return;
         this.status = status;
 
         log.debug("Worker '{}' changed status to: {}", getName(), status);

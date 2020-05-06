@@ -1,7 +1,8 @@
 package org.janelia.workstation.gui.viewer3d;
 
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.gui.viewer3d.axes.AxesActor;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.workstation.gui.viewer3d.resolver.FileResolver;
@@ -99,7 +100,7 @@ public class VolumeBrickActorBuilder {
      * @param volumeModel tells the axes actor whether its background will be white.
      * @return the actor.
      */
-    public GLActor buildAxesActor(org.janelia.it.jacs.shared.viewer3d.BoundingBox3d boundingBox, double axisLengthDivisor, VolumeModel volumeModel) {
+    public GLActor buildAxesActor(BoundingBox3d boundingBox, double axisLengthDivisor, VolumeModel volumeModel) {
         AxesActor axes = new AxesActor();
         axes.setVolumeModel(volumeModel);
         axes.setAxisLengths( boundingBox.getWidth(), boundingBox.getHeight(), boundingBox.getDepth() );
@@ -108,8 +109,8 @@ public class VolumeBrickActorBuilder {
         return axes;
     }
 
-    private org.janelia.it.jacs.shared.viewer3d.BoundingBox3d createBoundsOfVolumeModel(VolumeModel volumeModel) {
-        org.janelia.it.jacs.shared.viewer3d.BoundingBox3d boundingBox = new org.janelia.it.jacs.shared.viewer3d.BoundingBox3d();
+    private BoundingBox3d createBoundsOfVolumeModel(VolumeModel volumeModel) {
+        BoundingBox3d boundingBox = new BoundingBox3d();
         boundingBox.setMax(
                 new Vec3(
                         volumeModel.getVoxelDimensions()[0],

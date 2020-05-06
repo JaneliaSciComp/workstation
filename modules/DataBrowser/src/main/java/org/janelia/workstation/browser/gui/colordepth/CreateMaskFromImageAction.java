@@ -66,7 +66,7 @@ public class CreateMaskFromImageAction extends AbstractAction {
             @Override
             protected void doStuff() throws Exception {
                 FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(imagePath, false);
-                try (InputStream imageStream = imageFileProxy.openContentStream()) {
+                try (InputStream imageStream = imageFileProxy.openContentStream(false)) {
                     this.image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFileProxy.getFileId()));
                 }
                 alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();

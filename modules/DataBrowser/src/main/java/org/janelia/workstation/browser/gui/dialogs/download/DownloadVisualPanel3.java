@@ -2,7 +2,7 @@ package org.janelia.workstation.browser.gui.dialogs.download;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
-import org.janelia.it.jacs.shared.utils.Progress;
+import org.janelia.workstation.core.util.Progress;
 import org.janelia.model.domain.ChanSpecUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.enums.FileType;

@@ -1,6 +1,6 @@
 package org.janelia.workstation.controller.tileimagery;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.workstation.geom.CoordinateAxis;
 
 /**
  * An efficiently hashable key that uniquely identifies a particular

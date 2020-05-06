@@ -29,8 +29,9 @@ import javax.swing.SwingUtilities;
 
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.shared.solr.FacetValue;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
+import org.janelia.model.access.domain.search.FacetValue;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectAttribute;
@@ -45,7 +46,6 @@ import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
 import org.janelia.model.domain.interfaces.HasIdentifier;
-import org.janelia.model.domain.interfaces.HasName;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.ExportResultsAction;
@@ -82,6 +82,7 @@ import org.janelia.workstation.core.model.search.SearchConfiguration;
 import org.janelia.workstation.core.model.search.SearchResults;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.util.ConcurrentUtils;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -285,10 +286,7 @@ public class FilterEditorPanel
                 refreshSearchResults(true);
             }
         };
-        
-        getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
-        getActionMap().put("enterAction", mySearchAction);
-        
+
         this.resultsPanel = new PaginatedDomainResultsPanel(getSelectionModel(), getEditSelectionModel(), this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
@@ -306,7 +304,9 @@ public class FilterEditorPanel
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->FilterEditorPanel"));
 
         configPanel = new ConfigPanel(true);
-        
+        configPanel.getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true), "enterAction");
+        configPanel.getActionMap().put("enterAction", mySearchAction);
+
         setLayout(new BorderLayout());
         add(configPanel, BorderLayout.NORTH);
         add(resultsPanel, BorderLayout.CENTER);
@@ -342,6 +342,8 @@ public class FilterEditorPanel
         
         if (filter.getName()==null) {
             filter.setName(DEFAULT_FILTER_NAME);
+            // TODO: Load cached results because this is a generic new search
+
         }
         
         log.debug("loadDomainObject(Filter:{})",filter.getName());
@@ -362,19 +364,13 @@ public class FilterEditorPanel
             configPanel.addTitleComponent(saveAsButton, false, true);
             configPanel.setExpanded(filter.getId()==null);
             
-            refreshSearchResults(isUserDriven, new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    searchBox.requestFocus();
-                    debouncer.success();
-                    return null;
-                }
-            },new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    debouncer.failure();
-                    return null;
-                }
+            refreshSearchResults(isUserDriven, () -> {
+                searchBox.requestFocus();
+                debouncer.success();
+                return null;
+            }, () -> {
+                debouncer.failure();
+                return null;
             });
         }
         catch (Exception e) {
@@ -390,18 +386,12 @@ public class FilterEditorPanel
     
     private void refreshSearchResults(boolean isUserDriven, final Callable<Void> success) {
         refreshDebouncer.queue(success);
-        refreshSearchResults(isUserDriven, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                refreshDebouncer.success();
-                return null;
-            }
-        },new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                refreshDebouncer.failure();
-                return null;
-            }
+        refreshSearchResults(isUserDriven, () -> {
+            refreshDebouncer.success();
+            return null;
+        }, () -> {
+            refreshDebouncer.failure();
+            return null;
         });
     }
     
@@ -409,11 +399,10 @@ public class FilterEditorPanel
         log.trace("refresh");
         
         String inputFieldValue = searchBox.getText();
-        if (!StringUtils.areEqual(filter.getSearchString(), inputFieldValue)) {
+        if (!StringUtilsExtra.areEqual(filter.getSearchString(), inputFieldValue)) {
+            filter.setSearchString(inputFieldValue);
             dirty = true;
         }
-        
-        filter.setSearchString(inputFieldValue);
 
         saveButton.setVisible(dirty && filter.getId()!=null && !filter.getName().equals(DEFAULT_FILTER_NAME));
         
@@ -438,15 +427,11 @@ public class FilterEditorPanel
             @Override
             protected void hadSuccess() {
                 try {
-                    resultsPanel.showSearchResults(searchResults, isUserDriven, new Callable<Void>() {
-                        @Override
-                        public Void call() throws Exception {
-                            updateView();
-                            ConcurrentUtils.invokeAndHandleExceptions(success);
-                            ActivityLogHelper.logElapsed("FilterEditorPanel.performSearch", w);
-                            return null;
-                        }
-                        
+                    resultsPanel.showSearchResults(searchResults, isUserDriven, () -> {
+                        updateView();
+                        ConcurrentUtils.invokeAndHandleExceptions(success);
+                        ActivityLogHelper.logElapsed("FilterEditorPanel.performSearch", w);
+                        return null;
                     });
                 }
                 catch (Exception e) {
@@ -481,13 +466,11 @@ public class FilterEditorPanel
         for (final Class<? extends DomainObject> searchClass : DomainUtils.getSearchClasses()) {
             final String type = DomainUtils.getTypeName(searchClass);
             JMenuItem menuItem = new JRadioButtonMenuItem(type, searchClass.equals(searchConfig.getSearchClass()));
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    dirty = true;
-                    searchConfig.setSearchClass(searchClass);
-                    updateView();
-                    refreshSearchResults(true);
-                }
+            menuItem.addActionListener(e -> {
+                dirty = true;
+                searchConfig.setSearchClass(searchClass);
+                updateView();
+                refreshSearchResults(true);
             });
             typeGroup.add(menuItem);
             typeCriteriaButton.addMenuItem(menuItem);

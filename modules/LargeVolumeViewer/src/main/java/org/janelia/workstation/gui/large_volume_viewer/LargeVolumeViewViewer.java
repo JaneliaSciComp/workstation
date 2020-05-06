@@ -17,7 +17,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
@@ -299,6 +299,9 @@ public class LargeVolumeViewViewer extends JPanel {
             SimpleWorker worker = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
+                    logger.info("Exporting any out-of-sync neurons...");
+                    //oldQuadView.getAnnotationModel().exportOutOfSyncNeurons();
+
                     logger.info("Clearing cache...");
                     oldQuadView.clearCache();
                     oldQuadView.clear();

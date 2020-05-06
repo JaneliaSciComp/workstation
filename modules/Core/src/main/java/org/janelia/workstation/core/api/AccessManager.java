@@ -1,7 +1,8 @@
 package org.janelia.workstation.core.api;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.api.exceptions.AuthenticationException;
 import org.janelia.workstation.core.api.exceptions.ServiceException;
 import org.janelia.workstation.core.api.exceptions.SystemError;
@@ -239,8 +240,9 @@ public final class AccessManager {
         renewToken();
         // We're now authenticated. Get or create the Workstation user object.
         try {
-            return DomainMgr.getDomainMgr().getModel().getOrCreateUser(username);
-        } catch (Exception e) {
+            return DomainMgr.getDomainMgr().getModel().getUser(username);
+        }
+        catch (Exception e) {
             throw new ServiceException("Error getting or creating user "+username, e);
         }
     }

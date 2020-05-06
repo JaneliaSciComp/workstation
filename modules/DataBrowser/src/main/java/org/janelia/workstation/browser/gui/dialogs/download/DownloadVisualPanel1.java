@@ -30,8 +30,10 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.SelfArtifactDescriptor;
 import org.janelia.workstation.common.gui.support.WrapLayout;
@@ -100,7 +102,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         objectiveButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String objective : objectives) {
-            JMenuItem menuItem = new JRadioButtonMenuItem(objective, StringUtils.areEqual(objective, currObjective));
+            JMenuItem menuItem = new JRadioButtonMenuItem(objective, StringUtilsExtra.areEqual(objective, currObjective));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setObjective(objective);
@@ -123,7 +125,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         areaButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String area : areas) {
-            JMenuItem menuItem = new JRadioButtonMenuItem(area, StringUtils.areEqual(area, currArea));
+            JMenuItem menuItem = new JRadioButtonMenuItem(area, StringUtilsExtra.areEqual(area, currArea));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setArea(area);
@@ -146,7 +148,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         resultCategoryButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String resultCategory : resultCategories) {
-            JMenuItem menuItem = new JRadioButtonMenuItem(resultCategory, StringUtils.areEqual(resultCategory, currResultCategory));
+            JMenuItem menuItem = new JRadioButtonMenuItem(resultCategory, StringUtilsExtra.areEqual(resultCategory, currResultCategory));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setResultCategory(resultCategory);
@@ -174,7 +176,7 @@ public final class DownloadVisualPanel1 extends JPanel {
         imageCategoryButton.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String imageCategory : imageCategories) {
-            JMenuItem menuItem = new JRadioButtonMenuItem(imageCategory, StringUtils.areEqual(imageCategory, currImageCategory));
+            JMenuItem menuItem = new JRadioButtonMenuItem(imageCategory, StringUtilsExtra.areEqual(imageCategory, currImageCategory));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setImageCategory(imageCategory);

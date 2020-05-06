@@ -2,6 +2,7 @@ package org.janelia.workstation.browser.actions.context;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.dialogs.DataSetDialog;
@@ -33,17 +34,21 @@ import org.openide.util.NbBundle;
 @NbBundle.Messages("CTL_ViewDataSetSettingsAction=View Data Set Settings")
 public class ViewDataSetSettingsAction extends BaseContextualNodeAction {
 
-    private Sample sample;
+    private DomainObject domainObject;
 
     @Override
     protected void processContext() {
+        this.domainObject = null;
         setEnabledAndVisible(false);
         if (getNodeContext().isSingleObjectOfType(Sample.class)) {
-            this.sample = getNodeContext().getSingleObjectOfType(Sample.class);
-            if (sample != null) {
-                setVisible(true);
-                setEnabled(ClientDomainUtils.hasWriteAccess(sample));
-            }
+            this.domainObject = getNodeContext().getSingleObjectOfType(Sample.class);
+        }
+        else if (getNodeContext().isSingleObjectOfType(DataSet.class)) {
+            this.domainObject = getNodeContext().getSingleObjectOfType(DataSet.class);
+        }
+        if (domainObject != null) {
+            setVisible(true);
+            setEnabled(ClientDomainUtils.hasWriteAccess(domainObject));
         }
     }
 
@@ -55,14 +60,23 @@ public class ViewDataSetSettingsAction extends BaseContextualNodeAction {
     @Override
     public void performAction() {
 
-        Sample sample = this.sample;
+        DomainObject domainObject = this.domainObject;
 
         SimpleWorker simpleWorker = new SimpleWorker() {
             private DataSet dataSet;
 
             @Override
             protected void doStuff() throws Exception {
-                dataSet = DomainMgr.getDomainMgr().getModel().getDataSet(sample.getDataSet());
+                if (domainObject instanceof DataSet) {
+                    dataSet = (DataSet)domainObject;
+                }
+                else if (domainObject instanceof Sample) {
+                    Sample sample = (Sample)domainObject;
+                    dataSet = DomainMgr.getDomainMgr().getModel().getDataSet(sample.getDataSet());
+                }
+                else {
+                    throw new IllegalStateException("Cannot accept class: "+domainObject.getClass());
+                }
             }
 
             @Override

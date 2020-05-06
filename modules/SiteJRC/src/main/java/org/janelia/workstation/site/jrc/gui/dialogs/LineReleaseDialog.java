@@ -1,18 +1,8 @@
 package org.janelia.workstation.site.jrc.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.swing.*;
-
 import net.miginfocom.swing.MigLayout;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LineRelease;
@@ -28,6 +18,11 @@ import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
+import java.util.*;
+
 /**
  * A dialog for viewing the list of accessible fly line releases, editing them,
  * and adding new ones.
@@ -42,6 +37,7 @@ public class LineReleaseDialog extends ModalDialog {
 
     private JPanel attrPanel;
     private JTextField nameInput = new JTextField(30);
+    private final JComboBox<String> websiteComboBox;
     private JCheckBox sageSyncCheckbox;
     private ComboMembershipListPanel<Subject> annotatorsPanel;
     private JButton okButton;
@@ -56,8 +52,10 @@ public class LineReleaseDialog extends ModalDialog {
         setTitle("Fly Line Release Definition");
 
         attrPanel = new JPanel(new MigLayout("wrap 2, ins 20"));
-
         add(attrPanel, BorderLayout.CENTER);
+
+        this.websiteComboBox = new JComboBox<>();
+        websiteComboBox.setEditable(false);
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
@@ -101,8 +99,6 @@ public class LineReleaseDialog extends ModalDialog {
         final JLabel nameLabel = new JLabel("Release Name: ");
         attrPanel.add(nameLabel, "gap para");
 
-        nameInput.setEnabled(editable);
-        
         if (editable) {
             nameLabel.setLabelFor(nameInput);
             attrPanel.add(nameInput);
@@ -110,6 +106,17 @@ public class LineReleaseDialog extends ModalDialog {
         else {
             attrPanel.add(new JLabel(release.getName()));
         }
+
+        DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) websiteComboBox.getModel();
+        for (String website : LineRelease.TARGET_WEBSITES) {
+            model.addElement(website);
+        }
+        model.setSelectedItem(LineRelease.TARGET_WEBSITES[0]);
+
+        final JLabel websiteLabel = new JLabel("Target Website: ");
+        attrPanel.add(websiteLabel, "gap para");
+        websiteLabel.setLabelFor(websiteComboBox);
+        attrPanel.add(websiteComboBox);
 
         sageSyncCheckbox = new JCheckBox("Synchronize to SAGE");
         sageSyncCheckbox.setSelected(true); // default to true
@@ -148,6 +155,13 @@ public class LineReleaseDialog extends ModalDialog {
                     nameInput.setText(release.getName());
 
                     sageSyncCheckbox.setSelected(release.isSageSync());
+
+                    if (!StringUtils.isBlank(release.getTargetWebsite())) {
+                        websiteComboBox.setSelectedItem(release.getTargetWebsite());
+                    }
+                    else {
+                        websiteComboBox.setSelectedItem(LineRelease.TARGET_WEBSITES[0]);
+                    }
 
                     List<String> annotators = release.getAnnotators();
                     if (annotators!=null) {
@@ -227,6 +241,7 @@ public class LineReleaseDialog extends ModalDialog {
                     releaseEntity = model.createLineRelease(nameInput.getText(), null, null, Collections.emptyList());
                 }
 
+                releaseEntity.setTargetWebsite((String)websiteComboBox.getSelectedItem());
                 releaseEntity.setAnnotators(annotators);
                 releaseEntity.setSageSync(sageSyncCheckbox.isSelected());
                 releaseEntity = model.update(releaseEntity);

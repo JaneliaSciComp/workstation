@@ -175,10 +175,14 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
                     return null;
                 }
             }
-        } catch (Exception e) {
-            FrameworkAccess.handleException(e);
+            else {
+                return domainObject;
+            }
         }
-        return domainObject;
+        catch (Exception e) {
+            FrameworkAccess.handleException(e);
+            return null;
+        }
     }
     
 }

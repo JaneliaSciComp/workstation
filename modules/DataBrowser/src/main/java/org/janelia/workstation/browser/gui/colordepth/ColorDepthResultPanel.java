@@ -16,7 +16,8 @@ import javax.swing.SwingConstants;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.SampleUtils;
@@ -415,7 +416,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             @Override
             protected void doStuff() throws Exception {
                 List<ColorDepthMatch> maskMatches = currResult.getMaskMatches(mask);
-                log.info("Found {} matches for {}", maskMatches.size(), mask);
+                log.info("Found {} matches for {} in {}", maskMatches.size(), mask, search);
                 searchResults = prepareResults(maskMatches);
             }
 

@@ -7,8 +7,10 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
-import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.jacs.shared.geom.Vec3;
+
+import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.workstation.geom.Rotation3d;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.opengl.GL2Adapter;
 import org.janelia.workstation.gui.opengl.GL2AdapterFactory;
 import org.janelia.workstation.gui.opengl.GLActor;
@@ -124,7 +126,7 @@ public class OcclusiveRenderer
     
     /** Making this accessible for external use. */
     @Override
-    public void resetCameraDepth(org.janelia.it.jacs.shared.viewer3d.BoundingBox3d boundingBox) {
+    public void resetCameraDepth(BoundingBox3d boundingBox) {
         super.resetCameraDepth(boundingBox);
     }
 

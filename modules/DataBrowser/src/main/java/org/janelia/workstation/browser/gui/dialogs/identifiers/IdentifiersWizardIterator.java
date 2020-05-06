@@ -15,8 +15,7 @@ import org.openide.WizardDescriptor;
 import org.openide.util.ChangeSupport;
 
 /**
- * Download wizard that guides the user through several possible steps to choose what to download 
- * and how the output files are formatted.
+ * Search wizard that guides the user through a batch search.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -39,12 +38,14 @@ public final class IdentifiersWizardIterator implements WizardDescriptor.Iterato
         if (currPanels == null) {
             
             IdentifiersWizardPanel1 panel1 = new IdentifiersWizardPanel1();
+            IdentifiersWizardPanel2 panel2 = new IdentifiersWizardPanel2();
 
             // Listen to changes on each panel
             panel1.addChangeListener(this);
             
-            currPanels = new ArrayList<WizardDescriptor.Panel<WizardDescriptor>>();
+            currPanels = new ArrayList<>();
             currPanels.add(panel1);
+            currPanels.add(panel2);
             String[] steps = new String[currPanels.size()];
 
             Component mainFrame = FrameworkAccess.getMainFrame();
@@ -130,7 +131,7 @@ public final class IdentifiersWizardIterator implements WizardDescriptor.Iterato
         fireChangeEvent();
     }
 
-    private final void fireChangeEvent() {
+    private void fireChangeEvent() {
         changeSupport.fireChange();
     }
 }

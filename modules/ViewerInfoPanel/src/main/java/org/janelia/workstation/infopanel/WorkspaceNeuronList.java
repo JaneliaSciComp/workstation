@@ -1,9 +1,9 @@
 package org.janelia.workstation.infopanel;
 
 import org.janelia.console.viewerapi.SimpleIcons;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;

@@ -3,8 +3,8 @@ package org.janelia.workstation.gui.large_volume_viewer.skeleton;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.workstation.tracing.SegmentIndex;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;

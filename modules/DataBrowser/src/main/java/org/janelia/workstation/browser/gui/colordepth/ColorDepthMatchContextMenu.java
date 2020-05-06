@@ -11,7 +11,8 @@ import java.util.stream.Collectors;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;

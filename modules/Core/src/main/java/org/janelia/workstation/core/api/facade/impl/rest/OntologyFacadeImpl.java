@@ -10,7 +10,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-import org.janelia.it.jacs.shared.utils.DomainQuery;
+import org.janelia.model.domain.dto.DomainQuery;
 import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;

@@ -24,7 +24,8 @@ import javax.swing.SwingConstants;
 import org.janelia.console.viewerapi.dialogs.ChangeNeuronOwnerDialog;
 import org.janelia.console.viewerapi.dialogs.CommonDialogItems;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;

@@ -8,7 +8,8 @@ import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.workstation.browser.actions.OpenWithDefaultAppAction;
 import org.janelia.workstation.browser.gui.hud.Hud;
@@ -139,7 +140,7 @@ public class MaskContextMenu extends PopupContextMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 ActivityLogHelper.logUserAction("MaskContextMenu.showInLightbox", mask);
-                Hud.getSingletonInstance().setFilepathAndToggleDialog(mask.getFilepath(), true, true);
+                Hud.getSingletonInstance().setFilepathAndToggleDialog(mask.getFilepath(), null, true, true);
             }
         });
 

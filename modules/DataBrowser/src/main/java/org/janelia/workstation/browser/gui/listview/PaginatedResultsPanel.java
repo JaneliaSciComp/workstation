@@ -123,48 +123,25 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
         prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
         prevPageButton.setToolTipText("Back a page");
-        prevPageButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                goPrevPage();
-            }
-        });
+        prevPageButton.addActionListener(e -> goPrevPage());
 
         nextPageButton = new JButton(Icons.getIcon("arrow_forward.gif"));
         nextPageButton.setToolTipText("Forward a page");
-        nextPageButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                goNextPage();
-            }
-        });
+        nextPageButton.addActionListener(e -> goNextPage());
 
         startPageButton = new JButton(Icons.getIcon("arrow_double_left.png"));
         startPageButton.setToolTipText("Jump to start");
-        startPageButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                goStartPage();
-            }
-        });
+        startPageButton.addActionListener(e -> goStartPage());
 
         endPageButton = new JButton(Icons.getIcon("arrow_double_right.png"));
         endPageButton.setToolTipText("Jump to end");
-        endPageButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                goEndPage();
-            }
-        });
+        endPageButton.addActionListener(e -> goEndPage());
 
         selectAllButton = new JButton("Select All");
         selectAllButton.setToolTipText("Select all items on all pages");
-        selectAllButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                loadAndSelectAll();
-                ActivityLogHelper.logUserAction("PaginatedResultsPanel.loadAndSelectAll");
-            }
+        selectAllButton.addActionListener(e -> {
+            loadAndSelectAll();
+            ActivityLogHelper.logUserAction("PaginatedResultsPanel.loadAndSelectAll");
         });
 
         statusLabel = new JLabel("");
@@ -218,14 +195,11 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
 
                     final List<T> selectedObjects = getPageObjects(selectionModel.getSelectedIds());
 
-                    updateResultsView(new Callable<Void>() {
-                        @Override
-                        public Void call() throws Exception {
-                            // Reselect the items that were selected
-                            log.info("Reselecting {} objects in the {} viewer",selectedObjects.size(),type.getName());
-                            resultsView.select(selectedObjects, true, true, true, false);
-                            return null;
-                        }
+                    updateResultsView(() -> {
+                        // Reselect the items that were selected
+                        log.info("Reselecting {} objects in the {} viewer",selectedObjects.size(),type.getName());
+                        resultsView.select(selectedObjects, true, true, true, false);
+                        return null;
                     });
                 }
             });
@@ -541,10 +515,10 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                         if (selectedRefs.isEmpty()) {
                             // If the selection model is empty, just select the first item to make it appear in the inspector
                             List<T> objects = resultPage.getObjects();
-                            if (!objects.isEmpty()) {
+//                            if (!objects.isEmpty()) {
 //                                log.info("Auto-selecting first object (notifyModel={})", notifyModel);
 //                                resultsView.select(Arrays.asList(objects.get(0)), true, true, true, notifyModel);
-                            }
+//                            }
                         }
                         else {
                             // There's already something in the selection model, so we should attempt to reselect it
@@ -593,13 +567,10 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     private void updateResultsView(final Callable<Void> success) {
         selectionModel.reset();
         if (resultPage!=null) {
-            resultsView.show(resultPage, new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    showResultsView();
-                    ConcurrentUtils.invokeAndHandleExceptions(success);
-                    return null;
-                }
+            resultsView.show(resultPage, () -> {
+                showResultsView();
+                ConcurrentUtils.invokeAndHandleExceptions(success);
+                return null;
             });
         }
         else {

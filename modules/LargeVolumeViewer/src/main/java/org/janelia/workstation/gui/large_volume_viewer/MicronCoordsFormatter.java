@@ -2,7 +2,7 @@ package org.janelia.workstation.gui.large_volume_viewer;
 
 import java.awt.Point;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

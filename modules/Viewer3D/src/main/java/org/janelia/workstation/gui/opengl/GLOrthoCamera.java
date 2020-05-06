@@ -2,9 +2,9 @@ package org.janelia.workstation.gui.opengl;
 
 import javax.media.opengl.GL2;
 
-import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.jacs.shared.geom.Quaternion.AngleAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Rotation3d;
+import org.janelia.workstation.geom.Quaternion.AngleAxis;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.viewer3d.ViewportGL;
 

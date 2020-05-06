@@ -1,20 +1,15 @@
 package org.janelia.workstation.common.nb_action;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.SwingUtilities;
-
 import org.janelia.workstation.core.actions.PopupMenuGenerator;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.spi.actions.AdminActionBuilder;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.Exceptions;
 import org.openide.util.lookup.ServiceProvider;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.nio.file.AccessDeniedException;
 
 /**
  * Admin menu item for testing the processing of various types of exceptions.
@@ -86,6 +81,12 @@ public final class TestExceptionsActionBuilder implements AdminActionBuilder {
                 });
                 subMenu.add(unexpectedItem2);
 
+                JMenuItem authItem = new JMenuItem("HTTP 401 Unauthorized");
+                authItem.addActionListener(e -> {
+                    throw new RuntimeException("HTTP 401 Unauthorized");
+                });
+                subMenu.add(authItem);
+
                 JMenuItem oomTestItem = new JMenuItem("Out of Memory Exception");
                 oomTestItem.addActionListener(e -> {
                     throw new OutOfMemoryError("Test");
@@ -106,6 +107,12 @@ public final class TestExceptionsActionBuilder implements AdminActionBuilder {
                 });
                 subMenu.add(noSpaceItem2);
 
+                JMenuItem accessItem = new JMenuItem("File Permission Exception");
+                accessItem.addActionListener(e -> {
+                    exceptionTestAccessDenied();
+                });
+                subMenu.add(accessItem);
+
                 JMenuItem nbExceptionItem = new JMenuItem("NetBeans-style Exceptions.printStackTrace");
                 nbExceptionItem.addActionListener(e -> Exceptions.printStackTrace(new Exception("Test Exception")));
                 subMenu.add(nbExceptionItem);
@@ -120,6 +127,14 @@ public final class TestExceptionsActionBuilder implements AdminActionBuilder {
 
         private void exceptionTestInner(String message) {
             throw new IllegalStateException(message);
+        }
+
+        private void exceptionTestAccessDenied() {
+            try {
+                throw new java.nio.file.AccessDeniedException("/some/file/on/disk");
+            } catch (AccessDeniedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

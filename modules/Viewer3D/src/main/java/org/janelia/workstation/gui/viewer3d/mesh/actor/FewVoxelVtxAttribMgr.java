@@ -1,7 +1,7 @@
 package org.janelia.workstation.gui.viewer3d.mesh.actor;
 
-import org.janelia.it.jacs.shared.mesh_loader.*;
-import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
+import org.janelia.workstation.mesh_loader.*;
+import org.janelia.workstation.mesh_loader.wavefront_obj.OBJWriter;
 
 import java.io.File;
 import java.util.ArrayList;

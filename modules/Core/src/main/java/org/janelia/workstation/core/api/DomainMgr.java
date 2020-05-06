@@ -8,7 +8,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.security.Subject;
@@ -35,6 +36,7 @@ import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.events.model.PreferenceChangeEvent;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +75,7 @@ public class DomainMgr {
 
     private DomainModel model;
     private Map<String, Preference> preferenceMap;
+    private Subject subject;
 
     private DomainMgr() {
     }
@@ -104,9 +107,14 @@ public class DomainMgr {
 
     @Subscribe
     public synchronized void runAsUserChanged(SessionStartEvent event) {
-        log.info("User changed, resetting model");
-        this.preferenceMap = null;
-        model.invalidateAll();
+        if (subject != event.getSubject()) {
+            this.subject = event.getSubject();
+            log.info("User changed to {}, clearing data caches", subject.getName());
+            // Clear the user preferences, they'll be loaded on demand
+            this.preferenceMap = null;
+            // Clear the current model cache
+            model.invalidateAll();
+        }
     }
 
     AuthServiceClient getAuthClient() {
@@ -307,7 +315,7 @@ public class DomainMgr {
                 if (preference == null) {
                     preference = new Preference(getPreferenceSubject(), category, key, value);
                     DomainMgr.getDomainMgr().savePreference(preference);
-                } else if (!StringUtils.areEqual(preference.getValue(), value)) {
+                } else if (!StringUtilsExtra.areEqual(preference.getValue(), value)) {
                     preference.setValue(value);
                     DomainMgr.getDomainMgr().savePreference(preference);
                 }

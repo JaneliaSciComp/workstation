@@ -2,12 +2,14 @@ package org.janelia.workstation.browser.gui.editor;
 
 import javax.swing.JMenuItem;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.workstation.browser.actions.OpenWithDefaultAppAction;
 import org.janelia.model.domain.sample.SamplePipelineRun;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 
 /**
  * Right-click context menu for sample pipeline errors presented in the Sample Editor. 
@@ -49,7 +51,7 @@ public class SampleErrorContextMenu extends PopupContextMenu {
     }
     
     protected JMenuItem getTitleItem() {
-        String title = run.getParent().getObjective()+" "+StringUtils.splitCamelCase(run.getError().getClassification());
+        String title = run.getParent().getObjective()+" "+ StringUtilsExtra.splitCamelCase(run.getError().getClassification());
         JMenuItem titleMenuItem = new JMenuItem(title);
         titleMenuItem.setEnabled(false);
         return titleMenuItem;

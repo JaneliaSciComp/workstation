@@ -27,7 +27,8 @@ import javax.swing.SwingConstants;
 import javax.swing.TransferHandler;
 
 import org.janelia.workstation.browser.gui.options.BrowserOptions;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.SelectionModel;

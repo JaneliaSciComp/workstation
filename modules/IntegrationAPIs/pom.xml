@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.9</version>
+        <version>8.15</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>IntegrationAPIs</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>integration</artifactId>
-    <version>8.9</version>
+    <version>8.15</version>
     <packaging>nbm</packaging>
 
     <dependencies>
@@ -51,6 +51,7 @@
                 <configuration>
                     <publicPackages>
                         <publicPackage>org.janelia.workstation.integration</publicPackage>
+                        <publicPackage>org.janelia.workstation.integration.activity_logging</publicPackage>
                         <publicPackage>org.janelia.workstation.integration.api</publicPackage>
                         <publicPackage>org.janelia.workstation.integration.spi.actions</publicPackage>
                         <publicPackage>org.janelia.workstation.integration.spi.compression</publicPackage>

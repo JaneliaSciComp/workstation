@@ -1,6 +1,6 @@
 package org.janelia.workstation.controller.listener;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 
 /**

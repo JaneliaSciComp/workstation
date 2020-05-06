@@ -17,8 +17,8 @@ import java.util.Vector;
 import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 
-import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Rotation3d;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.MenuItemGenerator;

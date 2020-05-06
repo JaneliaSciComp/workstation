@@ -1,16 +1,16 @@
 package org.janelia.workstation.gui.large_volume_viewer.activity_logging;
 
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.api.SessionMgr;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.controller.tileimagery.TileIndex;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.integration.activity_logging.ActionString;
+import org.janelia.workstation.integration.activity_logging.CategoryString;
+import org.janelia.workstation.integration.activity_logging.ToolString;
 
 import java.util.Date;
 import java.util.HashMap;

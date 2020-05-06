@@ -9,7 +9,7 @@ import org.janelia.workstation.controller.tileimagery.ViewTileManager;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.shader.OutlineShader;
 import org.janelia.workstation.gui.opengl.GLActor;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.gui.viewer3d.shader.AbstractShader;
 
 public class TileOutlineActor 

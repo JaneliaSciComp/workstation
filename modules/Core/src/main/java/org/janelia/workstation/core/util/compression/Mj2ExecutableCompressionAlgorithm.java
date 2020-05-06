@@ -6,9 +6,9 @@ import java.nio.file.Files;
 import java.util.Date;
 
 import org.apache.commons.io.FileUtils;
+import org.janelia.workstation.core.util.SystemCall;
 import org.janelia.workstation.integration.spi.compression.CompressionAlgorithm;
 import org.janelia.workstation.integration.spi.compression.CompressionException;
-import org.janelia.it.jacs.shared.utils.SystemCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

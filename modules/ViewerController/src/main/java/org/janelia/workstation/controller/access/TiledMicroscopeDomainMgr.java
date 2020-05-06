@@ -317,8 +317,8 @@ public class TiledMicroscopeDomainMgr {
         getModel().notifyDomainObjectRemoved(reviewTask);
     }
     
-    public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate) throws Exception {
-        client.updateNeuronStyles(bulkNeuronStyleUpdate);
+    public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate, Long workspaceId) throws Exception {
+        client.updateNeuronStyles(bulkNeuronStyleUpdate, workspaceId);
     }
     
     public void remove(TmNeuronMetadata tmNeuron) throws Exception {

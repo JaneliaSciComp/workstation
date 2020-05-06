@@ -17,9 +17,9 @@ import org.janelia.workstation.gui.viewer3d.mesh.shader.MeshDrawShader;
 import org.janelia.workstation.gui.viewer3d.picking.RenderedIdPicker;
 import org.janelia.workstation.gui.viewer3d.shader.AbstractShader;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.mesh_loader.VertexAttributeSourceI;
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -117,7 +117,7 @@ public class NeuronSetAdapter
         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggle);
     }
 
-    @Override
+    /*@Override
     public CompletableFuture<Boolean> changeNeuronOwnership(Long neuronId) {
         try {
             TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
@@ -127,7 +127,7 @@ public class NeuronSetAdapter
         }
         return null;
     }
-
+*/
     private void updateVoxToMicronMatrices(TmSample sample) {
         // If we try to get the matrix too early, it comes back null, so populate just-in-time
         if (sample == null) {

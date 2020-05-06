@@ -17,6 +17,19 @@ import org.janelia.geometry3d.Box3;
  */
 public interface StaticVolumeBrickSource 
 {
+    public enum FileType {
+        MJ2 ("mj2"), TIFF ("tif");
+
+        FileType(String ext) {
+            extension = ext;
+        }
+        String extension;
+
+        public String getExtension() {
+            return extension;
+        }
+    };
     Collection<Double> getAvailableResolutions();
     BrickInfoSet getAllBrickInfoForResolution(Double resolution);
+    FileType getFileType();
 }

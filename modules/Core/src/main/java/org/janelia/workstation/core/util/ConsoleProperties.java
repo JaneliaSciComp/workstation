@@ -262,6 +262,11 @@ public class ConsoleProperties extends ConfigProperties {
         return ConsoleProperties.getString("console.localCache.rootDirectory", StringUtils.appendIfMissing(consolePrefsDir, "/") + ".jacs-file-cache");
     }
 
+    public static String getOutOfSyncNeuronDir() {
+        String consolePrefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
+        return ConsoleProperties.getString("console.localCache.rootDirectory", StringUtils.appendIfMissing(consolePrefsDir, "/") + ".lvv-out-of-sync-neurons");
+    }
+
     /**
      * This method is responsible for loading the property file represented by propertiesFileName
      * into properties passed in.

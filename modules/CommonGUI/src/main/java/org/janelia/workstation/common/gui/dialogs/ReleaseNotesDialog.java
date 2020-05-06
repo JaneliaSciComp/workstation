@@ -1,6 +1,7 @@
 package org.janelia.workstation.common.gui.dialogs;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.core.workers.SimpleWorker;

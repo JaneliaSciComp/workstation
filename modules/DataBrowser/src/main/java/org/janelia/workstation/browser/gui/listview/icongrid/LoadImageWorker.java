@@ -84,7 +84,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
             Stopwatch stopwatch = Stopwatch.createStarted();
             // Async cache-behind
             FileProxy proxy = FileMgr.getFileMgr().getFile(imageFilename, false);
-            try (InputStream imageStream = proxy.openContentStream()) {
+            try (InputStream imageStream = proxy.openContentStream(false)) {
                 log.trace("Async cache-behind loading: {}",imageFilename);
                 maxSizeImage = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFilename));
                 log.info("Took {} ms to load {}", stopwatch.elapsed(TimeUnit.MILLISECONDS), imageFilename);
@@ -95,7 +95,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
         }
         else {
             // Sync cache-ahead
-            try (InputStream imageStream = FileMgr.getFileMgr().getFile(imageFilename, false).openContentStream()) {
+            try (InputStream imageStream = FileMgr.getFileMgr().getFile(imageFilename, false).openContentStream(false)) {
                 log.trace("Cache-ahead loading: {}", imageFilename);
                 maxSizeImage = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFilename));
             }

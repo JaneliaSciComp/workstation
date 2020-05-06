@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.janelia.it.jacs.shared.mesh_loader.Triangle;
-import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
-import org.janelia.it.jacs.shared.mesh_loader.VertexInfoBean;
-import org.janelia.it.jacs.shared.mesh_loader.VertexInfoKey;
+import org.janelia.workstation.mesh_loader.Triangle;
+import org.janelia.workstation.mesh_loader.TriangleSource;
+import org.janelia.workstation.mesh_loader.VertexInfoBean;
+import org.janelia.workstation.mesh_loader.VertexInfoKey;
 
 /**
  * Creates triangles and their constituent vertices, to wrap a point

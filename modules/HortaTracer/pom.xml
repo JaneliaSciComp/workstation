@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.9</version>
+        <version>8.15</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>HortaTracer</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>horta</artifactId>
-    <version>8.9</version>
+    <version>8.15</version>
     <packaging>nbm</packaging>
 
     <dependencies>
@@ -51,6 +51,11 @@
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>gltools</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>common-gui</artifactId>
         </dependency>
 
         <!-- Geometry 3D --> 

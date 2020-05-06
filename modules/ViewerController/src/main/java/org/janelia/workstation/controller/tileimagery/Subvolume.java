@@ -25,13 +25,13 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.janelia.it.jacs.model.util.ThreadUtils;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.octree.ZoomLevel;
 import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.workstation.controller.tileimagery.raster.VoxelIndex;
 import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.geom.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

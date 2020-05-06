@@ -22,9 +22,9 @@ import javax.swing.JPopupMenu;
 import javax.swing.KeyStroke;
 
 import org.apache.commons.lang.SystemUtils;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.geom.Rotation3d;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.controller.tileimagery.AbstractTextureLoadAdapter;

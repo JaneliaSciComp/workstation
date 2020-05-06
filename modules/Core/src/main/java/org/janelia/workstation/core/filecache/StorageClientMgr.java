@@ -18,7 +18,8 @@ import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +30,12 @@ import org.slf4j.LoggerFactory;
 public class StorageClientMgr {
 
     private static final Logger LOG = LoggerFactory.getLogger(StorageClientMgr.class);
-    
-    private static final Cache<String, AgentStorageClient> STORAGE_WORKERS_CACHE = CacheBuilder.newBuilder()
+    private static final Consumer<Throwable> NOOP_ERROR_CONN_HANDLER = (t) -> {};
+
+    private final Cache<String, AgentStorageClient> STORAGE_WORKERS_CACHE = CacheBuilder.newBuilder()
             .concurrencyLevel(4)
             .maximumSize(256)
             .build();
-    private static final Consumer<Throwable> NOOP_ERROR_CONN_HANDLER = (t) -> {};
 
     private final HttpClientProxy httpClient;
     private final MasterStorageClient masterStorageClient;

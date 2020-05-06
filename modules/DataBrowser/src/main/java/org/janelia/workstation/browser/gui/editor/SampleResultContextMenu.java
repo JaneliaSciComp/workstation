@@ -21,6 +21,7 @@ import org.janelia.workstation.browser.actions.OpenInFinderAction;
 import org.janelia.workstation.browser.actions.OpenInNeuronAnnotatorActionListener;
 import org.janelia.workstation.browser.actions.OpenInToolAction;
 import org.janelia.workstation.browser.actions.OpenWithDefaultAppAction;
+import org.janelia.workstation.browser.actions.context.OpenInVvdNAPluginActionListener;
 import org.janelia.workstation.browser.gui.components.SampleResultViewerManager;
 import org.janelia.workstation.browser.gui.components.SampleResultViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
@@ -70,10 +71,11 @@ public class SampleResultContextMenu extends PopupContextMenu {
         add(getOpenInFinderItem());
         add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
-        add(getVaa3dTriViewItem());
-        add(getVaa3d3dViewItem());
+        add(getVVDNAPluginItem());
         add(getVvdViewerItem());
         add(getFijiViewerItem());
+        add(getVaa3dTriViewItem());
+        add(getVaa3d3dViewItem());
         add(getDownloadItem());
         
         setNextAddRequiresSeparator(true);
@@ -165,6 +167,14 @@ public class SampleResultContextMenu extends PopupContextMenu {
             return getNamedActionItem("Open in Neuron Annotator", new OpenInNeuronAnnotatorActionListener(result));
         }
         return getNamedActionItem("Open in Neuron Annotator", new OpenInNeuronAnnotatorActionListener(separation));
+    }
+
+    protected JMenuItem getVVDNAPluginItem() {
+        final NeuronSeparation separation = result.getLatestSeparationResult();
+        if (separation!=null) {
+            return getNamedActionItem("Open in VVD (Neurons)", new OpenInVvdNAPluginActionListener(separation));
+        }
+        return null;
     }
 
     protected JMenuItem getVaa3dTriViewItem() {

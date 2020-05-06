@@ -2,7 +2,7 @@ package org.janelia.workstation.controller.tileimagery;
 
 import java.util.Collection;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 
 
 public class TileStackCacheController extends BlockTiffOctreeLoadAdapter {

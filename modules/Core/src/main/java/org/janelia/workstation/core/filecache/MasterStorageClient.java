@@ -10,7 +10,8 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +50,7 @@ class MasterStorageClient extends AbstractStorageClient {
     WebDavStorage findStorage(String storagePath) throws WebDavException, FileNotFoundException {
         MultiStatusResponse[] multiStatusResponses = StorageClientResponseHelper.getResponses(
                 httpClient,
-                StorageClientResponseHelper.getStorageLookupURL(baseUrl, "data_storage_path", storagePath),
+                StorageClientResponseHelper.getStorageLookupURL(baseUrl, "data_storage_path", getUrlEncodedPath(storagePath)),
                 DavConstants.DEPTH_0,
                 0
         );

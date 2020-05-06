@@ -1,7 +1,6 @@
 package org.janelia.workstation.browser.gui.dialogs.download;
 
-import org.janelia.it.jacs.shared.utils.FileUtil;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.DynamicDomainObjectProxy;
@@ -23,6 +22,7 @@ import org.janelia.workstation.core.model.MappingType;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.options.DownloadOptions;
 import org.janelia.workstation.core.util.PathUtil;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
@@ -147,7 +147,7 @@ public class DownloadFileItem {
         }
         
         this.sourceFile = sourceFilePath;
-        this.sourceExtension = FileUtil.getExtension(sourceFilePath);
+        this.sourceExtension = Utils.getExtension(sourceFilePath);
 
         log.debug("Source path: {}",sourceFilePath);
         log.debug("Source extension: {}",sourceExtension);
@@ -221,7 +221,7 @@ public class DownloadFileItem {
         keyValues.addMap(new DynamicDomainObjectProxy(domainObject));
         log.debug("  domainObject: {}", domainObject);
 
-        String baseName = FileUtil.getBasename(new File(sourceFile).getName());
+        String baseName = Utils.getBasename(new File(sourceFile).getName());
         keyValues.put(ATTR_LABEL_FILE_NAME, baseName);
         log.debug("  {}: {}", ATTR_LABEL_FILE_NAME, baseName);
         
@@ -308,7 +308,7 @@ public class DownloadFileItem {
         keyValues.put(ATTR_LABEL_INDEX, index);
         
         log.debug("Filepath pattern: {}", filePattern);
-        String filepath = StringUtils.replaceVariablePattern(filePattern, keyValues);
+        String filepath = StringUtilsExtra.replaceVariablePattern(filePattern, keyValues);
         log.debug("Interpolated filepath: {}", filepath);
         
         if (DownloadOptions.getInstance().getSanitizeDownloads()) {

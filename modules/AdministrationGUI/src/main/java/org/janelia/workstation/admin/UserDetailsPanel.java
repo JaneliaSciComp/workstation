@@ -1,28 +1,6 @@
 package org.janelia.workstation.admin;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.beans.PropertyDescriptor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
-
-import javax.swing.*;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellEditor;
-
-import org.janelia.model.security.Group;
-import org.janelia.model.security.GroupRole;
-import org.janelia.model.security.Subject;
-import org.janelia.model.security.User;
-import org.janelia.model.security.UserGroupRole;
+import org.janelia.model.security.*;
 import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -31,6 +9,20 @@ import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellEditor;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.beans.PropertyDescriptor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  *
@@ -133,7 +125,7 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
     private void saveUser() {
         Set<UserGroupRole> userGroupRoles = currentUser.getUserGroupRoles();
         currentUser = parent.saveUser(currentUser, newPassword);
-        if (currentUser != null) {
+        if (currentUser != null && !userGroupRoles.isEmpty()) {
             parent.saveUserRoles(currentUser, userGroupRoles);
         }
         parent.viewUserList();

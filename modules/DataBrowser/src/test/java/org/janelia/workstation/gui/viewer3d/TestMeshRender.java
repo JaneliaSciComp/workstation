@@ -9,9 +9,10 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.jacs.shared.geom.Rotation3d;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
+import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.workstation.geom.Rotation3d;
+import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.mesh_loader.VertexAttributeSourceI;
 import org.janelia.workstation.core.util.WorkstationEnvironment;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
@@ -94,7 +95,7 @@ public class TestMeshRender {
              *  have such a natural source.
              */
             // NOTE: bounding box must match conditions in attributes mgr.
-            org.janelia.it.jacs.shared.viewer3d.BoundingBox3d bb = new org.janelia.it.jacs.shared.viewer3d.BoundingBox3d();
+            BoundingBox3d bb = new BoundingBox3d();
             bb.setMin( 73000, 47000, 17000 );
             bb.setMax( 75000, 49000, 21000 );
             configurator.setBoundingBox( bb );

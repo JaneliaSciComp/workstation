@@ -37,11 +37,11 @@ import org.janelia.console.viewerapi.ToolButton;
 import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
-import org.janelia.it.jacs.shared.swc.SWCDataConverter;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.swc.MatrixDrivenSWCExchanger;
+import org.janelia.workstation.swc.SWCDataConverter;
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -1240,7 +1240,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
                 new RawFileLocToClipboardAction(
                         statusLabel,
                         tileFormat,
-                        tmSample.getTwoPhotonAcquisitionFilepath(),
+                        tmSample.getAcquisitionFilepath(),
                         getRenderedVolumeLocation(tmSample),
                         getRenderedVolumeLoader())
         );

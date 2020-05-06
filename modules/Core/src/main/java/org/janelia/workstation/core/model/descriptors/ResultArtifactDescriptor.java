@@ -1,7 +1,7 @@
 package org.janelia.workstation.core.model.descriptors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
@@ -9,6 +9,7 @@ import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleAlignmentResult;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,7 +107,7 @@ public class ResultArtifactDescriptor extends ArtifactDescriptor {
         String realResultName = resultName==null?null:resultName.replace(areaSuffix, "");
         
         if (realResultName==null && resultClass!=null) {
-            realResultName = StringUtils.splitCamelCase(resultClass);
+            realResultName = StringUtilsExtra.splitCamelCase(resultClass);
         }
         
         StringBuilder sb = new StringBuilder();

@@ -1,8 +1,8 @@
 package org.janelia.workstation.gui.viewer3d.interfaces;
 
 import java.net.URL;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.geom.BoundingBox3d;
 
 public interface VolumeImage3d {
 

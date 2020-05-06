@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.opengl;
 
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.workstation.geom.BoundingBox3d;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;

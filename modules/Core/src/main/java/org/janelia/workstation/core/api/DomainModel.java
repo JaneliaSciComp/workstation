@@ -1,17 +1,15 @@
 package org.janelia.workstation.core.api;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingUtilities;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
+import com.google.common.cache.*;
 import com.google.common.collect.ComparisonChain;
 import org.janelia.it.jacs.model.entity.json.JsonTask;
-import org.janelia.it.jacs.shared.solr.SolrJsonResults;
-import org.janelia.it.jacs.shared.solr.SolrParams;
+import org.janelia.model.access.domain.search.DocumentSearchResults;
+import org.janelia.model.access.domain.search.DocumentSearchParams;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
@@ -95,6 +93,16 @@ public class DomainModel {
     private Map<Reference, Workspace> workspaceCache;
     private Map<Reference, Ontology> ontologyCache;
     private Map<Reference, ContainerizedService> containerCache;
+
+    private final LoadingCache<DocumentSearchParams, DocumentSearchResults> cachedSearchResults = CacheBuilder.newBuilder()
+            .maximumSize(20)
+            .build(
+                    new CacheLoader<DocumentSearchParams, DocumentSearchResults>() {
+                        @Override
+                        public DocumentSearchResults load(DocumentSearchParams query) throws Exception {
+                            return workspaceFacade.performSearch(query);
+                        }
+                    });
 
     public DomainModel(DomainFacade domainFacade, OntologyFacade ontologyFacade, SampleFacade sampleFacade,
                        SubjectFacade subjectFacade, WorkspaceFacade workspaceFacade) {
@@ -265,6 +273,7 @@ public class DomainModel {
             this.ontologyCache = null;
             this.containerCache = null;
             objectCache.invalidateAll();
+            cachedSearchResults.invalidateAll();;
         }
         Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent());
     }
@@ -537,6 +546,7 @@ public class DomainModel {
     }
 
     public List<Workspace> getWorkspaces() throws Exception {
+        Collection<Workspace> values;
         synchronized (modelLock) {
             if (workspaceCache == null) {
                 log.info("Caching workspaces from database...");
@@ -550,8 +560,9 @@ public class DomainModel {
                 }
                 if (TIMER) w.stop("getWorkspaces");
             }
+            values = workspaceCache.values();
         }
-        return new ArrayList<>(workspaceCache.values());
+        return new ArrayList<>(values);
     }
 
     public Workspace getDefaultWorkspace() throws Exception {
@@ -725,6 +736,7 @@ public class DomainModel {
      * @return collection of ontologies
      */
     public List<Ontology> getOntologies() {
+        Collection<Ontology> values;
         synchronized (modelLock) {
             if (ontologyCache == null) {
                 log.debug("Getting ontologies from database");
@@ -737,8 +749,9 @@ public class DomainModel {
                 }
                 if (TIMER) w.stop("getOntologies");
             }
+            values = ontologyCache.values();
         }
-        return new ArrayList<>(ontologyCache.values());
+        return new ArrayList<>(values);
     }
 
     /**
@@ -868,9 +881,9 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public SolrJsonResults search(SolrParams query) throws Exception {
+    public DocumentSearchResults search(DocumentSearchParams query) throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        SolrJsonResults results = workspaceFacade.performSearch(query);
+        DocumentSearchResults results = cachedSearchResults.get(query);
         if (TIMER) w.stop("search(query)");
         return results;
     }
@@ -1046,8 +1059,8 @@ public class DomainModel {
         return subjectFacade.getSubjectByNameOrKey(subjectKey);
     }
 
-    public Subject getOrCreateUser(String username) throws Exception {
-        return subjectFacade.getOrCreateUser(username);
+    public Subject getUser(String username) throws Exception {
+        return subjectFacade.getUser(username);
     }
 
     public String dispatchSamples(SampleReprocessingRequest request) throws Exception {

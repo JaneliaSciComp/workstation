@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
+import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,7 +126,7 @@ public class DesktopApi {
 	private static boolean runCommand(String command, String args, String file) {
 
 		String[] parts = prepareCommand(command, args, file);
-		log.info("Trying to exec: {}", StringUtils.getCommaDelimited(Arrays.asList(parts)));
+		log.info("Trying to exec: {}", StringUtilsExtra.getCommaDelimited(Arrays.asList(parts)));
 
 		try {
 			Process p = Runtime.getRuntime().exec(parts);

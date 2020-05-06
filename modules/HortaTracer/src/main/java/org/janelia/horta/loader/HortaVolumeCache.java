@@ -354,7 +354,7 @@ public class HortaVolumeCache {
                     progress.start();
                     progress.setDisplayName("Loading Tile " + tile.getTileRelativePath() + " ...");
                     progress.switchToIndeterminate();
-                    Texture3d tileTexture = tile.loadBrick(10, currentColorChannel);
+                    Texture3d tileTexture = tile.loadBrick(10, currentColorChannel, source.getFileType().getExtension());
                     if (tileTexture != null) {
                         if (nearVolumeMetadata.contains(tile)) { // Make sure this tile is still desired after loading
                             nearVolumeInRam.put(tile, tileTexture);

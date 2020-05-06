@@ -7,7 +7,7 @@ import java.util.concurrent.CancellationException;
 import javax.swing.ProgressMonitor;
 import javax.swing.SwingWorker;
 
-import org.janelia.it.jacs.shared.utils.Progress;
+import org.janelia.workstation.core.util.Progress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

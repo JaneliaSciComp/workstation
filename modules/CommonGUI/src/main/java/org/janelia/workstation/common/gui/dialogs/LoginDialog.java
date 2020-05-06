@@ -7,7 +7,8 @@ import java.awt.event.ComponentEvent;
 import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;

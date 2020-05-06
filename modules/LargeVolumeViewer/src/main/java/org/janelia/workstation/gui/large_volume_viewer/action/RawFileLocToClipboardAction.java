@@ -70,7 +70,7 @@ public class RawFileLocToClipboardAction extends AbstractAction {
                 .map(rawImage -> {
                     String acquisitionPath = StringUtils.defaultIfBlank(sampleAcquisitionPath, rawImage.getAcquisitionPath());
                     rawImage.setAcquisitionPath(acquisitionPath);
-                    return renderedVolumeLocation.getContentURIFromAbsolutePath(rawImage.getRawImagePath(0));
+                    return renderedVolumeLocation.getContentURIFromAbsolutePath(rawImage.getRawImagePath(0, null));
                 })
                 .orElseThrow(() -> {
                     // I don't know if this will ever happen so for now I am throwing an exception

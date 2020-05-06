@@ -21,7 +21,7 @@ public class EDTExceptionInterceptor extends EventQueue {
             super.dispatchEvent(event);
         } 
         catch (Throwable throwable) {
-            if (ExceptionTriage.isKnownHarmlessIssue(throwable)) {
+            if (ErrorPopups.attemptExceptionHandling(throwable)) {
                 // Known harmless issues are logged with lower logging level so as not to bother the user or spam JIRA tickets
                 logger.log(CustomLoggingLevel.WARNING, null, throwable);
             }

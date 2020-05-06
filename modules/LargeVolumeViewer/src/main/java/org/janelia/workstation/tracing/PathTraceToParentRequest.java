@@ -1,6 +1,6 @@
 package org.janelia.workstation.tracing;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.controller.tileimagery.SharedVolumeImage;
 import org.janelia.workstation.controller.tileimagery.TextureCache;
 

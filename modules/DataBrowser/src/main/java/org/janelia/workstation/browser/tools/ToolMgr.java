@@ -356,10 +356,10 @@ public class ToolMgr extends PreferenceManager {
         String path = tool.getPath();
         log.info("Running tool {} with path {} and arguments {}", toolName, path, arguments);
 
-        if (SystemInfo.isMac && tool.getPath().endsWith(".app")) {
+        if (SystemInfo.isMac && path.endsWith(".app") && arguments.isEmpty()) {
             Desktop.getDesktop().open(new File(path));
-        } else {
-            List<String> command = new ArrayList<>();
+        }
+        else {
 
             boolean foundArg = false;
             StringBuilder toolPathSb = new StringBuilder();
@@ -393,6 +393,7 @@ public class ToolMgr extends PreferenceManager {
                 return;
             }
 
+            List<String> command = new ArrayList<>();
             command.add(toolPath);
             command.addAll(toolArgs);
             command.addAll(arguments);
@@ -462,13 +463,6 @@ public class ToolMgr extends PreferenceManager {
         Utils.processStandardFilepath(standardFilepath, new FileCallable() {
             @Override
             public void call(File file) throws Exception {
-
-                if (file == null) {
-                    log.error("Could not open file path " + standardFilepath);
-                    JOptionPane.showMessageDialog(parent,
-                            "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
 
                 List<String> arguments = new ArrayList<>();
 

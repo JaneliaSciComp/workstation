@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.9</version>
+        <version>8.15</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>Viewer3D</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>viewer3d</artifactId>
-    <version>8.9</version>
+    <version>8.15</version>
     <packaging>nbm</packaging>
 
     <dependencies>
@@ -35,6 +35,27 @@
             <artifactId>jogl213lib</artifactId>
         </dependency>
 
+        <!-- JavaCPP -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacpp</artifactId>
+            <version>0.10</version>
+        </dependency>
+
+        <!-- FFMPEG -->
+        <dependency>
+            <groupId>org.bytedeco.javacpp-presets</groupId>
+            <artifactId>ffmpeg</artifactId>
+            <version>2.5.1-0.10</version>
+        </dependency>
+
+        <!-- HDF5 -->
+        <dependency>
+            <groupId>ch.systems.cisd</groupId>
+            <artifactId>jhdf5</artifactId>
+            <version>14.12.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -44,6 +65,8 @@
                 <artifactId>nbm-maven-plugin</artifactId>
                 <configuration>
                     <publicPackages>
+                        <publicPackage>org.janelia.workstation.ffmpeg</publicPackage>
+                        <publicPackage>org.janelia.workstation.geom</publicPackage>
                         <publicPackage>org.janelia.workstation.gui</publicPackage>
                         <publicPackage>org.janelia.workstation.gui.camera</publicPackage>
                         <publicPackage>org.janelia.workstation.gui.opengl</publicPackage>
@@ -72,7 +95,11 @@
                         <publicPackage>org.janelia.workstation.gui.viewer3d.text</publicPackage>
                         <publicPackage>org.janelia.workstation.gui.viewer3d.texture</publicPackage>
                         <publicPackage>org.janelia.workstation.gui.viewer3d.volume_builder</publicPackage>
+                        <publicPackage>org.janelia.workstation.img_3d_loader</publicPackage>
+                        <publicPackage>org.janelia.workstation.mesh_loader</publicPackage>
                         <publicPackage>org.janelia.workstation.signal</publicPackage>
+                        <publicPackage>org.janelia.workstation.swc</publicPackage>
+                        <publicPackage>org.janelia.workstation.units</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

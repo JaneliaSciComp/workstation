@@ -1,10 +1,11 @@
 package org.janelia.workstation.browser.gui.dialogs;
 
 import net.miginfocom.swing.MigLayout;
-import org.janelia.it.jacs.model.pipelines.PipelineProcess;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.sample.DataSet;
+import org.janelia.model.domain.sample.PipelineProcess;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;

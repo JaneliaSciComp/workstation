@@ -1,24 +1,8 @@
 package org.janelia.workstation.site.jrc.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
-import javax.swing.*;
-
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.enums.Objective;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
@@ -48,6 +32,12 @@ import org.janelia.workstation.site.jrc.action.context.ApplyPublishingNamesActio
 import org.janelia.workstation.site.jrc.nodes.FlyLineReleasesNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.List;
+import java.util.*;
 
 /**
  * A dialog for staging samples for publishing.
@@ -317,6 +307,9 @@ public class StageForPublishingDialog extends ModalDialog {
             return;
         }
 
+        ActivityLogHelper.logUserAction("StageForPublishingDialog.processSave");
+        setVisible(false);
+
         SimpleWorker worker = new SimpleWorker() {
 
             private LineRelease lineRelease;
@@ -361,10 +354,9 @@ public class StageForPublishingDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                ActivityLogHelper.logUserAction("StageForPublishingDialog.processSave", lineRelease.getId());
+
                 setLastSelectedRelease(lineRelease.getName());
                 setLastSelectedObjectives(objectives);
-                setVisible(false);
 
                 if (hadProblems) {
                     log.warn("Some problems were encountered");
@@ -386,12 +378,9 @@ public class StageForPublishingDialog extends ModalDialog {
 
                 DomainExplorerTopComponent.getInstance().refresh(() -> {
                     DomainExplorerTopComponent.getInstance().expandNodeById(FlyLineReleasesNode.NODE_ID);
-                    // This doesn't work, because the viewer will still be refreshing from the annotation changes
-                    //DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(lineRelease.getId());
-                    // Instead, let's create a new viewer...
                     for (IdentifiableNode node : NodeTracker.getInstance().getNodesById(lineRelease.getId())) {
                         if (node instanceof AbstractDomainObjectNode) {
-                            AbstractDomainObjectNode<?> nodeToLoad = (AbstractDomainObjectNode)node;
+                            AbstractDomainObjectNode<?> nodeToLoad = (AbstractDomainObjectNode<?>)node;
                             DomainListViewTopComponent viewer = ViewerUtils.createNewViewer(DomainListViewManager.getInstance(), "editor");
                             viewer.requestActive();
                             viewer.loadDomainObjectNode(nodeToLoad, true);
@@ -429,7 +418,7 @@ public class StageForPublishingDialog extends ModalDialog {
     }
 
     private int annotatePublishNames(Collection<Sample> samples) {
-        ApplyPublishingNamesActionListener a = new ApplyPublishingNamesActionListener(samples, false,true, this);
+        ApplyPublishingNamesActionListener a = new ApplyPublishingNamesActionListener(samples, false,false,true, this);
         a.actionPerformed(null);
         return a.getNumPublishingNamesApplied();
     }
@@ -468,7 +457,7 @@ public class StageForPublishingDialog extends ModalDialog {
     /**
      * Wrapper to present ColorDepthSearch with names in a combo box.
      */
-    private class ReleaseWrapper {
+    private static class ReleaseWrapper {
 
         LineRelease release;
 

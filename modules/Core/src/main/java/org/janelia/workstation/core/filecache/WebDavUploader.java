@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Splitter;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

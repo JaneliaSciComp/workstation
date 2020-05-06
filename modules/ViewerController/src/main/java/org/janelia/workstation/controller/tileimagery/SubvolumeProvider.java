@@ -1,10 +1,10 @@
 package org.janelia.workstation.controller.tileimagery;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.octree.ZoomLevel;
 import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
+import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.workstation.geom.Vec3;
 
 /**
  * within the large volume viewer, this interface enables our bad habits; the data

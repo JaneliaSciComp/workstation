@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.workstation.controller.listener.LoadStatusListener;
 import org.janelia.workstation.controller.listener.StatusUpdateListener;
 import org.janelia.workstation.controller.listener.VolumeLoadListener;
@@ -19,6 +18,7 @@ import org.janelia.workstation.controller.tileimagery.generator.InterleavedItera
 import org.janelia.workstation.controller.tileimagery.generator.MinResSliceGenerator;
 import org.janelia.workstation.controller.tileimagery.generator.SliceGenerator;
 import org.janelia.workstation.controller.tileimagery.generator.UmbrellaSliceGenerator;
+import org.janelia.workstation.geom.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

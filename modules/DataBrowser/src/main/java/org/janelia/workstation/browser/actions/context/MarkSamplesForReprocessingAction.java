@@ -18,6 +18,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.apache.commons.lang.StringUtils;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
 import org.janelia.model.domain.enums.PipelineStatus;
@@ -136,8 +137,23 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
                 for (Sample sample : samples) {
                     ActivityLogHelper.logUserAction("DomainObjectContentMenu.markForReprocessing", sample);    
                 }
+
+                StringBuilder extraOptions = new StringBuilder();
+                extraOptions.append("source=Workstation");
+                if (dialog.isSkipCorrection()) {
+                    extraOptions.append(",skip correction=true");
+                }
+                if (dialog.isSkipGrouper()) {
+                    extraOptions.append(",skip grouper=true");
+                }
+                if (!StringUtils.isBlank(dialog.getRunObjectives())) {
+                    extraOptions.append(",run objectives="+dialog.getRunObjectives());
+                }
+                if (!StringUtils.isBlank(dialog.getRunObjectives())) {
+                    extraOptions.append(",").append(dialog.getExtraOptions());
+                }
+
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                
                 SampleReprocessingRequest request = new SampleReprocessingRequest();
                 request.setSampleReferences(DomainUtils.getReferences(samples));
                 request.setProcessLabel("User Requested Reprocessing");
@@ -147,7 +163,8 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
                 request.setReuseAlignment(dialog.isReuseAlignment());
                 request.setReuseSeparation(dialog.isReuseSeparation());
                 request.setKeepExistingResults(dialog.isKeepExistingResults());
-                request.setExtraOptions(dialog.getExtraOptions());
+
+                request.setExtraOptions(extraOptions.toString());
                 
                 log.info("Dispatching {} samples", samples.size());
                 model.dispatchSamples(request);
@@ -179,6 +196,9 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
         private final JCheckBox reuseAlignmentCheckbox;
         private final JCheckBox reuseSeparationCheckbox;
         private final JCheckBox keepResultsCheckbox;
+        private final JCheckBox skipCorrectionCheckbox;
+        private final JCheckBox skipGrouperCheckbox;
+        private final JTextField runObjectivesField;
         private final JTextField extraOptionsField;
         
         private boolean returnValue;
@@ -214,7 +234,15 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
             mainPanel.addSeparator("Other options");
             this.keepResultsCheckbox = new JCheckBox();
             mainPanel.addItem("Keep previous results", keepResultsCheckbox);
-            
+            this.skipCorrectionCheckbox = new JCheckBox();
+            mainPanel.addItem("Skip distortion correction", skipCorrectionCheckbox);
+            this.skipGrouperCheckbox = new JCheckBox();
+            mainPanel.addItem("Skip stitching grouper", skipGrouperCheckbox);
+
+            this.runObjectivesField = new JTextField();
+            runObjectivesField.setColumns(20);
+            mainPanel.addItem("Objectives to run (leave blank for all)", runObjectivesField);
+
             this.extraOptionsField = new JTextField();
             extraOptionsField.setColumns(20);
             if (AccessManager.getAccessManager().isAdmin()) {
@@ -225,22 +253,16 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
             
             JButton okButton = new JButton(okButtonName);
             okButton.setToolTipText("Schedule selected samples for reprocessing");
-            okButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    returnValue = true;
-                    setVisible(false);
-                }
+            okButton.addActionListener(e -> {
+                returnValue = true;
+                setVisible(false);
             });
 
             JButton cancelButton = new JButton("Cancel");
             cancelButton.setToolTipText("Cancel without reprocessing");
-            cancelButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    returnValue = false;
-                    setVisible(false);
-                }
+            cancelButton.addActionListener(e -> {
+                returnValue = false;
+                setVisible(false);
             });
 
             JPanel buttonPane = new JPanel();
@@ -298,6 +320,17 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
             return keepResultsCheckbox.isSelected();
         }
 
+        public boolean isSkipCorrection() {
+            return skipCorrectionCheckbox.isSelected();
+        }
+
+        public boolean isSkipGrouper() {
+            return skipGrouperCheckbox.isSelected();
+        }
+
+        public String getRunObjectives() {
+            return runObjectivesField.getText();
+        }
 
         public String getExtraOptions() {
             return extraOptionsField.getText();

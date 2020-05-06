@@ -29,11 +29,19 @@ public interface SubjectFacade {
     Subject getSubjectByNameOrKey(String subjectNameOrKey) throws Exception;
 
     /**
-     * Returns the User for the current authenticated user. If the user does
-     * not exist in the system, it is created based on metadata in LDAP.
+     * Create the given user. On systems with LDAP integration, the user details will be read from LDAP, so
+     * only the username needs to be provided.
+     * @param user
+     * @return
+     * @throws Exception
+     */
+    public User createUser(User user) throws Exception;
+
+    /**
+     * Returns the User for the current authenticated user.
      * @return User object
      */
-    User getOrCreateUser(String username) throws Exception;
+    User getUser(String username) throws Exception;
 
     /**
      * Returns the current subject's preferences.

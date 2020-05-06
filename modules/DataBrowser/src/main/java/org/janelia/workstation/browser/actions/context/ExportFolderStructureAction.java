@@ -1,25 +1,16 @@
 package org.janelia.workstation.browser.actions.context;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.filechooser.FileFilter;
-
 import com.google.common.collect.Multimap;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.it.jacs.shared.file_chooser.FileChooser;
-import org.janelia.it.jacs.shared.utils.Progress;
+import org.janelia.workstation.core.util.Progress;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.workstation.browser.actions.OpenWithDefaultAppAction;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -32,6 +23,14 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @ActionID(
         category = "actions",
@@ -48,7 +47,6 @@ import org.openide.util.NbBundle;
 public class ExportFolderStructureAction extends BaseContextualNodeAction {
 
     private static final String DEFAULT_EXPORT_DIR = System.getProperty("user.home");
-    private static final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
     private Collection<Node> nodes = new ArrayList<>();
 
@@ -82,7 +80,7 @@ public class ExportFolderStructureAction extends BaseContextualNodeAction {
 
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select File Destination");
-        chooser.setFileSelectionMode(FileChooser.FILES_ONLY);
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         File defaultFile = new File(DEFAULT_EXPORT_DIR, filePrefix + ".xls");
 
         int i = 1;
@@ -104,7 +102,7 @@ public class ExportFolderStructureAction extends BaseContextualNodeAction {
             }
         });
 
-        if (chooser.showDialog(FrameworkAccess.getMainFrame(), "OK") == FileChooser.CANCEL_OPTION) {
+        if (chooser.showDialog(FrameworkAccess.getMainFrame(), "OK") == JFileChooser.CANCEL_OPTION) {
             return;
         }
 
@@ -136,7 +134,7 @@ public class ExportFolderStructureAction extends BaseContextualNodeAction {
             }
         };
 
-        worker.setProgressMonitor(new IndeterminateNoteProgressMonitor(FrameworkAccess.getMainFrame(), "Exporting data", ""));
+        worker.setProgressMonitor(new IndeterminateNoteProgressMonitor(FrameworkAccess.getMainFrame(), "Exporting folder structure and annotations", ""));
         worker.execute();
     }
 
@@ -145,14 +143,23 @@ public class ExportFolderStructureAction extends BaseContextualNodeAction {
         try (FileWriter writer = new FileWriter(destFile)) {
 
             writer.write("GUID\t");
-            writer.write("Type\t");
             writer.write("Name\t");
             writer.write("Annotations\t");
             writer.write("Folder Path\n");
 
             for (Node node : nodes) {
-                if (node instanceof TreeNode) {
-                    Node root = model.getDomainObject(TreeNode.class, node.getId());
+                if (node instanceof Workspace) {
+                    Node root = DomainMgr.getDomainMgr().getModel().getDomainObject(Workspace.class, node.getId());
+                    if (root==null) {
+                        throw new IllegalStateException("Could not find workspace: "+node.getId());
+                    }
+                    walkSubtree(root, 0, writer, "", progress);
+                }
+                else if (node instanceof TreeNode) {
+                    Node root = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, node.getId());
+                    if (root==null) {
+                        throw new IllegalStateException("Could not find root folder: "+node.getId());
+                    }
                     walkSubtree(root, 0, writer, "", progress);
                 }
                 else {
@@ -172,7 +179,10 @@ public class ExportFolderStructureAction extends BaseContextualNodeAction {
             progress.setStatus("Exporting "+node.getName());
         });
 
-        Multimap<Long, Annotation> annotationMap = DomainUtils.getAnnotationsByDomainObjectId(model.getAnnotations(node.getChildren()));
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        List<Reference> children = node.getChildren();
+        List<Annotation> annotations = model.getAnnotations(children);
+        Multimap<Long, Annotation> annotationMap = DomainUtils.getAnnotationsByDomainObjectId(annotations);
 
         for(DomainObject child : model.getDomainObjects(node.getChildren())) {
             if (child instanceof Node) {
@@ -188,8 +198,7 @@ public class ExportFolderStructureAction extends BaseContextualNodeAction {
                     sb.append(annotation.getName().replaceAll("\\s+", " "));
                 }
 
-                writer.write(child.getId()+"\t");
-                writer.write(child.getType()+"\t");
+                writer.write(Reference.createFor(child)+"\t");
                 writer.write(child.getName()+"\t");
                 writer.write(sb.toString());
                 writer.write(path+"\t"+node.getName()+"\n");

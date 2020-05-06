@@ -13,8 +13,8 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.workstation.controller.listener.TmGeoAnnotationAnchorListener;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.large_volume_viewer.listener.*;
 import org.janelia.workstation.gui.large_volume_viewer.action.TraceMode;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
@@ -138,7 +138,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         }
     }
 
-    public Vec3 getAnnotationPosition( long annotationID ) {
+    public Vec3 getAnnotationPosition(long annotationID ) {
         final Anchor anchor = skeleton.getAnchorByID(annotationID);
         Vec3 location = null;
         if (anchor != null) {

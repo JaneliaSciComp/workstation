@@ -72,7 +72,8 @@ public class ShowWorkspaceInfo extends BaseContextualNodeAction {
             message += "Sample ID: " + sample.getId() + "\n";
             message += "Sample octree path: " + sample.getLargeVolumeOctreeFilepath() + "\n";
             message += "Sample KTX path: " + sample.getLargeVolumeKTXFilepath() + "\n";
-            message += "Sample RAW path: " + sample.getTwoPhotonAcquisitionFilepath() + "\n";
+            message += "Sample RAW path: " + sample.getAcquisitionFilepath() + "\n";
+            message += "RAW compressed: " + sample.hasCompressedAcquisition() + "\n";
         }
         // need to use text area so you can copy the info to clipboard
         JTextArea textarea = new JTextArea(message);

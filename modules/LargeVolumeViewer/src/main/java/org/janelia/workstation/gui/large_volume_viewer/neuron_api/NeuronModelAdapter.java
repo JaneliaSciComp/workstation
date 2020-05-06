@@ -22,7 +22,7 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;

@@ -98,7 +98,7 @@ public class GroupContextMenu extends PopupContextMenu {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     ActivityLogHelper.logUserAction("ColorDepthMatchContentMenu.showInLightbox", proxyObject);
-                    Hud.getSingletonInstance().setFilepathAndToggleDialog(((HasFilepath)proxyObject).getFilepath(), false, false);
+                    Hud.getSingletonInstance().setFilepathAndToggleDialog(((HasFilepath)proxyObject).getFilepath(), null, false, false);
                 }
             });
     

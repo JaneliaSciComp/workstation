@@ -1,8 +1,11 @@
 package org.janelia.workstation.integration.api;
 
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+
+import org.janelia.workstation.integration.activity_logging.ActionString;
+
+import org.janelia.workstation.integration.activity_logging.CategoryString;
+
+import org.janelia.workstation.integration.activity_logging.ToolString;
 
 /**
  * Implement this to expose session-manager functionality to more-or-less
@@ -41,7 +44,6 @@ public interface ActivityLogging {
      * a granularity map.  Only issue the message at a preset
      * granularity.
      *
-     * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long, double, double)
      * @param elapsedMs
      * @param thresholdMs
      */

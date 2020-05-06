@@ -2,7 +2,6 @@ package org.janelia.console.viewerapi.model;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -47,10 +46,12 @@ public interface NeuronSet extends Collection<NeuronModel>
     void changeNeuronNonInteractable (List<TmNeuronMetadata> neuron, boolean interactable);
     void changeNeuronUserToggleRadius (List<TmNeuronMetadata> neuronList, boolean userToggleRadius);
     void changeNeuronUserProperties (List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle);
-    CompletableFuture<Boolean> changeNeuronOwnership (Long neuronId);
+    void changeNeuronOwnership (Long neuronId);
     void addObjectMesh(TmObjectMesh mesh);
     void removeObjectMesh(String meshName);    
     void updateObjectMeshName(String oldName, String updatedName);
     void setSelectMode(boolean select);
     void selectVertex (NeuronVertex anchor);
+
+    void startUpMessagingDiagnostics(NeuronModel neuron);
 }

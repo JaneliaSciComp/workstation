@@ -90,6 +90,7 @@ public class IdentifiersWizardPanel1 implements WizardDescriptor.ValidatingPanel
     public void storeSettings(WizardDescriptor wiz) {
         ActivityLogHelper.logUserAction("IdentifiersWizard.storeSettings", 1);
         IdentifiersWizardState state = (IdentifiersWizardState)wiz.getProperty(IdentifiersWizardIterator.PROP_WIZARD_STATE);
+        state.setSearchClass(getComponent().getCurrSearchClass());
         state.setText(getComponent().getText());
     }
 

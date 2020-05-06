@@ -28,10 +28,11 @@ import javax.swing.ProgressMonitor;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 
+import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.utils.FileUtil;
-import org.janelia.it.jacs.shared.utils.Progress;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.workstation.core.util.Progress;
+
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.model.search.DomainObjectResultPage;
@@ -528,7 +529,7 @@ public final class DownloadWizardAction implements ActionListener {
         
         final String targetExtension = downloadItem.getTargetExtension();
         final String targetName = downloadItem.getTargetFile().getFileName().toString();
-        final String basename = FileUtil.getBasename(targetName).replaceAll("#","");
+        final String basename = Utils.getBasename(targetName).replaceAll("#","");
 
         // Find the first matching file
         for(Path file : files) {

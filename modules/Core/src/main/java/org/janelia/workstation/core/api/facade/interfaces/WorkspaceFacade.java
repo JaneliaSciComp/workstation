@@ -3,8 +3,8 @@ package org.janelia.workstation.core.api.facade.interfaces;
 import java.util.Collection;
 import java.util.List;
 
-import org.janelia.it.jacs.shared.solr.SolrJsonResults;
-import org.janelia.it.jacs.shared.solr.SolrParams;
+import org.janelia.model.access.domain.search.DocumentSearchResults;
+import org.janelia.model.access.domain.search.DocumentSearchParams;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.gui.search.Filter;
@@ -25,7 +25,7 @@ public interface WorkspaceFacade {
      * @return the search results
      * @throws Exception something went wrong
      */
-    SolrJsonResults performSearch(SolrParams query) throws Exception;
+    DocumentSearchResults performSearch(DocumentSearchParams query) throws Exception;
     
     /**
      * Return the current user's default workspace.

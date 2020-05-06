@@ -41,7 +41,7 @@ import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.gui.task_workflow.NeuronTree;
 import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -2063,7 +2063,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.exportSWCData(swcFile, downsampleModulo, neurons, exportNotes, this);
+                //SannotationModel.exportSWCData(swcFile, downsampleModulo, neurons, exportNotes, this);
             }
 
             @Override

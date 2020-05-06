@@ -11,7 +11,7 @@ import org.janelia.workstation.integration.api.BrowsingController;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
- * Implements
+ * Implements the browser history.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

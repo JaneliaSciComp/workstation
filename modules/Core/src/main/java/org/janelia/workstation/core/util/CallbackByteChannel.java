@@ -37,8 +37,8 @@ public class CallbackByteChannel implements ReadableByteChannel {
         return n;
     }
 
-    public static interface ProgressCallBack {
-        public void callback(long bytesWritten);
+    public interface ProgressCallBack {
+        void callback(long bytesWritten);
     }
 
 }

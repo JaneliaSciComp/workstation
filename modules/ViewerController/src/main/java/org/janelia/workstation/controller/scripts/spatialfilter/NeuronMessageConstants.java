@@ -21,6 +21,7 @@ public class NeuronMessageConstants {
         REQUEST_NEURON_OWNERSHIP,
         REQUEST_NEURON_ASSIGNMENT,
         NEURON_OWNERSHIP_DECISION,
-        ERROR_PROCESSING
+        ERROR_PROCESSING,
+        NETWORK_DIAGNOSTICS
     }
 }
