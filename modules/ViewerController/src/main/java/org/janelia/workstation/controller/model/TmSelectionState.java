@@ -19,7 +19,7 @@ public class TmSelectionState {
     private Map<String, Object> selections;
     private AnnotationCategory selectionMode;
     public enum SelectionCode {
-        PRIMARY, SECONDARY
+        NEURON, VERTEX
     };
     long foo = 0;
     private static TmSelectionState instance;
@@ -34,17 +34,24 @@ public class TmSelectionState {
         selections = new HashMap<>();
     }
 
-    public Object getPrimarySelections() {
-        return selections.get(SelectionCode.PRIMARY.name());
+    public Object getNeuronSelections() {
+        return selections.get(SelectionCode.NEURON.name());
     }
 
-    public Object getCurrentSelection() {
-        Object currentSelections = selections.get(SelectionCode.PRIMARY.name());
-        return currentSelections;
+    public TmNeuronMetadata getCurrentNeuron() {
+        return (TmNeuronMetadata)selections.get(SelectionCode.NEURON.name());
     }
 
-    public void setCurrentSelection(Object selection) {
-        selections.put(SelectionCode.PRIMARY.name(), selection);
+    public TmGeoAnnotation getCurrentVertex() {
+        return (TmGeoAnnotation)selections.get(SelectionCode.VERTEX.name());
+    }
+
+    public void setCurrentNeuron(Object selection) {
+        selections.put(SelectionCode.NEURON.name(), selection);
+    }
+
+    public void setCurrentVertex(Object selection) {
+        selections.put(SelectionCode.VERTEX.name(), selection);
     }
 
     public void clearAllSelections() {

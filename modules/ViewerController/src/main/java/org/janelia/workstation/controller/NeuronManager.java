@@ -1607,8 +1607,10 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         final TmWorkspace workspace = modelManager.getCurrentWorkspace();
 
         SwingUtilities.invokeLater(() -> {
-            fireNotesUpdated(geoAnnotation);
-            //activityLog.logSetNote(workspace.getId(), geoAnnotation.getId(), noteString);
+            AnnotationEvent notesEvent = new AnnotationEvent(AnnotationEvent.Type.UPDATE);
+            notesEvent.setCategory(AnnotationCategory.VERTEX);
+            notesEvent.setVertices( Arrays.asList(new TmGeoAnnotation[]{geoAnnotation}));
+            EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.ANNOTATION).post(notesEvent);
         });
     }
 

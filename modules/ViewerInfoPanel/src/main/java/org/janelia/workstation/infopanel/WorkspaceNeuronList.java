@@ -1,6 +1,7 @@
 package org.janelia.workstation.infopanel;
 
 import org.janelia.console.viewerapi.SimpleIcons;
+import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.geom.BoundingBox3d;
@@ -444,7 +445,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     protected JPopupMenu createPopupMenu(MouseEvent me) {
-        NeuronContextMenu menu = new NeuronContextMenu(annotationModel.getCurrentNeuron());
+        NeuronContextMenu menu = new NeuronContextMenu(TmSelectionState.getInstance().getCurrentNeuron());
         menu.addMenuItems();
         return menu;
     }
@@ -476,8 +477,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
      * by the AnnModel
      */
     private void syncSelection() {
-        if (annotationModel.getCurrentNeuron() != null) {
-            int modelRow = neuronTableModel.getRowForNeuron(annotationModel.getCurrentNeuron());
+        if (TmSelectionState.getInstance().getCurrentNeuron() != null) {
+            int modelRow = neuronTableModel.getRowForNeuron(TmSelectionState.getInstance().getCurrentNeuron());
             if (modelRow >= 0) {
                 int viewRow = neuronTable.convertRowIndexToView(modelRow);
                 if (viewRow >= 0) {
