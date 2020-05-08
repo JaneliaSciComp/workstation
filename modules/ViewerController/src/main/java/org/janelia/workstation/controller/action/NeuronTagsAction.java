@@ -23,6 +23,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.awt.ActionID;
@@ -93,8 +94,7 @@ public class NeuronTagsAction extends EditAction {
 
     private TmNeuronMetadata getTargetNeuron() {
         if (targetNeuron == null) {
-            NeuronManager annModel = NeuronManager.getInstance();
-            return annModel.getCurrentNeuron();
+            return TmSelectionState.getInstance().getCurrentNeuron();
         }
         return targetNeuron;
     }

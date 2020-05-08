@@ -53,9 +53,13 @@ public class TmViewerManager implements GlobalViewerController {
     public void selectAnnotations(SelectionEvent selectionEvent) {
         switch (selectionEvent.getType()) {
             case SELECT:
-                List<DomainObject> selections = selectionEvent.getItems();
-                // for now just set selection as one item and set it as multiple shortly
-                modelManager.getCurrentSelections().setCurrentSelection(selections.get(0));
+                List<Object> selections = selectionEvent.getItems();
+                // temporary fix to get all the events in panelcontroller working
+                if (selections.get(0) instanceof TmNeuronMetadata)
+                    modelManager.getCurrentSelections().setCurrentNeuron(selections.get(0));
+                else
+                    modelManager.getCurrentSelections().setCurrentVertex(selections.get(0));
+
                 break;
             case CLEAR:
                 break;
