@@ -54,6 +54,14 @@ public class TmSelectionState {
         selections.put(SelectionCode.VERTEX.name(), selection);
     }
 
+    public void clearNeuronSelection() {
+        selections.remove(SelectionCode.NEURON.name());
+    }
+
+    public void clearVertexSelection() {
+        selections.remove(SelectionCode.VERTEX.name());
+    }
+
     public void clearAllSelections() {
         selections.clear();
     }

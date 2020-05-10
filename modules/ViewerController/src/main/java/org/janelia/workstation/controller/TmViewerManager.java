@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.text.View;
 import java.util.*;
 
 public class TmViewerManager implements GlobalViewerController {
@@ -45,26 +46,23 @@ public class TmViewerManager implements GlobalViewerController {
     public TmViewerManager() {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         setNeuronManager(NeuronManager.getInstance());
-        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).register(this);
-        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SELECTION).register(this);
+        ViewerEventBus.registerForEvents(this);
     }
 
     @Subscribe
-    public void selectAnnotations(SelectionEvent selectionEvent) {
-        switch (selectionEvent.getType()) {
-            case SELECT:
-                List<Object> selections = selectionEvent.getItems();
-                // temporary fix to get all the events in panelcontroller working
-                if (selections.get(0) instanceof TmNeuronMetadata)
-                    modelManager.getCurrentSelections().setCurrentNeuron(selections.get(0));
-                else
-                    modelManager.getCurrentSelections().setCurrentVertex(selections.get(0));
+    public void selectAnnotations(SelectionAnnotationEvent selectionEvent) {
+        if (selectionEvent.isSelect()) {
+            List<Object> selections = selectionEvent.getItems();
+            if (selections.get(0) instanceof TmNeuronMetadata)
+                modelManager.getCurrentSelections().setCurrentVertex(selections.get(0));
+            else
+                modelManager.getCurrentSelections().setCurrentVertex(selections.get(0));
+        } else {
+            //
+        }
 
-                break;
-            case CLEAR:
-                break;
-            case DESELECT:
-                break;
+        if (selectionEvent.isClear()) {
+            modelManager.getCurrentSelections().clearVertexSelection();
         }
 
     }
@@ -102,9 +100,7 @@ public class TmViewerManager implements GlobalViewerController {
 
     // once the data has been loaded
     @Subscribe
-    public void dataLoadComplete(LoadEvent dataEvent) {
-        if (dataEvent.getType()!= LoadEvent.Type.METADATA_COMPLETE)
-            return;
+    public void dataLoadComplete(LoadMetadataEvent dataEvent) {
         try {
             loadImagery(dataEvent.getSample());
         } catch (Exception error) {
@@ -156,9 +152,7 @@ public class TmViewerManager implements GlobalViewerController {
     }
 
     @Subscribe
-    public void loadComplete(LoadEvent event) {
-        if (event.getType()!= LoadEvent.Type.PROJECT_COMPLETE)
-            return;
+    public void loadComplete(LoadProjectEvent event) {
         final TmWorkspace workspace = modelManager.getCurrentWorkspace();
         if (workspace==null) {
             // this is a sample
@@ -174,11 +168,8 @@ public class TmViewerManager implements GlobalViewerController {
                     modelManager.getCurrentView().setFilter(true);
 
                     // fire event
-                    EventBus annBus = EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.ANNOTATION);
-                    AnnotationEvent annotationEvent = new AnnotationEvent(AnnotationEvent.Type.SPATIAL_FILTER);
-                    annotationEvent.setCategory(AnnotationCategory.NEURON);
-                    annotationEvent.setEnabled(true);
-                    annBus.post(annotationEvent);
+                    NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(true);
+                    ViewerEventBus.postEvent(spatialEvent);
                     break;
                 }
             }
@@ -192,10 +183,9 @@ public class TmViewerManager implements GlobalViewerController {
             FrameworkAccess.handleException(error);
         }
         SwingUtilities.invokeLater(() -> {
-            EventBus selectBus = EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SELECTION);
-            SelectionEvent evt = new SelectionEvent(SelectionEvent.Type.CLEAR);
-            evt.setCategory(AnnotationCategory.NEURON);
-            selectBus.post(evt);
+            SelectionEvent evt = new SelectionEvent();
+            evt.setClear(true);
+            ViewerEventBus.postEvent(evt);
         });
         if (workspace!=null) {
             ////activityLog.logLoadWorkspace(workspace.getId());

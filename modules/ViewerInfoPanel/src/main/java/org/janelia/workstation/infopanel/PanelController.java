@@ -5,14 +5,11 @@ import java.util.List;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.workstation.controller.AnnotationCategory;
-import org.janelia.workstation.controller.EventBusRegistry;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.workstation.controller.eventbus.AnnotationEvent;
-import org.janelia.workstation.controller.eventbus.LoadEvent;
-import org.janelia.workstation.controller.eventbus.SelectionEvent;
+import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,12 +41,11 @@ public class PanelController {
     }
     
     public void registerForEvents() {
-        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).register(this);
-        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.ANNOTATION).register(this);
-        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SELECTION).register(this);
+        ViewerEventBus.registerForEvents(this);
     }
 
-    public void workspaceUnloaded(LoadEvent loadEvent) {
+    @Subscribe
+    public void workspaceUnloaded(UnloadProjectEvent loadEvent) {
         annotationPanel.loadWorkspace(null);
         filteredAnnotationList.loadWorkspace(null);
         wsNeuronList.loadWorkspace(null);
@@ -57,8 +53,8 @@ public class PanelController {
     }
 
     @Subscribe
-    public void workspaceLoaded(LoadEvent loadEvent) {
-        if (loadEvent.getType()!= LoadEvent.Type.PROJECT_COMPLETE || loadEvent.getWorkspace()==null)
+    public void workspaceLoaded(LoadProjectEvent loadEvent) {
+        if (loadEvent.isSample())
             return;
 
         TmWorkspace workspace = loadEvent.getWorkspace();
@@ -69,10 +65,7 @@ public class PanelController {
     }
 
     @Subscribe
-    public void neuronsCreated(AnnotationEvent annoEvent) {
-        if (annoEvent.getType()!= AnnotationEvent.Type.CREATE || annoEvent.getCategory()!= AnnotationCategory.NEURON)
-            return;
-
+    public void neuronsCreated(NeuronCreateEvent annoEvent) {
         Collection<TmNeuronMetadata> neurons = annoEvent.getNeurons();
         for (TmNeuronMetadata neuron : neurons) {
             wsNeuronList.addNeuronToModel(neuron);
@@ -82,10 +75,7 @@ public class PanelController {
     }
 
     @Subscribe
-    public void neuronsDeleted(AnnotationEvent annoEvent) {
-        if (annoEvent.getType()!= AnnotationEvent.Type.DELETE || annoEvent.getCategory()!= AnnotationCategory.NEURON)
-            return;
-
+    public void neuronsDeleted(NeuronDeleteEvent annoEvent) {
         Collection<TmNeuronMetadata> neurons = annoEvent.getNeurons();
         for (TmNeuronMetadata neuron : neurons) {
             filteredAnnotationList.loadNeuron(neuron);
@@ -94,10 +84,7 @@ public class PanelController {
     }
 
     @Subscribe
-    public void neuronsRenamed(AnnotationEvent annoEvent) {
-        if (annoEvent.getType()!= AnnotationEvent.Type.RENAME || annoEvent.getCategory()!= AnnotationCategory.NEURON)
-            return;
-
+    public void neuronsRenamed(NeuronUpdateEvent annoEvent) {
         Collection<TmNeuronMetadata> neurons = annoEvent.getNeurons();
         for (TmNeuronMetadata neuron : neurons) {
             filteredAnnotationList.loadNeuron(neuron);
@@ -106,10 +93,7 @@ public class PanelController {
     }
 
     @Subscribe
-    public void neuronsSelected(SelectionEvent selectionEvent) {
-        if (selectionEvent.getType()!= SelectionEvent.Type.SELECT || selectionEvent.getCategory()!= AnnotationCategory.NEURON)
-            return;
-
+    public void neuronsSelected(SelectionNeuronsEvent selectionEvent) {
         List<DomainObject> neurons = selectionEvent.getItems();
         for (DomainObject neuron : neurons) {
             filteredAnnotationList.loadNeuron((TmNeuronMetadata)neuron);
@@ -118,39 +102,27 @@ public class PanelController {
     }
 
     @Subscribe
-    public void neuronTagsChanged(AnnotationEvent annoEvent) {
-        if (annoEvent.getType()!= AnnotationEvent.Type.UPDATE|| annoEvent.getCategory()!= AnnotationCategory.TAG)
-            return;
-
-        Collection<TmNeuronMetadata> neurons = annoEvent.getNeurons();
+    public void neuronTagsChanged(NeuronTagsUpdateEvent tagEvent) {
+        Collection<TmNeuronMetadata> neurons = tagEvent.getNeurons();
         wsNeuronList.neuronTagsChanged(neurons);
     }
 
     @Subscribe
-    public void neuronSpatialFilterUpdated(AnnotationEvent annoEvent) {
-        if (annoEvent.getType()!= AnnotationEvent.Type.SPATIAL_FILTER || annoEvent.getCategory()!= AnnotationCategory.NEURON)
-            return;
-
-        wsNeuronList.updateNeuronSpatialFilter(annoEvent.isEnabled(), annoEvent.getDescription());
+    public void neuronSpatialFilterUpdated(NeuronSpatialFilterUpdateEvent spatialEvent) {
+        wsNeuronList.updateNeuronSpatialFilter(spatialEvent.isEnabled(), spatialEvent.getDescription());
     }
 
     @Subscribe
-    public void annotationChanged(AnnotationEvent annoEvent) {
-        if (annoEvent.getType()!= AnnotationEvent.Type.UPDATE || annoEvent.getCategory()!= AnnotationCategory.VERTEX)
-            return;
-
-        Collection<TmGeoAnnotation> vertices = annoEvent.getVertices();
+    public void annotationChanged(AnnotationUpdateEvent annoEvent) {
+        Collection<TmGeoAnnotation> vertices = annoEvent.getAnnotations();
         for (TmGeoAnnotation vertex : vertices) {
             filteredAnnotationList.annotationChanged(vertex);
         }
     }
 
     @Subscribe
-    public void notesUpdated(AnnotationEvent annoEvent) {
-        if (annoEvent.getType()!= AnnotationEvent.Type.UPDATE || annoEvent.getCategory()!= AnnotationCategory.NOTE)
-            return;
-
-        Collection<TmGeoAnnotation> vertices = annoEvent.getVertices();
+    public void notesUpdated(AnnotationNotesUpdateEvent notesEvent) {
+        Collection<TmGeoAnnotation> vertices = notesEvent.getAnnotations();
         for (TmGeoAnnotation vertex : vertices) {
             filteredAnnotationList.notesChanged(vertex);
         }
