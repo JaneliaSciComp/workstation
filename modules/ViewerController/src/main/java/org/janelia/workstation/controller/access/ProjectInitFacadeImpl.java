@@ -6,10 +6,9 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.rendering.utils.ClientProxy;
-import org.janelia.workstation.controller.EventBusRegistry;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.TmViewerManager;
-import org.janelia.workstation.controller.eventbus.LoadEvent;
-import org.janelia.workstation.controller.eventbus.WorkspaceEvent;
+import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSpatialFilter;
@@ -79,10 +78,11 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
 
             @Override
             protected void hadSuccess() {
-                LoadEvent event = new LoadEvent(LoadEvent.Type.PROJECT_COMPLETE);
+                LoadProjectEvent event = new LoadProjectEvent(workspace==null);
                 event.setSample(sample);
-                event.setWorkspace(workspace);
-                EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
+                if (workspace!=null)
+                    event.setWorkspace(workspace);
+                ViewerEventBus.postEvent(event);
                 progress.finish();
             }
 
@@ -183,10 +183,10 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 log.info("Metadata loading completed");
                 progress2.finish();
                 // now that data and tileimagery has been loaded sent out events to refresh the viewers
-                LoadEvent event = new LoadEvent(LoadEvent.Type.METADATA_COMPLETE);
+                LoadMetadataEvent event = new LoadMetadataEvent();
                 event.setWorkspace(workspace);
                 event.setSample(sample);
-                EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
+                ViewerEventBus.postEvent(event);
             }
 
             @Override
@@ -203,8 +203,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
     @Override
     public void clearViewers() {
         // clear out the current model and send events to viewers to refresh
-        WorkspaceEvent event = new WorkspaceEvent(WorkspaceEvent.Type.CLEAR);
-        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SAMPLEWORKSPACE).post(event);
+        ViewerEventBus.postEvent(new UnloadProjectEvent(modelManager.getCurrentWorkspace()==null));
     }
 
     @Override

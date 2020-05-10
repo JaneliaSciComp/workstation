@@ -1,6 +1,8 @@
 package org.janelia.workstation.infopanel;
 
 import org.janelia.console.viewerapi.SimpleIcons;
+import org.janelia.workstation.controller.eventbus.SelectionNeuronsEvent;
+import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.geom.BoundingBox3d;
@@ -11,7 +13,7 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.controller.AnnotationCategory;
-import org.janelia.workstation.controller.EventBusRegistry;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
@@ -221,12 +223,11 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         neuronTable.addMouseListener(new MouseHandler() {
 
             private void selectNeuron(TmNeuronMetadata neuron) {
-                SelectionEvent event = new SelectionEvent(SelectionEvent.Type.SELECT);
-                event.setCategory(AnnotationCategory.NEURON);
+                SelectionNeuronsEvent event = new SelectionNeuronsEvent();
                 List<DomainObject> neuronList = new ArrayList<>();
                 neuronList.add(neuron);
                 event.setItems(neuronList);
-                EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SELECTION).post(event);
+                ViewerEventBus.postEvent(event);
             }
 
             @Override
@@ -444,7 +445,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     protected JPopupMenu createPopupMenu(MouseEvent me) {
-        NeuronContextMenu menu = new NeuronContextMenu(annotationModel.getCurrentNeuron());
+        NeuronContextMenu menu = new NeuronContextMenu(TmSelectionState.getInstance().getCurrentNeuron());
         menu.addMenuItems();
         return menu;
     }
@@ -747,7 +748,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         event.setCameraFocusX(location.getX());
         event.setCameraFocusY(location.getY());
         event.setCameraFocusZ(location.getZ());
-        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.VIEWSTATE).post(event);
+        ViewerEventBus.postEvent(event);
     }
 
     private void onNeuronDoubleClicked(TmNeuronMetadata neuron) {

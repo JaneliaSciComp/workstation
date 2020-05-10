@@ -4,9 +4,10 @@ import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.AnnotationCategory;
-import org.janelia.workstation.controller.EventBusRegistry;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.action.CommonActions;
+import org.janelia.workstation.controller.eventbus.SelectionAnnotationEvent;
 import org.janelia.workstation.controller.eventbus.SelectionEvent;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.listener.AnnotationSelectionListener;
@@ -16,8 +17,6 @@ import org.janelia.workstation.controller.model.annotations.neuron.AnnotationGeo
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
 import org.janelia.workstation.controller.model.annotations.neuron.InterestingAnnotation;
 import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
@@ -149,10 +148,9 @@ public class FilteredAnnotationList extends JPanel {
                     TmGeoAnnotation annotation = neuronManager.getGeoAnnotationFromID(ann.getNeuronID(), ann.getAnnotationID());
                     if (me.getClickCount() == 1) {
                         table.setRowSelectionInterval(viewRow, viewRow);
-                        SelectionEvent selectionEvent = new SelectionEvent(SelectionEvent.Type.SELECT);
-                        selectionEvent.setCategory(AnnotationCategory.VERTEX);
+                        SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent();
                         selectionEvent.setItems(Arrays.asList(new TmGeoAnnotation[]{annotation}));
-                        EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SELECTION).post(selectionEvent);
+                        ViewerEventBus.postEvent(selectionEvent);
                     } else if (me.getClickCount() == 2) {
                         // which column?
                         int viewColumn = table.columnAtPoint(me.getPoint());
@@ -162,15 +160,14 @@ public class FilteredAnnotationList extends JPanel {
                             // double-click note: edit note dialog
                             CommonActions.addEditNote(interestingAnnotation.getNeuronID(), interestingAnnotation.getAnnotationID());
                         } else {
-                           SelectionEvent selectionEvent = new SelectionEvent(SelectionEvent.Type.SELECT);
-                           selectionEvent.setCategory(AnnotationCategory.VERTEX);
+                           SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent();
                            selectionEvent.setItems(Arrays.asList(new TmGeoAnnotation[]{annotation}));
-                           EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.SELECTION).post(selectionEvent);
+                           ViewerEventBus.postEvent(selectionEvent);
                            ViewEvent viewEvent = new ViewEvent();
                            viewEvent.setCameraFocusX(annotation.getX());
                            viewEvent.setCameraFocusY(annotation.getY());
                            viewEvent.setCameraFocusZ(annotation.getZ());
-                           EventBusRegistry.getInstance().getEventRegistry(EventBusRegistry.EventBusType.VIEWSTATE).post(viewEvent);
+                           ViewerEventBus.postEvent(viewEvent);
                         }
                     }
                 }

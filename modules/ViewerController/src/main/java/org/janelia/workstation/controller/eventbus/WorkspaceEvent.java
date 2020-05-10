@@ -3,23 +3,8 @@ package org.janelia.workstation.controller.eventbus;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
 public class WorkspaceEvent {
-    public enum Type {
-        CREATE, LOAD, DELETE, IMPORT, EDIT, UPDATE, CLEAR;
-    };
-    private WorkspaceEvent.Type type;
     private long WorkspaceId;
     private TmWorkspace Workspace;
-
-    public WorkspaceEvent(Type type) {
-        this.type = type;
-    }
-
-    public WorkspaceEvent.Type getEventType() {
-        return type;
-    }
-    public void setEventType(WorkspaceEvent.Type type) {
-        this.type = type;
-    }
 
     public long getWorkspaceId() {
         return WorkspaceId;

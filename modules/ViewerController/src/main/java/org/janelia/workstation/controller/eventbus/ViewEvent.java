@@ -1,11 +1,6 @@
 package org.janelia.workstation.controller.eventbus;
 
 public class ViewEvent {
-
-    public enum Type {
-        SET, RESET, CLOSE, TRANSLATION, ROTATION, ZOOM, BUFFER
-    };
-    private Type type;
     private double cameraFocusX;
     private double cameraFocusY;
     private double cameraFocusZ;
@@ -14,13 +9,6 @@ public class ViewEvent {
     private boolean interpolate;
 
     public ViewEvent() {
-    }
-    public Type getType() {
-        return type;
-    }
-
-    public void setType(Type type) {
-        this.type = type;
     }
 
     public double getCameraFocusX() {
