@@ -18,6 +18,7 @@ import javax.swing.JTextField;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,10 +91,7 @@ public class BulkNeuronTagAction extends AbstractAction {
         SimpleWorker adder = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                Stopwatch stopwatch = Stopwatch.createStarted();
                 annModel.addNeuronTag(tag, neuronList);
-                System.out.println("added tag to " + neuronList.size() + " neurons in " + stopwatch);
-                stopwatch.stop();
             }
 
             @Override
@@ -103,7 +101,7 @@ public class BulkNeuronTagAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                logger.error("error adding tag " + tag + " to multiple neurons");
+                FrameworkAccess.handleException(error);
                 showError("There was an error adding the tag!", "Error");
             }
         };
@@ -143,7 +141,7 @@ public class BulkNeuronTagAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                logger.error("error removing tag " + tag + " from multiple neurons");
+                FrameworkAccess.handleException(error);
                 showError("There was an error removing the tags!", "Error");
             }
         };

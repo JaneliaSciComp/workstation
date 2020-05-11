@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import org.apache.commons.io.FilenameUtils;
+import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.it.jacs.shared.utils.Progress;
@@ -41,6 +42,7 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.security.Subject;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
@@ -53,6 +55,7 @@ import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionSupport;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.geom.ParametrizedLine;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -107,7 +110,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     private TmNeuronMetadata currentNeuron;
     private TmGeoAnnotation currentVertex;
     private List<TmNeuronMetadata> currentFilteredNeuronList;
-    private TmNeuronTagMap currentTagMap;
 
     private NeuronSpatialFilter neuronFilter;
    // private final FilteredAnnotationModel filteredAnnotationModel;
@@ -183,7 +185,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         log.info("Clearing annotation model");
         currentWorkspace = null;
         currentSample = null;
-        currentTagMap = null;
         setCurrentNeuron(null);
 
         SwingUtilities.invokeLater(() -> fireWorkspaceUnloaded(currentWorkspace));
@@ -191,18 +192,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public void setSWCDataConverter(SWCDataConverter converter) {
         this.swcDataConverter = converter;
-    }
-
-    // current neuron methods
-    public TmNeuronMetadata getCurrentNeuron() {
-        log.trace("getCurrentNeuron = {}",currentNeuron);
-        return currentNeuron;
-    }
-
-    // current neuron methods
-    public TmGeoAnnotation getCurrentPoint() {
-        log.trace("getCurrentPoint = {}",currentVertex);
-        return currentVertex;
     }
 
     // this method sets the current neuron but does not fire an event to update the UI
@@ -228,19 +217,9 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     // this method sets the current neuron *and* updates the UI; null neuron means deselect
     public void selectNeuron(TmNeuronMetadata neuron) {
-        if (neuron != null && getCurrentNeuron() != null && neuron.getId().equals(getCurrentNeuron().getId())) {
-            return;
-        }
-        setCurrentNeuron(neuron); // synchronized on this NeuronManager here
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireNeuronSelected(neuron);
-            }
-        });
-        if (modelManager.getCurrentWorkspace()!=null && neuron!=null) {
-            //activityLog.logSelectNeuron(modelManager.getCurrentWorkspace().getId(), neuron.getId());
-        }
+        SelectionNeuronsEvent neuronEvent = new SelectionNeuronsEvent();
+        neuronEvent.setItems(Arrays.asList(neuron));
+        ViewerEventBus.postEvent(neuronEvent);
     }
 
     // placeholder for any non listener methods that need to update neuron information
@@ -445,7 +424,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      */
     public synchronized void renameCurrentNeuron(String name) throws Exception {
         // rename whatever neuron was current at time of start of this call.
-        final TmNeuronMetadata neuron = getCurrentNeuron();
+        final TmNeuronMetadata neuron = TmSelectionState.getInstance().getCurrentNeuron();
         neuron.setName(name);
         this.neuronModel.saveNeuronData(neuron);
         log.info("Neuron was renamed: "+neuron);
@@ -505,40 +484,39 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         });
     }
 
-    public synchronized void deleteCurrentNeuron() throws Exception {
-        TmNeuronMetadata currentNeuron = getCurrentNeuron();
-        if (currentNeuron == null) {
-            return;
+    public synchronized void deleteCurrentNeuron() {
+        try {
+            TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
+
+            if (currentNeuron == null) {
+                return;
+            }
+            deleteNeuron(currentNeuron);
+            fireClearSelections();
+        } catch (Exception e) {
+            FrameworkAccess.handleException(e);
         }
-        deleteNeuron(currentNeuron);
-        setCurrentNeuron(null);
     }
 
-    public synchronized void deleteNeuron(final TmNeuronMetadata deletedNeuron) throws Exception {
-
-        // delete
-        neuronModel.deleteNeuron(currentWorkspace, deletedNeuron);
-        log.info("Neuron was deleted: "+deletedNeuron);
-
-        // updates
-        final TmWorkspace workspace = modelManager.getCurrentWorkspace();
-
+    public synchronized void deleteNeuron(final TmNeuronMetadata deletedNeuron) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 try {
+                    neuronModel.deleteNeuron(currentWorkspace, deletedNeuron);
+                    log.info("Neuron was deleted: "+deletedNeuron);
+
                     // if filter, add and remove fragments as necessary
                     if (applyFilter) {
                         NeuronUpdates updates = neuronFilter.deleteNeuron(deletedNeuron);
                         updateFrags(updates);
                     }
-        
-                    fireNeuronSelected(null);
+
                     fireNeuronDeleted(deletedNeuron);
+                    fireClearSelections();
+                } catch (Exception e) {
+                    FrameworkAccess.handleException(e);
                 }
-                finally {
-                }
-                ////activityLog.logDeleteNeuron(workspace.getId(), deletedNeuron.getId());
             }
         });
     }
@@ -582,7 +560,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
                 fireNeuronCreated(neuron);
                 fireNeuronSelected(neuron);
-                // //activityLog.logCreateNeuron(workspace.getId(), neuron.getId());
             }
         });
 
@@ -2075,6 +2052,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public void saveTagMeta(Map<String,Map<String,Object>> allTagMeta) throws Exception {
+        TmNeuronTagMap currentTagMap = modelManager.getCurrentTagMap();
         currentTagMap.saveTagGroupMappings(allTagMeta);
         // persist this map as a user preference for now
         saveUserPreferences();
@@ -2107,15 +2085,19 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public void addNeuronTag(String tag, List<TmNeuronMetadata> neuronList) throws Exception {
+        TmNeuronTagMap currentTagMap = modelManager.getCurrentTagMap();
         tmDomainMgr.bulkEditNeuronTags(neuronList, Arrays.asList(tag), true);
         for (TmNeuronMetadata neuron: neuronList) {
             currentTagMap.addTag(tag, neuron);
             neuron.getTags().add(tag);
-        }
-        SwingUtilities.invokeLater(() -> fireNeuronTagsChanged(neuronList));
+        };
+        NeuronTagsUpdateEvent tagsEvent = new NeuronTagsUpdateEvent();
+        tagsEvent.setNeurons(neuronList);
+        ViewerEventBus.postEvent(tagsEvent);
     }
     
     private void addUserNeuronTag(String tag, TmNeuronMetadata neuron) {
+        TmNeuronTagMap currentTagMap = modelManager.getCurrentTagMap();
         currentTagMap.addUserTag(tag, neuron);
         try {
             saveUserTags();
@@ -2125,6 +2107,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
     
     private void removeUserNeuronTag(String tag, TmNeuronMetadata neuron) {
+        TmNeuronTagMap currentTagMap = modelManager.getCurrentTagMap();
         currentTagMap.removeUserTag(tag, neuron);
         try {
             saveUserTags();
@@ -2134,6 +2117,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
     
     private Set<String> getUserNeuronTags(TmNeuronMetadata neuron) {
+        TmNeuronTagMap currentTagMap = modelManager.getCurrentTagMap();
         if (currentTagMap != null) {
             return currentTagMap.getUserTags().get(neuron.getId());
         } else {
@@ -2151,14 +2135,18 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             modelManager.getAllTagMeta().removeTag(tag, neuron);
             neuron.getTags().remove(tag);
         }
-        SwingUtilities.invokeLater(() -> fireNeuronTagsChanged(neuronList));
+        NeuronTagsUpdateEvent tagsEvent = new NeuronTagsUpdateEvent();
+        tagsEvent.setNeurons(neuronList);
+        ViewerEventBus.postEvent(tagsEvent);
     }
 
     public void clearNeuronTags(TmNeuronMetadata neuron) throws Exception {
         tmDomainMgr.bulkEditNeuronTags(Arrays.asList(neuron), new ArrayList<>(neuron.getTags()), false);
         modelManager.getAllTagMeta().clearTags(neuron);
         neuron.getTags().clear();
-        SwingUtilities.invokeLater(() -> fireNeuronTagsChanged(Arrays.asList(neuron)));
+        NeuronTagsUpdateEvent tagsEvent = new NeuronTagsUpdateEvent();
+        tagsEvent.setNeurons(Arrays.asList(neuron));
+        ViewerEventBus.postEvent(tagsEvent);
     }
 
     public List<File> breakOutByRoots(File infile) throws IOException {
@@ -2297,6 +2285,12 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         ViewerEventBus.postEvent(selectionEvent);
     }
 
+    void fireClearSelections() {
+        SelectionNeuronsEvent selectionEvent = new SelectionNeuronsEvent();
+        selectionEvent.setClear(true);
+        ViewerEventBus.postEvent(selectionEvent);
+    }
+
     /*void fireNeuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronStyleChanged(neuron, style);
@@ -2311,9 +2305,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
      */
 
-    void fireNeuronTagsChanged(List<TmNeuronMetadata> neuronList) {
-        /// RESTORE FUNCTIONALITY HERE
-    }
 
     void fireNotesUpdated(TmGeoAnnotation ann) {
      //   if (notesUpdateListener != null) {

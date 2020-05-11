@@ -15,6 +15,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -66,7 +67,7 @@ public class LVVDevPanel extends JPanel {
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        TmNeuronMetadata tmNeuronMetadata = annotationModel.getCurrentNeuron();
+                        TmNeuronMetadata tmNeuronMetadata = TmSelectionState.getInstance().getCurrentNeuron();
                         if (tmNeuronMetadata == null) {
                             System.out.println("no selected neuron");
                             return;
@@ -128,7 +129,7 @@ public class LVVDevPanel extends JPanel {
         testButton2.setAction(new AbstractAction("Add flat path") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                final TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
+                final TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
 
                 SimpleWorker worker = new SimpleWorker() {
                     @Override

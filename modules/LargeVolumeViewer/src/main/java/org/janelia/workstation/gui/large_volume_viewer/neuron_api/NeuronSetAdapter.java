@@ -23,6 +23,7 @@ import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.scripts.spatialfilter.SpatialFilter;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.controller.NeuronManager;
@@ -1102,7 +1103,7 @@ public class NeuronSetAdapter
 
             NeuronModelAdapter neuron = (NeuronModelAdapter) o;
             TmNeuronMetadata tmn = neuron.getTmNeuronMetadata();
-            TmNeuronMetadata previousNeuron = neuronSet.annotationModel.getCurrentNeuron();
+            TmNeuronMetadata previousNeuron = TmSelectionState.getInstance().getCurrentNeuron();
             Long neuronId = tmn.getId();
             boolean removingCurrentNeuron = (previousNeuron != null) && (previousNeuron.getId() == neuronId);
 

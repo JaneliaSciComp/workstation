@@ -26,6 +26,7 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.access.ModelTranslation;
 import org.janelia.workstation.controller.dialog.AddEditNoteDialog;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.tileimagery.VoxelPosition;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -499,7 +500,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
         
-        final TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
+        final TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
         if (currentNeuron == null) {
             presentError(
                     "You must select a neuron before beginning annotation!",
@@ -1344,7 +1345,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void deleteCurrentNeuron() {
-        TmNeuronMetadata neuron = annotationModel.getCurrentNeuron();
+        TmNeuronMetadata neuron = TmSelectionState.getInstance().getCurrentNeuron();
         if (neuron == null) {
             return;
         }
@@ -1386,7 +1387,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * rename the currently selected neuron
      */
     public void renameNeuron() {
-        final TmNeuronMetadata neuron = annotationModel.getCurrentNeuron();
+        final TmNeuronMetadata neuron = TmSelectionState.getInstance().getCurrentNeuron();
         if (neuron == null) {
             presentError(
                     "No selected neuron!",
@@ -1781,10 +1782,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             return;
         }
-        if (annotationModel.getCurrentNeuron() == null) {
+        if (TmSelectionState.getInstance().getCurrentNeuron() == null) {
             presentError("You must select a neuron to set its style.", "No neuron selected");
         } else {
-            chooseNeuronStyle(annotationModel.getCurrentNeuron());
+            chooseNeuronStyle(TmSelectionState.getInstance().getCurrentNeuron());
         }
     }
 
@@ -1876,11 +1877,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             return;
         }
-        if (annotationModel.getCurrentNeuron() == null) {
+        if (TmSelectionState.getInstance().getCurrentNeuron() == null) {
             presentError("You must select a neuron to hide or show it.", "No neuron selected");
         } 
         else {
-            TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
+            TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
             setNeuronVisibility(currentNeuron, !getNeuronVisibility(currentNeuron));
         }
     }
@@ -1892,10 +1893,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             return;
         }
-        if (annotationModel.getCurrentNeuron() == null) {
+        if (TmSelectionState.getInstance().getCurrentNeuron() == null) {
             presentError("You must select a neuron to hide or show it.", "No neuron selected");
         } else {
-            setNeuronVisibility(annotationModel.getCurrentNeuron(), visibility);
+            setNeuronVisibility(TmSelectionState.getInstance().getCurrentNeuron(), visibility);
         }
     }
     

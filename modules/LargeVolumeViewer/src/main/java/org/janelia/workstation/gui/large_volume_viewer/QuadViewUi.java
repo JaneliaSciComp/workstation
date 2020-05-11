@@ -37,6 +37,7 @@ import org.janelia.console.viewerapi.ToolButton;
 import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.swc.MatrixDrivenSWCExchanger;
@@ -276,7 +277,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
      * move toward the neuron root to the next branch or the root
      */
     public void backtrackNeuronMicron() {
-        TmNeuronMetadata neuron = annotationModel.getCurrentNeuron();
+        TmNeuronMetadata neuron = TmSelectionState.getInstance().getCurrentNeuron();
         if (neuron != null) {
             Anchor anchor = getSkeletonActor().getModel().getNextParent();
             if (anchor != null) {
