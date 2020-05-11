@@ -26,6 +26,7 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -119,7 +120,7 @@ public class NeuronTagsAction extends EditAction {
 
             @Override
             protected void hadError(Throwable error) {
-                logger.error("error adding tag " + tag + " to neuron " + target.getName());
+                FrameworkAccess.handleException(error);
                 showError("There was an error adding the " + tag + " tag!", "Error");
             }
         };
@@ -147,6 +148,7 @@ public class NeuronTagsAction extends EditAction {
             @Override
             protected void hadError(Throwable error) {
                 showError("There was an error removing the " + tag + " tag!", "Error");
+                FrameworkAccess.handleException(error);
             }
         };
         remover.execute();
@@ -179,6 +181,7 @@ public class NeuronTagsAction extends EditAction {
 
             @Override
             protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
                 showError("There was an error removing the tags!", "Error");
             }
         };

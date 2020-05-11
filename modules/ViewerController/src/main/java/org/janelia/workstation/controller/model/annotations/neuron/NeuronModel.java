@@ -28,7 +28,7 @@ public class NeuronModel {
     private static final Logger LOG = LoggerFactory.getLogger(NeuronModel.class);
     private final NeuronModelAdapter neuronModelAdapter = new NeuronModelAdapter();
     private final IdSource idSource = new IdSource();
-    private Map<Long, TmNeuronMetadata> neuronMap = new HashMap<>();
+    private Map<Long, TmNeuronMetadata> neuronMap;
     private CompletableFuture<Boolean> ownershipRequest;
     private CompletableFuture<TmNeuronMetadata> createNeuronRequest;
     static NeuronModel modelInstance;
@@ -38,6 +38,10 @@ public class NeuronModel {
             modelInstance = new NeuronModel();
         }
         return modelInstance;
+    }
+
+    public NeuronModel() {
+        neuronMap = new HashMap<>();
     }
 
     public Collection<TmNeuronMetadata> getNeurons() {

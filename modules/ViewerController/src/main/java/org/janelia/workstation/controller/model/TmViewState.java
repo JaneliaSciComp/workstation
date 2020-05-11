@@ -22,12 +22,15 @@ public class TmViewState {
     private double zoomLevel;
     private float[] cameraRotation;
     private boolean interpolate;
-    private Map<String, TmColorModel> colorModels = new ConcurrentHashMap<>();
+    private static Map<String, TmColorModel> colorModels;
+    private static Map<Long, Color> customNeuronColors;
 
     public void init() {
         neuronFilter = new NeuronSelectionSpatialFilter();
         ConcurrentHashMap<Long, Long> threadSafeMap = new ConcurrentHashMap<>();
         hiddenAnnotations = threadSafeMap.newKeySet();
+        colorModels = new ConcurrentHashMap<>();
+        customNeuronColors = new ConcurrentHashMap<>();
     }
 
     public boolean getFilter() {
@@ -131,7 +134,14 @@ public class TmViewState {
      * get a default style for a neuron
      */
     public static Color getColorForNeuron(Long neuronID) {
+        if (customNeuronColors.containsKey(neuronID)) {
+            return customNeuronColors.get(neuronID);
+        }
         return neuronColors[(int) (neuronID % neuronColors.length)];
+    }
+
+    public static void setColorForNeuron(Long neuronId, Color custom) {
+        customNeuronColors.put(neuronId, custom);
     }
 
     public TmColorModel getColorMode(String key) {

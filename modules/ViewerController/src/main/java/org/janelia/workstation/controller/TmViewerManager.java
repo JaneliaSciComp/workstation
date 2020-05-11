@@ -4,17 +4,15 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.console.viewerapi.dialogs.NeuronGroupsDialog;
 import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
+import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.workstation.controller.access.ProjectInitFacade;
 import org.janelia.workstation.controller.access.ProjectInitFacadeImpl;
 import org.janelia.workstation.controller.access.RefreshHandler;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -50,10 +48,28 @@ public class TmViewerManager implements GlobalViewerController {
     }
 
     @Subscribe
-    public void selectAnnotations(SelectionAnnotationEvent selectionEvent) {
+    public void selectNeurons(SelectionNeuronsEvent selectionEvent) {
         if (selectionEvent.isSelect()) {
             List<Object> selections = selectionEvent.getItems();
             if (selections.get(0) instanceof TmNeuronMetadata)
+                modelManager.getCurrentSelections().setCurrentNeuron(selections.get(0));
+            else
+                modelManager.getCurrentSelections().setCurrentNeuron(selections.get(0));
+        } else {
+            //
+        }
+
+        if (selectionEvent.isClear()) {
+            modelManager.getCurrentSelections().clearVertexSelection();
+        }
+
+    }
+
+    @Subscribe
+    public void selectAnnotations(SelectionAnnotationEvent selectionEvent) {
+        if (selectionEvent.isSelect()) {
+            List<Object> selections = selectionEvent.getItems();
+            if (selections.get(0) instanceof TmGeoAnnotation)
                 modelManager.getCurrentSelections().setCurrentVertex(selections.get(0));
             else
                 modelManager.getCurrentSelections().setCurrentVertex(selections.get(0));
@@ -183,13 +199,18 @@ public class TmViewerManager implements GlobalViewerController {
             FrameworkAccess.handleException(error);
         }
         SwingUtilities.invokeLater(() -> {
+            // load tags
+            TmNeuronTagMap currentTagMap = new TmNeuronTagMap();
+            for (TmNeuronMetadata tmNeuronMetadata : NeuronModel.getInstance().getNeurons()) {
+                for(String tag : tmNeuronMetadata.getTags()) {
+                    currentTagMap.addTag(tag, tmNeuronMetadata);
+                }
+            }
+            modelManager.setCurrentTagMap(currentTagMap);
+
             SelectionEvent evt = new SelectionEvent();
             evt.setClear(true);
             ViewerEventBus.postEvent(evt);
         });
-        if (workspace!=null) {
-            ////activityLog.logLoadWorkspace(workspace.getId());
-        }
-
     }
 }

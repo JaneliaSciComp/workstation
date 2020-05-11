@@ -13,6 +13,7 @@ import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.listener.AnnotationSelectionListener;
 import org.janelia.workstation.controller.listener.CameraPanToListener;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.model.annotations.neuron.AnnotationGeometry;
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
 import org.janelia.workstation.controller.model.annotations.neuron.InterestingAnnotation;
@@ -230,7 +231,7 @@ public class FilteredAnnotationList extends JPanel {
 
         if (currentNeuronCheckbox.isSelected()) {
             // Necessary optimization: only consider current neuron
-            TmNeuronMetadata currentNeuron = (TmNeuronMetadata)TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
+            TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
             if (currentNeuron!=null) {
                 updateData(currentNeuron);
             }
@@ -606,7 +607,7 @@ public class FilteredAnnotationList extends JPanel {
      * neuron" toggle doesn't explicitly set the filter
      */
     public AnnotationFilter getCurrentFilter() {
-        TmNeuronMetadata currentNeuron = neuronManager.getCurrentNeuron();
+        TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
         if (currentNeuronCheckbox.isSelected() && currentNeuron != null) {
             return new AndFilter(new NeuronFilter(currentNeuron), currentFilter);
         } else {
