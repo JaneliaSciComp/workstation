@@ -1813,7 +1813,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public static Color askForNeuronColor(NeuronStyle inputStyle) {
         NeuronColorDialog dialog = new NeuronColorDialog(
-                (Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
+                null,
                 inputStyle);
         dialog.setVisible(true);
         if (dialog.styleChosen()) {

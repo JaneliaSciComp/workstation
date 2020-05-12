@@ -49,6 +49,10 @@ public class TmViewerManager implements GlobalViewerController {
 
     @Subscribe
     public void selectNeurons(SelectionNeuronsEvent selectionEvent) {
+        if (selectionEvent.isClear()) {
+            modelManager.getCurrentSelections().clearNeuronSelection();
+            return;
+        }
         if (selectionEvent.isSelect()) {
             List<Object> selections = selectionEvent.getItems();
             if (selections.get(0) instanceof TmNeuronMetadata)
@@ -58,11 +62,6 @@ public class TmViewerManager implements GlobalViewerController {
         } else {
             //
         }
-
-        if (selectionEvent.isClear()) {
-            modelManager.getCurrentSelections().clearVertexSelection();
-        }
-
     }
 
     @Subscribe
@@ -170,8 +169,10 @@ public class TmViewerManager implements GlobalViewerController {
     @Subscribe
     public void loadComplete(LoadProjectEvent event) {
         final TmWorkspace workspace = modelManager.getCurrentWorkspace();
+        modelManager.setCurrentSample(event.getSample());
         if (workspace==null) {
             // this is a sample
+
         }
 
         String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();

@@ -95,6 +95,8 @@ public class PanelController {
     @Subscribe
     public void neuronsSelected(SelectionNeuronsEvent selectionEvent) {
         List<DomainObject> neurons = selectionEvent.getItems();
+        if (selectionEvent.isClear())
+            return;
         for (DomainObject neuron : neurons) {
             filteredAnnotationList.loadNeuron((TmNeuronMetadata)neuron);
             wsNeuronList.selectNeuron((TmNeuronMetadata)neuron);

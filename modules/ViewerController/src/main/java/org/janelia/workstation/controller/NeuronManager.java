@@ -492,7 +492,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                 return;
             }
             deleteNeuron(currentNeuron);
-            fireClearSelections();
         } catch (Exception e) {
             FrameworkAccess.handleException(e);
         }
@@ -512,8 +511,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                         updateFrags(updates);
                     }
 
-                    fireNeuronDeleted(deletedNeuron);
                     fireClearSelections();
+                    fireNeuronDeleted(deletedNeuron);
                 } catch (Exception e) {
                     FrameworkAccess.handleException(e);
                 }
@@ -2253,7 +2252,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public void fireNeuronDeleted(TmNeuronMetadata neuron) {
-        NeuronDeleteEvent annotationEvent = new NeuronDeleteEvent(Arrays.asList(new TmNeuronMetadata[]{neuron}));
+        NeuronDeleteEvent annotationEvent = new NeuronDeleteEvent();
+        annotationEvent.setNeurons(Arrays.asList(new TmNeuronMetadata[]{neuron}));
         ViewerEventBus.postEvent(annotationEvent);
     }
 

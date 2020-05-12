@@ -429,10 +429,10 @@ public class AnnotationPanel extends JPanel
 
 
         // developer panel, only shown to me; used for various testing things
-        if (AccessManager.getAccessManager().getActualSubject().getName().equals("olbrisd")) {
+        /*if (AccessManager.getAccessManager().getActualSubject().getName().equals("olbrisd")) {
             //lvvDevPanel = new LVVDevPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
             //add(lvvDevPanel, cVert);
-        }
+        }*/
 
 
         // the bilge...

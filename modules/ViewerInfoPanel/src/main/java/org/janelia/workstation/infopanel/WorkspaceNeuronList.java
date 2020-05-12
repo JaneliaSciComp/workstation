@@ -1081,10 +1081,7 @@ class NeuronTableModel extends AbstractTableModel {
                 }
             case COLUMN_COLOR:
                 // Note that is not the same as targetNeuron.getColor(). If the persisted color is null, it picks a default.
-                if (targetNeuron.getColor()!=null)
-                    return targetNeuron.getColor();
-                else
-                    return TmViewState.getColorForNeuron(targetNeuron.getId());
+                return TmViewState.getColorForNeuron(targetNeuron.getId());
             case COLUMN_VISIBILITY:
                 if (!modelManager.getCurrentView().isHidden(targetNeuron.getId())) {
                     return visibleIcon;
