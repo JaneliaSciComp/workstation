@@ -2,10 +2,13 @@ package org.janelia.workstation.controller.action;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.Arrays;
 
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.EditAction;
 import org.janelia.workstation.controller.dialog.NeuronColorDialog;
+import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.model.TmViewState;
@@ -66,12 +69,15 @@ public class NeuronChooseColorAction extends EditAction {
         Color color = askForNeuronColor(neuron);
         if (color != null) {
             TmViewState.setColorForNeuron(neuron.getId(), color);
+            NeuronUpdateEvent neuronEvent = new NeuronUpdateEvent();
+            neuronEvent.setNeurons(Arrays.asList(neuron));
+            ViewerEventBus.postEvent(neuronEvent);
         }
     }
 
     public static Color askForNeuronColor(TmNeuronMetadata neuron) {
         NeuronColorDialog dialog = new NeuronColorDialog(
-                (Frame) SwingUtilities.windowForComponent(null),
+                null,
                 TmViewState.getColorForNeuron(neuron.getId()));
         dialog.setVisible(true);
         if (dialog.styleChosen()) {
