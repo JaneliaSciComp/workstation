@@ -2,7 +2,7 @@ package org.janelia.workstation.controller.eventbus;
 
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
-public class WorkspaceEvent {
+public class WorkspaceEvent extends ViewerEvent {
     private long WorkspaceId;
     private TmWorkspace Workspace;
 

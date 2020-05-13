@@ -10,6 +10,9 @@ public class ViewerEventBus {
     public static void postEvent(Object event) {
         viewerbus.post(event);
     }
+    public static void unregisterForEvents(Object listener) {
+        viewerbus.unregister(listener);
+    }
     public static void registerForEvents(Object listener) {
         viewerbus.register(listener);
     }

@@ -337,6 +337,8 @@ public class AnnotationPanel extends JPanel
 
         neuronToolMenu.add(new WorkspaceInformationAction(annotationModel, workspaceNeuronList));
 
+        neuronToolMenu.add(new MessageSnooperAction());
+
         sortSubmenu = new JMenu("Sort");
         JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical by name") {
             @Override

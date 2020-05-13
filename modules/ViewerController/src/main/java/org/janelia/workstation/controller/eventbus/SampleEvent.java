@@ -2,7 +2,7 @@ package org.janelia.workstation.controller.eventbus;
 
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 
-public class SampleEvent {
+public class SampleEvent extends ViewerEvent {
     private long sampleId;
     private TmSample sample;
 

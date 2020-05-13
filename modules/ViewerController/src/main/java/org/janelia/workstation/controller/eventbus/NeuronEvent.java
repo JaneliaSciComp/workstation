@@ -3,7 +3,7 @@ package org.janelia.workstation.controller.eventbus;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import java.util.Collection;
 
-abstract public class NeuronEvent {
+abstract public class NeuronEvent extends ViewerEvent {
     public Collection<TmNeuronMetadata> getNeurons() {
         return neurons;
     }
