@@ -1,6 +1,6 @@
 package org.janelia.workstation.controller.eventbus;
 
-public class ViewEvent {
+public class ViewEvent extends ViewerEvent {
     private double cameraFocusX;
     private double cameraFocusY;
     private double cameraFocusZ;

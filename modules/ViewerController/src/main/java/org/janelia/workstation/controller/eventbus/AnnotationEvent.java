@@ -1,6 +1,4 @@
 package org.janelia.workstation.controller.eventbus;
 
-import org.janelia.workstation.controller.AnnotationCategory;
-
-abstract public class AnnotationEvent {
+abstract public class AnnotationEvent extends ViewerEvent {
 }
