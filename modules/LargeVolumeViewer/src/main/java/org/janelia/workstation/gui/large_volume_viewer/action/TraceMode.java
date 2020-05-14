@@ -16,9 +16,7 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.Set;
 
-import javax.swing.AbstractAction;
-import javax.swing.JMenuItem;
-import javax.swing.KeyStroke;
+import javax.swing.*;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
@@ -386,6 +384,11 @@ implements MouseMode, KeyListener
                          SimpleWorker scrollWorker = new SimpleWorker() {
                             @Override
                             protected void doStuff() throws Exception {
+                                // prompt the user to enter their name
+                                Long speed = Long.parseLong(JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(),
+                                        "Enter in speed of scroll through", 10));
+
+
                                 // grab current camera position and zoom and loop in z from there
                                 Vec3 cameraPos = getCamera().getFocus();
                                 cameraPos.setZ(getBoundingBox().getMinZ());
@@ -393,7 +396,7 @@ implements MouseMode, KeyListener
                                 controller.setLVVFocus(cameraPos);
                                 float step = 40;
                                 while (cameraPos.getZ() < getBoundingBox().getMaxZ()) {
-                                    Thread.sleep(100);
+                                    Thread.sleep(1000/speed);
                                     cameraPos = cameraPos.plus(new Vec3(0, 0, step));
                                     controller.setLVVFocus(cameraPos);
                                 }
