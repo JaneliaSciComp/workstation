@@ -73,7 +73,7 @@ public class FlyLineReleaseNode extends AbstractDomainObjectNode<LineRelease> {
             @Override
             public Transferable paste() throws IOException {
                 JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                        "To add samples to a release, right-click them and choose 'Add to Fly Line Release'");
+                        "To add samples to a release, right-click them and choose 'Stage for Publishing...'");
                 return null;
             }
         };
