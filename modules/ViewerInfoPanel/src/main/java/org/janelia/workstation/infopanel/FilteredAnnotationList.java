@@ -13,7 +13,6 @@ import org.janelia.workstation.gui.large_volume_viewer.controller.CameraPanToLis
 import org.janelia.workstation.gui.large_volume_viewer.controller.EditNoteRequestedListener;
 import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.perf4j.StopWatch;
 
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
