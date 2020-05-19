@@ -1,5 +1,4 @@
-// 8.16
+// 8.17
 
 Large Volume Viewer
-* Fixed issue with exception on bulk import swc
-* Added parameter for speed of scroll-through in z feature
+* Added warning dialog when out-of-sync neurons are saved at LVV close (but not quit, unfortunately)

@@ -1,6 +1,8 @@
 package org.janelia.workstation.gui.large_volume_viewer.annotation;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +42,7 @@ import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.workstation.geom.ParametrizedLine;
 import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.workstation.swc.SWCData;
 import org.janelia.workstation.swc.SWCDataConverter;
 import org.janelia.workstation.swc.SWCNode;
@@ -345,6 +348,15 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     }
     
     public synchronized void clear() {
+        // note: this method is called when the LVV is closed during a new sample open; it's
+        //  not called if the whole application quits; I believe it's also called when the
+        //  LVV fails to open a sample, during cleanup
+        // therefore it's where we should check for out-of-sync neurons and export
+        //  them; I don't think this will trigger during any failed sample openings
+        if (currentWorkspace != null) {
+            exportOutOfSyncNeurons();
+        }
+
         log.info("Clearing annotation model");
         currentWorkspace = null;
         currentSample = null;
@@ -2106,7 +2118,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         progress.setStatus("Done");
     }
 
-    public void exportOutOfSyncNeurons() {
+    public synchronized void exportOutOfSyncNeurons() {
         List<TmNeuronMetadata> neurons = getNeuronList().stream()
                 .filter(n -> n.getSyncLevel() >= NeuronTableModel.SYNC_WARN_LEVEL)
                 .collect(Collectors.toList());
@@ -2170,11 +2182,37 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                             }
                         });
 
+                // report to the user if we've saved any neurons; dialog should go away if not
+                //  acknowledged, because we don't want to hold up application exit
+
+                // normally AnnModel doesn't do dialogs, but in this case, we kind of have to do it here
+                // this doesn't seem to work during application quit, but it will work when the LVV is
+                //   closed and the JW does not quit, which is better than nothing
+                SwingUtilities.invokeLater(()->{
+                    JOptionPane pane = new JOptionPane(
+                            "Unsynchronized neurons found! " + neurons.size() + " neurons were saved in " + exportDirName +
+                                    ". This dialog will close automatically in 5 seconds.",
+                            JOptionPane.WARNING_MESSAGE);
+                    JDialog dialog = pane.createDialog(ComponentUtil.getLVVMainWindow(), "Unsynced neurons saved!");
+                    Timer timer = new Timer(5000, new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            dialog.setVisible(false);
+                            dialog.dispose();
+                        }
+                    });
+                    timer.setRepeats(false);
+                    timer.start();
+                    dialog.setVisible(true);
+
+                    });
+
+
             } catch (Exception e) {
                 // do nothing; this is already a last-gasp try to save some data we're
                 //  potentially losing, so failure is an option
                 // plus, there will always be a NullPointerException because things
                 //  are in the process of closing already when this is called
+                log.error("Exception while exporting out-of-sync neurons: ", e);
             }
         }
     }

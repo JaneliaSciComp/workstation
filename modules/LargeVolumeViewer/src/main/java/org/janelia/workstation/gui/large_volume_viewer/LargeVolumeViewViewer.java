@@ -298,10 +298,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
             SimpleWorker worker = new SimpleWorker() {
                 @Override
-                protected void doStuff() throws Exception {
-                    logger.info("Exporting any out-of-sync neurons...");
-                    oldQuadView.getAnnotationModel().exportOutOfSyncNeurons();
-
+                protected void doStuff() {
                     logger.info("Clearing cache...");
                     oldQuadView.clearCache();
                     oldQuadView.clear();

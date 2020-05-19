@@ -1,3 +1,9 @@
+// 8.16
+
+Large Volume Viewer
+* Fixed issue with exception on bulk import swc
+* Added parameter for speed of scroll-through in z feature
+
 // 8.15
 
 Data Browser
