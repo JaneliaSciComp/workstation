@@ -45,7 +45,7 @@ import java.util.*;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "explorer", openAtStartup = false)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position = 500)
 @ActionID(category = "Window", id = "org.janelia.workstation.gui.task_workflow.InfoPanelTopComponentTopComponent")
 @ActionReference(path = "Menu/Window", position = 103)
 @TopComponent.OpenActionRegistration(
@@ -75,6 +75,13 @@ public final class InfoPanelTopComponent extends TopComponent {
         add (annotationPanel);
 
     }
+
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(250, 0);
+    }
+
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
     }

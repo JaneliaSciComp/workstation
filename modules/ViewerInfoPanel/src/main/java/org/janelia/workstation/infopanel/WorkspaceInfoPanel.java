@@ -47,6 +47,11 @@ public class WorkspaceInfoPanel extends JPanel {
         loadWorkspace(null);
     }
 
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(250,100);
+    }
+
     /**
      * populate the UI with info from the input workspace
      */
