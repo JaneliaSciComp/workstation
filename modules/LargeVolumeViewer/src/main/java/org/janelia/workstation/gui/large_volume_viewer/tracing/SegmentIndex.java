@@ -1,4 +1,4 @@
-package org.janelia.workstation.tracing;
+package org.janelia.workstation.gui.large_volume_viewer.tracing;
 
 public class SegmentIndex {
     private long smallerGuid;

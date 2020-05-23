@@ -1,7 +1,7 @@
 package org.janelia.workstation.gui.large_volume_viewer.listener;
 
 import java.util.List;
-import org.janelia.workstation.tracing.AnchoredVoxelPath;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
 
 /**
  * Event methods surrounding anchored voxel paths.

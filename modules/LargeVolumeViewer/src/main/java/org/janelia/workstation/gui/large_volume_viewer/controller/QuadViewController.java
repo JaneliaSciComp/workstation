@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.listener;
+package org.janelia.workstation.gui.large_volume_viewer.controller;
 
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import java.net.URL;
@@ -24,8 +24,8 @@ import org.janelia.workstation.gui.large_volume_viewer.action.WheelMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.ZScanScrollModeAction;
 import org.janelia.workstation.gui.large_volume_viewer.action.ZoomMouseModeAction;
 import org.janelia.workstation.gui.large_volume_viewer.action.ZoomScrollModeAction;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.tracing.PathTraceToParentRequest;
+import org.janelia.workstation.gui.large_volume_viewer.listener.*;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceToParentRequest;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 
 /**

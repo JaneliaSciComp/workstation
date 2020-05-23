@@ -600,6 +600,7 @@
                         <execution>
                             <goals>
                                 <goal>addTestSources</goal>
+                                <goal>compile</goal>
                                 <goal>testCompile</goal>
                             </goals>
                         </execution>
@@ -668,7 +669,15 @@
                             <include>*/*Spec.*</include>
                         </includes>
                     </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.maven.surefire</groupId>
+                            <artifactId>surefire-junit47</artifactId>
+                            <version>${janeliaws.maven-surefire-plugin.version}</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jarsigner-plugin</artifactId>
@@ -758,6 +767,7 @@
                     <execution>
                         <goals>
                             <goal>addTestSources</goal>
+                            <goal>compile</goal>
                             <goal>testCompile</goal>
                         </goals>
                     </execution>
@@ -787,7 +797,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <includes>
-                        <include>*/*Spec.*</include>
+                        <include>**/*Spec.*</include>
                     </includes>
                 </configuration>
             </plugin>
@@ -960,7 +970,7 @@
                         <configuration>
                             <skipTests>false</skipTests>
                             <includes>
-                                <include>*/*Spec.*</include>
+                                <include>**/*Spec.*</include>
                             </includes>
                         </configuration>
                     </plugin>

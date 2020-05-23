@@ -9,8 +9,8 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.janelia.workstation.tracing.AnchoredVoxelPath;
-import org.janelia.workstation.tracing.SegmentIndex;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.SegmentIndex;
 import org.janelia.workstation.controller.tileimagery.VoxelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

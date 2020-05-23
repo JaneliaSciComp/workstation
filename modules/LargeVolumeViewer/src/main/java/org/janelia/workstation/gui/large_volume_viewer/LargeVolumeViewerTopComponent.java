@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.top_component;
+package org.janelia.workstation.gui.large_volume_viewer;
 
 import java.awt.BorderLayout;
 
@@ -19,17 +19,15 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.workstation.gui.large_volume_viewer.controller.LargeVolumeViewViewer;
+import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.openide.windows.TopComponentGroup;
@@ -94,7 +92,6 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_LargeVolumeViewerTopComponent());
         setToolTipText(Bundle.HINT_LargeVolumeViewerTopComponent());
-        establishLookups();
     }
 
     public DomainObject getCurrent() {
@@ -118,7 +115,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     public void openLargeVolumeViewer(DomainObject domainObject) {
         log.info("openLargeVolumeViewer({})",domainObject);
         setCurrent(domainObject);
-        getLvvv().loadDomainObject(domainObject);
+       // getLvvv().loadDomainObject(domainObject);
         initialObjectReference = Reference.createFor(domainObject);
     }
 
@@ -152,15 +149,11 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         jPanel1.add(lvvv, BorderLayout.CENTER );
-        Events.getInstance().registerOnEventBus(this);
-        Events.getInstance().registerOnEventBus(lvvv);
     }
 
     @Override
     public void componentClosed() {
         jPanel1.remove(lvvv);
-        Events.getInstance().unregisterOnEventBus(this);
-        Events.getInstance().unregisterOnEventBus(lvvv);
         closeGroup();
     }
 
@@ -347,15 +340,6 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
             log.warn("Could not parse double: "+doubleStr);
         }
         return null;
-    }
-    
-    private void establishLookups() {
-        // Use Lookup to communicate sample location and camera position
-        // TODO: separate data source from current view details
-        LargeVolumeViewerLocationProvider locProvider = 
-                new LargeVolumeViewerLocationProvider(lvvv);
-        content.add(locProvider);
-        associateLookup(new AbstractLookup(content));
     }
     
     private NeuronSet currNeurons = null;

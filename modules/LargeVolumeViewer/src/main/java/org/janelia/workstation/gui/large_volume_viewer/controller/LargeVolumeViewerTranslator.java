@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.annotation;
+package org.janelia.workstation.gui.large_volume_viewer.controller;
 
 import Jama.Matrix;
 import  org.janelia.workstation.geom.CoordinateAxis;
@@ -21,8 +21,8 @@ import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.workstation.tracing.AnchoredVoxelPath;
-import org.janelia.workstation.tracing.SegmentIndex;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.SegmentIndex;
 import org.janelia.workstation.controller.tileimagery.VoxelPosition;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;

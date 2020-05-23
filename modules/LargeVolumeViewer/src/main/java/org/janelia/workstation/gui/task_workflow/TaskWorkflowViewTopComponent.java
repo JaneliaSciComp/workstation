@@ -6,10 +6,8 @@ import com.mxgraph.model.mxCell;
 import com.mxgraph.util.mxEventObject;
 import com.mxgraph.util.mxEventSource;
 import com.mxgraph.view.mxGraphSelectionModel;
-import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SimpleIcons;
 import org.janelia.console.viewerapi.SynchronizationHelper;
-import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.workstation.geom.Quaternion;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -22,9 +20,8 @@ import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
+import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -63,7 +60,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -496,7 +492,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
    }
     
      private void reviewGroup(int groupIndex) {
-         ReviewGroup group = groupList.get(groupIndex);
+         /*ReviewGroup group = groupList.get(groupIndex);
          currGroupIndex = groupIndex;
          
          List<SampleLocation> playList = new ArrayList<SampleLocation>();
@@ -525,7 +521,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                  acceptor.playSampleLocations(playList, rotationCheckbox.isSelected(), Integer.parseInt(speedSpinner.getText()),
                          Integer.parseInt(numStepsSpinner.getText()));
              }
-         }
+         }*/
     }
 
     /**
@@ -541,15 +537,15 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         // not sure what the try/catch is preventing, but it was in the code I copied
         try {
             SynchronizationHelper helper = new SynchronizationHelper();
-            Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-            SampleLocation sampleLocation = originator.getSampleLocation();
+           // Tiled3dSampleLocationProviderAcceptor originator = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+            /*SampleLocation sampleLocation = originator.getSampleLocation();
             sampleLocation.setFocusUm(point.getLocation().getX(), point.getLocation().getY(), point.getLocation().getZ());
             sampleLocation.setMicrometersPerWindowHeight(point.getZoomLevel());
             sampleLocation.setRotationAsQuaternion(point.getRotation());   
             sampleLocation.setInterpolate(false);
             
             // LVV
-            originator.setSampleLocation(sampleLocation);
+            //originator.setSampleLocation(sampleLocation);
 
             // Horta
             Collection<Tiled3dSampleLocationProviderAcceptor> locationAcceptors = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
@@ -557,7 +553,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 if (acceptor.getProviderDescription().equals("Horta - Focus On Location")) {
                     acceptor.setSampleLocation(sampleLocation);
                 }
-            }
+            }*/
         } catch (Exception e) {
             FrameworkAccess.handleException(e);
         }

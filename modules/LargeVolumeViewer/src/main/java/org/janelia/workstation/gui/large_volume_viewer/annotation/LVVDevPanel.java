@@ -20,6 +20,8 @@ import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
+import org.janelia.workstation.gui.large_volume_viewer.controller.LargeVolumeViewerTranslator;
 
 /**
  * this panel is only shown to me; I use it when I need to insert

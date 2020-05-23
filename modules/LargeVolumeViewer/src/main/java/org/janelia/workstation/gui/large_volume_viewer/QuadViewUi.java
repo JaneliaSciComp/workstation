@@ -18,7 +18,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 import javax.media.opengl.GLProfile;
@@ -29,10 +28,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.janelia.console.viewerapi.BasicSampleLocation;
-import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SynchronizationHelper;
-import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ToolButton;
 import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
@@ -59,13 +56,13 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.workstation.gui.large_volume_viewer.action.*;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
+import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
+import org.janelia.workstation.gui.large_volume_viewer.controller.LargeVolumeViewerTranslator;
 import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.console.viewerapi.components.SpinnerCalculationValue;
 import org.janelia.workstation.gui.large_volume_viewer.listener.CameraListener;
 import org.janelia.workstation.gui.large_volume_viewer.listener.PathTraceRequestListener;
-import org.janelia.workstation.gui.large_volume_viewer.listener.QuadViewController;
+import org.janelia.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
 import org.janelia.workstation.controller.listener.VolumeLoadListener;
 import org.janelia.workstation.gui.large_volume_viewer.listener.WorkspaceClosureListener;
@@ -74,14 +71,13 @@ import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
 import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewLauncher;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.tracing.PathTraceToParentRequest;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_PREFERRED_ID;
+import static org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent.LVV_PREFERRED_ID;
 
 /**
  * Main window for QuadView application. Maintained using Google WindowBuilder
@@ -265,7 +261,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return camera.getFocus();
     }
 
-    void setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
+    public void setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
         camera.setPixelsPerSceneUnit(pixelsPerSceneUnit);
     }
 
@@ -424,7 +420,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
 
                     // Add menus/items for relocating per other views.
                     SynchronizationHelper helper = new SynchronizationHelper();
-                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders
+                    /*Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders
                             = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                     Tiled3dSampleLocationProviderAcceptor originator
                             = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
@@ -432,7 +428,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
 
                     for (JMenuItem navItem : menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor())) {
                         result.add(navItem);
-                    }
+                    }*/
                     return result;
                 }
             });
@@ -512,11 +508,11 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return annotationModel;
     }
 
-    void clear() {
+    public void clear() {
         tileServer.stop();
     }
 
-    void clearCache() {
+    public void clearCache() {
         tileServer.clearCache();
     }
 

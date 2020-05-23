@@ -16,7 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_LOGSTAMP_ID;
+import static org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent.LVV_LOGSTAMP_ID;
 
 /**
  * Keep all the logging code in one place, to declutter.
