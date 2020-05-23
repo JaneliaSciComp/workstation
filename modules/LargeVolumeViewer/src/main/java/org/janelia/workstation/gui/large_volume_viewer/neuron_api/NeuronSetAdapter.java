@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 import com.google.common.base.Stopwatch;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
@@ -33,7 +32,7 @@ import org.janelia.workstation.controller.listener.GlobalAnnotationListener;
 import org.janelia.workstation.controller.listener.TaskReviewListener;
 import org.janelia.workstation.controller.listener.TmGeoAnnotationModListener;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;

@@ -1,4 +1,4 @@
-package org.janelia.workstation.tracing;
+package org.janelia.workstation.gui.large_volume_viewer.tracing;
 
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;

@@ -29,7 +29,7 @@ import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
-import org.janelia.workstation.tracing.SegmentIndex;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

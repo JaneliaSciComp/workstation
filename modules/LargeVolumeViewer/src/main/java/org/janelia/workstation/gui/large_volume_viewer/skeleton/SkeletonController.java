@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.controller;
+package org.janelia.workstation.gui.large_volume_viewer.skeleton;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,18 +13,18 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.workstation.controller.listener.TmGeoAnnotationAnchorListener;
 import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.gui.large_volume_viewer.controller.QuadViewController;
+import org.janelia.workstation.gui.large_volume_viewer.listener.*;
 import org.janelia.workstation.gui.large_volume_viewer.action.TraceMode;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
-import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
-import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
+import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
+import org.janelia.workstation.gui.large_volume_viewer.controller.LargeVolumeViewerTranslator;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
-import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton_mesh.LineEnclosurePrecomputes;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
-import org.janelia.workstation.tracing.AnchoredVoxelPath;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -61,7 +61,8 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
 
     public NeuronSet getNeuronSet() {
-        return annoMgr.getNeuronSet();
+      //  return annoMgr.getNeuronSet();
+        return null;
     }
     
     public void setSkipSkeletonChange(boolean skipSkeletonChange) {
@@ -138,7 +139,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         }
     }
 
-    public Vec3 getAnnotationPosition( long annotationID ) {
+    public Vec3 getAnnotationPosition(long annotationID ) {
         final Anchor anchor = skeleton.getAnchorByID(annotationID);
         Vec3 location = null;
         if (anchor != null) {

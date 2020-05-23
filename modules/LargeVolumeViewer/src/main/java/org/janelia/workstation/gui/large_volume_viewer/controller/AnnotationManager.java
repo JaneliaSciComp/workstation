@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.annotation;
+package org.janelia.workstation.gui.large_volume_viewer.controller;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -28,10 +28,12 @@ import org.janelia.workstation.controller.dialog.AddEditNoteDialog;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.tileimagery.VoxelPosition;
+import org.janelia.workstation.gui.large_volume_viewer.annotation.PointRefiner;
+import org.janelia.workstation.gui.large_volume_viewer.annotation.SmartMergeAlgorithms;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
-import org.janelia.workstation.tracing.*;
+import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.*;
 import org.janelia.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.workstation.controller.tileimagery.TileServer;
 import org.janelia.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;

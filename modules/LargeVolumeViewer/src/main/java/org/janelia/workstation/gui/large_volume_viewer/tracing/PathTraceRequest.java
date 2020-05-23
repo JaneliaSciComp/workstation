@@ -1,4 +1,4 @@
-package org.janelia.workstation.tracing;
+package org.janelia.workstation.gui.large_volume_viewer.tracing;
 
 import org.janelia.workstation.geom.Vec3;
 
