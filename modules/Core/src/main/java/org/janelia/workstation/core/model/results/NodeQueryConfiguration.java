@@ -2,14 +2,11 @@ package org.janelia.workstation.core.model.results;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.model.search.DomainObjectResultPage;
-import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
-import org.janelia.workstation.core.model.search.SolrSearchResults;
 import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -67,11 +64,22 @@ public class NodeQueryConfiguration {
         this.fetchAnnotations = fetchAnnotations;
     }
 
+    /**
+     * Perform the initial query and return a control object which can be used to fetch additional pages.
+     * @return
+     * @throws Exception
+     */
     public NodeQueryResults performSearch() throws Exception {
         DomainObjectResultPage firstPage = performSearch(0);
         return new NodeQueryResults(this, firstPage);
     }
 
+    /**
+     * Perform a query for a given page.
+     * @param page the number of the page to return (zero-indexed)
+     * @return the result page
+     * @throws Exception
+     */
     DomainObjectResultPage performSearch(int page) throws Exception {
 
         StopWatch stopWatch = new LoggingStopWatch();
