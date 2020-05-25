@@ -1,7 +1,5 @@
 package org.janelia.workstation.core.model.search;
 
-import java.util.List;
-
 /**
  * Search results backed by a SOLR search.
  * 
@@ -24,10 +22,5 @@ public class SolrSearchResults extends DomainObjectSearchResults {
             setPage(page, resultPage);
         }
         return resultPage;
-    }
-    
-    @Override
-    public List<DomainObjectResultPage> getPages() {
-        return pages;
     }
 }

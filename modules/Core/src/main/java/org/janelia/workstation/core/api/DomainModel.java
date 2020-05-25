@@ -1,20 +1,11 @@
 package org.janelia.workstation.core.api;
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-
-import javax.swing.SwingUtilities;
-
 import com.google.common.cache.*;
 import com.google.common.collect.ComparisonChain;
 import org.janelia.it.jacs.model.entity.json.JsonTask;
-import org.janelia.model.access.domain.search.DocumentSearchResults;
 import org.janelia.model.access.domain.search.DocumentSearchParams;
-import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.ReverseReference;
+import org.janelia.model.access.domain.search.DocumentSearchResults;
+import org.janelia.model.domain.*;
 import org.janelia.model.domain.compute.ContainerizedService;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
@@ -25,33 +16,23 @@ import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.ontology.OntologyTermReference;
-import org.janelia.model.domain.sample.DataSet;
-import org.janelia.model.domain.sample.LSMImage;
-import org.janelia.model.domain.sample.LineRelease;
-import org.janelia.model.domain.sample.ObjectiveSample;
-import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.sample.SampleTile;
+import org.janelia.model.domain.sample.*;
 import org.janelia.model.domain.support.NotCacheable;
 import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.model.security.Subject;
-import org.janelia.workstation.core.api.facade.interfaces.DomainFacade;
-import org.janelia.workstation.core.api.facade.interfaces.OntologyFacade;
-import org.janelia.workstation.core.api.facade.interfaces.SampleFacade;
-import org.janelia.workstation.core.api.facade.interfaces.SubjectFacade;
-import org.janelia.workstation.core.api.facade.interfaces.WorkspaceFacade;
+import org.janelia.workstation.core.api.facade.interfaces.*;
 import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.core.events.model.DomainObjectAnnotationChangeEvent;
-import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
-import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
-import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
-import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
+import org.janelia.workstation.core.events.model.*;
 import org.janelia.workstation.core.util.ColorDepthUtils;
 import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.util.*;
 
 /**
  * Implements a unified domain model for client-side operations. All changes to the model should go through this class, as well as any domain object accesses
@@ -113,16 +94,13 @@ public class DomainModel {
         this.subjectFacade = subjectFacade;
         this.workspaceFacade = workspaceFacade;
 
-        this.objectCache = CacheBuilder.newBuilder().softValues().removalListener(new RemovalListener<Reference, DomainObject>() {
-            @Override
-            public void onRemoval(RemovalNotification<Reference, DomainObject> notification) {
-                synchronized (modelLock) {
-                    Reference id = notification.getKey();
-                    log.trace("Removed key from caches: {}", id);
-                    if (workspaceCache != null) workspaceCache.remove(id);
-                    if (ontologyCache != null) ontologyCache.remove(id);
-                    if (containerCache != null) containerCache.remove(id);
-                }
+        this.objectCache = CacheBuilder.newBuilder().softValues().removalListener((RemovalListener<Reference, DomainObject>) notification -> {
+            synchronized (modelLock) {
+                Reference id = notification.getKey();
+                log.trace("Removed key from caches: {}", id);
+                if (workspaceCache != null) workspaceCache.remove(id);
+                if (ontologyCache != null) ontologyCache.remove(id);
+                if (containerCache != null) containerCache.remove(id);
             }
         }).build();
     }
@@ -176,7 +154,7 @@ public class DomainModel {
      * @return canonical domain object instance
      */
     private <T extends DomainObject> T putOrUpdate(T domainObject, boolean invalidateTree) {
-        List<T> canonicalObjects = putOrUpdate(Arrays.asList(domainObject), invalidateTree);
+        List<T> canonicalObjects = putOrUpdate(Collections.singletonList(domainObject), invalidateTree);
         if (canonicalObjects.isEmpty()) return null;
         return canonicalObjects.get(0);
     }
@@ -374,6 +352,16 @@ public class DomainModel {
         return getDomainObjectsAs(DomainObject.class, references);
     }
 
+    public List<DomainObject> getChildren(Node node, String sortCriteria, int page, int pageSize) throws Exception {
+        log.debug("getChildren({}, sortCriteria={}, page={})", node, sortCriteria, page);
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        List<DomainObject> domainObjects = workspaceFacade.getChildren(node, sortCriteria, page, pageSize);
+        List<DomainObject> canonicalObjects = putOrUpdate(domainObjects, false);
+        if (TIMER) if (TIMER) w.stop("getDomainObjects(references)");
+        log.debug("getDomainObjects: returning {} objects", canonicalObjects.size());
+        return canonicalObjects;
+    }
+
     @SuppressWarnings("unchecked")
     public <T extends DomainObject> List<T> getDomainObjectsAs(Class<T> domainClass, List<Reference> references) throws Exception {
 
@@ -423,7 +411,7 @@ public class DomainModel {
     }
 
     public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) throws Exception {
-        List<T> list = getDomainObjects(domainClass, Arrays.asList(id));
+        List<T> list = getDomainObjects(domainClass, Collections.singletonList(id));
         return list.isEmpty() ? null : list.get(0);
     }
 
@@ -437,16 +425,14 @@ public class DomainModel {
     }
 
     public DomainObject getDomainObject(String className, Long id) throws Exception {
-        List<DomainObject> objects = getDomainObjects(className, Arrays.asList(id));
+        List<DomainObject> objects = getDomainObjects(className, Collections.singletonList(id));
         return objects.isEmpty() ? null : objects.get(0);
     }
 
     public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) throws Exception {
         List<T> objects = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        for (T domainObject : domainFacade.getDomainObjects(domainClass, name)) {
-            objects.add(domainObject);
-        }
+        objects.addAll(domainFacade.getDomainObjects(domainClass, name));
         if (TIMER) w.stop("getDomainObjects(Class,objectName)");
         return objects;
     }
@@ -496,6 +482,7 @@ public class DomainModel {
         return canonicalObjects;
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends DomainObject> List<T> getAllDomainObjectsByClass(Class<T> clazz) throws Exception {
         return (List<T>) getAllDomainObjectsByClass(clazz.getName());
     }
@@ -533,7 +520,7 @@ public class DomainModel {
     }
 
     public List<Annotation> getAnnotations(Reference reference) throws Exception {
-        return getAnnotations(Arrays.asList(reference));
+        return getAnnotations(Collections.singletonList(reference));
     }
 
     public List<Annotation> getAnnotations(Collection<Reference> references) throws Exception {
@@ -600,7 +587,7 @@ public class DomainModel {
         return canonicalDataSets;
     }
 
-    public class DataSetComparator implements Comparator<DataSet> {
+    public static class DataSetComparator implements Comparator<DataSet> {
         @Override
         public int compare(DataSet o1, DataSet o2) {
             return ComparisonChain.start()

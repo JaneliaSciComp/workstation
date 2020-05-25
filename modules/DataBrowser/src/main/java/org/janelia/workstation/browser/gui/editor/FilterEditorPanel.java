@@ -140,47 +140,44 @@ public class FilterEditorPanel
     public FilterEditorPanel() {
 
         this.saveButton = new JButton("Save");
-        saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (filter==null) throw new IllegalStateException("Cannot save null filter");
-                SimpleWorker worker = new SimpleWorker() {
-                        
-                    private Filter savedFilter;
-                    
-                    @Override
-                    protected void doStuff() throws Exception {
-                        Filter filterToSave = filter;
-                        if (filterToSave.getId()!=null) {
-                            // What we have is a clone of a filter, so we need to get the canonical instance
-                            filterToSave = DomainMgr.getDomainMgr().getModel().getDomainObject(filter);
-                            filterToSave.setCriteriaList(filter.getCriteriaList());
-                            filterToSave.setSearchClass(filter.getSearchClass());
-                            filterToSave.setSearchString(filter.getSearchString());
-                            log.info("Saving filter '{}' with id {}",filterToSave.getName(),filterToSave.getId());
-                        }
-                        else {
-                            log.info("Creating filter '{}'",filterToSave.getName());
-                        }
+        saveButton.addActionListener(e -> {
+            if (filter==null) throw new IllegalStateException("Cannot save null filter");
+            SimpleWorker worker = new SimpleWorker() {
 
-                        savedFilter = DomainMgr.getDomainMgr().getModel().save(filterToSave);
+                private Filter savedFilter;
+
+                @Override
+                protected void doStuff() throws Exception {
+                    Filter filterToSave = filter;
+                    if (filterToSave.getId()!=null) {
+                        // What we have is a clone of a filter, so we need to get the canonical instance
+                        filterToSave = DomainMgr.getDomainMgr().getModel().getDomainObject(filter);
+                        filterToSave.setCriteriaList(filter.getCriteriaList());
+                        filterToSave.setSearchClass(filter.getSearchClass());
+                        filterToSave.setSearchString(filter.getSearchString());
+                        log.info("Saving filter '{}' with id {}",filterToSave.getName(),filterToSave.getId());
+                    }
+                    else {
+                        log.info("Creating filter '{}'",filterToSave.getName());
                     }
 
-                    @Override
-                    protected void hadSuccess() {
-                        setFilter(savedFilter);
-                        savePreferences();
-                        saveButton.setVisible(false);
-                    }
+                    savedFilter = DomainMgr.getDomainMgr().getModel().save(filterToSave);
+                }
 
-                    @Override
-                    protected void hadError(Throwable error) {
-                        FrameworkAccess.handleException(error);
-                    }
-                };
-                worker.execute();
-                
-            }
+                @Override
+                protected void hadSuccess() {
+                    setFilter(savedFilter);
+                    savePreferences();
+                    saveButton.setVisible(false);
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    FrameworkAccess.handleException(error);
+                }
+            };
+            worker.execute();
+
         });
         
         this.saveAsButton = new JButton("Save As");
@@ -342,8 +339,6 @@ public class FilterEditorPanel
         
         if (filter.getName()==null) {
             filter.setName(DEFAULT_FILTER_NAME);
-            // TODO: Load cached results because this is a generic new search
-
         }
         
         log.debug("loadDomainObject(Filter:{})",filter.getName());
@@ -487,9 +482,7 @@ public class FilterEditorPanel
         for (Criteria criteria : filter.getCriteriaList()) {
             if (criteria instanceof TreeNodeCriteria) {
                 DropDownButton customCriteriaButton = createCustomCriteriaButton((TreeNodeCriteria)criteria);
-                if (customCriteriaButton!=null) {
-                    configPanel.addConfigComponent(customCriteriaButton);
-                }
+                configPanel.addConfigComponent(customCriteriaButton);
             }
         }
 

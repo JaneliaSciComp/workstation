@@ -199,6 +199,7 @@
                         <publicPackage>org.janelia.workstation.core.model.descriptors</publicPackage>
                         <publicPackage>org.janelia.workstation.core.model.keybind</publicPackage>
                         <publicPackage>org.janelia.workstation.core.model.search</publicPackage>
+                        <publicPackage>org.janelia.workstation.core.model.results</publicPackage>
                         <publicPackage>org.janelia.workstation.core.nodes</publicPackage>
                         <publicPackage>org.janelia.workstation.core.options</publicPackage>
                         <publicPackage>org.janelia.workstation.core.util</publicPackage>

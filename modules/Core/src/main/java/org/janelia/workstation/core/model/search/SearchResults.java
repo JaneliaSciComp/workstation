@@ -12,24 +12,24 @@ import java.util.List;
  */
 public interface SearchResults<T,S> {
 
-    public static final int PAGE_SIZE = 500;
+    int PAGE_SIZE = 500;
     
-    public int getNumLoadedPages();
+    int getNumLoadedPages();
 
-    public int getNumTotalPages();
+    int getNumTotalPages();
     
-    public long getNumLoadedResults();
+    long getNumLoadedResults();
 
-    public long getNumTotalResults();
+    long getNumTotalResults();
 
-    public boolean hasMoreResults();
+    boolean hasMoreResults();
 
-    public boolean isAllLoaded();
+    boolean isAllLoaded();
     
-    public List<? extends ResultPage<T,S>> getPages();
+    List<? extends ResultPage<T,S>> getPages();
     
-    public ResultPage<T,S> getPage(int page) throws Exception;
+    ResultPage<T,S> getPage(int page) throws Exception;
 
-    public boolean updateIfFound(T object);
+    boolean updateIfFound(T object);
    
 }

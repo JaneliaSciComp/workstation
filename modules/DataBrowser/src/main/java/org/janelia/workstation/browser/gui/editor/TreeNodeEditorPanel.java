@@ -1,18 +1,11 @@
 package org.janelia.workstation.browser.gui.editor;
 
-import java.awt.BorderLayout;
-import java.util.List;
-import java.util.concurrent.Callable;
-
 import com.google.common.eventbus.Subscribe;
-
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.interfaces.HasIdentifier;
-import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
 import org.janelia.workstation.browser.actions.ExportResultsAction;
 import org.janelia.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
@@ -24,7 +17,6 @@ import org.janelia.workstation.common.gui.support.SearchProvider;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
@@ -34,6 +26,7 @@ import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionMo
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.model.ImageModel;
+import org.janelia.workstation.core.model.results.NodeQueryConfiguration;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.model.search.ResultPage;
 import org.janelia.workstation.core.model.search.SearchResults;
@@ -44,8 +37,11 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
+import java.util.concurrent.Callable;
+
 /**
- * Simple editor panel for viewing folders. In the future it may support drag and drop editing of folders.
+ * Simple editor panel for viewing folders (e.g. TreeNodes).
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -65,10 +61,10 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     private DomainObjectEditSelectionModel editSelectionModel = new DomainObjectEditSelectionModel();
     private DomainObjectNode<Node> nodeNode;
     private Node node;
+    private NodeQueryConfiguration queryConfiguration;
     
     // Results
     private DomainObjectSearchResults searchResults;
-    private String sortCriteria;
 
     public TreeNodeEditorPanel() {
         
@@ -113,22 +109,16 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
         resultsPanel.showLoadingIndicator();
 
         this.node = node;
+        this.queryConfiguration = new NodeQueryConfiguration(node, DomainObjectSearchResults.PAGE_SIZE);
         getSelectionModel().setParentObject(node);
-        
+
         SimpleWorker worker = new SimpleWorker() {
 
-            private List<DomainObject> children;
-            private List<Annotation> annotations;
-            
             @Override
             protected void doStuff() throws Exception {
-                DomainModel model = DomainMgr.getDomainMgr().getModel();
-                children = model.getDomainObjects(node.getChildren());
-                annotations = model.getAnnotations(DomainUtils.getReferences(children));
                 loadPreferences();
-                DomainUtils.sortDomainObjects(children, sortCriteria);
-                searchResults = new DomainObjectSearchResults(children, annotations);
-                log.info("Showing "+children.size()+" items");
+                searchResults = queryConfiguration.performSearch();
+                log.debug("Displaying results: "+searchResults);
             }
 
             @Override
@@ -240,6 +230,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
         if (node==null) return;
         if (event.getDomainObject().getId().equals(node.getId())) {
             this.node = null;
+            this.queryConfiguration = null;
             searchResults = null;
             showNothing();
         }
@@ -254,12 +245,12 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     
     @Override
     public String getSortField() {
-        return sortCriteria;
+        return queryConfiguration.getSortCriteria();
     }
 
     @Override
     public void setSortField(final String sortCriteria) {
-        this.sortCriteria = sortCriteria;
+        queryConfiguration.setSortCriteria(sortCriteria);
         savePreferences();
     }
 
@@ -276,9 +267,13 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     private void loadPreferences() {
         if (node==null || node.getId()==null) return;
         try {
-            sortCriteria = (String) FrameworkAccess.getRemotePreferenceValue(
+            String sortCriteriaPref = FrameworkAccess.getRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, node.getId().toString(), null);
-            log.debug("Loaded sort criteria preference: {}",sortCriteria);
+
+            if (sortCriteriaPref!=null) {
+                log.info("Loaded sort criteria preference: {}", sortCriteriaPref);
+                queryConfiguration.setSortCriteria(sortCriteriaPref);
+            }
         }
         catch (Exception e) {
             log.error("Could not load sort criteria",e);
@@ -286,12 +281,12 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     }
 
     private void savePreferences() {
-        if (node==null || node.getId()==null) return;
-        if (StringUtils.isEmpty(sortCriteria)) return;
+        String sortCriteria = queryConfiguration.getSortCriteria();
+        if (node==null || node.getId()==null || StringUtils.isEmpty(sortCriteria)) return;
         try {
             FrameworkAccess.setRemotePreferenceValue(
                     DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, node.getId().toString(), sortCriteria);
-            log.debug("Saved sort criteria preference: {}",sortCriteria);
+            log.debug("Saved sort criteria preference: {}", sortCriteria);
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);

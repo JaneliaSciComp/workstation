@@ -121,6 +121,22 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         return response.readEntity(Filter.class);
     }
 
+    @Override
+    public List<DomainObject> getChildren(Node node, String sortCriteria, int page, int pageSize) throws Exception {
+        String currentPrincipal = AccessManager.getSubjectKey();
+        WebTarget target = service.path("data/node/children");
+        Response response = target
+                .queryParam("subjectKey", currentPrincipal)
+                .queryParam("nodeRef", Reference.createFor(node))
+                .queryParam("sortCriteria", sortCriteria)
+                .queryParam("page", page)
+                .queryParam("pageSize", pageSize)
+                .request("application/json")
+                .get();
+        checkBadResponse(target, response);
+        return response.readEntity(new GenericType<List<DomainObject>>() {});
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public <T extends Node> T addChildren(T node, Collection<Reference> references, Integer index) throws Exception {

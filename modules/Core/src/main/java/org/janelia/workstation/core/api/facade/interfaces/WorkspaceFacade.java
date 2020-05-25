@@ -64,6 +64,17 @@ public interface WorkspaceFacade {
     Filter update(Filter filter) throws Exception;
 
     /**
+     * Retrieve the paginated children of a given node, sorted according to the given sortCriteria.
+     * @param node the node (TreeNode/Workspace/etc)
+     * @param sortCriteria sort direction and field, e.g. "+id" or "-name"
+     * @param page index of the page to return
+     * @param pageSize size of pages
+     * @return list of children on the page requested
+     * @throws Exception
+     */
+    List<DomainObject> getChildren(Node node, String sortCriteria, int page, int pageSize) throws Exception;
+
+    /**
      * Add the given references as children of the specified node, at some index. 
      * @param node the node 
      * @param references collection of references to add

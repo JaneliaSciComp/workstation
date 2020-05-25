@@ -1,6 +1,7 @@
 package org.janelia.workstation.core.model.search;
 
 import com.google.common.collect.ListMultimap;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
@@ -8,12 +9,7 @@ import org.janelia.model.domain.ontology.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Manages a set of domain search results with pagination.
@@ -30,7 +26,7 @@ public class DomainObjectSearchResults implements SearchResults<DomainObject, Re
     protected long numLoadedResults = 0;
     
     /**
-     * Factory method to paginate a list of results already in memory. 
+     * Constructor which paginates a list of results already in memory.
      * @param domainObjects
      * @param annotations
      * @return 
@@ -38,16 +34,16 @@ public class DomainObjectSearchResults implements SearchResults<DomainObject, Re
     public DomainObjectSearchResults(Collection<? extends DomainObject> domainObjects, Collection<Annotation> annotations) {
         
         List<DomainObject> pageObjects = new ArrayList<>();
-        
         ListMultimap<Reference, Annotation> annotationsByTarget = DomainUtils.getAnnotationsByDomainObjectReference(annotations);
         Set<DomainObject> uniqueObjects = new LinkedHashSet<>(domainObjects);
         Set<Annotation> pageAnnotations = new LinkedHashSet<>();
-        
+
+        // Paginate results
         for(DomainObject domainObject : uniqueObjects)  {
             if (domainObject==null) continue;
             pageObjects.add(domainObject);
-            List<Annotation> annots = annotationsByTarget.get(Reference.createFor(domainObject));
-            pageAnnotations.addAll(annots);
+            List<Annotation> objectAnnotations = annotationsByTarget.get(Reference.createFor(domainObject));
+            pageAnnotations.addAll(objectAnnotations);
             if (pageObjects.size() >= PAGE_SIZE) {
                 addPage(createResultPage(pageObjects, new ArrayList<>(pageAnnotations), domainObjects.size()));
                 pageObjects.clear();
@@ -62,10 +58,14 @@ public class DomainObjectSearchResults implements SearchResults<DomainObject, Re
         
         if (getPages().isEmpty()) {
             // Construct an empty search results so as not to return null from this factory method
-            addPage(createResultPage(new ArrayList<DomainObject>(), new ArrayList<Annotation>(), 0));
+            addPage(createResultPage(new ArrayList<>(), new ArrayList<>(), 0));
         }
     }
-    
+
+    /**
+     * Constructor with the first page of results.
+     * @param firstPage
+     */
     public DomainObjectSearchResults(DomainObjectResultPage firstPage) {
         addPage(firstPage);
     }
@@ -76,7 +76,7 @@ public class DomainObjectSearchResults implements SearchResults<DomainObject, Re
         loadedPages.add(pages.size()-1);
     }
     
-    final void setPage(int page, DomainObjectResultPage resultPage) {
+    protected final void setPage(int page, DomainObjectResultPage resultPage) {
         updateNumResults(resultPage);
         while (pages.size()-1<page) {
             pages.add(null);
@@ -156,5 +156,15 @@ public class DomainObjectSearchResults implements SearchResults<DomainObject, Re
     
     private final DomainObjectResultPage createResultPage(List<DomainObject> domainObjects, List<Annotation> annotations, long totalNumResults) {
         return new DomainObjectResultPage(domainObjects, annotations, totalNumResults);
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("pages", pages)
+                .append("loadedPages", loadedPages)
+                .append("numTotalResults", numTotalResults)
+                .append("numLoadedResults", numLoadedResults)
+                .toString();
     }
 }
