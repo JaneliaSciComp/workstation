@@ -9,22 +9,10 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.infopanel.action.*;
+import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JSeparator;
+import javax.swing.*;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -182,6 +170,19 @@ public class AnnotationPanel extends JPanel
 
         // testing
         // showOutline(workspaceButtonsPanel, Color.green);
+
+        JCheckBox openLVV = new JCheckBox("Open LVV");
+        workspaceButtonsPanel.add(openLVV);
+        openLVV.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TopComponent tc = WindowManager.getDefault().findTopComponent("LargeVolumeViewerTopComponent");
+                if (tc != null) {
+                    tc.open();
+                    tc.requestActive();
+                }
+            }
+        });
 
         createWorkspaceButtonPlus = new JButton("+");
         workspaceButtonsPanel.add(createWorkspaceButtonPlus);

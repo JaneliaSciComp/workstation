@@ -1160,7 +1160,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         };
         adder.execute();
     }
-
+    ////  CCMMON ///
     /**
      * pop a dialog to add, edit, or delete note at the given annotation
      */
@@ -1189,7 +1189,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
     }
-
+    ////  CCMMON ///
     public void clearNote(final Long neuronID, final Long annotationID) {
         TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronID);
         if (!checkOwnership(neuronID))
@@ -1227,7 +1227,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public String getNote(final Long neuronID, Long annotationID) {
         return annotationModel.getNote(neuronID, annotationID);
     }
-
+    ////  CCMMON ///
     public void setNote(final Long neuronID, final Long annotationID, final String noteText) {
         SimpleWorker setter = new SimpleWorker() {
             @Override
@@ -1250,6 +1250,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         setter.execute();
     }
 
+
+    ////  CCMMON ///
     public void editNeuronTags(TmNeuronMetadata neuron) {
         log.info("editNeuronTags({})",neuron);
         // reuse the action; note that the action doesn't actually
@@ -1259,6 +1261,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         action.actionPerformed(new ActionEvent(this, -1, "dummy event"));
     }
 
+
+    ////  CCMMON ///
     public void setNeuronRadius(final Long neuronID) {
         if (!checkOwnership(neuronID))
             return;
@@ -1310,6 +1314,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         setter.execute();
     }
 
+
+    ////  CCMMON ///
     /**
      * create a new neuron in the current workspace, prompting for name
      */
@@ -1385,6 +1391,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     }
 
+
+    ////  CCMMON ///
     /**
      * rename the currently selected neuron
      */
@@ -1427,6 +1435,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     }
 
+
+    ////  CCMMON ///
     /**
      * change the ownership of the input neurons
      */
@@ -1460,6 +1470,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
+
+    ////  CCMMON ///
     /**
      * returns true if the current authenticated user is allowed to change ownership
      * for any user's neurons
@@ -1487,6 +1499,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return false;
     }
 
+
+    ////  CCMMON ///
     /**
      * pop a dialog that asks for a name for a neuron;
      * returns null if the user didn't make a choice
@@ -1516,7 +1530,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
-
+    ////  CCMMON ///
     /**
      * given a workspace, return a new generic neuron name (probably something
      * like "New neuron 12", where the integer is based on whatever similarly
@@ -1561,6 +1575,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         annotationModel.selectNeuron(neuron);
     }
 
+
+    ////  CCMMON ///
     /**
      * create a new workspace with the currently loaded sample
      */
@@ -2066,7 +2082,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             
             @Override
             protected void doStuff() throws Exception {
-                //SannotationModel.exportSWCData(swcFile, downsampleModulo, neurons, exportNotes, this);
+                //annotationModel.exportSWCData(swcFile, downsampleModulo, neurons, exportNotes, this);
             }
 
             @Override

@@ -85,7 +85,7 @@ public class TopComponentPopulator {
                             LargeVolumeViewerTopComponent.LVV_PREFERRED_ID
                     );
             if (tc != null) {
-                QuadViewUi ui = tc.getLvvv().getQuadViewUi();
+                QuadViewUi ui = tc.getQuadViewUi();
                 if (ui != null) {
                     skeleton = ui.getSkeleton();
                     neuronStyleModel = ui.getNeuronStyleModel();

@@ -299,10 +299,10 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     /**
      * Create the frame.
      */
-    public QuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, NeuronManager annotationModel) {
+    public QuadViewUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
         new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, FrameworkAccess.getMainFrame());
 
-        this.annotationModel = annotationModel;
+        this.annotationModel = NeuronManager.getInstance();
         this.largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
         this.annotationMgr = new AnnotationManager(this, tileServer, largeVolumeViewerTranslator);
 
@@ -376,9 +376,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         skeletonController.reestablish(skeleton, annotationMgr);
         skeletonController.registerForEvents(largeVolumeViewer.getSkeletonActor());
         largeVolumeViewerTranslator.connectSkeletonSignals(skeleton, skeletonController);
-
-        // must come after setupUi() (etc), since it triggers UI changes:
-        annotationMgr.setInitialObject(initialObject);
 
         clearCacheAction.putValue(Action.NAME, "Clear Cache");
         clearCacheAction.putValue(Action.SHORT_DESCRIPTION, "Empty image cache (for testing only)");
