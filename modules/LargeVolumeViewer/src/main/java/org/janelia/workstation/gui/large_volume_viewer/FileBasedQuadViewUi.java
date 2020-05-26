@@ -33,8 +33,8 @@ public class FileBasedQuadViewUi extends QuadViewUi {
     /**
      * Create the frame.
      */
-    FileBasedQuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, NeuronManager annotationModel) {
-        super(parentFrame, initialObject, overrideFrameMenuBar, annotationModel);
+    FileBasedQuadViewUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
+        super(parentFrame, overrideFrameMenuBar);
     }
 
     /**

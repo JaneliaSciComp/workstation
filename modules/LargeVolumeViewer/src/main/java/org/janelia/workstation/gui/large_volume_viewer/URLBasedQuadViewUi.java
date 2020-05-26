@@ -4,6 +4,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeLocation;
+import org.janelia.workstation.controller.tileimagery.JadeDataClient;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.controller.NeuronManager;
@@ -32,9 +33,9 @@ public class URLBasedQuadViewUi extends QuadViewUi {
     /**
      * Create the frame.
      */
-    URLBasedQuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, NeuronManager annotationModel, JadeServiceClient jadeServiceClient) {
-        super(parentFrame, initialObject, overrideFrameMenuBar, annotationModel);
-        this.jadeServiceClient = jadeServiceClient;
+    URLBasedQuadViewUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
+        super(parentFrame, overrideFrameMenuBar);
+        this.jadeServiceClient = JadeDataClient.getInstance().getClient();
     }
 
     /**

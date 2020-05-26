@@ -78,6 +78,7 @@
                         <publicPackage>org.janelia.console.viewerapi.actions</publicPackage>
                         <publicPackage>org.janelia.console.viewerapi.color_slider</publicPackage>
                         <publicPackage>org.janelia.console.viewerapi.commands</publicPackage>
+                        <publicPackage>org.janelia.console.viewerapi.components</publicPackage>
                         <publicPackage>org.janelia.console.viewerapi.controller</publicPackage>
                         <publicPackage>org.janelia.console.viewerapi.listener</publicPackage>
                         <publicPackage>org.janelia.console.viewerapi.model</publicPackage>
