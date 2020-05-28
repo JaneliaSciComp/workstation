@@ -1,5 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer.controller;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import java.net.URL;
 import java.util.ArrayList;
@@ -7,6 +8,11 @@ import java.util.Collection;
 import javax.swing.JComponent;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
+import org.janelia.workstation.controller.eventbus.UnloadProjectEvent;
+import org.janelia.workstation.controller.eventbus.WorkspaceEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.workstation.controller.listener.LoadStatusListener;
@@ -52,6 +58,22 @@ public class QuadViewController implements ViewStateListener {
         lvv.setMessageListener(new QvucMessageListener());
         this.ui.setPathTraceListener(new QvucPathRequestListener());
         this.ui.setWsCloseListener(new QvucWsClosureListener());
+        registerLoadRequests();
+    }
+
+    private void registerLoadRequests() {
+        ViewerEventBus.registerForEvents(this);
+    }
+
+    @Subscribe
+    public void loadProject(LoadProjectEvent event) {
+        URL tileURL = TmModelManager.getInstance().getTileLoader().getUrl();
+        ui.loadDataFromURL(tileURL);
+    }
+
+   // @Subscribe
+    public void unloadProject(UnloadProjectEvent event) {
+
     }
     
     @Override

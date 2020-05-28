@@ -9,6 +9,7 @@ import javax.swing.ToolTipManager;
 import com.google.common.eventbus.Subscribe;
 
 import org.janelia.workstation.common.gui.support.WindowLocator;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
@@ -174,7 +175,9 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     public void initialize() {
         if ( viewUI == null ) {
             // trying to diagnost how this can be null later
-            viewUI =  QuadViewUiProvider.createQuadViewUi(FrameworkAccess.getMainFrame(), false);
+            viewUI =  new QuadViewUi(FrameworkAccess.getMainFrame(), false);
+            // load current workspace or sample
+            viewUI.loadDataFromURL(TmModelManager.getInstance().getTileLoader().getUrl());
         }
         removeAll();
         viewUI.setVisible(true);

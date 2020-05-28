@@ -199,19 +199,17 @@ public class TmViewerManager implements GlobalViewerController {
         } catch (Exception error) {
             FrameworkAccess.handleException(error);
         }
-        SwingUtilities.invokeLater(() -> {
-            // load tags
-            TmNeuronTagMap currentTagMap = new TmNeuronTagMap();
-            for (TmNeuronMetadata tmNeuronMetadata : NeuronModel.getInstance().getNeurons()) {
-                for(String tag : tmNeuronMetadata.getTags()) {
-                    currentTagMap.addTag(tag, tmNeuronMetadata);
-                }
-            }
-            modelManager.setCurrentTagMap(currentTagMap);
 
-            SelectionEvent evt = new SelectionEvent();
-            evt.setClear(true);
-            ViewerEventBus.postEvent(evt);
-        });
+        TmNeuronTagMap currentTagMap = new TmNeuronTagMap();
+        for (TmNeuronMetadata tmNeuronMetadata : NeuronModel.getInstance().getNeurons()) {
+            for(String tag : tmNeuronMetadata.getTags()) {
+                currentTagMap.addTag(tag, tmNeuronMetadata);
+            }
+        }
+        modelManager.setCurrentTagMap(currentTagMap);
+
+        SelectionEvent evt = new SelectionEvent();
+        evt.setClear(true);
+        ViewerEventBus.postEvent(evt);
     }
 }
