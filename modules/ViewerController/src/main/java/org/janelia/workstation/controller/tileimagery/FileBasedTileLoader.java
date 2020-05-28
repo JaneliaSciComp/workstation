@@ -145,17 +145,16 @@ public class FileBasedTileLoader extends TileLoader {
                     return false;
                 }
             }
-            URL url;
             try {
                 url = testFile.toURI().toURL();
             } catch (MalformedURLException e) {
                 throw new IllegalArgumentException(e);
             }
-            return loadDataFromURL(url);
+            return true;
         }
 
         @Override
-        RenderedVolumeLocation getRenderedVolumeLocation(TmSample tmSample) {
+        public RenderedVolumeLocation getRenderedVolumeLocation(TmSample tmSample) {
             return new FileBasedRenderedVolumeLocation(Paths.get(tmSample.getLargeVolumeOctreeFilepath()), p -> Paths.get(OsFilePathRemapper.remapLinuxPath(p.toString())));
         }
 }

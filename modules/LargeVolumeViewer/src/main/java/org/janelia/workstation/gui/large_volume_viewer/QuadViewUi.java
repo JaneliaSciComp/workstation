@@ -86,7 +86,7 @@ import static org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerT
  * @author Christopher M. Bruns
  */
 @SuppressWarnings("serial")
-public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
+public class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuadViewUi.class);
 
@@ -1241,21 +1241,13 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return mnCopyTileFileLoc;
     }
 
-    abstract RenderedVolumeLocation getRenderedVolumeLocation(TmSample tmSample);
+    private RenderedVolumeLocation getRenderedVolumeLocation(TmSample tmSample) {
+        return TmModelManager.getInstance().getTileLoader().getRenderedVolumeLocation(tmSample);
+    }
 
     private RenderedVolumeLoader getRenderedVolumeLoader() {
         return new RenderedVolumeLoaderImpl();
     }
-
-    /**
-     * given a string containing the canonical Linux path to the data, open the
-     * data in the viewer
-     *
-     * @param sample
-     * @return
-     * @throws MalformedURLException
-     */
-    public abstract boolean loadData(TmSample sample);
 
     /**
      * this is called only via right-click File > Open folder menu
@@ -1271,7 +1263,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return rtnVal;
     }
 
-    boolean loadDataFromURL(URL url) {
+    public boolean loadDataFromURL(URL url) {
         LOG.info("loadDataFromURL: {}", url);
         boolean rtnVal = volumeImage.loadURL(url);
         loadedUrl = url;

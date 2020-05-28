@@ -38,7 +38,6 @@ public class URLBasedTileLoader extends TileLoader {
          */
         @Override
         public boolean loadData(TmSample sample) {
-            URL url;
             try {
                 String restServerURL = ConsoleProperties.getInstance().getProperty("mouselight.rest.url");
                 if (!restServerURL.endsWith("/")) restServerURL = restServerURL+"/";
@@ -48,11 +47,11 @@ public class URLBasedTileLoader extends TileLoader {
             } catch (MalformedURLException e) {
                 throw new IllegalArgumentException(e);
             }
-            return loadDataFromURL(url);
+            return true;
         }
 
         @Override
-        RenderedVolumeLocation getRenderedVolumeLocation(TmSample tmSample) {
+        public RenderedVolumeLocation getRenderedVolumeLocation(TmSample tmSample) {
             return jadeServiceClient.findDataLocation(tmSample.getLargeVolumeOctreeFilepath())
                     .map(dataLocation -> new JADEBasedRenderedVolumeLocation(dataLocation))
                     .orElseThrow(() -> {
