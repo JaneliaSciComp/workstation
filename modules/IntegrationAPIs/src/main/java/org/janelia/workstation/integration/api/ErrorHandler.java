@@ -9,7 +9,7 @@ package org.janelia.workstation.integration.api;
  */
 public interface ErrorHandler {
     
-    public static final String LOOKUP_PATH = "ErrorHandler/Location/Nodes";
+    String LOOKUP_PATH = "ErrorHandler/Location/Nodes";
     
     void handleException(Throwable ex);
 
