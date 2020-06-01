@@ -214,12 +214,9 @@ public class FileDownloadWorker {
                                 log.error("Download of {} was cancelled because of previous interrupt exception: {}", filename, e.getMessage());
                                 throw new CancellationException();
                             } else {
-                                if (errors == 1) {
-                                    // First exception is shown to the user
-                                    FrameworkAccess.handleException(e);
-                                } else {
-                                    FrameworkAccess.handleExceptionQuietly(e);
-                                }
+                                // fail quietly and do not popup any exceptions dialog for the background task
+                                // the number of failures will be show in the final status
+                                FrameworkAccess.handleExceptionQuietly(e);
                             }
                         }
 
@@ -228,7 +225,7 @@ public class FileDownloadWorker {
 
                     setName("Download " + toTransfer.size() + " items");
                     if (success == 0) {
-                        setFinalStatus("Failed to download all items.");
+                        setFinalStatus("Failed to download any of the selected items.");
                     } else if (errors > 0) {
                         setFinalStatus("Successfully downloaded " + success + " items. Failed to download " + errors + " items.");
                     } else {
