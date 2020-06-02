@@ -985,10 +985,10 @@ public class DomainModel {
         return canonicalReleases;
     }
 
-    public LineRelease createLineRelease(String name, Date releaseDate, Integer lagTimeFinal, List<String> dataSets) throws Exception {
+    public LineRelease createLineRelease(String name) throws Exception {
         LineRelease canonicalObject;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(sampleFacade.createLineRelease(name, releaseDate, lagTimeFinal, dataSets));
+            canonicalObject = putOrUpdate(sampleFacade.createLineRelease(name));
         }
         notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;

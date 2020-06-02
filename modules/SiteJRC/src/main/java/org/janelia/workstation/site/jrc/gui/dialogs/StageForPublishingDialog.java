@@ -325,8 +325,7 @@ public class StageForPublishingDialog extends ModalDialog {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
 
                 if (newReleaseRadioButton.isSelected()) {
-                    lineRelease = model.createLineRelease(
-                            releaseNameField.getText(), null, null, new ArrayList<>());
+                    lineRelease = model.createLineRelease(releaseNameField.getText());
                     log.info("Created release {}", lineRelease);
                 }
                 else {

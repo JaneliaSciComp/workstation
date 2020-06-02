@@ -62,13 +62,10 @@ public interface SampleFacade {
     /**
      * Creates a new line release.
      * @param name name of the new release
-     * @param releaseDate date of release
-     * @param lagTimeMonths lag time for what samples should be included in the release (may be null)
-     * @param dataSets the data sets that can be pulled from for the release
      * @return the saved line release
      * @throws Exception
      */
-    LineRelease createLineRelease(String name, Date releaseDate, Integer lagTimeMonths, List<String> dataSets) throws Exception;
+    LineRelease createLineRelease(String name) throws Exception;
 
     /**
      * Update and return the given line release.

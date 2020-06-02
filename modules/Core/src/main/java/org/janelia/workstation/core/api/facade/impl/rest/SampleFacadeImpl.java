@@ -120,14 +120,11 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
     }
 
     @Override
-    public LineRelease createLineRelease(String name, Date releaseDate, Integer lagTimeMonths, List<String> dataSets) throws Exception {
+    public LineRelease createLineRelease(String name) throws Exception {
         DomainQuery query = new DomainQuery();
 
         LineRelease release = new LineRelease();
         release.setName(name);
-        release.setReleaseDate(releaseDate);
-        release.setLagTimeMonths(lagTimeMonths);
-        release.setDataSets(dataSets);
         release.setTargetWebsite(LineRelease.TARGET_WEBSITES[0]);
 
         query.setDomainObject(release);

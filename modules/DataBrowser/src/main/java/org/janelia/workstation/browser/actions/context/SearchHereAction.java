@@ -44,7 +44,7 @@ public class SearchHereAction extends BaseContextualNodeAction {
             if (domainObject != null) {
                 // Only show search here if the user enables advanced features
                 boolean visible = BrowserOptions.getInstance().isShowSearchHere()
-                        && (domainObject instanceof TreeNode || domainObject instanceof Filter);
+                        && (domainObject instanceof Node || domainObject instanceof Filter);
                 setEnabledAndVisible(visible);
             }
         }
@@ -62,10 +62,10 @@ public class SearchHereAction extends BaseContextualNodeAction {
 
         Filter filter;
         if (domainObject instanceof Node) {
-            Node treeNode = (Node)domainObject;
+            Node node = (Node)domainObject;
             TreeNodeCriteria criteria = new TreeNodeCriteria();
-            criteria.setTreeNodeName(treeNode.getName());
-            criteria.setTreeNodeReference(Reference.createFor(treeNode));
+            criteria.setTreeNodeName(node.getName());
+            criteria.setTreeNodeReference(Reference.createFor(node));
             filter = new Filter();
             filter.addCriteria(criteria);
             filter.setSearchClass(FilterEditorPanel.DEFAULT_SEARCH_CLASS.getName());

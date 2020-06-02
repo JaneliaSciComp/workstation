@@ -238,7 +238,7 @@ public class LineReleaseDialog extends ModalDialog {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
 
                 if (releaseEntity == null) {
-                    releaseEntity = model.createLineRelease(nameInput.getText(), null, null, Collections.emptyList());
+                    releaseEntity = model.createLineRelease(nameInput.getText());
                 }
 
                 releaseEntity.setTargetWebsite((String)websiteComboBox.getSelectedItem());
