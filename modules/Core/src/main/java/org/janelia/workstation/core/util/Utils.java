@@ -427,9 +427,9 @@ public class Utils {
         }
     }
 
-    public static void copyURLToFile(String standardPath, File destination, SimpleWorker worker1, boolean hasProgress, boolean alwaysDownload) throws Exception {
-        if (worker1 != null) {
-            worker1.throwExceptionIfCancelled();
+    public static void copyURLToFile(String standardPath, File destination, SimpleWorker worker, boolean hasProgress, boolean alwaysDownload) throws Exception {
+        if (worker != null) {
+            worker.throwExceptionIfCancelled();
         }
         
         log.trace("copyURLToFile: standardPath={}, destination={}", standardPath, destination);
@@ -475,7 +475,7 @@ public class Utils {
 
         FileOutputStream output = new FileOutputStream(destination);
         try {
-            final long totalBytesWritten = copy(input, output, length, worker1, estimatedCompressionFactor, hasProgress);
+            final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor, hasProgress);
             log.info("Finished copy {} bytes from {} ({}) to {}", totalBytesWritten, standardPath, fileProxy.getFileId(), destination);
             if (length != null && totalBytesWritten < length) {
                 throw new CancellationException("Bytes written (" + totalBytesWritten + ") for " + fileProxy.getFileId() +
