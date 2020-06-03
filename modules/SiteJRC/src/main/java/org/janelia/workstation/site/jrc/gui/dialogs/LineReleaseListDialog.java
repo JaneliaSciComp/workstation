@@ -1,6 +1,5 @@
 package org.janelia.workstation.site.jrc.gui.dialogs;
 
-import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -13,28 +12,12 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -47,8 +30,7 @@ public class LineReleaseListDialog extends ModalDialog {
     private static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
 
     private static final String COLUMN_NAME = "Name";
-    private static final String COLUMN_RELEASE_DATE = "Release Date";
-    private static final String COLUMN_DATA_SETS = "Data Sets";
+    private static final String COLUMN_WEBSITE = "Target Website";
     private static final String COLUMN_SAGE_SYNC = "SAGE Sync";
 
     private final JLabel loadingLabel;
@@ -59,7 +41,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
     public LineReleaseListDialog() {
 
-        setTitle("My Fly Line Releases");
+        setTitle("Fly Line Releases");
 
         releaseDialog = new LineReleaseDialog(this);
 
@@ -82,13 +64,8 @@ public class LineReleaseListDialog extends ModalDialog {
                     if (COLUMN_NAME.equals(column.getName())) {
                         return release.getName();
                     }
-                    else if (COLUMN_RELEASE_DATE.equals(column.getName())) {
-                        Date date = release.getReleaseDate();
-                        return date == null ? null : df.format(date);
-                    }
-                    else if (COLUMN_DATA_SETS.equals(column.getName())) {
-                        List<String> value = release.getDataSets();
-                        return value == null ? null : Task.csvStringFromCollection(value).replaceAll(",", ", ");
+                    else if (COLUMN_WEBSITE.equals(column.getName())) {
+                        return release.getTargetWebsite();
                     }
                     else if (COLUMN_SAGE_SYNC.equals(column.getName())) {
                         return release.isSageSync();
@@ -114,50 +91,42 @@ public class LineReleaseListDialog extends ModalDialog {
                     final LineRelease release = (LineRelease) getRows().get(table.getSelectedRow()).getUserObject();
 
                     JMenuItem editItem = new JMenuItem("Edit");
-                    editItem.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            releaseDialog.showForRelease(release);
-                        }
-                    });
+                    editItem.addActionListener(e1 -> releaseDialog.showForRelease(release));
                     menu.add(editItem);
 
                     JMenuItem deleteItem = new JMenuItem("Delete");
-                    deleteItem.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
+                    deleteItem.addActionListener(e12 -> {
 
-                            int result = JOptionPane.showConfirmDialog(LineReleaseListDialog.this, "Are you sure you want to delete release '"
-                                    + release.getName() + "'? This will not remove anything already published to the web.",
-                                    "Delete Release", JOptionPane.OK_CANCEL_OPTION);
-                            if (result != 0) {
-                                return;
+                        int result = JOptionPane.showConfirmDialog(LineReleaseListDialog.this, "Are you sure you want to delete release '"
+                                + release.getName() + "'? This will not remove anything already published to the web.",
+                                "Delete Release", JOptionPane.OK_CANCEL_OPTION);
+                        if (result != 0) {
+                            return;
+                        }
+
+                        UIUtils.setWaitingCursor(LineReleaseListDialog.this);
+
+                        SimpleWorker worker = new SimpleWorker() {
+
+                            @Override
+                            protected void doStuff() throws Exception {
+                                DomainMgr.getDomainMgr().getModel().remove(release);
                             }
 
-                            UIUtils.setWaitingCursor(LineReleaseListDialog.this);
+                            @Override
+                            protected void hadSuccess() {
+                                UIUtils.setDefaultCursor(LineReleaseListDialog.this);
+                                loadReleases();
+                            }
 
-                            SimpleWorker worker = new SimpleWorker() {
-
-                                @Override
-                                protected void doStuff() throws Exception {
-                                    DomainMgr.getDomainMgr().getModel().remove(release);
-                                }
-
-                                @Override
-                                protected void hadSuccess() {
-                                    UIUtils.setDefaultCursor(LineReleaseListDialog.this);
-                                    loadReleases();
-                                }
-
-                                @Override
-                                protected void hadError(Throwable error) {
-                                    FrameworkAccess.handleException(error);
-                                    UIUtils.setDefaultCursor(LineReleaseListDialog.this);
-                                    loadReleases();
-                                }
-                            };
-                            worker.execute();
-                        }
+                            @Override
+                            protected void hadError(Throwable error) {
+                                FrameworkAccess.handleException(error);
+                                UIUtils.setDefaultCursor(LineReleaseListDialog.this);
+                                loadReleases();
+                            }
+                        };
+                        worker.execute();
                     });
                     menu.add(deleteItem);
                 }
@@ -209,27 +178,16 @@ public class LineReleaseListDialog extends ModalDialog {
         };
 
         dynamicTable.addColumn(COLUMN_NAME);
-        dynamicTable.addColumn(COLUMN_RELEASE_DATE);
-        dynamicTable.addColumn(COLUMN_DATA_SETS);
+        dynamicTable.addColumn(COLUMN_WEBSITE);
         dynamicTable.addColumn(COLUMN_SAGE_SYNC).setEditable(true);
 
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new fly line release definition");
-        addButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                releaseDialog.showForNewRelease();
-            }
-        });
+        addButton.addActionListener(e -> releaseDialog.showForNewRelease());
 
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close this dialog");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
+        okButton.addActionListener(e -> setVisible(false));
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
