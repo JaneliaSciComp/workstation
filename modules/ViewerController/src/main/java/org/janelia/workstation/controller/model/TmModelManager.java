@@ -9,6 +9,9 @@ import org.janelia.workstation.controller.SpatialIndexManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.tileimagery.TileLoader;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class is singleton to manage references to all the different model
@@ -20,12 +23,17 @@ import org.janelia.workstation.controller.tileimagery.TileLoader;
  * @author schauderd
  */
 public class TmModelManager {
+
+    private static final Logger log = LoggerFactory.getLogger(TmModelManager.class);
+
     private TmSample currentSample;
     private TmWorkspace currentWorkspace;
     private TmNeuronTagMap currentTagMap;
 
     private TmViewState currentView;
     private TmSelectionState currentSelections;
+    private Jama.Matrix voxToMicronMatrix;
+    private Jama.Matrix micronToVoxMatrix;
     private NeuronModel neuronModel;
     private final TiledMicroscopeDomainMgr tmDomainMgr;
     private TileLoader tileLoader;
@@ -61,6 +69,33 @@ public class TmModelManager {
         currentSample.setMicronToVoxMatrix(MatrixUtilities.serializeMatrix(micronToVoxMatrix, "micronToVoxMatrix"));
         currentSample.setVoxToMicronMatrix(MatrixUtilities.serializeMatrix(voxToMicronMatrix, "voxToMicronMatrix"));
         tmDomainMgr.save(currentSample);
+    }
+
+    public Jama.Matrix getVoxToMicronMatrix() {
+        return voxToMicronMatrix;
+    }
+
+    public Jama.Matrix getMicronToVoxMatrix() {
+        return micronToVoxMatrix;
+    }
+
+    public void updateVoxToMicronMatrices() {
+        if (currentSample == null) {
+            return;
+        }
+        String serializedVoxToMicronMatrix = currentSample.getVoxToMicronMatrix();
+        if (serializedVoxToMicronMatrix == null) {
+            FrameworkAccess.handleException(new Throwable("Null VoxMicron Matrix in Sample " + currentSample.getId()));
+            return;
+        }
+        voxToMicronMatrix = MatrixUtilities.deserializeMatrix(serializedVoxToMicronMatrix, "voxToMicronMatrix");
+
+        String serializedMicronToVoxMatrix = currentSample.getMicronToVoxMatrix();
+        if (serializedMicronToVoxMatrix == null) {
+            FrameworkAccess.handleException(new Throwable("Null MicronVox Matrix in Sample " + currentSample.getId()));
+            return;
+        }
+        micronToVoxMatrix = MatrixUtilities.deserializeMatrix(serializedMicronToVoxMatrix, "micronToVoxMatrix");
     }
 
     public void setCurrentSample(TmSample currentSample) {

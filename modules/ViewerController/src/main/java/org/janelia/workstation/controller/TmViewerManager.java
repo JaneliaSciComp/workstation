@@ -26,7 +26,7 @@ import java.util.*;
 public class TmViewerManager implements GlobalViewerController {
     private final Logger log = LoggerFactory.getLogger(TmViewerManager.class);
     private static final TmViewerManager instance = new TmViewerManager();
-    private TmModelManager modelManager = new TmModelManager();
+    private TmModelManager modelManager = TmModelManager.getInstance();
     private TiledMicroscopeDomainMgr tmDomainMgr;
     private NeuronManager neuronManager;
     private ProjectInitFacade projectInit;
@@ -189,6 +189,7 @@ public class TmViewerManager implements GlobalViewerController {
             }
         }
 
+        modelManager.updateVoxToMicronMatrices();
         SpatialIndexManager spatialController = new SpatialIndexManager();
         spatialController.initialize();
         TmModelManager.getInstance().setSpatialIndexManager(spatialController);
