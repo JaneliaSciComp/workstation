@@ -49,7 +49,6 @@ public class QuadViewController implements ViewStateListener {
     private final Collection<MouseWheelModeListener> relayMwmListeners = new ArrayList<>();
     private final Collection<ColorModelListener> relayCMListeners = new ArrayList<>();
     private final Collection<JComponent> orthPanels = new ArrayList<>();
-    private ViewerLocationAcceptor viewerLocationAcceptor = new QuadViewLocationAcceptor();
            
     public QuadViewController(QuadViewUi ui, AnnotationManager annoMgr, LargeVolumeViewer lvv) {
         this.ui = ui;
@@ -171,10 +170,6 @@ public class QuadViewController implements ViewStateListener {
     
     public void registerForEvents(GoToLocationAction action) {
         action.setListener(new QvucGotoListener());
-    }
-    
-    public ViewerLocationAcceptor getLocationAcceptor() {
-        return viewerLocationAcceptor;
     }
     
     public void mouseModeChanged(MouseMode.Mode mode) {

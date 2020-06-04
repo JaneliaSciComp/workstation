@@ -1,8 +1,11 @@
 package org.janelia.workstation.gui.large_volume_viewer.controller;
 
 import Jama.Matrix;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import com.google.common.eventbus.Subscribe;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.*;
+import  org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -34,11 +37,7 @@ import org.janelia.model.util.MatrixUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA. User: olbrisd Date: 7/9/13 Time: 2:06 PM
@@ -54,8 +53,7 @@ import java.util.Map;
  * unfortunately, this class's comments and methods tends to use "anchor" and
  * "annotation" somewhat interchangeably, which can be confusing
  */
-public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener,
-        GlobalAnnotationListener, BackgroundAnnotationListener {
+public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener {
 
     private Logger logger = LoggerFactory.getLogger(LargeVolumeViewerTranslator.class);
 
@@ -128,10 +126,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
 
     private void setupSignals() {
-      //  annModel.addGlobalAnnotationListener(this);
-      //  annModel.addBackgroundAnnotationListener(this);
-      //  annModel.addTmGeoAnnotationModListener(this);
-      //  annModel.addTmAnchoredPathListener(this);
+        ViewerEventBus.registerForEvents(this);
     }
 
     /**
@@ -271,41 +266,29 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         updateAnnotationRadius(annotation);
     }
 
-    @Override
-    public void neuronRadiusUpdated(TmNeuronMetadata neuron) {
-        updateNeuronRadius(neuron);
-    }
-
-   /* @Override
-    public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
-        fireNeuronStyleChangeEvent(neuron, style);
-    }
-
-    @Override
-    public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
-        fireNeuronStylesChangedEvent(neuronStyleMap);
-    }*/
-
-    @Override
-    public void neuronTagsChanged(List<TmNeuronMetadata> neuronList) {
-        // LVV translator currently does nothing with neuron tags
+    @Subscribe
+    public void neuronUpdated(NeuronUpdateEvent event) {
+        if (event.getNeurons()!=null && event.getNeurons().size()>0) {
+            for (TmNeuronMetadata neuron: event.getNeurons()) {
+                updateNeuronRadius(neuron);
+            }
+        }
     }
 
     public void annotationSelected(Long id) {
         fireNextParentEvent(id);
     }
 
-    @Override
-    public void workspaceUnloaded(TmWorkspace workspace) {
+    @Subscribe
+    public void workspaceUnloaded(UnloadProjectEvent event) {
         logger.info("Workspace unloaded");
         fireClearAnchors();
     }
 
-    @Override
-    public void workspaceLoaded(TmWorkspace workspace) {
-
+    @Subscribe
+    public void workspaceLoaded(LoadProjectEvent event) {
         logger.info("Workspace loaded");
-
+        TmWorkspace workspace = event.getWorkspace();
         if (workspace != null) {
 
             // See about things to add to the Tile Format.
@@ -329,9 +312,9 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
                 viewStateListener.loadColorModel(workspace.getColorModel());
             }
         }
+        spatialIndexReady(workspace);
     }
 
-    @Override
     public void spatialIndexReady(TmWorkspace workspace) {
 
         logger.info("Spatial index is ready. Rebuilding anchor model.");
@@ -380,67 +363,63 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             skeletonController.skeletonChanged(true);
         }
     }
-    
-    @Override
-    public void bulkNeuronsChanged(List<TmNeuronMetadata> addList, List<TmNeuronMetadata> deleteList) {
-        Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
-        
-        for (TmNeuronMetadata neuron: addList) {
-            this.neuronModelCreated(neuron);
+
+    @Subscribe
+    public void neuronCreated(NeuronCreateEvent event) {
+        for (TmNeuronMetadata neuron: event.getNeurons()) {
+            logger.info("neuronCreated: {}", neuron);
+
+            Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
+            List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
+            List<TmAnchoredPath> annList = new ArrayList<>();
+
+            for (TmGeoAnnotation root : neuron.getRootAnnotations()) {
+                addedAnchorList.addAll(neuron.getSubTreeList(root));
+            }
+
+            for (TmAnchoredPath path : neuron.getAnchoredPathMap().values()) {
+                annList.add(path);
+            }
+
+            fireAnchorsAdded(addedAnchorList);
+            logger.info("  added {} anchors", addedAnchorList.size());
+
+            fireNeuronStylesChangedEvent(updateNeuronStyleMap);
+            logger.info("  updated {} neuron styles", updateNeuronStyleMap.size());
+
+            addAnchoredPaths(neuron.getId(), annList);
+            logger.info("  added {} anchored paths", annList.size());
         }
-        
-        for (TmNeuronMetadata neuron: deleteList) {
-            this.neuronModelDeleted(neuron);
-        }
-        largeVolumeViewer.getCamera().fireViewChanged();
     }
 
-    @Override
-    public void neuronCreated(TmNeuronMetadata neuron) {
-        logger.info("neuronCreated: {}", neuron);
-
-        Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
-        List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
-        List<TmAnchoredPath> annList = new ArrayList<>();
-
-      //  NeuronStyle style = annModel.getNeuronStyle(neuron);
-      //  updateNeuronStyleMap.put(neuron, style);
-
-        for (TmGeoAnnotation root : neuron.getRootAnnotations()) {
-            addedAnchorList.addAll(neuron.getSubTreeList(root));
+    @Subscribe
+    public void neuronDeleted(NeuronDeleteEvent event) {
+        Collection<TmNeuronMetadata> neurons = event.getNeurons();
+        TmNeuronMetadata neuron=null;
+        if (!neurons.isEmpty()) {
+            neuron = neurons.iterator().next();
         }
-
-        for (TmAnchoredPath path : neuron.getAnchoredPathMap().values()) {
-            annList.add(path);
-        }
-
-        fireAnchorsAdded(addedAnchorList);
-        logger.info("  added {} anchors", addedAnchorList.size());
-
-        fireNeuronStylesChangedEvent(updateNeuronStyleMap);
-        logger.info("  updated {} neuron styles", updateNeuronStyleMap.size());
-
-        addAnchoredPaths(neuron.getId(), annList);
-        logger.info("  added {} anchored paths", annList.size());
+        processNeuronDeleted(neuron);
     }
 
-    @Override
-    public void neuronDeleted(TmNeuronMetadata neuron) {
-        logger.info("neuronDeleted: {}", neuron);
+    private void processNeuronDeleted(TmNeuronMetadata neuron) {
         fireNeuronStyleRemovedEvent(neuron);
         fireClearAnchors(neuron.getGeoAnnotationMap().values());
         removeAnchoredPathsByNeuronID(neuron.getId());
     }
 
-    @Override
-    public void neuronChanged(TmNeuronMetadata neuron) {
-        logger.info("neuronChanged: {}", neuron);
-
+    @Subscribe
+    public void neuronChanged(NeuronUpdateEvent event) {
+        Collection<TmNeuronMetadata> neurons = event.getNeurons();
+        TmNeuronMetadata neuron=null;
+        if (!neurons.isEmpty()) {
+            neuron = neurons.iterator().next();
+        }
         // maintain next parent selection across the delete/create
         Anchor nextParent = largeVolumeViewer.getSkeletonActor().getModel().getNextParent();
-
-        neuronDeleted(neuron);
-        neuronCreated(neuron);
+        processNeuronDeleted(neuron);
+        NeuronCreateEvent nce = new NeuronCreateEvent(event.getNeurons());
+        neuronCreated(nce);
 
         if (nextParent != null && neuron.getId().equals(nextParent.getNeuronID()) && neuron.getGeoAnnotationMap().containsKey(nextParent.getGuid())) {
             fireNextParentEvent(nextParent.getGuid());
@@ -448,24 +427,15 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
     }
 
-    @Override
-    public void neuronRenamed(TmNeuronMetadata neuron) {
-        // We don't care about neuron names
-    }
-
-    @Override
-    public void neuronsOwnerChanged(List<TmNeuronMetadata> neuronList) {
-        // We don't care about neuron owners
-    }
-
     /**
      * called when the model changes the current neuron
      */
-    @Override
-    public void neuronSelected(TmNeuronMetadata neuron) {
-        if (neuron == null) {
+    @Subscribe
+    public void neuronSelected(SelectionNeuronsEvent event) {
+        if (event.getItems() == null || event.getItems().size()==0) {
             return;
         }
+        TmNeuronMetadata neuron = (TmNeuronMetadata)event.getItems().get(0);
 
         // if there's a selected annotation in the neuron already, don't change it:
         Anchor anchor = largeVolumeViewer.getSkeletonActor().getModel().getNextParent();
@@ -564,12 +534,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private void fireClearAnchors() {
         for (TmGeoAnnotationAnchorListener l : anchorListeners) {
             l.clearAnchors();
-        }
-    }
-
-    private void fireNeuronStyleChangeEvent(TmNeuronMetadata neuron, NeuronStyle style) {
-        for (NeuronStyleChangeListener l : neuronStyleChangeListeners) {
-            l.neuronStyleChanged(neuron, style);
         }
     }
 
@@ -679,60 +643,4 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         }
         return largeVolumeViewer.getTileServer().getLoadAdapter().getTileFormat();
     }
-
-    @Override
-    public void neuronModelChanged(TmNeuronMetadata neuron) {
-        logger.debug("remote NeuronDelete: {}", neuron);
-
-        Anchor nextParent = largeVolumeViewer.getSkeletonActor().getModel().getNextParent();
-
-        neuronModelDeleted(neuron);
-        neuronModelCreated(neuron);
-
-        if (nextParent != null && neuron.getGeoAnnotationMap().containsKey(nextParent.getGuid())) {
-            fireNextParentEvent(nextParent.getGuid());
-        }
-    }
-
-    @Override
-    public void neuronModelCreated(TmNeuronMetadata neuron) {
-        logger.debug("remote NeuronCreated: {}", neuron);
-
-        Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
-        List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
-        List<TmAnchoredPath> annList = new ArrayList<>();
-
-     //   NeuronStyle style = annModel.getNeuronStyle(neuron);
-     //   updateNeuronStyleMap.put(neuron, style);
-
-        for (TmGeoAnnotation root : neuron.getRootAnnotations()) {
-            addedAnchorList.addAll(neuron.getSubTreeList(root));
-        }
-
-        for (TmAnchoredPath path : neuron.getAnchoredPathMap().values()) {
-            annList.add(path);
-        }
-
-        skeletonController.remoteAnchorsAdded(addedAnchorList);
-        skeletonController.remoteNeuronStylesChanged(updateNeuronStyleMap);
-        List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
-        for (TmAnchoredPath path : annList) {
-            voxelPathList.add(TAP2AVP(neuron.getId(), path));
-        }
-        skeletonController.remoteAddAnchoredVoxelPaths(voxelPathList);
-    }
-
-    @Override
-    public void neuronModelDeleted(TmNeuronMetadata neuron) {
-        logger.debug("remote NeuronDelete: {}", neuron);
-        skeletonController.neuronStyleRemoved(neuron);
-        skeletonController.remoteClearAnchors(neuron.getGeoAnnotationMap().values());
-        skeletonController.remoteRemoveAnchoredVoxelPaths(neuron.getId());
-    }
-
-    @Override
-    public void neuronOwnerChanged(TmNeuronMetadata neuron) {
-
-    }
-
 }

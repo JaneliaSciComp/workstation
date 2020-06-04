@@ -5,6 +5,7 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.MatrixUtilities;
+import org.janelia.workstation.controller.SpatialIndexManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.tileimagery.TileLoader;
@@ -28,6 +29,7 @@ public class TmModelManager {
     private NeuronModel neuronModel;
     private final TiledMicroscopeDomainMgr tmDomainMgr;
     private TileLoader tileLoader;
+    private SpatialIndexManager spatialIndexManager;
 
     private static final TmModelManager instance = new TmModelManager();
     public static TmModelManager getInstance() {
@@ -42,6 +44,14 @@ public class TmModelManager {
 
     public TmSample getCurrentSample() {
         return currentSample;
+    }
+
+    public SpatialIndexManager getSpatialIndexManager() {
+        return spatialIndexManager;
+    }
+
+    public void setSpatialIndexManager(SpatialIndexManager spatialIndexManager) {
+        this.spatialIndexManager = spatialIndexManager;
     }
 
     public void setSampleMatrices(Matrix micronToVoxMatrix, Matrix voxToMicronMatrix) throws Exception {

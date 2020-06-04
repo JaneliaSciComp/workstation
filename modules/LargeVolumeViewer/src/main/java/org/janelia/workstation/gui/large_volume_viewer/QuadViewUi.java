@@ -269,6 +269,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         return camera.getPixelsPerSceneUnit();
     }
 
+    public LargeVolumeViewerTranslator getLargeVolumeViewerTranslator() {
+        return largeVolumeViewerTranslator;
+    }
     /**
      * move toward the neuron root to the next branch or the root
      */

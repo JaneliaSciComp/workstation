@@ -114,6 +114,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
             protected void doStuff() throws Exception {
                 TmModelManager modelManager = TmModelManager.getInstance();
                 sample = TiledMicroscopeDomainMgr.getDomainMgr().getSample(workspace);
+                modelManager.setCurrentSample(sample);
                 progress2.start();
                 progress2.setDisplayName("Loading metadata");
                 progress2.switchToIndeterminate();
