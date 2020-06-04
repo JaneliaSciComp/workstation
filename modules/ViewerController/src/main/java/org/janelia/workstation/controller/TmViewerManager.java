@@ -169,7 +169,6 @@ public class TmViewerManager implements GlobalViewerController {
     @Subscribe
     public void loadComplete(LoadProjectEvent event) {
         final TmWorkspace workspace = modelManager.getCurrentWorkspace();
-        modelManager.setCurrentSample(event.getSample());
         if (workspace==null) {
             // this is a sample
 
@@ -185,12 +184,16 @@ public class TmViewerManager implements GlobalViewerController {
                     modelManager.getCurrentView().setFilter(true);
 
                     // fire event
-                    NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(true);
-                    ViewerEventBus.postEvent(spatialEvent);
                     break;
                 }
             }
         }
+
+        SpatialIndexManager spatialController = new SpatialIndexManager();
+        spatialController.initialize();
+        TmModelManager.getInstance().setSpatialIndexManager(spatialController);
+        NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(true);
+        ViewerEventBus.postEvent(spatialEvent);
 
         try {
             loadUserPreferences();

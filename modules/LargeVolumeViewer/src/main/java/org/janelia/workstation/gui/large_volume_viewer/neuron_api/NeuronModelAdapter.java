@@ -22,9 +22,9 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
+import org.janelia.workstation.controller.NeuronVertexAdapter;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.util.Exceptions;
@@ -819,7 +819,7 @@ public class NeuronModelAdapter implements NeuronModel {
                     logger.error("anchor not found in geoAnnotationMap");
                     return null;
                 }
-                cachedVertices.put(vertexId, new NeuronVertexAdapter(a, neuronSet));
+              //  cachedVertices.put(vertexId, new NeuronVertexAdapter(a, neuronSet));
             }
             return cachedVertices.get(vertexId);
         }
@@ -838,7 +838,7 @@ public class NeuronModelAdapter implements NeuronModel {
             }
 
             if (!cachedVertices.containsKey(vertexId)) {
-                cachedVertices.put(vertexId, new NeuronVertexAdapter(a, neuronSet));
+                //cachedVertices.put(vertexId, new NeuronVertexAdapter(a, neuronSet));
             }
             return cachedVertices.get(vertexId);
         }

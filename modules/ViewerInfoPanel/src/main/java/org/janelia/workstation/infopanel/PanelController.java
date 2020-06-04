@@ -86,6 +86,8 @@ public class PanelController {
     @Subscribe
     public void neuronsRenamed(NeuronUpdateEvent annoEvent) {
         Collection<TmNeuronMetadata> neurons = annoEvent.getNeurons();
+        if (neurons==null)
+            return;
         for (TmNeuronMetadata neuron : neurons) {
             filteredAnnotationList.loadNeuron(neuron);
             wsNeuronList.updateModel(neuron);

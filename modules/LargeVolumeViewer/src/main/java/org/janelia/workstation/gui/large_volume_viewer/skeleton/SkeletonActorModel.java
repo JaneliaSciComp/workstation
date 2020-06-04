@@ -18,15 +18,15 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.SpatialIndexManager;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;
-import org.janelia.workstation.gui.large_volume_viewer.neuron_api.NeuronModelAdapter;
-import org.janelia.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
-import org.janelia.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
+import org.janelia.workstation.controller.NeuronVertexAdapter;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
@@ -726,130 +726,97 @@ public class SkeletonActorModel {
         }
         
         List<Anchor> anchors = new ArrayList<>();
-        NeuronSet neuronSet = SkeletonController.getInstance().getNeuronSet();
-        if (neuronSet != null) {
-            
-            if (!(neuronSet instanceof NeuronSetAdapter)) {
-                throw new IllegalStateException("Neuron set must be a NeuronSetAdapter");
-            }
-            
-            if (!neuronSet.isSpatialIndexValid()) {
-                log.trace("Spatial index is not ready yet");
-                return Collections.emptyList();
-            }
-            
-            NeuronSetAdapter neuronSetAdapter = (NeuronSetAdapter)neuronSet;
-            
-            // Establish the extents of the current viewport in world coordinates
-            
-            Point p1 = new Point(viewport.getOriginX(), 
-                                 viewport.getOriginY());
-            Point p2 = new Point(viewport.getOriginX()+viewport.getWidth(), 
-                                 viewport.getOriginY()+viewport.getHeight());
-                        
-            Vec3 wp1v = pointComputer.worldFromPixel(p1);
-            Vec3 wp2v = pointComputer.worldFromPixel(p2);
-            double thickness = zoomedZThicknessInPixels/getCamera().getPixelsPerSceneUnit();
-            
-            // Add in Z thickness and translate into array format
-            
-            double[] wp1 = { 
-                    wp1v.getX(),
-                    wp1v.getY(),
-                    wp1v.getZ()-thickness/2
-                    };
-            double[] wp2 = { 
-                    wp2v.getX(),
-                    wp2v.getY(),
-                    wp2v.getZ()+thickness/2
-                    };
-            
-            // Find all relevant anchors which are inside the viewport
-            Map<Long,TmGeoAnnotation> annotations = new LinkedHashMap<>();
-            List<NeuronVertex> vertexList = neuronSet.getAnchorsInMicronArea(wp1, wp2);
-            if (vertexList != null) {
-                for (NeuronVertex vertex : vertexList) {
-                    if (vertex instanceof NeuronVertexAdapter) {
-                        TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
-                        annotations.put(annotation.getId(), annotation);
-                    }
-                }
-            }
-            
-            // Add next parent, even if it's not in the current viewport
-            Anchor nextParent = getNextParent();
-            if (nextParent != null) {
-                // Serious gymnastics required to get a TmGeoAnnotation by id 
-                NeuronModel nextNeuron = neuronSet.getNeuronByGuid(nextParent.getNeuronID());
-                if (nextNeuron!=null) {
-                    NeuronVertex nextVertex = nextNeuron.getVertexByGuid(nextParent.getGuid());
-                    if (nextVertex instanceof NeuronVertexAdapter) {
-                        TmGeoAnnotation nextAnnotation = ((NeuronVertexAdapter) nextVertex).getTmGeoAnnotation();
-                        annotations.put(nextAnnotation.getId(), nextAnnotation);
-                    }
-                }
-            }
+        // Establish the extents of the current viewport in world coordinates
 
-            // when zoom is high, the viewport could be so small (especially in z) that we don't
-            //  catch points we care about; so add some nearby points on the theory that if you're
-            //  zoomed so far in that this is a problem, it's likely that the nearby points
-            //  are the ones you care about; choosing 3 such points arbitrarily
-            Point pcenter = new Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
-            Vec3 wpcenterv = pointComputer.worldFromPixel(pcenter);
-            double[] wpcenter = {
-                    wpcenterv.getX(),
-                    wpcenterv.getY(),
-                    wpcenterv.getZ()-thickness/2
-            };
+        Point p1 = new Point(viewport.getOriginX(),
+                viewport.getOriginY());
+        Point p2 = new Point(viewport.getOriginX()+viewport.getWidth(),
+                viewport.getOriginY()+viewport.getHeight());
 
-            vertexList = neuronSet.getAnchorClosestToMicronLocation(wpcenter, 3);
-            if (vertexList != null) {
-                for (NeuronVertex vertex : vertexList) {
-                    if (vertex instanceof NeuronVertexAdapter) {
-                        TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
-                        if (!annotations.containsKey(annotation.getId())) {
-                            annotations.put(annotation.getId(), annotation);
-                        }
-                    }
-                }
-            }
+        Vec3 wp1v = pointComputer.worldFromPixel(p1);
+        Vec3 wp2v = pointComputer.worldFromPixel(p2);
+        double thickness = zoomedZThicknessInPixels/getCamera().getPixelsPerSceneUnit();
 
+        // Add in Z thickness and translate into array format
 
-            // Add all parent and child anchors, so that lines are draw even if the linked anchor is outside the viewport
-            for (Long annotationId : getRelevantAnchorIds(neuronSetAdapter, annotations.values())) {
-                Anchor anchor = skeleton.getAnchorByID(annotationId);
-                if (anchor != null) {
-                    anchors.add(anchor);
-                }
-                else {
-                    // This is probably ok: it just means that the spatial index returned some anchors which are no longer in the 
-                    // skeleton. The spatial index should get updated separately, and then this will stop. 
-                    log.trace("Cannot find anchor for annotation: "+annotationId);
-                }
-            }
-            
-            if (!anchors.isEmpty() && anchors.size()<annotations.size()) {
-                log.warn("Adding less anchors ({}) than are in the index ({}). This probably means the index is stale.", anchors.size(), annotations.size());
+        double[] wp1 = {
+                wp1v.getX(),
+                wp1v.getY(),
+                wp1v.getZ()-thickness/2
+        };
+        double[] wp2 = {
+                wp2v.getX(),
+                wp2v.getY(),
+                wp2v.getZ()+thickness/2
+        };
+
+        // Find all relevant anchors which are inside the viewport
+        Map<Long,TmGeoAnnotation> annotations = new LinkedHashMap<>();
+        SpatialIndexManager spatialManager = TmModelManager.getInstance().getSpatialIndexManager();
+        List<TmGeoAnnotation> vertexList = spatialManager.getAnchorsInMicronArea(wp1, wp2);
+        if (vertexList != null) {
+            for (TmGeoAnnotation vertex : vertexList) {
+                annotations.put(vertex.getId(), vertex);
             }
         }
 
-        log.debug("Found {} anchors in viewport",anchors.size());
+        // Add next parent, even if it's not in the current viewport
+        Anchor nextParent = getNextParent();
+        if (nextParent != null) {
+            // Serious gymnastics required to get a TmGeoAnnotation by id
+            TmNeuronMetadata nextNeuron = NeuronManager.getInstance().getNeuronFromNeuronID(nextParent.getNeuronID());
+            if (nextNeuron!=null) {
+                TmGeoAnnotation nextVertex = nextNeuron.getGeoAnnotationMap().get(nextParent.getGuid());
+                annotations.put(nextVertex.getId(), nextVertex);
+            }
+        }
 
+        // when zoom is high, the viewport could be so small (especially in z) that we don't
+        //  catch points we care about; so add some nearby points on the theory that if you're
+        //  zoomed so far in that this is a problem, it's likely that the nearby points
+        //  are the ones you care about; choosing 3 such points arbitrarily
+        Point pcenter = new Point((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+        Vec3 wpcenterv = pointComputer.worldFromPixel(pcenter);
+        double[] wpcenter = {
+                wpcenterv.getX(),
+                wpcenterv.getY(),
+                wpcenterv.getZ()-thickness/2
+        };
+
+        vertexList = spatialManager.getAnchorClosestToMicronLocation(wpcenter, 3);
+        if (vertexList != null) {
+            for (TmGeoAnnotation vertex : vertexList) {
+                annotations.put(vertex.getId(), vertex);
+            }
+        }
+
+        // Add all parent and child anchors, so that lines are draw even if the linked anchor is outside the viewport
+        for (Long annotationId : getRelevantAnchorIds(annotations.values())) {
+            Anchor anchor = skeleton.getAnchorByID(annotationId);
+            if (anchor != null) {
+                anchors.add(anchor);
+            }
+            else {
+                // This is probably ok: it just means that the spatial index returned some anchors which are no longer in the
+                // skeleton. The spatial index should get updated separately, and then this will stop.
+                log.trace("Cannot find anchor for annotation: "+annotationId);
+            }
+        }
+
+        if (!anchors.isEmpty() && anchors.size()<annotations.size()) {
+            log.warn("Adding less anchors ({}) than are in the index ({}). This probably means the index is stale.", anchors.size(), annotations.size());
+        }
+
+        log.debug("Found {} anchors in viewport",anchors.size());
         return anchors;
     }
     
-    private Set<Long> getRelevantAnchorIds(NeuronSetAdapter neuronSetAdapter, Collection<TmGeoAnnotation> annotations) {
+    private Set<Long> getRelevantAnchorIds(Collection<TmGeoAnnotation> annotations) {
 
         Set<Long> anchorIds = new HashSet<>();
         for (TmGeoAnnotation annotation : annotations) {
 
-            NeuronModelAdapter neuronForAnnotation = 
-                    (NeuronModelAdapter) neuronSetAdapter.getNeuronForAnnotation(annotation);
-            if (neuronForAnnotation==null) {
-                log.warn("Cannot get neuron model for annotation: "+annotation.getId());
-                continue;
-            }
-            TmNeuronMetadata neuron = neuronForAnnotation.getTmNeuronMetadata();
+            TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(annotation.getNeuronId());
 
             // Add annotation in viewport
             anchorIds.add(annotation.getId());

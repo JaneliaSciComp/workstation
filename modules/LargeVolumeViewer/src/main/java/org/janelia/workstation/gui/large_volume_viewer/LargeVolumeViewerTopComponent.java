@@ -8,7 +8,9 @@ import javax.swing.ToolTipManager;
 
 import com.google.common.eventbus.Subscribe;
 
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.gui.support.WindowLocator;
+import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
@@ -184,6 +186,14 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         add((Component) viewUI);
 
         // Repaint the skeleton
+        TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+        boolean isSample = true;
+        if (workspace!=null)
+            isSample = false;
+        LoadProjectEvent event = new LoadProjectEvent(isSample);
+        event.setWorkspace(workspace);
+        event.setSample(TmModelManager.getInstance().getCurrentSample());
+        viewUI.getLargeVolumeViewerTranslator().workspaceLoaded(event);
         SkeletonController.getInstance().skeletonChanged(true);
 
         revalidate();

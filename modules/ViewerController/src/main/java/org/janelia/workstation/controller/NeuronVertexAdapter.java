@@ -1,10 +1,17 @@
-package org.janelia.workstation.gui.large_volume_viewer.neuron_api;
+package org.janelia.workstation.controller;
 
 import java.util.Objects;
 
+import Jama.Matrix;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.util.MatrixUtilities;
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -12,14 +19,16 @@ import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
  */
 public class NeuronVertexAdapter implements NeuronVertex
 {
+
+    private final Logger LOG = LoggerFactory.getLogger(this.getClass());
     private final TmGeoAnnotation vertex;
     private final Long vertexId;
-    private final NeuronSetAdapter workspace;
+    private Jama.Matrix voxToMicronMatrix;
+    private Jama.Matrix micronToVoxMatrix;
 
-    public NeuronVertexAdapter(TmGeoAnnotation vertex, NeuronSetAdapter workspace) {
+    public NeuronVertexAdapter(TmGeoAnnotation vertex) {
         this.vertex = vertex;
         this.vertexId = vertex.getId();
-        this.workspace = workspace;
     }
     
     @Override
@@ -34,11 +43,41 @@ public class NeuronVertexAdapter implements NeuronVertex
             {1.0, },
         });
         // NeuronVertex API requires coordinates in micrometers
-        Jama.Matrix micLoc = workspace.getVoxToMicronMatrix().times(voxLoc);
+        Jama.Matrix micLoc = getVoxToMicronMatrix().times(voxLoc);
         return new float[] {
                 (float) micLoc.get(0, 0),
                 (float) micLoc.get(1, 0),
                 (float) micLoc.get(2, 0)};
+    }
+
+    Jama.Matrix getVoxToMicronMatrix() {
+        if (voxToMicronMatrix != null)
+            return voxToMicronMatrix;
+        updateVoxToMicronMatrices(TmModelManager.getInstance().getCurrentSample());
+        return voxToMicronMatrix;
+    }
+
+    Jama.Matrix getMicronToVoxMatrix() {
+        if (micronToVoxMatrix != null)
+            return micronToVoxMatrix;
+        updateVoxToMicronMatrices(TmModelManager.getInstance().getCurrentSample());
+        return micronToVoxMatrix;
+    }
+
+    private void updateVoxToMicronMatrices(TmSample sample) {
+        String serializedVoxToMicronMatrix = sample.getVoxToMicronMatrix();
+        if (serializedVoxToMicronMatrix == null) {
+            LOG.error("Found null voxToMicronMatrix");
+            return;
+        }
+        voxToMicronMatrix = MatrixUtilities.deserializeMatrix(serializedVoxToMicronMatrix, "voxToMicronMatrix");
+
+        String serializedMicronToVoxMatrix = sample.getMicronToVoxMatrix();
+        if (serializedMicronToVoxMatrix == null) {
+            LOG.error("Found null micronToVoxMatrix");
+            return;
+        }
+        micronToVoxMatrix = MatrixUtilities.deserializeMatrix(serializedMicronToVoxMatrix, "micronToVoxMatrix");
     }
 
     @Override
@@ -53,7 +92,7 @@ public class NeuronVertexAdapter implements NeuronVertex
             {1.0, },
         });
         // TmGeoAnnotation XYZ is in voxel coordinates
-        Jama.Matrix voxLoc = workspace.getMicronToVoxMatrix().times(micLoc);
+        Jama.Matrix voxLoc = getMicronToVoxMatrix().times(micLoc);
         vertex.setX(new Double(voxLoc.get(0,0)));
         vertex.setY(new Double(voxLoc.get(1,0)));
         vertex.setZ(new Double(voxLoc.get(2,0)));

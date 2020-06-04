@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.neuron_api;
+package org.janelia.workstation.controller;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.scripts.spatialfilter.SpatialFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +33,9 @@ public class NeuronVertexSpatialIndex {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    private final Map<NeuronVertex, CacheableKey> cachedKeys = new HashMap<>();
+    private final Map<TmGeoAnnotation, CacheableKey> cachedKeys = new HashMap<>();
     
-    private KDTree<NeuronVertex> index; // Cannot be final because it doesn't have a clear method
+    private KDTree<TmGeoAnnotation> index; // Cannot be final because it doesn't have a clear method
 
     // Is the index currently in a valid, usable state?
     private AtomicBoolean valid = new AtomicBoolean(false);
@@ -54,9 +55,9 @@ public class NeuronVertexSpatialIndex {
      * @param micronXYZ
      * @return
      */
-    public NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ) {
+    public TmGeoAnnotation getAnchorClosestToMicronLocation(double[] micronXYZ) {
         if (index==null) return null;
-        List<NeuronVertex> nbrs = getAnchorClosestToMicronLocation(micronXYZ, 1);
+        List<TmGeoAnnotation> nbrs = getAnchorClosestToMicronLocation(micronXYZ, 1);
         if (nbrs.isEmpty()) return null;
         return nbrs.get(0);
     }
@@ -68,7 +69,7 @@ public class NeuronVertexSpatialIndex {
      * @param n
      * @return
      */
-    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
+    public List<TmGeoAnnotation> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
         if (index==null) return Collections.emptyList();
         try {
             return index.nearest(micronXYZ, n);
@@ -87,21 +88,10 @@ public class NeuronVertexSpatialIndex {
      * @param filter filter which anchors to exclude
      * @return list of matching anchors
      */
-    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n, final SpatialFilter filter) {
+    public List<TmGeoAnnotation> getAnchorClosestToMicronLocation(double[] micronXYZ, int n, final SpatialFilter filter) {
         if (index==null) return Collections.emptyList();
         try {
-            return index.nearest(micronXYZ, n, new Checker<NeuronVertex>() {
-                @Override
-                public boolean usable(NeuronVertex v) {
-                    if (v instanceof NeuronVertexAdapter) {
-                        TmGeoAnnotation ann = ((NeuronVertexAdapter) v).getTmGeoAnnotation();
-                        return filter.include(v, ann);
-                    }
-                    else {
-                        return filter.include(v, null);
-                    }
-                }
-            });
+            return index.nearest(micronXYZ, n);
         } 
         catch (KeySizeException ex) {
             log.warn("Exception while finding anchor in spatial index", ex);
@@ -115,7 +105,7 @@ public class NeuronVertexSpatialIndex {
      * @param p2 higher corner
      * @return list of anchors 
      */
-    public List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2) {
+    public List<TmGeoAnnotation> getAnchorsInMicronArea(double[] p1, double[] p2) {
         if (index==null) return Collections.emptyList();
         try {
             log.debug("Finding anchors in area bounded by points: p1=({},{},{}) p2=({},{},{})",p1[0],p1[1],p1[2],p2[0],p2[1],p2[2]);
@@ -132,12 +122,14 @@ public class NeuronVertexSpatialIndex {
      * @param v
      * @return
      */
-    private double[] keyForVertex(NeuronVertex v) {
+    private double[] keyForVertex(TmGeoAnnotation v) {
         if (cachedKeys.containsKey(v)) {
             return cachedKeys.get(v).toArray();
         }
         else {
-            float xyz[] = v.getLocation(); // Neuron API returns coordinates in micrometers
+
+            float xyz[] = new float[]{v.getX().floatValue(),v.getY().floatValue(),v.getZ().floatValue()}; // Neuron API returns coordinates in micrometers
+
 
             // we originally used the exact coords as the key; that caused
             //  problems (collisions) when there were duplicate points, which
@@ -177,7 +169,7 @@ public class NeuronVertexSpatialIndex {
         }
     }
 
-    public boolean addToIndex(NeuronVertex vertex) {
+    public boolean addToIndex(TmGeoAnnotation vertex) {
         try {
             double[] key = keyForVertex(vertex);
             // log.info("Adding key to index: ({},{},{})",key[0],key[1],key[2]);
@@ -192,7 +184,7 @@ public class NeuronVertexSpatialIndex {
         return true;
     }
 
-    public boolean removeFromIndex(NeuronVertex vertex) {
+    public boolean removeFromIndex(TmGeoAnnotation vertex) {
         try {
             double[] k = keyForVertex(vertex);
             // log.info("Removing key from index: ({},{},{})",k[0],k[1],k[2]);
@@ -206,7 +198,7 @@ public class NeuronVertexSpatialIndex {
         return true;
     }
     
-    public boolean updateIndex(NeuronVertex vertex) {
+    public boolean updateIndex(TmGeoAnnotation vertex) {
         if (!removeFromIndex(vertex)) {
             return false;
         }
@@ -221,12 +213,12 @@ public class NeuronVertexSpatialIndex {
         return valid.get();
     }
     
-    public synchronized void rebuildIndex(Collection<NeuronModel> neuronList) {
+    public synchronized void rebuildIndex(Collection<TmNeuronMetadata> neuronList) {
         log.info("Rebuilding spatial index");
         valid.set(false);
         clear();
-        for (NeuronModel neuronModel : neuronList) {
-            for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
+        for (TmNeuronMetadata neuronModel : neuronList) {
+            for (TmGeoAnnotation neuronVertex : neuronModel.getGeoAnnotationMap().values()) {
                 addToIndex(neuronVertex);
             }
         }

@@ -20,6 +20,8 @@ import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.workstation.controller.NeuronVertexAdapter;
+import org.janelia.workstation.controller.NeuronVertexSpatialIndex;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
@@ -70,7 +72,6 @@ public class NeuronSetAdapter
     private final NeuronList innerList;
     private Jama.Matrix voxToMicronMatrix;
     private Jama.Matrix micronToVoxMatrix;
-    private final NeuronVertexSpatialIndex spatialIndex = new NeuronVertexSpatialIndex();
     private final NeuronSetBackgroundAnnotationListener backgroundAnnotationListener;
 
     private NeuronSetAdapter(NeuronList innerNeuronList) {
@@ -164,27 +165,9 @@ public class NeuronSetAdapter
     }
 
     @Override
-    public List<NeuronVertex> getAnchorsInMicronArea(double[] p1, double[] p2) {
-        return spatialIndex.getAnchorsInMicronArea(p1, p2);
-    }
-
-    @Override
-    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
-        return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n);
-    }
-
-    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n, SpatialFilter filter) {
-        return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n, filter);
-    }
-
-    @Override
-    public NeuronVertex getAnchorClosestToMicronLocation(double[] voxelXYZ) {
-        return spatialIndex.getAnchorClosestToMicronLocation(voxelXYZ);
-    }
-
-    @Override
     public boolean isSpatialIndexValid() {
-        return spatialIndex.isValid();
+        //return spatialIndex.isValid();
+        return false;
     }
 
     @Override
@@ -458,7 +441,7 @@ public class NeuronSetAdapter
             }
 
             LOG.debug("Adding vertex: {}", newVertex);
-            spatialIndex.addToIndex(newVertex);
+         //   spatialIndex.addToIndex(newVertex);
         }
 
         @Override
@@ -490,7 +473,7 @@ public class NeuronSetAdapter
                 deletedVerticesByNeuron.get(neuron).add(vertex);
 
                 LOG.debug("Removing vertex: {}", vertex);
-                spatialIndex.removeFromIndex(vertex);
+            //    spatialIndex.removeFromIndex(vertex);
             }
 
             // Send out one signal per neuron
@@ -519,7 +502,7 @@ public class NeuronSetAdapter
                 NeuronVertex oldVertex = oldNeuronModel.getVertexForAnnotation(annotation);
                 if (oldVertex != null) {
                     LOG.debug("Removing vertex: {}", oldVertex);
-                    spatialIndex.removeFromIndex(oldVertex);
+               //     spatialIndex.removeFromIndex(oldVertex);
                 }
             }
 
@@ -530,7 +513,7 @@ public class NeuronSetAdapter
             }
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 LOG.debug("Adding vertex: {}", neuronVertex);
-                spatialIndex.addToIndex(neuronVertex);
+               // spatialIndex.addToIndex(neuronVertex);
             }
 
             NeuronVertex reparentedVertex = neuronModel.getVertexForAnnotation(annotation);
@@ -560,7 +543,7 @@ public class NeuronSetAdapter
             }
 
             LOG.debug("Updating vertex: {}", movedVertex);
-            spatialIndex.updateIndex(movedVertex);
+          //  spatialIndex.updateIndex(movedVertex);
 
             NeuronVertexUpdateObservable signal = neuron.getVertexUpdatedObservable();
             signal.setChanged();
@@ -656,7 +639,7 @@ public class NeuronSetAdapter
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
                 LOG.debug("Removing cached vertex: {}", neuronVertex);
-                spatialIndex.removeFromIndex(neuronVertex);
+               // spatialIndex.removeFromIndex(neuronVertex);
             }
             // merge in the latest vertices and update the geometry
             neuronModel.mergeNeuronData(neuron);
@@ -664,7 +647,7 @@ public class NeuronSetAdapter
             // Re-create all the vertices for the neuron, and re-add them to the spatial index
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 LOG.debug("Re-adding vertex: {}", neuronVertex);
-                spatialIndex.addToIndex(neuronVertex);
+               // spatialIndex.addToIndex(neuronVertex);
             }
 
             //  repaintHorta(neuronModel);
@@ -675,7 +658,7 @@ public class NeuronSetAdapter
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 LOG.debug("Adding vertex: {}", neuronVertex);
-                spatialIndex.addToIndex(neuronVertex);
+            //    spatialIndex.addToIndex(neuronVertex);
             }
             neuronModel.getGeometryChangeObservable().setChanged();
             getMembershipChangeObservable().setChanged();
@@ -691,7 +674,7 @@ public class NeuronSetAdapter
                 return;
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 LOG.debug("Removing vertex: {}", neuronVertex);
-                spatialIndex.removeFromIndex(neuronVertex);
+         //       spatialIndex.removeFromIndex(neuronVertex);
                 deletedVertices.add(neuronVertex);
             }
             neuronModel.getVertexesRemovedObservable().setChanged();
@@ -718,7 +701,7 @@ public class NeuronSetAdapter
 
         @Override
         public void workspaceUnloaded(final TmWorkspace workspace) {
-            spatialIndex.clear();
+            //spatialIndex.clear();
         }
 
         @Override
@@ -727,7 +710,7 @@ public class NeuronSetAdapter
             setWorkspace(workspace);
 
             if (workspace == null) {
-                spatialIndex.clear();
+                //spatialIndex.clear();
             } else {
                 final ProgressHandle progress = ProgressHandleFactory.createHandle("Building spatial index");
                 progress.setInitialDelay(0);
@@ -737,7 +720,7 @@ public class NeuronSetAdapter
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        spatialIndex.rebuildIndex(innerList);
+                  //      spatialIndex.rebuildIndex(innerList);
                     }
 
                     @Override
@@ -779,7 +762,7 @@ public class NeuronSetAdapter
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 LOG.debug("Adding vertex: {}", neuronVertex);
-                spatialIndex.addToIndex(neuronVertex);
+               // spatialIndex.addToIndex(neuronVertex);
             }
             neuronModel.getGeometryChangeObservable().setChanged();
             getMembershipChangeObservable().setChanged();
@@ -796,7 +779,7 @@ public class NeuronSetAdapter
                 NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
                 neuronModel.getGeometryChangeObservable().setChanged();                
                 for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
-                    spatialIndex.addToIndex(neuronVertex);
+                //    spatialIndex.addToIndex(neuronVertex);
                 }
                 getMembershipChangeObservable().notifyObservers(neuronModel);
             }
@@ -808,7 +791,7 @@ public class NeuronSetAdapter
                     continue;
                 for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                     LOG.debug("Removing vertex: {}", neuronVertex);
-                    spatialIndex.removeFromIndex(neuronVertex);
+                  //  spatialIndex.removeFromIndex(neuronVertex);
                     deletedVertices.add(neuronVertex);
                 }
                 neuronModel.getVertexesRemovedObservable().setChanged();
@@ -831,7 +814,7 @@ public class NeuronSetAdapter
             NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 LOG.debug("Removing vertex: {}", neuronVertex);
-                spatialIndex.removeFromIndex(neuronVertex);
+            //    spatialIndex.removeFromIndex(neuronVertex);
                 deletedVertices.add(neuronVertex);
             }
             neuronModel.getVertexesRemovedObservable().setChanged();
@@ -854,7 +837,7 @@ public class NeuronSetAdapter
             // Remove all the existing cached vertices for this neuron
             for (NeuronVertex neuronVertex : neuronModel.getCachedVertexes()) {
                 LOG.debug("Removing cached vertex: {}", neuronVertex);
-                spatialIndex.removeFromIndex(neuronVertex);
+             //   spatialIndex.removeFromIndex(neuronVertex);
             }
             // Re-create all the vertices for the neuron, and re-add them to the spatial index
             neuronModel.loadNewVertices(neuron);
@@ -862,7 +845,7 @@ public class NeuronSetAdapter
             // Re-create all the vertices for the neuron from the neuron passed, not the model (which might be out of date)
             for (NeuronVertex neuronVertex : neuronModel.getVertexes()) {
                 LOG.debug("Re-adding vertex: {}", neuronVertex);
-                spatialIndex.addToIndex(neuronVertex);
+             //   spatialIndex.addToIndex(neuronVertex);
             }
 
             // Recreate edges from the updated vertex list

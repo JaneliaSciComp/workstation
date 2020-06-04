@@ -39,7 +39,7 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.keybind.KeymapUtil;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.MouseModalWidget;
-import org.janelia.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
+import org.janelia.workstation.controller.NeuronVertexAdapter;
 import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
