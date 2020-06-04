@@ -80,6 +80,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
             protected void hadSuccess() {
                 LoadProjectEvent event = new LoadProjectEvent(workspace==null);
                 event.setSample(sample);
+                modelManager.setCurrentSample(sample);
                 if (workspace!=null)
                     event.setWorkspace(workspace);
                 ViewerEventBus.postEvent(event);
@@ -114,7 +115,6 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
             protected void doStuff() throws Exception {
                 TmModelManager modelManager = TmModelManager.getInstance();
                 sample = TiledMicroscopeDomainMgr.getDomainMgr().getSample(workspace);
-                modelManager.setCurrentSample(sample);
                 progress2.start();
                 progress2.setDisplayName("Loading metadata");
                 progress2.switchToIndeterminate();

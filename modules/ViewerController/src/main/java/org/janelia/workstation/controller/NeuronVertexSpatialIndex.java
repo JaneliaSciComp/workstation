@@ -13,6 +13,7 @@ import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.SpatialFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,8 +129,7 @@ public class NeuronVertexSpatialIndex {
         }
         else {
 
-            float xyz[] = new float[]{v.getX().floatValue(),v.getY().floatValue(),v.getZ().floatValue()}; // Neuron API returns coordinates in micrometers
-
+            float xyz[] = getLocationInMicrometers(v); // Neuron API returns coordinates in micrometers
 
             // we originally used the exact coords as the key; that caused
             //  problems (collisions) when there were duplicate points, which
@@ -183,6 +183,24 @@ public class NeuronVertexSpatialIndex {
         }
         return true;
     }
+
+    public float[] getLocationInMicrometers(TmGeoAnnotation vertex) {
+        // Convert from image voxel coordinates to Cartesian micrometers
+        // TmGeoAnnotation is in voxel coordinates
+        Jama.Matrix voxLoc = new Jama.Matrix(new double[][] {
+                {vertex.getX(), },
+                {vertex.getY(), },
+                {vertex.getZ(), },
+                {1.0, },
+        });
+        // NeuronVertex API requires coordinates in micrometers
+        Jama.Matrix micLoc = TmModelManager.getInstance().getVoxToMicronMatrix().times(voxLoc);
+        return new float[] {
+                (float) micLoc.get(0, 0),
+                (float) micLoc.get(1, 0),
+                (float) micLoc.get(2, 0)};
+    }
+
 
     public boolean removeFromIndex(TmGeoAnnotation vertex) {
         try {
