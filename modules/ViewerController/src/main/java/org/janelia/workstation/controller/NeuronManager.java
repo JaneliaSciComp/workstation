@@ -31,6 +31,7 @@ import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -539,15 +540,19 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      * @throws Exception
      */
     public synchronized TmNeuronMetadata createNeuron(String name) throws Exception {
-        neuronModel.createTiledMicroscopeNeuron(modelManager.getCurrentWorkspace(), name);
-        // replace with code from prod
-        TmNeuronMetadata neuron = null;
+        TmNeuronMetadata newNeuron = new TmNeuronMetadata();
+        newNeuron.setOwnerKey(AccessManager.getSubjectKey());
+        final TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+        newNeuron.setWorkspaceRef(Reference.createFor(TmWorkspace.class, workspace.getId()));
+        newNeuron.setName(name);
+        TmNeuronMetadata neuron = tmDomainMgr.save(newNeuron);
+        neuronModel.completeCreateNeuron(neuron);
 
         // Update local workspace
         log.info("Neuron was created: "+neuron);
         setCurrentNeuron(neuron);
 
-        final TmWorkspace workspace = modelManager.getCurrentWorkspace();
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
