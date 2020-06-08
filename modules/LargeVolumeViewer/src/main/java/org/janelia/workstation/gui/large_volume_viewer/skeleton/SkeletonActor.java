@@ -16,6 +16,8 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.ImageIcon;
 
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.gui.camera.Camera3d;
@@ -24,8 +26,6 @@ import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 import org.janelia.workstation.gui.large_volume_viewer.shader.PathShader;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
@@ -309,8 +309,6 @@ public class SkeletonActor implements GLActor {
         List<ElementDataOffset> vertexOffsets = model.getVertexOffsets();
         List<ElementDataOffset> colorOffsets = model.getColorOffsets();
 
-        NeuronStyleModel neuronStyles = model.getNeuronStyles();
-
         n=0;
         for (ElementDataOffset lineElementOffset : lineOffsets) {
 
@@ -334,11 +332,7 @@ public class SkeletonActor implements GLActor {
 
             // 2nd pass : colored line
             gl.glLineWidth(1.5f);
-            NeuronStyle style = neuronStyles.get(lineElementOffset.id);
-            if (style==null) {
-                style = NeuronStyle.getStyleForNeuron(lineElementOffset.id);
-            }
-            lineShader.setUniform3v(gl, "baseColor", 1, style.getColorAsFloatArray());
+            lineShader.setUniform3v(gl, "baseColor", 1, TmViewState.getColorForNeuronAsFloatArray(lineElementOffset.id));
             gl.glDrawElements(GL2.GL_LINES,
                     lineElementOffset.size/SkeletonActorModel.INT_BYTE_COUNT,
                     GL2.GL_UNSIGNED_INT,
@@ -389,11 +383,10 @@ public class SkeletonActor implements GLActor {
         lineShader.setUniform3v(gl2gl3, "focus", 1, focus);
         // black background
         gl.glLineWidth(5.0f);
-        NeuronStyleModel neuronStyles = model.getNeuronStyles();
         Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments = model.getNeuronTracedSegments();
 
         for (Long neuronID : neuronTracedSegments.keySet()) {
-            if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible()) {
+            if (!TmModelManager.getInstance().getCurrentView().isHidden(neuronID)) {
                 continue;
             }
 
@@ -402,16 +395,9 @@ public class SkeletonActor implements GLActor {
                 segment.display(glDrawable);
             }
             gl.glLineWidth(3.0f);
-            NeuronStyle style;
-            if (neuronStyles.containsKey(neuronID)) {
-                style = neuronStyles.get(neuronID);
-            }
-            else {
-                style = NeuronStyle.getStyleForNeuron(neuronID);
-            }
             for (TracedPathActor segment : neuronTracedSegments.get(neuronID).values()) {
                 // neuron colored foreground
-                lineShader.setUniform3v(gl2gl3, "baseColor", 1, style.getColorAsFloatArray());
+                lineShader.setUniform3v(gl2gl3, "baseColor", 1, TmViewState.getColorForNeuronAsFloatArray(neuronID));
                 segment.display(glDrawable);
             }
         }

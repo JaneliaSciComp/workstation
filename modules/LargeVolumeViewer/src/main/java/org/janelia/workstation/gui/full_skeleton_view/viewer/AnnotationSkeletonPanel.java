@@ -102,7 +102,6 @@ public class AnnotationSkeletonPanel extends JPanel {
             // This one also acts as a collector of data.
             linesDrawActor = new SkeletonActor();
             linesDrawActor.setParentAnchorImageName( SkeletonActor.ParentAnchorImage.LARGE );
-            linesDrawActor.getModel().setNeuronStyleModel( dataSource.getNeuronStyleModel() );
             linesDrawActor.setShowOnlyParentAnchors( true );
             linesDrawActor.getModel().setAnchorsVisible(true);
             linesDrawActor.getModel().setFocusOnNextParent(true);

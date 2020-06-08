@@ -33,7 +33,6 @@ import org.janelia.workstation.controller.listener.BackgroundAnnotationListener;
 import org.janelia.workstation.controller.listener.GlobalAnnotationListener;
 import org.janelia.workstation.controller.listener.TaskReviewListener;
 import org.janelia.workstation.controller.listener.TmGeoAnnotationModListener;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -103,7 +102,7 @@ public class NeuronSetAdapter
         //annotationModel.setNeuronVisibility(neuronList, visible);
     }
 
-    @Override
+    /*@Override
     public void changeNeuronNonInteractable(List<TmNeuronMetadata> neuronList, boolean interactable) {
         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, interactable);
     }
@@ -116,7 +115,7 @@ public class NeuronSetAdapter
     @Override
     public void changeNeuronUserProperties(List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle) {
         LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggle);
-    }
+    }*/
 
     @Override
     public CompletableFuture<Boolean> changeNeuronOwnership(Long neuronId) {
@@ -879,20 +878,12 @@ public class NeuronSetAdapter
             repaintHorta(neuronModel);
         }
 
-       // @Override
-        public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
-            // log.info("neuronStyleChanged");
-            if (updateOneNeuronStyle(neuron, style)) {
-                repaintHorta();
-            }
-        }
-
         private boolean notifyVisibilityChange(NeuronModel neuronModel) {
             neuronModel.getVisibilityChangeObservable().setChanged();
             neuronModel.getVisibilityChangeObservable().notifyObservers();
             return true;
         }
-
+/*
         private boolean updateOneNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) {
             // log.info("updateOneNeuronStyle");
             if (neuron == null)
@@ -953,7 +944,7 @@ public class NeuronSetAdapter
             }
             if (bChanged)
                 repaintHorta();
-        }
+        }*/
 
         @Override
         public void neuronTagsChanged(List<TmNeuronMetadata> neuronList) {
