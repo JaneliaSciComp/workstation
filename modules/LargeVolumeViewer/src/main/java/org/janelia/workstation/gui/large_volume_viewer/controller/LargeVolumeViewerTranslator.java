@@ -14,7 +14,6 @@ import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.listener.AnchoredVoxelPathListener;
 import org.janelia.workstation.controller.listener.BackgroundAnnotationListener;
 import org.janelia.workstation.controller.listener.GlobalAnnotationListener;
-import org.janelia.workstation.gui.large_volume_viewer.listener.NeuronStyleChangeListener;
 import org.janelia.workstation.gui.large_volume_viewer.listener.NextParentListener;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
 import org.janelia.workstation.controller.listener.TmAnchoredPathListener;
@@ -23,7 +22,6 @@ import org.janelia.workstation.controller.listener.TmGeoAnnotationModListener;
 import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.SegmentIndex;
 import org.janelia.workstation.controller.tileimagery.VoxelPosition;
@@ -63,7 +61,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<>();
     private Collection<TmGeoAnnotationAnchorListener> anchorListeners = new ArrayList<>();
     private Collection<NextParentListener> nextParentListeners = new ArrayList<>();
-    private Collection<NeuronStyleChangeListener> neuronStyleChangeListeners = new ArrayList<>();
     private ViewStateListener viewStateListener;
 
     public void addAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
@@ -90,14 +87,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         nextParentListeners.remove(l);
     }
 
-    public void addNeuronStyleChangeListener(NeuronStyleChangeListener l) {
-        neuronStyleChangeListeners.add(l);
-    }
-
-    public void removeNeuronStyleChangeListener(NeuronStyleChangeListener l) {
-        neuronStyleChangeListeners.remove(l);
-    }
-
     public LargeVolumeViewerTranslator(NeuronManager annModel, LargeVolumeViewer largeVolumeViewer) {
         this.annModel = annModel;
         this.largeVolumeViewer = largeVolumeViewer;
@@ -114,7 +103,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         addAnchoredVoxelPathListener(skeletonController);
         addTmGeoAnchorListener(skeletonController);
         addNextParentListener(skeletonController);
-        addNeuronStyleChangeListener(skeletonController);
         skeletonController.registerForEvents(this);
     }
 
@@ -321,7 +309,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
         if (workspace != null) {
 
-            Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
             List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
             List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
 
@@ -350,9 +337,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
             skeletonController.setSkipSkeletonChange(true);
 
-            fireNeuronStylesChangedEvent(updateNeuronStyleMap);
-            logger.debug("updated {} neuron styles", updateNeuronStyleMap.size());
-
             fireAnchorsAdded(addedAnchorList);
             logger.info("added {} anchors", addedAnchorList.size());
 
@@ -369,7 +353,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         for (TmNeuronMetadata neuron: event.getNeurons()) {
             logger.info("neuronCreated: {}", neuron);
 
-            Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
             List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
             List<TmAnchoredPath> annList = new ArrayList<>();
 
@@ -383,9 +366,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
             fireAnchorsAdded(addedAnchorList);
             logger.info("  added {} anchors", addedAnchorList.size());
-
-            fireNeuronStylesChangedEvent(updateNeuronStyleMap);
-            logger.info("  updated {} neuron styles", updateNeuronStyleMap.size());
 
             addAnchoredPaths(neuron.getId(), annList);
             logger.info("  added {} anchored paths", annList.size());
@@ -403,7 +383,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
 
     private void processNeuronDeleted(TmNeuronMetadata neuron) {
-        fireNeuronStyleRemovedEvent(neuron);
         fireClearAnchors(neuron.getGeoAnnotationMap().values());
         removeAnchoredPathsByNeuronID(neuron.getId());
     }
@@ -534,18 +513,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private void fireClearAnchors() {
         for (TmGeoAnnotationAnchorListener l : anchorListeners) {
             l.clearAnchors();
-        }
-    }
-
-    private void fireNeuronStylesChangedEvent(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
-        for (NeuronStyleChangeListener l : neuronStyleChangeListeners) {
-            l.neuronStylesChanged(neuronStyleMap);
-        }
-    }
-
-    private void fireNeuronStyleRemovedEvent(TmNeuronMetadata neuron) {
-        for (NeuronStyleChangeListener l : neuronStyleChangeListeners) {
-            l.neuronStyleRemoved(neuron);
         }
     }
 

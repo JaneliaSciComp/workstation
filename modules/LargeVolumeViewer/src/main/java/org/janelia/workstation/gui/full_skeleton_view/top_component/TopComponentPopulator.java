@@ -11,7 +11,6 @@ import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonP
 import org.janelia.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent;
 
 /**
@@ -43,7 +42,6 @@ public class TopComponentPopulator {
     private static class SkeletonDataSource implements AnnotationSkeletonDataSourceI {
 
         private Skeleton skeleton;
-        private NeuronStyleModel neuronStyleModel;
         private NeuronManager annotationModel;
 
         public SkeletonDataSource() {
@@ -55,14 +53,6 @@ public class TopComponentPopulator {
                 cacheValues();
             }
             return skeleton;
-        }
-        
-        @Override
-        public NeuronStyleModel getNeuronStyleModel() {
-            if (neuronStyleModel == null) {
-                cacheValues();
-            }
-            return neuronStyleModel;
         }
 
         @Override
@@ -88,7 +78,6 @@ public class TopComponentPopulator {
                 QuadViewUi ui = tc.getQuadViewUi();
                 if (ui != null) {
                     skeleton = ui.getSkeleton();
-                    neuronStyleModel = ui.getNeuronStyleModel();
                     annotationModel = ui.getAnnotationModel();    
                 }
             }

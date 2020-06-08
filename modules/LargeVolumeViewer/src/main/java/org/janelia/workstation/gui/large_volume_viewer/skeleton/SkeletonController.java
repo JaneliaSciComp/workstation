@@ -22,7 +22,6 @@ import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationMana
 import org.janelia.workstation.gui.large_volume_viewer.controller.LargeVolumeViewerTranslator;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton_mesh.LineEnclosurePrecomputes;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
@@ -36,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener,
-        NextParentListener, NeuronStyleChangeListener {
+        NextParentListener {
 
     private static final Logger log = LoggerFactory.getLogger(SkeletonController.class);
 
@@ -258,9 +257,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void clearAnchors() {
         skeleton.clear();
-        for (SkeletonActor actor: actors) {
-            actor.getModel().clearStyles();
-        }
 		skeletonChanged();
     }
 
@@ -282,37 +278,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         // Need not rebuild everything, each time the anchor is selected.
         //   ** this would make the whole display very slow ** updateMeshDrawActor();
         fireComponentUpdate();
-    }
-
-    @Override
-    public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
-        for (SkeletonActor actor: actors) {
-            actor.getModel().changeNeuronStyle(neuron, style);
-        }
-        refreshMeshDrawUpdateTimer();
-        fireComponentUpdate();
-    }
-
-    @Override
-    public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
-        for (SkeletonActor actor: actors) {
-            actor.getModel().updateNeuronStyles(neuronStyleMap);
-        }
-        refreshMeshDrawUpdateTimer();
-        fireComponentUpdate();
-    }
-    
-    public void remoteNeuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
-        for (SkeletonActor actor: actors) {
-            actor.getModel().updateRemoteNeuronStyles(neuronStyleMap);
-        }
-    }
-    
-    @Override
-    public void neuronStyleRemoved(TmNeuronMetadata neuron) {
-        for (SkeletonActor actor: actors) {
-            actor.getModel().removeNeuronStyle(neuron);
-        }
     }
 
     public void annotationSelected( Long guid ) {
@@ -381,14 +346,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     public void smartMergeNeuriteRequested(Anchor clickedAnchor, Anchor currentParentAnchor) {
         annoMgr.smartMergeNeuriteRequested(clickedAnchor, currentParentAnchor);
-    }
-
-    public void changeNeuronStyleRequested(Anchor anchor) {
-        annoMgr.chooseNeuronStyle(anchor);
-    }
-
-    public void setNeuronVisibilityRequested(Anchor anchor, boolean visibility) {
-        annoMgr.setNeuronVisibility(anchor, visibility);
     }
     
     public void anchorAdded(AnchorSeed anchorSeed) {

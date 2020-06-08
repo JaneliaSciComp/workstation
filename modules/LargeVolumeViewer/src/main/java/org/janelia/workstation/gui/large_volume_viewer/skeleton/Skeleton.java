@@ -254,14 +254,6 @@ public class Skeleton {
         controller.smartMergeNeuriteRequested(clickedAnchor, getNextParent());
     }
 
-    public void changeNeuronStyle(Anchor anchor) {
-        controller.changeNeuronStyleRequested(anchor);
-    }
-
-    public void setNeuronVisitility(Anchor anchor, boolean visibility) {
-        controller.setNeuronVisibilityRequested(anchor, visibility);
-    }
-
     public void splitNeuriteRequest(Anchor anchor) {
         controller.splitNeuriteRequested(anchor);
     }

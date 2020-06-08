@@ -23,6 +23,7 @@ import javax.swing.KeyStroke;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.large_volume_viewer.MenuItemGenerator;
@@ -614,7 +615,8 @@ implements MouseMode, KeyListener
                     AbstractAction changeNeuronStyleAction = new AbstractAction("Change neuron color...") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            skeleton.changeNeuronStyle(hover);
+
+                            //skeleton.changeNeuronStyle(hover);
                         }
                     };
                     changeNeuronStyleAction.setEnabled(controller.editsAllowed());
@@ -623,7 +625,7 @@ implements MouseMode, KeyListener
                     AbstractAction hideNeuronAction = new AbstractAction("Hide neuron") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            skeleton.setNeuronVisitility(hover, false);
+                            TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(hover.getNeuronID());
                         }
                     };
                     hideNeuronAction.setEnabled(controller.editsAllowed());
@@ -772,19 +774,19 @@ implements MouseMode, KeyListener
                     try {
                         Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
                         if (property.equals(NeuronGroupsDialog.PROPERTY_RADIUS)) {
-                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, toggled);
+                          //  LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, toggled);
                             LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
                         } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
-                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuronList, !toggled);
+                          //  LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuronList, !toggled);
                             LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
                         } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
-                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, toggled);
+                          //  LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, toggled);
                             LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
                         } else if (property.equals(NeuronGroupsDialog.PROPERTY_CROSSCHECK)) {
                             List<String> properties =  new ArrayList<String>();
                             properties.add("Radius");
                             properties.add("Background");
-                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggled);
+                           // LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggled);
                             LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
                         }
                     } catch (Exception error) {

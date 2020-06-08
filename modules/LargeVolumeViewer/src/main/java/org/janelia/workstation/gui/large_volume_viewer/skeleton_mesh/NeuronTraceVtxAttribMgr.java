@@ -1,6 +1,7 @@
 package org.janelia.workstation.gui.large_volume_viewer.skeleton_mesh;
 
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.model.annotations.neuron.AnnotationGeometry;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
@@ -10,8 +11,6 @@ import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnot
 import org.janelia.workstation.controller.model.annotations.neuron.InterestingAnnotation;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.workstation.gui.viewer3d.picking.IdCoder;
 import org.janelia.workstation.gui.viewer3d.picking.IdCoderProvider;
 import org.janelia.workstation.mesh_loader.*;
@@ -140,16 +139,12 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
         triangleSources.clear();
     
         Skeleton skeleton = dataSource.getSkeleton();
-        NeuronStyleModel neuronStyleModel = dataSource.getNeuronStyleModel();
-        if ( dataSource == null  ||  skeleton == null  ||  neuronStyleModel == null ) {
+        if ( dataSource == null  ||  skeleton == null ) {
             if (dataSource == null) {
                 log.warn("No data source set");
             }
             if (skeleton == null) {
                 log.warn("No skeleton in data source");
-            }
-            if ( neuronStyleModel == null ) {
-                log.warn("No neuron style model.");
             }
             throw new Exception("Please set all model information before execution.");
         }
@@ -227,14 +222,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
             return null;
         }
         return dataSource.getSkeleton();
-    }
-
-    /**
-     * @return the neuronStyleModel
-     */
-    public NeuronStyleModel getNeuronStyleModel() {
-        return dataSource.getNeuronStyleModel();
-
     }
 
     /**
@@ -559,10 +546,11 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
             manualSegmentEnclosureFactory.setCharacteristics(HIGH_VOL_LOW_RES_SIDE_COUNT, MANUAL_SEGMENT_RADIUS);
         }
         for ( AnchorLinesReturn anchorLine: anchorLines ) {
+            // NOTE THIS MIGHT NOT EVEN BE USED ANYMORE
             manualSegmentEnclosureFactory.addEnclosure(
                     anchorLine.getStart(),
                     anchorLine.getEnd(),
-                    anchorLine.getStyle().getColorAsFloatArray()
+                    TmViewState.getColorForNeuronAsFloatArray(123132L)
             );
         }                
 
@@ -598,8 +586,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
             return true;
         }
         Long neuronId = anchor.getNeuronID();
-        NeuronStyle style = getNeuronStyle(neuronId);
-        final float[] colorAsFloatArray = style.getColorAsFloatArray();
+
+        final float[] colorAsFloatArray = TmViewState.getColorForNeuronAsFloatArray(neuronId);
         double[] previousCoords = null;
         VoxelPosition previousVoxelPos = null;
         for ( VoxelPosition voxelPos: voxelPath.getPath() ) {
@@ -652,8 +640,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
         }
         int tracedPairSkipCount = 0;
         for (Anchor anchor: anchors) {
-            NeuronStyle style = getNeuronStyle(anchor.getNeuronID());
-                    
             Integer i1 = anchorToIndex.get( anchor );
             for (Anchor neighbor: anchor.getNeighbors() ) {
                 SegmentIndex pathTestInx = new SegmentIndex( anchor.getGuid(), neighbor.getGuid() );
@@ -665,7 +651,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
                         AnchorLinesReturn traceRtn = new AnchorLinesReturn();
                         traceRtn.setStart( toDoubleArr(anchor.getLocation()) );
                         traceRtn.setEnd( toDoubleArr(neighbor.getLocation()) );
-                        traceRtn.setStyle( style );
                         rtnVal.add( traceRtn );
                         log.debug("Adding anchor line: " + i1 + "->" + i2);
                     }
@@ -689,14 +674,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
         log.debug("Skipped " + tracedPairSkipCount + " for being in a traced pair.");
         return rtnVal;
     }
-
-    private NeuronStyle getNeuronStyle(Long neuronId) {
-        NeuronStyle style = dataSource.getNeuronStyleModel().get(neuronId);
-        if (style == null) {
-            style = NeuronStyle.getStyleForNeuron(neuronId);
-        }
-        return style;
-    }
     
     private Collection<Anchor> getAnchorsSafe() {
         if (dataSource.getSkeleton() == null) {
@@ -713,7 +690,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
     private static class AnchorLinesReturn {
         private double[] start;
         private double[] end;
-        private NeuronStyle style;
 
         /**
          * @return the start
@@ -742,21 +718,6 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
         public void setEnd(double[] end) {
             this.end = end;
         }
-
-        /**
-         * @return the style
-         */
-        public NeuronStyle getStyle() {
-            return style;
-        }
-
-        /**
-         * @param style the style to set
-         */
-        public void setStyle(NeuronStyle style) {
-            this.style = style;
-        }
-        
     }
     
 }

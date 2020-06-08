@@ -27,11 +27,10 @@ import org.janelia.workstation.controller.access.ModelTranslation;
 import org.janelia.workstation.controller.dialog.AddEditNoteDialog;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.tileimagery.VoxelPosition;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.PointRefiner;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.SmartMergeAlgorithms;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.*;
 import org.janelia.workstation.gui.large_volume_viewer.QuadViewUi;
@@ -717,7 +716,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // can't merge if target is hidden
         TmNeuronMetadata targetNeuron = annotationModel.getNeuronFromNeuronID(targetNeuronID);
-        if (!getNeuronVisibility(targetNeuron)) {
+        if (!TmModelManager.getInstance().getCurrentView().isHidden(targetNeuron.getId())) {
             log.warn("Can't merge annotation to hidden neuron");
             return false;
         }
@@ -1790,57 +1789,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return ann.getId();
     }
 
-
-    /**
-     * pop a dialog to choose neuron style; three variants work together to operate
-     * from different input sources
-     */
-    public void chooseNeuronColor() {
-        // called from annotation panel neuron gear menu "choose neuron style"
-        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-            return;
-        }
-        if (TmSelectionState.getInstance().getCurrentNeuron() == null) {
-            presentError("You must select a neuron to set its style.", "No neuron selected");
-        } else {
-            chooseNeuronStyle(TmSelectionState.getInstance().getCurrentNeuron());
-        }
-    }
-
-    public void chooseNeuronStyle(Anchor anchor) {
-        // called from right-click on neuron in 2d view, "set neuron style"
-        chooseNeuronStyle(annotationModel.getNeuronFromNeuronID(anchor.getNeuronID()));
-    }
-
-    public void chooseNeuronStyle(final TmNeuronMetadata neuron) {
-        // called from neuron list, clicking on color swatch
-        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-            return;
-        }
-        if (neuron == null) {
-            // should not happen
-            return;
-        }
-
-        Color color = askForNeuronColor(getNeuronStyle(neuron));
-        if (color != null) {
-            NeuronStyle style = new NeuronStyle(color, getNeuronVisibility(neuron), false);
-            setNeuronStyle(neuron, style);
-        }
-    }
-
-    public static Color askForNeuronColor(NeuronStyle inputStyle) {
-        NeuronColorDialog dialog = new NeuronColorDialog(
-                null,
-                inputStyle);
-        dialog.setVisible(true);
-        if (dialog.styleChosen()) {
-            return dialog.getChosenColor();
-        } else {
-            return null;
-        }
-    }
-
     public void setAllNeuronVisibility(final boolean visibility) {
         setBulkNeuronVisibility(null, visibility);
     }
@@ -1852,7 +1800,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         SimpleWorker updater = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                setNeuronVisibility(neurons, visibility);
+                TmViewState viewState = TmModelManager.getInstance().getCurrentView();
+                for (TmNeuronMetadata neuron: neurons) {
+                    viewState.addAnnotationToHidden(neuron.getId());
+                }
             }
 
             @Override
@@ -1866,132 +1817,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         };
         updater.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), visibility?"Showing neurons...":"Hiding neurons...", ""));
         return updater.executeWithFuture();
-    }
-
-    // hide others = hide all then show current; this is purely a convenience function
-    public void hideUnselectedNeurons() {
-        SimpleWorker updater = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                setNeuronVisibility(annotationModel.getNeuronList(), false);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                setCurrentNeuronVisibility(true);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                FrameworkAccess.handleException(error);
-            }
-        };
-        updater.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Hiding neurons...", ""));
-        updater.execute();
-    }
-    
-    public void toggleSelectedNeurons() {
-        
-        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-            return;
-        }
-        if (TmSelectionState.getInstance().getCurrentNeuron() == null) {
-            presentError("You must select a neuron to hide or show it.", "No neuron selected");
-        } 
-        else {
-            TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
-            setNeuronVisibility(currentNeuron, !getNeuronVisibility(currentNeuron));
-        }
-    }
-    
-    /**
-     * as with chooseNeuronStyle, multiple versions allow for multiple entry points
-     */
-    public void setCurrentNeuronVisibility(boolean visibility) {
-        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-            return;
-        }
-        if (TmSelectionState.getInstance().getCurrentNeuron() == null) {
-            presentError("You must select a neuron to hide or show it.", "No neuron selected");
-        } else {
-            setNeuronVisibility(TmSelectionState.getInstance().getCurrentNeuron(), visibility);
-        }
-    }
-    
-    public boolean getNeuronVisibility(TmNeuronMetadata neuron) {
-        return annotationModel.getNeuronVisibility(neuron);
-    }
-
-    public void setNeuronVisibility(Anchor anchor, boolean visibility) {
-        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(anchor.getNeuronID());
-        setNeuronVisibility(neuron, visibility);
-    }
-    
-    public void setNeuronVisibility(Collection<TmNeuronMetadata> bulkNeurons, boolean visibility) {
-        //annotationModel.setNeuronVisibility(bulkNeurons, visibility);
-    }
-    
-    public void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
-     //   annotationModel.setNeuronVisibility(neuron, visibility);
-    }
-    
-    public void setNeuronNonInteractable(List<TmNeuronMetadata> neuronList, boolean nonInteractable) {
-        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
-        for (int i=0; i<neuronList.size(); i++) {
-             NeuronStyle style = getNeuronStyle(neuronList.get(i));
-             style.setNonInteractable(nonInteractable);
-             styleUpdater.put(neuronList.get(i), style);
-        }
-        //this.annotationModel.fireNeuronStylesChanged(styleUpdater);
-    } 
-        
-    public void setNeuronUserToggleRadius(List<TmNeuronMetadata> neuronList, boolean toggleRadius) {
-        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
-        for (int i=0; i<neuronList.size(); i++) {
-             NeuronStyle style = getNeuronStyle(neuronList.get(i));
-             style.setUserToggleRadius(toggleRadius);
-             styleUpdater.put(neuronList.get(i), style);
-        }
-      //  this.annotationModel.fireNeuronStylesChanged(styleUpdater);
-    }
-    
-    public void setNeuronUserProperties(List<TmNeuronMetadata> neuronList, List<String> properties, boolean toggle) {
-        Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<TmNeuronMetadata, NeuronStyle>();
-        for (int i=0; i<neuronList.size(); i++) {
-             NeuronStyle style = getNeuronStyle(neuronList.get(i));
-             for (String property: properties) {
-                 style.setProperty(property, toggle);
-             }
-             styleUpdater.put(neuronList.get(i), style);
-        }
-      //  this.annotationModel.fireNeuronStylesChanged(styleUpdater);
-    }
-
-    public NeuronStyle getNeuronStyle(TmNeuronMetadata neuron) {
-        // simple pass through; I want get/set to look the same, and set is *not*
-        //  just a pass through
-       // return annotationModel.getNeuronStyle(neuron);
-        return null;
-    }
-
-    public void setNeuronStyle(final TmNeuronMetadata neuron, final NeuronStyle style) {
-        SimpleWorker setter = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-        //        annotationModel.setNeuronStyle(neuron, style);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing; listeners will update
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                FrameworkAccess.handleException(error);
-            }
-        };
-        setter.execute();
     }
     
     public void saveColorModel3d(ImageColorModel colorModel) {

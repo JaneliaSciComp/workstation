@@ -70,7 +70,6 @@ import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewLauncher;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceToParentRequest;
@@ -116,7 +115,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
     private TileServer tileServer = largeVolumeViewer.getTileServer();
     private SharedVolumeImage volumeImage = tileServer.getSharedVolumeImage();
     private ImageColorModel imageColorModel = new ImageColorModel(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
-    private NeuronStyleModel neuronStyleModel = new NeuronStyleModel();
 
     // Four quadrants for orthogonal views
     private OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
@@ -312,7 +310,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
         largeVolumeViewer.setImageColorModel(imageColorModel);
-        largeVolumeViewer.setNeuronStyleModel(neuronStyleModel);
         sliderPanel.setVisible(false);
 
         camera.addCameraListener(new CameraListener() {
@@ -498,10 +495,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     public Skeleton getSkeleton() {
         return skeleton;
-    }
-
-    public NeuronStyleModel getNeuronStyleModel() {
-        return neuronStyleModel;
     }
 
     public NeuronManager getAnnotationModel() {

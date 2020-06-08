@@ -22,14 +22,13 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.SpatialIndexManager;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.workstation.controller.NeuronVertexAdapter;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.SegmentIndex;
@@ -80,18 +79,6 @@ public class SkeletonActorModel {
     private TileFormat getTileFormat() {
         return tileFormat;
     }
-
-    private NeuronStyleModel neuronStyles;
-
-    public void clearStyles() {
-        neuronStyles.clear();
-    }
-
-    public void setNeuronStyleModel(NeuronStyleModel nsModel) {
-        this.neuronStyles = nsModel;
-    }
-
-    public NeuronStyleModel getNeuronStyles() { return neuronStyles; }
 
     private boolean anchorsVisible = true;
 
@@ -208,10 +195,7 @@ public class SkeletonActorModel {
             //log.info("displayLines2 Check1");
 
             for (Long neuronID : neuronVertices.keySet()) {
-
-                NeuronStyle neuronStyle=neuronStyles.get(neuronID);
-                
-                if (neuronStyle != null && (!neuronStyle.isVisible())) {
+                if (TmModelManager.getInstance().getCurrentView().isHidden(neuronID)) {
                     continue;
                 }
 
@@ -302,8 +286,7 @@ public class SkeletonActorModel {
             List<Long> neuronOrderList=new ArrayList<>();
 
             for (Long neuronID : neuronVertices.keySet()) {
-                NeuronStyle neuronStyle=neuronStyles.get(neuronID);
-                if (neuronStyle != null && !neuronStyle.isVisible()) {
+                if (TmModelManager.getInstance().getCurrentView().isHidden(neuronID)) {
                     continue;
                 }
                 neuronOrderList.add(neuronID);
@@ -346,30 +329,6 @@ public class SkeletonActorModel {
             return neuronAnchorIndices.get(anchor);
         }
         return -1;
-    }
-
-    public void changeNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) {
-        if (neuron != null) {
-            neuronStyles.put(neuron.getId(), style);
-            forceUpdateAnchors();
-        }
-    }
-
-    public void updateNeuronStyles(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
-        for (TmNeuronMetadata neuron: neuronStyleMap.keySet()) {
-            neuronStyles.put(neuron.getId(), neuronStyleMap.get(neuron));
-        }
-        forceUpdateAnchors();
-    }
-
-    public void updateRemoteNeuronStyles(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
-        for (TmNeuronMetadata neuron: neuronStyleMap.keySet()) {
-            neuronStyles.put(neuron.getId(), neuronStyleMap.get(neuron));
-        }
-    }
-    
-    public void removeNeuronStyle(TmNeuronMetadata neuron) {
-        neuronStyles.remove(neuron.getId());
     }
 
     public synchronized void forceUpdateAnchors() {
@@ -435,7 +394,6 @@ public class SkeletonActorModel {
         neuronIndexAnchors.clear();
         Map<Long, Integer> neuronVertexIndex = new HashMap<>();
         Integer currentVertexIndex;
-        NeuronStyle style;
         for (Anchor anchor : anchors) {
             Long neuronID = anchor.getNeuronID();
 
@@ -445,11 +403,7 @@ public class SkeletonActorModel {
             vertexBuffer.put((float) xyz.getY());
             vertexBuffer.put((float) xyz.getZ());
 
-            style=neuronStyles.get(neuronID);
-            if (style==null) {
-                style = NeuronStyle.getStyleForNeuron(neuronID);
-            }
-            float[] styleColorArr=style.getColorAsFloatArray();
+            float[] styleColorArr= TmViewState.getColorForNeuronAsFloatArray(neuronID);
             FloatBuffer colorBuffer=neuronColors.get(neuronID);
             colorBuffer.put(styleColorArr);
 
@@ -691,19 +645,18 @@ public class SkeletonActorModel {
      * is the input anchor's neuron visible?
      */
     public boolean anchorIsVisible(Anchor anchor) {
-        if (anchor == null || anchor.getNeuronID() == null || !neuronStyles.containsKey(anchor.getNeuronID())) {
+        if (anchor == null || anchor.getNeuronID() == null) {
             return false;
         } else {
-            NeuronStyle style = neuronStyles.get(anchor.getNeuronID());
-            return style.isVisible();
+            return !TmModelManager.getInstance().getCurrentView().isHidden(anchor.getNeuronID());
         }
     }
     
     public boolean anchorIsNonInteractable(Anchor anchor) {
-        if (anchor == null || anchor.getNeuronID() == null || !neuronStyles.containsKey(anchor.getNeuronID())) {
+        if (anchor == null || anchor.getNeuronID() == null) {
             return false;
         } else {
-            return neuronStyles.get(anchor.getNeuronID()).isNonInteractable();
+            return TmModelManager.getInstance().getCurrentView().isrNonInteractable(anchor.getNeuronID());
         }
     }
     

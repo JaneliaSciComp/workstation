@@ -24,7 +24,6 @@ import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActorStateUpdater;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
@@ -383,10 +382,6 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
         }
         this.imageColorModel = imageColorModel;
         sliceActor.setImageColorModel(imageColorModel);
-    }
-
-    void setNeuronStyleModel(NeuronStyleModel nsModel) {
-        skeletonActor.getModel().setNeuronStyleModel(nsModel);
     }
 
     public Skeleton getSkeleton() {
