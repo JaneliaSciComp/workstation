@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.action;
+package org.janelia.workstation.gui.large_volume_viewer.controller;
 
 import java.awt.Cursor;
 import java.awt.Point;
@@ -27,6 +27,8 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.large_volume_viewer.MenuItemGenerator;
+import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;
+import org.janelia.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
 import org.janelia.console.viewerapi.dialogs.NeuronGroupsDialog;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
@@ -49,7 +51,7 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TraceMode extends BasicMouseMode 
+public class TraceMode extends BasicMouseMode
 implements MouseMode, KeyListener
 {
     private Logger logger = LoggerFactory.getLogger(TraceMode.class);
