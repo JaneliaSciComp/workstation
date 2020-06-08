@@ -89,9 +89,11 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     public static final LargeVolumeViewerTopComponent getInstance() {
         return (LargeVolumeViewerTopComponent)WindowManager.getDefault().findTopComponent(LVV_PREFERRED_ID);
     }
-    
+    javax.swing.GroupLayout layout;
+
     public LargeVolumeViewerTopComponent() {
-        initComponents();
+        layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
         setName(Bundle.CTL_LargeVolumeViewerTopComponent());
         setToolTipText(Bundle.HINT_LargeVolumeViewerTopComponent());
     }
@@ -120,29 +122,15 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         initialObjectReference = Reference.createFor(domainObject);
     }
 
-    private void initComponents() {
-
-        jPanel1 = new javax.swing.JPanel();
-
-        jPanel1.setLayout(new java.awt.BorderLayout());
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-    }
-
     private javax.swing.JPanel jPanel1;
 
     @Override
     public void componentOpened() {
         if (viewUI==null)
             initialize();
+        else {
+            jPanel1.add(viewUI, BorderLayout.CENTER );
+        }
     }
 
     @Override
@@ -183,7 +171,14 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         }
         removeAll();
         viewUI.setVisible(true);
-        add((Component) viewUI);
+        layout.setHorizontalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(viewUI, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(viewUI, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
 
         // Repaint the skeleton
         TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();

@@ -12,7 +12,7 @@ import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.PanMode;
-import org.janelia.workstation.gui.large_volume_viewer.action.TraceMode;
+import org.janelia.workstation.gui.large_volume_viewer.controller.TraceMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.WheelMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.ZScanMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.ZoomMode;

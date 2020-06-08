@@ -3,7 +3,6 @@ package org.janelia.workstation.gui.large_volume_viewer.skeleton;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -17,7 +16,7 @@ import org.janelia.workstation.controller.listener.TmGeoAnnotationAnchorListener
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.workstation.gui.large_volume_viewer.listener.*;
-import org.janelia.workstation.gui.large_volume_viewer.action.TraceMode;
+import org.janelia.workstation.gui.large_volume_viewer.controller.TraceMode;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.controller.LargeVolumeViewerTranslator;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
@@ -26,7 +25,6 @@ import org.janelia.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
