@@ -262,6 +262,11 @@ public class BasicNeuronModel implements NeuronModel
     }
 
     @Override
+    public void removeReviewedVertices(Collection<NeuronVertex> vertexList) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
     public void clearVertices(Collection<NeuronVertex> vertexList) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

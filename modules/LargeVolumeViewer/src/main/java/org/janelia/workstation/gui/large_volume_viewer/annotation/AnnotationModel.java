@@ -268,9 +268,9 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         taskReviewListeners.add(reviewListener);
     }
 
-    public void branchReviewed (TmNeuronMetadata neuron, List<TmGeoAnnotation> annotations) {
+    public void branchReviewed (TmNeuronMetadata neuron, List<TmGeoAnnotation> annotations, boolean reviewed) {
         for (TaskReviewListener listener: taskReviewListeners) {
-            listener.neuronBranchReviewed(neuron, annotations);
+            listener.neuronBranchReviewed(neuron, annotations, reviewed);
         }
     }
 

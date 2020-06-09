@@ -443,6 +443,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         saveButton.addActionListener(event -> onSaveButton());
         workflowButtonsPanel.add(saveButton);
 */
+
+        annManager = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
     }
     
     private void playBranch() {
@@ -792,7 +794,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     public void setSelectedAsReviewed(boolean review) {
         if (currGroupIndex!=-1 && !selectMode) {
             ReviewGroup currGroup = groupList.get(currGroupIndex);
-            currGroup.setReviewed(true);
+            currGroup.setReviewed(review);
         }
         Object[] guiCells = new Object[selectedPoints.size()];        
         List<Long> annotationList = new ArrayList<>();
@@ -807,7 +809,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         } else {
             navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.OPEN);  
         }
-        annManager.setBranchReviewed(currNeuron, annotationList);
+        annManager.setBranchReviewed(currNeuron, annotationList, review);
         
         // update persistence
         if (currTask!=null) {

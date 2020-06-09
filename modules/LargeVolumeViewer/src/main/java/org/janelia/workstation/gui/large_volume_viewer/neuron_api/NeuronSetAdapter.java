@@ -396,11 +396,11 @@ public class NeuronSetAdapter
     }
 
     @Override
-    public void neuronBranchReviewed(TmNeuronMetadata neuron, List<TmGeoAnnotation> annList) {
+    public void neuronBranchReviewed(TmNeuronMetadata neuron, List<TmGeoAnnotation> annList, boolean reviewed) {
         // determine the neuronvertices for each of these and add them to the model
         NeuronModelAdapter neuronModel = innerList.neuronModelForTmNeuron(neuron);
         if (!neuronModel.getReviewMode())
-            neuronModel.setReviewMode(true);
+            neuronModel.setReviewMode(reviewed);
         List<NeuronVertex> vertexList = new ArrayList<>();
         if (annList!=null && annList.size()>0) {
             for (TmGeoAnnotation annotation : annList) {
@@ -408,7 +408,10 @@ public class NeuronSetAdapter
                 if (vertex!=null)
                     vertexList.add(vertex);
             }
-            neuronModel.addReviewedVertices(vertexList);
+            if (reviewed)
+                neuronModel.addReviewedVertices(vertexList);
+            else
+                neuronModel.removeReviewedVertices(vertexList);
         }
         neuronModel.getColorChangeObservable().hasChanged();
         neuronModel.getColorChangeObservable().notifyObservers();
