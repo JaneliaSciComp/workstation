@@ -866,12 +866,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         merger.execute();
     }
 
-    public void setBranchReviewed(TmNeuronMetadata neuron, List<Long> annIdList) {
+    public void setBranchReviewed(TmNeuronMetadata neuron, List<Long> annIdList, boolean reviewed) {
         List<TmGeoAnnotation> annotationList = new ArrayList<TmGeoAnnotation>();
         for (Long annId: annIdList) {
             annotationList.add(annotationModel.getGeoAnnotationFromID(neuron, annId));
         }
-        annotationModel.branchReviewed(neuron, annotationList);
+        annotationModel.branchReviewed(neuron, annotationList, reviewed);
     }
 
     private class TmDisplayNeuron {

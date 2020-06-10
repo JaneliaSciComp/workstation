@@ -37,6 +37,7 @@ extends Hideable, NonInteractable, UserToggleRadius
     Collection<NeuronVertex> getReviewedVertices();
     boolean isReviewedVertex (NeuronVertex vertex);
     void addReviewedVertices(Collection<NeuronVertex> vertexList);
+    void removeReviewedVertices(Collection<NeuronVertex> vertexList);
     void clearVertices (Collection<NeuronVertex> vertexList);
     
     // Adding a vertex is so common that it gets its own signal

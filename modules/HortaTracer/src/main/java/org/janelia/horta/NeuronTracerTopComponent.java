@@ -129,6 +129,7 @@ import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
 import org.openide.actions.UndoAction;
@@ -521,7 +522,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         sceneWindow.setControlsVisibility(true);
         currentSource = locationList.get(0).getSampleUrl().toString();
         defaultColorChannel = locationList.get(0).getDefaultColorChannel();
-        volumeCache.setColorChannel(defaultColorChannel);        
+        volumeCache.setColorChannel(defaultColorChannel);
+        setSampleLocation(locationList.get(0));
+        try {
+            Thread.sleep(500);
+        } catch (Exception e) {
+            FrameworkAccess.handleException(e);
+        }
         playback.reviewPoints(locationList, autoRotation, speed, stepScale);
     }
 

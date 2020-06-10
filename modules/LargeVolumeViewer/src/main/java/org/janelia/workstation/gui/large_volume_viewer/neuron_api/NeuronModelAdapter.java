@@ -450,6 +450,11 @@ public class NeuronModelAdapter implements NeuronModel {
     }
 
     @Override
+    public void removeReviewedVertices(Collection<NeuronVertex> vertexList) {
+        reviewedNodes.removeAll(vertexList);
+    }
+
+    @Override
     public void clearVertices(Collection<NeuronVertex> vertexList) {
         reviewedNodes.removeAll(vertexList);
     }
