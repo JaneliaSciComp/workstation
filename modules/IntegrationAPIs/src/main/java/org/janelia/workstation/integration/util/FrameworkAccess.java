@@ -2,11 +2,19 @@ package org.janelia.workstation.integration.util;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.swing.JFrame;
 
-import org.janelia.workstation.integration.api.*;
+import org.janelia.workstation.integration.api.ActivityLogging;
+import org.janelia.workstation.integration.api.BrowsingController;
+import org.janelia.workstation.integration.api.DataController;
+import org.janelia.workstation.integration.api.ErrorHandler;
+import org.janelia.workstation.integration.api.FileAccessController;
+import org.janelia.workstation.integration.api.FrameModel;
+import org.janelia.workstation.integration.api.InspectionController;
+import org.janelia.workstation.integration.api.PreferenceModel;
+import org.janelia.workstation.integration.api.ProgressController;
+import org.janelia.workstation.integration.api.SettingsModel;
 import org.janelia.workstation.integration.spi.compression.CompressedFileResolverI;
 import org.openide.util.Lookup;
 import org.openide.util.NbPreferences;
@@ -218,10 +226,10 @@ public class FrameworkAccess {
     }
 
     public static Long generateGUID() {
-        return getDataController().generateGUIDs(1).get(0).longValue();
+        return getDataController().generateGUIDs(1).get(0);
     }
 
     public static List<Long> generateGUIDs(int count) {
-        return getDataController().generateGUIDs(count).stream().map(Number::longValue).collect(Collectors.toList());
+        return getDataController().generateGUIDs(count);
     }
 }

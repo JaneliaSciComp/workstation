@@ -746,7 +746,7 @@
                         <publicPackage>org.janelia.it.jacs.model.user_data.tiledMicroscope</publicPackage>
                         <publicPackage>org.janelia.it.jacs.model.user_data.tools</publicPackage>
                         <publicPackage>org.janelia.it.jacs.model.user_data.validation</publicPackage>
-                        <publicPackage>org.janelia.it.jacs.model.util</publicPackage>
+                        <publicPackage>org.janelia.model.access.domain</publicPackage>
                         <publicPackage>org.janelia.it.jacs.model.vo</publicPackage>
                         <publicPackage>org.janelia.it.jacs.shared.utils</publicPackage>
                         <publicPackage>org.janelia.rendering</publicPackage>

@@ -19,12 +19,12 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.octree.ZoomLevel;
@@ -365,7 +365,7 @@ public class Subvolume {
     }
 
     private void multiThreadedFetch(Set<TileIndex> neededTiles, final TextureCache textureCache, final AbstractTextureLoadAdapter loadAdapter, final TileFormat tileFormat, final ZoomLevel zoom, final ZoomedVoxelIndex farCorner) {
-        ExecutorService executorService = ThreadUtils.establishExecutor(
+        ExecutorService executorService = Executors.newFixedThreadPool(
                 N_THREADS,
                 new ThreadFactoryBuilder()
                         .setNameFormat("SubvolumeFetch-%03d")

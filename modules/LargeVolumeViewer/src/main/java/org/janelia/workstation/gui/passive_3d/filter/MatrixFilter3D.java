@@ -5,13 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 import javax.swing.ProgressMonitor;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -205,7 +207,7 @@ public class MatrixFilter3D {
         // First, let's change the bytes going into the neighborhoods, to
         // all long values.  One pass, rather than repeating that operation.
         final long[] inputLongs = convertToLong( param );          
-        final ExecutorService executorService = ThreadUtils.establishExecutor(
+        final ExecutorService executorService = Executors.newFixedThreadPool(
                 NUM_THREADS,
                 new ThreadFactoryBuilder()
                         .setNameFormat("MatrixFilter-%03d")
@@ -242,7 +244,10 @@ public class MatrixFilter3D {
             // Now that everything has been queued, can send the shutdown
             // signal.  Then await termination, which in turn waits for all
             // the loads to complete.
-            ThreadUtils.followUpExecution(executorService, callbacks, 5);
+            int awaitMin = 5;
+            if (!executorService.awaitTermination(awaitMin, TimeUnit.MINUTES)) {
+                throw new IllegalStateException("One or mo re operations were not completed as of shutdown.  More time than " + awaitMin + " min may be needed.");
+            }
         } catch ( Exception ex ) {
             FrameworkAccess.handleException(ex);
         }

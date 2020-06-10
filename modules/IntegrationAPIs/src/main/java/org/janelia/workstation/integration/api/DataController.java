@@ -14,6 +14,6 @@ public interface DataController {
      * @param count number of identifiers to generate
      * @return list of new GUIDs
      */
-    List<Number> generateGUIDs(long count);
+    List<Long> generateGUIDs(int count);
 
 }

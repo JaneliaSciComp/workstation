@@ -1,10 +1,10 @@
 package org.janelia.workstation.browser.api.services;
 
-import org.janelia.model.util.TimebasedIdentifierGenerator;
+import java.util.List;
+
+import org.janelia.model.access.domain.TimebasedIdentifierGenerator;
 import org.janelia.workstation.integration.api.DataController;
 import org.openide.util.lookup.ServiceProvider;
-
-import java.util.List;
 
 /**
  * Implements the data controller.
@@ -25,7 +25,7 @@ public class ConsoleDataController implements DataController {
     private TimebasedIdentifierGenerator generator = new TimebasedIdentifierGenerator(ID_CONTEXT, true);
 
     @Override
-    public List<Number> generateGUIDs(long count) {
+    public List<Long> generateGUIDs(int count) {
         return generator.generateIdList(count);
     }
 }
