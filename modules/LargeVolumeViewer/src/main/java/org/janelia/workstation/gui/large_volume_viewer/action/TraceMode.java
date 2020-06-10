@@ -385,9 +385,10 @@ implements MouseMode, KeyListener
                             @Override
                             protected void doStuff() throws Exception {
                                 // prompt the user to enter their name
-                                Long speed = Long.parseLong(JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(),
-                                        "Enter in speed of scroll through", 10));
+                                String speed = JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(),
+                                        "Enter in speed of scroll through", 10);
 
+                                Long speedNum = (long)(1000/Double.parseDouble(speed));
 
                                 // grab current camera position and zoom and loop in z from there
                                 Vec3 cameraPos = getCamera().getFocus();
@@ -396,7 +397,7 @@ implements MouseMode, KeyListener
                                 controller.setLVVFocus(cameraPos);
                                 float step = 40;
                                 while (cameraPos.getZ() < getBoundingBox().getMaxZ()) {
-                                    Thread.sleep(1000/speed);
+                                    Thread.sleep(speedNum);
                                     cameraPos = cameraPos.plus(new Vec3(0, 0, step));
                                     controller.setLVVFocus(cameraPos);
                                 }
@@ -409,6 +410,7 @@ implements MouseMode, KeyListener
 
                             @Override
                             protected void hadError(Throwable error) {
+                                FrameworkAccess.handleException(error);
                             }
                         };
                         scrollWorker.execute();                                                               //
