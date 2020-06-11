@@ -13,6 +13,7 @@ import javax.swing.table.TableModel;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.workstation.controller.listener.TmGeoAnnotationAnchorListener;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.workstation.gui.large_volume_viewer.listener.*;
@@ -326,10 +327,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         annoMgr.addEditNoteRequested(anchor);
     }
 
-    public void editNeuronTagRequested(Anchor anchor) {
-        annoMgr.editNeuronTagsRequested(anchor);
-    }
-
     public void setNeuronRadiusRequested(Anchor anchor) {
         annoMgr.setNeuronRadiusRequested(anchor);
     }
@@ -339,7 +336,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
     
     public boolean checkOwnership(Long neuronID) {
-        return annoMgr.checkOwnership(neuronID);
+        return TmModelManager.getInstance().checkOwnership(neuronID);
     }
 
     public void smartMergeNeuriteRequested(Anchor clickedAnchor, Anchor currentParentAnchor) {

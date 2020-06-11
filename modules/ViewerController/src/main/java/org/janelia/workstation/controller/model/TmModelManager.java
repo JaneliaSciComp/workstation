@@ -1,17 +1,26 @@
 package org.janelia.workstation.controller.model;
 
 import Jama.Matrix;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.MatrixUtilities;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.SpatialIndexManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.tileimagery.TileLoader;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * This class is singleton to manage references to all the different model
@@ -43,6 +52,7 @@ public class TmModelManager {
     public static TmModelManager getInstance() {
         return instance;
     }
+    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     public TmModelManager() {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
@@ -166,5 +176,52 @@ public class TmModelManager {
 
     public void setTileLoader(TileLoader tileLoader) {
         this.tileLoader = tileLoader;
+    }
+
+    public boolean checkOwnership(Long neuronID)  {
+        return checkOwnership(NeuronManager.getInstance().getNeuronFromNeuronID(neuronID));
+    }
+
+    public boolean checkOwnership(TmNeuronMetadata neuron)  {
+        if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
+            if (neuron.getOwnerKey().equals(TRACERS_GROUP)) {
+                try {
+                    CompletableFuture<Boolean> future = NeuronManager.getInstance().getNeuronModel().requestOwnershipChange(neuron);
+                    if (future == null) {
+                        FrameworkAccess.handleException("Problem requesting ownership change for neuron " + neuron.getName() +
+                                ".", new Throwable("Ownership change failed"));
+                        return false;
+                    }
+                    Boolean ownershipDecision = future.get(5, TimeUnit.SECONDS);
+                    if (!ownershipDecision) {
+                        FrameworkAccess.handleException("Ownership change request for neuron " + neuron.getName() +
+                                " with current owner " + neuron.getOwnerName() +
+                                " rejected.", new Throwable("Ownership change failed"));
+                    }
+                    return ownershipDecision.booleanValue();
+                } catch (TimeoutException e) {
+                    FrameworkAccess.handleException("Ownership change request for neuron " + neuron.getName() +
+                            " apparently timed out. Check to see if operation actually succeeded.", new Throwable("Ownership change timed out"));
+                    String errorMessage = "Roundtrip request for ownership of System-owned neuron " + neuron.getName() + " timed out";
+                    log.error(errorMessage);
+                    FrameworkAccess.handleException(e);
+                } catch (Exception e) {
+                    FrameworkAccess.handleException("Ownership change request for neuron " + neuron.getName() +
+                            " had an unknown failure.", new Throwable("Ownership change failed"));
+                    String errorMessage = "Unspecified problems handling roundtrip request for ownership of System-owned neuron";
+                    log.error(errorMessage);
+                    FrameworkAccess.handleException(e);
+                }
+                return false;
+            }
+            JOptionPane.showMessageDialog(
+                    null,
+                    "Neuron " + neuron.getName() + " is owned by " + neuron.getOwnerName() +
+                            ". Ask them for ownership if you'd like to make changes.",
+                    "Neuron not owned",
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        return true;
     }
 }
