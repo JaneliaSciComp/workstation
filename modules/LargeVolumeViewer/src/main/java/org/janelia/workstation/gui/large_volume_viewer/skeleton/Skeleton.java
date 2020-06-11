@@ -238,10 +238,6 @@ public class Skeleton {
         controller.addEditNoteRequested(anchor);
     }
 
-    public void editNeuronTagRequest(Anchor anchor) {
-        controller.editNeuronTagRequested(anchor);
-    }
-
     public void setNeuronRadiusRequest(Anchor anchor) {
         controller.setNeuronRadiusRequested(anchor);
     }

@@ -16,7 +16,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  // support the capability to select multiple neurons and multiple annotation points at the same time
  */
 public class TmSelectionState {
-    private Map<String, Object> selections;
+    private Map<String, Object> primarySelections;
+    private Map<String, Object> secondarySelections;
     private AnnotationCategory selectionMode;
     public enum SelectionCode {
         NEURON, VERTEX
@@ -31,38 +32,63 @@ public class TmSelectionState {
     }
 
     private TmSelectionState() {
-        selections = new HashMap<>();
+        primarySelections = new HashMap<>();
     }
 
     public Object getNeuronSelections() {
-        return selections.get(SelectionCode.NEURON.name());
+        return primarySelections.get(SelectionCode.NEURON.name());
     }
 
     public TmNeuronMetadata getCurrentNeuron() {
-        return (TmNeuronMetadata)selections.get(SelectionCode.NEURON.name());
+        return (TmNeuronMetadata)primarySelections.get(SelectionCode.NEURON.name());
     }
 
     public TmGeoAnnotation getCurrentVertex() {
-        return (TmGeoAnnotation)selections.get(SelectionCode.VERTEX.name());
+        return (TmGeoAnnotation)primarySelections.get(SelectionCode.VERTEX.name());
     }
 
     public void setCurrentNeuron(Object selection) {
-        selections.put(SelectionCode.NEURON.name(), selection);
+        primarySelections.put(SelectionCode.NEURON.name(), selection);
     }
 
     public void setCurrentVertex(Object selection) {
-        selections.put(SelectionCode.VERTEX.name(), selection);
+        primarySelections.put(SelectionCode.VERTEX.name(), selection);
     }
 
     public void clearNeuronSelection() {
-        selections.clear();
+        primarySelections.clear();
     }
 
     public void clearVertexSelection() {
-        selections.remove(SelectionCode.VERTEX.name());
+        primarySelections.remove(SelectionCode.VERTEX.name());
+    }
+
+    public TmNeuronMetadata getSecondaryNeuron() {
+        return (TmNeuronMetadata)secondarySelections.get(SelectionCode.NEURON.name());
+    }
+
+    public TmGeoAnnotation getSecondaryVertex() {
+        return (TmGeoAnnotation)secondarySelections.get(SelectionCode.VERTEX.name());
+    }
+
+    public void setSecondarySelections(Object selection) {
+        secondarySelections.put(SelectionCode.NEURON.name(), selection);
+    }
+
+    public void setSecondaryVertex(Object selection) {
+        secondarySelections.put(SelectionCode.VERTEX.name(), selection);
+    }
+
+    public void clearSecondarySelection() {
+        secondarySelections.clear();
+    }
+
+    public void clearSecondaryVertexSelection() {
+        secondarySelections.remove(SelectionCode.VERTEX.name());
     }
 
     public void clearAllSelections() {
-        selections.clear();
+        primarySelections.clear();
+        secondarySelections.clear();
     }
 }

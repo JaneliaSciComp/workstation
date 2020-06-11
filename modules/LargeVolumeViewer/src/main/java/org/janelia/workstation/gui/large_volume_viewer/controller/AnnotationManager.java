@@ -3,13 +3,10 @@ package org.janelia.workstation.gui.large_volume_viewer.controller;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -21,9 +18,8 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.dialogs.NeuronGroupsDialog;
-import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.workstation.controller.NeuronManager;
-import org.janelia.workstation.controller.access.ModelTranslation;
+import org.janelia.workstation.controller.action.MergeNeuronsAction;
 import org.janelia.workstation.controller.dialog.AddEditNoteDialog;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
@@ -31,7 +27,6 @@ import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.tileimagery.VoxelPosition;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.PointRefiner;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.SmartMergeAlgorithms;
-import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.*;
 import org.janelia.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.workstation.controller.tileimagery.TileServer;
@@ -45,15 +40,11 @@ import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.workers.BackgroundWorker;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleListenableFuture;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.workstation.controller.action.NeuronTagsAction;
-import org.janelia.console.viewerapi.dialogs.EditWorkspaceNameDialog;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
@@ -72,23 +63,12 @@ import org.slf4j.LoggerFactory;
 
 public class AnnotationManager implements UpdateAnchorListener, PathTraceListener, VolumeLoadListener
 /**
- * this class is the middleman between the UI and the model. first, the UI makes
- * naive requests (eg, add annotation). then this class determines if the
- * request is valid (eg, can't add if no neuron), popping dialogs if needed.
- * lastly, this class gathers and/or reformats info as needed to actually make
- * the call to the back end, usually spinning off a worker thread to do so.
- *
- * this class's events are usually connected to various UI signals, and it
- * typically fires events for NeuronManager. this class has no
- * responsibilities in notifying UI elements of what's been done; that's handled
- * by events generated at NeuronManager.
+ * this class handles any actions specific to LVV tracing that can't be generalized into something common for other
+ * viewers.
  */
 {
-
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
-
     private ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
-
     private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     // annotation model object
@@ -134,59 +114,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         this.lvvTranslator = lvvTranslator;
     }
 
-    public File getSwcDirectory() {
-        if (swcDirectory == null) {
-            swcDirectory = getDefaultSwcDirectory();
-        }
-        return swcDirectory;
-    }
-
-    private File getDefaultSwcDirectory() {
-        // swc imports and exports are done to one particular place in the
-        //  file system right now, so default to that location; fall back to
-        //  user's home dir if it's not available
-
-        // do a brute force search, like we do for finding tile path (see QuadViewUi.loadFile());
-        //  fortunately, we're checking fewer locations
-        String osName = System.getProperty("os.name").toLowerCase();
-        List<Path> prefixesToTry = new Vector<>();
-        if (osName.contains("win")) {
-            for (File fileRoot : File.listRoots()) {
-                prefixesToTry.add(fileRoot.toPath());
-            }
-        } else if (osName.contains("os x")) {
-            // for Mac, it's simpler:
-            prefixesToTry.add(new File("/Volumes").toPath());
-        } else if (osName.contains("lin")) {
-            // Linux
-            prefixesToTry.add(new File("/groups/mousebrainmicro").toPath());
-        }
-        boolean found = false;
-        // java and its "may not have been initialized" errors...
-        File testFile = new File(System.getProperty("user.home"));
-        for (Path prefix: prefixesToTry) {
-            // test with and without the first part
-            testFile = prefix.resolve("shared_tracing/Finished_Neurons").toFile();
-            if (testFile.exists()) {
-                found = true;
-                break;
-            }
-            testFile = prefix.resolve("mousebrainmicro/shared_tracing/Finished_Neurons").toFile();
-            if (testFile.exists()) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            testFile = new File(System.getProperty("user.home"));
-        }
-        return testFile;
-    }
-
-    public void setSwcDirectory(File swcDirectory) {
-        this.swcDirectory = swcDirectory;
-    }
-
+    // need common permissions model
     public boolean editsAllowed() {
         return true;
         //return annotationModel.editsAllowed();
@@ -217,12 +145,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void addEditNoteRequested(Anchor anchor) {
         if (anchor != null) {
             addEditNote(anchor.getNeuronID(), anchor.getGuid());
-        }
-    }
-
-    public void editNeuronTagsRequested(Anchor anchor) {
-        if (anchor != null) {
-            editNeuronTags(annotationModel.getNeuronFromNeuronID(anchor.getNeuronID()));
         }
     }
 
@@ -286,63 +208,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         addAnnotation(seed.getLocation(), seed.getParentGuid());
     }
 
-    public boolean checkOwnership(TmNeuronMetadata neuron)  {
-        if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
-            if (neuron.getOwnerKey().equals(TRACERS_GROUP)) {
-                try {
-                    CompletableFuture<Boolean> future = annotationModel.getNeuronModel().requestOwnershipChange(neuron);
-                    if (future == null) {
-                        presentError("Problem requesting ownership change for neuron " + neuron.getName() +
-                                ".", "Ownership change failed");
-                        return false;
-                    }
-                    Boolean ownershipDecision = future.get(5, TimeUnit.SECONDS);
-                    if (!ownershipDecision) {
-                        presentError("Ownership change request for neuron " + neuron.getName() +
-                                " with current owner " + neuron.getOwnerName() +
-                                " rejected.", "Ownership change failed");
-                    }
-                    return ownershipDecision.booleanValue();
-                } catch (TimeoutException e) {
-                    presentError("Ownership change request for neuron " + neuron.getName() +
-                            " apparently timed out. Check to see if operation actually succeeded.", "Ownership change timed out");
-                    String errorMessage = "Roundtrip request for ownership of System-owned neuron " + neuron.getName() + " timed out";
-                    log.error(errorMessage);
-                    e.printStackTrace();
-                    FrameworkAccess.handleException(e);
-                } catch (Exception e) {
-                    presentError("Ownership change request for neuron " + neuron.getName() +
-                            " had an unknown failure.", "Ownership change failed");
-                    String errorMessage = "Unspecified problems handling roundtrip request for ownership of System-owned neuron";
-                    log.error(errorMessage);
-                    e.printStackTrace();
-                    FrameworkAccess.handleException(e);
-                }
-                return false;
-            }
-            handleOwnershipChange(neuron);
-            return false;
-        }
-        return true;
-    }
-    
-    public boolean checkOwnership (Long neuronID) {
-        return checkOwnership(annotationModel.getNeuronFromNeuronID(neuronID));
-    }
-    
-    private void handleOwnershipChange(TmNeuronMetadata neuron) {
-        presentError("Neuron " + neuron.getName() + " is owned by " + neuron.getOwnerName() +
-            ". Ask them for ownership if you'd like to make changes.", "Neuron not owned");
-    }
-        
-    private void handleOwnershipChange(List<TmNeuronMetadata> neuronList) {
-        String neuronNames = neuronList.stream()
-                .map(TmNeuronMetadata::getName)
-                .collect(Collectors.joining(", "));
-        presentError("You do not own the following neurons: " + neuronNames +
-                ". You must request access to these neurons to make change.", "Neurons not owned");
-    }
-
     /**
      * NOTE:  MOVE THIS TO WHERE ACTUAL MOVE EVENT IS BEING PROCESSED
      * @param anchor
@@ -354,8 +219,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             annotationModel.fireAnnotationNotMoved(annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid()));
             return;
         }
-        
-        if (!checkOwnership(anchor.getNeuronID()))
+
+        if (!TmModelManager.getInstance().checkOwnership(anchor.getNeuronID()))
             return;
         
         // find closest to new anchor location that isn't the annotation already
@@ -413,7 +278,16 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 return;
             } else if (ans == JOptionPane.YES_OPTION) {
                 activityLog.logMergedNeurite(getSampleID(), getWorkspaceID(), closest);
-                mergeNeurite(anchor.getNeuronID(), anchor.getGuid(), closest.getNeuronId(), closest.getId());
+                TmNeuronMetadata sourceNeuron = annotationModel.getNeuronFromNeuronID(anchor.getNeuronID());
+                TmGeoAnnotation sourceVertex = annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
+                TmNeuronMetadata targetNeuron = annotationModel.getNeuronFromNeuronID(closest.getNeuronId());
+                TmGeoAnnotation targetVertex = annotationModel.getGeoAnnotationFromID(closest.getNeuronId(), closest.getId());
+                TmSelectionState.getInstance().setCurrentNeuron(sourceNeuron);
+                TmSelectionState.getInstance().setCurrentVertex(sourceVertex);
+                TmSelectionState.getInstance().setSecondarySelections(targetNeuron);
+                TmSelectionState.getInstance().setSecondaryVertex(targetVertex);
+                MergeNeuronsAction action = new MergeNeuronsAction();
+                action.execute();
             } else {
                 // move, don't merge
                 activityLog.logMovedAnchor(getSampleID(), getWorkspaceID(), anchor.getNeuronID(), closest);
@@ -508,8 +382,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     "No neuron!");
             return;
         }
-        
-        if (!checkOwnership(currentNeuron))
+
+        if (!TmModelManager.getInstance().checkOwnership(currentNeuron))
             return;
 
         // verify that the parent annotation (if there is one) is in our neuron;
@@ -569,6 +443,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         adder.execute();
     }
 
+
+    // COMMON
     /**
      * delete the annotation with the input ID; the annotation must be a "link",
      * which is an annotation that is not a root (no parent) or branch point
@@ -589,8 +465,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     "No such annotation");
             return;
         }
-        
-        if (!checkOwnership(neuronID))
+
+        if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
         
         if (annotation.isRoot() && annotation.getChildIds().size() > 0) {
@@ -636,7 +512,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        if (!checkOwnership(neuronID))
+        if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
         
         // if more than one point, ask the user if they are sure (we have
@@ -683,8 +559,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // dialog?
             return;
         }
-        
-        if (!checkOwnership(neuronID))
+
+        if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
         
         SimpleWorker mover = new SimpleWorker() {
@@ -740,60 +616,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return true;
     }
 
-    /**
-     * merge the two neurites to which the two annotations belong.
-     * Activity-logged by caller.
-     *
-     * @param sourceAnnotationID
-     * @param targetAnnotationID
-     */
-    public void mergeNeurite(final Long sourceNeuronID, final Long sourceAnnotationID, final Long targetNeuronID, final Long targetAnnotationID) {
-        if (!checkOwnership(sourceNeuronID)||!checkOwnership(targetNeuronID))
-            return;
-        
-        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(sourceNeuronID, sourceAnnotationID);
-        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(targetNeuronID, targetAnnotationID);
-        // System.out.println("merge requested, " + sourceAnnotationID + " to " + targetAnnotationID);
-
-        // same neurite = cycle = NO!
-        // this should already be filtered out, but it's important enough to check twice
-        if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
-            presentError(
-                    "You can't merge a neurite with itself!",
-                    "Can't merge!!");
-            annotationModel.fireAnnotationNotMoved(sourceAnnotation);
-            return;
-        }
-
-        // then call ann model
-        SimpleWorker merger = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.mergeNeurite(sourceNeuronID, sourceAnnotationID, targetNeuronID, targetAnnotationID);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // sends its own signals
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                FrameworkAccess.handleException(error);
-            }
-        };
-        merger.execute();
-
-    }
-
     public void smartMergeNeuriteRequested(Anchor sourceAnchor, Anchor targetAnchor) {
         if (targetAnchor == null) {
             presentError("No neurite selected!  Select an annotation on target neurite, then choose this operation again.",
                 "No selected neurite");
             return;
         }
-                
-        if (!checkOwnership(targetAnchor.getNeuronID()) || !checkOwnership(sourceAnchor.getNeuronID()))
+
+        if (!TmModelManager.getInstance().checkOwnership(targetAnchor.getNeuronID()) ||
+                !TmModelManager.getInstance().checkOwnership(sourceAnchor.getNeuronID()))
             return;
 
         TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(sourceAnchor.getNeuronID(),
@@ -899,7 +730,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         //  throw in a dummy "create new neuron" option at the top
         final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
         TmNeuronMetadata sourceNeuron = annotationModel.getNeuronFromNeuronID(annotation.getNeuronId());
-        if (!checkOwnership(sourceNeuron))
+        if (!TmModelManager.getInstance().checkOwnership(sourceNeuron))
             return;
         
         ArrayList<TmNeuronMetadata> neuronList = new ArrayList<>(annotationModel.getCurrentFilteredNeuronList());
@@ -978,9 +809,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         } else {
             // we're moving to an existing neuron; not allowed if destination is owned by someone else;
             //  otherwise, this is straightforward
-            if (!checkOwnership(destinationNeuron)) {
+            if (!TmModelManager.getInstance().checkOwnership(destinationNeuron))
                 return;
-            }
+
+
 
             SimpleWorker mover = new SimpleWorker() {
                 @Override
@@ -1018,8 +850,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // dialog?
             return;
         }
-        
-        if (!checkOwnership(neuronID))
+
+        if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
         
         // can't split a root if it has multiple children (ambiguous):
@@ -1053,12 +885,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         splitter.execute();
     }
 
+    // COMMON
+
     public void rerootNeurite(final Long neuronID, final Long newRootAnnotationID) {
         if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             return;
         }
-        
-        if (!checkOwnership(neuronID))
+
+        if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
         
 
@@ -1084,12 +918,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         rerooter.execute();
     }
 
+
+    //COMMON
     public void splitNeurite(final Long neuronID, final Long newRootAnnotationID) {
         if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             return;
         }
-        
-        if (!checkOwnership(neuronID))
+
+        if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
         
 
@@ -1125,6 +961,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     }
 
+
+    //COMMON
     /**
      * add an anchored path; not much to check, as the UI needs to check it even
      * before the request gets here
@@ -1134,8 +972,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // dialog?
             return;
         }
-        
-        if (!checkOwnership(neuronID))
+
+        if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
         
 
@@ -1164,7 +1002,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * pop a dialog to add, edit, or delete note at the given annotation
      */
     public void addEditNote(final Long neuronID, final Long annotationID) {
-        if (!checkOwnership(neuronID))
+        if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
 
         String noteText = getNote(neuronID, annotationID);
@@ -1191,9 +1029,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     ////  CCMMON ///
     public void clearNote(final Long neuronID, final Long annotationID) {
         TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronID);
-        if (!checkOwnership(neuronID))
+        if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
-        
+
         final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
         if (textAnnotation != null) {
             SimpleWorker deleter = new SimpleWorker() {
@@ -1249,23 +1087,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         setter.execute();
     }
 
-
-    ////  CCMMON ///
-    public void editNeuronTags(TmNeuronMetadata neuron) {
-        log.info("editNeuronTags({})",neuron);
-        // reuse the action; note that the action doesn't actually
-        //  use the event, so we can throw in an empty one
-        NeuronTagsAction action = new NeuronTagsAction();
-        action.setTargetNeuron(neuron);
-        action.actionPerformed(new ActionEvent(this, -1, "dummy event"));
-    }
-
-
     ////  CCMMON ///
     public void setNeuronRadius(final Long neuronID) {
-        if (!checkOwnership(neuronID))
+        if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
-        
+
         String ans = (String) JOptionPane.showInputDialog(
                 ComponentUtil.getLVVMainWindow(),
                 "Set radius for neuron (µm): ",
@@ -1356,9 +1182,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (neuron == null) {
             return;
         }
-        
-        if (!checkOwnership(neuron))
-            return; 
+
+        if (!TmModelManager.getInstance().checkOwnership(neuron))
+            return;
 
         int nAnnotations = neuron.getGeoAnnotationMap().size();
         int ans = JOptionPane.showConfirmDialog(
@@ -1387,50 +1213,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             };
             deleter.execute();
         }
-
-    }
-
-
-    ////  CCMMON ///
-    /**
-     * rename the currently selected neuron
-     */
-    public void renameNeuron() {
-        final TmNeuronMetadata neuron = TmSelectionState.getInstance().getCurrentNeuron();
-        if (neuron == null) {
-            presentError(
-                    "No selected neuron!",
-                    "No neuron!");
-            return;
-        }
-        if (!checkOwnership(neuron))
-            return;
-        
-
-        final String neuronName = promptForNeuronName(neuron.getName());
-        if (neuronName == null) {
-            return;
-        }
-
-        SimpleWorker renamer = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.renameCurrentNeuron(neuronName);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing here, annModel emits its own signals
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                presentError(
-                        "Could not rename neuron!",
-                        error);
-            }
-        };
-        renamer.execute();
 
     }
 
@@ -1563,6 +1345,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return String.format("Neuron %d", maximum + 1);
     }
 
+    //COMMON
     /**
      * given an neuronId, select (make current) the neuron it belongs to
      */
@@ -1572,135 +1355,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
         TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
         annotationModel.selectNeuron(neuron);
-    }
-
-
-    ////  CCMMON ///
-    /**
-     * create a new workspace with the currently loaded sample
-     */
-    public void createWorkspace() {
-        // if no sample loaded, error
-        if (initialObject == null) {
-            presentError(
-                    "You must load a brain sample entity before creating a workspace!",
-                    "No brain sample!");
-            return;
-        }
-
-        // check that the entity *is* a workspace or brain sample, and get the sample ID:
-        Long sampleID;
-
-        if (initialObject instanceof TmSample) {
-            sampleID = initialObject.getId();
-        } else if (initialObject instanceof TmWorkspace) {
-            sampleID = getSampleID();
-            if (sampleID == null) {
-                presentError("Sample ID is null; did the previous sample or workspace finish loading?\n\nCould not create workspace!",
-                        "Null sample ID");
-                return;
-            }
-        } else {
-            presentError(
-                    "You must load a brain sample before creating a workspace!",
-                    "No brain sample!");
-            return;
-        }
-
-        // ask the user if they really want a new workspace if one is active
-        final boolean existingWorkspace = TmModelManager.getInstance().getCurrentWorkspace() != null;
-        if (existingWorkspace) {
-            int ans = JOptionPane.showConfirmDialog(
-                    ComponentUtil.getLVVMainWindow(),
-                    "You already have an active workspace!  Close and create another?",
-                    "Workspace exists",
-                    JOptionPane.YES_NO_OPTION);
-            if (ans == JOptionPane.NO_OPTION) {
-                return;
-            }
-        }
-
-        EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
-        final String workspaceName = dialog.showForSample(TmModelManager.getInstance().getCurrentSample());
-        
-        if (workspaceName == null) {
-            log.info("Aborting workspace creation: no valid name was provided by the user");
-            return;
-        }
-
-        // create it in another thread
-        // there is no doubt a better way to get these parameters in:
-        final Long finalSampleId = sampleID;
-        SimpleWorker creator = new SimpleWorker() {
-            
-            private TmWorkspace workspace;
-            
-            @Override
-            protected void doStuff() throws Exception {
-                
-                log.info("Creating new workspace with name '{}' for {}",workspaceName,finalSampleId);
-                
-                // now we can create the workspace
-                this.workspace = annotationModel.createWorkspace(finalSampleId, workspaceName);
-                log.info("Created workspace with id={}",workspace.getId());
-
-                // Reuse the existing color model 
-                if (existingWorkspace) {
-                    workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
-                    //annotationModel.saveWorkspace(workspace);
-                    log.info("Copied existing color model");
-                }
-            }
-
-            @Override
-            protected void hadSuccess() {
-                LargeVolumeViewerTopComponent.getInstance().openLargeVolumeViewer(workspace);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                FrameworkAccess.handleException(error);
-            }
-        };
-        creator.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Creating new workspace...", ""));
-        creator.execute();
-    }
-
-    public void saveWorkspaceCopy() {
-
-        EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
-        final String workspaceName = dialog.showForSample(TmModelManager.getInstance().getCurrentSample());
-        final String assignOwner = dialog.getAssignOwner();
-        
-        if (workspaceName==null) {
-            log.info("Aborting workspace creation: no valid name was provided by the user");
-            return;
-        }
-
-        final TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
-        
-        SimpleWorker creator = new SimpleWorker() {
-            
-            private TmWorkspace workspaceCopy;
-            
-            @Override
-            protected void doStuff() throws Exception {
-                workspaceCopy = annotationModel.copyWorkspace(workspace, workspaceName, assignOwner);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                LargeVolumeViewerTopComponent.getInstance().openLargeVolumeViewer(workspaceCopy);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                FrameworkAccess.handleException(error);
-            }
-        };
-
-        creator.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Copying workspace...", ""));
-        creator.execute();
     }
 
     /**
@@ -1793,6 +1447,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         setBulkNeuronVisibility(null, visibility);
     }
 
+
+    // COMMON
     public SimpleListenableFuture setBulkNeuronVisibility(Collection<TmNeuronMetadata> neuronList, final boolean visibility) {
         final Collection<TmNeuronMetadata> neurons = neuronList==null?annotationModel.getNeuronList():neuronList;
       
@@ -1818,35 +1474,17 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         updater.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), visibility?"Showing neurons...":"Hiding neurons...", ""));
         return updater.executeWithFuture();
     }
-    
-    public void saveColorModel3d(ImageColorModel colorModel) {
-        log.info("saveColorModel3d()");
-        try {
-            if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-                presentError("You must create a workspace to be able to save the color model!", "No workspace");
-            }
-            else {
-                TmWorkspace workspace = getCurrentWorkspace();
-                workspace.setColorModel3d(ModelTranslation.translateColorModel(colorModel));
-                log.info("Setting 3d color model: {}",workspace.getColorModel3d());
-                saveCurrentWorkspace();
-            }
-        }
-        catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
-    }
 
     public void setAutomaticRefinement(final boolean state) {
-        try {
-            TmWorkspace workspace = getCurrentWorkspace();
-            workspace.setAutoPointRefinement(state);
-            saveCurrentWorkspace();
-        }
-        catch(Exception e) {
-            FrameworkAccess.handleException(e);
-        }
+    try {
+        TmWorkspace workspace = getCurrentWorkspace();
+        workspace.setAutoPointRefinement(state);
+        saveCurrentWorkspace();
     }
+    catch(Exception e) {
+        FrameworkAccess.handleException(e);
+    }
+}
 
     public void setAutomaticTracing(final boolean state) {
         try {
@@ -1876,97 +1514,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         PathTraceToParentWorker worker = new PathTraceToParentWorker(request, AUTOMATIC_TRACING_TIMEOUT);
         worker.setPathTraceListener(this);
         worker.execute();
-    }
-
-    public void exportNeuronsAsSWC(final File swcFile, final int downsampleModulo, final Collection<TmNeuronMetadata> neurons,
-       final boolean exportNotes) {
-        int nannotations = 0;
-        for (TmNeuronMetadata neuron : neurons) {
-            nannotations += neuron.getGeoAnnotationMap().size();
-        }
-        if (nannotations == 0) {
-            if (neurons.size()==1) {
-                presentError("Neuron has no points!", "Export error");
-            }
-            else {
-                presentError("No points in any neuron!", "Export error");
-            }
-            return;
-        }
-
-        // note: I wanted to test file writeability here, where I can report back
-        //  to the user, but it just doesn't work; both file.canWrite() and
-        //  Files.isWritable() give wrong values for reasons I don't understand
-
-        BackgroundWorker saver = new BackgroundWorker() {
-            
-            @Override
-            public String getName() {
-                return "Exporting SWC File";
-            }
-            
-            @Override
-            protected void doStuff() throws Exception {
-                //annotationModel.exportSWCData(swcFile, downsampleModulo, neurons, exportNotes, this);
-            }
-
-            @Override
-            public Callable<Void> getSuccessCallback() {
-                return new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        DesktopApi.browse(swcFile.getParentFile());
-                        return null;
-                    }
-                };
-            }
-        };
-        saver.executeWithEvents();
-    }
-
-    public void importSWCFiles(final List<File> swcFiles) {
-       
-        if (swcFiles.isEmpty()) return;
-        
-        // note for the future: at this point, we could pop another dialog with:
-        //  (a) info: file has xxx nodes; continue?
-        //  (b) option to downsample
-        //  (c) option to include/exclude automatically traced paths, if we can
-        //      store that info in the file
-        //  (d) option to shift position (add constant x, y, z offset)       
-        
-        BackgroundWorker importer = new BackgroundWorker() {
-
-            private TmNeuronMetadata neuron;
-            
-            @Override
-            public String getName() {
-                return swcFiles.size()>1?"Importing SWC Files":"Importing SWC File";
-            }
-
-            @Override
-            protected void doStuff() throws Exception {
-                int imported = 0;
-                int index = 0;
-                int total = swcFiles.size();
-                TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
-                for (File swcFile : swcFiles) {
-                    setStatus(swcFile.getName());
-                    if (swcFile.exists()) {
-                        annotationModel.importBulkSWCData(swcFile, workspace);
-                        activityLog.logImportSWCFile(workspace.getId(), swcFile.getName());
-                        imported++;
-                    }
-                    setProgress(index++, total);
-                }
-                setStatus("Successfully imported "+imported+" files");
-            }
-
-            @Override
-            protected void hadSuccess() {
-            }
-        };
-        importer.executeWithEvents();
     }
 
     /**
@@ -2015,10 +1562,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public NeuronManager getAnnotationModel() {
         return annotationModel;
     }
-
-   // public NeuronSet getNeuronSet() {
-       // return annotationModel.getNeuronSet();
-  //  }
     
     
 }

@@ -1,6 +1,7 @@
 package org.janelia.workstation.controller;
 
 import java.awt.Color;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -18,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,6 +42,7 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.security.Subject;
+import org.janelia.workstation.controller.action.NeuronTagsAction;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
@@ -529,7 +531,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      */
     public synchronized TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {
         TmWorkspace workspace = tmDomainMgr.createWorkspace(sampleId, name);
-        //activityLog.logCreateWorkspace(workspace.getId());
         return workspace;
     }
 
@@ -2074,7 +2075,15 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public void saveUserTags() throws Exception {
        // empty because for now since don't want to save their hide preferences between sessions
     }
-    
+
+    public void editNeuronTags(TmNeuronMetadata neuron) {
+        log.info("editNeuronTags({})",neuron);
+        // reuse the action; note that the action doesn't actually
+        //  use the event, so we can throw in an empty one
+        NeuronTagsAction action = new NeuronTagsAction();
+        action.setTargetNeuron(neuron);
+        action.actionPerformed(new ActionEvent(this, -1, "dummy event"));
+    }
 
     public Set<TmNeuronMetadata> getNeuronsForTag(String tag) {
         return modelManager.getAllTagMeta().getNeurons(tag);
@@ -2389,5 +2398,14 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         } else {
             return getNeuronModel().getNeurons().size();
         }
+    }
+
+    public static void handleException(String message, String title) {
+        FrameworkAccess.handleException(message, new Throwable(title));
+        JOptionPane.showMessageDialog(
+                null,
+                message,
+                title,
+                JOptionPane.ERROR_MESSAGE);
     }
 }

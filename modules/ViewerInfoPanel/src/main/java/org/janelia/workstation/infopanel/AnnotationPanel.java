@@ -49,13 +49,7 @@ public class AnnotationPanel extends JPanel
     private final NeuronCreateAction createNeuronAction = new NeuronCreateAction();
     private final NeuronDeleteAction deleteNeuronAction = new NeuronDeleteAction();
 
-    private final Action createWorkspaceAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            // REFACTOR:  NEED TO MOVE OUT OF ANNOTATION MANAGER
-            //annotationMgr.createWorkspace();
-        }
-    };
+    private final Action createWorkspaceAction = new CreateWorkspaceAction();
 
     // ----- actions
     private final Action centerAnnotationAction = new AbstractAction() {

@@ -74,6 +74,7 @@ implements MouseMode, KeyListener
 	private Point pressPoint;
 	private Viewport viewport;
 	private BoundingBox3d boundingBox;
+	private NeuronManager neuronManager;
 	// private Anchor nextParent = null;
 	private boolean autoFocusNextAnchor = false;
 	private static long time1;
@@ -81,6 +82,7 @@ implements MouseMode, KeyListener
 	public static String getTimerMs() { return new Long(new Date().getTime() - time1).toString(); }
 	
 	public TraceMode(Skeleton skeleton) {
+	    neuronManager = NeuronManager.getInstance();
 		this.skeleton = skeleton;
 		setHoverCursor(penCursor);
 		setDragCursor(crossCursor);
@@ -569,7 +571,7 @@ implements MouseMode, KeyListener
                     AbstractAction editNeuronTagsAction = new AbstractAction("Edit neuron tags...") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            skeleton.editNeuronTagRequest(hover);
+                            neuronManager.editNeuronTags(neuronManager.getNeuronFromNeuronID(hover.getNeuronID()));
                         }
                     };
                     editNeuronTagsAction.setEnabled(controller.editsAllowed());
