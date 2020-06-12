@@ -3,16 +3,10 @@ package org.janelia.workstation.gui.large_volume_viewer.controller;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.io.File;
-import java.net.URL;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -33,10 +27,9 @@ import org.janelia.workstation.controller.tileimagery.TileServer;
 import org.janelia.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.UpdateAnchorListener;
-import org.janelia.workstation.controller.listener.VolumeLoadListener;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
-import org.janelia.workstation.gui.task_workflow.NeuronTree;
-import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
+import org.janelia.workstation.controller.task_workflow.NeuronTree;
+import org.janelia.workstation.controller.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.core.api.AccessManager;
@@ -46,12 +39,10 @@ import org.janelia.workstation.core.workers.SimpleListenableFuture;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.security.GroupRole;
@@ -61,7 +52,7 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AnnotationManager implements UpdateAnchorListener, PathTraceListener, VolumeLoadListener
+public class AnnotationManager implements UpdateAnchorListener, PathTraceListener
 /**
  * this class handles any actions specific to LVV tracing that can't be generalized into something common for other
  * viewers.
@@ -73,17 +64,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     // annotation model object
     private QuadViewUi quadViewUi;
-
-    private DomainObject initialObject;
-
     private TileServer tileServer;
-
-    private LargeVolumeViewerTranslator lvvTranslator;
-
-
-    private File swcDirectory;
     private NeuronManager annotationModel;
-
 
     public boolean isTempOwnershipAdmin() {
         return isTempOwnershipAdmin;
@@ -107,17 +89,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
-    public AnnotationManager(QuadViewUi quadViewUi, TileServer tileServer, LargeVolumeViewerTranslator lvvTranslator) {
+    public AnnotationManager(QuadViewUi quadViewUi, TileServer tileServer) {
         this.annotationModel = NeuronManager.getInstance();
         this.quadViewUi = quadViewUi;
         this.tileServer = tileServer;
-        this.lvvTranslator = lvvTranslator;
     }
 
     // need common permissions model
     public boolean editsAllowed() {
-        return true;
-        //return annotationModel.editsAllowed();
+        return TmModelManager.getInstance().getCurrentView().isProjectReadOnly();
     }
     
     public void deleteSubtreeRequested(Anchor anchor) {
@@ -158,58 +138,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
         ngDialog.showDialog();
     }
-    
-    public NeuronTree generateNeuronTreeForReview(Long neuronId) {
-        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
-        TmGeoAnnotation rootAnnotation = neuron.getFirstRoot();
-        if (rootAnnotation!=null) {
-            NeuronTree rootNode = createNeuronTreeNode(null, rootAnnotation);
-            exploreNeuronBranches(rootNode, neuron, rootAnnotation);
-            return rootNode;
-        }
-        return null;
-    }
-
-    /**
-     * recursive function to map a TmGeoAnnotation root to a NeuronTree root 
-     * main reason is that NeuronTree is more concerned with display and review;
-     * these aren't related to the persistence so didn't want to pollute the model
-     **/    
-    public void generateReviewPointList(Long neuronId) {
-        TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
-        TmGeoAnnotation rootAnnotation = neuron.getFirstRoot();
-        if (rootAnnotation!=null) {
-            NeuronTree rootNode = createNeuronTreeNode(null, rootAnnotation);
-            exploreNeuronBranches(rootNode, neuron, rootAnnotation);
-            TaskWorkflowViewTopComponent.getInstance().createNeuronReview(neuron, rootNode);
-        }
-    }
-    
-    void exploreNeuronBranches (NeuronTree node, TmNeuronMetadata neuron, TmGeoAnnotation currVertex) {
-        List<TmGeoAnnotation> children = neuron.getChildrenOfOrdered(currVertex);
-
-        // now start new branches for each of the other children
-        for (TmGeoAnnotation child: children) {
-             NeuronTree childNode = createNeuronTreeNode(node, child);
-             exploreNeuronBranches(childNode, neuron, child);
-        }
-    }
-    
-    NeuronTree createNeuronTreeNode(NeuronTree parentNode, TmGeoAnnotation annotation) {
-        Vec3 tempLocation = getTileFormat().micronVec3ForVoxelVec3Centered(
-                new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
-        NeuronTree childNode = new NeuronTree(parentNode, tempLocation, annotation.getId());
-        if (parentNode!=null)
-            parentNode.addChild(childNode);
-        return childNode;
-    }
 
     public void anchorAdded(Skeleton.AnchorSeed seed) {
         addAnnotation(seed.getLocation(), seed.getParentGuid());
     }
 
     /**
-     * NOTE:  MOVE THIS TO WHERE ACTUAL MOVE EVENT IS BEING PROCESSED
      * @param anchor
      */
     public void moveAnchor(Anchor anchor) {
@@ -326,31 +260,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
-    //-------------------------------IMPLEMENTS VolumeLoadListener
-    @Override
-    public void volumeLoaded(URL url) {
-        if (initialObject instanceof TmSample) {
-            activityLog.setTileFormat(getTileFormat(), initialObject.getId());
-        } else if (initialObject instanceof TmWorkspace) {
-            TmWorkspace initialWorkspace = (TmWorkspace) initialObject;
-            activityLog.setTileFormat(getTileFormat(), initialWorkspace.getSampleId());
-        }
-    }
-
     public TileFormat getTileFormat() {
         return tileServer.getLoadAdapter().getTileFormat();
-    }
-
-    public DomainObject getInitialObject() {
-        return initialObject;
-    }
-
-    /**
-     * @param initialObject = entity the user right-clicked on to start the
-     * large volume viewer
-     */
-    public void setInitialObject(final DomainObject initialObject) {
-        this.initialObject = initialObject;
     }
 
     // ----- methods called from UI
@@ -684,7 +595,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 // unlike most operations in the annmgr, we want to adjust the UI in
                 //  ways other than via the updates the model triggers; in this case,
                 //  we advance the next parent to the appropriate annotation
-                lvvTranslator.fireNextParentEvent(nextParentID);
+               // lvvTranslator.fireNextParentEvent(nextParentID);
             }
 
             @Override

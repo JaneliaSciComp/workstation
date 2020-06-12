@@ -1,27 +1,28 @@
-package org.janelia.workstation.gui.task_workflow;
+package org.janelia.workstation.controller.task_workflow;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.eventbus.Subscribe;
 import com.mxgraph.model.mxCell;
 import com.mxgraph.util.mxEventObject;
 import com.mxgraph.util.mxEventSource;
 import com.mxgraph.view.mxGraphSelectionModel;
 import org.janelia.console.viewerapi.SimpleIcons;
 import org.janelia.console.viewerapi.SynchronizationHelper;
+import org.janelia.model.domain.tiledMicroscope.*;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.CreateNeuronReviewEvent;
+import org.janelia.workstation.controller.eventbus.NeuronBranchReviewedEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.tileimagery.TileFormat;
+import org.janelia.workstation.controller.tileimagery.TileServer;
 import org.janelia.workstation.geom.Quaternion;
 import org.janelia.workstation.geom.Vec3;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronReviewItem;
-import org.janelia.model.domain.tiledMicroscope.TmPointListReviewItem;
-import org.janelia.model.domain.tiledMicroscope.TmReviewItem;
-import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -59,12 +60,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @ConvertAsProperties(
         dtd = "-//org.janelia.workstation.gui.task_workflow//TaskWorkflowViewTopComponent//EN",
@@ -90,7 +86,6 @@ import java.util.Map;
 public final class TaskWorkflowViewTopComponent extends TopComponent implements ExplorerManager.Provider, mxEventSource.mxIEventListener {
     public static final String PREFERRED_ID = "TaskWorkflowViewTopComponent";
     public static final String LABEL_TEXT = "Task Workflow";
-    private AnnotationManager annManager;
 
     enum REVIEW_CATEGORY {
         NEURON_REVIEW, POINT_REVIEW
@@ -159,8 +154,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     
     @Override
     public void componentOpened() {
-        if (annManager==null || annManager.getCurrentWorkspace()==null)
-            return;
+     //   if (annManager==null || annManager.getCurrentWorkspace()==null)
+       //     return;
         loadHistory();
     }
 
@@ -176,6 +171,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {        
        navigator = new ReviewTaskNavigator();
+       ViewerEventBus.registerForEvents(this);
        
     }// </editor-fold>//GEN-END:initComponents
 
@@ -367,7 +363,6 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         selectPoint(point);
     }
     public void loadHistory() {        
-        annManager = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         ((TaskReviewTableModel)taskReviewTable.getModel()).clear();
         retrieveTasks();
     }
@@ -439,8 +434,6 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         saveButton.addActionListener(event -> onSaveButton());
         workflowButtonsPanel.add(saveButton);
 */
-
-        annManager = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
     }
     
     private void playBranch() {
@@ -480,7 +473,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 
             } catch (Exception e) {
                 log.error("Error saving reviewed points", e);
-                JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                JOptionPane.showMessageDialog(null,
                         "Could not write out reviewed points " + exportFile,
                         "Error writing point reviews file",
                         JOptionPane.ERROR_MESSAGE);
@@ -790,7 +783,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     public void setSelectedAsReviewed(boolean review) {
         if (currGroupIndex!=-1 && !selectMode) {
             ReviewGroup currGroup = groupList.get(currGroupIndex);
-            currGroup.setReviewed(review);
+            currGroup.setReviewed(true);
         }
         Object[] guiCells = new Object[selectedPoints.size()];        
         List<Long> annotationList = new ArrayList<>();
@@ -805,7 +798,14 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         } else {
             navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.OPEN);  
         }
-        annManager.setBranchReviewed(currNeuron, annotationList, review);
+        NeuronBranchReviewedEvent branchReviewedEvent = new NeuronBranchReviewedEvent();
+        Collection<TmGeoAnnotation> realAnnList = new ArrayList<>();
+        NeuronManager manager = NeuronManager.getInstance();
+        for (Long annId: annotationList) {
+            realAnnList.add(manager.getGeoAnnotationFromID(currNeuron.getId(), annId));
+        }
+        branchReviewedEvent.setAnnotations(realAnnList);
+        ViewerEventBus.postEvent(branchReviewedEvent);
         
         // update persistence
         if (currTask!=null) {
@@ -930,7 +930,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 reviewData = mapper.readValue(new FileInputStream(pointFile), new TypeReference<Map<String,Object>>(){});
             } catch (IOException e) {
                 log.error("Error reading point file "+pointFile, e);
-                JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                JOptionPane.showMessageDialog(null,
                         "Could not read file " + pointFile,
                         "Error reading point file",
                         JOptionPane.ERROR_MESSAGE);
@@ -984,7 +984,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                         groupList.add(group);
 
                         if (nerrors > 0) {
-                            JOptionPane.showMessageDialog(ComponentUtil.getLVVMainWindow(),
+                            JOptionPane.showMessageDialog(null,
                                     "Not all lines in point file could be parsed; " + nerrors + " errors.",
                                     "Errors parsing point file",
                                     JOptionPane.ERROR_MESSAGE);
@@ -1005,8 +1005,6 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
      * retrieve all review tasks 
      */
     public List<TmReviewTask> retrieveTasks () {
-        if (annManager==null || annManager.getCurrentWorkspace()==null)
-            this.close();
         List<TmReviewTask> reviewTasks = null;
         TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         try {
@@ -1016,7 +1014,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 String ref = task.getWorkspaceRef();
                 ref = ref.replace("TmWorkspace#","");
                 // cheat since I didn't want to update the model for a patch
-                if (annManager.getCurrentWorkspace() != null && Long.parseLong(ref) == annManager.getCurrentWorkspace().getId()) {
+                if (TmModelManager.getInstance().getCurrentWorkspace() != null &&
+                        Long.parseLong(ref) == TmModelManager.getInstance().getCurrentWorkspace().getId()) {
                     tableModel.addReviewTask(task);
                 }
             }
@@ -1024,6 +1023,47 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             Exceptions.printStackTrace(ex);
         }
         return reviewTasks;        
+    }
+
+    @Subscribe
+    public void createNeuronReview (CreateNeuronReviewEvent event) {
+        TmNeuronMetadata neuron = event.getNeuron();
+        if (neuron!=null) {
+            NeuronTree tree = generateNeuronTreeForReview(neuron.getId());
+            createNeuronReview(neuron, tree);
+        }
+    }
+
+    public NeuronTree generateNeuronTreeForReview(Long neuronId) {
+        NeuronManager neuronManager = NeuronManager.getInstance();
+        TmNeuronMetadata neuron = neuronManager.getNeuronFromNeuronID(neuronId);
+        TmGeoAnnotation rootAnnotation = neuron.getFirstRoot();
+        if (rootAnnotation!=null) {
+            NeuronTree rootNode = createNeuronTreeNode(null, rootAnnotation);
+            exploreNeuronBranches(rootNode, neuron, rootAnnotation);
+            return rootNode;
+        }
+        return null;
+    }
+
+    void exploreNeuronBranches (NeuronTree node, TmNeuronMetadata neuron, TmGeoAnnotation currVertex) {
+        List<TmGeoAnnotation> children = neuron.getChildrenOfOrdered(currVertex);
+
+        // now start new branches for each of the other children
+        for (TmGeoAnnotation child: children) {
+            NeuronTree childNode = createNeuronTreeNode(node, child);
+            exploreNeuronBranches(childNode, neuron, child);
+        }
+    }
+
+    NeuronTree createNeuronTreeNode(NeuronTree parentNode, TmGeoAnnotation annotation) {
+        TileFormat tileFormat = TileServer.getInstance().getLoadAdapter().getTileFormat();
+        Vec3 tempLocation =  tileFormat.micronVec3ForVoxelVec3Centered(
+                new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
+        NeuronTree childNode = new NeuronTree(parentNode, tempLocation, annotation.getId());
+        if (parentNode!=null)
+            parentNode.addChild(childNode);
+        return childNode;
     }
 
     /**
@@ -1037,7 +1077,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         List<TmReviewItem> itemList = reviewTask.getReviewItems();
         if (itemList.size() > 0 && reviewTask.getCategory().equals(REVIEW_CATEGORY.NEURON_REVIEW.toString())) {
             TmNeuronReviewItem sample = (TmNeuronReviewItem) itemList.get(0);
-            NeuronTree root = annManager.generateNeuronTreeForReview(sample.getNeuronId());
+            NeuronTree root = generateNeuronTreeForReview(sample.getNeuronId());
             List<List<PointDisplay>> pathList = generatePlayList(root);
 
             loadPointList(pathList);
@@ -1047,7 +1087,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             initSelection(pathList);
             addTaskButtons();
 
-            currNeuron = annManager.getAnnotationModel().getNeuronFromNeuronID(sample.getNeuronId());
+            currNeuron = NeuronManager.getInstance().getNeuronFromNeuronID(sample.getNeuronId());
             currCategory = REVIEW_CATEGORY.NEURON_REVIEW;
 
             // awkwardly walk through the tree using the stored path lists to mark branches as reviewed

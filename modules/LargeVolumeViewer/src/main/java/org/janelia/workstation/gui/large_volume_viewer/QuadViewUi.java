@@ -14,7 +14,6 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,7 +39,6 @@ import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.swc.MatrixDrivenSWCExchanger;
 import org.janelia.workstation.swc.SWCDataConverter;
 import org.janelia.workstation.geom.BoundingBox3d;
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -70,7 +68,7 @@ import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
-import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewLauncher;
+import org.janelia.workstation.controller.task_workflow.TaskWorkflowViewLauncher;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
@@ -305,10 +303,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
 
         this.annotationModel = NeuronManager.getInstance();
         this.largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
-        this.annotationMgr = new AnnotationManager(this, tileServer, largeVolumeViewerTranslator);
+        this.annotationMgr = new AnnotationManager(this, tileServer);
 
         volumeImage.addVolumeLoadListener(this);
-        volumeImage.addVolumeLoadListener(annotationMgr);
         largeVolumeViewer.setImageColorModel(imageColorModel);
         sliderPanel.setVisible(false);
 

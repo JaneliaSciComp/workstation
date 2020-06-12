@@ -14,8 +14,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TmViewState {
     private NeuronSelectionSpatialFilter neuronFilter;
     private boolean applyFilter;
+    private boolean projectReadOnly;
     private Set<Long> hiddenAnnotations;
     private Set<Long> nonInteractableAnnotations;
+
 
     private double cameraFocusX;
     private double cameraFocusY;
@@ -136,6 +138,14 @@ public class TmViewState {
 
     public void setInterpolate(boolean interpolate) {
         this.interpolate = interpolate;
+    }
+
+    public boolean isProjectReadOnly() {
+        return projectReadOnly;
+    }
+
+    public void setProjectReadOnly(boolean projectReadOnly) {
+        this.projectReadOnly = projectReadOnly;
     }
 
     private static Color[] neuronColors = {

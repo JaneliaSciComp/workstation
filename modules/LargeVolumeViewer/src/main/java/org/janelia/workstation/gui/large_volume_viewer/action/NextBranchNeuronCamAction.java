@@ -9,7 +9,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
+import org.janelia.workstation.controller.task_workflow.TaskWorkflowViewTopComponent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;

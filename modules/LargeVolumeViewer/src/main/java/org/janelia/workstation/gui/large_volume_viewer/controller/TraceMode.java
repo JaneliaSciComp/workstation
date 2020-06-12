@@ -23,6 +23,8 @@ import javax.swing.KeyStroke;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.action.GenerateTaskReviewAction;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.large_volume_viewer.MenuItemGenerator;
@@ -36,7 +38,7 @@ import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActorModel;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent;
-import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
+import org.janelia.workstation.controller.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.keybind.KeymapUtil;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -390,12 +392,6 @@ implements MouseMode, KeyListener
                          SimpleWorker scrollWorker = new SimpleWorker() {
                             @Override
                             protected void doStuff() throws Exception {
-                                // prompt the user to enter their name
-                                String speed = JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(),
-                                        "Enter in speed of scroll through", 10);
-
-                                Long speedNum = (long)(1000/Double.parseDouble(speed));
-
                                 // grab current camera position and zoom and loop in z from there
                                 Vec3 cameraPos = getCamera().getFocus();
                                 cameraPos.setZ(getBoundingBox().getMinZ());
@@ -403,7 +399,7 @@ implements MouseMode, KeyListener
                                 controller.setLVVFocus(cameraPos);
                                 float step = 40;
                                 while (cameraPos.getZ() < getBoundingBox().getMaxZ()) {
-                                    Thread.sleep(speedNum);
+                                    Thread.sleep(100);
                                     cameraPos = cameraPos.plus(new Vec3(0, 0, step));
                                     controller.setLVVFocus(cameraPos);
                                 }
@@ -416,7 +412,6 @@ implements MouseMode, KeyListener
 
                             @Override
                             protected void hadError(Throwable error) {
-                                FrameworkAccess.handleException(error);
                             }
                         };
                         scrollWorker.execute();                                                               //
@@ -591,13 +586,8 @@ implements MouseMode, KeyListener
                     };
                     setNeuronGroupsAction.setEnabled(controller.editsAllowed());
                     result.add(new JMenuItem(setNeuronGroupsAction));
-                    
-                    AbstractAction generateReviewPointList = new AbstractAction("Generate neuron review tree...") {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().generateReviewPointList(hover.getNeuronID());
-                        }
-                    };
+
+                    AbstractAction generateReviewPointList = new GenerateTaskReviewAction();
                     generateReviewPointList.setEnabled(controller.editsAllowed());
                     result.add(new JMenuItem(generateReviewPointList));
                     
