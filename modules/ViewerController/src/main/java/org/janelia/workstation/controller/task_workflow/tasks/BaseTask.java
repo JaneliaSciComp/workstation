@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.task_workflow.tasks;
+package org.janelia.workstation.controller.task_workflow.tasks;
 
 /**
  * this is the base class for a "task" that needs to be completed in the task workflow.

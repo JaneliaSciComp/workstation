@@ -56,7 +56,6 @@ public class QuadViewController implements ViewStateListener {
         this.lvv = lvv;
         lvv.setMessageListener(new QvucMessageListener());
         this.ui.setPathTraceListener(new QvucPathRequestListener());
-        this.ui.setWsCloseListener(new QvucWsClosureListener());
         registerLoadRequests();
     }
 
@@ -273,15 +272,6 @@ public class QuadViewController implements ViewStateListener {
         @Override
         public void pathTrace(PathTraceToParentRequest request) {
             annoMgr.tracePathToParent(request);
-        }
-        
-    }
-    
-    private class QvucWsClosureListener implements WorkspaceClosureListener {
-
-        @Override
-        public void closeWorkspace() {
-            annoMgr.setInitialObject(null);
         }
         
     }

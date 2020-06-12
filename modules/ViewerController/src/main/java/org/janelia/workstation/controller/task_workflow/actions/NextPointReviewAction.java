@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.task_workflow.actions;
+package org.janelia.workstation.controller.task_workflow.actions;
 
 /**
  *
@@ -18,26 +18,26 @@ import org.slf4j.LoggerFactory;
 
 @ActionID(
         category = "Task Workflow",
-        id = "PreviousPointReviewAction"
+        id = "NextPointReviewAction"
 )
 @ActionRegistration(
-        displayName = "Go To Previous Review Point",
+        displayName = "Go To Next Review Point",
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "A-P")
+    @ActionReference(path = "Shortcuts", name = "A-N")
 })
-public class PreviousPointReviewAction extends AbstractAction {
+public class NextPointReviewAction extends AbstractAction {
 
-    private static final Logger log = LoggerFactory.getLogger(PreviousPointReviewAction.class);
-    public PreviousPointReviewAction() {
-        super("Previous Review Point");
+    private static final Logger log = LoggerFactory.getLogger(NextPointReviewAction.class);
+    public NextPointReviewAction() {
+        super("Next Review Point");
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
         // commenting out for now since it's still in development
-        // TaskWorkflowViewTopComponent.getInstance().prevTask()
+        // TaskWorkflowViewTopComponent.getInstance().nextTask();
     }
     
     @Override

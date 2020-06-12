@@ -12,8 +12,6 @@ import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.listener.AnchoredVoxelPathListener;
-import org.janelia.workstation.controller.listener.BackgroundAnnotationListener;
-import org.janelia.workstation.controller.listener.GlobalAnnotationListener;
 import org.janelia.workstation.gui.large_volume_viewer.listener.NextParentListener;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
 import org.janelia.workstation.controller.listener.TmAnchoredPathListener;

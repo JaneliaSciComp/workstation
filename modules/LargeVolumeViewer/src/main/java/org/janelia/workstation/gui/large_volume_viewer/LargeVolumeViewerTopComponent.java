@@ -188,7 +188,6 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         LoadProjectEvent event = new LoadProjectEvent(isSample);
         event.setWorkspace(workspace);
         event.setSample(TmModelManager.getInstance().getCurrentSample());
-        viewUI.getLargeVolumeViewerTranslator().workspaceLoaded(event);
         SkeletonController.getInstance().skeletonChanged(true);
 
         revalidate();

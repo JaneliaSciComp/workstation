@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.task_workflow;
+package org.janelia.workstation.controller.task_workflow;
 
 import java.util.ArrayList;
 import java.util.List;

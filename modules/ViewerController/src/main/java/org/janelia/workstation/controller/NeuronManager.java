@@ -139,12 +139,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         return annotationModel;
     }
 
-   /* public void branchReviewed (TmNeuronMetadata neuron, List<TmGeoAnnotation> annotations) {
-        for (TaskReviewListener listener: taskReviewListeners) {
-            listener.neuronBranchReviewed(neuron, annotations);
-        }
-    }*/
-
     public NeuronManager() {
         this.modelManager = TmModelManager.getInstance();
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();

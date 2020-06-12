@@ -23,6 +23,7 @@ import javax.swing.KeyStroke;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.action.GenerateTaskReviewAction;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.geom.Vec3;
@@ -37,7 +38,7 @@ import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActorModel;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent;
-import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
+import org.janelia.workstation.controller.task_workflow.TaskWorkflowViewTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.keybind.KeymapUtil;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -585,13 +586,8 @@ implements MouseMode, KeyListener
                     };
                     setNeuronGroupsAction.setEnabled(controller.editsAllowed());
                     result.add(new JMenuItem(setNeuronGroupsAction));
-                    
-                    AbstractAction generateReviewPointList = new AbstractAction("Generate neuron review tree...") {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().generateReviewPointList(hover.getNeuronID());
-                        }
-                    };
+
+                    AbstractAction generateReviewPointList = new GenerateTaskReviewAction();
                     generateReviewPointList.setEnabled(controller.editsAllowed());
                     result.add(new JMenuItem(generateReviewPointList));
                     
