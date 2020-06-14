@@ -1,10 +1,5 @@
 package org.janelia.workstation.core.workers;
 
-import java.beans.PropertyChangeEvent;
-import java.util.concurrent.Callable;
-
-
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.workers.WorkerChangedEvent;
 import org.janelia.workstation.core.events.workers.WorkerEndedEvent;
@@ -14,6 +9,9 @@ import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.beans.PropertyChangeEvent;
+import java.util.concurrent.Callable;
 
 /**
  * A worker thread which can be monitored in the background.

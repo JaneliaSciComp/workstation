@@ -29,6 +29,7 @@ import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.BrandingConfig;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.SystemInfo;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.StatusDisplayer;
 import org.openide.filesystems.FileUtil;
@@ -115,21 +116,40 @@ public class ShowingHook implements Runnable {
 
             // Connect to the data server
             StatusDisplayer.getDefault().setStatusText("Connecting to server...");
-            String connectionString = ConnectionMgr.getConnectionMgr().getConnectionString();
 
-            if (StringUtils.isBlank(connectionString)) {
-                log.debug("Connection string is blank, asking for user input");
-                ConnectDialog connectDialog = new ConnectDialog();
-                connectDialog.showDialog();
-            }
-            else {
-                ConnectionResult result = ConnectionMgr.getConnectionMgr().connect(connectionString);
-                if (result.getErrorText() != null) {
-                    ConnectDialog connectDialog = new ConnectDialog();
-                    connectDialog.showDialog(result);
+            SimpleWorker worker = new SimpleWorker() {
+
+                private ConnectionResult connectionResult;
+
+                @Override
+                protected void doStuff() throws Exception {
+                    String connectionString = ConnectionMgr.getConnectionMgr().getConnectionString();
+
+                    if (StringUtils.isBlank(connectionString)) {
+                        log.debug("Connection string is blank, asking for user input");
+                        ConnectDialog connectDialog = new ConnectDialog();
+                        connectDialog.showDialog();
+                    }
+                    else {
+                        connectionResult = ConnectionMgr.getConnectionMgr().connect(connectionString);
+                    }
                 }
-            }
 
+                @Override
+                protected void hadSuccess() {
+                    if (connectionResult.getErrorText() != null) {
+                        ConnectDialog connectDialog = new ConnectDialog();
+                        connectDialog.showDialog(connectionResult);
+                    }
+                }
+
+                @Override
+                protected void hadError(Throwable e) {
+                    log.error("Unknown connection error", e);
+                }
+            };
+
+            worker.execute();
         });
     }
 
