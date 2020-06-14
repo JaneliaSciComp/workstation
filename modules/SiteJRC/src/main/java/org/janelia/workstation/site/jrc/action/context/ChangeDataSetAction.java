@@ -3,13 +3,21 @@ package org.janelia.workstation.site.jrc.action.context;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
+import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
+import org.janelia.workstation.common.gui.dialogs.ConnectDialog;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.api.ConnectionMgr;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.StateMgr;
+import org.janelia.workstation.core.model.ConnectionResult;
+import org.janelia.workstation.core.model.DomainModelViewUtils;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.core.workers.TaskMonitoringWorker;
+import org.janelia.workstation.ffmpeg.Frame;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -73,10 +81,57 @@ public class ChangeDataSetAction extends BaseContextualNodeAction {
         ActivityLogHelper.logUserAction("ChangeDataSetAction.actionPerformed");
 
         final String newDataSet = (String) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(), "New data set:\n",
-                "Change sample data set", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                "Change sample data set", JOptionPane.PLAIN_MESSAGE, null, null, samples.iterator().next().getDataSet());
         if (StringUtils.isEmpty(newDataSet)) {
             return;
         }
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            private DataSet dataSet;
+
+            @Override
+            protected void doStuff() throws Exception {
+                dataSet = DomainMgr.getDomainMgr().getModel().getDataSet(newDataSet);
+            }
+
+            @Override
+            protected void hadSuccess() {
+
+                if (dataSet==null) {
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                            "Could not find data set.",
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                if (ClientDomainUtils.hasWriteAccess(dataSet)) {
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                            "You do not have write access to "+newDataSet,
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                changeDataSet(samples, newDataSet);
+            }
+
+            @Override
+            protected void hadError(Throwable e) {
+                FrameworkAccess.handleException(e);
+            }
+        };
+
+        worker.execute();
+    }
+
+    private void changeDataSet(Collection<Sample> samples, String newDataSet) {
+
+        int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
+                "Are you sure you want to change the data set for these samples to "+newDataSet+"? " +
+                        "This will affect all the images in these sample in both the Workstation and SAGE, " +
+                        "and may also move files on disk, if the owner of the sample changes.",
+                "Are you sure?", JOptionPane.OK_CANCEL_OPTION);
+        if (result != 0) return;
 
         Task task;
         try {
@@ -110,6 +165,11 @@ public class ChangeDataSetAction extends BaseContextualNodeAction {
                 DomainMgr.getDomainMgr().getModel().invalidate(samples);
             }
         };
+
+        taskWorker.setSuccessCallback(() -> {
+            SimpleWorker.runInBackground(() -> DomainMgr.getDomainMgr().getModel().invalidate(samples));
+            return null;
+        });
 
         taskWorker.executeWithEvents();
     }

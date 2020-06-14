@@ -6,7 +6,9 @@ import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.StateMgr;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.core.workers.TaskMonitoringWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
@@ -32,7 +34,7 @@ import java.util.*;
 @ActionReferences({
         @ActionReference(path = "Menu/Actions/Sample", position = 529)
 })
-@NbBundle.Messages("CTL_SyncWithSAGEAction=Synchronize Samples with SAGE")
+@NbBundle.Messages("CTL_SyncWithSAGEAction=Synchronize Slide Codes with SAGE")
 public class SyncWithSAGEAction extends BaseContextualNodeAction {
 
     private Collection<Sample> samples = new ArrayList<>();
@@ -56,9 +58,9 @@ public class SyncWithSAGEAction extends BaseContextualNodeAction {
     public String getName() {
         if (getViewerContext()!=null) {
             String samplesText = getViewerContext().isMultiple()?samples.size()+" Samples":"Sample";
-            return "Synchronize "+samplesText+" with SAGE";
+            return "Synchronize Slide Codes with SAGE for "+samplesText;
         }
-        return "Synchronize Samples with SAGE";
+        return "Synchronize Slide Codes with SAGE";
     }
 
     @Override
@@ -75,14 +77,14 @@ public class SyncWithSAGEAction extends BaseContextualNodeAction {
 
         if (slideCodes.size()>100) {
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                    "To resynchronize more than 100 slide codes, please contact your system administrator",
+                    "To resynchronize more than 100 slide codes, please contact your system administrator.",
                     "Too many samples selected", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
                 "Are you sure you want to synchronize " + slideCodes.size() + " slide codes with the SAGE database?",
-                "Synchronize Samples with SAGE", JOptionPane.OK_CANCEL_OPTION);
+                "Are you sure?", JOptionPane.OK_CANCEL_OPTION);
 
         if (result != 0) return;
 
@@ -112,6 +114,11 @@ public class SyncWithSAGEAction extends BaseContextualNodeAction {
                     super.doStuff();
                 }
             };
+
+            taskWorker.setSuccessCallback(() -> {
+                SimpleWorker.runInBackground(() -> DomainMgr.getDomainMgr().getModel().invalidate(samples));
+                return null;
+            });
 
             taskWorker.executeWithEvents();
         }

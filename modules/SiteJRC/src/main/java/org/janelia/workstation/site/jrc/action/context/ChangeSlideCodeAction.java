@@ -9,6 +9,7 @@ import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.StateMgr;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.core.workers.TaskMonitoringWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
@@ -67,10 +68,23 @@ public class ChangeSlideCodeAction extends BaseContextualNodeAction {
         ActivityLogHelper.logUserAction("ChangeSlideCodeAction.actionPerformed");
 
         final String newSlideCode = (String) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(), "New slide code:\n",
-                "Change sample slide code", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                "Change sample slide code", JOptionPane.PLAIN_MESSAGE, null, null, sample.getSlideCode());
         if (StringUtils.isEmpty(newSlideCode)) {
             return;
         }
+
+        if (newSlideCode.equals(sample.getSlideCode())) {
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                    "Slide code was not modified.",
+                    "Nothing to do", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
+                "Are you sure you want to change the slide code for this sample? " +
+                        "This will affect all the images in this sample in both the Workstation and SAGE.",
+                "Are you sure?", JOptionPane.OK_CANCEL_OPTION);
+        if (result != 0) return;
 
         Task task;
         try {
@@ -98,6 +112,11 @@ public class ChangeSlideCodeAction extends BaseContextualNodeAction {
                 DomainMgr.getDomainMgr().getModel().invalidate(sample);
             }
         };
+
+        taskWorker.setSuccessCallback(() -> {
+            SimpleWorker.runInBackground(() -> DomainMgr.getDomainMgr().getModel().invalidate(sample));
+            return null;
+        });
 
         taskWorker.executeWithEvents();
     }

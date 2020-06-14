@@ -1,3 +1,17 @@
+// 8.17
+
+Data Browser
+* Pagination for folder browsing
+* Added additional Sample attributes for tracking publication status
+
+Large Volume Task
+* Added warning dialog when out-of-sync neurons are saved at LVV close (but not quit, unfortunately)
+* Added support for less than 1Hz on Z scroll
+
+Task Workflow
+* Fixed issue with NeuronCam interpolating to next/current branch on replay
+* Added support to clear reviewed branches in Horta
+
 // 8.16
 
 Large Volume Viewer
