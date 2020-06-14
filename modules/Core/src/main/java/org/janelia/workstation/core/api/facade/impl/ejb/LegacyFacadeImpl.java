@@ -20,13 +20,13 @@ public class LegacyFacadeImpl implements LegacyFacade {
     @Override
     public void submitJob(String processDefName, Long taskId) throws Exception {
         if (taskId == null) throw new IllegalArgumentException("Task id may not be null");
-        EJBFactory.getRemoteComputeBean(true).submitJob(processDefName, taskId);
+        EJBFactory.getRemoteComputeBean().submitJob(processDefName, taskId);
     }
 
     @Override
     public void dispatchJob(String processDefName, Long taskId) throws Exception {
         if (taskId == null) throw new IllegalArgumentException("Task id may not be null");
-        EJBFactory.getRemoteComputeBean(true).dispatchJob(processDefName, taskId);
+        EJBFactory.getRemoteComputeBean().dispatchJob(processDefName, taskId);
     }
 
     public static class EJBLookupException extends Exception {

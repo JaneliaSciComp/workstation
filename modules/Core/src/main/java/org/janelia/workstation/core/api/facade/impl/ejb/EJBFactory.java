@@ -29,37 +29,29 @@ public class EJBFactory {
      * @return InitialContext
      * @throws javax.naming.NamingException problem with the name
      */
-    private static InitialContext createInitialContext(boolean remotePipeline) throws NamingException {
+    private static InitialContext createInitialContext() throws NamingException {
         String interactiveServer = ConsoleProperties.getInstance().getProperty("interactive.server.url");;
-        String pipelineServer = interactiveServer;
 
         String interactiveServerUrl = "jnp://"+interactiveServer+":1199";
-        String pipelineServerUrl = "jnp://"+pipelineServer+":1199";
 
-        log.debug("Using interactive server: "+interactiveServerUrl);
-        log.debug("Using pipeline server: "+pipelineServerUrl);
+        log.info("Using interactive server: "+interactiveServerUrl);
 
         Properties icInteractiveServerProperties = new Properties();
         icInteractiveServerProperties.put(Context.PROVIDER_URL, interactiveServerUrl);
         icInteractiveServerProperties.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
         icInteractiveServerProperties.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
 
-        Properties icPipelineServerProperties = new Properties();
-        icPipelineServerProperties.put(Context.PROVIDER_URL, pipelineServerUrl);
-        icPipelineServerProperties.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
-        icPipelineServerProperties.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
-
-        return new InitialContext(remotePipeline ? icPipelineServerProperties : icInteractiveServerProperties);
+        return new InitialContext(icInteractiveServerProperties);
     }
     
     /**
      * @param lookupName the jndi name for the ejb
      * @return EJBObject
      */
-    private static Object getRemoteInterface(String lookupName, boolean remotePipeline) {
+    private static Object getRemoteInterface(String lookupName) {
         InitialContext ic=null;
         try {
-            ic = createInitialContext(remotePipeline);
+            ic = createInitialContext();
             if (!lookupName.startsWith("compute/")) {
                 lookupName = "compute/" + lookupName;
             }
@@ -85,20 +77,8 @@ public class EJBFactory {
         }
     }
 
-    /**
-     * @param lookupName the jndi name for the ejb
-     * @return EJBObject
-     */
-    private static Object getRemoteInterface(String lookupName) {
-    	return getRemoteInterface(lookupName, false);
-    }
-
     static ComputeBeanRemote getRemoteComputeBean() {
         return (ComputeBeanRemote) getRemoteInterface(REMOTE_COMPUTE_JNDI_NAME);
-    }
-
-    static ComputeBeanRemote getRemoteComputeBean(boolean remotePipeline) {
-        return (ComputeBeanRemote) getRemoteInterface(REMOTE_COMPUTE_JNDI_NAME, remotePipeline);
     }
 
 }
