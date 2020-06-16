@@ -222,18 +222,6 @@ public class Skeleton {
         controller.deleteLinkRequested(anchor);
     }
 
-    public void deleteSubtreeRequest(Anchor anchor){        
-        controller.deleteSubtreeRequested(anchor);
-    }
-
-    public void splitAnchorRequest(Anchor anchor) {
-        controller.splitAnchorRequested(anchor);
-    }
-
-    public void rerootNeuriteRequest(Anchor anchor) {
-        controller.rerootNeuriteRequested(anchor);
-    }
-
     public void addEditNoteRequest(Anchor anchor) {
         controller.addEditNoteRequested(anchor);
     }
@@ -248,10 +236,6 @@ public class Skeleton {
 
     public void smartMergeNeuriteRequest(Anchor clickedAnchor) {
         controller.smartMergeNeuriteRequested(clickedAnchor, getNextParent());
-    }
-
-    public void splitNeuriteRequest(Anchor anchor) {
-        controller.splitNeuriteRequested(anchor);
     }
 
 	public boolean delete(Anchor anchor) {

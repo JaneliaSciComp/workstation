@@ -23,7 +23,7 @@ import javax.swing.KeyStroke;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.workstation.controller.NeuronManager;
-import org.janelia.workstation.controller.action.GenerateTaskReviewAction;
+import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.geom.Vec3;
@@ -496,7 +496,8 @@ implements MouseMode, KeyListener
                     AbstractAction deleteSubtreeAction = new AbstractAction("Delete subtree rooted at this anchor") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            skeleton.deleteSubtreeRequest(hover);
+                            DeleteNeuronSubtreeAction action = new DeleteNeuronSubtreeAction();
+                            action.execute(hover.getNeuronID(), hover.getGuid());
                         }
                     };
                     deleteSubtreeAction.setEnabled(controller.editsAllowed());
@@ -534,7 +535,8 @@ implements MouseMode, KeyListener
                     AbstractAction splitAnchorAction = new AbstractAction("Split anchor") {
                         @Override
                         public void actionPerformed(ActionEvent actionEvent) {
-                            skeleton.splitAnchorRequest(hover);
+                            SplitNeuronBetweenVerticesAction action = new SplitNeuronBetweenVerticesAction();
+                            action.execute(hover.getNeuronID(), hover.getGuid());
                         }
                     };
                     splitAnchorAction.setEnabled(controller.editsAllowed());
@@ -543,7 +545,8 @@ implements MouseMode, KeyListener
                     AbstractAction splitNeuriteAction = new AbstractAction("Split neurite") {
                         @Override
                         public void actionPerformed(ActionEvent actionEvent) {
-                            skeleton.splitNeuriteRequest(hover);
+                            SplitNeuronAtVertexAction action = new SplitNeuronAtVertexAction();
+                            action.execute(hover.getNeuronID(), hover.getGuid());
                         }
                     };
                     splitNeuriteAction.setEnabled(controller.editsAllowed());
@@ -552,7 +555,8 @@ implements MouseMode, KeyListener
                     AbstractAction setAnchorAsRootAction = new AbstractAction("Set anchor as root") {
                         @Override
                         public void actionPerformed(ActionEvent actionEvent) {
-                            skeleton.rerootNeuriteRequest(hover);
+                            RerootNeuronAction action = new RerootNeuronAction();
+                            action.execute(hover.getNeuronID(), hover.getGuid());
                         }
                     };
                     setAnchorAsRootAction.setEnabled(controller.editsAllowed());
