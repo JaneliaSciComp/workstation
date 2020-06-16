@@ -303,22 +303,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         }
     }
 
-    public void deleteSubtreeRequested(Anchor anchor) {
-        annoMgr.deleteSubtreeRequested(anchor);
-    }
-
-    public void splitAnchorRequested(Anchor anchor) {
-        annoMgr.splitAnchorRequested(anchor);
-    }
-
-    public void rerootNeuriteRequested(Anchor anchor) {
-        annoMgr.rerootNeuriteRequested(anchor);
-    }
-
-    public void splitNeuriteRequested(Anchor anchor) {
-        annoMgr.splitNeuriteRequested(anchor);
-    }
-
     public void deleteLinkRequested(Anchor anchor) {
         annoMgr.deleteLinkRequested(anchor);
     }

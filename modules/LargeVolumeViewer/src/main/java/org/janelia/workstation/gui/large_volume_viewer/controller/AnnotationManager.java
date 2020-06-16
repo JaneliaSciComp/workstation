@@ -99,24 +99,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public boolean editsAllowed() {
         return TmModelManager.getInstance().getCurrentView().isProjectReadOnly();
     }
-    
-    public void deleteSubtreeRequested(Anchor anchor) {
-        if (anchor != null) {
-            deleteSubTree(anchor.getNeuronID(), anchor.getGuid());
-        } 
-    }
-
-    public void splitAnchorRequested(Anchor anchor) {
-        splitAnchor(anchor.getNeuronID(), anchor.getGuid());
-    }
-
-    public void rerootNeuriteRequested(Anchor anchor) {
-        rerootNeurite(anchor.getNeuronID(), anchor.getGuid());
-    }
-
-    public void splitNeuriteRequested(Anchor anchor) {
-        splitNeurite(anchor.getNeuronID(), anchor.getGuid());
-    }
 
     public void deleteLinkRequested(Anchor anchor) {
         deleteLink(anchor.getNeuronID(), anchor.getGuid());
@@ -354,8 +336,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         adder.execute();
     }
 
-
-    // COMMON
     /**
      * delete the annotation with the input ID; the annotation must be a "link",
      * which is an annotation that is not a root (no parent) or branch point
@@ -398,54 +378,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void doStuff() throws Exception {
                 activityLog.logDeleteLink(getSampleID(), getWorkspaceID(), annotation);
                 annotationModel.deleteLink(annotationModel.getGeoAnnotationFromID(neuronID, annotationID));
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing here; annotationModel emits signals
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                FrameworkAccess.handleException(error);
-            }
-        };
-        deleter.execute();
-    }
-
-    /**
-     * delete the annotation with the input ID, and delete all of its
-     * descendants
-     */
-    public void deleteSubTree(final Long neuronID, final Long annotationID) {
-        if (TmModelManager.getInstance().getCurrentWorkspace() == null || annotationID == null) {
-            // dialog?
-            return;
-        }
-
-        if (!TmModelManager.getInstance().checkOwnership(neuronID))
-            return;
-        
-        // if more than one point, ask the user if they are sure (we have
-        //  no undo right now!)
-        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(neuronID, annotationID);
-        activityLog.logDeleteSubTree(getSampleID(), getWorkspaceID(), annotation);
-        int nAnnotations = annotationModel.getNeuronFromNeuronID(neuronID).getSubTreeList(annotation).size();
-        if (nAnnotations > 1) {
-            int ans = JOptionPane.showConfirmDialog(
-                    ComponentUtil.getLVVMainWindow(),
-                    String.format("Selected subtree has %d points; delete?", nAnnotations),
-                    "Delete subtree?",
-                    JOptionPane.OK_CANCEL_OPTION);
-            if (ans != JOptionPane.OK_OPTION) {
-                return;
-            }
-        }
-
-        SimpleWorker deleter = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.deleteSubTree(annotation);
             }
 
             @Override
@@ -745,135 +677,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             };
             mover.execute();
         }
-
     }
 
-
-    /**
-     * place a new annotation near the annotation with the input ID; place it
-     * "nearby" in the direction of its parent if it has one; if it's a root
-     * annotation with one child, place it in the direction of the child
-     * instead; if it's a root with many children, it's an error, since there is
-     * no unambiguous location to place the new anchor
-     */
-    public void splitAnchor(final Long neuronID, Long annotationID) {
-        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-            // dialog?
-            return;
-        }
-
-        if (!TmModelManager.getInstance().checkOwnership(neuronID))
-            return;
-        
-        // can't split a root if it has multiple children (ambiguous):
-        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(neuronID, annotationID);
-        if (annotation.isRoot() && annotation.getChildIds().size() != 1) {
-            presentError(
-                    "Cannot split root annotation with multiple children (ambiguous)!",
-                    "Error");
-            return;
-        }
-
-        SimpleWorker splitter = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                activityLog.logSplitAnnotation(getSampleID(), getWorkspaceID(), annotation);
-                annotationModel.splitAnnotation(annotation);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing here, model emits signals
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                presentError(
-                        "Could not split anchor!",
-                        error);
-            }
-        };
-        splitter.execute();
-    }
-
-    // COMMON
-
-    public void rerootNeurite(final Long neuronID, final Long newRootAnnotationID) {
-        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-            return;
-        }
-
-        if (!TmModelManager.getInstance().checkOwnership(neuronID))
-            return;
-        
-
-        SimpleWorker rerooter = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                activityLog.logRerootNeurite(getSampleID(), getWorkspaceID(), newRootAnnotationID);
-                annotationModel.rerootNeurite(neuronID, newRootAnnotationID);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing here, model emits signals
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                presentError(
-                        "Could not reroot neurite!",
-                        error);
-            }
-        };
-        rerooter.execute();
-    }
-
-
-    //COMMON
-    public void splitNeurite(final Long neuronID, final Long newRootAnnotationID) {
-        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-            return;
-        }
-
-        if (!TmModelManager.getInstance().checkOwnership(neuronID))
-            return;
-        
-
-        // if it's already the root, can't split
-        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(neuronID, newRootAnnotationID);
-        if (annotation.isRoot()) {
-            presentError(
-                    "Cannot split neurite at its root annotation!",
-                    "Error");
-            return;
-        }
-
-        SimpleWorker splitter = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                activityLog.logSplitNeurite(getSampleID(), getWorkspaceID(), annotation);
-                annotationModel.splitNeurite(neuronID, annotation.getId());
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing here, model emits signals
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                presentError(
-                        "Could not split neurite!",
-                        error);
-            }
-        };
-        splitter.execute();
-
-    }
-
-
-    //COMMON
     /**
      * add an anchored path; not much to check, as the UI needs to check it even
      * before the request gets here
@@ -908,6 +713,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         };
         adder.execute();
     }
+
     ////  CCMMON ///
     /**
      * pop a dialog to add, edit, or delete note at the given annotation
