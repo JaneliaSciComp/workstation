@@ -1,8 +1,11 @@
 package org.janelia.workstation.infopanel;
 
 import org.janelia.console.viewerapi.SimpleIcons;
+import org.janelia.console.viewerapi.dialogs.ChangeNeuronOwnerDialog;
+import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.eventbus.SelectionNeuronsEvent;
 import org.janelia.workstation.controller.model.TmSelectionState;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.geom.BoundingBox3d;
@@ -22,25 +25,10 @@ import org.janelia.workstation.controller.eventbus.SelectionEvent;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 //import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 
-import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultRowSorter;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.RowFilter;
-import javax.swing.RowSorter;
-import javax.swing.SortOrder;
+import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -278,29 +266,43 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                         String owner = selectedNeuron.getOwnerName();
                         String ownerKey = selectedNeuron.getOwnerKey();
                         String username = AccessManager.getAccessManager().getActualSubject().getName();
-                        // REPLACE With model call
-                        /* if (owner.equals(username) ||
+
+                        if (owner.equals(username) ||
                             ownerKey.equals(TRACERS_GROUP) ||
                             // admins can change ownership on any neuron
-
-
-                                annotationManager.isOwnershipAdmin()) {
+                                TmViewerManager.getInstance().isOwnershipAdmin()) {
 
                             // pop up a dialog so the user can request to change the ownership
                             //  of the neuron
-                            ChangeNeuronOwnerDialog dialog = new ChangeNeuronOwnerDialog((Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()));
+                            ChangeNeuronOwnerDialog dialog = new ChangeNeuronOwnerDialog(null);
                             dialog.setVisible(true);
                             if (dialog.isSuccess()) {
-                                annotationManager.changeNeuronOwner(selectedNeuron, dialog.getNewOwnerKey());
+                                SimpleWorker changer = new SimpleWorker() {
+                                    @Override
+                                    protected void doStuff() throws Exception {
+                                        NeuronManager.getInstance().changeNeuronOwner(selectedNeuron.getId(), dialog.getNewOwnerKey());
+                                    }
+
+                                    @Override
+                                    protected void hadSuccess() {
+
+                                    }
+
+                                    @Override
+                                    protected void hadError(Throwable error) {
+                                        FrameworkAccess.handleException("Could not change neuron owner!", error);
+                                    }
+                                };
+                                changer.execute();
                             }
 
                         } else {
                             // submit a request to take ownership
 
                             // for now:
-                            JOptionPane.showMessageDialog(SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
+                            JOptionPane.showMessageDialog(null,
                                 owner + " owns this neuron. You need to ask them or an admin to give this neuron to you.");
-                        }*/
+                        }
                         // the click might move the neuron selection, which we don't want
                         syncSelection();
                     }

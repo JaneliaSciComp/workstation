@@ -146,8 +146,7 @@ implements MouseMode, KeyListener
             //  clicking an anchor always sets next parent (old behavior: could put
             //  a point on top of another, which we don't want)
             if (hoverAnchor != null) {
-                LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel()
-                        .selectPoint(hoverAnchor.getNeuronID(), hoverAnchor.getGuid());
+                NeuronManager.getInstance().selectPoint(hoverAnchor.getNeuronID(), hoverAnchor.getGuid());
                 controller.setNextParent(hoverAnchor);
             } else {
                 // original behavior: shift-click to annotate; new behavior (2018):
@@ -506,7 +505,8 @@ implements MouseMode, KeyListener
                     AbstractAction deleteLinkAction = new AbstractAction("Delete link") {
                         @Override
                         public void actionPerformed(ActionEvent actionEvent) {
-                            skeleton.deleteLinkRequest(hover);
+                            DeleteVertexLinkAction action = new DeleteVertexLinkAction();
+                            action.execute(hover.getNeuronID(), hover.getGuid());
                         }
                     };
                     deleteLinkAction.setEnabled(controller.editsAllowed());
@@ -567,7 +567,8 @@ implements MouseMode, KeyListener
                     AbstractAction addNoteAction = new AbstractAction("Add, edit, delete note...") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            skeleton.addEditNoteRequest(hover);
+                            AddEditNoteAction action = new AddEditNoteAction();
+                            action.execute(hover.getNeuronID(), hover.getGuid());
                         }
                     };
                     addNoteAction.setEnabled(controller.editsAllowed());
@@ -608,7 +609,8 @@ implements MouseMode, KeyListener
                     AbstractAction setNeuronRadiusAction = new AbstractAction("Set neuron radius...") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            skeleton.setNeuronRadiusRequest(hover);
+                            NeuronSetRadiusAction action = new NeuronSetRadiusAction();
+                            action.execute(hover.getNeuronID());
                         }
                     };
                     setNeuronRadiusAction.setEnabled(controller.editsAllowed());
@@ -619,8 +621,8 @@ implements MouseMode, KeyListener
                     AbstractAction changeNeuronStyleAction = new AbstractAction("Change neuron color...") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-
-                            //skeleton.changeNeuronStyle(hover);
+                            NeuronChooseColorAction action = new NeuronChooseColorAction();
+                            action.chooseNeuronColor(NeuronManager.getInstance().getNeuronFromNeuronID(hover.getNeuronID()));
                         }
                     };
                     changeNeuronStyleAction.setEnabled(controller.editsAllowed());
@@ -629,7 +631,7 @@ implements MouseMode, KeyListener
                     AbstractAction hideNeuronAction = new AbstractAction("Hide neuron") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(hover.getNeuronID());
+
                         }
                     };
                     hideNeuronAction.setEnabled(controller.editsAllowed());
@@ -698,7 +700,8 @@ implements MouseMode, KeyListener
 		case KeyEvent.VK_BACK_SPACE:
 		case KeyEvent.VK_DELETE:
 			if (nextParent != null) {
-                skeleton.deleteLinkRequest(nextParent);
+			    DeleteVertexLinkAction action = new DeleteVertexLinkAction();
+			    action.execute(nextParent.getNeuronID(), nextParent.getGuid());
 			}
 			break;
 		case KeyEvent.VK_LEFT:
@@ -738,7 +741,8 @@ implements MouseMode, KeyListener
 		case KeyEvent.VK_A:
 			// add/edit note dialog
 			if (event.getModifiers() == 0 && nextParent != null) {
-				skeleton.addEditNoteRequest(nextParent);
+                AddEditNoteAction action = new AddEditNoteAction();
+                action.execute(nextParent.getNeuronID(), nextParent.getGuid());
 			}
 			break;
         case KeyEvent.VK_P:
@@ -754,7 +758,7 @@ implements MouseMode, KeyListener
 		}
                 
         // if not normal key event, check our group toggle events
-        NeuronManager annModel = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel();
+        NeuronManager annModel = NeuronManager.getInstance();
         Map<String, Map<String,Object>> groupMappings = annModel.getTagGroupMappings();
         Iterator<String> groups = groupMappings.keySet().iterator();
         while (groups.hasNext()) {
@@ -779,19 +783,19 @@ implements MouseMode, KeyListener
                         Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
                         if (property.equals(NeuronGroupsDialog.PROPERTY_RADIUS)) {
                           //  LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, toggled);
-                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
+                            NeuronManager.getInstance().saveUserPreferences();
                         } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
                           //  LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuronList, !toggled);
-                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
+                            NeuronManager.getInstance().saveUserPreferences();
                         } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
                           //  LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, toggled);
-                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
+                            NeuronManager.getInstance().saveUserPreferences();
                         } else if (property.equals(NeuronGroupsDialog.PROPERTY_CROSSCHECK)) {
                             List<String> properties =  new ArrayList<String>();
                             properties.add("Radius");
                             properties.add("Background");
                            // LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggled);
-                            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().saveUserPreferences();
+                            NeuronManager.getInstance().saveUserPreferences();
                         }
                     } catch (Exception error) {
 

@@ -303,18 +303,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         }
     }
 
-    public void deleteLinkRequested(Anchor anchor) {
-        annoMgr.deleteLinkRequested(anchor);
-    }
-
-    public void addEditNoteRequested(Anchor anchor) {
-        annoMgr.addEditNoteRequested(anchor);
-    }
-
-    public void setNeuronRadiusRequested(Anchor anchor) {
-        annoMgr.setNeuronRadiusRequested(anchor);
-    }
-
     public void moveNeuriteRequested(Anchor anchor) {
         annoMgr.moveNeuriteRequested(anchor);
     }

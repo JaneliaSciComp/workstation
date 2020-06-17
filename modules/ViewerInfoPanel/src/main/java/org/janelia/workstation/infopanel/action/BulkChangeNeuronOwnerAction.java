@@ -129,8 +129,9 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
                     //  and waits for it to finish; for now, rely on the time warning
                     //  in the dialog above
                     Subject newOwner = dialog.getNewOwnerKey();
+                    NeuronManager manager = NeuronManager.getInstance();
                     for (TmNeuronMetadata neuron: neurons) {
-                      //  annMgr.changeNeuronOwner(neuron, newOwner);
+                         manager.changeNeuronOwner(neuron.getId(), newOwner);
                     }
                 }
 

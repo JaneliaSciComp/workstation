@@ -1,10 +1,15 @@
 package org.janelia.workstation.infopanel;
 
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ComponentUtil;
+import org.janelia.workstation.controller.TmViewerManager;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
+import org.janelia.workstation.controller.eventbus.NeuronHideEvent;
+import org.janelia.workstation.controller.eventbus.NeuronUnhideEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
 import org.janelia.workstation.core.api.AccessManager;
@@ -248,11 +253,11 @@ public class AnnotationPanel extends JPanel
                         if (ans == JOptionPane.CANCEL_OPTION) {
                             tempOwnerAdminItem.setSelected(false);
                         } else {
-                            //annotationMgr.setTempOwnershipAdmin(true);
+                            TmViewerManager.getInstance().setTempOwnershipAdmin(true);
                         }
                     } else {
                         // giving up admin
-                        //annotationMgr.setTempOwnershipAdmin(false);
+                        TmViewerManager.getInstance().setTempOwnershipAdmin(false);
                     }
                 }
         );
@@ -289,15 +294,26 @@ public class AnnotationPanel extends JPanel
         showAllNeuronsAction = new AbstractAction("Show neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
-               // annotationMgr.setBulkNeuronVisibility(workspaceNeuronList.getNeuronList(), true);
+                for (TmNeuronMetadata neuron: workspaceNeuronList.getNeuronList()) {
+                    TmModelManager.getInstance().getCurrentView().removeAnnotationFromHidden(neuron.getId());
+                }
+                NeuronUnhideEvent event = new NeuronUnhideEvent();
+                event.setNeurons(workspaceNeuronList.getNeuronList());
+                ViewerEventBus.postEvent(event);
             }
+
         };
         neuronToolMenu.add(showAllNeuronsAction);
         
         hideAllNeuronsAction = new AbstractAction("Hide neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
-               // annotationMgr.setBulkNeuronVisibility(workspaceNeuronList.getNeuronList(), false);
+                for (TmNeuronMetadata neuron: workspaceNeuronList.getNeuronList()) {
+                    TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
+                }
+                NeuronHideEvent event = new NeuronHideEvent();
+                event.setNeurons(workspaceNeuronList.getNeuronList());
+                ViewerEventBus.postEvent(event);
             }
         };
         neuronToolMenu.add(hideAllNeuronsAction);
@@ -305,7 +321,12 @@ public class AnnotationPanel extends JPanel
         hideOtherNeuronsAction = new AbstractAction("Hide other neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //annotationMgr.setBulkNeuronVisibility(workspaceNeuronList.getUnshownNeuronList(), false);
+                for (TmNeuronMetadata neuron: workspaceNeuronList.getUnshownNeuronList()) {
+                    TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
+                }
+                NeuronHideEvent event = new NeuronHideEvent();
+                event.setNeurons(workspaceNeuronList.getNeuronList());
+                ViewerEventBus.postEvent(event);
             }
         };
         neuronToolMenu.add(hideOtherNeuronsAction);

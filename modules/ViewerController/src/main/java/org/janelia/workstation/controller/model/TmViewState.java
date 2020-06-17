@@ -1,9 +1,14 @@
 package org.janelia.workstation.controller.model;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.NeuronHideEvent;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
 
 import java.awt.*;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,7 +22,6 @@ public class TmViewState {
     private boolean projectReadOnly;
     private Set<Long> hiddenAnnotations;
     private Set<Long> nonInteractableAnnotations;
-
 
     private double cameraFocusX;
     private double cameraFocusY;

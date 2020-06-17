@@ -5,6 +5,9 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.console.viewerapi.dialogs.NeuronGroupsDialog;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.tiledMicroscope.*;
+import org.janelia.model.security.GroupRole;
+import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
 import org.janelia.workstation.controller.access.ProjectInitFacade;
 import org.janelia.workstation.controller.access.ProjectInitFacadeImpl;
 import org.janelia.workstation.controller.access.RefreshHandler;
@@ -13,6 +16,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -27,11 +31,14 @@ public class TmViewerManager implements GlobalViewerController {
     private final Logger log = LoggerFactory.getLogger(TmViewerManager.class);
     private static final TmViewerManager instance = new TmViewerManager();
     private TmModelManager modelManager = TmModelManager.getInstance();
+    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+
     private TiledMicroscopeDomainMgr tmDomainMgr;
     private NeuronManager neuronManager;
     private ProjectInitFacade projectInit;
     private DomainObject currProject;
     private int NUMBER_FRAGMENTS_THRESHOLD = 100;
+    private boolean isTempOwnershipAdmin = false;
 
     public enum ToolSet {
         NEURON
@@ -131,6 +138,37 @@ public class TmViewerManager implements GlobalViewerController {
     public boolean editsAllowed() {
         if (modelManager.getCurrentWorkspace()==null) return false;
         return ClientDomainUtils.hasWriteAccess(modelManager.getCurrentWorkspace());
+    }
+
+    public boolean isTempOwnershipAdmin() {
+        return isTempOwnershipAdmin;
+    }
+
+    public void setTempOwnershipAdmin(boolean tempOwnershipAdmin) {
+        isTempOwnershipAdmin = tempOwnershipAdmin;
+    }
+
+    public boolean isOwnershipAdmin() {
+        // workstation admins always qualify
+        if (AccessManager.getAccessManager().isAdmin()) {
+            return true;
+        }
+
+        // user has temporary admin (think of it as sudo)
+        if (isTempOwnershipAdmin()) {
+            return true;
+        }
+
+        // check if user has admin role in tracers group:
+        Subject subject = AccessManager.getAccessManager().getAuthenticatedSubject();
+        if (subject==null) {
+            return false;
+        }
+        if (subject instanceof User) {
+            User user = (User)subject;
+            return user.getUserGroupRole(TRACERS_GROUP).equals(GroupRole.Admin);
+        }
+        return false;
     }
 
     public void loadUserPreferences() throws Exception {
