@@ -584,7 +584,7 @@ public class NeuronSetAdapter
     public void addEditNote(NeuronVertex anchor) {
         if (anchor instanceof NeuronVertexAdapter) {
             TmGeoAnnotation annotation = ((NeuronVertexAdapter) anchor).getTmGeoAnnotation();
-            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().addEditNote(annotation.getNeuronId(), annotation.getId());
+           // LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().addEditNote(annotation.getNeuronId(), annotation.getId());
         }
     }
 
@@ -592,7 +592,7 @@ public class NeuronSetAdapter
     public void addTraceEndNote(NeuronVertex anchor) {
         if (anchor instanceof NeuronVertexAdapter) {
             TmGeoAnnotation annotation = ((NeuronVertexAdapter) anchor).getTmGeoAnnotation();
-            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNote(annotation.getNeuronId(), annotation.getId(), PredefinedNote.TRACED_END.getNoteText());
+           // LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNote(annotation.getNeuronId(), annotation.getId(), PredefinedNote.TRACED_END.getNoteText());
         }
     }
 
@@ -600,7 +600,7 @@ public class NeuronSetAdapter
     public void addUnique1Note(NeuronVertex anchor) {
         if (anchor instanceof NeuronVertexAdapter) {
             TmGeoAnnotation annotation = ((NeuronVertexAdapter) anchor).getTmGeoAnnotation();
-            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNote(annotation.getNeuronId(), annotation.getId(), PredefinedNote.UNIQUE_1.getNoteText());
+           // LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNote(annotation.getNeuronId(), annotation.getId(), PredefinedNote.UNIQUE_1.getNoteText());
         }
     }
 
@@ -608,7 +608,7 @@ public class NeuronSetAdapter
     public void addUnique2Note(NeuronVertex anchor) {
         if (anchor instanceof NeuronVertexAdapter) {
             TmGeoAnnotation annotation = ((NeuronVertexAdapter) anchor).getTmGeoAnnotation();
-            LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNote(annotation.getNeuronId(), annotation.getId(), PredefinedNote.UNIQUE_2.getNoteText());
+           // LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNote(annotation.getNeuronId(), annotation.getId(), PredefinedNote.UNIQUE_2.getNoteText());
         }
     }
 

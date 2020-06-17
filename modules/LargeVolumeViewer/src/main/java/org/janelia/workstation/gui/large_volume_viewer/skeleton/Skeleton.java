@@ -218,18 +218,6 @@ public class Skeleton {
         this.hoverAnchor = hoverAnchor;
     }
 
-    public void deleteLinkRequest(Anchor anchor) {
-        controller.deleteLinkRequested(anchor);
-    }
-
-    public void addEditNoteRequest(Anchor anchor) {
-        controller.addEditNoteRequested(anchor);
-    }
-
-    public void setNeuronRadiusRequest(Anchor anchor) {
-        controller.setNeuronRadiusRequested(anchor);
-    }
-
     public void moveNeuriteRequest(Anchor anchor) {
         controller.moveNeuriteRequested(anchor);
     }

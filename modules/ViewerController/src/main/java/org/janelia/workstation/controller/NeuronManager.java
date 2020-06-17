@@ -41,7 +41,9 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
 import org.janelia.workstation.controller.action.NeuronTagsAction;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -93,19 +95,14 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class NeuronManager implements DomainObjectSelectionSupport {
-
     private static final Logger log = LoggerFactory.getLogger(NeuronManager.class);
-    
     public static final String STD_SWC_EXTENSION = SWCData.STD_SWC_EXTENSION;
     private static final String COLOR_FORMAT = "# COLOR %f,%f,%f";
     private static final String NAME_FORMAT = "# NAME %s";
-
     private static final String NEURON_TAG_VISIBILITY = "hidden";
 
     private static final int NUMBER_FRAGMENTS_THRESHOLD = 1000;
-
     private final TiledMicroscopeDomainMgr tmDomainMgr;
-
     private SWCDataConverter swcDataConverter;
 
     private TmSample currentSample;
