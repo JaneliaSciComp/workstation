@@ -68,7 +68,6 @@ import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
-import org.janelia.workstation.controller.task_workflow.TaskWorkflowViewLauncher;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
@@ -191,7 +190,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     private SkeletonController skeletonController;
     private AnnotationSkeletonViewLauncher annotationSkeletonViewLauncher;
-    private TaskWorkflowViewLauncher taskWorkflowViewLauncher;
     private PathTraceRequestListener pathTraceListener;
     private WorkspaceClosureListener wsCloseListener;
 
@@ -436,7 +434,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
                     result.add(addCopyRawTileFileLocMenuItem(TmModelManager.getInstance().getCurrentSample()));
                     result.add(addCopyOctreePathMenuItem(TmModelManager.getInstance().getCurrentSample()));
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
-                    result.addAll(taskWorkflowViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());
 
                     return result;
