@@ -33,6 +33,7 @@ public class TmSelectionState {
 
     private TmSelectionState() {
         primarySelections = new HashMap<>();
+        secondarySelections = new HashMap<>();
     }
 
     public Object getNeuronSelections() {

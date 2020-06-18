@@ -389,8 +389,10 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     public void neuronChanged(NeuronUpdateEvent event) {
         Collection<TmNeuronMetadata> neurons = event.getNeurons();
         TmNeuronMetadata neuron=null;
-        if (!neurons.isEmpty()) {
+        if (neurons!=null && !neurons.isEmpty()) {
             neuron = neurons.iterator().next();
+        } else {
+            return;
         }
         // maintain next parent selection across the delete/create
         Anchor nextParent = largeVolumeViewer.getSkeletonActor().getModel().getNextParent();
