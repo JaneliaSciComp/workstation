@@ -17,8 +17,6 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.SpatialIndexManager;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -27,7 +25,6 @@ import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;
-import org.janelia.workstation.controller.NeuronVertexAdapter;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
@@ -656,7 +653,7 @@ public class SkeletonActorModel {
         if (anchor == null || anchor.getNeuronID() == null) {
             return false;
         } else {
-            return TmModelManager.getInstance().getCurrentView().isrNonInteractable(anchor.getNeuronID());
+            return TmModelManager.getInstance().getCurrentView().isNonInteractable(anchor.getNeuronID());
         }
     }
     

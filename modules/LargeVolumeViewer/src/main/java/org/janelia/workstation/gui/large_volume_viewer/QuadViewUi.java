@@ -189,7 +189,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
     private TileFormat tileFormat;
 
     private SkeletonController skeletonController;
-    private AnnotationSkeletonViewLauncher annotationSkeletonViewLauncher;
     private PathTraceRequestListener pathTraceListener;
     private WorkspaceClosureListener wsCloseListener;
 
@@ -433,7 +432,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
                     result.add(addCopyTileLocMenuItem());
                     result.add(addCopyRawTileFileLocMenuItem(TmModelManager.getInstance().getCurrentSample()));
                     result.add(addCopyOctreePathMenuItem(TmModelManager.getInstance().getCurrentSample()));
-                    result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());
 
                     return result;

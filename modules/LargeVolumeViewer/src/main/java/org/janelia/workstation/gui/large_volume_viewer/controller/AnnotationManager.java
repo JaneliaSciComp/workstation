@@ -84,7 +84,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     // need common permissions model
     public boolean editsAllowed() {
-        return TmModelManager.getInstance().getCurrentView().isProjectReadOnly();
+        return !TmModelManager.getInstance().getCurrentView().isProjectReadOnly();
     }
 
     public void editNeuronGroups() {
