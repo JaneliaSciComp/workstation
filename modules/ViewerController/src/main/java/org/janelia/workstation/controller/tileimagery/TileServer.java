@@ -47,7 +47,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     private final TexturePreFetcher futurePreFetcher; //!!!! = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, HIGHER_RES_TILE_LOADER_CONCURRENCY);
 
     // Refactoring 6/12/2013
-    private static SharedVolumeImage sharedVolumeImage;
+    private SharedVolumeImage sharedVolumeImage;
     private TextureCache textureCache = new TextureCache();
 
     private LoadStatusListener loadStatusListener;
@@ -59,16 +59,8 @@ public class TileServer implements ComponentListener, // so changes in viewer si
 
     // New path for handling tile updates July 9, 2013 cmb
     private Set<TileIndex> currentDisplayTiles = new HashSet<>();
-    private static TileServer instance;
-    public static TileServer getInstance() {
-        if (instance==null) {
-            sharedVolumeImage = new SharedVolumeImage();
-            instance = new TileServer(sharedVolumeImage);
-        }
-        return instance;
-    }
 
-    private TileServer(SharedVolumeImage sharedVolumeImage) {
+    public TileServer(SharedVolumeImage sharedVolumeImage) {
         this.minResPreFetcher = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, MIN_RES_TILE_LOADER_CONCURRENCY);
         this.futurePreFetcher = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, HIGHER_RES_TILE_LOADER_CONCURRENCY);
 

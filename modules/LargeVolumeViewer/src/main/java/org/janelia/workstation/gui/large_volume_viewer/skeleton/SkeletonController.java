@@ -57,11 +57,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     
     private SkeletonController() {
     }
-
-    public NeuronSet getNeuronSet() {
-      //  return annoMgr.getNeuronSet();
-        return null;
-    }
     
     public void setSkipSkeletonChange(boolean skipSkeletonChange) {
         this.skipSkeletonChange = skipSkeletonChange;

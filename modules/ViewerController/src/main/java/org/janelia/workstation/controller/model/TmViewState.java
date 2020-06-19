@@ -22,6 +22,7 @@ public class TmViewState {
     private boolean projectReadOnly;
     private Set<Long> hiddenAnnotations;
     private Set<Long> nonInteractableAnnotations;
+    private Set<Long> neuronRadiusToggle;
 
     private double cameraFocusX;
     private double cameraFocusY;
@@ -38,6 +39,7 @@ public class TmViewState {
         ConcurrentHashMap<Long, Long> threadSafeMap = new ConcurrentHashMap<>();
         hiddenAnnotations = threadSafeMap.newKeySet();
         nonInteractableAnnotations = threadSafeMap.newKeySet();
+        neuronRadiusToggle = threadSafeMap.newKeySet();
         colorModels = new ConcurrentHashMap<>();
         customNeuronColors = new ConcurrentHashMap<>();
         customNeuronRadii = new ConcurrentHashMap<>();
@@ -75,7 +77,6 @@ public class TmViewState {
         return hiddenAnnotations.contains(annId);
     }
 
-
     public Set<Long> getNonInteractableAnnotations() {
         return nonInteractableAnnotations;
     }
@@ -84,16 +85,36 @@ public class TmViewState {
         nonInteractableAnnotations.clear();
     }
 
-    public void addAnnotationTorNonInteractable(Long annId) {
+    public void addAnnotationToNonInteractable(Long annId) {
         nonInteractableAnnotations.add(annId);
     }
 
-    public void removeAnnotationFromrNonInteractable(Long annId) {
+    public void removeAnnotationFromNonInteractable(Long annId) {
         nonInteractableAnnotations.remove(annId);
     }
 
-    public boolean isrNonInteractable(Long annId) {
+    public boolean isNonInteractable(Long annId) {
         return nonInteractableAnnotations.contains(annId);
+    }
+
+    public Set<Long> getNeuronRadiusToggle() {
+        return neuronRadiusToggle;
+    }
+
+    public void clearNeuronRadiusToggle() {
+        neuronRadiusToggle.clear();
+    }
+
+    public void addAnnotationToNeuronRadiusToggle(Long annId) {
+        neuronRadiusToggle.add(annId);
+    }
+
+    public void removeAnnotationFromNeuronRadiusToggle(Long annId) {
+        neuronRadiusToggle.remove(annId);
+    }
+
+    public boolean isNeuronRadiusToggle(Long annId) {
+        return neuronRadiusToggle.contains(annId);
     }
 
     public double getCameraFocusX() {

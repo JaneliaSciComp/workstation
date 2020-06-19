@@ -1057,13 +1057,14 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     }
 
     NeuronTree createNeuronTreeNode(NeuronTree parentNode, TmGeoAnnotation annotation) {
-        TileFormat tileFormat = TileServer.getInstance().getLoadAdapter().getTileFormat();
+       /* TileFormat tileFormat = TileServer.getInstance().getLoadAdapter().getTileFormat();
         Vec3 tempLocation =  tileFormat.micronVec3ForVoxelVec3Centered(
                 new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
         NeuronTree childNode = new NeuronTree(parentNode, tempLocation, annotation.getId());
         if (parentNode!=null)
-            parentNode.addChild(childNode);
-        return childNode;
+            parentNode.addChild(childNode);*/
+       return null;
+        //return childNode;
     }
 
     /**

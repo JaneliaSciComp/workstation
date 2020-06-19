@@ -65,8 +65,9 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
     protected Viewport viewport = renderer.getViewport();
     protected RubberBand rubberBand = new RubberBand();
 
-    protected TileServer tileServer = TileServer.getInstance();
-    protected VolumeImage3d volumeImage = tileServer.getSharedVolumeImage();
+    private SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
+    protected TileServer tileServer = new TileServer(sharedVolumeImage);
+    protected VolumeImage3d volumeImage = sharedVolumeImage;
     protected SliceActor sliceActor;
     private ImageColorModel imageColorModel;
     private final BasicMouseMode pointComputer = new BasicMouseMode();

@@ -20,8 +20,6 @@ import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -43,7 +41,6 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.keybind.KeymapUtil;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.gui.large_volume_viewer.MouseModalWidget;
-import org.janelia.workstation.controller.NeuronVertexAdapter;
 import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -198,27 +195,22 @@ implements MouseMode, KeyListener
         final double worldRadius = pixelRadius / camera.getPixelsPerSceneUnit();
         // Find smallest squared distance
         final double cutoff = worldRadius * worldRadius;
-        
+
         StopWatch stopwatch = new StopWatch();
         stopwatch.start();
-        
+
         Anchor spatial = null;
-        NeuronSet neuronSet = controller.getNeuronSet();
-        if (neuronSet != null) {
-                        
-            List<NeuronVertex> vertexList = neuronSet.getAnchorClosestToMicronLocation(new double[]{xyz.x(), xyz.y(), xyz.z()}, 20);
-            if (vertexList != null) {
-                logger.trace("Got {} closest neurons for mouse position {}", vertexList.size(), xyz);
-                List<Anchor> anchors = new ArrayList<>();
-                for (NeuronVertex vertex : vertexList) {
-                    TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
-                    Anchor anchor = skeleton.getAnchorByID(annotation.getId());
-                    if (anchor!=null) {
-                        anchors.add(anchor);
-                    }
-                } 
-                spatial = findBestAnchor(anchors, xyz, cutoff);
+        List<TmGeoAnnotation> closestAnchors = TmModelManager.getInstance().getSpatialIndexManager().getAnchorClosestToMicronLocation(new double[]{xyz.x(), xyz.y(), xyz.z()}, 20);
+        if (closestAnchors != null) {
+            logger.trace("Got {} closest neurons for mouse position {}", closestAnchors.size(), xyz);
+            List<Anchor> anchors = new ArrayList<>();
+            for (TmGeoAnnotation vertex : closestAnchors) {
+                Anchor anchor = skeleton.getAnchorByID(vertex.getId());
+                if (anchor!=null) {
+                    anchors.add(anchor);
+                }
             }
+            spatial = findBestAnchor(anchors, xyz, cutoff);
         }
 
         stopwatch.stop();
@@ -228,7 +220,7 @@ implements MouseMode, KeyListener
         }
 
         Anchor closest = spatial;
-        
+
         // closest == null means you're not on an anchor anymore
 		if (skeletonActor != null && closest != hoverAnchor) {
 			// test for closest == null because null will come back invisible,
@@ -782,19 +774,50 @@ implements MouseMode, KeyListener
                     try {
                         Iterator<TmNeuronMetadata> neuronsIter = neurons.iterator();
                         if (property.equals(NeuronGroupsDialog.PROPERTY_RADIUS)) {
-                          //  LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserToggleRadius(neuronList, toggled);
+                            if (toggled) {
+                                for (TmNeuronMetadata neuron: neuronList) {
+                                    TmModelManager.getInstance().getCurrentView().addAnnotationToNeuronRadiusToggle(neuron.getId());
+                                }
+                            } else {
+                                for (TmNeuronMetadata neuron: neuronList) {
+                                    TmModelManager.getInstance().getCurrentView().removeAnnotationFromNeuronRadiusToggle(neuron.getId());
+                                }
+                            }
                             NeuronManager.getInstance().saveUserPreferences();
                         } else if (property.equals(NeuronGroupsDialog.PROPERTY_VISIBILITY)) {
-                          //  LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronVisibility(neuronList, !toggled);
+                            if (toggled) {
+                                for (TmNeuronMetadata neuron: neuronList) {
+                                    TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
+                                }
+                            } else {
+                                for (TmNeuronMetadata neuron: neuronList) {
+                                    TmModelManager.getInstance().getCurrentView().removeAnnotationFromHidden(neuron.getId());
+                                }
+                            }
                             NeuronManager.getInstance().saveUserPreferences();
                         } else if (property.equals(NeuronGroupsDialog.PROPERTY_READONLY)) {
-                          //  LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronNonInteractable(neuronList, toggled);
+                            if (toggled) {
+                                for (TmNeuronMetadata neuron: neuronList) {
+                                    TmModelManager.getInstance().getCurrentView().addAnnotationToNonInteractable(neuron.getId());
+                                }
+                            } else {
+                                for (TmNeuronMetadata neuron: neuronList) {
+                                    TmModelManager.getInstance().getCurrentView().removeAnnotationFromNonInteractable(neuron.getId());
+                                }
+                            }
                             NeuronManager.getInstance().saveUserPreferences();
                         } else if (property.equals(NeuronGroupsDialog.PROPERTY_CROSSCHECK)) {
-                            List<String> properties =  new ArrayList<String>();
-                            properties.add("Radius");
-                            properties.add("Background");
-                           // LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().setNeuronUserProperties(neuronList, properties, toggled);
+                            if (toggled) {
+                                for (TmNeuronMetadata neuron: neuronList) {
+                                    TmModelManager.getInstance().getCurrentView().addAnnotationToNeuronRadiusToggle(neuron.getId());
+                                    TmModelManager.getInstance().getCurrentView().addAnnotationToNonInteractable(neuron.getId());
+                                }
+                            } else {
+                                for (TmNeuronMetadata neuron: neuronList) {
+                                    TmModelManager.getInstance().getCurrentView().removeAnnotationFromNeuronRadiusToggle(neuron.getId());
+                                    TmModelManager.getInstance().getCurrentView().removeAnnotationFromNonInteractable(neuron.getId());
+                                }
+                            }
                             NeuronManager.getInstance().saveUserPreferences();
                         }
                     } catch (Exception error) {
