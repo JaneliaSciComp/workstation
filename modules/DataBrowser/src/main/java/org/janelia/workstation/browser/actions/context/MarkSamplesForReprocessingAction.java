@@ -106,10 +106,24 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
         }
         
         int numBlocked = 0;
+        int numDeleted = 0;
         for (Sample sample : samples) {
             if (sample.isSampleBlocked()) {
                 numBlocked++;
             }
+            // TODO: replace this string constant with PipelineStatus.Deleted, once jacs-model is updated
+            if ("Deleted".equals(sample.getStatus())) {
+                numDeleted++;
+            }
+        }
+
+        if (numDeleted>0) {
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                    "Samples with status 'Deleted' are missing primary data and cannot be reprocessed.\n" +
+                            "Please deselect Deleted samples and try again.",
+                    "Deleted samples selected",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
         }
         
         StringBuilder sampleText = new StringBuilder();
@@ -125,7 +139,9 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
         if (!dialog.showDialog()) return;
         
         if (numBlocked>0) {
-            int result2 = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(), "You have selected "+numBlocked+" blocked samples for reprocessing. Continue with unblocking and reprocessing?",
+            int result2 = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
+                    "You have selected "+numBlocked+" blocked samples for reprocessing.\n" +
+                            "Continue with unblocking and reprocessing?",
                     "Blocked Samples Selected", JOptionPane.OK_CANCEL_OPTION);
             if (result2 != 0) return;
         }
