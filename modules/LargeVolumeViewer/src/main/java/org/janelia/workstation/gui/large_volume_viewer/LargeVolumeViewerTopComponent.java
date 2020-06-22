@@ -12,7 +12,6 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.gui.support.WindowLocator;
 import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
 import org.janelia.workstation.integration.activity_logging.ToolString;
@@ -195,14 +194,14 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         repaint();
 
         // Need to popup the skeletal viewer.
-        AnnotationSkeletalViewTopComponent asvtc =
+      /*  AnnotationSkeletalViewTopComponent asvtc =
                 (AnnotationSkeletalViewTopComponent) WindowLocator.getByName(
                         AnnotationSkeletalViewTopComponent.PREFERRED_ID
                 );
         if (asvtc != null) {
             asvtc.revalidate();
             asvtc.repaint();
-        }
+        }*/
 
         if (initialViewFocus!=null) {
             log.info("Setting initial camera focus: {}", initialViewFocus);

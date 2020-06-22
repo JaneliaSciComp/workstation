@@ -52,7 +52,6 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.access.ModelTranslation;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.tileimagery.*;
-import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
 import org.janelia.workstation.gui.large_volume_viewer.action.*;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.controller.LargeVolumeViewerTranslator;
@@ -96,8 +95,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     private static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
-    private boolean bAllowOrthoView = false;    // this disabled switching between single and multiple ortho views
-
     // One shared camera for all viewers.
     // (there's only one viewer now actually, but you know...)
     private BasicObservableCamera3d camera = new BasicObservableCamera3d();
@@ -114,12 +111,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
     private ImageColorModel imageColorModel = new ImageColorModel(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
 
     // Four quadrants for orthogonal views
-    private OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
-    private OrthogonalPanel swViewer = new OrthogonalPanel(CoordinateAxis.Y, orthoViewContextSharer);
     private OrthogonalPanel nwViewer = new OrthogonalPanel(CoordinateAxis.Z, orthoViewContextSharer);
 
     private JPanel zViewerPanel = new JPanel();
-    private JComponent seViewer = zViewerPanel; // should be same as Z...
     private JPanel viewerPanel = new JPanel();
 
     // we never finished the multi-panel orthogonal view, and it's not
@@ -394,11 +388,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         quadViewController.registerForEvents(tileServer);
         quadViewController.registerForEvents(goToLocationAction);
 
-        OrthogonalPanel[] viewPanels = {neViewer, swViewer, nwViewer};
+        OrthogonalPanel[] viewPanels = {nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
         quadViewController.registerForEvents(imageColorModel);
         quadViewController.unregisterOrthPanels();
-        quadViewController.registerAsOrthPanelForRepaint(seViewer); // Must do separately.
+      //  quadViewController.registerAsOrthPanelForRepaint(seViewer); // Must do separately.
         skeletonController.registerForEvents(quadViewController);  // Pass-through
         for (OrthogonalPanel v : viewPanels) {
             quadViewController.registerForEvents(v);
@@ -604,9 +598,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     private void setOrthogonalMode() {
         nwViewer.setVisible(true);
-        neViewer.setVisible(true);
-        swViewer.setVisible(true);
-        seViewer.setVisible(true);
         tileServer.refreshCurrentTileSet();
     }
 
@@ -616,9 +607,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     private void setZViewMode() {
         nwViewer.setVisible(true);
-        neViewer.setVisible(false);
-        swViewer.setVisible(false);
-        seViewer.setVisible(false);
         tileServer.refreshCurrentTileSet();
     }
 
@@ -684,11 +672,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         // Four quadrants for orthogonal views
         // One panel for Z slice viewer (upper left northwest)
         viewerPanel.add(nwViewer, new QuadrantConstraints(0, 0));
-        // other three quadrants
-        viewerPanel.add(neViewer, new QuadrantConstraints(1, 0));
-        viewerPanel.add(swViewer, new QuadrantConstraints(0, 1));
-        viewerPanel.add(seViewer, new QuadrantConstraints(1, 1));
-
         largeVolumeViewer.setCamera(camera);
         largeVolumeViewer.getComponent().setBackground(Color.DARK_GRAY);
         zViewerPanel.setLayout(new BoxLayout(zViewerPanel, BoxLayout.Y_AXIS));
@@ -1049,17 +1032,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
 
         toolBar.addSeparator();
 
-        // disable orthogonal mode button; we never finished the feature
-        // we use a single ortho view, but we can't switch to a multi-panel ortho view
-        if (bAllowOrthoView) {
-            JButton orthogonalModeButton = new JButton("");
-            orthogonalModeButton.setAction(orthogonalModeAction);
-            orthogonalModeButton.setMargin(new Insets(0, 0, 0, 0));
-            orthogonalModeButton.setHideActionText(true);
-            orthogonalModeButton.setFocusable(false);
-            toolBar.add(orthogonalModeButton);
-        }
-
         return toolBarPanel;
     }
 
@@ -1255,7 +1227,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         LOG.info("loadDataFromURL: {}", url);
         boolean rtnVal = volumeImage.loadURL(url);
         loadedUrl = url;
-        new AnnotationSkeletonViewLauncher(false).refreshTopComponent();
         return rtnVal;
     }
 
@@ -1297,13 +1268,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
      */
     public void setPathTraceListener(PathTraceRequestListener pathTraceListener) {
         this.pathTraceListener = pathTraceListener;
-    }
-
-    /**
-     * @param wsCloseListener the wsCloseListener to set
-     */
-    public void setWsCloseListener(WorkspaceClosureListener wsCloseListener) {
-        this.wsCloseListener = wsCloseListener;
     }
 
     SampleLocation getSampleLocation() {

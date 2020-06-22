@@ -21,7 +21,6 @@ import org.janelia.workstation.gui.large_volume_viewer.controller.TraceMode;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.controller.LargeVolumeViewerTranslator;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
-import org.janelia.workstation.gui.large_volume_viewer.skeleton_mesh.LineEnclosurePrecomputes;
 import org.janelia.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
@@ -87,7 +86,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         this.skeleton.setController(this);
 
         actors.clear();
-        LineEnclosurePrecomputes.clearWorkspaceRelevant();
         lvvTranslator = null;
         qvController = null;
     }
