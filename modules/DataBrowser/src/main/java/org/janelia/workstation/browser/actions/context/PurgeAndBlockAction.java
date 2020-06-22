@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
+import com.google.common.collect.Lists;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.model.domain.sample.Sample;
@@ -15,6 +16,7 @@ import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.StateMgr;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.core.workers.TaskMonitoringWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
@@ -39,6 +41,8 @@ import org.openide.util.NbBundle;
 })
 @NbBundle.Messages("CTL_PurgeAndBlockAction=Purge And Block Sample")
 public class PurgeAndBlockAction extends BaseContextualNodeAction {
+
+    private static final int BATCH_SIZE = 200;
 
     private Collection<Sample> samples = new ArrayList<>();
 
@@ -69,7 +73,7 @@ public class PurgeAndBlockAction extends BaseContextualNodeAction {
     @Override
     public void performAction() {
 
-        Collection<Sample> samples = new ArrayList<>(this.samples);
+        List<Sample> samples = new ArrayList<>(this.samples);
 
         ActivityLogHelper.logUserAction("ProcessingBlockAction.actionPerformed");
 
@@ -80,22 +84,27 @@ public class PurgeAndBlockAction extends BaseContextualNodeAction {
 
         if (result != 0) return;
 
-        Task task;
         try {
-            StringBuilder sampleIdBuf = new StringBuilder();
-            for (Sample sample : samples) {
-                if (sampleIdBuf.length() > 0) sampleIdBuf.append(",");
-                sampleIdBuf.append(sample.getId());
+            for(List<Sample> batchList : Lists.partition(samples, BATCH_SIZE)) {
+                launchPurgeTask(batchList);
             }
-
-            HashSet<TaskParameter> taskParameters = new HashSet<>();
-            taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
-            task = StateMgr.getStateMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
         }
         catch (Exception ex) {
             FrameworkAccess.handleException(ex);
-            return;
         }
+    }
+
+    private void launchPurgeTask(List<Sample> samples) throws Exception {
+
+        StringBuilder sampleIdBuf = new StringBuilder();
+        for (Sample sample : samples) {
+            if (sampleIdBuf.length() > 0) sampleIdBuf.append(",");
+            sampleIdBuf.append(sample.getId());
+        }
+
+        HashSet<TaskParameter> taskParameters = new HashSet<>();
+        taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
+        Task task = StateMgr.getStateMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
 
         TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
 
@@ -108,12 +117,14 @@ public class PurgeAndBlockAction extends BaseContextualNodeAction {
             protected void doStuff() throws Exception {
                 setStatus("Executing");
                 super.doStuff();
-                for (Sample sample : samples) {
-                    DomainMgr.getDomainMgr().getModel().invalidate(sample);
-                }
                 DomainMgr.getDomainMgr().getModel().invalidate(samples);
             }
         };
+
+        taskWorker.setSuccessCallback(() -> {
+            SimpleWorker.runInBackground(() -> DomainMgr.getDomainMgr().getModel().invalidate(samples));
+            return null;
+        });
 
         taskWorker.executeWithEvents();
     }
