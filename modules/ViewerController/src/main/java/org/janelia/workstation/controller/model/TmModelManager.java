@@ -54,7 +54,7 @@ public class TmModelManager {
     }
     private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
-    public TmModelManager() {
+    private TmModelManager() {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         neuronModel = NeuronModel.getInstance();
         currentView = new TmViewState();
