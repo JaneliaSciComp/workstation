@@ -192,13 +192,13 @@ public class OrthogonalViewer
                 JPopupMenu popupMenu = new JPopupMenu();
 
                 // Annotators requested "Navigate to Horta..." menus to appear first
-                for (JMenuItem item : navigationMenuItemGenerator.getMenus(e)) {
+               /* for (JMenuItem item : navigationMenuItemGenerator.getMenus(e)) {
                     if (item == null) {
                         popupMenu.addSeparator();
                     } else {
                         popupMenu.add(item);
                     }
-                }
+                }*/
 
                 // Mode specific menu items first
                 List<JMenuItem> modeItems = modeMenuItemGenerator.getMenus(e);

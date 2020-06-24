@@ -5,8 +5,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.tracing.AnchoredVoxelPath;
-import org.janelia.workstation.tracing.SegmentIndex;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.SegmentIndex;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -247,17 +247,6 @@ public class Skeleton {
     /** Relay from external callers. */
     public void skeletonChanged() {
         controller.skeletonChanged();
-    }
-
-    //---------------------Servicing TmGeoAnnotation anchor changes
-    public Anchor addTmGeoAnchor(TmGeoAnnotation tga) {
-        Vec3 location = new Vec3(tga.getX(), tga.getY(), tga.getZ());
-        Anchor parentAnchor = anchorsByGuid.get(tga.getParentId());
-        Anchor anchor = new Anchor(location, parentAnchor, tga.getNeuronId(), tileFormat);
-        anchor.setGuid(tga.getId());
-        addAnchor(anchor);
-        controller.annotationSelected(anchor.getGuid());
-        return anchor;
     }
 
     public List<Anchor> addTmGeoAnchors(List<TmGeoAnnotation> annotationList) {

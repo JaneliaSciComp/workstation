@@ -187,21 +187,11 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         LoadProjectEvent event = new LoadProjectEvent(isSample);
         event.setWorkspace(workspace);
         event.setSample(TmModelManager.getInstance().getCurrentSample());
-        viewUI.getLargeVolumeViewerTranslator().workspaceLoaded(event);
+        viewUI.getAnnotationMgr().workspaceLoaded(event);
         SkeletonController.getInstance().skeletonChanged(true);
 
         revalidate();
         repaint();
-
-        // Need to popup the skeletal viewer.
-      /*  AnnotationSkeletalViewTopComponent asvtc =
-                (AnnotationSkeletalViewTopComponent) WindowLocator.getByName(
-                        AnnotationSkeletalViewTopComponent.PREFERRED_ID
-                );
-        if (asvtc != null) {
-            asvtc.revalidate();
-            asvtc.repaint();
-        }*/
 
         if (initialViewFocus!=null) {
             log.info("Setting initial camera focus: {}", initialViewFocus);

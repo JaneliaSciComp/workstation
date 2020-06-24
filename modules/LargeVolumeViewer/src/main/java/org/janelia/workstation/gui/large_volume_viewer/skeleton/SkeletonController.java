@@ -7,21 +7,17 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.JComponent;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.TableModel;
 
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.workstation.controller.listener.TmGeoAnnotationAnchorListener;
+import com.google.common.eventbus.Subscribe;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.workstation.gui.large_volume_viewer.listener.*;
 import org.janelia.workstation.gui.large_volume_viewer.controller.TraceMode;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.controller.LargeVolumeViewerTranslator;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
-import org.janelia.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
 import org.janelia.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -32,21 +28,16 @@ import org.slf4j.LoggerFactory;
  * This hands off interesting driving info to skeleton.
  * @author fosterl
  */
-public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener,
-        NextParentListener {
+public class SkeletonController implements AnchoredVoxelPathListener, NextParentListener {
 
     private static final Logger log = LoggerFactory.getLogger(SkeletonController.class);
 
     private Skeleton skeleton;
     private List<SkeletonActor> actors = new ArrayList<>();
     private List<JComponent> updateListeners = new ArrayList<>();
-    private MeshDrawActor meshDrawActor;
     private SkeletonAnchorListener skeletonAnchorListener;
     private AnnotationManager annoMgr;
-    private LargeVolumeViewerTranslator lvvTranslator;
     private QuadViewController qvController;
-    private NVTTableModelListener nvtTableModelListener;
-    private TableModel nvtTableModel;
     private Timer meshDrawUpdateTimer;
     private boolean skipSkeletonChange=false;
 
@@ -55,8 +46,14 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     private Long nextParentId = -1L;
     
     private SkeletonController() {
+        registerEvents();
     }
-    
+
+    private void registerEvents() {
+        ViewerEventBus.registerForEvents(this);
+    }
+
+    // used for bulk updates... need a better mechanism so it doesn't feel so kludgy
     public void setSkipSkeletonChange(boolean skipSkeletonChange) {
         this.skipSkeletonChange = skipSkeletonChange;
     }
@@ -86,7 +83,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         this.skeleton.setController(this);
 
         actors.clear();
-        lvvTranslator = null;
         qvController = null;
     }
     
@@ -99,23 +95,8 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         this.actors.remove(actor);        
     }
     
-    public void registerForEvents(LargeVolumeViewerTranslator lvvTranslator) {
-        this.lvvTranslator = lvvTranslator;
-    }
-    
     public void registerForEvents(QuadViewController qvController) {
         this.qvController = qvController;
-    }
-    
-    public void registerForEvents(MeshDrawActor meshDrawActor, TableModel tableModel) {
-        if (nvtTableModelListener != null) {
-            if (nvtTableModel != null)
-            nvtTableModel.removeTableModelListener(nvtTableModelListener);
-        }
-        this.meshDrawActor = meshDrawActor;
-        nvtTableModel = tableModel;
-        nvtTableModel.addTableModelListener(new NVTTableModelListener());
-        meshDrawActor.refresh();
     }
     
     public void registerForEvents(JComponent component) {
@@ -157,11 +138,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         skeleton.incrementAnchorVersion();
         skeletonChanged();
     }
-    
-    public void remoteAddAnchoredVoxelPaths(List<AnchoredVoxelPath> paths) {
-        skeleton.addTracedSegments(paths);
-        skeleton.incrementAnchorVersion();
-    }
 
     @Override
     public void removeAnchoredVoxelPath(AnchoredVoxelPath path) {
@@ -179,74 +155,53 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void remoteRemoveAnchoredVoxelPaths(Long neuronID) {
         skeleton.removeTracedSegments(neuronID);
     }
-     
-    //--------------------------------IMPLEMENTS TmGeoAnnotationAnchorListener
-    @Override
-    public void anchorAdded(TmGeoAnnotation tmAnchor) {
-        Anchor anchor = skeleton.addTmGeoAnchor(tmAnchor);
-        anchor.setSkeletonAnchorListener(skeletonAnchorListener);
-        skeletonChanged();
+
+    @Subscribe
+    public void anchorsAdded(AnnotationCreateEvent event) {
+        Collection<TmGeoAnnotation> annotations = event.getAnnotations();
+        processAnchorsAdded(annotations);
     }
 
-    @Override
-    public void anchorsAdded(List<TmGeoAnnotation> tmAnchors) {
-        List<Anchor> anchors = skeleton.addTmGeoAnchors(tmAnchors);
+    public void processAnchorsAdded (Collection<TmGeoAnnotation> vertexList) {
+        List<Anchor> anchors = skeleton.addTmGeoAnchors(new ArrayList<>(vertexList));
         for (Anchor anchor: anchors) {
             anchor.setSkeletonAnchorListener(skeletonAnchorListener);
         }
         skeletonChanged();
     }
-    
-    public void remoteAnchorsAdded(List<TmGeoAnnotation> tmAnchors) {
-        List<Anchor> anchors = skeleton.addTmGeoAnchors(tmAnchors);
-        for (Anchor anchor: anchors) {
-            anchor.setSkeletonAnchorListener(skeletonAnchorListener);
-        }
-    }
 
-    @Override
-    public void anchorDeleted(TmGeoAnnotation anchor) {
-        skeleton.deleteTmGeoAnchor(anchor);
-        skeletonChanged();
-    }
-
-    @Override
-    public void anchorReparented(TmGeoAnnotation anchor) {
-        skeleton.reparentTmGeoAnchor(anchor);
-        skeletonChanged();
-    }
-
-    @Override
-    public void anchorMovedBack(TmGeoAnnotation anchor) {
-        skeleton.moveTmGeoAnchorBack(anchor);
-    }
-
-    @Override
-    public void anchorMoved(TmGeoAnnotation anchor) {
-        skeleton.moveTmGeoAnchor(anchor);
-    }
-
-    @Override
-    public void clearAnchors(Collection<TmGeoAnnotation> annotations) {
-        for(TmGeoAnnotation annotation : annotations) {
-            Anchor anchor = skeleton.getAnchorByID(annotation.getId());
-            if (anchor!=null) {
-                skeleton.delete(anchor);
+    @Subscribe
+    public void anchorDeleted(AnnotationDeleteEvent event) {
+        Collection<TmGeoAnnotation> annotations = event.getAnnotations();
+        if (!annotations.isEmpty()) {
+            for (TmGeoAnnotation annotation: annotations) {
+                skeleton.deleteTmGeoAnchor(annotation);
             }
         }
         skeletonChanged();
     }
-    
-    public void remoteClearAnchors(Collection<TmGeoAnnotation> annotations) {
-        for(TmGeoAnnotation annotation : annotations) {
-            Anchor anchor = skeleton.getAnchorByID(annotation.getId());
-            if (anchor!=null) {
-                skeleton.delete(anchor);
+
+    @Subscribe
+    public void anchorReparented(AnnotationParentReparentedEvent event) {
+        Collection<TmGeoAnnotation> annotations = event.getAnnotations();
+        if (!annotations.isEmpty()) {
+            for (TmGeoAnnotation annotation: annotations) {
+                skeleton.reparentTmGeoAnchor(annotation);
+            }
+        }
+        skeletonChanged();
+    }
+
+    @Subscribe
+    public void anchorMoved(AnnotationUpdateEvent event) {
+        Collection<TmGeoAnnotation> annotations = event.getAnnotations();
+        if (!annotations.isEmpty()) {
+            for (TmGeoAnnotation annotation: annotations) {
+                skeleton.moveTmGeoAnchor(annotation);
             }
         }
     }
-    
-    @Override
+
     public void clearAnchors() {
         skeleton.clear();
 		skeletonChanged();
@@ -272,8 +227,13 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         fireComponentUpdate();
     }
 
-    public void annotationSelected( Long guid ) {
-        lvvTranslator.annotationSelected(guid);
+    @Subscribe
+    public void annotationSelected(SelectionAnnotationEvent event) {
+        List items = event.getItems();
+        if (!items.isEmpty()) {
+            TmGeoAnnotation selectedAnnotation = (TmGeoAnnotation)items.get(0);
+            setNextParent(selectedAnnotation.getId());
+        }
     }
 
     public void skeletonChanged() {
@@ -329,12 +289,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         }
     }
 
-    private void updateMeshDrawActor() {
-        if (meshDrawActor != null) {
-            meshDrawActor.refresh();
-        }
-    }
-
     /**
      * Some events, being very numerous, cause a deluge of requests, each
      * of which is time-consuming to honor.  Rather than honor each one,
@@ -349,23 +303,11 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         TimerTask meshDrawUpdateTask = new TimerTask() {
             @Override
             public void run() {
-                updateMeshDrawActor();
                 fireComponentUpdate();
             }
         };
         meshDrawUpdateTimer.schedule(meshDrawUpdateTask, 10000);
     }
-
-    @Override
-    public void anchorRadiusChanged(TmGeoAnnotation anchor) {
-        // Do nothing: radius has no effect on skeleton view
-    }
-
-    @Override
-    public void anchorRadiiChanged(List<TmGeoAnnotation> anchorList) {
-        // nothing: radius not indicated in skeleton view
-    }
-
 
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {
 
@@ -381,22 +323,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
             skeletonChanged(true); // update display, but don't update all listeners
         }
         
-    }
-	
-    /**
-     * This listener will update for changes made on the table of special
-     * annotations.
-     */
-    private class NVTTableModelListener implements TableModelListener {
-                
-        @Override
-        public void tableChanged(TableModelEvent e) {
-            if (e.getColumn() > -1) {
-                updateMeshDrawActor();
-                fireComponentUpdate();
-            }                    
-        }
-
     }
 
 }
