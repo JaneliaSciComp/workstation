@@ -17,6 +17,10 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.infopanel.SwcDirAndFileFilter;
 import org.janelia.workstation.infopanel.SwcDirListFilter;
 import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.core.workers.BackgroundWorker;
+import org.janelia.workstation.swc.SWCDirectorySource;
+
 
 /**
  * Drag the SWCs into the workspace, and make neurons.
@@ -63,9 +67,7 @@ public class ImportSWCAction extends AbstractAction {
         //  give enough flexibility compared to doing a custom dialog from the start
         // could specify a dir to open in, but not sure what to choose
         try {
-            //REFACTOR
-            //JFileChooser chooser = new JFileChooser(annotationManager.getSwcDirectory());
-            JFileChooser chooser = new JFileChooser();
+            JFileChooser chooser = new JFileChooser(SWCDirectorySource.getSwcDirectory());
             chooser.setDialogTitle("Choose swc file or dialog");
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             final FileFilter swcAndDirFilter = new SwcDirAndFileFilter();
@@ -76,8 +78,35 @@ public class ImportSWCAction extends AbstractAction {
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 List<File> swcFiles = getFilesList(chooser.getSelectedFile());
                 if (swcFiles.size() > 0) {
-                   // annotationManager.importSWCFiles(swcFiles);
-                   // annotationManager.setSwcDirectory(swcFiles.get(0).getParentFile());
+                    NeuronManager annotationModel = NeuronManager.getInstance();
+                    BackgroundWorker importer = new BackgroundWorker() {
+                        @Override
+                        public String getName() {
+                            return swcFiles.size()>1?"Importing SWC Files":"Importing SWC File";
+                        }
+
+                        @Override
+                        protected void doStuff() throws Exception {
+                            int imported = 0;
+                            int index = 0;
+                            int total = swcFiles.size();
+                            TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+                            for (File swcFile : swcFiles) {
+                                setStatus(swcFile.getName());
+                                if (swcFile.exists()) {
+                                    annotationModel.importBulkSWCData(swcFile, workspace);
+                                    imported++;
+                                }
+                                setProgress(index++, total);
+                            }
+                            setStatus("Successfully imported "+imported+" files");
+                        }
+
+                        @Override
+                        protected void hadSuccess() {
+                        }
+                    };
+                    importer.executeWithEvents();
                 }
             }
         }

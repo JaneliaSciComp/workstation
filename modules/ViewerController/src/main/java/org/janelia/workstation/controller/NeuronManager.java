@@ -27,10 +27,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
-import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
@@ -60,10 +58,12 @@ import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionSupport;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
-import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.core.util.Progress;
 import org.janelia.workstation.geom.ParametrizedLine;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.model.util.MatrixUtilities;
+import org.janelia.workstation.swc.MatrixDrivenSWCExchanger;
 import org.janelia.workstation.swc.SWCData;
 import org.janelia.workstation.swc.SWCDataConverter;
 import org.janelia.workstation.swc.SWCNode;
@@ -171,7 +171,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         neuronModel.addNeuron(neuron);
     }
     
-   public FilteredAnnotationModel getFilteredAnnotationModel() {
+    public FilteredAnnotationModel getFilteredAnnotationModel() {
        return filteredAnnotationModel;
    }
     
@@ -184,8 +184,15 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         SwingUtilities.invokeLater(() -> fireWorkspaceUnloaded(currentWorkspace));
     }
 
-    public void setSWCDataConverter(SWCDataConverter converter) {
-        this.swcDataConverter = converter;
+    public SWCDataConverter getSwcDataConverter() {
+        if (swcDataConverter == null) {
+            swcDataConverter = new SWCDataConverter();
+            TmSample sample = TmModelManager.getInstance().getCurrentSample();
+            swcDataConverter.setSWCExchanger(new MatrixDrivenSWCExchanger(
+                    MatrixUtilities.deserializeMatrix(sample.getMicronToVoxMatrix(), "micronToVoxMatrix"),
+                    MatrixUtilities.deserializeMatrix(sample.getVoxToMicronMatrix(), "voxToMicronMatrix")));
+        }
+        return swcDataConverter;
     }
 
     // this method sets the current neuron but does not fire an event to update the UI
@@ -1570,19 +1577,12 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         neuronModel.saveNeuronData(neuron);
 
         log.info("Set note on annotation {} in neuron {}", geoAnnotation.getId(),  neuron);
-        
-        final TmWorkspace workspace = modelManager.getCurrentWorkspace();
-
         SwingUtilities.invokeLater(() -> {
-            AnnotationNotesUpdateEvent notesEvent = new AnnotationNotesUpdateEvent();
-            notesEvent.setAnnotations( Arrays.asList(new TmGeoAnnotation[]{geoAnnotation}));
-            ViewerEventBus.postEvent(notesEvent);
+            fireNotesUpdated(geoAnnotation);
         });
     }
 
     public synchronized void removeNote(final Long neuronID, final TmStructuredTextAnnotation textAnnotation) throws Exception {
-
-        final TmWorkspace workspace = modelManager.getCurrentWorkspace();
         TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronID);
         neuronModel.deleteStructuredTextAnnotation(neuron, textAnnotation.getParentId());
         final TmGeoAnnotation ann = getGeoAnnotationFromID(neuron, textAnnotation.getParentId());
@@ -1590,11 +1590,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         neuronModel.saveNeuronData(neuron);
 
         log.info("Removed note on annotation {} in neuron {}", ann.getId(),  neuron);
-        
-        // updates
         SwingUtilities.invokeLater(() -> {
             fireNotesUpdated(ann);
-            //activityLog.logRemoveNote(workspace.getId(), textAnnotation.getParentId());
         });
     }
 
@@ -1754,7 +1751,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         // get swcdata via converter, then write; conversion from TmNeurons is done
         //  all at once so all neurons are off set from the same center of mass
         // First write one file per neuron.
-        List<SWCData> swcDatas = swcDataConverter.fromTmNeuron(neuronList, neuronHeaders, downsampleModulo);
+        List<SWCData> swcDatas = getSwcDataConverter().fromTmNeuron(neuronList, neuronHeaders, downsampleModulo);
         // there's one swc and one note file per neuron, plus aggregate; note how
         //  we set progress; i only increments per neuron, but we show progress over
         //  all files
@@ -1779,7 +1776,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                 if (exportNotes) {
                     progress.setStatus("Exporting notes file " + (i + 1));
                     NoteExporter.exportNotes(swcData.getPath(), modelManager.getCurrentWorkspace().getId(), swcData.getNeuronCenter(),
-                        neuronList.get(i), swcDataConverter);
+                        neuronList.get(i), getSwcDataConverter());
                     progress.setProgress(2 * i + 1, total);
                 }
 
@@ -1797,7 +1794,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
         // Next write one file containing all neurons, if there are more than one.
         if (swcDatas != null  &&  swcDatas.size() > 1) {
-            SWCData swcData = swcDataConverter.fromAllTmNeuron(neuronList, downsampleModulo);
+            SWCData swcData = getSwcDataConverter().fromAllTmNeuron(neuronList, downsampleModulo);
             if (swcData != null) {
                 swcData.write(swcFile);
                 progress.setStatus("Exporting combined neuron file");
@@ -1806,7 +1803,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                 if (exportNotes) {
                     progress.setStatus("Exporting combined notes file");
                     NoteExporter.exportNotes(swcData.getPath(),  modelManager.getCurrentWorkspace().getId(), swcData.getNeuronCenter(),
-                        neuronList, swcDataConverter);
+                        neuronList, getSwcDataConverter());
                 }
             }
         }
@@ -1883,7 +1880,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         for (SWCNode node : swcData.getNodeList()) {
             // Internal points, as seen in annotations, are same as external
             // points in SWC: represented as voxels. --LLF
-            double[] internalPoint = swcDataConverter.internalFromExternal(
+            double[] internalPoint = getSwcDataConverter().internalFromExternal(
                     new double[]{
                             node.getX() + externalOffset[0],
                             node.getY() + externalOffset[1],
@@ -2008,7 +2005,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             for (JsonNode noteNode: notesNode) {
 
                 // from swc part, above:
-                double[] point = swcDataConverter.internalFromExternal(
+                double[] point = getSwcDataConverter().internalFromExternal(
                         new double[]{
                                 noteNode.get(0).asDouble() + offset[0],
                                 noteNode.get(1).asDouble() + offset[1],
@@ -2312,9 +2309,9 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
 
     void fireNotesUpdated(TmGeoAnnotation ann) {
-     //   if (notesUpdateListener != null) {
-       //     notesUpdateListener.notesUpdated(ann);
-      //  }
+        AnnotationNotesUpdateEvent notesEvent = new AnnotationNotesUpdateEvent();
+        notesEvent.setAnnotations( Arrays.asList(ann));
+        ViewerEventBus.postEvent(notesEvent);
     }
 
    /* public NeuronSet getNeuronSet() {

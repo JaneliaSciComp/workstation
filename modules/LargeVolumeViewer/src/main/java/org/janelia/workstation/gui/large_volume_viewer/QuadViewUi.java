@@ -36,8 +36,6 @@ import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.swc.MatrixDrivenSWCExchanger;
-import org.janelia.workstation.swc.SWCDataConverter;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -543,7 +541,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
                             1
                     )
             );
-            updateSWCDataConverter();
 
             zScanMode.setTileFormat(tileFormat);
             nextZSliceAction.setTileFormat(tileFormat);
@@ -586,14 +583,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
             result = Math.min(z, result);
         }
         return result;
-    }
-
-    private void updateSWCDataConverter() {
-        SWCDataConverter swcDataConverter = new SWCDataConverter();
-        swcDataConverter.setSWCExchanger(
-                new MatrixDrivenSWCExchanger(tileFormat.getMicronToVoxMatrix(), tileFormat.getVoxToMicronMatrix())
-        );
-        annotationModel.setSWCDataConverter(swcDataConverter);
     }
 
     private void setOrthogonalMode() {
@@ -1219,7 +1208,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         }
         // then just go ahead and load the file
         boolean rtnVal = loadDataFromURL(url);
-        updateSWCDataConverter();
         return rtnVal;
     }
 
