@@ -43,12 +43,6 @@ class NeuronModelAdapter {
     private static final int MAX_NEURONS = 1000000;
     private static Logger LOG = LoggerFactory.getLogger(NeuronModelAdapter.class);
 
-    private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
-    private static final String MESSAGESERVER_USERACCOUNT = ConsoleProperties.getInstance().getProperty("domain.msgserver.useraccount").trim();
-    private static final String MESSAGESERVER_PASSWORD = ConsoleProperties.getInstance().getProperty("domain.msgserver.password").trim();
-    private static final String MESSAGESERVER_UPDATESEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.updates").trim();
-    private static final String MESSAGESERVER_ROUTINGKEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.routingkey.updates").trim();
-
     private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
     private MessageSender messageSender;
 
@@ -92,6 +86,14 @@ class NeuronModelAdapter {
 
     private MessageSender getSender() {
         if (messageSender == null) {
+            // get constants; these used to be static final in class, but (a) they are only used here, and (b) they
+            //  seem to get initialized too early in the current refactor; it seems that at the point
+            //  this class is created, the props haven't yet been loaded and everything will come back empty
+            String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
+            String MESSAGESERVER_USERACCOUNT = ConsoleProperties.getInstance().getProperty("domain.msgserver.useraccount").trim();
+            String MESSAGESERVER_PASSWORD = ConsoleProperties.getInstance().getProperty("domain.msgserver.password").trim();
+            String MESSAGESERVER_UPDATESEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.updates").trim();
+            String MESSAGESERVER_ROUTINGKEY = ConsoleProperties.getInstance().getProperty("domain.msgserver.routingkey.updates").trim();
             MessageConnection messageConnection = ConnectionManager.getInstance()
                     .getConnection(MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 0,
                             (e) -> {

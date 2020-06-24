@@ -1,12 +1,16 @@
 package org.janelia.workstation.controller.action;
 
 import java.awt.event.ActionEvent;
+import java.util.concurrent.Callable;
+import java.util.Arrays;
 
-import javax.swing.AbstractAction;
+import javax.swing.*;
 
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.model.TmSelectionState;
+import org.janelia.workstation.common.gui.support.DesktopApi;
+import org.janelia.workstation.core.workers.BackgroundWorker;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -34,14 +38,45 @@ public class NeuronExportCurrentAction extends AbstractAction {
         NeuronManager annotationModel = NeuronManager.getInstance();
         TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
         if (currentNeuron == null) {
-           // annotationMgr.presentError("You must select a neuron prior to performing this action.", "No neuron selected");
+            JOptionPane.showMessageDialog(
+                    null,
+                    "You must select a neuron prior to performing this action.",
+                    "No neuron selected",
+                    JOptionPane.ERROR_MESSAGE);
         }
         else {
             SwcExport export = new SwcExport();
             SwcExport.ExportParameters params = export.getExportParameters(currentNeuron.getName());
             if ( params != null ) {
-               // annotationMgr.exportNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo(),
-                 //   Arrays.asList(currentNeuron), params.getExportNotes());
+                if (currentNeuron.getGeoAnnotationMap().size() == 0) {
+                    JOptionPane.showMessageDialog(
+                            null,
+                            "The selected neuron has no annotations!",
+                            "No annotations",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+
+                BackgroundWorker saver = new BackgroundWorker() {
+                    @Override
+                    public String getName() {
+                        return "Exporting SWC File";
+                    }
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        annotationModel.exportSWCData(params.getSelectedFile(), params.getDownsampleModulo(),
+                                Arrays.asList(currentNeuron), params.getExportNotes(),this);
+                    }
+
+                    @Override
+                    public Callable<Void> getSuccessCallback() {
+                        return () -> {
+                            DesktopApi.browse(params.getSelectedFile().getParentFile());
+                            return null;
+                        };
+                    }
+                };
+                saver.executeWithEvents();
             }
         }
     }

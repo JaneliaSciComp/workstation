@@ -3,17 +3,14 @@ package org.janelia.workstation.infopanel;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.workstation.controller.AnnotationCategory;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.action.CommonActions;
 import org.janelia.workstation.controller.eventbus.SelectionAnnotationEvent;
-import org.janelia.workstation.controller.eventbus.SelectionEvent;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.listener.AnnotationSelectionListener;
 import org.janelia.workstation.controller.listener.CameraPanToListener;
 import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.model.annotations.neuron.AnnotationGeometry;
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
 import org.janelia.workstation.controller.model.annotations.neuron.InterestingAnnotation;
@@ -23,7 +20,6 @@ import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -76,11 +72,11 @@ public class FilteredAnnotationList extends JPanel {
     private JTable filteredTable;
     private JTextField filterField;
     private TableRowSorter<FilteredAnnotationModel> sorter;
-    private JCheckBox currentNeuronCheckbox;
 
     // data stuff
     private NeuronManager neuronManager;
     private FilteredAnnotationModel model;
+    private TmNeuronMetadata currentNeuron;
 
     private Map<String, AnnotationFilter> filters = new HashMap<>();
     private AnnotationFilter currentFilter;
@@ -107,7 +103,6 @@ public class FilteredAnnotationList extends JPanel {
     
     public void beginTransaction() {
         this.skipUpdate = true;
-        updateData();
     }
     
     public void endTransaction() {
@@ -184,23 +179,27 @@ public class FilteredAnnotationList extends JPanel {
     //   for now, they all call the same internal, brute force update
 
     public void loadNeuron(TmNeuronMetadata neuron) {
+        currentNeuron = neuron;
         updateData();
     }
 
     public void loadWorkspace(TmWorkspace workspace) {
+        currentNeuron = null;
         updateData();
     }
 
     public void notesChanged(TmGeoAnnotation ann) {
-        updateData();
+        // only update if it's in our neuron
+        if (currentNeuron != null && ann.getNeuronId().equals(currentNeuron.getId())) {
+            updateData();
+        }
     }
 
     public void annotationChanged(TmGeoAnnotation ann) {
-        updateData();
-    }
-
-    public void annotationsChanged(List<TmGeoAnnotation> annotationList) {
-        updateData();
+        // only update if it's in our neuron
+        if (currentNeuron != null && ann.getNeuronId().equals(currentNeuron.getId())) {
+            updateData();
+        }
     }
 
     public synchronized void updateData() {
@@ -208,13 +207,14 @@ public class FilteredAnnotationList extends JPanel {
         if (skipUpdate)
             return;
 
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
+            return;
+        }
+
         // check how long to update
         // ans: with ~2k annotations, <20ms to update
         // Stopwatch stopwatch = new Stopwatch();
         // stopwatch.start();
-
-        // totally brute force; we don't know what updated, so
-        //  start from scratch each time
 
         int savedSelectionRow = filteredTable.getSelectedRow();
         InterestingAnnotation savedAnn = null;
@@ -222,25 +222,11 @@ public class FilteredAnnotationList extends JPanel {
             savedAnn = model.getAnnotationAtRow(filteredTable.convertRowIndexToModel(savedSelectionRow));
         }
 
-        TmWorkspace currentWorkspace = TmModelManager.getInstance().getCurrentWorkspace();
-        if (currentWorkspace == null) {
-            return;
-        }
-        
+        // we only show annotations from the current neuron (there used to be a check
+        //  box to see annotations from all neurons)
         model.clear();
-
-        if (currentNeuronCheckbox.isSelected()) {
-            // Necessary optimization: only consider current neuron
-            TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
-            if (currentNeuron!=null) {
-                updateData(currentNeuron);
-            }
-        }
-        else {
-            // Consider all neurons
-            for (TmNeuronMetadata neuron: new ArrayList<>(neuronManager.getNeuronList())) {
-                updateData(neuron);
-            }
+        if (currentNeuron != null) {
+            loadNeuronAnnotations(currentNeuron);
         }
 
         model.fireTableDataChanged();
@@ -257,12 +243,11 @@ public class FilteredAnnotationList extends JPanel {
         // stopwatch.stop();
         // System.out.println("updated filtered annotation list; elapsed time = " + stopwatch.toString());
     }
-    
-    public void updateData(TmNeuronMetadata neuron) {
+
+    private void loadNeuronAnnotations(TmNeuronMetadata neuron) {
 
         // loop over roots in neuron, annotations per root;
         //  put all the "interesting" annotations in a list
-        
         AnnotationFilter filter = getCurrentFilter();
         String note;
         
@@ -507,24 +492,6 @@ public class FilteredAnnotationList extends JPanel {
             }
         });
 
-        // checkbox for current neuron only
-        currentNeuronCheckbox = new JCheckBox("Current neuron only");
-        currentNeuronCheckbox.setSelected(true);
-        currentNeuronCheckbox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateData();
-            }
-        });
-
-        GridBagConstraints c5 = new GridBagConstraints();
-        c5.gridx = 0;
-        c5.gridy = GridBagConstraints.RELATIVE;
-        c5.weighty = 0.0;
-        c5.anchor = GridBagConstraints.PAGE_START;
-        c5.fill = GridBagConstraints.HORIZONTAL;
-        add(currentNeuronCheckbox, c5);
-
 
         // text field for filter
         JPanel filterPanel = new JPanel();
@@ -607,12 +574,7 @@ public class FilteredAnnotationList extends JPanel {
      * neuron" toggle doesn't explicitly set the filter
      */
     public AnnotationFilter getCurrentFilter() {
-        TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
-        if (currentNeuronCheckbox.isSelected() && currentNeuron != null) {
-            return new AndFilter(new NeuronFilter(currentNeuron), currentFilter);
-        } else {
-            return currentFilter;
-        }
+        return currentFilter;
     }
 
     /**
