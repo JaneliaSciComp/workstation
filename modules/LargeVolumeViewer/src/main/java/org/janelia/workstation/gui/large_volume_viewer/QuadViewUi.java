@@ -28,7 +28,6 @@ import javax.swing.event.ChangeListener;
 
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.ToolButton;
 import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
@@ -54,7 +53,6 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.gui.large_volume_viewer.action.*;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.controller.LargeVolumeViewerTranslator;
 import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.console.viewerapi.components.SpinnerCalculationValue;
 import org.janelia.workstation.gui.large_volume_viewer.listener.CameraListener;
@@ -142,7 +140,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
     // annotation things
     private final NeuronManager annotationModel;
     private final AnnotationManager annotationMgr;
-    private final LargeVolumeViewerTranslator largeVolumeViewerTranslator;
 
     // actions
     private final Action openFolderAction = new OpenFolderAction(largeVolumeViewer.getComponent(), this);
@@ -256,9 +253,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         return camera.getPixelsPerSceneUnit();
     }
 
-    public LargeVolumeViewerTranslator getLargeVolumeViewerTranslator() {
-        return largeVolumeViewerTranslator;
-    }
     /**
      * move toward the neuron root to the next branch or the root
      */
@@ -293,8 +287,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, FrameworkAccess.getMainFrame());
 
         this.annotationModel = NeuronManager.getInstance();
-        this.largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
-        this.annotationMgr = new AnnotationManager(this, tileServer);
+        this.annotationMgr = new AnnotationManager(this, largeVolumeViewer, tileServer);
 
         volumeImage.addVolumeLoadListener(this);
         largeVolumeViewer.setImageColorModel(imageColorModel);
@@ -337,10 +330,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         // connect up text UI and model with graphic UI(s):
         getSkeletonActor().getModel().addAnchorUpdateListener(annotationMgr);
 
-        // Nb: skeleton.anchorMovedSilentSignal intentionally does *not* connect to annotationMgr!
-        largeVolumeViewerTranslator.setViewStateListener(quadViewController);
-       // annotationModel.setViewStateListener(quadViewController);
-
         // Toggle skeleton actor with v key
         // see note in interceptModeChangeGestures() regarding which input map
         InputMap inputMap = viewerPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
@@ -363,7 +352,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         skeletonController = SkeletonController.getInstance();
         skeletonController.reestablish(skeleton, annotationMgr);
         skeletonController.registerForEvents(largeVolumeViewer.getSkeletonActor());
-        largeVolumeViewerTranslator.connectSkeletonSignals(skeleton, skeletonController);
+        annotationMgr.connectSkeletonSignals(skeleton, skeletonController);
 
         clearCacheAction.putValue(Action.NAME, "Clear Cache");
         clearCacheAction.putValue(Action.SHORT_DESCRIPTION, "Empty image cache (for testing only)");
@@ -398,25 +387,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
             quadViewController.registerForEvents(v);
             v.setCamera(camera);
             v.setSharedVolumeImage(volumeImage);
-            v.setNavigationMenuItemGenerator(new MenuItemGenerator() {
-                @Override
-                public List<JMenuItem> getMenus(MouseEvent event) {
-                    List<JMenuItem> result = new ArrayList<>();
-
-                    // Add menus/items for relocating per other views.
-                    SynchronizationHelper helper = new SynchronizationHelper();
-                    /*Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders
-                            = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                    Tiled3dSampleLocationProviderAcceptor originator
-                            = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-
-                    for (JMenuItem navItem : menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor())) {
-                        result.add(navItem);
-                    }*/
-                    return result;
-                }
-            });
             v.setSystemMenuItemGenerator(new MenuItemGenerator() {
                 @Override
                 public List<JMenuItem> getMenus(MouseEvent event) {

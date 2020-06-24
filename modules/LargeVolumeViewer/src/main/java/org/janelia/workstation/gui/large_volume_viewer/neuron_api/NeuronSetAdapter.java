@@ -1,6 +1,5 @@
 package org.janelia.workstation.gui.large_volume_viewer.neuron_api;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -21,19 +20,14 @@ import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.workstation.controller.NeuronVertexAdapter;
-import org.janelia.workstation.controller.NeuronVertexSpatialIndex;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
-import org.janelia.workstation.controller.scripts.spatialfilter.SpatialFilter;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.controller.NeuronManager;
-import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
 import org.janelia.workstation.controller.listener.BackgroundAnnotationListener;
 import org.janelia.workstation.controller.listener.GlobalAnnotationListener;
 import org.janelia.workstation.controller.listener.TaskReviewListener;
-import org.janelia.workstation.controller.listener.TmGeoAnnotationModListener;
-import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -65,7 +59,6 @@ public class NeuronSetAdapter
     TmWorkspace workspace; // LVV workspace, as opposed to Horta workspace
     NeuronManager annotationModel;
     private final GlobalAnnotationListener globalAnnotationListener;
-    private final TmGeoAnnotationModListener annotationModListener;
     private HortaMetaWorkspace metaWorkspace = null;
     private final Lookup.Result<HortaMetaWorkspace> hortaWorkspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaMetaWorkspace.class);
     private final NeuronList innerList;
@@ -79,7 +72,6 @@ public class NeuronSetAdapter
         this.globalAnnotationListener = new MyGlobalAnnotationListener();
         this.backgroundAnnotationListener = new NeuronSetBackgroundAnnotationListener();
         backgroundAnnotationListener.setGlobal(globalAnnotationListener);
-        this.annotationModListener = new MyTmGeoAnnotationModListener();
         this.hortaWorkspaceResult.addLookupListener(new NSALookupListener());
     }
 
@@ -395,8 +387,7 @@ public class NeuronSetAdapter
         repaintHorta();
     }
 
-    private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener {
-        @Override
+    private class MyTmGeoAnnotationModListener {
         public void annotationAdded(TmGeoAnnotation annotation) {
 
             LOG.debug("annotationAdded");
@@ -443,7 +434,6 @@ public class NeuronSetAdapter
          //   spatialIndex.addToIndex(newVertex);
         }
 
-        @Override
         public void annotationsDeleted(List<TmGeoAnnotation> annotations) {
 
             LOG.debug("annotationDeleted");
@@ -488,7 +478,6 @@ public class NeuronSetAdapter
             repaintHorta();
         }
 
-        @Override
         public void annotationReparented(TmGeoAnnotation annotation, Long prevNeuronId) {
 
             LOG.debug("annotationReparented");
@@ -524,7 +513,6 @@ public class NeuronSetAdapter
             repaintHorta();
         }
 
-        @Override
         public void annotationMoved(TmGeoAnnotation movedAnnotation) {
 
             LOG.debug("annotationMoved");
@@ -551,13 +539,11 @@ public class NeuronSetAdapter
             repaintHorta();
         }
 
-        @Override
         public void annotationNotMoved(TmGeoAnnotation annotation) {
             LOG.debug("annotationNotMoved");
             // updateEdges();
         }
 
-        @Override
         public void annotationRadiusUpdated(TmGeoAnnotation annotation) {
 
             LOG.debug("annotationRadiusUpdated");

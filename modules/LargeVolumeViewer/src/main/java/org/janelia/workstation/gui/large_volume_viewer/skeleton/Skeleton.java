@@ -248,17 +248,6 @@ public class Skeleton {
     public void skeletonChanged() {
         controller.skeletonChanged();
     }
-
-    //---------------------Servicing TmGeoAnnotation anchor changes
-    public Anchor addTmGeoAnchor(TmGeoAnnotation tga) {
-        Vec3 location = new Vec3(tga.getX(), tga.getY(), tga.getZ());
-        Anchor parentAnchor = anchorsByGuid.get(tga.getParentId());
-        Anchor anchor = new Anchor(location, parentAnchor, tga.getNeuronId(), tileFormat);
-        anchor.setGuid(tga.getId());
-        addAnchor(anchor);
-        controller.annotationSelected(anchor.getGuid());
-        return anchor;
-    }
     
     public List<Anchor> addTmGeoAnchors(List<TmGeoAnnotation> annotationList) {
         List<Anchor> anchorList = new ArrayList<>();

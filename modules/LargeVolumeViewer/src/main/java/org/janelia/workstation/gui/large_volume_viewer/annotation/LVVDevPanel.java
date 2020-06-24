@@ -21,7 +21,6 @@ import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.controller.LargeVolumeViewerTranslator;
 
 /**
  * this panel is only shown to me; I use it when I need to insert
@@ -37,15 +36,12 @@ public class LVVDevPanel extends JPanel {
     // these are useful to have around when testing:
     private AnnotationManager annotationMgr;
     private NeuronManager annotationModel;
-    private LargeVolumeViewerTranslator largeVolumeViewerTranslator;
 
     // 2016: new neuron persistance
 
-    public LVVDevPanel(AnnotationManager annotationMgr, NeuronManager annotationModel,
-                       LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
+    public LVVDevPanel(AnnotationManager annotationMgr, NeuronManager annotationModel) {
         this.annotationMgr = annotationMgr;
         this.annotationModel = annotationModel;
-        this.largeVolumeViewerTranslator = largeVolumeViewerTranslator;
         setupUI();
     }
 
