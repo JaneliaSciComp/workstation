@@ -1823,8 +1823,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                     swcFile.getName(), swcData.getInvalidReason()));
         }
 
-
-
         // create one neuron for the file; take name from the filename (strip extension)
         String neuronName = swcData.parseName();
         if (neuronName == null) {
@@ -1839,16 +1837,10 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         parameters.put("file", swcFile);
         
         // Must create the neuron up front, because we need the id when adding the linked geometric annotations below.
-        CompletableFuture<TmNeuronMetadata> future = neuronModel.createTiledMicroscopeNeuron(tmWorkspace, neuronName);
-        if (future==null)
-            return;
-        try {
-            TmNeuronMetadata updatedNeuron = future.get(5, TimeUnit.SECONDS);
-            parameters.put("neuron", updatedNeuron);
-            finishBulkSWCData(parameters);
-        } catch (Exception error) {
-            FrameworkAccess.handleException(error);
-        }
+        // we're doing this synchronously now, as we do when user clicks "+" in the neuron list
+        TmNeuronMetadata updatedNeuron = createNeuron(neuronName);
+        parameters.put("neuron", updatedNeuron);
+        finishBulkSWCData(parameters);
     }
 
     public synchronized void finishBulkSWCData(Map<String,Object> neuronData) {
