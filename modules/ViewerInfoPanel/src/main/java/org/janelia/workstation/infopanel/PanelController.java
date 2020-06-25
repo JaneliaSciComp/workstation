@@ -100,6 +100,8 @@ public class PanelController {
         if (selectionEvent.isClear())
             return;
         for (DomainObject neuron : neurons) {
+            // note that we do not really support multiple selections yet, so only
+            //  the last neuron in the list will end up selected
             filteredAnnotationList.loadNeuron((TmNeuronMetadata)neuron);
             wsNeuronList.selectNeuron((TmNeuronMetadata)neuron);
         }

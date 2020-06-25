@@ -175,9 +175,10 @@ public class FilteredAnnotationList extends JPanel {
         setCurrentFilter(filters.get("default"));
     }
 
-    // the next routines are called by PanelController (etc) when data changes;
-    //   for now, they all call the same internal, brute force update
+    // the next routines are called by PanelController when data changes;
+    //   generally they all end up calling updateData()
 
+    // sets input neuron to current (ie, selected) and updates
     public void loadNeuron(TmNeuronMetadata neuron) {
         currentNeuron = neuron;
         updateData();
