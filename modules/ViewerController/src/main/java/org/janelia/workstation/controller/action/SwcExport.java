@@ -21,6 +21,9 @@ import javax.swing.border.EmptyBorder;
 
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.janelia.workstation.swc.SWCDirectorySource;
+
+import static org.janelia.workstation.swc.SWCDirectorySource.setSwcDirectory;
 
 public class SwcExport {
 
@@ -35,8 +38,7 @@ public class SwcExport {
     }
 
     public ExportParameters getExportParameters( String seedName ) throws HeadlessException {
-        //JFileChooser chooser = new JFileChooser(annotationMgr.getSwcDirectory());
-        JFileChooser chooser = new JFileChooser();
+        JFileChooser chooser = new JFileChooser(SWCDirectorySource.getSwcDirectory());
         chooser.setDialogTitle("Save SWC file");
         chooser.setSelectedFile(new File(seedName + NeuronManager.STD_SWC_EXTENSION));
         JPanel panel = new JPanel();
@@ -111,10 +113,9 @@ public class SwcExport {
                 rtnVal.setDownsampleModulo(downsampleModulo);
                 rtnVal.setSelectedFile(chooser.getSelectedFile().getAbsoluteFile());
                 rtnVal.setExportNotes(notesInput);
-                //annotationMgr.setSwcDirectory(rtnVal.getSelectedFile().getParentFile());
+                SWCDirectorySource.setSwcDirectory(rtnVal.getSelectedFile().getParentFile());
             }
         } catch (NumberFormatException nfe) {
-            //annotationMgr.presentError("Failed to parse input text as number: " + textInput, "Invalid Downsample");
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), nfe);
         }
         return rtnVal;

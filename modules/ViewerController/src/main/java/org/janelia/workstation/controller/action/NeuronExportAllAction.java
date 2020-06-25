@@ -1,11 +1,16 @@
 package org.janelia.workstation.controller.action;
 
 import java.awt.event.ActionEvent;
+import java.util.concurrent.Callable;
 
-import javax.swing.AbstractAction;
+import javax.swing.*;
 
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.core.workers.BackgroundWorker;
+
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -31,12 +36,49 @@ public class NeuronExportAllAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         NeuronManager annotationModel = NeuronManager.getInstance();
-        if (TmModelManager.getInstance().getCurrentWorkspace()==null) return;
+        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
+            return;
+        }
+
         SwcExport export = new SwcExport();
         SwcExport.ExportParameters params = export.getExportParameters(TmModelManager.getInstance().getCurrentWorkspace().getName());
         if ( params != null ) {
-            //annotationMgr.exportNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo(),
-              //  annotationModel.getNeuronList(), params.getExportNotes());
+
+            //check for annotations
+            int nannotations = 0;
+            for (TmNeuronMetadata neuron : annotationModel.getNeuronList()) {
+                nannotations += neuron.getGeoAnnotationMap().size();
+            }
+            if (nannotations == 0) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "There are no annotations in any neurons!",
+                        "No annotations",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            BackgroundWorker saver = new BackgroundWorker() {
+                @Override
+                public String getName() {
+                    return "Exporting SWC File";
+                }
+
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.exportSWCData(params.getSelectedFile(), params.getDownsampleModulo(),
+                            annotationModel.getNeuronList(), params.getExportNotes(),this);
+                }
+
+                @Override
+                public Callable<Void> getSuccessCallback() {
+                    return () -> {
+                        DesktopApi.browse(params.getSelectedFile().getParentFile());
+                        return null;
+                    };
+                }
+            };
+            saver.executeWithEvents();
         }
     }
     
