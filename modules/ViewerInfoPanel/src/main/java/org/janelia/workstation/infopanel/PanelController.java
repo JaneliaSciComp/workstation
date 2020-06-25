@@ -78,7 +78,7 @@ public class PanelController {
     public void neuronsDeleted(NeuronDeleteEvent annoEvent) {
         Collection<TmNeuronMetadata> neurons = annoEvent.getNeurons();
         for (TmNeuronMetadata neuron : neurons) {
-            filteredAnnotationList.loadNeuron(neuron);
+            filteredAnnotationList.deleteNeuron(neuron);
             wsNeuronList.deleteFromModel(neuron);
         }
     }

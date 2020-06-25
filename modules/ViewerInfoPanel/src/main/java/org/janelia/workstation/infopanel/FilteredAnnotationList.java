@@ -183,6 +183,13 @@ public class FilteredAnnotationList extends JPanel {
         updateData();
     }
 
+    public void deleteNeuron(TmNeuronMetadata neuron) {
+        if (neuron.getId().equals(currentNeuron.getId())) {
+            currentNeuron = null;
+        }
+        updateData();
+    }
+
     public void loadWorkspace(TmWorkspace workspace) {
         currentNeuron = null;
         updateData();
