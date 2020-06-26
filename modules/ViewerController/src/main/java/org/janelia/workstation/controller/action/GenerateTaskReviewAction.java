@@ -1,6 +1,5 @@
 package org.janelia.workstation.controller.action;
 
-import org.janelia.console.viewerapi.dialogs.EditWorkspaceNameDialog;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;

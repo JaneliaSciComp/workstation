@@ -13,7 +13,7 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.console.viewerapi.dialogs.ChangeNeuronOwnerDialog;
+import org.janelia.workstation.controller.dialog.ChangeNeuronOwnerDialog;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.security.Subject;
 import org.slf4j.Logger;

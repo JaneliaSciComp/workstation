@@ -1,4 +1,4 @@
-package org.janelia.console.viewerapi.dialogs;
+package org.janelia.workstation.controller.dialog;
 
 import java.util.ArrayList;
 import java.util.List;

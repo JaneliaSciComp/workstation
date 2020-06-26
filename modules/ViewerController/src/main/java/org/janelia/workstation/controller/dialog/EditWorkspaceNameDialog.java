@@ -1,4 +1,4 @@
-package org.janelia.console.viewerapi.dialogs;
+package org.janelia.workstation.controller.dialog;
 
 import java.awt.BorderLayout;
 import java.awt.HeadlessException;
@@ -21,8 +21,6 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import org.janelia.console.viewerapi.dialogs.ChangeNeuronOwnerDialog;
-import org.janelia.console.viewerapi.dialogs.CommonDialogItems;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
 import org.apache.commons.lang3.StringUtils;

@@ -1,4 +1,4 @@
-package org.janelia.console.viewerapi.dialogs;
+package org.janelia.workstation.controller.dialog;
 
 import org.janelia.model.security.Subject;
 import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;

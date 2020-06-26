@@ -1,6 +1,6 @@
 package org.janelia.workstation.controller.action;
 
-import org.janelia.console.viewerapi.dialogs.EditWorkspaceNameDialog;
+import org.janelia.workstation.controller.dialog.EditWorkspaceNameDialog;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.NeuronManager;

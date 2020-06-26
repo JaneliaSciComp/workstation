@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.console.viewerapi.actions.PathCorrectionKeyListener;
-import org.janelia.console.viewerapi.dialogs.EditWorkspaceNameDialog;
+import org.janelia.workstation.controller.dialog.EditWorkspaceNameDialog;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.api.web.AsyncServiceClient;
