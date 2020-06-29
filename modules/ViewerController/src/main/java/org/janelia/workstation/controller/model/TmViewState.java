@@ -61,8 +61,12 @@ public class TmViewState {
         return hiddenAnnotations;
     }
 
-    public void clearHidden() {
-        hiddenAnnotations.clear();
+    public void toggleHidden(Long annId) {
+        if (hiddenAnnotations.contains(annId)) {
+            removeAnnotationFromHidden(annId);
+        } else {
+            addAnnotationToHidden(annId);
+        }
     }
 
     public void addAnnotationToHidden(Long annId) {

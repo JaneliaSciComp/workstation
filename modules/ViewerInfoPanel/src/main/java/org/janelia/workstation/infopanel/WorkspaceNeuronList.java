@@ -3,6 +3,7 @@ package org.janelia.workstation.infopanel;
 import org.janelia.console.viewerapi.SimpleIcons;
 import org.janelia.console.viewerapi.dialogs.ChangeNeuronOwnerDialog;
 import org.janelia.workstation.controller.TmViewerManager;
+import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
 import org.janelia.workstation.controller.eventbus.SelectionNeuronsEvent;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -259,7 +260,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                         syncSelection();
                     } else if (modelColumn == NeuronTableModel.COLUMN_VISIBILITY) {
                         // single click visibility = toggle visibility
-                      //  annotationManager.setNeuronVisibility(selectedNeuron, !annotationManager.getNeuronVisibility(selectedNeuron));
+                        modelManager.getCurrentView().toggleHidden(selectedNeuron.getId());
+                        neuronTableModel.updateNeuron(selectedNeuron);
                         // the click might move the neuron selection, which we don't want
                         syncSelection();
                     } else if (modelColumn == NeuronTableModel.COLUMN_OWNER_ICON) {
