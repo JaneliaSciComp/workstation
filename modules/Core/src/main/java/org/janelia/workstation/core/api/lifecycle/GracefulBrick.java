@@ -7,6 +7,7 @@ import java.util.MissingResourceException;
 import javax.swing.JOptionPane;
 
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.janelia.workstation.core.api.ConnectionMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.core.util.Utils;
@@ -30,13 +31,12 @@ public class GracefulBrick {
     
     public void brickAndUninstall() throws Exception {
 
-        log.debug("Places.getUserDirectory: "+Places.getUserDirectory());
-        log.debug("user.dir: "+System.getProperty("user.dir")); // TODO: delete this before uninstall
-        log.debug("netbeans.home: "+System.getProperty("netbeans.home"));
+        log.info("Places.getUserDirectory: "+Places.getUserDirectory());
+        log.info("user.dir: "+System.getProperty("user.dir"));
         
         final String configFile = "config/app.conf";
         File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, "org.janelia.workstation", false);
-        log.debug("Found system config at {}", sysWideConfig);
+        log.info("Found system config at {}", sysWideConfig);
         
         if (!isBricked()) {
             return;
@@ -48,28 +48,37 @@ public class GracefulBrick {
         File uninstaller = null;
         if (SystemInfo.isMac) {
             helpPage = "manual/macosx_upgrade.html";
-            String installDir = sysWideConfig.getAbsolutePath().split("\\.app")[0]+".app";
-            uninstaller = new File(installDir, "uninstall.command");
+            if (sysWideConfig!=null) {
+                String installDir = sysWideConfig.getAbsolutePath().split("\\.app")[0]+".app";
+                uninstaller = new File(installDir, "uninstall.command");
+            }
         }
         else if (SystemInfo.isWindows) {
             helpPage = "manual/windows_upgrade.html";
-            String cp = sysWideConfig.getAbsolutePath();
-            String installDir = cp.substring(0,cp.indexOf("JaneliaWorkstation")+"JaneliaWorkstation".length());
-            uninstaller = new File(installDir, "uninstall.exe");
+            if (sysWideConfig!=null) {
+                String cp = sysWideConfig.getAbsolutePath();
+                String installDir = cp.substring(0, cp.indexOf("JaneliaWorkstation") + "JaneliaWorkstation".length());
+                uninstaller = new File(installDir, "uninstall.exe");
+            }
         }
         else if (SystemInfo.isLinux) {
             helpPage = "manual/linux_upgrade.html";
-            String cp = sysWideConfig.getAbsolutePath();
-            String installDir = cp.substring(0,cp.indexOf("JaneliaWorkstation")+"JaneliaWorkstation".length());
-            uninstaller = new File(installDir, "uninstall.sh");
+            if (sysWideConfig!=null) {
+                String cp = sysWideConfig.getAbsolutePath();
+                String installDir = cp.substring(0, cp.indexOf("JaneliaWorkstation") + "JaneliaWorkstation".length());
+                uninstaller = new File(installDir, "uninstall.sh");
+            }
         }
         else {
             log.error("Unknown system: "+SystemInfo.OS_NAME);
             helpPage = "upgrade";
         }
-        
-        final String helpUrl = String.format("http://workstation.int.janelia.org/%s", helpPage);
-        final String simpleHelpUrl = "http://workstation.int.janelia.org/upgrade";
+
+
+        String apiGateway = ConnectionMgr.getConnectionMgr().getConnectionString();
+
+        final String helpUrl = String.format("%s/%s", apiGateway, helpPage);
+        final String simpleHelpUrl = String.format("%s/upgrade", apiGateway);
         
         String html = "<html><body width='420'>" +
         "<p>This version of the Workstation is no longer supported and must be manually upgraded to the latest release.</p>" +
