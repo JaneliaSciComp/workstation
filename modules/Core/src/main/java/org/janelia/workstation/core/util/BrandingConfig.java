@@ -9,8 +9,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
-
-import org.apache.commons.lang3.StringUtils;
 import org.openide.modules.InstalledFileLocator;
 import org.openide.modules.Places;
 import org.slf4j.Logger;
@@ -20,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * NetBeans provides a way for a user to keep a customized properties file which holds certain 
  * startup configuration options. By default, NetBeans will use the ${APPNAME}.conf file which is 
  * provided with the application distribution. The Workstation's version of this file is found 
- * at ConsoleApplication/harness/etc/app.conf
+ * at modules/application/src/main/resources/janeliaws.conf
  * 
  * Within the Workstation, we provide a way for the user to change their max memory setting, 
  * which must be done in a customized ${APPNAME}.conf within the netbeans user directory.

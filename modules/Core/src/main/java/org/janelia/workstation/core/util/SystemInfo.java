@@ -123,10 +123,10 @@ public class SystemInfo {
 
     public static String getInstallDir() {
 
-        final String configFile = "config/app.conf";
+        final String configFile = "config/janeliaws.conf";
         File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, "org.janelia.workstation", false);
         if (sysWideConfig==null) {
-            log.warn("Could not find app.conf. Install dir is unknown.");
+            log.error("Error locating system configuration in resources directory: "+configFile);
             return null;
         }
         String cp = sysWideConfig.getAbsolutePath();

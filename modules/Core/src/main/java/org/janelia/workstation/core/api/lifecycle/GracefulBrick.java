@@ -32,11 +32,16 @@ public class GracefulBrick {
     public void brickAndUninstall() throws Exception {
 
         log.info("Places.getUserDirectory: "+Places.getUserDirectory());
-        log.info("user.dir: "+System.getProperty("user.dir"));
         
-        final String configFile = "config/app.conf";
+        final String configFile = "config/janeliaws.conf";
         File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, "org.janelia.workstation", false);
-        log.info("Found system config at {}", sysWideConfig);
+
+        if (sysWideConfig==null) {
+            log.warn("Could not find janeliaws.conf. Install dir is unknown.");
+        }
+        else {
+            log.info("Found system config at {}", sysWideConfig);
+        }
         
         if (!isBricked()) {
             return;
@@ -47,14 +52,14 @@ public class GracefulBrick {
         String helpPage;
         File uninstaller = null;
         if (SystemInfo.isMac) {
-            helpPage = "manual/macosx_upgrade.html";
+            helpPage = "manual/macosx_install.html";
             if (sysWideConfig!=null) {
                 String installDir = sysWideConfig.getAbsolutePath().split("\\.app")[0]+".app";
                 uninstaller = new File(installDir, "uninstall.command");
             }
         }
         else if (SystemInfo.isWindows) {
-            helpPage = "manual/windows_upgrade.html";
+            helpPage = "manual/windows_install.html";
             if (sysWideConfig!=null) {
                 String cp = sysWideConfig.getAbsolutePath();
                 String installDir = cp.substring(0, cp.indexOf("JaneliaWorkstation") + "JaneliaWorkstation".length());
@@ -62,7 +67,7 @@ public class GracefulBrick {
             }
         }
         else if (SystemInfo.isLinux) {
-            helpPage = "manual/linux_upgrade.html";
+            helpPage = "manual/linux_install.html";
             if (sysWideConfig!=null) {
                 String cp = sysWideConfig.getAbsolutePath();
                 String installDir = cp.substring(0, cp.indexOf("JaneliaWorkstation") + "JaneliaWorkstation".length());
@@ -74,11 +79,10 @@ public class GracefulBrick {
             helpPage = "upgrade";
         }
 
-
         String apiGateway = ConnectionMgr.getConnectionMgr().getConnectionString();
 
         final String helpUrl = String.format("%s/%s", apiGateway, helpPage);
-        final String simpleHelpUrl = String.format("%s/upgrade", apiGateway);
+        final String simpleHelpUrl = String.format("%s/manual/install.html", apiGateway);
         
         String html = "<html><body width='420'>" +
         "<p>This version of the Workstation is no longer supported and must be manually upgraded to the latest release.</p>" +
@@ -153,9 +157,7 @@ public class GracefulBrick {
     }
     
     private boolean isBricked() {
-        
-        if (SystemInfo.isDev) return false;
-        
+
         String brickedProp = System.getProperty("brick");
         if ("true".equals(brickedProp)) {
             log.info("Client bricked by system property");
@@ -165,7 +167,9 @@ public class GracefulBrick {
             log.info("Client unbricked by system property");
             return false;
         }
-        
+
+        if (SystemInfo.isDev) return false;
+
         String brickUrl = null;
 
         try {
