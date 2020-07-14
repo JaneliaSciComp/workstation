@@ -6,14 +6,13 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 
-import com.google.common.eventbus.Subscribe;
+import com.google.common.eventbus.*;
 
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.workstation.common.gui.support.WindowLocator;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
 import org.janelia.workstation.integration.activity_logging.ToolString;
 import org.janelia.workstation.geom.Vec3;
 
@@ -134,7 +133,9 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
 
     @Override
     public void componentClosed() {
-        jPanel1.remove(viewUI);
+        if (jPanel1 != null) {
+            jPanel1.remove(viewUI);
+        }
         closeGroup();
     }
 
@@ -162,11 +163,26 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     }
 
     public void initialize() {
-        if ( viewUI == null ) {
-            // trying to diagnost how this can be null later
+        if (viewUI == null) {
             viewUI =  new QuadViewUi(FrameworkAccess.getMainFrame(), false);
-            // load current workspace or sample
-            viewUI.loadDataFromURL(TmModelManager.getInstance().getTileLoader().getUrl());
+            // load current workspace or sample, if there is one to load
+            if (TmModelManager.getInstance().getTileLoader() != null) {
+                viewUI.loadDataFromURL(TmModelManager.getInstance().getTileLoader().getUrl());
+
+                // Repaint the skeleton
+                TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+                boolean isSample = true;
+                if (workspace != null)
+                    isSample = false;
+                LoadProjectEvent event = new LoadProjectEvent(isSample);
+                // note: null workspace OK here; indicates a sample
+                event.setWorkspace(workspace);
+                event.setSample(TmModelManager.getInstance().getCurrentSample());
+                ViewerEventBus.postEvent(event);
+
+                revalidate();
+                repaint();
+            }
         }
         removeAll();
         viewUI.setVisible(true);
@@ -179,19 +195,6 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
                         .addComponent(viewUI, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
-        // Repaint the skeleton
-        TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
-        boolean isSample = true;
-        if (workspace!=null)
-            isSample = false;
-        LoadProjectEvent event = new LoadProjectEvent(isSample);
-        event.setWorkspace(workspace);
-        event.setSample(TmModelManager.getInstance().getCurrentSample());
-        viewUI.getAnnotationMgr().workspaceLoaded(event);
-        SkeletonController.getInstance().skeletonChanged(true);
-
-        revalidate();
-        repaint();
 
         if (initialViewFocus!=null) {
             log.info("Setting initial camera focus: {}", initialViewFocus);

@@ -18,6 +18,7 @@ import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.MergeNeuronsAction;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.listener.TmAnchoredPathListener;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceListener;
 import org.janelia.workstation.controller.listener.TmGeoAnnotationAnchorListener;
 import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -122,12 +123,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     @Subscribe
-    public void workspaceUnloaded(UnloadProjectEvent event) {
-        log.info("Workspace unloaded");
-        skeletonController.clearAnchors();
-    }
-
-    @Subscribe
     public void workspaceLoaded(LoadProjectEvent event) {
         log.info("Workspace loaded");
         TmWorkspace workspace = event.getWorkspace();
@@ -152,104 +147,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 viewStateListener.loadColorModel(workspace.getColorModel());
             }
         }
-        spatialIndexReady(workspace);
-    }
-
-    public void spatialIndexReady(TmWorkspace workspace) {
-        log.info("Spatial index is ready. Rebuilding anchor model.");
-
-        if (workspace != null) {
-
-            List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
-            List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
-
-            for (TmNeuronMetadata neuron : annotationModel.getNeuronList()) {
-                // note that we must add annotations in parent-child sequence
-                //  so lines get drawn correctly; we must send this as one big
-                //  list so the anchor update routine is run once will all anchors
-                //  present rather than piecemeal (which will cause problems in
-                //  some cases on workspace reloads)
-                for (TmGeoAnnotation root : neuron.getRootAnnotations()) {
-                    addedAnchorList.addAll(neuron.getSubTreeList(root));
-                }
-
-                // draw anchored paths, too, after all the anchors are drawn
-                for (TmAnchoredPath path : neuron.getAnchoredPathMap().values()) {
-                    voxelPathList.add(TAP2AVP(neuron.getId(), path));
-                }
-            }
-
-            skeletonController.setSkipSkeletonChange(true);
-
-            skeletonController.processAnchorsAdded (addedAnchorList);
-            log.info("added {} anchors", addedAnchorList.size());
-
-            fireAnchoredVoxelPathsAdded(voxelPathList);
-            log.debug("added {} anchored paths", voxelPathList.size());
-
-            skeletonController.setSkipSkeletonChange(false);
-            skeletonController.skeletonChanged(true);
-        }
-    }
-
-    @Subscribe
-    public void neuronCreated(NeuronCreateEvent event) {
-        for (TmNeuronMetadata neuron: event.getNeurons()) {
-            log.info("neuronCreated: {}", neuron);
-
-            List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
-            List<TmAnchoredPath> annList = new ArrayList<>();
-
-            for (TmGeoAnnotation root : neuron.getRootAnnotations()) {
-                addedAnchorList.addAll(neuron.getSubTreeList(root));
-            }
-
-            for (TmAnchoredPath path : neuron.getAnchoredPathMap().values()) {
-                annList.add(path);
-            }
-
-            fireAnchorsAdded(addedAnchorList);
-            log.info("  added {} anchors", addedAnchorList.size());
-
-            addAnchoredPaths(neuron.getId(), annList);
-            log.info("  added {} anchored paths", annList.size());
-        }
-    }
-
-    @Subscribe
-    public void neuronDeleted(NeuronDeleteEvent event) {
-        Collection<TmNeuronMetadata> neurons = event.getNeurons();
-        TmNeuronMetadata neuron=null;
-        if (!neurons.isEmpty()) {
-            neuron = neurons.iterator().next();
-        }
-        processNeuronDeleted(neuron);
-    }
-
-    private void processNeuronDeleted(TmNeuronMetadata neuron) {
-        fireClearAnchors(neuron.getGeoAnnotationMap().values());
-        removeAnchoredPathsByNeuronID(neuron.getId());
-    }
-
-    @Subscribe
-    public void neuronChanged(NeuronUpdateEvent event) {
-        Collection<TmNeuronMetadata> neurons = event.getNeurons();
-        TmNeuronMetadata neuron=null;
-        if (neurons!=null && !neurons.isEmpty()) {
-            neuron = neurons.iterator().next();
-        } else {
-            return;
-        }
-        // maintain next parent selection across the delete/create
-        Anchor nextParent = largeVolumeViewer.getSkeletonActor().getModel().getNextParent();
-        processNeuronDeleted(neuron);
-        NeuronCreateEvent nce = new NeuronCreateEvent(event.getNeurons());
-        neuronCreated(nce);
-
-        if (nextParent != null && neuron.getId().equals(nextParent.getNeuronID()) && neuron.getGeoAnnotationMap().containsKey(nextParent.getGuid())) {
-            fireNextParentEvent(nextParent.getGuid());
-        }
-
     }
 
     /**
@@ -295,26 +192,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
-    private void fireAnchorsAdded(List<TmGeoAnnotation> anchors) {
-        for (TmGeoAnnotationAnchorListener l : anchorListeners) {
-            l.anchorsAdded(anchors);
-        }
-    }
-
-    private void fireClearAnchors(Collection<TmGeoAnnotation> annotations) {
-        for (TmGeoAnnotationAnchorListener l : anchorListeners) {
-            l.clearAnchors(annotations);
-        }
-    }
-
     //-----------------------------IMPLEMENTS TmAnchoredPathListener
-    //  This listener functions as a value-remarshalling relay to next listener.
-    private void fireAnchoredVoxelPathsAdded(List<AnchoredVoxelPath> voxelPathList) {
-        for (AnchoredVoxelPathListener l : avpListeners) {
-            l.addAnchoredVoxelPaths(voxelPathList);
-        }
-    }
-
     @Override
     public void addAnchoredPath(Long neuronID, TmAnchoredPath path) {
         for (AnchoredVoxelPathListener l : avpListeners) {

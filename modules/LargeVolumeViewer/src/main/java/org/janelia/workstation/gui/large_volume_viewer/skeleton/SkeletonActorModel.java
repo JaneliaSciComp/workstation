@@ -665,7 +665,7 @@ public class SkeletonActorModel {
     }
     
     private Collection<Anchor> getAnchorsSafe() {
-        if (skeleton == null || skeleton.getAnchors() == null) {
+        if (skeleton == null || skeleton.getAnchors() == null || skeleton.getAnchors().size() == 0) {
             return Collections.emptyList();
         }
 
