@@ -250,8 +250,14 @@ public class TmViewerManager implements GlobalViewerController {
         }
         modelManager.setCurrentTagMap(currentTagMap);
 
-        SelectionEvent evt = new SelectionEvent();
-        evt.setClear(true);
-        ViewerEventBus.postEvent(evt);
+        // this is for displaying the neurons
+        LoadNeuronsEvent neuronsEvent = new LoadNeuronsEvent();
+        neuronsEvent.setWorkspace(workspace);
+        ViewerEventBus.postEvent(neuronsEvent);
+
+        // this is for clearing selections
+        SelectionEvent selectionEvent = new SelectionEvent();
+        selectionEvent.setClear(true);
+        ViewerEventBus.postEvent(selectionEvent);
     }
 }
