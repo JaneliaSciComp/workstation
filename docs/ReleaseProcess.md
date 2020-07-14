@@ -59,8 +59,7 @@ mvn --batch-mode -T 8 -Djava.awt.headless=true -Dkeystorepass=<password> clean i
 
 Build installers and update center:
 ```
-cd modules/application
-mvn --batch-mode -T 8 -Djava.awt.headless=true -Dkeystorepass=<password> package -P deployment
+mvn -f modules/applications/pom.xml --batch-mode -T 8 -Djava.awt.headless=true -Dkeystorepass=<password> package -P deployment
 ```
 
 Once the build is complete, the installers and update center will be available under the **modules/application/target** directory.
