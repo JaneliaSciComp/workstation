@@ -137,7 +137,7 @@ public class ShowingHook implements Runnable {
 
                 @Override
                 protected void hadSuccess() {
-                    if (connectionResult.getErrorText() != null) {
+                    if (connectionResult != null && connectionResult.getErrorText() != null) {
                         ConnectDialog connectDialog = new ConnectDialog();
                         connectDialog.showDialog(connectionResult);
                     }
