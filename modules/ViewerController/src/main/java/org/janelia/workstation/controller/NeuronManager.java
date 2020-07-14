@@ -2178,13 +2178,13 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public void fireAnnotationRadiusUpdated(TmGeoAnnotation annotation) {
         AnnotationUpdateEvent annotationEvent = new AnnotationUpdateEvent();
-        annotationEvent.setAnnotations( Arrays.asList(new TmGeoAnnotation[]{annotation}));
+        annotationEvent.setAnnotations( Arrays.asList(annotation));
         ViewerEventBus.postEvent(annotationEvent);
     }
 
     public void fireNeuronRadiusUpdated(TmNeuronMetadata neuron) {
         NeuronUpdateEvent neuronEvent = new NeuronUpdateEvent();
-        neuronEvent.setNeurons( Arrays.asList(new TmNeuronMetadata[]{neuron}));
+        neuronEvent.setNeurons( Arrays.asList(neuron));
         ViewerEventBus.postEvent(neuronEvent);
     }
 
@@ -2193,7 +2193,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     void fireAnnotationAdded(TmGeoAnnotation annotation) {
-        AnnotationCreateEvent annotationEvent = new AnnotationCreateEvent(Arrays.asList(new TmGeoAnnotation[]{annotation}));
+        AnnotationCreateEvent annotationEvent = new AnnotationCreateEvent(Arrays.asList(annotation));
         ViewerEventBus.postEvent(annotationEvent);
     }
 
@@ -2203,17 +2203,21 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     void fireAnnotationReparented(TmGeoAnnotation annotation, Long prevNeuronId) {
-        AnnotationParentReparentedEvent annotationEvent = new AnnotationParentReparentedEvent(Arrays.asList(new TmGeoAnnotation[]{annotation}));
+        AnnotationParentReparentedEvent annotationEvent = new AnnotationParentReparentedEvent(Arrays.asList(annotation));
         annotationEvent.setPrevNeuronId(prevNeuronId);
         ViewerEventBus.postEvent(annotationEvent);
     }
 
     void fireAnchoredPathsRemoved(Long neuronID, List<TmAnchoredPath> deleteList) {
-/// need new event for this
+        AnchoredPathDeleteEvent deleteEvent = new AnchoredPathDeleteEvent(deleteList);
+        deleteEvent.setNeuronID(neuronID);
+        ViewerEventBus.postEvent(deleteEvent);
     }
 
     void fireAnchoredPathAdded(Long neuronID, TmAnchoredPath path) {
-/// need new event for this
+        AnchoredPathCreateEvent createEvent = new AnchoredPathCreateEvent(Arrays.asList(path));
+        createEvent.setNeuronID(neuronID);
+        ViewerEventBus.postEvent(createEvent);
     }
 
     void fireWorkspaceUnloaded(TmWorkspace workspace) {
