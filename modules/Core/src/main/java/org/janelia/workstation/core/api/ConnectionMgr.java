@@ -41,11 +41,16 @@ public class ConnectionMgr {
     }
 
     public String getConnectionString() {
+
         String defaultValue = ConsoleProperties.getString("api.gateway", null);
         log.debug("hardcoded api.gateway string: {}", defaultValue);
 
+        defaultValue = System.getProperty("api.gateway", defaultValue);
+        log.debug("System property api.gateway string: {}", defaultValue);
+
         defaultValue = FrameworkAccess.getLocalPreferenceValue(ConnectionMgr.class, CONNECTION_STRING_PREF, defaultValue);
         log.debug("final connection string: {}", defaultValue);
+
         return defaultValue;
     }
 
