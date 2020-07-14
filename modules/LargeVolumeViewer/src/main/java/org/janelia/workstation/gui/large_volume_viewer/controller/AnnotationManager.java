@@ -17,18 +17,15 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.MergeNeuronsAction;
 import org.janelia.workstation.controller.eventbus.*;
-import org.janelia.workstation.controller.listener.TmAnchoredPathListener;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceListener;
 import org.janelia.workstation.controller.listener.TmGeoAnnotationAnchorListener;
 import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.tileimagery.VoxelPosition;
-import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.PointRefiner;
 import org.janelia.workstation.gui.large_volume_viewer.annotation.SmartMergeAlgorithms;
-import org.janelia.workstation.gui.large_volume_viewer.listener.AnchoredVoxelPathListener;
 import org.janelia.workstation.gui.large_volume_viewer.listener.NextParentListener;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.*;
@@ -48,7 +45,7 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AnnotationManager implements UpdateAnchorListener, PathTraceListener, TmAnchoredPathListener
+public class AnnotationManager implements UpdateAnchorListener, PathTraceListener
 /**
  * this class handles any actions specific to LVV tracing that can't be generalized into something common for other
  * viewers.
@@ -56,26 +53,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 {
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
     private ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
-    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     // annotation model object
     private QuadViewUi quadViewUi;
     private TileServer tileServer;
     private NeuronManager annotationModel;
     private LargeVolumeViewer largeVolumeViewer;
-    private SkeletonController skeletonController;
-    private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<>();
     private Collection<TmGeoAnnotationAnchorListener> anchorListeners = new ArrayList<>();
     private Collection<NextParentListener> nextParentListeners = new ArrayList<>();
     private ViewStateListener viewStateListener;
-
-    public void addAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
-        avpListeners.add(l);
-    }
-
-    public void removeAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
-        avpListeners.remove(l);
-    }
 
     public void addTmGeoAnchorListener(TmGeoAnnotationAnchorListener l) {
         anchorListeners.add(l);
@@ -117,8 +103,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void connectSkeletonSignals(Skeleton skeleton, SkeletonController skeletonController) {
-        this.skeletonController = skeletonController;
-        addAnchoredVoxelPathListener(skeletonController);
         addNextParentListener(skeletonController);
     }
 
@@ -192,93 +176,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
-    //-----------------------------IMPLEMENTS TmAnchoredPathListener
-    @Override
-    public void addAnchoredPath(Long neuronID, TmAnchoredPath path) {
-        for (AnchoredVoxelPathListener l : avpListeners) {
-            l.addAnchoredVoxelPath(TAP2AVP(neuronID, path));
-        }
-    }
-
-    @Override
-    public void removeAnchoredPaths(Long neuronID, List<TmAnchoredPath> pathList) {
-        for (TmAnchoredPath path : pathList) {
-            for (AnchoredVoxelPathListener l : avpListeners) {
-                l.removeAnchoredVoxelPath(TAP2AVP(neuronID, path));
-            }
-        }
-    }
-
-    @Override
-    public void removeAnchoredPathsByNeuronID(Long neuronID) {
-        for (AnchoredVoxelPathListener l : avpListeners) {
-            l.removeAnchoredVoxelPaths(neuronID);
-        }
-    }
-
-    public void addAnchoredPaths(Long neuronID, List<TmAnchoredPath> pathList) {
-        List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
-        for (TmAnchoredPath path : pathList) {
-            voxelPathList.add(TAP2AVP(neuronID, path));
-        }
-
-        for (AnchoredVoxelPathListener l : avpListeners) {
-            l.addAnchoredVoxelPaths(voxelPathList);
-        }
-    }
-
-    /**
-     * convert between path formats
-     *
-     * @param path = TmAnchoredPath
-     * @return corresponding AnchoredVoxelPath
-     */
-    private AnchoredVoxelPath TAP2AVP(final Long inputNeuronID, TmAnchoredPath path) {
-        // prepare the data:
-        TmAnchoredPathEndpoints endpoints = path.getEndpoints();
-        final SegmentIndex inputSegmentIndex = new SegmentIndex(endpoints.getFirstAnnotationID(),
-                endpoints.getSecondAnnotationID());
-
-        final ArrayList<VoxelPosition> inputPath = new ArrayList<>();
-        final CoordinateAxis axis = CoordinateAxis.Z;
-        final int depthAxis = axis.index();
-        final int heightAxis = axis.index() - 1 % 3;
-        final int widthAxis = axis.index() - 2 % 3;
-        for (List<Integer> point : path.getPointList()) {
-            inputPath.add(
-                    new VoxelPosition(point.get(widthAxis), point.get(heightAxis), point.get(depthAxis))
-            );
-        }
-
-        // do a quick implementation of the interface:
-        AnchoredVoxelPath voxelPath = new AnchoredVoxelPath() {
-            Long neuronID;
-            SegmentIndex segmentIndex;
-            List<VoxelPosition> path;
-
-            {
-                this.neuronID = inputNeuronID;
-                this.segmentIndex = inputSegmentIndex;
-                this.path = inputPath;
-            }
-
-            public Long getNeuronID() {
-                return neuronID;
-            }
-
-            @Override
-            public SegmentIndex getSegmentIndex() {
-                return segmentIndex;
-            }
-
-            @Override
-            public List<VoxelPosition> getPath() {
-                return path;
-            }
-        };
-
-        return voxelPath;
-    }
 
     // need common permissions model
     public boolean editsAllowed() {
