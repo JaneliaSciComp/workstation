@@ -1,9 +1,9 @@
 package org.janelia.workstation.infopanel;
 
 import org.janelia.console.viewerapi.SimpleIcons;
-import org.janelia.console.viewerapi.dialogs.ChangeNeuronOwnerDialog;
 import org.janelia.workstation.controller.TmViewerManager;
-import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
+import org.janelia.workstation.controller.action.NeuronChooseColorAction;
+import org.janelia.workstation.controller.dialog.ChangeNeuronOwnerDialog;
 import org.janelia.workstation.controller.eventbus.SelectionNeuronsEvent;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -16,7 +16,6 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseHandler;
-import org.janelia.workstation.controller.AnnotationCategory;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
