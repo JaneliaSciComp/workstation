@@ -183,6 +183,19 @@ public class AnnotationPanel extends JPanel
             }
         });
 
+        JCheckBox openHorta = new JCheckBox("Open Horta");
+        workspaceButtonsPanel.add(openHorta);
+        openHorta.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TopComponent tc = WindowManager.getDefault().findTopComponent("NeuronTracerTopComponent");
+                if (tc != null) {
+                    tc.open();
+                    tc.requestActive();
+                }
+            }
+        });
+
         createWorkspaceButtonPlus = new JButton("+");
         workspaceButtonsPanel.add(createWorkspaceButtonPlus);
         createWorkspaceAction.putValue(Action.NAME, "+");

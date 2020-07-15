@@ -136,6 +136,10 @@ public class TmModelManager {
         this.currentSelections = currentSelections;
     }
 
+    public void saveCurrentWorkspace() throws Exception {
+        tmDomainMgr.save(currentWorkspace);
+    }
+
     public void saveWorkspace(TmWorkspace workspace) throws Exception {
         tmDomainMgr.save(workspace);
     }

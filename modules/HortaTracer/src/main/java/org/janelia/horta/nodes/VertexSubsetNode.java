@@ -5,6 +5,8 @@ import java.awt.Image;
 import java.util.Collection;
 import java.util.List;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
@@ -66,7 +68,7 @@ public class VertexSubsetNode extends AbstractNode
     } // - See more at: https://platform.netbeans.org/tutorials/nbm-nodesapi2.html#sthash.0xrEv8DO.dpuf
 
     
-    private static class VertexSubsetChildFactory extends ChildFactory<NeuronVertex>
+    private static class VertexSubsetChildFactory extends ChildFactory<TmGeoAnnotation>
     {
         private final VertexSubset vertices;
         
@@ -75,17 +77,17 @@ public class VertexSubsetNode extends AbstractNode
         }
 
         @Override
-        protected boolean createKeys(List<NeuronVertex> toPopulate)
+        protected boolean createKeys(List<TmGeoAnnotation> toPopulate)
         {
-            for (NeuronVertex neuron : vertices.getVertices()) {
+            for (TmGeoAnnotation neuron : vertices.getVertices()) {
                 toPopulate.add(neuron);
             }
             return true;
         }
         
         @Override
-        protected Node createNodeForKey(NeuronVertex vertex) {
-            Collection<NeuronVertex> neighbors = vertices.getNeighborMap().get(vertex);
+        protected Node createNodeForKey(TmGeoAnnotation vertex) {
+            Collection<TmGeoAnnotation> neighbors = vertices.getNeighborMap().get(vertex);
             return new NeuronVertexNode(vertex, neighbors);
         }
     }

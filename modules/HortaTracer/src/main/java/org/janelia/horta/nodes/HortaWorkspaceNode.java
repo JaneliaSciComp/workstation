@@ -21,6 +21,8 @@ import org.janelia.horta.loader.GZIPFileLoader;
 import org.janelia.horta.loader.SwcLoader;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
@@ -40,22 +42,21 @@ import org.slf4j.LoggerFactory;
  */
 public class HortaWorkspaceNode extends AbstractNode
 {
-    private final HortaMetaWorkspace workspace;
+    private TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public HortaWorkspaceNode(HortaMetaWorkspace workspace, List<MeshActor> meshActors, ObservableInterface meshObserver) {
-        super(Children.create(new HortaWorkspaceChildFactory(workspace, meshActors, meshObserver), true), Lookups.singleton(workspace));
-        this.workspace = workspace;
+    public HortaWorkspaceNode(List<MeshActor> meshActors, ObservableInterface meshObserver) {
+        super(Children.create(new HortaWorkspaceChildFactory(meshActors, meshObserver), true));
         updateDisplayName();
         // The factory is already listening on behalf of the children, 
         // so we just need to update the label, in case the neuron count has changed.
-        workspace.addObserver(new Observer() {
+     /*   workspace.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
             {
                 updateDisplayName();
             }
-        });
+        });*/
     }
     
     private void updateDisplayName() {
@@ -63,7 +64,8 @@ public class HortaWorkspaceNode extends AbstractNode
     }
     
     public VantageInterface getVantage() {
-        return workspace.getVantage();
+        //return workspace.getVantage();
+        return null;
     }
     
     @Override
@@ -72,9 +74,9 @@ public class HortaWorkspaceNode extends AbstractNode
         droppedFileHandler.addLoader(new GZIPFileLoader());
         droppedFileHandler.addLoader(new TarFileLoader());
         droppedFileHandler.addLoader(new TgzFileLoader());        
-        final NeuronSet neuronList = new WorkspaceUtil(workspace).getOrCreateTemporaryNeuronSet();
-        final SwcLoader swcLoader = new SwcLoader(neuronList);
-        droppedFileHandler.addLoader(swcLoader);
+       // final NeuronSet neuronList = new WorkspaceUtil(workspace).getOrCreateTemporaryNeuronSet();
+       // final SwcLoader swcLoader = new SwcLoader(neuronList);
+       // droppedFileHandler.addLoader(swcLoader);
         
         return new PasteType() {
             @Override
@@ -87,7 +89,7 @@ public class HortaWorkspaceNode extends AbstractNode
                         droppedFileHandler.handleFile(f);
                     }
                     // Update after asynchronous load completes
-                    swcLoader.runAfterLoad(new Runnable() {
+                    /*swcLoader.runAfterLoad(new Runnable() {
                     @Override
                     public void run()
                     {
@@ -98,7 +100,7 @@ public class HortaWorkspaceNode extends AbstractNode
                         // TODO force repaint - just once per drop action though.
                         triggerRepaint();
                     }
-                    });
+                    });*/
                 } catch (UnsupportedFlavorException ex) {
                     logger.error("unsupported flavor during drag and drop; data has flavors:");
                     for (DataFlavor f: transferable.getTransferDataFlavors()){
@@ -120,16 +122,18 @@ public class HortaWorkspaceNode extends AbstractNode
     public Image getOpenedIcon(int i) {
         return getIcon(i);
     }
-    
-    public Integer getSize() {return workspace.getNeuronSets().size();}
+
+    // need to figure out how to support object meshes
+    public Integer getSize() {return 1;}
     
     public Color getBackgroundColor() {
-        return workspace.getBackgroundColor();
+        return null;
+        //return workspace.getBackgroundColor();
     }
     
     public void setBackgroundColor(Color color) {
-        workspace.setBackgroundColor(color);
-        workspace.notifyObservers();
+        //workspace.setBackgroundColor(color);
+        //workspace.notifyObservers();
     }
     
     @Override 
@@ -156,8 +160,8 @@ public class HortaWorkspaceNode extends AbstractNode
     void triggerRepaint()
     {
         // logger.info("Workspace repaint triggered");
-        workspace.setChanged();
-        workspace.notifyObservers();
+        //workspace.setChanged();
+        //workspace.notifyObservers();
     }
     
 }

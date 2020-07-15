@@ -1,6 +1,6 @@
 package org.janelia.console.viewerapi.listener;
 
-import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
 /**
  *
@@ -8,6 +8,6 @@ import org.janelia.console.viewerapi.model.NeuronSet;
  */
 public interface NeuronWorkspaceChangeListener {
 
-    void workspaceChanged(NeuronSet workspace);
+    void workspaceChanged(TmWorkspace workspace);
     
 }

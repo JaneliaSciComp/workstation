@@ -14,13 +14,11 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
-import org.janelia.console.viewerapi.model.NeuronEdge;
-import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
-import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronEdge;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,11 +31,11 @@ public class ConesActor extends BasicGL3Actor
     private final MeshGeometry meshGeometry;
     private final MeshActor meshActor;
     private final ConesMaterial material;
-    private final NeuronModel neuron;
+    private final TmNeuronMetadata neuron;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public ConesActor(
-            final NeuronModel neuron, 
+            final TmNeuronMetadata neuron,
             Texture2d lightProbeTexture,
             ShaderProgram conesShader) 
     {
@@ -52,7 +50,7 @@ public class ConesActor extends BasicGL3Actor
         
         updateGeometry();
         
-        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
+       /* neuron.getVisibilityChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
             {
@@ -79,7 +77,7 @@ public class ConesActor extends BasicGL3Actor
             {
                 updateGeometry();
             }
-        });
+        });*/
     }
     
     private void updateGeometry() {
@@ -87,22 +85,21 @@ public class ConesActor extends BasicGL3Actor
         meshGeometry.clear();
         int vertexIndex = 0;
         // logger.info("Edge count = "+neuron.getEdges().size());
-        for (NeuronEdge neuronEdge : neuron.getEdges()) {
-            Iterator<NeuronVertex> i = neuronEdge.iterator();
-            NeuronVertex parent = i.next();
-            NeuronVertex neuronVertex = i.next();
+        for (TmNeuronEdge neuronEdge : neuron.getEdges()) {
+            TmGeoAnnotation parent = neuronEdge.getParentVertex();
+            TmGeoAnnotation neuronVertex = neuronEdge.getChildVertex();
         // for (NeuronVertex neuronVertex : neuron.getVertexes()) {
             // NeuronVertex parent = neuronVertex.getParentVertex();
             if (parent == null) 
                 continue; // need an edge, to draw a cone
 
-            Vector3 c1 = new Vector3(neuronVertex.getLocation()); // center of first sphere
-            Vector3 c2 = new Vector3(parent.getLocation()); // center of second sphere
+            Vector3 c1 = new Vector3(neuronVertex.getX(), neuronVertex.getY(), neuronVertex.getZ()); // center of first sphere
+            Vector3 c2 = new Vector3(parent.getX(), parent.getY(), parent.getZ()); // center of second sphere
             double r1 = DefaultNeuron.radius;
             double r2 = DefaultNeuron.radius;
-            if (neuronVertex.hasRadius())
+            if (neuronVertex.getRadius()!=null)
                 r1 = neuronVertex.getRadius();
-            if (parent.hasRadius())
+            if (parent.getRadius()!=null)
                 r2 = parent.getRadius();
 
             // To make cones line up perfectly with the spheres, the ends
@@ -120,8 +117,8 @@ public class ConesActor extends BasicGL3Actor
                 double rs2 = r2;
                 // Swap so r2 is always the largest
                 if (rs2 < rs1) {
-                    cs2 = new Vector3(neuronVertex.getLocation()); // center of first sphere
-                    cs1 = new Vector3(parent.getLocation()); // center of second sphere
+                    cs2 = new Vector3(neuronVertex.getX(), neuronVertex.getY(), neuronVertex.getZ()); // center of first sphere
+                    cs1 = new Vector3(parent.getX(), parent.getY(), parent.getZ()); // center of second sphere
                     rs2 = neuronVertex.getRadius();
                     rs1 = parent.getRadius();
                 }
@@ -162,12 +159,12 @@ public class ConesActor extends BasicGL3Actor
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
         // Propagate any pending structure changes...
         if (neuron != null) {
-            neuron.getVisibilityChangeObservable().notifyObservers();
+            //neuron.getVisibilityChangeObservable().notifyObservers();
         }
         if (! isVisible()) return;
         if (neuron != null) {
-            neuron.getColorChangeObservable().notifyObservers();
-            neuron.getGeometryChangeObservable().notifyObservers();
+           // neuron.getColorChangeObservable().notifyObservers();
+            //neuron.getGeometryChangeObservable().notifyObservers();
         }
         // if (meshGeometry.size() < 1) return;
         // gl.glDisable(GL3.GL_DEPTH_TEST);
