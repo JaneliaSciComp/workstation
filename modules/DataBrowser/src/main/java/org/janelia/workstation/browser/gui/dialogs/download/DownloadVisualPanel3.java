@@ -348,16 +348,13 @@ public final class DownloadVisualPanel3 extends JPanel {
             progress.setProgress(i++, downloadObjects.size());
         }
 
-        Collections.sort(downloadFileItems, new Comparator<DownloadFileItem>() {
-            @Override
-            public int compare(DownloadFileItem o1, DownloadFileItem o2) {
-                ComparisonChain chain = ComparisonChain.start()
-                        .compare(o1.getPath(), o2.getPath(), Ordering.natural().nullsFirst())
-                        .compare(o1.getPrefix(), o2.getPrefix(), Ordering.natural().nullsFirst())
-                        .compare(o1.getNumber(), o2.getNumber(), Ordering.natural().nullsFirst())
-                        .compare(o1.getExtension(), o2.getExtension(), Ordering.natural().nullsFirst());
-                return chain.result();
-            }
+        downloadFileItems.sort((o1, o2) -> {
+            ComparisonChain chain = ComparisonChain.start()
+                    .compare(o1.getPath(), o2.getPath(), Ordering.natural().nullsFirst())
+                    .compare(o1.getPrefix(), o2.getPrefix(), Ordering.natural().nullsFirst())
+                    .compare(o1.getNumber(), o2.getNumber(), Ordering.natural().nullsFirst())
+                    .compare(o1.getExtension(), o2.getExtension(), Ordering.natural().nullsFirst());
+            return chain.result();
         });
         
         for (DownloadFileItem downloadFileItem : downloadFileItems) {

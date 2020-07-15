@@ -265,7 +265,7 @@ public class FileDownloadWorker {
     }
 
     private String getChannelSuffix(String filepath) {
-        Pattern p = Pattern.compile("(.*)(_(c\\d))(.*)");
+        Pattern p = Pattern.compile("(.*)(-CH(\\d))(.*)");
         Matcher m = p.matcher(filepath);
         if (m.matches()) {
             return m.group(3);
@@ -303,17 +303,14 @@ public class FileDownloadWorker {
     }
 
     private Callable<Void> getDownloadSuccessCallback() {
-        return new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                String maxPath = Multisets.copyHighestCountFirst(parentDirs).iterator().next();
-                if (maxPath != null) {
-                    DesktopApi.browse(new File(maxPath));
-                } else {
-                    DesktopApi.browse(downloadsDir.toFile());
-                }
-                return null;
+        return () -> {
+            String maxPath = Multisets.copyHighestCountFirst(parentDirs).iterator().next();
+            if (maxPath != null) {
+                DesktopApi.browse(new File(maxPath));
+            } else {
+                DesktopApi.browse(downloadsDir.toFile());
             }
+            return null;
         };
     }
 }

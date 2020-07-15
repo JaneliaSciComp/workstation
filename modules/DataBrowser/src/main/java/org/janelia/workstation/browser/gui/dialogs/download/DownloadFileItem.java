@@ -155,10 +155,17 @@ public class DownloadFileItem {
         if (outputExtensions!=null) {
             this.targetExtension = outputExtensions.get(sourceExtension);
         }
+
         if (this.targetExtension==null || DownloadWizardState.NATIVE_EXTENSION.equals(targetExtension)) {
             this.targetExtension = sourceExtension;
         }
-        log.debug("Output extension: {}",sourceExtension);
+
+        // Can't output LSMs when splitting
+        if (splitChannels && targetExtension.startsWith("lsm")) {
+            targetExtension = targetExtension.replaceFirst("lsm", "tif");
+        }
+
+        log.debug("Output extension: {}",targetExtension);
         
         if (itemPath!=null && !flattenStructure) {
 
@@ -322,7 +329,7 @@ public class DownloadFileItem {
         StringBuilder sb = new StringBuilder(filepath);
 
         if (splitChannels) {
-            sb.append("_#");
+            sb.append("-CH#");
         }
 
         String relativePath = sb.toString();
