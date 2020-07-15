@@ -641,19 +641,20 @@ public class NeuronManager implements DomainObjectSelectionSupport {
              //   viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
         }
 
-        SwingUtilities.invokeLater(new Runnable() {
+        /*SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                fireAnnotationAdded(annotation);
-                if (applyFilter) {
+          */
+        fireAnnotationAdded(annotation);
+        selectPoint(neuron.getId(), annotation.getId());
+                /*if (applyFilter) {
                     NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
                     updateFrags(updates);
-                    selectPoint(neuron.getId(), annotation.getId());
-                   // SkeletonController.getInstance().setNextParent(annotation.getId());
                 }
+                selectPoint(neuron.getId(), annotation.getId());
                 //activityLog.logEndOfOperation(getWsId(), xyz);
             }
-        });
+        });*/
         
         addTimer.mark("end addChildAnn");
         // reset timer state; we don't care about end > start

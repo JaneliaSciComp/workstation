@@ -13,7 +13,7 @@ import java.util.Observable;
 import java.util.Observer;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import org.apache.commons.io.FilenameUtils;
+
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.horta.loader.DroppedFileHandler;
@@ -21,6 +21,7 @@ import org.janelia.horta.loader.GZIPFileLoader;
 import org.janelia.horta.loader.SwcLoader;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
@@ -41,29 +42,30 @@ import org.slf4j.LoggerFactory;
  */
 public class NeuronSetNode extends AbstractNode
 {
-    private final NeuronSet neuronList;
+    private final List<TmNeuronMetadata> neuronList;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public NeuronSetNode(final NeuronSet neuronList) {
+    public NeuronSetNode(final List<TmNeuronMetadata> neuronList) {
         super(Children.create(new NeuronSetChildFactory(neuronList), true), Lookups.singleton(neuronList));
         this.neuronList = neuronList;
-        String name = neuronList.getName();
+        //String name = neuronList.getName();
+        String name = "Neuron List";
         setDisplayName(name);
 
-        neuronList.getNameChangeObservable().addObserver(new Observer() {
+        /*neuronList.getNameChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
             {
                 setDisplayName(neuronList.getName());
             }
-        });
+        });*/
     }
     
     // Context menu for NeuronSetNode'
     @Override
     public Action[] getActions(boolean popup) {
         List<Action> result = new ArrayList<>();
-        result.add(new ManualUpdateNeuronsAction(neuronList));
+      //  result.add(new ManualUpdateNeuronsAction(neuronList));
         return result.toArray(new Action[result.size()]);
     }
     
@@ -75,9 +77,10 @@ public class NeuronSetNode extends AbstractNode
         final DroppedFileHandler droppedFileHandler = new DroppedFileHandler();
         droppedFileHandler.addLoader(new GZIPFileLoader());
         droppedFileHandler.addLoader(new TarFileLoader());
-        droppedFileHandler.addLoader(new TgzFileLoader());        
-        final SwcLoader swcLoader = new SwcLoader(neuronList);
-        droppedFileHandler.addLoader(swcLoader);
+        droppedFileHandler.addLoader(new TgzFileLoader());
+        return null;
+      //  final SwcLoader swcLoader = new SwcLoader(neuronList);
+        /*droppedFileHandler.addLoader(swcLoader);
        
         return new PasteType() {
             @Override
@@ -106,7 +109,7 @@ public class NeuronSetNode extends AbstractNode
                 }
                 return null;
             }
-        };
+        };*/
     }
     
     private void triggerRepaint() {
@@ -145,40 +148,40 @@ public class NeuronSetNode extends AbstractNode
         return sheet; 
     }
 
-    private static class NeuronSetChildFactory extends ChildFactory<NeuronModel>
+    private static class NeuronSetChildFactory extends ChildFactory<TmNeuronMetadata>
     {
-        private final NeuronSet neuronList;
+        private final List<TmNeuronMetadata> neuronList;
         
-        public NeuronSetChildFactory(NeuronSet neuronList) {
+        public NeuronSetChildFactory(List<TmNeuronMetadata> neuronList) {
             this.neuronList = neuronList;
-            neuronList.getMembershipChangeObservable().addObserver(new Observer() {
+            /*neuronList.getMembershipChangeObservable().addObserver(new Observer() {
                 @Override
                 public void update(Observable o, Object arg)
                 {
                     refresh(false);
                 }
-            });
+            });*/
         }
 
         @Override
-        protected boolean createKeys(List<NeuronModel> toPopulate)
+        protected boolean createKeys(List<TmNeuronMetadata> toPopulate)
         {
             toPopulate.addAll(neuronList);
             return true;
         }
 
         @Override
-        protected Node createNodeForKey(NeuronModel key) {
-            return new NeuronModelNode(key, neuronList.isReadOnly());
+        protected Node createNodeForKey(TmNeuronMetadata key) {
+            return new NeuronNode(key);
         }
     }
     
     
     private static class ManualUpdateNeuronsAction extends AbstractAction
     {
-        private final NeuronSet neurons;
+        private final List<TmNeuronMetadata> neurons;
         
-        public ManualUpdateNeuronsAction(NeuronSet neurons) 
+        public ManualUpdateNeuronsAction(List<TmNeuronMetadata> neurons)
         {
             putValue(NAME, "Refresh these neurons now");
             this.neurons = neurons;
@@ -188,25 +191,25 @@ public class NeuronSetNode extends AbstractNode
         public void actionPerformed(ActionEvent e)
         {
             // 1) Mark everything dirty in depth-first order
-            for (NeuronModel neuron : neurons) {
-                neuron.getGeometryChangeObservable().setChanged();
+            for (TmNeuronMetadata neuron : neurons) {
+              /*  neuron.getGeometryChangeObservable().setChanged();
                 neuron.getVertexesRemovedObservable().setChanged();
                 neuron.getVertexCreatedObservable().setChanged();
                 neuron.getVisibilityChangeObservable().setChanged();
-                neuron.getColorChangeObservable().setChanged();
+                neuron.getColorChangeObservable().setChanged();*/
             }
-            neurons.getMembershipChangeObservable().setChanged();
-            neurons.getNameChangeObservable().setChanged();
+           // neurons.getMembershipChangeObservable().setChanged();
+           // neurons.getNameChangeObservable().setChanged();
             // 2) Notify observers in depth-first order
-            for (NeuronModel neuron : neurons) {
-                neuron.getGeometryChangeObservable().notifyObservers();
+            for (TmNeuronMetadata neuron : neurons) {
+              //  neuron.getGeometryChangeObservable().notifyObservers();
                 // neuron.getVertexesRemovedObservable().notifyObservers();
                 // neuron.getMembersAddedObservable().notifyObservers();
-                neuron.getVisibilityChangeObservable().notifyObservers();
-                neuron.getColorChangeObservable().notifyObservers();
+               // neuron.getVisibilityChangeObservable().notifyObservers();
+              //  neuron.getColorChangeObservable().notifyObservers();
             }
-            neurons.getMembershipChangeObservable().notifyObservers();
-            neurons.getNameChangeObservable().notifyObservers();
+          //  neurons.getMembershipChangeObservable().notifyObservers();
+           // neurons.getNameChangeObservable().notifyObservers();
         }
         
     }

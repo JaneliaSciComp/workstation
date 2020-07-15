@@ -23,6 +23,7 @@ public class TmViewState {
     private Set<Long> hiddenAnnotations;
     private Set<Long> nonInteractableAnnotations;
     private Set<Long> neuronRadiusToggle;
+    private Set<Long> reviewModeNeurons;
 
     private double cameraFocusX;
     private double cameraFocusY;
@@ -113,6 +114,14 @@ public class TmViewState {
         neuronRadiusToggle.add(annId);
     }
 
+    public void toggleNeuronInteractable(Long annId) {
+        if (nonInteractableAnnotations.contains(annId)) {
+            removeAnnotationFromNonInteractable(annId);
+        } else {
+            addAnnotationToNonInteractable(annId);
+        }
+    }
+
     public void removeAnnotationFromNeuronRadiusToggle(Long annId) {
         neuronRadiusToggle.remove(annId);
     }
@@ -120,6 +129,35 @@ public class TmViewState {
     public boolean isNeuronRadiusToggle(Long annId) {
         return neuronRadiusToggle.contains(annId);
     }
+
+    public void toggleNeuronRadius(Long annId) {
+        if (neuronRadiusToggle.contains(annId)) {
+            removeAnnotationFromNeuronRadiusToggle(annId);
+        } else {
+            addAnnotationToNeuronRadiusToggle(annId);
+        }
+    }
+
+    public Set<Long> getReviewModeNeurons() {
+        return reviewModeNeurons;
+    }
+
+    public void clearReviewModeNeurons() {
+        reviewModeNeurons.clear();
+    }
+
+    public void addNeuronToReviewModeNeurons(Long neuronId) {
+        reviewModeNeurons.add(neuronId);
+    }
+
+    public void removeNeuronFromReviewModeNeurons(Long neuronId) {
+        reviewModeNeurons.remove(neuronId);
+    }
+
+    public boolean isNeuronInReviewMode(Long neuronId) {
+        return reviewModeNeurons.contains(neuronId);
+    }
+
 
     public double getCameraFocusX() {
         return cameraFocusX;

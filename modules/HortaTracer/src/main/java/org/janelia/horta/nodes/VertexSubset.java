@@ -3,6 +3,7 @@ package org.janelia.horta.nodes;
 import java.util.Collection;
 import java.util.Map;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 
 /**
  *
@@ -10,14 +11,14 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
  */
 public class VertexSubset
 {
-    private final Collection<NeuronVertex> vertices;
-    private final Map<NeuronVertex, Collection<NeuronVertex>> neighborMap;
+    private final Collection<TmGeoAnnotation> vertices;
+    private final Map<TmGeoAnnotation, Collection<TmGeoAnnotation>> neighborMap;
     private final String name;
     private final int branchCount;
     
-    VertexSubset(Collection<NeuronVertex> vertices, 
-                    String name, Map<NeuronVertex,
-                    Collection<NeuronVertex>> neighborMap,
+    VertexSubset(Collection<TmGeoAnnotation> vertices,
+                    String name, Map<TmGeoAnnotation,
+                    Collection<TmGeoAnnotation>> neighborMap,
                     int branchCount) 
     {
         this.vertices = vertices;
@@ -26,7 +27,7 @@ public class VertexSubset
         this.branchCount = branchCount;
     }
 
-    public Collection<NeuronVertex> getVertices()
+    public Collection<TmGeoAnnotation> getVertices()
     {
         return vertices;
     }
@@ -36,7 +37,7 @@ public class VertexSubset
         return name;
     }
 
-    public Map<NeuronVertex, Collection<NeuronVertex>> getNeighborMap()
+    public Map<TmGeoAnnotation, Collection<TmGeoAnnotation>> getNeighborMap()
     {
         return neighborMap;
     }

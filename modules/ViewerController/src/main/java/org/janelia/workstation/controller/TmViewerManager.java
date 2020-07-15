@@ -177,9 +177,6 @@ public class TmViewerManager implements GlobalViewerController {
         Map<String,Map<String,Object>> tagGroupMappings = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, modelManager.getCurrentSample().getId().toString(), null);
         if (tagGroupMappings!=null && currentTagMap!=null) {
             currentTagMap.saveTagGroupMappings(tagGroupMappings);
-            //   if (neuronSetAdapter!=null && neuronSetAdapter.getMetaWorkspace()!=null) {
-            //     neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);
-            //   }
 
             // set toggled group properties on load-up
             Iterator<String> groupTags = tagGroupMappings.keySet().iterator();

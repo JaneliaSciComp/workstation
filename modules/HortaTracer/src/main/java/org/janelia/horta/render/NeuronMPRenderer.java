@@ -27,18 +27,16 @@ import org.janelia.gltools.MultipassRenderer;
 import org.janelia.gltools.RemapColorActor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
-import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.geometry3d.Matrix4;
-import org.janelia.gltools.BasicGL3Actor;
-import org.janelia.gltools.ShaderProgram;
-import org.janelia.gltools.texture.Texture2d;
-import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.GL3Resource;
 import org.janelia.gltools.MeshActor;
 import org.janelia.horta.neuronvbo.NeuronVboActor;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +52,7 @@ public class NeuronMPRenderer extends MultipassRenderer {
     private final VolumeRenderPass volumeRenderPass;
     
     private final Set<NeuronSet> currentNeuronLists = new HashSet<>();
-    private final HortaMetaWorkspace workspace;
+    private final TmWorkspace workspace;
     private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
     private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
     
@@ -65,14 +63,13 @@ public class NeuronMPRenderer extends MultipassRenderer {
     private final ImageColorModel imageColorModel;
     
     public NeuronMPRenderer(GLAutoDrawable drawable,
-            HortaMetaWorkspace workspace,
             final ImageColorModel imageColorModel) 
     {
         this.drawable = drawable;
         this.imageColorModel = imageColorModel;
         
-        this.workspace = workspace;
-        workspace.addObserver(neuronListRefresher);
+        this.workspace = TmModelManager.getInstance().getCurrentWorkspace();
+       // workspace.addObserver(neuronListRefresher);
         
         backgroundRenderPass = new BackgroundRenderPass();
         add(backgroundRenderPass);
@@ -308,21 +305,21 @@ public class NeuronMPRenderer extends MultipassRenderer {
         return volumeRenderPass.getRelativeZFar();
     }
 
-    private void addNeuronReconstruction(NeuronModel neuron) {
+    private void addNeuronReconstruction(TmNeuronMetadata neuron) {
         allSwcActor.addNeuron(neuron);
         
-        neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
+       // neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
     
     public void clearNeuronReconstructions() {
-        for (NeuronModel neuron : allSwcActor) {
+        for (TmNeuronMetadata neuron : allSwcActor) {
             removeNeuronReconstruction(neuron);
         }
     }
     
-    private void removeNeuronReconstruction(NeuronModel neuron) {
+    private void removeNeuronReconstruction(TmNeuronMetadata neuron) {
         allSwcActor.removeNeuron(neuron);
-        neuron.getVisibilityChangeObservable().deleteObserver(volumeLayerExpirer);
+        //neuron.getVisibilityChangeObservable().deleteObserver(volumeLayerExpirer);
     }
     
     private double opaqueDepthForScreenXy(Point2D xy) {
@@ -421,14 +418,16 @@ public class NeuronMPRenderer extends MultipassRenderer {
         
     }
     
-    public void addNeuronActors(NeuronModel neuron) {
+    public void addNeuronActors(TmNeuronMetadata neuron) {
         if (allSwcActor.contains(neuron)) 
             return;
         allSwcActor.addNeuron(neuron);
 
-        neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
+        //neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
-    
+
+
+    // now that we have a joint model, this can be much simpler and consist of different eventbus listeners
     private class NeuronListRefresher implements Observer 
     {
 
@@ -443,25 +442,22 @@ public class NeuronMPRenderer extends MultipassRenderer {
             }
             
             // Update neuron models
-            Set<NeuronModel> latestNeurons = new java.util.HashSet<>();
+            Set<TmNeuronMetadata> latestNeurons = new java.util.HashSet<>();
             Set<NeuronSet> latestNeuronLists = new java.util.HashSet<>();
             // 1 - enumerate latest neurons
-            
-            
-            for (NeuronSet neuronList : workspace.getNeuronSets()) {
-                latestNeuronLists.add(neuronList);
-                latestNeurons.addAll(neuronList);
-            }
+
+            latestNeurons.addAll(NeuronManager.getInstance().getNeuronList());
+
             // 2 - remove obsolete neurons
-            Set<NeuronModel> obsoleteNeurons = new HashSet<>();
-            Set<NeuronModel> newNeurons = new HashSet<>();
+            Set<TmNeuronMetadata> obsoleteNeurons = new HashSet<>();
+            Set<TmNeuronMetadata> newNeurons = new HashSet<>();
             
-            for (NeuronModel neuron : allSwcActor) {
+            for (TmNeuronMetadata neuron : allSwcActor) {
                 if (!latestNeurons.remove(neuron))
                     obsoleteNeurons.add(neuron);
             }
             
-            for (NeuronModel neuron : obsoleteNeurons) {
+            for (TmNeuronMetadata neuron : obsoleteNeurons) {
                 removeNeuronReconstruction(neuron);
             }
             
@@ -476,19 +472,19 @@ public class NeuronMPRenderer extends MultipassRenderer {
 
             // 3 - add new neurons
             
-            for (NeuronSet neuronList : workspace.getNeuronSets()) {
+           /* for (NeuronSet neuronList : workspace.getNeuronSets()) {
                 if (currentNeuronLists.add(neuronList)) {
                     neuronList.getMembershipChangeObservable().addObserver(neuronListRefresher);
                 }
-            }
-            for (NeuronModel neuron : latestNeurons) {
+            }*/
+            for (TmNeuronMetadata neuron : latestNeurons) {
                  addNeuronReconstruction(neuron);
             }
             // 4 - double check for changes in neuron size (e.g. after transfer neurite)
             if (arg!=null && arg instanceof List) {
                 List neuronsToRefresh = (List)arg;
                 for (int i=0; i<neuronsToRefresh.size(); i++) {
-                     allSwcActor.checkForChanges((NeuronModel)neuronsToRefresh.get(i));
+                     allSwcActor.checkForChanges((TmNeuronMetadata)neuronsToRefresh.get(i));
                 }
             } else {
                 allSwcActor.checkForChanges();

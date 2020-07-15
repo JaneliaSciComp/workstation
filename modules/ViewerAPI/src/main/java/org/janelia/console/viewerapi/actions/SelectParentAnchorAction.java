@@ -7,17 +7,19 @@ import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.commands.SelectPrimaryAnchorCommand;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.openide.awt.UndoRedo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class SelectParentAnchorAction extends AbstractAction implements Action
 {
-    private final NeuronSet workspace;
-    private final NeuronVertex newParentAnchor;
+    private final TmWorkspace workspace;
+    private final TmGeoAnnotation newParentAnchor;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
-    public SelectParentAnchorAction(NeuronSet workspace, NeuronVertex anchor)
+    public SelectParentAnchorAction(TmWorkspace workspace, TmGeoAnnotation anchor)
     {
         super("Set Anchor As Parent");
         this.workspace = workspace;
