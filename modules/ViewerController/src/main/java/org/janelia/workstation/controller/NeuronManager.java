@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
+import com.google.common.eventbus.Subscribe;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
@@ -2363,12 +2364,12 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public void setNeuronFiltering(boolean filtering) {
         applyFilter = filtering;
         try {            
-            fireWorkspaceLoaded(currentWorkspace);
+           // fireWorkspaceLoaded(currentWorkspace);
             fireSpatialIndexReady(currentWorkspace);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        fireNeuronSpatialFilterUpdated(applyFilter, getFilterStrategy());
+       // fireNeuronSpatialFilterUpdated(applyFilter, getFilterStrategy());
     }
 
     public NeuronSpatialFilter getFilterStrategy() {
@@ -2376,10 +2377,22 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public void setFilterStrategy(NeuronSpatialFilter filterStrategy) {
-        neuronFilter = filterStrategy;
+        if (neuronFilter != filterStrategy)
+            neuronFilter = filterStrategy;
         neuronFilter.initFilter(neuronModel.getNeurons());
         setNeuronFiltering(true);
     }
+
+    /*
+    public void neuronFilterUpdate (NeuronSpatialFilterUpdateEvent event) {
+        boolean filter = event.isEnabled();
+        if (filter) {
+            setFilterStrategy(event.getFilter());
+            setNeuronFiltering(true);
+        } else {
+            setNeuronFiltering(false);
+        }
+    }*/
 
     public int getNumTotalNeurons() {
         if (isFilteringEnabled()) {
