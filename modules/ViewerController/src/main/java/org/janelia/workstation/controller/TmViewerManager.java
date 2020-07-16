@@ -16,6 +16,8 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
@@ -217,8 +219,8 @@ public class TmViewerManager implements GlobalViewerController {
                 nFragments += 1;
                 if (nFragments >= NUMBER_FRAGMENTS_THRESHOLD) {
                     modelManager.getCurrentView().setFilter(true);
-
-                    // fire event
+                    NeuronSelectionSpatialFilter neuronFilter = new NeuronSelectionSpatialFilter();
+                    neuronManager.setFilterStrategy(neuronFilter);
                     break;
                 }
             }
@@ -228,8 +230,8 @@ public class TmViewerManager implements GlobalViewerController {
         SpatialIndexManager spatialController = new SpatialIndexManager();
         spatialController.initialize();
         TmModelManager.getInstance().setSpatialIndexManager(spatialController);
-        NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(true);
-        ViewerEventBus.postEvent(spatialEvent);
+      //  NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(true);
+      //  ViewerEventBus.postEvent(spatialEvent);
 
         try {
             loadUserPreferences();
