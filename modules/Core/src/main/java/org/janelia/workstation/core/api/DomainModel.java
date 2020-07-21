@@ -25,6 +25,7 @@ import org.janelia.model.security.Subject;
 import org.janelia.workstation.core.api.facade.interfaces.*;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.*;
+import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.util.ColorDepthUtils;
 import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;
@@ -355,7 +356,22 @@ public class DomainModel {
     public List<DomainObject> getChildren(Node node, String sortCriteria, int page, int pageSize) throws Exception {
         log.debug("getChildren({}, sortCriteria={}, page={})", node, sortCriteria, page);
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        List<DomainObject> domainObjects = workspaceFacade.getChildren(node, sortCriteria, page, pageSize);
+        List<DomainObject> domainObjects;
+        if (node.getId()==null || node.getId()<0) {
+            // This is not a persisted node, so we can't use the usual pagination method.
+            // Get everything, sort it, and then select the page.
+            // TODO: this could be improved by moving this logic to the server-side
+            List<DomainObject> allDomainObjects = getDomainObjects(node.getChildren());
+            DomainUtils.sortDomainObjects(allDomainObjects, sortCriteria);
+            List<Annotation> annotations = getAnnotations(node.getChildren());
+            DomainObjectSearchResults results = new DomainObjectSearchResults(allDomainObjects, annotations);
+            domainObjects = results.getPage(page).getObjects();
+        }
+        else {
+            // This is a persisted node, so we can paginate on the server and return just the requested page
+            domainObjects = workspaceFacade.getChildren(node, sortCriteria, page, pageSize);
+        }
+
         List<DomainObject> canonicalObjects = putOrUpdate(domainObjects, false);
         if (TIMER) if (TIMER) w.stop("getDomainObjects(references)");
         log.debug("getDomainObjects: returning {} objects", canonicalObjects.size());

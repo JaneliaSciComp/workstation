@@ -9,3 +9,4 @@ Data Browser
 * Improvements to background threading and network timeouts
 * Purge and Block is now called in batches, allow larger numbers of samples to be purged
 * The connection string can now be specified on the command line
+* Fixed bug with viewing Batch Search results

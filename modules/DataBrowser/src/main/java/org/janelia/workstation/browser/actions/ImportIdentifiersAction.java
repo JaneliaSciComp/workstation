@@ -90,7 +90,7 @@ public final class ImportIdentifiersAction extends CallableSystemAction {
 
             IdentifiersWizardState endState = (IdentifiersWizardState) wiz.getProperty(IdentifiersWizardIterator.PROP_WIZARD_STATE);
 
-            Long guid = FrameworkAccess.generateGUID();
+            Long guid = -1L;
 
             TreeNode node = new TreeNode();
             node.setId(guid);
