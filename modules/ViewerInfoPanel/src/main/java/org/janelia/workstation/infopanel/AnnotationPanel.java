@@ -12,16 +12,12 @@ import org.janelia.workstation.controller.eventbus.NeuronHideEvent;
 import org.janelia.workstation.controller.eventbus.NeuronUnhideEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
-import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.infopanel.action.*;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 
 import javax.swing.*;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -40,6 +36,9 @@ public class AnnotationPanel extends JPanel
     private TmModelManager annotationModel;
 
     // UI components
+    private JScrollPane scrollPane;
+    private JPanel mainPanel;
+
     private FilteredAnnotationList filteredList;
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
@@ -138,7 +137,15 @@ public class AnnotationPanel extends JPanel
     }
 
     private void setupUI() {
-        setLayout(new GridBagLayout());
+        // put a scroll pane around the whole thing, because we've had problems with
+        //  some people with small screens not seeing all the controls, especially the
+        //  "new workspace" button
+        mainPanel = new JPanel();
+        scrollPane = new JScrollPane(mainPanel);
+        setLayout(new BorderLayout());
+        add(scrollPane);
+
+        mainPanel.setLayout(new GridBagLayout());
 
         // ----- workspace information; show name, whatever attributes
         workspaceInfoPanel = new WorkspaceInfoPanel();
@@ -150,7 +157,7 @@ public class AnnotationPanel extends JPanel
         cTop.insets = new Insets(10, 0, 0, 0);
         cTop.weightx = 1.0;
         cTop.weighty = 0.0;
-        add(workspaceInfoPanel, cTop);
+        mainPanel.add(workspaceInfoPanel, cTop);
 
         // I want the rest of the components to stack vertically;
         //  components should fill or align left as appropriate
@@ -165,7 +172,7 @@ public class AnnotationPanel extends JPanel
         // buttons for doing workspace things
         JPanel workspaceButtonsPanel = new JPanel();
         workspaceButtonsPanel.setLayout(new BoxLayout(workspaceButtonsPanel, BoxLayout.LINE_AXIS));
-        add(workspaceButtonsPanel, cVert);
+        mainPanel.add(workspaceButtonsPanel, cVert);
 
         // testing
         // showOutline(workspaceButtonsPanel, Color.green);
@@ -282,7 +289,7 @@ public class AnnotationPanel extends JPanel
 
         // list of neurons in workspace
         workspaceNeuronList = new WorkspaceNeuronList(width);
-        add(workspaceNeuronList, cVert);
+        mainPanel.add(workspaceNeuronList, cVert);
 
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
@@ -389,7 +396,7 @@ public class AnnotationPanel extends JPanel
         // buttons for acting on neurons (which are in the list immediately above):
         JPanel neuronButtonsPanel = new JPanel();
         neuronButtonsPanel.setLayout(new BoxLayout(neuronButtonsPanel, BoxLayout.LINE_AXIS));
-        add(neuronButtonsPanel, cVert);
+        mainPanel.add(neuronButtonsPanel, cVert);
 
         JButton createNeuronButtonPlus = new JButton("+");
         neuronButtonsPanel.add(createNeuronButtonPlus);
@@ -422,9 +429,9 @@ public class AnnotationPanel extends JPanel
 
 
         // ----- interesting annotations
-        add(Box.createRigidArea(new Dimension(0, 20)), cVert);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)), cVert);
         filteredList = FilteredAnnotationList.createInstance(neuronManager, width);
-        add(filteredList, cVert);
+        mainPanel.add(filteredList, cVert);
 
 
         // buttons for acting on annotations
@@ -433,7 +440,7 @@ public class AnnotationPanel extends JPanel
         // NOTE 2: the same functionality is still available on the right-click menu
         JPanel neuriteButtonsPanel = new JPanel();
         neuriteButtonsPanel.setLayout(new BoxLayout(neuriteButtonsPanel, BoxLayout.LINE_AXIS));
-        // add(neuriteButtonsPanel, cVert);
+        // mainPanel.add(neuriteButtonsPanel, cVert);
 
         JButton centerAnnotationButton = new JButton("Center");
         centerAnnotationAction.putValue(Action.NAME, "Center");
@@ -449,7 +456,7 @@ public class AnnotationPanel extends JPanel
         // developer panel, only shown to me; used for various testing things
         /*if (AccessManager.getAccessManager().getActualSubject().getName().equals("olbrisd")) {
             //lvvDevPanel = new LVVDevPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
-            //add(lvvDevPanel, cVert);
+            //mainPanel.add(lvvDevPanel, cVert);
         }*/
 
 
@@ -461,7 +468,7 @@ public class AnnotationPanel extends JPanel
         cBottom.fill = GridBagConstraints.BOTH;
         cTop.weightx = 1.0;
         cBottom.weighty = 1.0;
-        add(Box.createVerticalGlue(), cBottom);
+        mainPanel.add(Box.createVerticalGlue(), cBottom);
     }
 }
 
