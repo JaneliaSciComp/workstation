@@ -68,7 +68,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
             int concurrency = HIGHER_RES_TILE_LOADER_CONCURRENCY;
 
             @Override
-            BlockTiffOctreeLoadAdapter createLoadAdapter(String baseURI) {
+            public BlockTiffOctreeLoadAdapter createLoadAdapter(String baseURI) {
                 return TileStackCacheController.createInstance(
                         new TileStackOctreeLoadAdapter(new TileFormat(), URI.create(baseURI), concurrency));
             }

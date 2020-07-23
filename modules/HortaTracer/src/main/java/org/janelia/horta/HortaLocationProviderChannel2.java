@@ -70,7 +70,7 @@ public class HortaLocationProviderChannel2
             nttc.requestActive();
             try {
                 sampleLocation.setDefaultColorChannel(1);
-                nttc.setSampleLocation(sampleLocation);
+                //nttc.setSampleLocation(sampleLocation);
             } catch (Exception ex) {
                 logger.error("Error setting channel location", ex);
             }

@@ -15,7 +15,7 @@ public class TileStackOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter {
 
     private final BlockTiffOctreeLoadAdapter blockTiffOctreeLoadAdapter;
 
-    TileStackOctreeLoadAdapter(TileFormat tileFormat, URI baseURI, int concurrency) {
+    public TileStackOctreeLoadAdapter(TileFormat tileFormat, URI baseURI, int concurrency) {
         super(tileFormat, baseURI);
         if (baseURI.getScheme().startsWith("file")) {
             blockTiffOctreeLoadAdapter = new FileBasedBlockTiffOctreeLoadAdapter(tileFormat, baseURI, concurrency);

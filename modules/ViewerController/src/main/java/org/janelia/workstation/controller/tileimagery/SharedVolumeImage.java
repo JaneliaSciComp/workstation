@@ -154,7 +154,7 @@ public class SharedVolumeImage implements VolumeImage3d {
         return loadAdapter;
     }
 
-    SharedVolumeImage setTileLoaderProvider(BlockTiffOctreeTileLoaderProvider tileLoaderProvider) {
+    public SharedVolumeImage setTileLoaderProvider(BlockTiffOctreeTileLoaderProvider tileLoaderProvider) {
         this.tileLoaderProvider = tileLoaderProvider;
         return this;
     }
