@@ -5,6 +5,7 @@ import java.util.Collection;
 
 abstract public class AnnotationEvent extends ViewerEvent {
     protected Collection<TmGeoAnnotation> annotations;
+    protected TmGeoAnnotation requestedNextParent;
 
     public Collection<TmGeoAnnotation> getAnnotations() {
         return annotations;
@@ -12,5 +13,17 @@ abstract public class AnnotationEvent extends ViewerEvent {
 
     public void setAnnotations(Collection<TmGeoAnnotation> annotations) {
         this.annotations = annotations;
+    }
+
+    public void setRequestedNextParent(TmGeoAnnotation nextParent) {
+        this.requestedNextParent = nextParent;
+    }
+
+    public TmGeoAnnotation getRequestedNextParent() {
+        return requestedNextParent;
+    }
+
+    public boolean hasRequestedNextParent() {
+        return requestedNextParent != null;
     }
 }

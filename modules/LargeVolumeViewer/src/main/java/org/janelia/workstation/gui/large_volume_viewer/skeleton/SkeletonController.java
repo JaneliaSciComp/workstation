@@ -220,7 +220,7 @@ public class SkeletonController implements NextParentListener {
             annList.add(path);
         }
 
-        processAnchorsAdded(addedAnchorList);
+        processAnchorsAdded(addedAnchorList, null);
         log.info("  added {} anchors", addedAnchorList.size());
 
         processAnchoredVoxelPathsAdded(TAPlist2AVPlist(neuron.getId(), annList));
@@ -228,7 +228,7 @@ public class SkeletonController implements NextParentListener {
     }
 
     private void processNeuronDeleted(TmNeuronMetadata neuron) {
-        processAnchorsDeleted(neuron.getGeoAnnotationMap().values());
+        processAnchorsDeleted(neuron.getGeoAnnotationMap().values(), null);
         processAnchoredVoxelPathsDeleted(neuron.getId());
     }
 
@@ -318,13 +318,22 @@ public class SkeletonController implements NextParentListener {
     @Subscribe
     public void anchorsAdded(AnnotationCreateEvent event) {
         Collection<TmGeoAnnotation> annotations = event.getAnnotations();
-        processAnchorsAdded(annotations);
+        processAnchorsAdded(annotations, event.getRequestedNextParent());
     }
 
-    private void processAnchorsAdded(Collection<TmGeoAnnotation> vertexList) {
+    private void processAnchorsAdded(Collection<TmGeoAnnotation> vertexList, TmGeoAnnotation nextParent) {
         List<Anchor> anchors = skeleton.addTmGeoAnchors(new ArrayList<>(vertexList));
         for (Anchor anchor: anchors) {
             anchor.setSkeletonAnchorListener(skeletonAnchorListener);
+        }
+        if (nextParent != null) {
+            setNextParent(nextParent.getId());
+        } else {
+            // if there is only one anchor added, make it the next parent; otherwise,
+            //  do nothing
+            if (anchors.size() == 1) {
+                setNextParent(anchors.get(0));
+            }
         }
         skeletonChanged();
     }
@@ -332,12 +341,16 @@ public class SkeletonController implements NextParentListener {
     @Subscribe
     public void anchorDeleted(AnnotationDeleteEvent event) {
         Collection<TmGeoAnnotation> annotations = event.getAnnotations();
-        processAnchorsDeleted(annotations);
+        processAnchorsDeleted(annotations, event.getRequestedNextParent());
     }
 
-    private void processAnchorsDeleted(Collection<TmGeoAnnotation> annotations) {
+    private void processAnchorsDeleted(Collection<TmGeoAnnotation> annotations,
+        TmGeoAnnotation nextParent) {
         for (TmGeoAnnotation annotation: annotations) {
             skeleton.deleteTmGeoAnchor(annotation);
+        }
+        if (nextParent != null) {
+            setNextParent(nextParentId);
         }
         skeletonChanged();
     }
@@ -350,6 +363,9 @@ public class SkeletonController implements NextParentListener {
                 skeleton.reparentTmGeoAnchor(annotation);
             }
         }
+        if (event.hasRequestedNextParent()) {
+            setNextParent(event.getRequestedNextParent().getId());
+        }
         skeletonChanged();
     }
 
@@ -360,6 +376,10 @@ public class SkeletonController implements NextParentListener {
             for (TmGeoAnnotation annotation: annotations) {
                 skeleton.moveTmGeoAnchor(annotation);
             }
+        }
+        if (event.hasRequestedNextParent()) {
+            setNextParent(event.getRequestedNextParent().getId());
+            skeletonChanged();
         }
     }
 
@@ -383,8 +403,6 @@ public class SkeletonController implements NextParentListener {
         for (SkeletonActor actor : actors) {
             actor.getModel().setNextParent(parent);
         }
-        // Need not rebuild everything, each time the anchor is selected.
-        //   ** this would make the whole display very slow ** updateMeshDrawActor();
         fireComponentUpdate();
     }
 
