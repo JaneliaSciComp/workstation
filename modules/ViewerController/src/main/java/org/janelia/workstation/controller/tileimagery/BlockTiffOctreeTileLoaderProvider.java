@@ -1,5 +1,5 @@
 package org.janelia.workstation.controller.tileimagery;
 
-abstract class BlockTiffOctreeTileLoaderProvider {
-    abstract BlockTiffOctreeLoadAdapter createLoadAdapter(String baseURI);
+public abstract class BlockTiffOctreeTileLoaderProvider {
+    public abstract BlockTiffOctreeLoadAdapter createLoadAdapter(String baseURI);
 }

@@ -5,6 +5,8 @@ import javax.swing.undo.UndoableEdit;
 import org.janelia.console.viewerapi.Command;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 
 /**
  * Seeds a new neuron with a single root anchor
@@ -14,22 +16,22 @@ public class MoveNeuronAnchorCommand
 extends AbstractUndoableEdit
 implements UndoableEdit, Command
 {
-    private final NeuronModel neuron;
-    private final NeuronVertex anchor;
+    private final TmNeuronMetadata neuron;
+    private final TmGeoAnnotation anchor;
     private final float[] initialCoordinates;
     private final float[] finalCoordinates;
     
     public MoveNeuronAnchorCommand(
-            NeuronModel neuron,
-            NeuronVertex anchor,
+            TmNeuronMetadata neuron,
+            TmGeoAnnotation anchor,
             float[] destinationXyz)
     {
         this.neuron = neuron;
         this.anchor = anchor;
         this.initialCoordinates = new float[] {
-            anchor.getLocation()[0],
-            anchor.getLocation()[1],
-            anchor.getLocation()[2]
+            anchor.getX().floatValue(),
+            anchor.getY().floatValue(),
+            anchor.getZ().floatValue()
         };
         this.finalCoordinates = new float[] {
             destinationXyz[0],
@@ -40,7 +42,8 @@ implements UndoableEdit, Command
 
     @Override
     public boolean execute() {
-        return neuron.moveVertex(anchor, finalCoordinates);
+        return false;
+        //return neuron.moveVertex(anchor, finalCoordinates);
     }
 
     @Override
@@ -58,6 +61,6 @@ implements UndoableEdit, Command
     @Override
     public void undo() {
         super.undo(); // raises exception if canUndo() is false
-        neuron.moveVertex(anchor, initialCoordinates);
+        //neuron.moveVertex(anchor, initialCoordinates);
     }
 }

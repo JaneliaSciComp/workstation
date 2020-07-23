@@ -10,9 +10,9 @@ import javax.swing.Action;
 import org.janelia.geometry3d.Box3;
 // import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
-import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.VantageInterface;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
@@ -28,17 +28,17 @@ import org.slf4j.LoggerFactory;
  *
  * @author Christopher Bruns
  */
-public class NeuronModelNode extends AbstractNode
+public class NeuronNode extends AbstractNode
 {
-    private final NeuronModel neuron;
+    private final TmNeuronMetadata neuron;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final boolean isReadOnly;
 
-    public NeuronModelNode(NeuronModel neuron, boolean isReadOnly) {
-        super(Children.create(new NeuronModelChildFactory(neuron), true), Lookups.singleton(neuron));
+    public NeuronNode(TmNeuronMetadata neuron) {
+        super(Children.create(new NeuronChildFactory(neuron), true), Lookups.singleton(neuron));
         setDisplayName(neuron.getName()); //  + " (" + neuron.getVertexes().size() + " vertices)");
         this.neuron = neuron;
-        this.isReadOnly = isReadOnly;
+        this.isReadOnly = false;
     }
     
     @Override
@@ -68,19 +68,19 @@ public class NeuronModelNode extends AbstractNode
         // Maybe expose "center on" action
         // 0 - is there a camera to actually center on?
         final VantageInterface vantage = getVantage();
-        if ((vantage != null) && neuron.getVertexes().size() > 0) {
+        if ((vantage != null) && neuron.getGeoAnnotationMap().values().size() > 0) {
             result.add(new CenterOnNeuronAction(neuron, vantage));
         }
         return result.toArray(new Action[result.size()]);
     }
     
-    public int getSize() {return neuron.getVertexes().size();}
+    public int getSize() {return neuron.getGeoAnnotationMap().size();}
     public boolean isVisible() {return neuron.isVisible();}
     public void setVisible(boolean visible) {
         if (neuron.isVisible() == visible)
             return;
         neuron.setVisible(visible);
-        neuron.getVisibilityChangeObservable().notifyObservers();
+        //neuron.getVisibilityChangeObservable().notifyObservers();
         triggerRepaint();
     }
     public Color getColor() {return neuron.getColor();}
@@ -89,7 +89,7 @@ public class NeuronModelNode extends AbstractNode
             return;
         // logger.info("NeuronNode color set to "+color);
         neuron.setColor(color);
-        neuron.getColorChangeObservable().notifyObservers();
+        //neuron.getColorChangeObservable().notifyObservers();
         triggerRepaint();
     }
     public void triggerRepaint() {
@@ -131,10 +131,10 @@ public class NeuronModelNode extends AbstractNode
 
     private static class CenterOnNeuronAction extends AbstractAction
     {
-        private final NeuronModel neuron;
+        private final TmNeuronMetadata neuron;
         private final VantageInterface vantage;
         
-        public CenterOnNeuronAction(NeuronModel neuron, VantageInterface vantage)
+        public CenterOnNeuronAction(TmNeuronMetadata neuron, VantageInterface vantage)
         {
             putValue(NAME, "Center on this neuron");
             this.neuron = neuron;
@@ -146,21 +146,22 @@ public class NeuronModelNode extends AbstractNode
         {
             // 1 - compute neuron bounding box center point
             Box3 boundingBox = new Box3();
-            for (NeuronVertex vertex: neuron.getVertexes())
-                boundingBox.include(new Vector3(vertex.getLocation()));
+            for (TmGeoAnnotation vertex: neuron.getGeoAnnotationMap().values())
+                boundingBox.include(new Vector3(vertex.getX(), vertex.getY(), vertex.getZ()));
             Vector3 centroid = boundingBox.getCentroid();
             // 2 - find actual vertex closest to that center point
-            NeuronVertex closestVertex = neuron.getVertexes().iterator().next();
-            float minDistSquared = centroid.distanceSquared(new Vector3(closestVertex.getLocation()));
-            for (NeuronVertex vertex: neuron.getVertexes()) {
-                float d2 = centroid.distanceSquared(new Vector3(vertex.getLocation()));
+            TmGeoAnnotation closestVertex = neuron.getGeoAnnotationMap().values().iterator().next();
+            float minDistSquared = centroid.distanceSquared(new Vector3(closestVertex.getX(), closestVertex.getY(),
+                    closestVertex.getZ()));
+            for (TmGeoAnnotation vertex: neuron.getGeoAnnotationMap().values()) {
+                float d2 = centroid.distanceSquared(new Vector3(vertex.getX(), vertex.getY(), vertex.getZ()));
                 if (d2 < minDistSquared) {
                     minDistSquared = d2;
                     closestVertex = vertex;
                 }
             }
             // 3 - center on that vertex
-            Vector3 center = new Vector3(closestVertex.getLocation());
+            Vector3 center = new Vector3(closestVertex.getX(), closestVertex.getY(), closestVertex.getZ());
             vantage.setFocus(center.getX(), center.getY(), center.getZ());
             // 4 - adjust scale
             float maxScale = 5.0f;

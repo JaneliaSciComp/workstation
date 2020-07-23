@@ -15,16 +15,23 @@ import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
+import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.text.View;
+import java.net.URI;
+import java.net.URL;
 import java.util.*;
 
 public class TmViewerManager implements GlobalViewerController {
@@ -177,9 +184,6 @@ public class TmViewerManager implements GlobalViewerController {
         Map<String,Map<String,Object>> tagGroupMappings = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT, modelManager.getCurrentSample().getId().toString(), null);
         if (tagGroupMappings!=null && currentTagMap!=null) {
             currentTagMap.saveTagGroupMappings(tagGroupMappings);
-            //   if (neuronSetAdapter!=null && neuronSetAdapter.getMetaWorkspace()!=null) {
-            //     neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);
-            //   }
 
             // set toggled group properties on load-up
             Iterator<String> groupTags = tagGroupMappings.keySet().iterator();
@@ -212,6 +216,22 @@ public class TmViewerManager implements GlobalViewerController {
 
         }
 
+        SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
+        URL url = TmModelManager.getInstance().getTileLoader().getUrl();
+        sharedVolumeImage.setTileLoaderProvider(new BlockTiffOctreeTileLoaderProvider() {
+            int concurrency = 15;
+
+            @Override
+            public BlockTiffOctreeLoadAdapter createLoadAdapter(String baseURI) {
+                return TileStackCacheController.createInstance(
+                        new TileStackOctreeLoadAdapter(new TileFormat(), URI.create(baseURI), concurrency));
+            }
+        });
+        sharedVolumeImage.loadURL(url);
+        BoundingBox3d box = sharedVolumeImage.getBoundingBox3d();
+        TmModelManager.getInstance().setSampleBoundingBox (box);
+        TmModelManager.getInstance().setVoxelCenter (sharedVolumeImage.getVoxelCenter());
+
         String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
         modelManager.getCurrentView().setFilter(false);
         int nFragments = 0;
@@ -220,9 +240,17 @@ public class TmViewerManager implements GlobalViewerController {
                 nFragments += 1;
                 if (nFragments >= NUMBER_FRAGMENTS_THRESHOLD) {
                     modelManager.getCurrentView().setFilter(true);
-
-                    // fire event
+                    NeuronSelectionSpatialFilter neuronFilter = new NeuronSelectionSpatialFilter();
+                    neuronManager.setFilterStrategy(neuronFilter);
                     break;
+                }
+            }
+            if (neuron.getColor()==null) {
+                neuron.setColor(TmViewState.getColorForNeuron(neuron.getId()));
+            }
+            for (TmGeoAnnotation ann: neuron.getGeoAnnotationMap().values()) {
+                if (ann.getRadius()==null) {
+                    ann.setRadius(1.0);
                 }
             }
         }
@@ -231,8 +259,8 @@ public class TmViewerManager implements GlobalViewerController {
         SpatialIndexManager spatialController = new SpatialIndexManager();
         spatialController.initialize();
         TmModelManager.getInstance().setSpatialIndexManager(spatialController);
-        NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(true);
-        ViewerEventBus.postEvent(spatialEvent);
+      //  NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(true);
+      //  ViewerEventBus.postEvent(spatialEvent);
 
         try {
             loadUserPreferences();

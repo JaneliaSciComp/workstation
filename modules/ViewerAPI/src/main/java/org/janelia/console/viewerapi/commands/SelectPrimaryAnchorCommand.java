@@ -5,6 +5,8 @@ import javax.swing.undo.UndoableEdit;
 import org.janelia.console.viewerapi.Command;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
 /**
  * Seeds a new neuron with a single root anchor
@@ -14,12 +16,12 @@ public class SelectPrimaryAnchorCommand
 extends AbstractUndoableEdit
 implements UndoableEdit, Command, Notifier
 {
-    private final NeuronVertex newPrimary;
-    private final NeuronSet workspace;
-    private NeuronVertex oldPrimary;
+    private final TmGeoAnnotation newPrimary;
+    private final TmWorkspace workspace;
+    private TmGeoAnnotation oldPrimary;
     private boolean doNotify = true;
     
-    public SelectPrimaryAnchorCommand(NeuronSet workspace, NeuronVertex primary)
+    public SelectPrimaryAnchorCommand(TmWorkspace workspace, TmGeoAnnotation primary)
     {
         this.workspace = workspace;
         newPrimary = primary;
@@ -27,7 +29,8 @@ implements UndoableEdit, Command, Notifier
 
     @Override
     public boolean execute() {
-        if (workspace == null)
+        // move this to viewercontroller
+       /* if (workspace == null)
             return false;
         oldPrimary = workspace.getPrimaryAnchor();
         if (oldPrimary == newPrimary)
@@ -38,7 +41,7 @@ implements UndoableEdit, Command, Notifier
         if (doesNotify()) {
             workspace.getPrimaryAnchorObservable().notifyObservers();
         }
-        workspace.selectVertex(newPrimary);
+        workspace.selectVertex(newPrimary);*/
         return true;
     }
 
@@ -65,14 +68,14 @@ implements UndoableEdit, Command, Notifier
             return;
         }
         try {
-            workspace.setPrimaryAnchor(oldPrimary);
-            if (workspace.getPrimaryAnchor() != oldPrimary) {
-                die();
-                return;
-            }
-            if (doesNotify()) {
-                workspace.getPrimaryAnchorObservable().notifyObservers();
-            }
+           // //workspace.setPrimaryAnchor(oldPrimary);
+          //  if (workspace.getPrimaryAnchor() != oldPrimary) {
+           //     die();
+            //    return;
+           // }
+            //if (doesNotify()) {
+           //     workspace.getPrimaryAnchorObservable().notifyObservers();
+           // }
         } catch (Exception exc) {
             die(); // This Command object is no longer useful
         }

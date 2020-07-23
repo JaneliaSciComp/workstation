@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Image;
 import java.util.Collection;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
@@ -18,11 +19,11 @@ import org.openide.util.lookup.Lookups;
  */
 public class NeuronVertexNode extends AbstractNode
 {
-    private final NeuronVertex vertex;
-    private final Collection<NeuronVertex> neighbors;
+    private final TmGeoAnnotation vertex;
+    private final Collection<TmGeoAnnotation> neighbors;
 
 
-    NeuronVertexNode(NeuronVertex vertex, Collection<NeuronVertex> neighbors)
+    NeuronVertexNode(TmGeoAnnotation vertex, Collection<TmGeoAnnotation> neighbors)
     {
         super(Children.create(new NeuronVertexChildFactory(), true), Lookups.singleton(vertex));
         this.vertex = vertex;

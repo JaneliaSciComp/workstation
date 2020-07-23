@@ -13,15 +13,10 @@ import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
-import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.console.viewerapi.model.NeuronVertexCreationObserver;
-import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
-import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
-import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
-import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,17 +29,17 @@ public class SpheresActor extends BasicGL3Actor
     private final MeshGeometry meshGeometry;
     private final MeshActor meshActor;
     protected final SpheresMaterial material;
-    private final NeuronModel neuron;
+    private final TmNeuronMetadata neuron;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     // Simpler constructor creates its own image and shader resources
-    public SpheresActor(NeuronModel neuron) {
+    public SpheresActor(TmNeuronMetadata neuron) {
         this(neuron, null, new SpheresMaterial.SpheresShader());
     }
     
     // For scaling efficiency, alternate constructor takes shared resources as argument
     public SpheresActor(
-            final NeuronModel neuron, 
+            final TmNeuronMetadata neuron,
             Texture2d lightProbeTexture,
             ShaderProgram spheresShader) 
     {
@@ -59,7 +54,7 @@ public class SpheresActor extends BasicGL3Actor
         
         updateGeometry();
         
-        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
+        /*neuron.getVisibilityChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
             {
@@ -99,17 +94,18 @@ public class SpheresActor extends BasicGL3Actor
             public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
                 updateGeometry();
             }
-        });
+        });*/
     }
     
     private void updateGeometry() {
         // TODO: more careful updating of nodes
         meshGeometry.clear();
-        for (NeuronVertex neuronVertex : neuron.getVertexes()) {
-            Vertex vertex = meshGeometry.addVertex(neuronVertex.getLocation());
+        for (TmGeoAnnotation neuronVertex : neuron.getGeoAnnotationMap().values()) {
+            Vertex vertex = meshGeometry.addVertex(new float[]{neuronVertex.getX().floatValue(),
+                    neuronVertex.getY().floatValue(), neuronVertex.getZ().floatValue()});
             float radius = DefaultNeuron.radius;
-            if (neuronVertex.hasRadius())
-                radius = (float) neuronVertex.getRadius();
+            if (neuronVertex.getRadius()!=null)
+                radius = neuronVertex.getRadius().floatValue();
             vertex.setAttribute("radius", radius);
         }
         meshGeometry.notifyObservers(); // especially the Material?
@@ -121,13 +117,13 @@ public class SpheresActor extends BasicGL3Actor
             return;
         
         // Propagate any pending structure changes...
-        neuron.getVisibilityChangeObservable().notifyObservers();
+       // neuron.getVisibilityChangeObservable().notifyObservers();
         if (! isVisible()) 
             return;        
         
-        neuron.getColorChangeObservable().notifyObservers();
-        neuron.getGeometryChangeObservable().notifyObservers();
-        if (neuron.getVertexes().isEmpty())
+      //  neuron.getColorChangeObservable().notifyObservers();
+      //  neuron.getGeometryChangeObservable().notifyObservers();
+        if (neuron.getGeoAnnotationMap().isEmpty())
             return;
 
         super.display(gl, camera, parentModelViewMatrix);       
@@ -152,7 +148,7 @@ public class SpheresActor extends BasicGL3Actor
         return material.getMinPixelRadius();
     }
 
-    public NeuronModel getNeuron() {
+    public TmNeuronMetadata getNeuron() {
         return neuron;
     }
 

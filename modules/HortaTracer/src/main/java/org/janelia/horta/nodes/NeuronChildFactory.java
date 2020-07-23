@@ -3,14 +3,11 @@ package org.janelia.horta.nodes;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
-import org.janelia.console.viewerapi.model.NeuronEdge;
-import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronEdge;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 
@@ -18,39 +15,38 @@ import org.openide.nodes.Node;
  *
  * @author Christopher Bruns
  */
-public class NeuronModelChildFactory extends ChildFactory< VertexSubset >
+public class NeuronChildFactory extends ChildFactory< VertexSubset >
 {
-    private final NeuronModel neuron;
-    private final Map<NeuronVertex, Collection<NeuronVertex>> vertexNeighbors = new HashMap<>();
+    private final TmNeuronMetadata neuron;
+    private final Map<TmGeoAnnotation, Collection<TmGeoAnnotation>> vertexNeighbors = new HashMap<>();
     private final VertexSubset tips = new VertexSubset(
-            new HashSet<NeuronVertex>(), 
+            new HashSet<TmGeoAnnotation>(),
             "Tips",
             vertexNeighbors, 1); // zero or one neighbor
     private final VertexSubset branchPoints = new VertexSubset(
-            new HashSet<NeuronVertex>(), 
+            new HashSet<TmGeoAnnotation>(),
             "Branch Points",
             vertexNeighbors, 3); // more than two neighbors
     
-    public NeuronModelChildFactory(NeuronModel neuron) {
+    public NeuronChildFactory(TmNeuronMetadata neuron) {
         this.neuron = neuron;
-        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
+       /* neuron.getVisibilityChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
                 refresh(false);
             }
-        });
+        });*/
     }
 
-    private void insertDirectionalPair(NeuronVertex vertex1, NeuronVertex vertex2) {
+    private void insertDirectionalPair(TmGeoAnnotation vertex1, TmGeoAnnotation vertex2) {
         if (! vertexNeighbors.containsKey(vertex1))
-            vertexNeighbors.put(vertex1, new HashSet<NeuronVertex>());
+            vertexNeighbors.put(vertex1, new HashSet<TmGeoAnnotation>());
         vertexNeighbors.get(vertex1).add(vertex2);
     }
     
-    private void insertEdge(NeuronEdge edge) {
-        Iterator<NeuronVertex> it = edge.iterator();
-        NeuronVertex vertex1 = it.next();
-        NeuronVertex vertex2 = it.next();
+    private void insertEdge(TmNeuronEdge edge) {
+        TmGeoAnnotation vertex1 = edge.getParentVertex();
+        TmGeoAnnotation vertex2 = edge.getChildVertex();
         insertDirectionalPair(vertex1, vertex2);
         insertDirectionalPair(vertex2, vertex1);
     }
@@ -59,13 +55,13 @@ public class NeuronModelChildFactory extends ChildFactory< VertexSubset >
         // Precache all vertex neighbors
         // TODO: somehow manage updates efficiently, or at all...
         vertexNeighbors.clear();
-        for ( NeuronEdge edge : neuron.getEdges() ) {
+        for ( TmNeuronEdge edge : neuron.getEdges() ) {
             insertEdge(edge);
         }
         tips.getVertices().clear();
         branchPoints.getVertices().clear();
-        for ( NeuronVertex vertex : neuron.getVertexes()) {
-            Collection<NeuronVertex> neighbors = vertexNeighbors.get(vertex);
+        for ( TmGeoAnnotation vertex : neuron.getGeoAnnotationMap().values()) {
+            Collection<TmGeoAnnotation> neighbors = vertexNeighbors.get(vertex);
             int neighborCount = 0;
             if (neighbors != null)
                 neighborCount = neighbors.size();

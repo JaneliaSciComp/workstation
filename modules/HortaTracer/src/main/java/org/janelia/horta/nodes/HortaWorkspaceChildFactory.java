@@ -11,6 +11,10 @@ import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.horta.NeuronTracerTopComponent;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 
@@ -20,12 +24,12 @@ import org.openide.nodes.Node;
  */
 class HortaWorkspaceChildFactory extends ChildFactory {
 
-    private final HortaMetaWorkspace workspace;
+    private final TmWorkspace workspace;
     private final Collection<MeshActor> meshActors = new HashSet<>();
     private final Observer refresher;
 
-    public HortaWorkspaceChildFactory(HortaMetaWorkspace workspace, List<MeshActor> meshActorList, ObservableInterface meshObserver) {
-        this.workspace = workspace;
+    public HortaWorkspaceChildFactory(List<MeshActor> meshActorList, ObservableInterface meshObserver) {
+        this.workspace = TmModelManager.getInstance().getCurrentWorkspace();
         this.meshActors.addAll(meshActorList);
         refresher = new Observer() {
             @Override
@@ -33,7 +37,7 @@ class HortaWorkspaceChildFactory extends ChildFactory {
                 refresh(false);
             }
         };
-        workspace.addObserver(refresher);
+       // workspace.addObserver(refresher);
 
         meshObserver.addObserver(new Observer() {
             @Override
@@ -51,23 +55,18 @@ class HortaWorkspaceChildFactory extends ChildFactory {
         for (GL3Actor meshActor : meshActors) {
             toPopulate.add(meshActor);
         }
-        for (NeuronSet neuronList : workspace.getNeuronSets()) {
+        for (TmNeuronMetadata neuron : NeuronManager.getInstance().getNeuronList()) {
             // Only show neuron lists with, you know, neurons in them.
-            neuronList.getMembershipChangeObservable().deleteObserver(refresher);
-            if (neuronList.size() == 0) {
-                // Listen for changes to empty neuron list content
-                neuronList.getMembershipChangeObservable().addObserver(refresher);
-            } else {
-                toPopulate.add(neuronList);
-            }
+            //neuronList.getMembershipChangeObservable().deleteObserver(refresher);
+            toPopulate.add(neuron);
         }
         return true;
     }
 
     @Override
     protected Node createNodeForKey(Object key) {
-        if (key instanceof NeuronSet) {
-            return new NeuronSetNode((NeuronSet) key);
+        if (key instanceof TmNeuronMetadata) {
+            return new NeuronNode((TmNeuronMetadata) key);
         } else if (key instanceof MeshActor) {
             return new MeshNode((MeshActor) key);
         }

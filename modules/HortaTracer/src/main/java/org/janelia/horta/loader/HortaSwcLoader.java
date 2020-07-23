@@ -51,7 +51,7 @@ public class HortaSwcLoader implements FileTypeLoader
                         if (neuronSet.add(neuron))
                             neuronSet.getMembershipChangeObservable().setChanged();
                     }
-                    renderer.addNeuronActors(neuron);
+                    //renderer.addNeuronActors(neuron);
                 } catch (IOException ex) {
                     Exceptions.printStackTrace(ex);
                 }

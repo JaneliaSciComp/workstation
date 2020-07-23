@@ -1,11 +1,12 @@
 package org.janelia.workstation.infopanel;
 
 import org.janelia.console.viewerapi.SimpleIcons;
-import org.janelia.workstation.controller.action.ChangeNeuronOwnerAction;
 import org.janelia.workstation.controller.TmViewerManager;
-import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
+import org.janelia.workstation.controller.action.NeuronChooseColorAction;
+import org.janelia.workstation.controller.dialog.ChangeNeuronOwnerDialog;
 import org.janelia.workstation.controller.eventbus.SelectionNeuronsEvent;
 import org.janelia.workstation.controller.model.TmSelectionState;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.workstation.geom.BoundingBox3d;
@@ -20,9 +21,11 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.infopanel.action.NeuronListProvider;
+import org.janelia.workstation.controller.eventbus.SelectionEvent;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 //import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
 
 import javax.swing.*;
@@ -222,9 +225,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                 int viewRow = table.rowAtPoint(me.getPoint());
                 if (viewRow >= 0) {
                     int modelRow = neuronTable.convertRowIndexToModel(viewRow);
-                    TmNeuronMetadata clickedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
+                    TmNeuronMetadata selectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
                     // select neuron
-                    selectNeuron(clickedNeuron);
+                    selectNeuron(selectedNeuron);
 
                     // show popup menu for the selected neuron
                     JPopupMenu popupMenu = createPopupMenu(me);
@@ -242,27 +245,66 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                 int viewRow = table.rowAtPoint(me.getPoint());
                 if (viewRow >= 0) {
                     int modelRow = neuronTable.convertRowIndexToModel(viewRow);
-                    TmNeuronMetadata clickedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
+                    TmNeuronMetadata selectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
                     // which column?
                     int viewColumn = table.columnAtPoint(me.getPoint());
                     int modelColumn = neuronTable.convertColumnIndexToModel(viewColumn);
                     if (modelColumn == NeuronTableModel.COLUMN_NAME) {
                         // single click name, select neuron
-                        selectNeuron(clickedNeuron);
+                        selectNeuron(selectedNeuron);
                     }  else if (modelColumn == NeuronTableModel.COLUMN_COLOR) {
-                        // single click color, edit style
-                       // annotationManager.chooseNeuronStyle(clickedNeuron);
+                        NeuronChooseColorAction action = new NeuronChooseColorAction();
+                        action.chooseNeuronColor(NeuronManager.getInstance().getNeuronFromNeuronID(selectedNeuron.getId()));
                         // the click might move the neuron selection, which we don't want
                         syncSelection();
                     } else if (modelColumn == NeuronTableModel.COLUMN_VISIBILITY) {
                         // single click visibility = toggle visibility
-                        modelManager.getCurrentView().toggleHidden(clickedNeuron.getId());
-                        neuronTableModel.updateNeuron(clickedNeuron);
+                        modelManager.getCurrentView().toggleHidden(selectedNeuron.getId());
+                        neuronTableModel.updateNeuron(selectedNeuron);
                         // the click might move the neuron selection, which we don't want
                         syncSelection();
                     } else if (modelColumn == NeuronTableModel.COLUMN_OWNER_ICON) {
-                        ChangeNeuronOwnerAction action = new ChangeNeuronOwnerAction(clickedNeuron);
-                        action.execute();
+                        String owner = selectedNeuron.getOwnerName();
+                        String ownerKey = selectedNeuron.getOwnerKey();
+                        String username = AccessManager.getAccessManager().getActualSubject().getName();
+
+                        if (owner.equals(username) ||
+                            ownerKey.equals(TRACERS_GROUP) ||
+                            // admins can change ownership on any neuron
+                                TmViewerManager.getInstance().isOwnershipAdmin()) {
+
+                            // pop up a dialog so the user can request to change the ownership
+                            //  of the neuron
+                            ChangeNeuronOwnerDialog dialog = new ChangeNeuronOwnerDialog(null);
+                            dialog.setVisible(true);
+                            if (dialog.isSuccess()) {
+                                SimpleWorker changer = new SimpleWorker() {
+                                    @Override
+                                    protected void doStuff() throws Exception {
+                                        NeuronManager.getInstance().changeNeuronOwner(selectedNeuron.getId(), dialog.getNewOwnerKey());
+                                    }
+
+                                    @Override
+                                    protected void hadSuccess() {
+
+                                    }
+
+                                    @Override
+                                    protected void hadError(Throwable error) {
+                                        FrameworkAccess.handleException("Could not change neuron owner!", error);
+                                    }
+                                };
+                                changer.execute();
+                            }
+
+                        } else {
+                            // submit a request to take ownership
+
+                            // for now:
+                            JOptionPane.showMessageDialog(null,
+                                owner + " owns this neuron. You need to ask them or an admin to give this neuron to you.");
+                        }
+                        // the click might move the neuron selection, which we don't want
                         syncSelection();
                     }
                 }
@@ -276,9 +318,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                 int viewRow = table.rowAtPoint(me.getPoint());
                 if (viewRow >= 0) {
                     int modelRow = neuronTable.convertRowIndexToModel(viewRow);
-                    TmNeuronMetadata clickedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
+                    TmNeuronMetadata selectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
                     // double click, go to neuron
-                    onNeuronDoubleClicked(clickedNeuron);
+                    onNeuronDoubleClicked(selectedNeuron);
                 }
                 me.consume();
             }

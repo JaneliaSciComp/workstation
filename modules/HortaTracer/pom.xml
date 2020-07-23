@@ -47,6 +47,17 @@
             <artifactId>viewerapi</artifactId>
         </dependency>
 
+        <!-- Viewer Controller -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewercontroller</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewer3d</artifactId>
+        </dependency>
+
         <!-- GL Viewer --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>

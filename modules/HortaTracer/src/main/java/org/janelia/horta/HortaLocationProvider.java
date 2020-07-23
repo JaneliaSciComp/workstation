@@ -77,7 +77,7 @@ public class HortaLocationProvider implements Tiled3dSampleLocationProviderAccep
             nttc.requestActive();
             try {
                 sampleLocation.setDefaultColorChannel(0);
-                nttc.setSampleLocation(sampleLocation);
+               // nttc.setSampleLocation(sampleLocation);
             } catch (Exception ex) {
                 logger.error("Failed to set sample location", ex);
             }

@@ -15,14 +15,15 @@ import java.util.Observer;
 import java.util.Set;
 import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.GenericObservable;
-import org.janelia.console.viewerapi.model.NeuronEdge;
-import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObserver;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronEdge;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * TODO: Perform full clear when workspace changes
  * TODO: Test all edit operations, from both LVV and Horta
  */
-public class NeuronVbo implements Iterable<NeuronModel>
+public class NeuronVbo implements Iterable<TmNeuronMetadata>
 {
     private final static int FLOATS_PER_VERTEX = 8;
     // Be sure to synchronize these constants with the actual shader vertex attribute (in) layout
@@ -42,7 +43,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
     private final static int RGBV_ATTRIB = 2;
     private final static float REVIEWED_GRAY_COLOR = 200;
 
-    private final Set<NeuronModel> neurons = new HashSet<>();
+    private final Set<TmNeuronMetadata> neurons = new HashSet<>();
     private int vboVertices = 0;
     private int vboEdgeIndices = 0;
     private int edgeCount = 0;
@@ -56,10 +57,10 @@ public class NeuronVbo implements Iterable<NeuronModel>
     private FloatBuffer vertexBuffer;
     
     // Cached indices
-    private final Map<NeuronModel, Integer> neuronOffsets = new HashMap<>(); // for surgically updating buffers
-    private final Map<NeuronModel, Integer> neuronVertexCounts = new HashMap<>(); // for sanity checking
-    private final Map<NeuronModel, Integer> neuronEdgeCounts = new HashMap<>(); // for sanity checking
-    private final Map<NeuronModel, NeuronObserver> neuronObservers = new HashMap<>();
+    private final Map<TmNeuronMetadata, Integer> neuronOffsets = new HashMap<>(); // for surgically updating buffers
+    private final Map<TmNeuronMetadata, Integer> neuronVertexCounts = new HashMap<>(); // for sanity checking
+    private final Map<TmNeuronMetadata, Integer> neuronEdgeCounts = new HashMap<>(); // for sanity checking
+    private final Map<TmNeuronMetadata, NeuronObserver> neuronObservers = new HashMap<>();
     
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
@@ -69,7 +70,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
     
     public void clear() {
         // first disconnect all signals
-        for (NeuronModel neuron : this) {
+        for (TmNeuronMetadata neuron : this) {
             disconnectSignals(neuron);
         }
         if (edgeCount > 0)
@@ -85,13 +86,13 @@ public class NeuronVbo implements Iterable<NeuronModel>
         vertexCount = 0;
     }
     
-    private void connectSignals(final NeuronModel neuron) {
+    private void connectSignals(final TmNeuronMetadata neuron) {
         if (neuronObservers.containsKey(neuron))
             return;
         neuronObservers.put(neuron, new NeuronObserver(neuron));
     }
     
-    private void disconnectSignals(NeuronModel neuron) {
+    private void disconnectSignals(TmNeuronMetadata neuron) {
         NeuronObserver observer = neuronObservers.get(neuron);
         if (observer == null)
             return;
@@ -175,18 +176,18 @@ public class NeuronVbo implements Iterable<NeuronModel>
     }
     
     // lightweight update of just the color field
-    private boolean updateNeuronColor(NeuronModel neuron) 
+    private boolean updateNeuronColor(TmNeuronMetadata neuron)
     {
         if (buffersNeedRebuild)
             return false;
-        int sv = neuron.getVertexes().size();
+        int sv = neuron.getAnnotationCount();
         int se = neuron.getEdges().size();
         float rgb[] = {0,0,0,1};
         neuron.getColor().getRGBComponents(rgb);
         boolean bChanged = false; // nothing has changed yet
         
         // check for whether the neuron is under review
-        if (neuron.getReviewMode()) {
+        if (TmModelManager.getInstance().getCurrentView().isNeuronInReviewMode(neuron.getId())) {
             buffersNeedRebuild = true;
             return false;
         }
@@ -243,11 +244,11 @@ public class NeuronVbo implements Iterable<NeuronModel>
     
     // lightweight update of just the visibility field
     // returns true if the buffer state actually changed
-    private boolean updateNeuronVisibility(NeuronModel neuron) 
+    private boolean updateNeuronVisibility(TmNeuronMetadata neuron)
     {
         if (buffersNeedRebuild)
             return false; // we are going to redo everything anyway, so skip the surgical update
-        int sv = neuron.getVertexes().size();
+        int sv = neuron.getAnnotationCount();
         int se = neuron.getEdges().size();
         boolean bIsVisible = neuron.isVisible();
         float visFloat = bIsVisible ? 1.0f : 0.0f;
@@ -304,29 +305,29 @@ public class NeuronVbo implements Iterable<NeuronModel>
         neuronOffsets.clear();
         neuronVertexCounts.clear();
         neuronEdgeCounts.clear();
-        for (NeuronModel neuron : neurons) {
+        for (TmNeuronMetadata neuron : neurons) {
             // if (! neuron.isVisible()) continue;
             neuronOffsets.put(neuron, vertexCount);
-            neuronVertexCounts.put(neuron, neuron.getVertexes().size());
+            neuronVertexCounts.put(neuron, neuron.getAnnotationCount());
             neuronEdgeCounts.put(neuron, neuron.getEdges().size());
             float visibility = neuron.isVisible() ? 1 : 0;
             Color color = neuron.getColor();
             color.getColorComponents(rgb);
-            Map<NeuronVertex, Integer> vertexIndices = new HashMap<>();
-            for (NeuronVertex vertex : neuron.getVertexes()) {
+            Map<TmGeoAnnotation, Integer> vertexIndices = new HashMap<>();
+            for (TmGeoAnnotation vertex : neuron.getGeoAnnotationMap().values()) {
                 int index = vertexCount;
                 vertexIndices.put(vertex, index);
                 // X, Y, Z, radius, r, g, b, visibility
-                float[] xyz = vertex.getLocation();
+                float[] xyz = new float[]{vertex.getX().floatValue(),vertex.getY().floatValue(),vertex.getZ().floatValue()};
                 vertexAttributes.add(xyz[0]); // X
                 vertexAttributes.add(xyz[1]); // Y
                 vertexAttributes.add(xyz[2]); // Z
-                float radius = vertex.getRadius();
-                if (neuron.isUserToggleRadius()) {
+                float radius = vertex.getRadius().floatValue();
+                if (TmModelManager.getInstance().getCurrentView().isNeuronRadiusToggle(neuron.getId())) {
                     radius = 0.3f;
                 }
                 vertexAttributes.add(radius); // radius
-                if (neuron.getReviewMode() && neuron.isReviewedVertex(vertex)) {
+                /*if (neuron.getReviewMode() && neuron.isReviewedVertex(vertex)) {
                     vertexAttributes.add(REVIEWED_GRAY_COLOR); // red
                     vertexAttributes.add(REVIEWED_GRAY_COLOR); // green
                     vertexAttributes.add(REVIEWED_GRAY_COLOR); // blue
@@ -334,14 +335,13 @@ public class NeuronVbo implements Iterable<NeuronModel>
                     vertexAttributes.add(rgb[0]); // red
                     vertexAttributes.add(rgb[1]); // green
                     vertexAttributes.add(rgb[2]); // blue
-                }
+                }*/
                 vertexAttributes.add(visibility); // visibility
                 vertexCount += 1;
             }
-            for (NeuronEdge edge : neuron.getEdges()) {
-                Iterator<NeuronVertex> eit = edge.iterator();
-                NeuronVertex v1 = eit.next();
-                NeuronVertex v2 = eit.next();
+            for (TmNeuronEdge edge : neuron.getEdges()) {
+                TmGeoAnnotation v1 = edge.getParentVertex();
+                TmGeoAnnotation v2 = edge.getChildVertex();
                 Integer i1 = vertexIndices.get(v1);
                 Integer i2 = vertexIndices.get(v2);
                 if ( (i1 == null) || (i2 == null) ) {
@@ -433,7 +433,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
         buffersNeedUpdate = false;
     }
 
-    boolean add(final NeuronModel neuron) 
+    boolean add(final TmNeuronMetadata neuron)
     {
         if (neuron == null)
             return false;
@@ -442,7 +442,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
         if (! neurons.add(neuron))
             return false;
 
-        vertexCount += neuron.getVertexes().size();
+        vertexCount += neuron.getAnnotationCount();
         buffersNeedRebuild = true;
 
         connectSignals(neuron);
@@ -451,7 +451,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
     }
 
     @Override
-    public Iterator<NeuronModel> iterator() {
+    public Iterator<TmNeuronMetadata> iterator() {
         return neurons.iterator();
     }
 
@@ -463,11 +463,11 @@ public class NeuronVbo implements Iterable<NeuronModel>
         return vertexCount;
     }
 
-    boolean contains(NeuronModel neuron) {
+    boolean contains(TmNeuronMetadata neuron) {
         return neurons.contains(neuron);
     }
 
-    boolean remove(NeuronModel neuron) {
+    boolean remove(TmNeuronMetadata neuron) {
         if (! neurons.remove(neuron))
             return false;
         disconnectSignals(neuron);
@@ -480,8 +480,8 @@ public class NeuronVbo implements Iterable<NeuronModel>
         // log.info("check for changes");
         if (buffersNeedRebuild)
             return; // no need to check counts, if we will be rebuilding anyway
-        for (NeuronModel neuron : this) {
-            if ( (neuron.getVertexes().size() != neuronVertexCounts.get(neuron)) 
+        for (TmNeuronMetadata neuron : this) {
+            if ( (neuron.getAnnotationCount() != neuronVertexCounts.get(neuron))
                     || (neuron.getEdges().size() != neuronEdgeCounts.get(neuron)))
             {
                 buffersNeedRebuild = true;
@@ -495,7 +495,7 @@ public class NeuronVbo implements Iterable<NeuronModel>
     
     private class NeuronObserver
     {
-        private final NeuronModel neuron;
+        private final TmNeuronMetadata neuron;
         
         // Surgical update after color change
         private final Observer colorChangeObserver = new Observer() {
@@ -550,29 +550,29 @@ public class NeuronVbo implements Iterable<NeuronModel>
         };
         
         
-        public NeuronObserver(NeuronModel neuron) {
+        public NeuronObserver(TmNeuronMetadata neuron) {
             this.neuron = neuron;
             connectSignals();
         }
         
         private void connectSignals() 
         {
-            neuron.getColorChangeObservable().addObserver(colorChangeObserver);
+           /* neuron.getColorChangeObservable().addObserver(colorChangeObserver);
             neuron.getVisibilityChangeObservable().addObserver(visibilityObserver);
             neuron.getVertexCreatedObservable().addObserver(vertexCreationObserver);
             neuron.getGeometryChangeObservable().addObserver(geometryChangeObserver);
             neuron.getVertexUpdatedObservable().addObserver(vertexUpdateObserver);
-            neuron.getVertexesRemovedObservable().addObserver(vertexDeletionObserver);
+            neuron.getVertexesRemovedObservable().addObserver(vertexDeletionObserver);*/
     }
 
         private void disconnectSignals() 
         {
-            neuron.getColorChangeObservable().deleteObserver(colorChangeObserver);
+            /*neuron.getColorChangeObservable().deleteObserver(colorChangeObserver);
             neuron.getVisibilityChangeObservable().deleteObserver(visibilityObserver);
             neuron.getVertexCreatedObservable().deleteObserver(vertexCreationObserver);
             neuron.getGeometryChangeObservable().deleteObserver(geometryChangeObserver);
             neuron.getVertexUpdatedObservable().deleteObserver(vertexUpdateObserver);
-            neuron.getVertexesRemovedObservable().deleteObserver(vertexDeletionObserver);
+            neuron.getVertexesRemovedObservable().deleteObserver(vertexDeletionObserver);*/
         }
     }
 

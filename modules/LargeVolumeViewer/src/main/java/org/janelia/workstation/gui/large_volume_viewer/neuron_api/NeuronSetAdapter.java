@@ -334,21 +334,6 @@ public class NeuronSetAdapter
     
     @Override
     public void removeObjectMesh(String meshName) {
-        try {
-            TmObjectMesh deleteMesh = null;
-            List<TmObjectMesh> meshList = TmModelManager.getInstance().getCurrentWorkspace().getObjectMeshList();
-            for (TmObjectMesh mesh: meshList) {
-                if (mesh.getName().equals(meshName)) {
-                    deleteMesh = mesh;
-                }
-            }
-            if (deleteMesh!=null) {
-                TmModelManager.getInstance().getCurrentWorkspace().removeObjectMesh(deleteMesh);
-               // annotationModel.saveCurrentWorkspace();
-            }
-        } catch (Exception error) {
-            FrameworkAccess.handleException(error);
-        }
     }
 
     @Override
@@ -427,7 +412,7 @@ public class NeuronSetAdapter
                 // Emit annotation added signal, to update Horta spatial index
                 NeuronVertexCreationObservable addedSignal = neuron.getVertexCreatedObservable();
                 addedSignal.setChanged();
-                addedSignal.notifyObservers(new VertexWithNeuron(newVertex, neuron));
+               // addedSignal.notifyObservers(new VertexWithNeuron(newVertex, neuron));
             }
 
             LOG.debug("Adding vertex: {}", newVertex);
@@ -469,8 +454,8 @@ public class NeuronSetAdapter
             for (NeuronModel neuron : deletedVerticesByNeuron.keySet()) {
                 neuron.getVertexesRemovedObservable().setChanged();
                 Collection<NeuronVertex> deletedVertices = deletedVerticesByNeuron.get(neuron);
-                neuron.getVertexesRemovedObservable().notifyObservers(
-                        new VertexCollectionWithNeuron(deletedVertices, neuron));
+               // neuron.getVertexesRemovedObservable().notifyObservers(
+                 //       new VertexCollectionWithNeuron(deletedVertices, neuron));
             }
 
             // Repaint Horta now, to update view without further user interaction
@@ -508,7 +493,7 @@ public class NeuronSetAdapter
 
             NeuronVertexUpdateObservable signal = neuronModel.getVertexUpdatedObservable();
             signal.setChanged();
-            signal.notifyObservers(new VertexWithNeuron(reparentedVertex, neuronModel));
+           // signal.notifyObservers(new VertexWithNeuron(reparentedVertex, neuronModel));
 
             repaintHorta();
         }
@@ -534,7 +519,7 @@ public class NeuronSetAdapter
 
             NeuronVertexUpdateObservable signal = neuron.getVertexUpdatedObservable();
             signal.setChanged();
-            signal.notifyObservers(new VertexWithNeuron(movedVertex, neuron));
+          //  signal.notifyObservers(new VertexWithNeuron(movedVertex, neuron));
 
             repaintHorta();
         }
@@ -561,7 +546,7 @@ public class NeuronSetAdapter
             }
             NeuronVertexUpdateObservable signal = neuron.getVertexUpdatedObservable();
             signal.setChanged();
-            signal.notifyObservers(new VertexWithNeuron(movedVertex, neuron));
+           // signal.notifyObservers(new VertexWithNeuron(movedVertex, neuron));
             repaintHorta();
         }
     }
@@ -663,8 +648,8 @@ public class NeuronSetAdapter
                 deletedVertices.add(neuronVertex);
             }
             neuronModel.getVertexesRemovedObservable().setChanged();
-            neuronModel.getVertexesRemovedObservable().notifyObservers(
-                    new VertexCollectionWithNeuron(deletedVertices, neuronModel));
+          //  neuronModel.getVertexesRemovedObservable().notifyObservers(
+             //       new VertexCollectionWithNeuron(deletedVertices, neuronModel));
 
             neuronModel.getGeometryChangeObservable().setChanged();
             innerList.removeFromCache(neuron.getId());
@@ -780,8 +765,8 @@ public class NeuronSetAdapter
                     deletedVertices.add(neuronVertex);
                 }
                 neuronModel.getVertexesRemovedObservable().setChanged();
-                neuronModel.getVertexesRemovedObservable().notifyObservers(
-                        new VertexCollectionWithNeuron(deletedVertices, neuronModel));
+              //  neuronModel.getVertexesRemovedObservable().notifyObservers(
+                     //   new VertexCollectionWithNeuron(deletedVertices, neuronModel));
                 neuronModel.getGeometryChangeObservable().setChanged();
                 innerList.removeFromCache(neuron.getId());
                 getMembershipChangeObservable().setChanged();
@@ -803,8 +788,8 @@ public class NeuronSetAdapter
                 deletedVertices.add(neuronVertex);
             }
             neuronModel.getVertexesRemovedObservable().setChanged();
-            neuronModel.getVertexesRemovedObservable().notifyObservers(
-                    new VertexCollectionWithNeuron(deletedVertices, neuronModel));
+        //    neuronModel.getVertexesRemovedObservable().notifyObservers(
+              //      new VertexCollectionWithNeuron(deletedVertices, neuronModel));
 
             neuronModel.getGeometryChangeObservable().setChanged();
             innerList.removeFromCache(neuron.getId());

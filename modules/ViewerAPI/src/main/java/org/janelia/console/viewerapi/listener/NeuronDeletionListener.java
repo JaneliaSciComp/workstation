@@ -1,7 +1,10 @@
 package org.janelia.console.viewerapi.listener;
 
 import java.util.Collection;
+
+import org.janelia.console.viewerapi.components.TmNeuronPanel;
 import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 
 /**
  *
@@ -9,6 +12,6 @@ import org.janelia.console.viewerapi.model.NeuronModel;
  */
 public interface NeuronDeletionListener {
 
-    void neuronsDeleted(Collection<NeuronModel> deletedNeurons);
+    void neuronsDeleted(Collection<TmNeuronMetadata> deletedNeurons);
     
 }
