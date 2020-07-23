@@ -1117,7 +1117,13 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                 beginTransaction();
                 try {
                     // Need to delete the anchor to undraw it
-                    fireAnnotationsDeleted(Arrays.asList(link));
+                    // note that if the link is a root, the parent is a neuron, and there is
+                    //  no "next parent" anymore
+                    if (link.isRoot()) {
+                        fireAnnotationsDeleted(Arrays.asList(link), null);
+                    } else {
+                        fireAnnotationsDeleted(Arrays.asList(link), parent);
+                    }
                     // Also need to redraw the neurite, because we need the link from the reparenting to appear
                     fireNeuronChanged(neuron);
 
@@ -1199,7 +1205,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                     for (TmGeoAnnotation ann : notesChanged) {
                         fireNotesUpdated(ann);
                     }
-                    fireAnnotationsDeleted(deleteList);
+                    fireAnnotationsDeleted(deleteList, rootParent);
                     if (applyFilter) {
                         NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
                         updateFrags(updates);
@@ -2194,11 +2200,13 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     void fireAnnotationAdded(TmGeoAnnotation annotation) {
         AnnotationCreateEvent annotationEvent = new AnnotationCreateEvent(Arrays.asList(annotation));
+        annotationEvent.setRequestedNextParent(annotation);
         ViewerEventBus.postEvent(annotationEvent);
     }
 
-    void fireAnnotationsDeleted(List<TmGeoAnnotation> deleteList) {
+    void fireAnnotationsDeleted(List<TmGeoAnnotation> deleteList, TmGeoAnnotation nextParent) {
         AnnotationDeleteEvent annotationEvent = new AnnotationDeleteEvent(deleteList);
+        annotationEvent.setRequestedNextParent(nextParent);
         ViewerEventBus.postEvent(annotationEvent);
     }
 

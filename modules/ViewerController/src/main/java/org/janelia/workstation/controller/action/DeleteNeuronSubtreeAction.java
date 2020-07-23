@@ -68,7 +68,8 @@ import java.awt.event.ActionEvent;
             //  no undo right now!)
             final TmGeoAnnotation annotation = neuronManager.getGeoAnnotationFromID(neuron.getId(),
                     vertex.getId());
-            int nAnnotations = neuronManager.getNeuronFromNeuronID(vertex.getId()).getSubTreeList(annotation).size();
+            // why are we not using the passed in neuron?  do we not trust that it's up to date?
+            int nAnnotations = neuronManager.getNeuronFromNeuronID(neuron.getId()).getSubTreeList(annotation).size();
             if (nAnnotations > 1) {
                 int ans = JOptionPane.showConfirmDialog(
                         null,
