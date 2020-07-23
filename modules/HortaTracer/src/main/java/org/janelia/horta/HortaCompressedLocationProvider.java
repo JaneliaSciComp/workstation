@@ -55,7 +55,7 @@ public class HortaCompressedLocationProvider extends HortaLocationProviderBase i
             try {
                 sampleLocation.setDefaultColorChannel(0);
                 sampleLocation.setCompressed(true);
-                nttc.setSampleLocation(sampleLocation);
+               // nttc.setSampleLocation(sampleLocation);
             } catch (Exception ex) {
                 throw new RuntimeException("Error setting sample location", ex);
             }

@@ -4,7 +4,7 @@ import com.jogamp.opengl.util.FPSAnimator;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
-import org.janelia.console.viewerapi.BasicSampleLocation;
+
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.Quaternion;
@@ -82,10 +82,12 @@ public class PlayReviewManager {
                 if (quaternionRotation != null) {
                     q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
                 }
-                ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+                ViewLoader acceptor = new ViewLoader(
                         loader, neuronTracer, sceneWindow
                 );
-                acceptor.acceptLocation(sampleLocation);
+
+                // Set up a more flexible scheme for animations
+                //acceptor.loadView(sampleLocation);
                 Vantage vantage = sceneWindow.getVantage();
                 vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
                 Thread.sleep(500);
@@ -98,7 +100,7 @@ public class PlayReviewManager {
                     if (quaternionRotation != null) {
                         q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
                     }
-                    acceptor = new SampleLocationAcceptor(
+                    acceptor = new ViewLoader(
                             loader, neuronTracer, sceneWindow
                     );
 
@@ -114,7 +116,8 @@ public class PlayReviewManager {
                         steps = 1;
                     }
                     steps = steps * stepScale;
-                    boolean interrupt = animateToLocationWithRotation(acceptor, q, sampleLocation, steps, null);
+                    boolean interrupt = false;
+                    //animateToLocationWithRotation(acceptor, q, sampleLocation, steps, null);
                     if (interrupt) {
                         playState.setCurrentNode(i);
                         break;
@@ -210,7 +213,7 @@ public class PlayReviewManager {
         if (quaternionRotation != null) {
             q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
         }
-        ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+        ViewLoader acceptor = new ViewLoader(
                 loader, neuronTracer, sceneWindow
         );
 
@@ -226,8 +229,8 @@ public class PlayReviewManager {
             steps = 1;
         }
         steps = steps * stepScale;
-
-        return animateToLocationWithRotation(acceptor, q, sampleLocation, steps, startStep);
+return true;
+        //return animateToLocationWithRotation(acceptor, q, sampleLocation, steps, startStep);
     }
 
     private boolean animateToLocationWithRotation(ViewerLocationAcceptor acceptor, Quaternion endRotation, SampleLocation endLocation, int steps, Integer startStep) throws Exception {
@@ -283,7 +286,7 @@ public class PlayReviewManager {
     }
 
     /**
-     * @param pausePlayback the pausePlayback to set
+     * @param pause the pausePlayback to set
      */
     void setPausePlayback(boolean pause) {
         this.pausePlayback = pause;

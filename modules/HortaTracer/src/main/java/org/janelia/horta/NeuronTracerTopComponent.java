@@ -34,6 +34,7 @@ import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.MouseInputListener;
 import javax.swing.text.Keymap;
 
+import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 
@@ -103,13 +104,15 @@ import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.action.NeuronRenameAction;
+import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.controller.model.TmSelectionState;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
@@ -123,7 +126,6 @@ import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
 import org.openide.util.actions.SystemAction;
-import org.openide.util.lookup.Lookups;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
@@ -375,6 +377,10 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         neuronMPRenderer = setUpActors();
 
+        hortaManager.addNeuronCreationListener(neuronMPRenderer);
+        hortaManager.addNeuronDeletionListener(neuronMPRenderer);
+        hortaManager.addNeuronUpdateListener(neuronMPRenderer);
+
         // Drag a YML tilebase file to put some data in the viewer
         setupDragAndDropYml();
 
@@ -382,38 +388,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         setBackgroundColor(backgroundColor); // call this AFTER setUpActors
 
         // neuronMPRenderer.setWorkspace(workspace); // set up signals in renderer
-
-        // MOVE THIS TO CONTROLLER TO LISTER FOR POST WORKSPACE EVENTBUS
-        /*metaWorkspace.addObserver(new Observer() {
-            // Update is called when the set of neurons changes, or the background color changes
-            @Override
-            public void update(Observable o, Object arg) {
-                // Apply tracing interactions to LVV workspace
-                // TODO: for now assuming that the largest NeuronSet is the LVV one
-
-                Collection<NeuronSet> sets = metaWorkspace.getNeuronSets();
-                if (sets.isEmpty()) {} // Do nothing
-                else if (sets.size() == 1) {
-                    //setDefaultWorkspace(sets.iterator().next());
-                } else {
-                    for (NeuronSet ws : sets) {
-                        // Skip initial internal default set
-                        if (ws.getName().equals("Temporary Neurons"))
-                            continue;
-                        // Assume any other set is probably the LVV workspace
-                       // setDefaultWorkspace(ws);
-                    }
-                }
-
-                // Update background color
-               // setBackgroundColor(metaWorkspace.getBackgroundColor());
-
-                // load all meshes from the workspace
-                loadMeshActors();
-
-                redrawNow();
-            }
-        });*/
 
         neuronTraceLoader = new NeuronTraceLoader(
                 NeuronTracerTopComponent.this,
@@ -425,8 +399,20 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         loadStartupPreferences();
 
-        //metaWorkspace.notifyObservers();
+        //metaWorksopace.notifyObservers();
         playback = new PlayReviewManager(sceneWindow, this, neuronTraceLoader);
+        initSampleLocation();
+
+    }
+
+    public void loadWorkspaceNeurons() {
+        // Update background color
+        // setBackgroundColor(metaWorkspace.getBackgroundColor());
+
+        // load all meshes from the workspace
+        loadMeshActors();
+
+        redrawNow();
     }
     
     public void stopPlaybackReview() {
@@ -509,62 +495,67 @@ public final class NeuronTracerTopComponent extends TopComponent
         playback.reviewPoints(locationList, autoRotation, speed, stepScale);
     }
 
-    void setSampleLocation(SampleLocation sampleLocation) {
+    // center on the brain sample
+    void initSampleLocation() {
+        Vec3 voxelCenter = TmModelManager.getInstance().getVoxelCenter();
+        ViewEvent event = new ViewEvent();
+        event.setCameraFocusX(voxelCenter.getX());
+        event.setCameraFocusY(voxelCenter.getY());
+        event.setCameraFocusZ(voxelCenter.getZ());
+        event.setZoomLevel(event.getZoomLevel());
+        setSampleLocation(event);
+    }
+
+    @Subscribe
+    void setSampleLocation(ViewEvent event) {
         try {
-            leverageCompressedFiles = sampleLocation.isCompressed();
+            //leverageCompressedFiles = sampleLocation.isCompressed();
             playback.clearPlayState();
             Quaternion q = new Quaternion();
-            float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
+            float[] quaternionRotation = event.getCameraRotation();
             if (quaternionRotation != null) {
                 q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
             }
-            ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+            ViewLoader viewLoader = new ViewLoader(
                     neuronTraceLoader,this, sceneWindow
             );
 
-            // if neuron and neuron vertex passed, select this parent vertex
-            if (sampleLocation.getNeuronVertexId() != null) {
-                long neuronId = sampleLocation.getNeuronId();
-                long vertexId = sampleLocation.getNeuronVertexId();
-                TmSelectionState tmSelectionState = TmModelManager.getInstance().getCurrentSelections();
-                TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(neuronId);
-                TmGeoAnnotation vertex = NeuronManager.getInstance().getGeoAnnotationFromID(neuronId, vertexId);
-                if (neuron != null && vertex != null) {
-                    tracingInteractor.selectParentVertex(vertex, neuron);
-                }
+            Vec3 location = new Vec3(event.getCameraFocusX(),
+                    event.getCameraFocusY(), event.getCameraFocusZ());
+            double zoom = event.getZoomLevel();
+            viewLoader.loadView(location, zoom);
+            Vantage vantage = sceneWindow.getVantage();
+            if (quaternionRotation != null) {
+                vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
+            } else {
+                vantage.setRotationInGround(vantage.getDefaultRotation());
             }
 
-            if (sampleLocation.getInterpolate()) {
-                // figure out number of steps
-                Vantage vantage = sceneWindow.getVantage();
-                float[] startLocation = vantage.getFocus();
-                double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm()-startLocation[0],2) +
-                        Math.pow(sampleLocation.getFocusYUm()-startLocation[1],2) +
-                        Math.pow(sampleLocation.getFocusZUm()-startLocation[2],2));
-                // # of steps is 1 per uM
-                int steps = (int) Math.round(distance);
-                if (steps < 1)
-                    steps = 1;
-            } else {
-                acceptor.acceptLocation(sampleLocation);
-                currLocation = sampleLocation;
-                Vantage vantage = sceneWindow.getVantage();
-                if (sampleLocation.getRotationAsQuaternion() != null) {
-                    vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
-                } else {
-                    vantage.setRotationInGround(vantage.getDefaultRotation());
-                }
-            }
-            activityLogger.logHortaLaunch(sampleLocation);
-            currentSource = sampleLocation.getSampleUrl().toString();
-            defaultColorChannel = sampleLocation.getDefaultColorChannel();
+            currentSource = TmModelManager.getInstance().getTileLoader().getUrl().toString();
+            defaultColorChannel = 0;
             volumeCache.setColorChannel(defaultColorChannel);
         } catch (Exception ex) {
             throw new RuntimeException(
-                    "Failed to load location " + sampleLocation.getSampleUrl().toString() + ", " +
-                    sampleLocation.getFocusXUm() + "," + sampleLocation.getFocusYUm() + "," + sampleLocation.getFocusZUm(), ex
+                    "Failed to set the view in Horta", ex
             );
         }
+    }
+
+    private void playAnimation() {
+        /**
+         if (sampleLocation.getInterpolate()) {
+         // figure out number of steps
+         Vantage vantage = sceneWindow.getVantage();
+         float[] startLocation = vantage.getFocus();
+         double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm()-startLocation[0],2) +
+         Math.pow(sampleLocation.getFocusYUm()-startLocation[1],2) +
+         Math.pow(sampleLocation.getFocusZUm()-startLocation[2],2));
+         // # of steps is 1 per uM
+         int steps = (int) Math.round(distance);
+         if (steps < 1)
+         steps = 1;
+         } else {
+         **/
     }
 
     private List<GL3Actor> tracingActors = new ArrayList<>();
@@ -578,6 +569,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         List<MultipassRenderer> renderers = sceneWindow.getRenderer().getMultipassRenderers();
         renderers.clear();
         renderers.add(neuronMPRenderer0);
+
 
         // 3) Neurite model
         tracingActors.clear();
@@ -616,6 +608,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         crossHairActor = new CenterCrossHairActor();
         sceneWindow.getRenderer().addActor(crossHairActor);
         /* */
+
+        // add in all neurons from workspace
+        if (TmModelManager.getInstance().getCurrentWorkspace()!=null) {
+            for (TmNeuronMetadata neuron: NeuronManager.getInstance().getNeuronList()) {
+                neuronMPRenderer0.addNeuronActors(neuron);
+            }
+        }
 
         return neuronMPRenderer0;
     }
@@ -1141,28 +1140,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         }));*/
     }
 
-    // Reimplementing internal load tile method, after Les refactored SampleLocation etc.
-    private boolean loadTileAtCurrentFocusAsynchronous() {
-        if (currentSource == null)
-            return false;
-        SampleLocation location = new BasicSampleLocation();
-        location.setCompressed(false);
-        location.setDefaultColorChannel(defaultColorChannel);
-        Vantage vantage = sceneWindow.getCamera().getVantage();
-        Vector3 focus = new Vector3(vantage.getFocusPosition());
-        location.setFocusUm(focus.getX(), focus.getY(), focus.getZ());
-        try {
-            location.setSampleUrl(new URL(currentSource));
-        } catch (MalformedURLException ex) {
-            return false;
-        }
-        location.setMicrometersPerWindowHeight(
-                vantage.getSceneUnitsPerViewportHeight());
-
-        setSampleLocation(location);
-        return true;
-    }
-
     private void setupContextMenu(Component innerComponent) {
         // Context menu for window - at first just to see if it works with OpenGL
         // (A: YES, if applied to the inner component)
@@ -1196,21 +1173,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                     Tiled3dSampleLocationProviderAcceptor origin =
                             helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
                     logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
-                    ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+                    ViewLoader acceptor = new ViewLoader(
                             neuronTraceLoader, NeuronTracerTopComponent.this, sceneWindow
                     );
-                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-                    if (locationProviders.size() > 1) {
-                        JMenu synchronizeAllMenu = new JMenu("Synchronize with Other 3D Viewer.");
-                        for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
-                            synchronizeAllMenu.add(item);
-                        }
-                        topMenu.add(synchronizeAllMenu);
-                    } else if (locationProviders.size() == 1) {
-                        for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
-                            topMenu.add(item);
-                        }
-                    }
                     topMenu.add(new JPopupMenu.Separator());
                 }
 
@@ -2222,7 +2187,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     public void reloadSampleLocation() {
-        if (currLocation!=null)
-            setSampleLocation(currLocation);
+        //if (currLocation!=null)
+         //   setSampleLocation();
     }
 }

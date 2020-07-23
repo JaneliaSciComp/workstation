@@ -34,6 +34,7 @@ public class HortaManager {
 
     private List<NeuronCreationListener> neuronCreationListeners = new ArrayList<>();
     private List<NeuronDeletionListener> neuronDeletionListeners = new ArrayList<>();
+    private List<NeuronUpdateListener> neuronUpdateListeners = new ArrayList<>();
     private List<NeuronVertexCreationListener> vertexCreationListeners = new ArrayList<>();
     private List<NeuronVertexDeletionListener> vertexDeletionListeners = new ArrayList<>();
     private List<NeuronVertexUpdateListener> vertexUpdateListeners = new ArrayList<>();
@@ -45,6 +46,10 @@ public class HortaManager {
     
     public void addNeuronCreationListener(NeuronCreationListener listener) {
         neuronCreationListeners.add(listener);
+    }
+
+    public void addNeuronUpdateListener(NeuronUpdateListener listener) {
+        neuronUpdateListeners.add(listener);
     }
 
     public void addNeuronDeletionListener(NeuronDeletionListener listener) {
@@ -75,6 +80,13 @@ public class HortaManager {
     // When Horta TopComponent closes
     public void onClosed() {
         // strip down all things in the workspace
+    }
+
+    @Subscribe
+    private void neuronUpdate(NeuronUpdateEvent event) {
+        for (NeuronUpdateListener listener: neuronUpdateListeners) {
+            listener.neuronsUpdated(event.getNeurons());
+        }
     }
 
     @Subscribe

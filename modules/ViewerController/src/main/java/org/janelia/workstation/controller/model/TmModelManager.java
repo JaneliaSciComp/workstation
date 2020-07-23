@@ -13,6 +13,8 @@ import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.tileimagery.TileLoader;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +48,8 @@ public class TmModelManager {
     private NeuronModel neuronModel;
     private final TiledMicroscopeDomainMgr tmDomainMgr;
     private TileLoader tileLoader;
+    private Vec3 voxelCenter;
+    private BoundingBox3d sampleBoundingBox;
     private SpatialIndexManager spatialIndexManager;
 
     private static final TmModelManager instance = new TmModelManager();
@@ -181,6 +185,23 @@ public class TmModelManager {
     public void setTileLoader(TileLoader tileLoader) {
         this.tileLoader = tileLoader;
     }
+
+    public BoundingBox3d getSampleBoundingBox() {
+        return sampleBoundingBox;
+    }
+
+    public void setSampleBoundingBox(BoundingBox3d sampleBoundingBox) {
+        this.sampleBoundingBox = sampleBoundingBox;
+    }
+
+    public Vec3 getVoxelCenter() {
+        return voxelCenter;
+    }
+
+    public void setVoxelCenter(Vec3 voxelCenter) {
+        this.voxelCenter = voxelCenter;
+    }
+
 
     public boolean checkOwnership(Long neuronID)  {
         return checkOwnership(NeuronManager.getInstance().getNeuronFromNeuronID(neuronID));

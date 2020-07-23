@@ -16,7 +16,6 @@ import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringUtils;
 import org.janelia.console.viewerapi.OsFilePathRemapper;
-import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
@@ -35,16 +34,19 @@ import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.scenewindow.SceneWindow;
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
+import org.janelia.workstation.geom.Vec3;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SampleLocationAcceptor implements ViewerLocationAcceptor {
-    private static final Logger LOG = LoggerFactory.getLogger(SampleLocationAcceptor.class);
+public class ViewLoader {
+    private static final Logger LOG = LoggerFactory.getLogger(ViewLoader.class);
     private static final HttpClientHelper HTTP_HELPER = new HttpClientHelper();
 
     private final NeuronTraceLoader loader;
@@ -53,17 +55,16 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
     private final ObjectMapper objectMapper;
 
 
-    SampleLocationAcceptor(NeuronTraceLoader loader,
-                           NeuronTracerTopComponent nttc,
-                           SceneWindow sceneWindow) {
+    ViewLoader(NeuronTraceLoader loader,
+               NeuronTracerTopComponent nttc,
+               SceneWindow sceneWindow) {
         this.loader = loader;
         this.nttc = nttc;
         this.sceneWindow = sceneWindow;
         this.objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    @Override
-    public void acceptLocation(final SampleLocation sampleLocation) throws Exception {
+    public void loadView(Vec3 syncLocation, double syncZoom) throws Exception {
         Runnable task = new Runnable() {
             @Override
             public void run() {
@@ -74,22 +75,22 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     progress.setDisplayName("Loading brain specimen...");
                     // TODO - ensure that Horta viewer is open
                     // First ensure that this component uses same sample.
-                    URL url = sampleLocation.getSampleUrl();
-                    TmSample sample = sampleLocation.getSample();
-
+                    //URL url = sampleLocation.getSampleUrl();
+                    TmSample sample = TmModelManager.getInstance().getCurrentSample();
+                    URL url = TmModelManager.getInstance().getTileLoader().getUrl();
                     // trying to run down a bug:
                     if (sample == null) {
                         LOG.info("found null sample for sample url " + url + " at coordinates "
-                                + sampleLocation.getFocusXUm() + ", "
-                                + sampleLocation.getFocusYUm() + ", "
-                                + sampleLocation.getFocusZUm());
+                                + syncLocation.getX() + ", "
+                                + syncLocation.getY() + ", "
+                                + syncLocation.getZ());
                     }
                     RenderedVolume renderedVolume = getVolumeInfo(url.toURI());
 
                     if (nttc.isPreferKtx()) {
                         // for KTX tile the camera must be set before the tiles are loaded in order for them to be displayed first time
                         progress.setDisplayName("Centering on location...");
-                        setCameraLocation(sampleLocation);
+                        setCameraLocation(syncZoom, syncLocation);
                         // use ktx tiles
                         KtxOctreeBlockTileSource ktxSource = createKtxSource(url, sample);
                         nttc.setKtxSource(ktxSource);
@@ -108,10 +109,10 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         // start loading raw tiles
                         progress.switchToIndeterminate();
                         progress.setDisplayName("Loading brain tile image...");
-                        loader.loadTileAtCurrentFocus(volumeBrickSource, sampleLocation.getDefaultColorChannel());
+                        loader.loadTileAtCurrentFocus(volumeBrickSource, 0);
                         // for raw tiles the camera needs to be set after the tile began loading in order to trigger the display
                         progress.setDisplayName("Centering on location...");
-                        setCameraLocation(sampleLocation);
+                        setCameraLocation(syncZoom, syncLocation);
                     }
 
                     nttc.redrawNow();
@@ -189,21 +190,20 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         return new RawVolumeBrickSource(nttc.getTileLoader()).init(sample, rawTiles, progress::progress);
     }
 
-    private void setCameraLocation(SampleLocation sampleLocation) {
+    private void setCameraLocation(double zoom, Vec3 sampleLocation) {
         // Now, position this component over other component's focus.
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
         Vantage v = pCam.getVantage();
         Vector3 focusVector3 = new Vector3(
-                (float) sampleLocation.getFocusXUm(),
-                (float) sampleLocation.getFocusYUm(),
-                (float) sampleLocation.getFocusZUm());
+                (float) sampleLocation.getX(),
+                (float) sampleLocation.getY(),
+                (float) sampleLocation.getZ());
 
         if (!v.setFocusPosition(focusVector3)) {
             LOG.info("New focus is the same as previous focus");
         }
         v.setDefaultFocus(focusVector3);
 
-        double zoom = sampleLocation.getMicrometersPerWindowHeight();
         if (zoom > 0) {
             v.setSceneUnitsPerViewportHeight((float) zoom);
             v.setDefaultSceneUnitsPerViewportHeight((float) zoom);
