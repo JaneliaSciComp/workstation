@@ -115,34 +115,40 @@ public final class DomainViewerTopComponent extends TopComponent {
     }
 
     @Override
-    protected void componentShowing() {
-        log.debug("componentShowing - {}", this.getName());
-        DomainViewerManager.getInstance().activate(this);
-    }
-
-    @Override
-    protected void componentHidden() {
-        log.debug("componentHidden - {}", this.getName());
-    }
-
-    @Override
     protected void componentActivated() {
-        log.debug("componentActivated - {}", this.getName());
+        log.info("componentActivated - {}", this.getName());
         DomainViewerManager.getInstance().activate(this);
         if (editor!=null) {
             editor.activate();
             ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
             if (editor.getViewerContext()!=null) {
                 ViewerUtils.updateNodeIfChanged(this, content, editor.getViewerContext().getSelectionModel().getObjects());
+                ViewerUtils.updateGlobalSelection(editor.getViewerContext().getSelectionModel(), true);
             }
         }
     }
     
     @Override
     protected void componentDeactivated() {
-        log.debug("componentDeactivated - {}", this.getName());
+        log.info("componentDeactivated - {}", this.getName());
         if (editor!=null) {
             editor.deactivate();
+        }
+    }
+
+    @Override
+    protected void componentShowing() {
+        log.info("componentShowing - {}", this.getName());
+        DomainViewerManager.getInstance().activate(this);
+    }
+
+    @Override
+    protected void componentHidden() {
+        log.info("componentHidden - {}", this.getName());
+        if (editor!=null) {
+            if (editor.getViewerContext() != null) {
+                ViewerUtils.updateGlobalSelection(editor.getViewerContext().getSelectionModel(), true);
+            }
         }
     }
 
@@ -157,6 +163,7 @@ public final class DomainViewerTopComponent extends TopComponent {
                 ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
                 if (editor.getViewerContext()!=null) {
                     ViewerUtils.updateNodeIfChanged(this, content, editor.getViewerContext().getSelectionModel().getObjects());
+                    ViewerUtils.updateGlobalSelection(editor.getViewerContext().getSelectionModel(), true);
                 }
             }
         }

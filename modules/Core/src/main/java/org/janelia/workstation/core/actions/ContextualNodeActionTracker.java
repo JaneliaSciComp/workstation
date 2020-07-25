@@ -66,10 +66,10 @@ public class ContextualNodeActionTracker implements LookupListener {
         ViewerContext viewerContext = viewerContexts.isEmpty()?null:viewerContexts.iterator().next();
 
         if (lookupEvent.getSource()==nodeResult) {
-            log.info("Node changed: {} nodes and {} objects selected", selectedNodes.size(), nodeContext.getObjects().size());
+            log.trace("Node changed: {} nodes and {} objects selected", selectedNodes.size(), nodeContext.getObjects().size());
         }
         else if (lookupEvent.getSource()==viewerContextResult) {
-            log.info("Viewer context changed: {}", viewerContext);
+            log.trace("Viewer context changed: {}", viewerContext);
         }
         else {
             throw new IllegalStateException("Unexpected lookup event");

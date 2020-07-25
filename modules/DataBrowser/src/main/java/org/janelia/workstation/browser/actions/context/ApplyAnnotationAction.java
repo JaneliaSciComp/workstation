@@ -1,12 +1,8 @@
 package org.janelia.workstation.browser.actions.context;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.janelia.model.domain.ontology.Category;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
-import org.janelia.workstation.browser.gui.options.BrowserOptions;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -14,6 +10,9 @@ import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 import org.openide.util.actions.SystemAction;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Create an annotation by applying the current ontology term to the 
@@ -39,12 +38,10 @@ public class ApplyAnnotationAction extends BaseContextualNodeAction {
         return SystemAction.get(ApplyAnnotationAction.class);
     }
 
-    private boolean isDuplicateAnnotationAllowed;
     private Collection<OntologyTerm> selected = new ArrayList<>();
 
     @Override
     protected void processContext() {
-        this.isDuplicateAnnotationAllowed = BrowserOptions.getInstance().isDuplicateAnnotationAllowed();
         selected.clear();
         if (getNodeContext().isOnlyObjectsOfType(OntologyTerm.class)) {
             for (OntologyTerm term : getNodeContext().getOnlyObjectsOfType(OntologyTerm.class)) {
@@ -63,10 +60,6 @@ public class ApplyAnnotationAction extends BaseContextualNodeAction {
         else {
             setEnabledAndVisible(false);
         }
-    }
-
-    public void setDuplicateAnnotationAllowed(boolean duplicateAnnotationAllowed) {
-        this.isDuplicateAnnotationAllowed = duplicateAnnotationAllowed;
     }
 
     @Override

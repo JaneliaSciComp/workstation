@@ -15,6 +15,7 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
+import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -112,7 +113,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     
     @Override
     public void componentClosed() {
-        log.debug("componentClosed - {}", this.getName());
+        log.info("componentClosed - {}", this.getName());
         // Stop listening for events
         Events.getInstance().unregisterOnEventBus(this);
         if (editor!=null) {
@@ -141,14 +142,28 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (editor!=null) {
             ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
             ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
+            ViewerUtils.updateGlobalSelection(editor.getSelectionModel(), true);
         }
     }
     
     @Override
     protected void componentDeactivated() {
-        log.debug("componentDeactivated - {}", this.getName());
+        log.info("componentDeactivated - {}", this.getName());
         if (findContext!=null) {
             FindContextManager.getInstance().deactivateContext(findContext);
+        }
+    }
+
+    @Override
+    protected void componentShowing() {
+        log.info("componentShowing - {}", this.getName());
+    }
+
+    @Override
+    protected void componentHidden() {
+        log.info("componentHidden - {}", this.getName());
+        if (editor!=null) {
+            ViewerUtils.updateGlobalSelection(editor.getSelectionModel(), false);
         }
     }
 
@@ -161,6 +176,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             log.trace("Our selection changed, updating cookie because of {}", e);
             ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
             ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
+            ViewerUtils.updateGlobalSelection(editor.getSelectionModel(), true);
         }
     }
 

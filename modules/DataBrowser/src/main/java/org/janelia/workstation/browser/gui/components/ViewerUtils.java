@@ -1,12 +1,11 @@
 package org.janelia.workstation.browser.gui.components;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditorState;
 import org.janelia.workstation.core.actions.ViewerContext;
+import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelectionModel;
+import org.janelia.workstation.core.events.selection.SelectionModel;
 import org.janelia.workstation.core.model.DomainModelViewUtils;
 import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.openide.util.Lookup;
@@ -16,6 +15,10 @@ import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Utilities for working with viewers. 
@@ -133,13 +136,33 @@ public class ViewerUtils {
             currentObjects.addAll(childObjectsNode.getObjects());
         }
 
-        List<Object> newObjects = new ArrayList<>(objects);
+        List<Object> newObjects = new ArrayList<Object>(objects);
         if (!currentObjects.equals(newObjects)) {
             log.info("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());
             // Clear all existing nodes
             lookupProvider.getLookup().lookupAll(ChildObjectsNode.class).forEach(content::remove);
             // Add new node
             content.add(new ChildObjectsNode(newObjects));
+        }
+    }
+
+    public static void updateGlobalSelection(SelectionModel selectionModel, boolean selected) {
+
+        List<DomainObject> domainObjects =  new ArrayList<>();
+        for (Object object : selectionModel.getObjects()) {
+            if (object instanceof DomainObject) {
+                domainObjects.add((DomainObject)object);
+            }
+        }
+
+        if (!domainObjects.isEmpty()) {
+            log.info("Updating GlobalDomainObjectSelectionModel ({}, selected={})", domainObjects.size(), selected);
+            if (selected) {
+                GlobalDomainObjectSelectionModel.getInstance().select(domainObjects, true, false);
+            }
+            else {
+                GlobalDomainObjectSelectionModel.getInstance().deselect(domainObjects, false);
+            }
         }
     }
 

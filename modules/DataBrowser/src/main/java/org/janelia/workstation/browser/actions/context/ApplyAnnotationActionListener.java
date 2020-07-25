@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.swing.ProgressMonitor;
+import javax.swing.*;
 
 import com.google.common.collect.Multimap;
 import org.janelia.workstation.core.util.Progress;
@@ -34,6 +34,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Action class for applying ontology terms to domain objects.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ApplyAnnotationActionListener implements ActionListener {
@@ -83,16 +85,17 @@ public class ApplyAnnotationActionListener implements ActionListener {
             if (selectedIds.isEmpty()) {
                 // Cannot annotate nothing
                 log.warn("ApplyAnnotationAction called without any objects being selected");
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                        "Select some items to annotate",
+                        "No items selected",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
             String keyTermValue = ontologyTerm.getName();
             Long keyTermId = ontologyTerm.getId();
-            log.info("Will annotate all selected objects with: {} ({})",keyTermValue,keyTermId);
-
-            for(Reference id : selectedIds) {
-                log.debug("Selected: "+id);
-            }
+            log.info("Will annotate all selected objects with: {} ({})", keyTermValue, keyTermId);
+            log.info("Selected items: "+selectedIds);
 
             annotateReferences(ontologyTerm, selectedIds);
         }

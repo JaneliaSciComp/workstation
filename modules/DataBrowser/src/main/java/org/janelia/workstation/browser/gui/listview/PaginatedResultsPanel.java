@@ -503,37 +503,34 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
             @Override
             protected void hadSuccess() {
                 final ArrayList<S> selectedRefs = new ArrayList<>(selectionModel.getSelectedIds());
-                log.info("Got selected refs: {}",selectedRefs);
-                updateResultsView(new Callable<Void>() {   
-                    @Override
-                    public Void call() throws Exception {
+                log.trace("Got selected refs: {}",selectedRefs);
+                updateResultsView(() -> {
 
-                        TopComponent topComponent = UIUtils.getAncestorWithType(PaginatedResultsPanel.this, TopComponent.class);
-                        boolean notifyModel = topComponent==null || topComponent.isVisible();
-                    
-                        log.debug("updateResultsView complete, restoring selection");
-                        if (selectedRefs.isEmpty()) {
-                            // If the selection model is empty, just select the first item to make it appear in the inspector
-                            List<T> objects = resultPage.getObjects();
+                    TopComponent topComponent = UIUtils.getAncestorWithType(PaginatedResultsPanel.this, TopComponent.class);
+                    boolean notifyModel = topComponent==null || topComponent.isVisible();
+
+                    log.debug("updateResultsView complete, restoring selection");
+                    if (selectedRefs.isEmpty()) {
+                        // If the selection model is empty, just select the first item to make it appear in the inspector
+                        List<T> objects = resultPage.getObjects();
 //                            if (!objects.isEmpty()) {
 //                                log.info("Auto-selecting first object (notifyModel={})", notifyModel);
 //                                resultsView.select(Arrays.asList(objects.get(0)), true, true, true, notifyModel);
 //                            }
-                        }
-                        else {
-                            // There's already something in the selection model, so we should attempt to reselect it
-                            log.info("Reselecting {} objects",selectedRefs.size());
-                            List<T> objects = getPageObjects(selectedRefs);
-                            resultsView.select(objects, true, true, false, true);
-                        }
-                            
-                        resultsView.refreshEditMode();
-                        
-                        updateStatusBar();
-                        
-                        ConcurrentUtils.invokeAndHandleExceptions(success);
-                        return null;
                     }
+                    else {
+                        // There's already something in the selection model, so we should attempt to reselect it
+                        log.info("Reselecting {} objects",selectedRefs.size());
+                        List<T> objects = getPageObjects(selectedRefs);
+                        resultsView.select(objects, true, true, false, true);
+                    }
+
+                    resultsView.refreshEditMode();
+
+                    updateStatusBar();
+
+                    ConcurrentUtils.invokeAndHandleExceptions(success);
+                    return null;
                 });
             }
 
@@ -653,7 +650,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
                 log.debug("currPage={}",currPage);
                 int globalStartIndex = currPage* SearchResults.PAGE_SIZE + foundIndex;
                 log.debug("globalStartIndex={}",globalStartIndex);
-                ResultIterator<T,S> resultIterator = new ResultIterator<T,S>(searchResults, globalStartIndex, bias, skipStartingNode);
+                ResultIterator<T,S> resultIterator = new ResultIterator<>(searchResults, globalStartIndex, bias, skipStartingNode);
                 searcher = new ResultIteratorFind<T,S>(resultIterator) {
                     @Override
                     protected boolean matches(ResultPage<T, S> resultPage, T object) {

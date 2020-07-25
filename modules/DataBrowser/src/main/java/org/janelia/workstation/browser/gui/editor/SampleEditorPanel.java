@@ -5,14 +5,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 import net.miginfocom.swing.MigLayout;
-
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.DomainObjectAttribute;
-import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.SampleUtils;
+import org.janelia.model.domain.*;
 import org.janelia.model.domain.compute.ContainerizedService;
 import org.janelia.model.domain.enums.AlignmentScoreType;
 import org.janelia.model.domain.enums.ErrorType;
@@ -21,15 +15,7 @@ import org.janelia.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.sample.LSMImage;
-import org.janelia.model.domain.sample.NeuronSeparation;
-import org.janelia.model.domain.sample.ObjectiveSample;
-import org.janelia.model.domain.sample.PipelineError;
-import org.janelia.model.domain.sample.PipelineResult;
-import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.sample.SampleAlignmentResult;
-import org.janelia.model.domain.sample.SamplePipelineRun;
-import org.janelia.model.domain.sample.SampleProcessingResult;
+import org.janelia.model.domain.sample.*;
 import org.janelia.workstation.browser.actions.ExportResultsAction;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
@@ -41,13 +27,8 @@ import org.janelia.workstation.browser.gui.support.SelectablePanelListPanel;
 import org.janelia.workstation.browser.selection.PipelineErrorSelectionEvent;
 import org.janelia.workstation.browser.selection.PipelineResultSelectionEvent;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
-import org.janelia.workstation.common.gui.editor.ViewerContextProvider;
 import org.janelia.workstation.common.gui.listview.ListViewerState;
-import org.janelia.workstation.common.gui.support.Debouncer;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.common.gui.support.PreferenceSupport;
-import org.janelia.workstation.common.gui.support.SearchProvider;
+import org.janelia.workstation.common.gui.support.*;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -80,14 +61,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-
-import java.awt.BorderLayout;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.List;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -482,8 +458,9 @@ public class SampleEditorPanel
 
         currRunMap.clear();
         configPanel.setTitle(sample.getName());
+        selectionModel.reset();
         selectionModel.setParentObject(sample);
-        
+
         this.sample = sample;
         this.lsms = null;
         
@@ -730,7 +707,6 @@ public class SampleEditorPanel
         add(configPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
     }
-
     
     private void prepareSampleValues() {
 
