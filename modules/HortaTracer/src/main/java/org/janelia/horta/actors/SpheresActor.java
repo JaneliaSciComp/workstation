@@ -17,6 +17,7 @@ import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,8 +102,9 @@ public class SpheresActor extends BasicGL3Actor
         // TODO: more careful updating of nodes
         meshGeometry.clear();
         for (TmGeoAnnotation neuronVertex : neuron.getGeoAnnotationMap().values()) {
-            Vertex vertex = meshGeometry.addVertex(new float[]{neuronVertex.getX().floatValue(),
-                    neuronVertex.getY().floatValue(), neuronVertex.getZ().floatValue()});
+            float[] location = TmModelManager.getInstance().getLocationInMicrometers(neuronVertex.getX(),
+                    neuronVertex.getY(), neuronVertex.getZ());
+            Vertex vertex = meshGeometry.addVertex(location);
             float radius = DefaultNeuron.radius;
             if (neuronVertex.getRadius()!=null)
                 radius = neuronVertex.getRadius().floatValue();
@@ -118,8 +120,8 @@ public class SpheresActor extends BasicGL3Actor
         
         // Propagate any pending structure changes...
        // neuron.getVisibilityChangeObservable().notifyObservers();
-        if (! isVisible()) 
-            return;        
+      //  if (! isVisible())
+        //    return;
         
       //  neuron.getColorChangeObservable().notifyObservers();
       //  neuron.getGeometryChangeObservable().notifyObservers();

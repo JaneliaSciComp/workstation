@@ -4,22 +4,10 @@ import com.jogamp.common.nio.Buffers;
 import java.awt.Color;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Set;
+import java.util.*;
 import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.GenericObservable;
-import org.janelia.console.viewerapi.model.NeuronVertexCreationObserver;
-import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
-import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
-import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
-import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.console.viewerapi.model.*;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronEdge;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -89,7 +77,7 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
     private void connectSignals(final TmNeuronMetadata neuron) {
         if (neuronObservers.containsKey(neuron))
             return;
-        neuronObservers.put(neuron, new NeuronObserver(neuron));
+       // neuronObservers.put(neuron, new NeuronObserver(neuron));
     }
     
     private void disconnectSignals(TmNeuronMetadata neuron) {
@@ -119,7 +107,7 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
         if (edgeCount < 1) 
             return;
         setUpVbo(gl);
-        gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboEdgeIndices);        
+        gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboEdgeIndices);
         gl.glDrawElements(GL3.GL_LINES, 2 * edgeCount, GL3.GL_UNSIGNED_INT, 0);
     }
     
@@ -318,7 +306,8 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
                 int index = vertexCount;
                 vertexIndices.put(vertex, index);
                 // X, Y, Z, radius, r, g, b, visibility
-                float[] xyz = new float[]{vertex.getX().floatValue(),vertex.getY().floatValue(),vertex.getZ().floatValue()};
+                float[] xyz = TmModelManager.getInstance().getLocationInMicrometers(vertex.getX(),
+                        vertex.getY(), vertex.getZ());
                 vertexAttributes.add(xyz[0]); // X
                 vertexAttributes.add(xyz[1]); // Y
                 vertexAttributes.add(xyz[2]); // Z
@@ -332,14 +321,15 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
                     vertexAttributes.add(REVIEWED_GRAY_COLOR); // green
                     vertexAttributes.add(REVIEWED_GRAY_COLOR); // blue
                 } else {
-                    vertexAttributes.add(rgb[0]); // red
-                    vertexAttributes.add(rgb[1]); // green
-                    vertexAttributes.add(rgb[2]); // blue
-                }*/
+                 */
+                vertexAttributes.add(rgb[0]); // red
+                vertexAttributes.add(rgb[1]); // green
+                vertexAttributes.add(rgb[2]); // blue
+                //}
                 vertexAttributes.add(visibility); // visibility
                 vertexCount += 1;
             }
-            for (TmNeuronEdge edge : neuron.getEdges()) {
+           for (TmNeuronEdge edge : getEdges(neuron)) {
                 TmGeoAnnotation v1 = edge.getParentVertex();
                 TmGeoAnnotation v2 = edge.getChildVertex();
                 Integer i1 = vertexIndices.get(v1);
@@ -383,6 +373,19 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
                 log.info(" edge {} : {}", i, edgeBuffer.get(i));            
             }
         }        
+    }
+
+    private Collection<TmNeuronEdge> getEdges(TmNeuronMetadata neuron) {
+        Set<TmNeuronEdge> freshEdges = new HashSet<>(); // All edges in the current model
+        for (TmGeoAnnotation child : neuron.getGeoAnnotationMap().values()) {
+                Long parentId = child.getParentId();
+                TmGeoAnnotation parent = neuron.getGeoAnnotationMap().get(parentId);
+                if (parent == null)
+                    continue;
+                TmNeuronEdge edge = new TmNeuronEdge(parent, child);
+                freshEdges.add(edge);
+        }
+        return freshEdges;
     }
 
     private void allocateBuffers(GL3 gl)

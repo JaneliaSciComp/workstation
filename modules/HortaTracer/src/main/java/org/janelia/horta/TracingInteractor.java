@@ -251,8 +251,9 @@ public class TracingInteractor extends MouseAdapter
     
     // List<Float> for comparing vertex locations, even if the underlying vertex object has changed identity.
     private static List<Float> vtxKey(TmGeoAnnotation vtx) {
-        float[] v = new float[]{vtx.getX().floatValue(), vtx.getY().floatValue(), vtx.getZ().floatValue()};
-        return Arrays.asList(v[0], v[1], v[2]);
+        float[] vtxLocation = TmModelManager.getInstance().getLocationInMicrometers(vtx.getX(),
+                vtx.getY(), vtx.getZ());
+        return Arrays.asList(vtxLocation[0], vtxLocation[1], vtxLocation[2]);
     }
     
     // Mouse clicking for recentering, selection, and tracing
@@ -336,8 +337,8 @@ public class TracingInteractor extends MouseAdapter
 
         // NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
         // NeuronModel neuron = vix.neuronForVertex(vertex);
-        float loc[] = new float[]{vertex.getX().floatValue(), vertex.getY().floatValue(),
-                vertex.getZ().floatValue()};
+        float[] loc = TmModelManager.getInstance().getLocationInMicrometers(vertex.getX(),
+                vertex.getY(), vertex.getZ());
 
         // Create a modified vertex to represent the enlarged, highlighted actor
         TmGeoAnnotation parentVertex = new TmGeoAnnotation();
@@ -479,8 +480,8 @@ public class TracingInteractor extends MouseAdapter
         
         // NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
         // NeuronModel neuron = vix.neuronForVertex(vertex);
-        float loc[] = new float[]{vertex.getX().floatValue(), vertex.getY().floatValue(),
-                vertex.getZ().floatValue()};
+        float[] loc = TmModelManager.getInstance().getLocationInMicrometers(vertex.getX(),
+                vertex.getY(), vertex.getZ());
         
         boolean doShowStatusMessage = true;
         if (doShowStatusMessage) {
@@ -576,8 +577,9 @@ public class TracingInteractor extends MouseAdapter
         ConstVector3 p1 = volumeProjection.worldXyzForScreenXyInPlane(event.getPoint());
         ConstVector3 dXYZ = p1.minus(previousDragXYZ);
         TmGeoAnnotation hoverVertex = highlightHoverModel.getGeoAnnotationMap().values().iterator().next();
-        ConstVector3 oldLocation = new Vector3(new float[]{hoverVertex.getX().floatValue(),
-                hoverVertex.getY().floatValue(), hoverVertex.getZ().floatValue()});
+        float[] hoverLocation = TmModelManager.getInstance().getLocationInMicrometers(hoverVertex.getX(),
+                hoverVertex.getY(), hoverVertex.getZ());
+        ConstVector3 oldLocation = new Vector3(hoverLocation);
         ConstVector3 newLocation = oldLocation.plus(dXYZ);
         hoverVertex.setX(new Double(newLocation.getX()));
         hoverVertex.setY(new Double(newLocation.getY()));
@@ -608,8 +610,9 @@ public class TracingInteractor extends MouseAdapter
         if ( (cachedHighlightVertex != null) && (!TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) ) {
             cachedDragVertex = cachedHighlightVertex;
             previousDragXYZ = volumeProjection.worldXyzForScreenXyInPlane(event.getPoint());
-            startingDragVertexLocation = new Vector3(new float[]{cachedHighlightVertex.getX().floatValue(),
-                    cachedHighlightVertex.getY().floatValue(), cachedHighlightVertex.getZ().floatValue()});
+            float[] startingDragVertexLoc = TmModelManager.getInstance().getLocationInMicrometers(cachedHighlightVertex.getX(),
+                    cachedHighlightVertex.getY(), cachedHighlightVertex.getZ());
+            startingDragVertexLocation = new Vector3(startingDragVertexLoc);
             // log.info("Begin drag vertex");
         }
         else {
@@ -625,8 +628,9 @@ public class TracingInteractor extends MouseAdapter
             assert(cachedDragVertex == cachedHighlightVertex);
             // log.info("End drag vertex");
             TmGeoAnnotation hoverVertex = highlightHoverModel.getGeoAnnotationMap().values().iterator().next();
-            ConstVector3 newLocation = new Vector3(new float[]{hoverVertex.getX().floatValue(),
-                hoverVertex.getY().floatValue(), hoverVertex.getZ().floatValue()});
+            float[] location = TmModelManager.getInstance().getLocationInMicrometers(hoverVertex.getX(),
+                    hoverVertex.getY(), hoverVertex.getZ());
+            ConstVector3 newLocation = new Vector3(location);
             if (! newLocation.equals(startingDragVertexLocation)) 
             {
                 moveAnchor(cachedHighlightNeuron, cachedHighlightVertex, newLocation);
@@ -707,10 +711,9 @@ public class TracingInteractor extends MouseAdapter
                                 // log.info("skipping invisible neuron");
                                 continue;
                             }
-                            
-                            Vector3 xyz = new Vector3(new float[]{v.getX().floatValue(),
-                                    v.getY().floatValue(),v.getZ().floatValue()
-                            }).minus(cursorXyz);
+                            float[] location = TmModelManager.getInstance().getLocationInMicrometers(v.getX(),
+                                    v.getY(), v.getZ());
+                            Vector3 xyz = new Vector3(location).minus(cursorXyz);
                             float d2 = xyz.dot(xyz);
                             // log.info("vertex distance = {} um", Math.sqrt(d2));
                             if (d2 < minDistSquared) {
@@ -743,8 +746,9 @@ public class TracingInteractor extends MouseAdapter
                     log.warn("Unexpected null neuron");
                 }
                 // Is cursor too far from closest vertex?
-                Vector3 vertexXyz = new Vector3(nearestVertex.getX(), nearestVertex.getY(),
-                        nearestVertex.getZ());
+                float[] location = TmModelManager.getInstance().getLocationInMicrometers(nearestVertex.getX(),
+                        nearestVertex.getY(), nearestVertex.getZ());
+                Vector3 vertexXyz = new Vector3(location);
                 float dist = vertexXyz.distance(cursorXyz);
                 float radius = DefaultNeuron.radius;
                 if (nearestVertex.getRadius()!=null)
@@ -984,7 +988,7 @@ public class TracingInteractor extends MouseAdapter
         public void clearParent() {
             if (! canClearParent())
                 return;
-            //new SelectParentAnchorAction(defaultWorkspace, null).actionPerformed(null);
+            //new SelectParentAnchorAction(deAcaultWorkspace, null).actionPerformed(null);
         }
         
         public boolean canCreateNeuron() {
