@@ -89,6 +89,24 @@ public class TmModelManager {
         return voxToMicronMatrix;
     }
 
+    public float[] getLocationInMicrometers(double x, double y, double z)
+    {
+        // Convert from image voxel coordinates to Cartesian micrometers
+        // TmGeoAnnotation is in voxel coordinates
+        Jama.Matrix voxLoc = new Jama.Matrix(new double[][] {
+                {x, },
+                {y, },
+                {z, },
+                {1.0, },
+        });
+        // NeuronVertex API requires coordinates in micrometers
+        Jama.Matrix micLoc = getVoxToMicronMatrix().times(voxLoc);
+        return new float[] {
+                (float) micLoc.get(0, 0),
+                (float) micLoc.get(1, 0),
+                (float) micLoc.get(2, 0)};
+    }
+
     public Jama.Matrix getMicronToVoxMatrix() {
         return micronToVoxMatrix;
     }
