@@ -18,7 +18,9 @@ import org.slf4j.LoggerFactory;
  * NetBeans provides a way for a user to keep a customized properties file which holds certain 
  * startup configuration options. By default, NetBeans will use the ${APPNAME}.conf file which is 
  * provided with the application distribution. The Workstation's version of this file is found 
- * at modules/application/src/main/resources/janeliaws.conf
+ * at modules/application/src/main/resources/janeliaws.conf in the source tree and is installed in two locations:
+ * JaneliaWorkstation/etc/janeliaws.conf
+ * JaneliaWorkstation/JaneliaWorkstation/config/janeliaws.conf
  * 
  * Within the Workstation, we provide a way for the user to change their max memory setting, 
  * which must be done in a customized ${APPNAME}.conf within the netbeans user directory.
