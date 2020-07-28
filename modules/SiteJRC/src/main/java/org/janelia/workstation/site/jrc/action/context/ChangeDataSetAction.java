@@ -105,9 +105,9 @@ public class ChangeDataSetAction extends BaseContextualNodeAction {
                     return;
                 }
 
-                if (ClientDomainUtils.hasWriteAccess(dataSet)) {
+                if (!ClientDomainUtils.hasWriteAccess(dataSet)) {
                     JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                            "You do not have write access to "+newDataSet,
+                            "You do not have write access to target data set "+newDataSet,
                             "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
