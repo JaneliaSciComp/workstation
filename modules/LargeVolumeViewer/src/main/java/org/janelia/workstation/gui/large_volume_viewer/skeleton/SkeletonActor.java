@@ -386,7 +386,7 @@ public class SkeletonActor implements GLActor {
         Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments = model.getNeuronTracedSegments();
 
         for (Long neuronID : neuronTracedSegments.keySet()) {
-            if (!TmModelManager.getInstance().getCurrentView().isHidden(neuronID)) {
+            if (TmModelManager.getInstance().getCurrentView().isHidden(neuronID)) {
                 continue;
             }
 
