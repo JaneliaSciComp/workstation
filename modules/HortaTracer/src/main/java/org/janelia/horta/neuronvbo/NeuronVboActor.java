@@ -33,6 +33,10 @@ public class NeuronVboActor
         vboPool.add(neuron);
     }
 
+    public void markAsDirty(Long neuronId) {
+        vboPool.markAsDirty(neuronId);
+    }
+
     public void removeNeuron(TmNeuronMetadata neuron) {
         vboPool.remove(neuron);
     }

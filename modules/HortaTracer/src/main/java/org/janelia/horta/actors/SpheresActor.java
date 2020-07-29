@@ -98,7 +98,7 @@ public class SpheresActor extends BasicGL3Actor
         });*/
     }
     
-    private void updateGeometry() {
+    public void updateGeometry() {
         // TODO: more careful updating of nodes
         meshGeometry.clear();
         for (TmGeoAnnotation neuronVertex : neuron.getGeoAnnotationMap().values()) {

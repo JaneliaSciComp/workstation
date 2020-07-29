@@ -1,13 +1,7 @@
 package org.janelia.horta.neuronvbo;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
@@ -43,7 +37,7 @@ public class NeuronVboPool implements Iterable<TmNeuronMetadata> {
     // private int nextVbo = 0;
 
     // private Set<NeuronModel> dirtyNeurons; // Track incremental updates
-    // private Map<NeuronModel, NeuronVbo> neuronVbos;
+    private Map<Long, NeuronVbo> neuronMap = new HashMap<>();
     // TODO: increase after initial debugging
     // Shaders...
     // Be sure to synchronize these constants with the actual shader source uniform layout
@@ -193,6 +187,7 @@ public class NeuronVboPool implements Iterable<TmNeuronMetadata> {
                     emptiestVbo.getVertexCount());
         }
         emptiestVbo.add(neuron);
+        neuronMap.put(neuron.getId(), emptiestVbo);
         if (doLogStats) {
             log.info("Emptiest vbo ({}) now contains {} neurons and {} vertices after insersion",
                     emptiestVbo.toString(),
@@ -240,6 +235,13 @@ public class NeuronVboPool implements Iterable<TmNeuronMetadata> {
     @Override
     public Iterator<TmNeuronMetadata> iterator() {
         return new NeuronIterator();
+    }
+
+    public void markAsDirty(Long neuronId) {
+        NeuronVbo dirtyVbo = neuronMap.get(neuronId);
+        if (dirtyVbo!=null) {
+            dirtyVbo.markAsDirty();
+        }
     }
 
     void checkForChanges() {

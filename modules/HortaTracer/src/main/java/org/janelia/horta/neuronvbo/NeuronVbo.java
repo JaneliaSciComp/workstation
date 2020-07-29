@@ -58,9 +58,6 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
     
     public void clear() {
         // first disconnect all signals
-        for (TmNeuronMetadata neuron : this) {
-            disconnectSignals(neuron);
-        }
         if (edgeCount > 0)
             buffersNeedRebuild = true;
         if (vertexCount > 0)
@@ -78,13 +75,6 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
         if (neuronObservers.containsKey(neuron))
             return;
        // neuronObservers.put(neuron, new NeuronObserver(neuron));
-    }
-    
-    private void disconnectSignals(TmNeuronMetadata neuron) {
-        NeuronObserver observer = neuronObservers.get(neuron);
-        if (observer == null)
-            return;
-        observer.disconnectSignals();
     }
     
     void init(GL3 gl)
@@ -473,7 +463,6 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
     boolean remove(TmNeuronMetadata neuron) {
         if (! neurons.remove(neuron))
             return false;
-        disconnectSignals(neuron);
         buffersNeedRebuild = true;
         return true;
     }
@@ -494,6 +483,10 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
             updateNeuronVisibility(neuron);
             updateNeuronColor(neuron);
         }
+    }
+
+    public void markAsDirty () {
+        buffersNeedRebuild = true;
     }
     
     private class NeuronObserver
@@ -517,66 +510,11 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
                 updateNeuronVisibility(neuron);
             }
         };
-        
-        // Full update after adding a vertex: the total number of vertices changed
-        private final NeuronVertexCreationObserver vertexCreationObserver = new NeuronVertexCreationObserver() {
-            @Override
-            public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
-                buffersNeedRebuild = true;
-            }
-        };
-        
-        /* Maybe not necessary... */
-        private final Observer geometryChangeObserver = new Observer() {
-            @Override
-            public void update(Observable o, Object arg)
-            {
-                buffersNeedRebuild = true;
-            }            
-        };
-        
-        private final NeuronVertexUpdateObserver vertexUpdateObserver = new NeuronVertexUpdateObserver() {
-            @Override
-            public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg)
-            {
-                // TODO: Surgical update -- while you are at it, you should probably investigate and
-                // refactor usages of "geometryChangeObservable".
-                buffersNeedRebuild = true;
-            }
-        };
-        
-        private final NeuronVertexDeletionObserver vertexDeletionObserver = new NeuronVertexDeletionObserver() {
-            @Override
-            public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
-                buffersNeedRebuild = true;
-            }
-        };
-        
-        
+
         public NeuronObserver(TmNeuronMetadata neuron) {
             this.neuron = neuron;
-            connectSignals();
         }
-        
-        private void connectSignals() 
-        {
-           /* neuron.getColorChangeObservable().addObserver(colorChangeObserver);
-            neuron.getVisibilityChangeObservable().addObserver(visibilityObserver);
-            neuron.getVertexCreatedObservable().addObserver(vertexCreationObserver);
-            neuron.getGeometryChangeObservable().addObserver(geometryChangeObserver);
-            neuron.getVertexUpdatedObservable().addObserver(vertexUpdateObserver);
-            neuron.getVertexesRemovedObservable().addObserver(vertexDeletionObserver);*/
-    }
 
-        private void disconnectSignals() 
-        {
-            /*neuron.getColorChangeObservable().deleteObserver(colorChangeObserver);
-            neuron.getVisibilityChangeObservable().deleteObserver(visibilityObserver);
-            neuron.getVertexCreatedObservable().deleteObserver(vertexCreationObserver);
-            neuron.getGeometryChangeObservable().deleteObserver(geometryChangeObserver);
-            neuron.getVertexUpdatedObservable().deleteObserver(vertexUpdateObserver);
-            neuron.getVertexesRemovedObservable().deleteObserver(vertexDeletionObserver);*/
-        }
     }
 
 }

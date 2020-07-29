@@ -156,7 +156,7 @@ import org.slf4j.LoggerFactory;
     "HINT_NeuronTracerTopComponent=Horta Neuron Tracer window"
 })
 public final class NeuronTracerTopComponent extends TopComponent
-        implements VolumeProjection {
+        implements VolumeProjection, NeuronVertexUpdateListener {
 
     static final String PREFERRED_ID = "NeuronTracerTopComponent";
     private static final int CACHE_CONCURRENCY = 10;
@@ -232,8 +232,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         // Insert a specialized SceneWindow into the component
         initialize3DViewer(); // initializes workspace
 
-        hortaManager = new HortaManager();
-
         // Change default rotation to Y-down, like large-volume viewer
         sceneWindow.getVantage().setDefaultRotation(new Rotation().setFromAxisAngle(
                 new Vector3(1, 0, 0), (float) Math.PI));
@@ -241,6 +239,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         setupMouseNavigation();
 
+        hortaManager = new HortaManager(this, tracingInteractor);
         hortaManager.addNeuronVertexCreationListener(tracingInteractor);
         hortaManager.addNeuronVertexDeletionListener(tracingInteractor);
         hortaManager.addNeuronVertexUpdateListener(tracingInteractor);
@@ -579,31 +578,10 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         // 3) Neurite model
         tracingActors.clear();
-        for (GL3Actor tracingActor : tracingInteractor.createActors()) {
+        for (GL3Actor tracingActor : tracingInteractor.createActors(this)) {
             tracingActors.add(tracingActor);
             sceneWindow.getRenderer().addActor(tracingActor);
-            if (tracingActor instanceof SpheresActor) // highlight hover actor
-            {
-                SpheresActor spheresActor = (SpheresActor) tracingActor;
-               /* spheresActor.getNeuron().getVertexCreatedObservable().addObserver(new NeuronVertexCreationObserver() {
-                    @Override
-                    public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg) {
-                        redrawNow();
-                    }
-                });
-                spheresActor.getNeuron().getVertexesRemovedObservable().addObserver(new NeuronVertexDeletionObserver() {
-                    @Override
-                    public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
-                        redrawNow();
-                    }
-                });
-                spheresActor.getNeuron().getVertexUpdatedObservable().addObserver(new NeuronVertexUpdateObserver() {
-                    @Override
-                    public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
-                        redrawNow();
-                    }
-                });*/
-            }
+
         }
 
         // 4) Scale bar
@@ -2195,5 +2173,11 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void reloadSampleLocation() {
         //if (currLocation!=null)
          //   setSampleLocation();
+    }
+
+    @Override
+    public void neuronVertexUpdated(VertexWithNeuron vertexWithNeuron) {
+        neuronMPRenderer.markAsDirty(vertexWithNeuron.neuron.getId());
+        redrawNow();
     }
 }
