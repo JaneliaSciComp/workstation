@@ -2,8 +2,8 @@ package org.janelia.workstation.gui.large_volume_viewer.tracing;
 
 import  org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
-import org.janelia.it.jacs.shared.octree.ZoomLevel;
-import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
+import org.janelia.workstation.octree.ZoomLevel;
+import org.janelia.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.workstation.controller.tileimagery.VoxelPosition;
 import org.janelia.workstation.core.workers.BackgroundWorker;
 import org.janelia.workstation.controller.tileimagery.Subvolume;

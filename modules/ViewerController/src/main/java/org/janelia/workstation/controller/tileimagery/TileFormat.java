@@ -1,8 +1,8 @@
 package org.janelia.workstation.controller.tileimagery;
 
 import Jama.Matrix;
-import org.janelia.it.jacs.shared.octree.ZoomLevel;
-import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
+import org.janelia.workstation.octree.ZoomLevel;
+import org.janelia.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.geom.BoundingBox3d;

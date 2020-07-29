@@ -1,7 +1,7 @@
 package org.janelia.workstation.controller.tileimagery;
 
-import org.janelia.it.jacs.shared.octree.ZoomLevel;
-import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
+import org.janelia.workstation.octree.ZoomLevel;
+import org.janelia.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.workstation.geom.Vec3;
