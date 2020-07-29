@@ -157,6 +157,10 @@ public class NeuronMPRenderer extends MultipassRenderer implements NeuronUpdateL
         volumeRenderPass.clearActors();
         setIntensityBufferDirty();
     }
+
+    public void markAsDirty(Long neuronId) {
+        allSwcActor.markAsDirty(neuronId);
+    }
     
     @Override
     public void display(GL3 gl, AbstractCamera camera) 

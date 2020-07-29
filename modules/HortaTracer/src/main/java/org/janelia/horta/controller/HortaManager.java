@@ -8,6 +8,8 @@ import org.janelia.console.viewerapi.listener.*;
 import java.util.List;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.horta.NeuronTracerTopComponent;
+import org.janelia.horta.TracingInteractor;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.NeuronManager;
@@ -28,7 +30,9 @@ import org.slf4j.LoggerFactory;
  */
 public class HortaManager {
 
-    private final TmWorkspace workspace;
+    private TmWorkspace workspace;
+    private NeuronTracerTopComponent topComponent;
+    private TracingInteractor guiManager;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -40,8 +44,11 @@ public class HortaManager {
     private List<NeuronVertexUpdateListener> vertexUpdateListeners = new ArrayList<>();
     private List<NeuronWorkspaceChangeListener> neuronWorkspaceChangeListeners = new ArrayList<>();
     
-    public HortaManager() {
+    public HortaManager(NeuronTracerTopComponent topComponent, TracingInteractor guiManager) {
         workspace = TmModelManager.getInstance().getCurrentWorkspace();
+        this.guiManager = guiManager;
+        this.topComponent = topComponent;
+        guiManager.setDefaultWorkspace(workspace);
     }
     
     public void addNeuronCreationListener(NeuronCreationListener listener) {
