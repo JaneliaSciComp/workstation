@@ -8,6 +8,7 @@ import org.janelia.workstation.controller.tileimagery.VoxelPosition;
 import org.janelia.workstation.core.workers.BackgroundWorker;
 import org.janelia.workstation.controller.tileimagery.Subvolume;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -116,6 +117,11 @@ public class PathTraceToParentWorker extends BackgroundWorker {
 
             setStatus("Done");
         }
+    }
+
+    @Override
+    protected void hadError(Throwable error) {
+        FrameworkAccess.handleException(error);
     }
 
     private ZoomedVoxelIndex zoomedVoxelIndexForVoxelVec3(Vec3 vec3, TileFormat tileFormat, ZoomLevel zoomLevel) {
