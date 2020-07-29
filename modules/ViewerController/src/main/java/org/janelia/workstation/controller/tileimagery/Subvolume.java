@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer;
+package org.janelia.workstation.controller.tileimagery;
 
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
@@ -25,14 +25,13 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.janelia.it.jacs.model.util.ThreadUtils;
-import org.janelia.workstation.geom.CoordinateAxis;
-import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.octree.ZoomLevel;
 import org.janelia.workstation.octree.ZoomedVoxelIndex;
-import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.workstation.controller.tileimagery.raster.VoxelIndex;
 import org.janelia.workstation.core.workers.IndeterminateNoteProgressMonitor;
-import org.janelia.workstation.raster.VoxelIndex;
-import org.janelia.workstation.tracing.VoxelPosition;
+import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.geom.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -365,7 +364,7 @@ public class Subvolume {
     }
 
     private void multiThreadedFetch(Set<TileIndex> neededTiles, final TextureCache textureCache, final AbstractTextureLoadAdapter loadAdapter, final TileFormat tileFormat, final ZoomLevel zoom, final ZoomedVoxelIndex farCorner) {
-        ExecutorService executorService = Executors.newFixedThreadPool(
+        ExecutorService executorService = ThreadUtils.establishExecutor(
                 N_THREADS,
                 new ThreadFactoryBuilder()
                         .setNameFormat("SubvolumeFetch-%03d")

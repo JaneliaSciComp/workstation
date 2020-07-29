@@ -5,12 +5,11 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.List;
-import org.janelia.workstation.gui.large_volume_viewer.SharedVolumeImage;
-import org.janelia.workstation.gui.large_volume_viewer.Subvolume;
+import org.janelia.workstation.controller.tileimagery.SharedVolumeImage;
+import org.janelia.workstation.controller.tileimagery.Subvolume;
 import org.janelia.workstation.octree.ZoomLevel;
 import org.janelia.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.workstation.tracing.AStar;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
