@@ -244,10 +244,10 @@ public class SkeletonController implements NextParentListener {
 
     @Subscribe
     public void anchoredPathsDeleted(AnchoredPathDeleteEvent event) {
-        processAnchoredVoxelPathsDeleted(event.getNeuronID());
+        processAnchoredVoxelPathsDeleted(TAPlist2AVPlist(event.getNeuronID(), event.getPaths()));
     }
 
-    private List<AnchoredVoxelPath> TAPlist2AVPlist(Long neuronID, List<TmAnchoredPath> pathList) {
+    private List<AnchoredVoxelPath> TAPlist2AVPlist(Long neuronID, Collection<TmAnchoredPath> pathList) {
         List<AnchoredVoxelPath> result = new ArrayList<>();
         for (TmAnchoredPath path: pathList) {
             result.add(TAP2AVP(neuronID, path));
@@ -310,6 +310,13 @@ public class SkeletonController implements NextParentListener {
 
     public void processAnchoredVoxelPathsDeleted(Long neuronID) {
         skeleton.removeTracedSegments(neuronID);
+        skeletonChanged();
+    }
+
+    public void processAnchoredVoxelPathsDeleted(List<AnchoredVoxelPath> paths) {
+        for (AnchoredVoxelPath avp: paths) {
+            skeleton.removeTracedSegment(avp);
+        }
         skeletonChanged();
     }
 
