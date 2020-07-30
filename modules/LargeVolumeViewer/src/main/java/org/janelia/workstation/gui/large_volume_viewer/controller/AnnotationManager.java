@@ -875,28 +875,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return ann.getId();
     }
 
-    public void setAutomaticRefinement(final boolean state) {
-    try {
-        TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
-        workspace.setAutoPointRefinement(state);
-        TmModelManager.getInstance().saveWorkspace(workspace);
-    }
-    catch(Exception e) {
-        FrameworkAccess.handleException(e);
-    }
-}
-
-    public void setAutomaticTracing(final boolean state) {
-        try {
-            TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
-            workspace.setAutoTracing(state);
-            TmModelManager.getInstance().saveWorkspace(workspace);
-        }
-        catch(Exception e) {
-            FrameworkAccess.handleException(e);
-        }
-    }
-
     public void tracePathToParent(PathTraceToParentRequest request) {
         TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(request.getNeuronGuid(), request.getAnchorGuid1());
         if (annotation.isRoot()) {

@@ -13,6 +13,7 @@ import org.janelia.workstation.controller.eventbus.NeuronUnhideEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
 import org.janelia.workstation.infopanel.action.*;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 
@@ -217,7 +218,14 @@ public class AnnotationPanel extends JPanel
         automaticRefinementMenuItem.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent itemEvent) {
-               // annotationMgr.setAutomaticRefinement(itemEvent.getStateChange() == ItemEvent.SELECTED);
+                try {
+                    TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+                    workspace.setAutoPointRefinement(itemEvent.getStateChange() == ItemEvent.SELECTED);
+                    TmModelManager.getInstance().saveWorkspace(workspace);
+                }
+                catch(Exception e) {
+                    FrameworkAccess.handleException(e);
+                }
             }
         });
         workspaceToolMenu.add(automaticRefinementMenuItem);
@@ -227,7 +235,16 @@ public class AnnotationPanel extends JPanel
         automaticTracingMenuItem.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent itemEvent) {
-                //annotationMgr.setAutomaticTracing(itemEvent.getStateChange() == ItemEvent.SELECTED);
+                try {
+                    TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+                    if (workspace != null) {
+                        workspace.setAutoTracing(itemEvent.getStateChange() == ItemEvent.SELECTED);
+                        TmModelManager.getInstance().saveWorkspace(workspace);
+                    }
+                }
+                catch(Exception e) {
+                    FrameworkAccess.handleException(e);
+                }
             }
         });
         workspaceToolMenu.add(automaticTracingMenuItem);
