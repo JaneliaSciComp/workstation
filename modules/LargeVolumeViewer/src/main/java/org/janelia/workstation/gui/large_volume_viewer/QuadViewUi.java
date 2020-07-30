@@ -381,6 +381,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         quadViewController.unregisterOrthPanels();
       //  quadViewController.registerAsOrthPanelForRepaint(seViewer); // Must do separately.
         skeletonController.registerForEvents(quadViewController);  // Pass-through
+        NeuronManager.getInstance().setViewStateListener(quadViewController);
         for (OrthogonalPanel v : viewPanels) {
             quadViewController.registerForEvents(v);
             v.setCamera(camera);

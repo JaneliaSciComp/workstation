@@ -45,6 +45,7 @@ import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.workstation.controller.action.NeuronTagsAction;
 import org.janelia.workstation.controller.eventbus.*;
+import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
@@ -118,12 +119,14 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     private static NeuronManager annotationModel;
     private TmModelManager modelManager;
     private NeuronModel neuronModel;
+    private ViewStateListener viewStateListener;
     private final LoadTimer addTimer = new LoadTimer();
 
     private boolean select = true;
     private boolean applyFilter = false;
 
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+
 
     // ----- constants
     // how far away to try to put split anchors (pixels)
@@ -146,6 +149,10 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public void registerEvents() {
         ViewerEventBus.registerForEvents(this);
+    }
+
+    public void setViewStateListener(ViewStateListener viewStateListener) {
+        this.viewStateListener = viewStateListener;
     }
     
     @Override
@@ -638,8 +645,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         stripPredefNotes(neuron, parentAnn.getId());
         
         if (automatedTracingEnabled()) {
-           // if (viewStateListener != null)
-             //   viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
+            if (viewStateListener != null)
+                viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
         }
 
         /*SwingUtilities.invokeLater(new Runnable() {
@@ -737,9 +744,9 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
         if (automatedTracingEnabled()) {
             // trace to parent, and each child to this parent:
-           // viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
+            viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
             for (TmGeoAnnotation child : neuron.getChildrenOf(annotation)) {
-             //   viewStateListener.pathTraceRequested(child.getNeuronId(), child.getId());
+                viewStateListener.pathTraceRequested(child.getNeuronId(), child.getId());
             }
         }
 
@@ -1110,7 +1117,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         
         // if we're tracing, retrace if there's a new connection
         if (automatedTracingEnabled() && child != null) {
-            //viewStateListener.pathTraceRequested(child.getNeuronId(), child.getId());
+            viewStateListener.pathTraceRequested(child.getNeuronId(), child.getId());
         }
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -1307,10 +1314,10 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         
         // retrace
         if (automatedTracingEnabled()) {
-          //  if (viewStateListener != null) {
-            //    viewStateListener.pathTraceRequested(newAnnotation.getNeuronId(), newAnnotation.getId());
-              //  viewStateListener.pathTraceRequested(annotation1.getNeuronId(), annotation1.getId());
-            //}
+            if (viewStateListener != null) {
+                viewStateListener.pathTraceRequested(newAnnotation.getNeuronId(), newAnnotation.getId());
+                viewStateListener.pathTraceRequested(annotation1.getNeuronId(), annotation1.getId());
+            }
         }
 
         final TmGeoAnnotation updateAnnotation = neuron.getGeoAnnotationMap().get(annotation1.getId());
