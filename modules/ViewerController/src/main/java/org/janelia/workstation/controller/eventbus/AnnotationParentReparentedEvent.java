@@ -5,7 +5,6 @@ import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import java.util.Collection;
 
 public class AnnotationParentReparentedEvent extends AnnotationEvent {
-    private Collection<TmGeoAnnotation> annotations;
     private Long prevNeuronId;
 
     public AnnotationParentReparentedEvent(Collection<TmGeoAnnotation> annotations) {
