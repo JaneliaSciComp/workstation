@@ -1,6 +1,7 @@
 package org.janelia.workstation.controller.model;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.ViewerEventBus;
@@ -31,7 +32,7 @@ public class TmViewState {
     private double zoomLevel;
     private float[] cameraRotation;
     private boolean interpolate;
-    private static Map<String, TmColorModel> colorModels;
+    private static Map<String, ImageColorModel> colorModels;
     private static Map<Long, Color> customNeuronColors;
     private static Map<Long, Long> customNeuronRadii;
 
@@ -44,6 +45,7 @@ public class TmViewState {
         colorModels = new ConcurrentHashMap<>();
         customNeuronColors = new ConcurrentHashMap<>();
         customNeuronRadii = new ConcurrentHashMap<>();
+        reviewModeNeurons = threadSafeMap.newKeySet();
     }
 
     public boolean getFilter() {
@@ -260,11 +262,11 @@ public class TmViewState {
         customNeuronColors.put(neuronId, custom);
     }
 
-    public TmColorModel getColorMode(String key) {
+    public ImageColorModel getColorMode(String key) {
         return colorModels.get(key);
     }
 
-    public void setColorModel(String key, TmColorModel model) {
+    public void setColorModel(String key, ImageColorModel model) {
         colorModels.put(key, model);
     }
 }

@@ -33,6 +33,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 
 import Jama.Matrix;
+import org.janelia.console.viewerapi.listener.NeuronSelectionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
@@ -53,6 +54,7 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.SpatialIndexManager;
 import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.action.NeuronCreateAction;
 import org.janelia.workstation.controller.eventbus.SelectionAnnotationEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.api.AccessManager;
@@ -73,10 +75,9 @@ import org.slf4j.LoggerFactory;
  * @author Christopher Bruns
  */
 public class TracingInteractor extends MouseAdapter
-        implements MouseInputListener, KeyListener, 
+        implements MouseInputListener, KeyListener,
         NeuronVertexDeletionListener, NeuronVertexCreationListener,
-        NeuronVertexUpdateListener
-{
+        NeuronVertexUpdateListener, NeuronSelectionListener {
     private final VolumeProjection volumeProjection;
     private TmWorkspace metaWorkspace;
     private int snapRadius = 5; // pixels
@@ -890,6 +891,11 @@ public class TracingInteractor extends MouseAdapter
         this.snapRadius = snapRadius;
     }
 
+    @Override
+    public void vertexSelected(TmGeoAnnotation selectedVertex) {
+        selectParentVertex(selectedVertex, NeuronManager.getInstance().getNeuronFromNeuronID(selectedVertex.getNeuronId()));
+    }
+
 
     // Cached state of interactor at one moment in time, so hovered density, for
     // example, does not go stale before the user selects a menu option.
@@ -961,8 +967,34 @@ public class TracingInteractor extends MouseAdapter
                 FrameworkAccess.handleException(error);
                 return false;
             }
-
             return true;
+        }
+
+        private boolean createRootVertex(TmNeuronMetadata newNeuron) {
+            try {
+                if (densityVertex!=null) {
+                    Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
+                    Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
+                            {densityVertex.getX(),},
+                            {densityVertex.getY(),},
+                            {densityVertex.getZ(),},
+                            {1.0,},});
+                    // NeuronVertex API requires coordinates in micrometers
+                    Jama.Matrix voxLoc = m2v.times(micLoc);
+                    Vec3 newLoc = new Vec3(voxLoc.get(0, 0), voxLoc.get(1, 0),
+                            voxLoc.get(2, 0));
+                    TmGeoAnnotation newAnn = NeuronManager.getInstance().addRootAnnotation(newNeuron, newLoc);
+                    if (newAnn!=null)
+                        selectParentVertex(newAnn, newNeuron);
+                }
+            }  catch (Exception error) {
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                        "User add root vertex", "Failed to create root vertex", JOptionPane.INFORMATION_MESSAGE);
+                FrameworkAccess.handleException(error);
+                return false;
+            }
+            return true;
+
         }
         
         public boolean canClearParent() {
@@ -990,12 +1022,21 @@ public class TracingInteractor extends MouseAdapter
         public void createNeuron() {
             if (! canCreateNeuron())
                 return;
-            
-           /* new CreateNeuronAction(
-                    volumeProjection.getMouseableComponent(),
-                    defaultWorkspace,
-                    densityVertex.getLocation(),
-                    densityVertex.getRadius()).actionPerformed(null);*/
+
+            NeuronCreateAction createAction = new NeuronCreateAction();
+            if (densityVertex!=null) {
+                Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
+                Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
+                        {densityVertex.getX(),},
+                        {densityVertex.getY(),},
+                        {densityVertex.getZ(),},
+                        {1.0,},});
+                // NeuronVertex API requires coordinates in micrometers
+                Jama.Matrix voxLoc = m2v.times(micLoc);
+                Vec3 newLoc = new Vec3(voxLoc.get(0, 0), voxLoc.get(1, 0),
+                        voxLoc.get(2, 0));
+                createAction.execute(true, newLoc);
+            }
         }
         
         public boolean canDeleteNeuron() {
@@ -1006,18 +1047,6 @@ public class TracingInteractor extends MouseAdapter
             if (TmModelManager.getInstance().getCurrentView().isProjectReadOnly())
                 return false;
             return true;
-        }
-        
-        public void deleteNeuron() {
-            if (! canDeleteNeuron())
-                return;
-            if (!checkOwnership(hoveredNeuron)) {
-                return;
-            }
-            /*new DeleteNeuronAction(
-                    volumeProjection.getMouseableComponent(),
-                    defaultWorkspace,
-                    hoveredNeuron).actionPerformed(null);*/
         }
         
         public boolean canSplitNeurite() {
@@ -1071,32 +1100,19 @@ public class TracingInteractor extends MouseAdapter
             }       
             if (!checkOwnership(NeuronManager.getInstance().getNeuronFromNeuronID(parentVertex.getNeuronId()))) {
                 return false;
-            }   
-            
-            final boolean doConfirmMerge = false;
-            if (doConfirmMerge) {
-                Object[] options = {"Merge", "Cancel"};
-                int answer = JOptionPane.showOptionDialog(
-                        volumeProjection.getMouseableComponent(),
-                        String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
-                                parentNeuron.getName(),
-                                hoveredNeuron.getName()),
-                        "Merge neurites?", 
-                        JOptionPane.YES_NO_OPTION, 
-                        JOptionPane.QUESTION_MESSAGE, 
-                        null, 
-                        options,
-                        options[1]); // default button
-                if (answer != JOptionPane.YES_OPTION)
-                    return false;
             }
 
-           // MergeNeuriteCommand cmd = new MergeNeuriteCommand(defaultWorkspace, hoveredVertex, parentVertex);
-
-                // TODO: maybe walk down merged subtree to next branch or tip
+            try {
+                NeuronManager.getInstance().mergeNeurite(parentNeuron.getId(), parentVertex.getId(),
+                        hoveredNeuron.getId(), hoveredVertex.getId());
                 selectParent();
-                
-                return true;
+            } catch (Exception error) {
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                        "Merge 2 neurites in Horta", "Failed to merge neurites", JOptionPane.INFORMATION_MESSAGE);
+                FrameworkAccess.handleException(error);
+                return false;
+            }
+            return true;
         }
         
         public boolean canRecolorNeuron() {
@@ -1128,6 +1144,7 @@ public class TracingInteractor extends MouseAdapter
         }
         
         public void selectParent() {
+            TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(hoveredNeuron);
             TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(hoveredVertex);
             SelectionAnnotationEvent event = new SelectionAnnotationEvent();
             event.setItems(Arrays.asList(new TmGeoAnnotation[]{hoveredVertex}));

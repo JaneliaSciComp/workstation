@@ -5,12 +5,14 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.action.EditAction;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -35,9 +37,17 @@ public class NeuronCreateAction extends EditAction {
     public NeuronCreateAction() {
         super("Create neuron");
     }
-    
+
+    public void execute(boolean initVertex, Vec3 vertexLoc) {
+       createNeuron(initVertex, vertexLoc);
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
+        createNeuron(false, null);
+    }
+
+    private void createNeuron(boolean createInitVertex, Vec3 vertexLoc) {
         if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             // dialog?
             return;
@@ -45,18 +55,25 @@ public class NeuronCreateAction extends EditAction {
 
         // prompt the user for a name, but suggest a standard name
         final String neuronName = promptForNeuronName(getNextNeuronName());
-
         if (neuronName != null) {
             // create it:
             SimpleWorker creator = new SimpleWorker() {
+                TmNeuronMetadata newNeuron;
                 @Override
                 protected void doStuff() throws Exception {
-                    NeuronManager.getInstance().createNeuron(neuronName);
+                    newNeuron = NeuronManager.getInstance().createNeuron(neuronName);
                 }
 
                 @Override
                 protected void hadSuccess() {
-                    // nothing here, annModel emits its own signals
+                    try {
+                        if (createInitVertex) {
+                            TmGeoAnnotation newAnn = NeuronManager.getInstance().addRootAnnotation(newNeuron, vertexLoc);
+                        }
+                    } catch (Exception e) {
+                        FrameworkAccess.handleException(new Exception( "Could not create neuron",
+                                error));
+                    }
                 }
 
                 @Override

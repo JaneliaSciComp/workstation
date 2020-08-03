@@ -326,7 +326,7 @@ public class NeuronMPRenderer extends MultipassRenderer implements NeuronUpdateL
         }
     }
     
-    private void removeNeuronReconstruction(TmNeuronMetadata neuron) {
+    public void removeNeuronReconstruction(TmNeuronMetadata neuron) {
         allSwcActor.removeNeuron(neuron);
         //neuron.getVisibilityChangeObservable().deleteObserver(volumeLayerExpirer);
     }

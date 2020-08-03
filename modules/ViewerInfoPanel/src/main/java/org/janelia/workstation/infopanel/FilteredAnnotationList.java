@@ -185,7 +185,7 @@ public class FilteredAnnotationList extends JPanel {
     }
 
     public void deleteNeuron(TmNeuronMetadata neuron) {
-        if (neuron.getId().equals(currentNeuron.getId())) {
+        if (currentNeuron!=null && neuron.getId().equals(currentNeuron.getId())) {
             currentNeuron = null;
         }
         updateData();
