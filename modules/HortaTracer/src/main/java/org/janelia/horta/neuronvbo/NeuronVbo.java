@@ -12,6 +12,7 @@ import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronEdge;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -290,6 +291,8 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
             neuronEdgeCounts.put(neuron, neuron.getEdges().size());
             float visibility = neuron.isVisible() ? 1 : 0;
             Color color = neuron.getColor();
+            if (color==null)
+                color = TmViewState.getColorForNeuron(neuron.getId());
             color.getColorComponents(rgb);
             Map<TmGeoAnnotation, Integer> vertexIndices = new HashMap<>();
             for (TmGeoAnnotation vertex : neuron.getGeoAnnotationMap().values()) {
@@ -301,7 +304,9 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
                 vertexAttributes.add(xyz[0]); // X
                 vertexAttributes.add(xyz[1]); // Y
                 vertexAttributes.add(xyz[2]); // Z
-                float radius = vertex.getRadius().floatValue();
+                float radius = 1.0f;
+                if (vertex.getRadius()!=null)
+                    radius = vertex.getRadius().floatValue();
                 if (TmModelManager.getInstance().getCurrentView().isNeuronRadiusToggle(neuron.getId())) {
                     radius = 0.3f;
                 }

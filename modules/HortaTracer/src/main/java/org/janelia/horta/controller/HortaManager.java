@@ -13,6 +13,7 @@ import org.janelia.horta.TracingInteractor;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.slf4j.Logger;
@@ -42,6 +43,7 @@ public class HortaManager {
     private List<NeuronVertexCreationListener> vertexCreationListeners = new ArrayList<>();
     private List<NeuronVertexDeletionListener> vertexDeletionListeners = new ArrayList<>();
     private List<NeuronVertexUpdateListener> vertexUpdateListeners = new ArrayList<>();
+    private List<NeuronSelectionListener> neuronSelectionListeners = new ArrayList<>();
     private List<NeuronWorkspaceChangeListener> neuronWorkspaceChangeListeners = new ArrayList<>();
     
     public HortaManager(NeuronTracerTopComponent topComponent, TracingInteractor guiManager) {
@@ -49,6 +51,7 @@ public class HortaManager {
         this.guiManager = guiManager;
         this.topComponent = topComponent;
         guiManager.setDefaultWorkspace(workspace);
+        ViewerEventBus.registerForEvents(this);
     }
     
     public void addNeuronCreationListener(NeuronCreationListener listener) {
@@ -73,6 +76,10 @@ public class HortaManager {
 
     public void addNeuronVertexUpdateListener(NeuronVertexUpdateListener listener) {
         vertexUpdateListeners.add(listener);
+    }
+
+    public void addNeuronSelectionListener(NeuronSelectionListener listener) {
+        neuronSelectionListeners.add(listener);
     }
     
     void addWorkspaceChangeListener(NeuronWorkspaceChangeListener listener) {
@@ -132,6 +139,17 @@ public class HortaManager {
         VertexCollectionWithNeuron vn = new VertexCollectionWithNeuron(event.getAnnotations(), NeuronManager.getInstance().getNeuronFromNeuronID(annotation.getNeuronId()));
         for (NeuronVertexDeletionListener listener: vertexDeletionListeners) {
             listener.neuronVertexesDeleted(vn);
+        }
+    }
+
+    @Subscribe
+    private void vertexSelected(SelectionAnnotationEvent event) {
+        TmGeoAnnotation annotation = (TmGeoAnnotation)event.getItems().iterator().next();
+        if (annotation==null)
+            return;
+
+        for (NeuronSelectionListener listener: neuronSelectionListeners) {
+            listener.vertexSelected(annotation);
         }
     }
 

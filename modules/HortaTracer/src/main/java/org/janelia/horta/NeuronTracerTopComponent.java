@@ -103,6 +103,7 @@ import org.janelia.scenewindow.SceneRenderer.CameraType;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.action.NeuronDeleteAction;
 import org.janelia.workstation.controller.action.NeuronRenameAction;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -156,7 +157,7 @@ import org.slf4j.LoggerFactory;
     "HINT_NeuronTracerTopComponent=Horta Neuron Tracer window"
 })
 public final class NeuronTracerTopComponent extends TopComponent
-        implements VolumeProjection, NeuronVertexUpdateListener {
+        implements VolumeProjection, NeuronVertexUpdateListener, NeuronVertexDeletionListener, NeuronVertexCreationListener {
 
     static final String PREFERRED_ID = "NeuronTracerTopComponent";
     private static final int CACHE_CONCURRENCY = 10;
@@ -240,11 +241,17 @@ public final class NeuronTracerTopComponent extends TopComponent
         setupMouseNavigation();
 
         hortaManager = new HortaManager(this, tracingInteractor);
-        hortaManager.addNeuronVertexCreationListener(tracingInteractor);
-        hortaManager.addNeuronVertexDeletionListener(tracingInteractor);
-        hortaManager.addNeuronVertexUpdateListener(tracingInteractor);
+        //hortaManager.addNeuronVertexCreationListener(tracingInteractor);
+        //hortaManager.addNeuronVertexDeletionListener(tracingInteractor);
+        //hortaManager.addNeuronVertexUpdateListener(tracingInteractor);
 
-        // Redraw the density when annotations are added/deleted/moved
+        hortaManager.addNeuronVertexCreationListener(this);
+        hortaManager.addNeuronVertexDeletionListener(this);
+        hortaManager.addNeuronVertexUpdateListener(this);
+        hortaManager.addNeuronSelectionListener(tracingInteractor);
+
+
+        /*// Redraw the density when annotations are added/deleted/moved
         hortaManager.addNeuronVertexCreationListener(new NeuronVertexCreationListener() {
             @Override
             public void neuronVertexCreated(VertexWithNeuron vertexWithNeuron) {
@@ -262,7 +269,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             public void neuronVertexUpdated(VertexWithNeuron vertexWithNeuron) {
                 getNeuronMPRenderer().setIntensityBufferDirty();
             }
-        });
+        });*/
 
         // Create right-click context menu
         setupContextMenu(sceneWindow.getInnerComponent());
@@ -316,6 +323,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         };
         sceneWindow.getCamera().addObserver(cursorCacheDestroyer);
 
+        TmModelManager.getInstance().getCurrentView().setColorModel("default", imageColorModel);
         imageColorModel.addColorModelListener(new ColorModelListener() {
             @Override
             public void colorModelChanged() {
@@ -501,7 +509,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         event.setCameraFocusX(voxelCenter.getX());
         event.setCameraFocusY(voxelCenter.getY());
         event.setCameraFocusZ(voxelCenter.getZ());
-        event.setZoomLevel(event.getZoomLevel());
+        event.setZoomLevel(1000);
         setSampleLocation(event);
     }
 
@@ -1696,12 +1704,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     if (interactorContext.canDeleteNeuron()) {
                         // Extra separator due to danger...
                         topMenu.add(new JPopupMenu.Separator());
-                        topMenu.add(new AbstractAction("!!! DELETE Neuron... !!!") {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                interactorContext.deleteNeuron();
-                            }
-                        });
+                        topMenu.add(new NeuronDeleteAction());
                     }
                 }
 
@@ -2171,6 +2174,18 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     @Override
     public void neuronVertexUpdated(VertexWithNeuron vertexWithNeuron) {
+        neuronMPRenderer.markAsDirty(vertexWithNeuron.neuron.getId());
+        redrawNow();
+    }
+
+    @Override
+    public void neuronVertexesDeleted(VertexCollectionWithNeuron vertexesWithNeurons) {
+        neuronMPRenderer.markAsDirty(vertexesWithNeurons.neuron.getId());
+        redrawNow();
+    }
+
+    @Override
+    public void neuronVertexCreated(VertexWithNeuron vertexWithNeuron) {
         neuronMPRenderer.markAsDirty(vertexWithNeuron.neuron.getId());
         redrawNow();
     }

@@ -7,6 +7,9 @@ import java.util.TimerTask;
 import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.model.domain.tiledMicroscope.TmColorModel;
+import org.janelia.workstation.controller.access.ModelTranslation;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -41,10 +44,9 @@ import org.openide.util.Utilities;
     "CTL_ColorSlidersTopComponent=ColorSliders",
     "HINT_ColorSlidersTopComponent=Controls for adjusting brightness, contrast, color"
 })
-public final class ColorSlidersTopComponent extends TopComponent 
-implements LookupListener
+public final class ColorSlidersTopComponent extends TopComponent
 {
-    private Lookup.Result<ImageColorModel> colorMapResult = null;
+    private ImageColorModel colorMap = null;
     private ImageColorModel selectedColorMap = null;
     private final SliderPanel sliderPanel = new SliderPanel();
 
@@ -82,20 +84,13 @@ implements LookupListener
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        colorMapResult = Utilities.actionsGlobalContext().lookupResult(ImageColorModel.class);
-        colorMapResult.addLookupListener(this);
-        Collection<? extends ImageColorModel> allColorMaps = colorMapResult.allInstances();
-        if (allColorMaps.isEmpty()) {
-            setColorMap(null);
-        }
-        else {
-            setColorMap(allColorMaps.iterator().next());
-        }
+        colorMap = TmModelManager.getInstance().getCurrentView().getColorMode("default");
+        setColorMap(colorMap);
     }
 
     @Override
     public void componentClosed() {
-        colorMapResult.removeLookupListener(this);
+
     }
 
     void writeProperties(java.util.Properties p) {
@@ -128,15 +123,4 @@ implements LookupListener
             return;
         sliderPanel.setImageColorModel(colorMap);
     }
-    
-    @Override
-    public void resultChanged(LookupEvent le) {
-        Collection<? extends ImageColorModel> allColorMaps = colorMapResult.allInstances();
-        if (allColorMaps.isEmpty()) {
-            setColorMap(null);
-            return;
-        }
-        setColorMap(allColorMaps.iterator().next());
-    }
-    
 }

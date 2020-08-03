@@ -48,6 +48,7 @@ import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
@@ -205,6 +206,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     // this method sets the current neuron but does not fire an event to update the UI
     private synchronized void setCurrentNeuron(TmNeuronMetadata neuron) {
+        TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(neuron);
         log.info("setCurrentNeuron({})",neuron);
         // be sure we're using the neuron object from the current workspace
         if (neuron != null) {
@@ -540,6 +542,23 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         return workspace;
     }
 
+    private static Color[] neuronColors = {
+            Color.red,
+            Color.blue,
+            Color.green,
+            Color.magenta,
+            Color.cyan,
+            Color.yellow,
+            Color.white,
+            // I need more colors!  (1, 0.5, 0) and permutations:
+            new Color(1.0f, 0.5f, 0.0f),
+            new Color(0.0f, 0.5f, 1.0f),
+            new Color(0.0f, 1.0f, 0.5f),
+            new Color(1.0f, 0.0f, 0.5f),
+            new Color(0.5f, 0.0f, 1.0f),
+            new Color(0.5f, 1.0f, 0.0f)
+    };
+
     /**
      * create a neuron in the current workspace
      *
@@ -553,6 +572,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         newNeuron.setWorkspaceRef(Reference.createFor(TmWorkspace.class, workspace.getId()));
         newNeuron.setName(name);
         TmNeuronMetadata neuron = tmDomainMgr.save(newNeuron);
+        neuron.setColor(neuronColors[(int) (neuron.getId() % neuronColors.length)]);
         neuronModel.completeCreateNeuron(neuron);
 
         // Update local workspace
@@ -970,7 +990,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                 log.info("MERGE B: {}",stopwatch.elapsed().toMillis());
                 }
                 finally {
-                    endTransaction();                
+                    //endTransaction();
                 }
                 log.info("TOTAL MERGE: {}",stopwatch.elapsed().toMillis());
                 stopwatch.stop();
