@@ -86,6 +86,9 @@ public class FileProxyService extends AbstractHandler {
                 response.setStatus(200);
                 log.debug("Writing {} bytes", nbytes);
                 input = fileProxy.openContentStream(false);
+                if (input==null) {
+                    throw new FileNotFoundException(standardPath);
+                }
                 output = response.getOutputStream();
                 Utils.copyNio(input, output, BUFFER_SIZE);
             } else {

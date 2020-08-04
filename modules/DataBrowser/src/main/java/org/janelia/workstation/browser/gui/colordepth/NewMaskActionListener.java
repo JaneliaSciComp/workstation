@@ -61,9 +61,8 @@ public final class NewMaskActionListener implements ActionListener {
                 @Override
                 protected void doStuff() throws Exception {
                     uploadPath = MaskUtils.uploadMask(localFile);
-                    FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(uploadPath, false);
-                    try (InputStream imageStream = imageFileProxy.openContentStream(false)) {
-                        this.image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(imageFileProxy.getFileId()));
+                    try (InputStream imageStream = FileMgr.getFileMgr().openFileInputStream(uploadPath, false)) {
+                        this.image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(uploadPath));
                     }
                     alignmentSpaces = DomainMgr.getDomainMgr().getModel().getAlignmentSpaces();
                 }

@@ -1,6 +1,7 @@
 package org.janelia.workstation.browser.gui.support;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -207,7 +208,9 @@ public class FileDownloadWorker {
                             errors++;
                             // If any error occurred during download, we need to delete the file which was being downloaded
                             cleanFile(downloadItem.getTargetFile().toFile());
-                            if (e instanceof CancellationException) {
+                            if (e instanceof FileNotFoundException) {
+                                log.error("File not found for download: {}", filename);
+                            } else if (e instanceof CancellationException) {
                                 log.error("Download of {} was cancelled because of previous cancellation exception: {}", filename, e.getMessage());
                                 throw (CancellationException) e;
                             } else if (e instanceof InterruptedException || e instanceof ClosedByInterruptException) {

@@ -127,7 +127,14 @@ public class FileMgr {
      */
     public InputStream openFileInputStream(String standardPathName, boolean forceRefresh) throws IOException {
         FileProxy fileProxy = getFile(standardPathName, forceRefresh);
-        return fileProxy.openContentStream(false);
+        InputStream inputStream = fileProxy.openContentStream(false);
+        if (inputStream==null) {
+            // TODO: there is already a FileNotFoundException generated upstream inside the file cache, but it
+            // gets clobbered into a null return value. That exception should be bubbled up instead of having
+            // to be recreated here. See also: FileProxyService.
+            throw new FileNotFoundException(standardPathName);
+        }
+        return inputStream;
     }
 
 }

@@ -180,7 +180,7 @@ public class Hud extends ModalDialog {
         menuLikePanel.add(leftSidePanel, BorderLayout.WEST);
         
         add(menuLikePanel, BorderLayout.NORTH);
-        
+
         previewLabel = new JLabel(new ImageIcon());
         previewLabel.setFocusable(false);
         previewLabel.setRequestFocusEnabled(false);
@@ -428,18 +428,15 @@ public class Hud extends ModalDialog {
                     if (image == null) {
                         try {
                             log.debug("Must load image.");
-                            FileProxy imageFileProxy = FileMgr.getFileMgr().getFile(filepath, false);
-                            if (imageFileProxy != null) {
-                                try (InputStream imageStream = imageFileProxy.openContentStream(false)) {
-                                    image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(filepath));
-                                }
-                                if (ic != null) {
-                                    ic.put(filepath, image);
-                                }
+                            try (InputStream imageStream = FileMgr.getFileMgr().openFileInputStream(filepath, false)) {
+                                image = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(filepath));
+                            }
+                            if (ic != null) {
+                                ic.put(filepath, image);
                             }
                         }
                         catch (FileNotFoundException e) {
-                            log.warn("Could not find file: "+filepath, e);
+                            log.debug("Could not find file: "+filepath, e);
                         }
                     }
 
@@ -452,6 +449,7 @@ public class Hud extends ModalDialog {
 
                 @Override
                 protected void hadSuccess() {
+                    setTitle(title);
                     if (image != null) {
                         previewLabel.setIcon(new ImageIcon(image));
                         dirtyEntityFor3D = true;
@@ -460,21 +458,22 @@ public class Hud extends ModalDialog {
                             handleRenderSelection();
                         }
                         setAllColorsOn();
-                        setTitle(title);
-                        
                         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                         int width = (int)Math.round((double)screenSize.width*0.9);
                         int height = (int)Math.round((double)screenSize.height*0.9);
                         width = Math.min(image.getWidth()+5, width);
                         height = Math.min(image.getHeight()+5, height);
                         scrollPane.setSize(new Dimension(width, height));
-                        if (toggle) {
-                            toggleDialog();
-                        }
-                        else {
-                            pack();
-                        }
-                    } // do nothing if image is null which can happen if the file is missing
+                    }
+                    else {
+                        previewLabel.setIcon(new MissingIcon());
+                    }
+                    if (toggle) {
+                        toggleDialog();
+                    }
+                    else {
+                        pack();
+                    }
                 }
 
                 @Override

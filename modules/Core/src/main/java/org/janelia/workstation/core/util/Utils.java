@@ -77,6 +77,7 @@ public class Utils {
     }
 
     public static BufferedImage readImageFromInputStream(InputStream inputStream, String format) {
+        if (inputStream==null) return null;
         String selectedRenderer = FrameworkAccess.getModelProperty(
                 OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.LOCI.toString());
         RendererType2D renderer = RendererType2D.valueOf(selectedRenderer);

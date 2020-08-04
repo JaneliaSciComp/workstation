@@ -157,7 +157,8 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
                                 errorType = "Image could not be loaded";
                             }
 
-                            imagePanel.setImage(Icons.getImage("file_error.png"));
+                            BufferedImage image = Icons.getImage("file_error.png");
+                            imagePanel.setImage(image);
                             imagePanel.setText(errorType, Color.red);
                             setMainComponent(imagePanel);
                             

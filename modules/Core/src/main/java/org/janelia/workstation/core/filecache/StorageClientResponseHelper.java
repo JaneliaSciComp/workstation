@@ -42,6 +42,7 @@ class StorageClientResponseHelper {
                 throw new WebDavException(responseCode + " response code returned for " + href, responseCode);
             }
             else if (responseCode == HttpStatus.SC_NOT_FOUND) {
+                LOG.debug("File not found: {}", href);
                 throw new FileNotFoundException("Resource " + href + " not found (" + responseCode + ")");
             }
             else {

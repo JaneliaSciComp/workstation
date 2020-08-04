@@ -77,6 +77,7 @@ public class LoadedImagePanel extends JPanel {
             protected void hadSuccess() {
 
                 if (isCancelled()) {
+                    log.debug("Load was cancelled");
                     return;
                 }
                 
@@ -114,7 +115,6 @@ public class LoadedImagePanel extends JPanel {
                 }
                 
                 BufferedImage image = Icons.getImage("file_error.png");
-                
                 imagePanel.setImage(image);
                 imagePanel.setText(errorType, Color.red);
                 setImageComponent(imagePanel);
