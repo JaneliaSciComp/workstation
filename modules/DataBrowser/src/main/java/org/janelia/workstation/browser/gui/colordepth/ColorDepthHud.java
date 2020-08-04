@@ -7,6 +7,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.io.InputStream;
 import java.util.List;
 
 import javax.swing.*;
@@ -273,8 +274,12 @@ public class ColorDepthHud extends ModalDialog {
                 log.debug("sample: {}", sample);
 
                 // Load images
-                this.image1 = Utils.readImageFromInputStream(FileMgr.getFileMgr().openFileInputStream(mask.getFilepath(), false), FilenameUtils.getExtension(mask.getFilepath()));
-                this.image2 = Utils.readImageFromInputStream(FileMgr.getFileMgr().openFileInputStream(image.getFilepath(), false), FilenameUtils.getExtension(image.getFilepath()));
+                try (InputStream imageStream = FileMgr.getFileMgr().openFileInputStream(mask.getFilepath(), false)) {
+                    this.image1 = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(mask.getFilepath()));
+                }
+                try (InputStream imageStream = FileMgr.getFileMgr().openFileInputStream(image.getFilepath(), false)) {
+                    this.image2 = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(image.getFilepath()));
+                }
             }
 
             @Override
