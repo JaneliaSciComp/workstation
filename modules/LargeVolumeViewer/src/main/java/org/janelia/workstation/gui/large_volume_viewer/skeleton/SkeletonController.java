@@ -357,7 +357,7 @@ public class SkeletonController implements NextParentListener {
             skeleton.deleteTmGeoAnchor(annotation);
         }
         if (nextParent != null) {
-            setNextParent(nextParentId);
+            setNextParent(nextParent.getId());
         }
         skeletonChanged();
     }
