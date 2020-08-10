@@ -221,10 +221,10 @@ public class SkeletonController implements NextParentListener {
         }
 
         processAnchorsAdded(addedAnchorList, null);
-        log.info("  added {} anchors", addedAnchorList.size());
+        //log.info("  added {} anchors", addedAnchorList.size());
 
         processAnchoredVoxelPathsAdded(TAPlist2AVPlist(neuron.getId(), annList));
-        log.info("  added {} anchored paths", annList.size());
+        //log.info("  added {} anchored paths", annList.size());
     }
 
     private void processNeuronDeleted(TmNeuronMetadata neuron) {

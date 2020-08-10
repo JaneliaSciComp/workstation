@@ -5,12 +5,17 @@ import java.util.List;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,6 +113,39 @@ public class PanelController {
     }
 
     @Subscribe
+    public void vertexSelected(SelectionAnnotationEvent selectionEvent) {
+        List<TmGeoAnnotation> vertices = (List<TmGeoAnnotation>)selectionEvent.getItems();
+
+        if (vertices.size()==0)
+            return;
+
+        // for now only select one vertex; add multiple selection as appropriate
+        TmGeoAnnotation vertexSelected = vertices.get(0);
+        TmNeuronMetadata neuronSelected =  NeuronManager.getInstance().getNeuronFromNeuronID(vertexSelected.getNeuronId());
+        if (neuronSelected==null)
+            return;
+
+        wsNeuronList.selectNeuron(neuronSelected);
+        SimpleWorker selector = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                filteredAnnotationList.loadNeuron(neuronSelected);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                filteredAnnotationList.selectAnnotation(vertexSelected);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+            }
+        };
+        selector.execute();
+    }
+
+    @Subscribe
     public void neuronTagsChanged(NeuronTagsUpdateEvent tagEvent) {
         Collection<TmNeuronMetadata> neurons = tagEvent.getNeurons();
         wsNeuronList.neuronTagsChanged(neurons);
@@ -120,6 +158,14 @@ public class PanelController {
 
     @Subscribe
     public void annotationChanged(AnnotationUpdateEvent annoEvent) {
+        Collection<TmGeoAnnotation> vertices = annoEvent.getAnnotations();
+        for (TmGeoAnnotation vertex : vertices) {
+            filteredAnnotationList.annotationChanged(vertex);
+        }
+    }
+
+    @Subscribe
+    public void annotationCreated(AnnotationCreateEvent annoEvent) {
         Collection<TmGeoAnnotation> vertices = annoEvent.getAnnotations();
         for (TmGeoAnnotation vertex : vertices) {
             filteredAnnotationList.annotationChanged(vertex);

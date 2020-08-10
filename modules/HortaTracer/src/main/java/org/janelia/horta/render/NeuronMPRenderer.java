@@ -321,9 +321,7 @@ public class NeuronMPRenderer extends MultipassRenderer implements NeuronUpdateL
     }
     
     public void clearNeuronReconstructions() {
-        for (TmNeuronMetadata neuron : allSwcActor) {
-            removeNeuronReconstruction(neuron);
-        }
+        allSwcActor.clear();
     }
     
     public void removeNeuronReconstruction(TmNeuronMetadata neuron) {

@@ -40,7 +40,11 @@ public class NeuronVboActor
     public void removeNeuron(TmNeuronMetadata neuron) {
         vboPool.remove(neuron);
     }
-    
+
+    public void clear() {
+        vboPool.clear();
+    }
+
     public boolean contains(TmNeuronMetadata neuron) {
         return vboPool.contains(neuron);
     }

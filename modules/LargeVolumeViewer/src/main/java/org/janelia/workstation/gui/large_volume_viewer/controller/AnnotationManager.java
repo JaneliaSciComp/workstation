@@ -285,7 +285,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     @Override
     public void update(Anchor anchor) {
         if (anchor != null) {
-            selectNeuron(anchor.getNeuronID());
+            TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(anchor.getNeuronID());
+            TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(anchor.getGuid());
+            NeuronManager.getInstance().updateFragsByAnnotation(anchor.getNeuronID(), anchor.getGuid());
+            TmGeoAnnotation ann = NeuronManager.getInstance().getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
+            SelectionAnnotationEvent event = new SelectionAnnotationEvent();
+            event.setItems(Arrays.asList(new TmGeoAnnotation[]{ann}));
+            ViewerEventBus.postEvent(event);
         }
     }
 

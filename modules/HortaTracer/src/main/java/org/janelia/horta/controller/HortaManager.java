@@ -10,7 +10,9 @@ import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.horta.NeuronTracerTopComponent;
 import org.janelia.horta.TracingInteractor;
+import org.janelia.horta.render.NeuronMPRenderer;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
@@ -33,6 +35,7 @@ public class HortaManager {
 
     private TmWorkspace workspace;
     private NeuronTracerTopComponent topComponent;
+    private NeuronMPRenderer renderer;
     private TracingInteractor guiManager;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -46,10 +49,11 @@ public class HortaManager {
     private List<NeuronSelectionListener> neuronSelectionListeners = new ArrayList<>();
     private List<NeuronWorkspaceChangeListener> neuronWorkspaceChangeListeners = new ArrayList<>();
     
-    public HortaManager(NeuronTracerTopComponent topComponent, TracingInteractor guiManager) {
+    public HortaManager(NeuronTracerTopComponent topComponent, NeuronMPRenderer renderer, TracingInteractor guiManager) {
         workspace = TmModelManager.getInstance().getCurrentWorkspace();
         this.guiManager = guiManager;
         this.topComponent = topComponent;
+        this.renderer = renderer;
         guiManager.setDefaultWorkspace(workspace);
         ViewerEventBus.registerForEvents(this);
     }
@@ -94,6 +98,35 @@ public class HortaManager {
     // When Horta TopComponent closes
     public void onClosed() {
         // strip down all things in the workspace
+    }
+
+    @Subscribe
+    private void workspaceClosed(UnloadProjectEvent event) {
+        try {
+            renderer.clearNeuronReconstructions();
+
+            topComponent.redrawNow();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @Subscribe
+    private void workspaceLoaded(LoadNeuronsEvent event) {
+        try {
+            renderer.clearNeuronReconstructions();
+
+            if (TmModelManager.getInstance().getCurrentWorkspace() != null) {
+                for (TmNeuronMetadata neuron : NeuronManager.getInstance().getNeuronList()) {
+                    renderer.addNeuronActors(neuron);
+                }
+            }
+            topComponent.initSampleLocation();
+            topComponent.redrawNow();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Subscribe

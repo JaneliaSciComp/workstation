@@ -81,33 +81,12 @@ public class FilteredAnnotationList extends JPanel {
     private Map<String, AnnotationFilter> filters = new HashMap<>();
     private AnnotationFilter currentFilter;
 
-    // interaction
-    private CameraPanToListener panListener;
-    private AnnotationSelectionListener annoSelectListener;
-
     private static FilteredAnnotationList theInstance;
     private boolean skipUpdate=false;
 
     public static FilteredAnnotationList createInstance(final NeuronManager annotationModel, int width) {
         theInstance = new FilteredAnnotationList(annotationModel, width);
         return theInstance;
-    }
-
-    public static FilteredAnnotationList getInstance() {
-        return theInstance;
-    }
-
-    public void setSkipUpdate(boolean skipUpdate) {
-        this.skipUpdate = skipUpdate;
-    }
-    
-    public void beginTransaction() {
-        this.skipUpdate = true;
-    }
-    
-    public void endTransaction() {
-        this.skipUpdate = false;
-        updateData();
     }
 
     private FilteredAnnotationList(final NeuronManager neuronManager, int width) {
@@ -173,6 +152,17 @@ public class FilteredAnnotationList extends JPanel {
         // set the current filter late, after both the filters and UI are
         //  set up
         setCurrentFilter(filters.get("default"));
+    }
+
+    public void selectAnnotation (TmGeoAnnotation ann) {
+        int numAnnotations = model.getRowCount();
+        for (int i=0; i<numAnnotations; i++) {
+            InterestingAnnotation annAtRow = model.getAnnotationAtRow(i);
+            if (annAtRow.getAnnotationID()==ann.getId()) {
+                filteredTable.setRowSelectionInterval(i, i);
+                break;
+            }
+        }
     }
 
     // the next routines are called by PanelController when data changes;
