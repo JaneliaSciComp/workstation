@@ -56,6 +56,7 @@ import org.janelia.workstation.controller.SpatialIndexManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.NeuronCreateAction;
 import org.janelia.workstation.controller.eventbus.SelectionAnnotationEvent;
+import org.janelia.workstation.controller.eventbus.ViewerEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.keybind.KeymapUtil;
@@ -593,9 +594,8 @@ public class TracingInteractor extends MouseAdapter
         if ( (cachedHighlightVertex != null) && (!TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) ) {
             cachedDragVertex = cachedHighlightVertex;
             previousDragXYZ = volumeProjection.worldXyzForScreenXyInPlane(event.getPoint());
-            float[] startingDragVertexLoc = TmModelManager.getInstance().getLocationInMicrometers(cachedHighlightVertex.getX(),
+            startingDragVertexLocation = new Vector3(cachedHighlightVertex.getX(),
                     cachedHighlightVertex.getY(), cachedHighlightVertex.getZ());
-            startingDragVertexLocation = new Vector3(startingDragVertexLoc);
             // log.info("Begin drag vertex");
         }
         else {
@@ -608,7 +608,7 @@ public class TracingInteractor extends MouseAdapter
         // log.info("End drag");
         // Maybe complete an "anchor dragged" gesture
         if ( (cachedDragVertex != null) && (!TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) ) {
-            assert(cachedDragVertex == cachedHighlightVertex);
+            assert(cachedDragVertex.getId() == cachedHighlightVertex.getId());
             // log.info("End drag vertex");
             TmGeoAnnotation hoverVertex = highlightHoverModel.getGeoAnnotationMap().values().iterator().next();
             float[] location = new float[]{hoverVertex.getX().floatValue(),
@@ -958,8 +958,9 @@ public class TracingInteractor extends MouseAdapter
                     Vec3 newLoc = new Vec3(voxLoc.get(0, 0), voxLoc.get(1, 0),
                             voxLoc.get(2, 0));
                     TmGeoAnnotation newAnn = NeuronManager.getInstance().addChildAnnotation(parentVertex, newLoc);
-                    if (newAnn!=null)
+                    if (newAnn!=null) {
                         selectParentVertex(newAnn, parentNeuron);
+                    }
                 }
             }  catch (Exception error) {
                 JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
@@ -1006,7 +1007,10 @@ public class TracingInteractor extends MouseAdapter
         public void clearParent() {
             if (! canClearParent())
                 return;
-            //new SelectParentAnchorAction(deAcaultWorkspace, null).actionPerformed(null);
+            clearParentVertex();
+            SelectionAnnotationEvent annEvent = new SelectionAnnotationEvent();
+            annEvent.setClear(true);
+            ViewerEventBus.postEvent(annEvent);
         }
         
         public boolean canCreateNeuron() {
@@ -1146,6 +1150,7 @@ public class TracingInteractor extends MouseAdapter
         public void selectParent() {
             TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(hoveredNeuron);
             TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(hoveredVertex);
+            NeuronManager.getInstance().updateFragsByAnnotation(hoveredNeuron.getId(), hoveredVertex.getId());
             SelectionAnnotationEvent event = new SelectionAnnotationEvent();
             event.setItems(Arrays.asList(new TmGeoAnnotation[]{hoveredVertex}));
             ViewerEventBus.postEvent(event);

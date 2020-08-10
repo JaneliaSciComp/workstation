@@ -103,8 +103,7 @@ import org.janelia.scenewindow.SceneRenderer.CameraType;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.workstation.controller.NeuronManager;
-import org.janelia.workstation.controller.action.NeuronDeleteAction;
-import org.janelia.workstation.controller.action.NeuronRenameAction;
+import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
@@ -240,17 +239,6 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         setupMouseNavigation();
 
-        hortaManager = new HortaManager(this, tracingInteractor);
-        //hortaManager.addNeuronVertexCreationListener(tracingInteractor);
-        //hortaManager.addNeuronVertexDeletionListener(tracingInteractor);
-        //hortaManager.addNeuronVertexUpdateListener(tracingInteractor);
-
-        hortaManager.addNeuronVertexCreationListener(this);
-        hortaManager.addNeuronVertexDeletionListener(this);
-        hortaManager.addNeuronVertexUpdateListener(this);
-        hortaManager.addNeuronSelectionListener(tracingInteractor);
-
-
         /*// Redraw the density when annotations are added/deleted/moved
         hortaManager.addNeuronVertexCreationListener(new NeuronVertexCreationListener() {
             @Override
@@ -384,6 +372,16 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         neuronMPRenderer = setUpActors();
 
+        hortaManager = new HortaManager(this, getNeuronMPRenderer(), tracingInteractor);
+        //hortaManager.addNeuronVertexCreationListener(tracingInteractor);
+        //hortaManager.addNeuronVertexDeletionListener(tracingInteractor);
+        //hortaManager.addNeuronVertexUpdateListener(tracingInteractor);
+
+        hortaManager.addNeuronVertexCreationListener(this);
+        hortaManager.addNeuronVertexDeletionListener(this);
+        hortaManager.addNeuronVertexUpdateListener(this);
+        hortaManager.addNeuronSelectionListener(tracingInteractor);
+
         hortaManager.addNeuronCreationListener(neuronMPRenderer);
         hortaManager.addNeuronDeletionListener(neuronMPRenderer);
         hortaManager.addNeuronUpdateListener(neuronMPRenderer);
@@ -503,7 +501,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     // center on the brain sample
-    void initSampleLocation() {
+    public void initSampleLocation() {
+        volumeCache.clearAllTiles();
         Vec3 voxelCenter = TmModelManager.getInstance().getVoxelCenter();
         ViewEvent event = new ViewEvent();
         event.setCameraFocusX(voxelCenter.getX());
@@ -1022,16 +1021,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                 redrawNow();
             }
         });
-
-       /* associateLookup(Lookups.fixed(
-                vantage,
-                // brightnessModel, 
-                imageColorModel,
-                metaWorkspace,
-                frameTracker,
-                movieSource,
-                vp,
-                this));*/
 
         sceneWindow.setBackgroundColor(Color.DARK_GRAY);
         this.add(sceneWindow.getOuterComponent(), BorderLayout.CENTER);
@@ -1627,7 +1616,16 @@ public final class NeuronTracerTopComponent extends TopComponent
                         });
                     }
 
+                    topMenu.add(new AbstractAction("Edit Neuron Groups") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            //add edit Note
+                        }
+                    });
+
                     if (interactorContext.getCurrentParentAnchor() != null) {
+                        TmGeoAnnotation vertex = interactorContext.getCurrentParentAnchor();
+
                         topMenu.add(new AbstractAction("Center on Current Parent Anchor") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
@@ -1637,15 +1635,53 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 neuronTraceLoader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
                             }
                         });
-                    }
 
-                    if (interactorContext.getHighlightedAnchor() != null) {
-                        // logger.info("Found highlighted anchor");
-                        if (!interactorContext.getHighlightedAnchor().equals(interactorContext.getCurrentParentAnchor())) {
-                         /*   topMenu.add(new SelectParentAnchorAction(
-                                    activeNeuronSet,
-                                    interactorContext.getHighlightedAnchor()
-                            ));*/
+                        topMenu.add(new AbstractAction("Add/Edit Note on Anchor") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                //add edit Note
+                            }
+                        });
+
+                        topMenu.add(new AbstractAction("Edit Neuron Tags") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                //add edit Note
+                            }
+                        });
+
+                        if (!vertex.isRoot()) {
+                            topMenu.add(new AbstractAction("Delete Neuron Subtree") {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    DeleteNeuronSubtreeAction action = new DeleteNeuronSubtreeAction();
+                                    action.execute(vertex.getNeuronId(), vertex.getId());
+                                }
+                            });
+
+                            topMenu.add(new AbstractAction("Delete Vertex Link") {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    DeleteVertexLinkAction action = new DeleteVertexLinkAction();
+                                    action.execute(vertex.getNeuronId(), vertex.getId());
+                                }
+                            });
+
+                            topMenu.add(new AbstractAction("Set Vertex as Neuron Root") {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    RerootNeuronAction action = new RerootNeuronAction();
+                                    action.execute(vertex.getNeuronId(), vertex.getId());
+                                }
+                            });
+
+                            topMenu.add(new AbstractAction("Split Neuron Between Vertices") {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    SplitNeuronBetweenVerticesAction action = new SplitNeuronBetweenVerticesAction();
+                                    action.execute(vertex.getNeuronId(), vertex.getId());
+                                }
+                            });
                         }
                     }
                 }

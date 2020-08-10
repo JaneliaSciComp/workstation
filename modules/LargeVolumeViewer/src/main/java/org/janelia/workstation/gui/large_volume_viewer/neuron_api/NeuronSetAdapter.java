@@ -17,8 +17,6 @@ import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
-import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
-import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.workstation.controller.NeuronVertexAdapter;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -592,7 +590,7 @@ public class NeuronSetAdapter
     public void selectVertex(NeuronVertex anchor) {
         TmGeoAnnotation annotation = getAnnotationForAnchor(anchor);
         if (annotation!=null)
-            annotationModel.selectPoint(annotation.getNeuronId(), annotation.getId());
+            annotationModel.updateFragsByAnnotation(annotation.getNeuronId(), annotation.getId());
     }
 
     private class NeuronSetBackgroundAnnotationListener implements BackgroundAnnotationListener {

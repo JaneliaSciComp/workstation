@@ -116,6 +116,14 @@ public class TmViewerManager implements GlobalViewerController {
      *
       */
     public void loadProject(DomainObject project) {
+        if (TmModelManager.getInstance().getCurrentSample()!=null) {
+            boolean isSample = (TmModelManager.getInstance().getCurrentWorkspace()==null) ? true : false;
+            UnloadProjectEvent event = new UnloadProjectEvent(isSample);
+            event.setSample(TmModelManager.getInstance().getCurrentSample());
+            event.setWorkspace(TmModelManager.getInstance().getCurrentWorkspace());
+            ViewerEventBus.postEvent(event);
+        }
+
         projectInit = new ProjectInitFacadeImpl(project);
         projectInit.clearViewers();
         currProject = project;
@@ -238,12 +246,6 @@ public class TmViewerManager implements GlobalViewerController {
         for (TmNeuronMetadata neuron: modelManager.getNeuronModel().getNeurons()) {
             if (neuron.getOwnerKey().equals(systemNeuron)) {
                 nFragments += 1;
-                if (nFragments >= NUMBER_FRAGMENTS_THRESHOLD) {
-                    modelManager.getCurrentView().setFilter(true);
-                    NeuronSelectionSpatialFilter neuronFilter = new NeuronSelectionSpatialFilter();
-                    neuronManager.setFilterStrategy(neuronFilter);
-                    break;
-                }
             }
             if (neuron.getColor()==null) {
                 neuron.setColor(TmViewState.getColorForNeuron(neuron.getId()));
@@ -254,13 +256,18 @@ public class TmViewerManager implements GlobalViewerController {
                 }
             }
         }
+        if (nFragments >= NUMBER_FRAGMENTS_THRESHOLD) {
+            modelManager.getCurrentView().setFilter(true);
+            NeuronSelectionSpatialFilter neuronFilter = new NeuronSelectionSpatialFilter();
+            neuronManager.setFilterStrategy(neuronFilter);
+        }
 
         modelManager.updateVoxToMicronMatrices();
         SpatialIndexManager spatialController = new SpatialIndexManager();
         spatialController.initialize();
         TmModelManager.getInstance().setSpatialIndexManager(spatialController);
-      //  NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(true);
-      //  ViewerEventBus.postEvent(spatialEvent);
+        NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(true);
+        ViewerEventBus.postEvent(spatialEvent);
 
         try {
             loadUserPreferences();

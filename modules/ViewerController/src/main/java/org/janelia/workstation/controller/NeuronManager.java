@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import javax.swing.*;
@@ -26,7 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 
-import com.google.common.eventbus.Subscribe;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.controller.TransactionManager;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
@@ -40,15 +38,12 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
-import org.janelia.model.security.User;
 import org.janelia.workstation.controller.action.NeuronTagsAction;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
-import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
@@ -277,7 +272,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
     
     // purely used for updating the spatial filter for selection-oriented filtering strategies
-    public void selectPoint(Long neuronId, Long annotationId) {
+    public void updateFragsByAnnotation(Long neuronId, Long annotationId) {
         TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronId);
         TmGeoAnnotation annotation = neuron.getGeoAnnotationMap().get(annotationId);
 
@@ -293,9 +288,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
                     NeuronUpdates updates = neuronFilter.selectVertex(annotation);                    
                     updateFrags(updates);
-                    setCurrentNeuron(neuron);
-                    currentVertex = annotation;
-                    selectNeuron(neuron);
                     log.info("TOTAL FRAG UPDATE TIME: {}",stopwatch.elapsed().toMillis());
                     stopwatch.stop();
                 }
@@ -630,7 +622,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                 if (applyFilter) {
                     NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
                     updateFrags(updates);
-                    selectPoint(neuron.getId(), annotation.getId());
+                    updateFragsByAnnotation(neuron.getId(), annotation.getId());
                 }
                 //activityLog.logEndOfOperation(getWsId(), xyz);
             }
@@ -674,12 +666,12 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             public void run() {
           */
         fireAnnotationAdded(annotation);
-        selectPoint(neuron.getId(), annotation.getId());
+        updateFragsByAnnotation(neuron.getId(), annotation.getId());
                 /*if (applyFilter) {
                     NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
                     updateFrags(updates);
                 }
-                selectPoint(neuron.getId(), annotation.getId());
+                updateFragsByAnnotation(neuron.getId(), annotation.getId());
                 //activityLog.logEndOfOperation(getWsId(), xyz);
             }
         });*/
@@ -735,7 +727,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                     if (applyFilter) {
                         NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
                         updateFrags(updates);
-                        selectPoint(neuron.getId(), annotation.getId());
+                        updateFragsByAnnotation(neuron.getId(), annotation.getId());
                     }
                     //activityLog.logEndOfOperation(getWsId(), location);
                 }
@@ -1352,7 +1344,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                     if (applyFilter) {
                         NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
                         updateFrags(updates);
-                        selectPoint(neuron.getId(), annotation.getId());
+                        updateFragsByAnnotation(neuron.getId(), annotation.getId());
                     }
                 }
                 finally {
@@ -2270,8 +2262,13 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     void fireBulkNeuronsChanged(List<TmNeuronMetadata> addList, List<TmNeuronMetadata> deleteList) {
-// need to figure out if this is still needed
+        NeuronCreateEvent addNeuronsEvent = new NeuronCreateEvent(addList);
+        ViewerEventBus.postEvent(addNeuronsEvent);
+        NeuronDeleteEvent deleteNeuronsEvent = new NeuronDeleteEvent();
+        deleteNeuronsEvent.setNeurons(deleteList);
+        ViewerEventBus.postEvent(deleteNeuronsEvent);
     }
+
 
     public void fireSpatialIndexReady(TmWorkspace workspace) {
 // not sure if I need this anymore
