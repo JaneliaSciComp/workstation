@@ -12,14 +12,13 @@ import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSpatialFilter;
-import org.janelia.workstation.controller.tileimagery.FileBasedTileLoader;
-import org.janelia.workstation.controller.tileimagery.TileLoader;
-import org.janelia.workstation.controller.tileimagery.URLBasedTileLoader;
+import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -28,6 +27,8 @@ import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -62,6 +63,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
 
             @Override
             protected void doStuff() throws Exception {
+                TmModelManager.getInstance().setCurrentSample(sample);
                 JadeServiceClient jadeServiceClient = new JadeServiceClient(
                         ConsoleProperties.getString("jadestorage.rest.url"),
                         () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
@@ -74,6 +76,25 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 }
                 modelManager.setTileLoader(loader);
                 loader.loadData(sample);
+
+                SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
+                TileServer tileServer = new TileServer(sharedVolumeImage);
+                TmModelManager.getInstance().setTileServer(tileServer);
+                URL url = TmModelManager.getInstance().getTileLoader().getUrl();
+                sharedVolumeImage.setTileLoaderProvider(new BlockTiffOctreeTileLoaderProvider() {
+                    int concurrency = 15;
+
+                    @Override
+                    public BlockTiffOctreeLoadAdapter createLoadAdapter(String baseURI) {
+                        return TileStackCacheController.createInstance(
+                                new TileStackOctreeLoadAdapter(new TileFormat(), URI.create(baseURI), concurrency));
+                    }
+                });
+                sharedVolumeImage.loadURL(url);
+                modelManager.updateVoxToMicronMatrices();
+                BoundingBox3d box = sharedVolumeImage.getBoundingBox3d();
+                TmModelManager.getInstance().setSampleBoundingBox (box);
+                TmModelManager.getInstance().setVoxelCenter (sharedVolumeImage.getVoxelCenter());
             }
 
             @Override

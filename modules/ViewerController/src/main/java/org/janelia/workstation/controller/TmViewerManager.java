@@ -71,8 +71,6 @@ public class TmViewerManager implements GlobalViewerController {
             List<Object> selections = selectionEvent.getItems();
             if (selections.get(0) instanceof TmNeuronMetadata)
                 modelManager.getCurrentSelections().setCurrentNeuron(selections.get(0));
-            else
-                modelManager.getCurrentSelections().setCurrentNeuron(selections.get(0));
         } else {
             //
         }
@@ -224,22 +222,6 @@ public class TmViewerManager implements GlobalViewerController {
 
         }
 
-        SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
-        URL url = TmModelManager.getInstance().getTileLoader().getUrl();
-        sharedVolumeImage.setTileLoaderProvider(new BlockTiffOctreeTileLoaderProvider() {
-            int concurrency = 15;
-
-            @Override
-            public BlockTiffOctreeLoadAdapter createLoadAdapter(String baseURI) {
-                return TileStackCacheController.createInstance(
-                        new TileStackOctreeLoadAdapter(new TileFormat(), URI.create(baseURI), concurrency));
-            }
-        });
-        sharedVolumeImage.loadURL(url);
-        BoundingBox3d box = sharedVolumeImage.getBoundingBox3d();
-        TmModelManager.getInstance().setSampleBoundingBox (box);
-        TmModelManager.getInstance().setVoxelCenter (sharedVolumeImage.getVoxelCenter());
-
         String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
         modelManager.getCurrentView().setFilter(false);
         int nFragments = 0;
@@ -262,10 +244,7 @@ public class TmViewerManager implements GlobalViewerController {
             neuronManager.setFilterStrategy(neuronFilter);
         }
 
-        modelManager.updateVoxToMicronMatrices();
-        SpatialIndexManager spatialController = new SpatialIndexManager();
-        spatialController.initialize();
-        TmModelManager.getInstance().setSpatialIndexManager(spatialController);
+        TmModelManager.getInstance().getSpatialIndexManager().initialize();
         NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(true);
         ViewerEventBus.postEvent(spatialEvent);
 

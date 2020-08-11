@@ -103,7 +103,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
             camera);
 
     private TileServer tileServer = largeVolumeViewer.getTileServer();
-    private SharedVolumeImage volumeImage = tileServer.getSharedVolumeImage();
+    private SharedVolumeImage volumeImage = TmModelManager.getInstance().getTileServer().getSharedVolumeImage();
     private ImageColorModel imageColorModel = new ImageColorModel(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
 
     // Four quadrants for orthogonal views

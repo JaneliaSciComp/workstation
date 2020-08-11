@@ -284,12 +284,12 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
         neuronOffsets.clear();
         neuronVertexCounts.clear();
         neuronEdgeCounts.clear();
+        TmViewState viewState = TmModelManager.getInstance().getCurrentView();
         for (TmNeuronMetadata neuron : neurons) {
-            // if (! neuron.isVisible()) continue;
             neuronOffsets.put(neuron, vertexCount);
             neuronVertexCounts.put(neuron, neuron.getAnnotationCount());
             neuronEdgeCounts.put(neuron, neuron.getEdges().size());
-            float visibility = neuron.isVisible() ? 1 : 0;
+            float visibility = viewState.isHidden(neuron.getId()) ? 0 : 1;
             Color color = neuron.getColor();
             if (color==null)
                 color = TmViewState.getColorForNeuron(neuron.getId());

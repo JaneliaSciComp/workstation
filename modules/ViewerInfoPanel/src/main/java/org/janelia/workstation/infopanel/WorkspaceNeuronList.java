@@ -4,7 +4,7 @@ import org.janelia.console.viewerapi.SimpleIcons;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.action.NeuronChooseColorAction;
 import org.janelia.workstation.controller.dialog.ChangeNeuronOwnerDialog;
-import org.janelia.workstation.controller.eventbus.SelectionNeuronsEvent;
+import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.geom.Vec3;
@@ -21,8 +21,6 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.infopanel.action.NeuronListProvider;
-import org.janelia.workstation.controller.eventbus.SelectionEvent;
-import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -261,6 +259,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                         // single click visibility = toggle visibility
                         modelManager.getCurrentView().toggleHidden(selectedNeuron.getId());
                         neuronTableModel.updateNeuron(selectedNeuron);
+                        NeuronUpdateEvent updateEvent = new NeuronUpdateEvent();
+                        updateEvent.setNeurons(Arrays.asList(new TmNeuronMetadata[]{selectedNeuron}));
+                        ViewerEventBus.postEvent(updateEvent);
                         // the click might move the neuron selection, which we don't want
                         syncSelection();
                     } else if (modelColumn == NeuronTableModel.COLUMN_OWNER_ICON) {
@@ -767,24 +768,6 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
             sendViewEvent(bounds.getCenter());
         }
     }
-
-    /*public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
-        saveSelection();
-        neuronTableModel.updateNeuron(neuron);
-        updateNeuronLabel();
-        restoreSelection();
-    }
-
-    public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
-        saveSelection();
-        List<TmNeuronMetadata> neuronList = new ArrayList<>();
-        for (TmNeuronMetadata tmNeuronMetadata: neuronStyleMap.keySet()) {
-            neuronList.add(annotationModel.getNeuronFromNeuronID(tmNeuronMetadata.getId()));
-        }
-        neuronTableModel.updateNeurons(neuronList);
-        updateNeuronLabel();
-        restoreSelection();
-    }*/
 
     public void neuronTagsChanged(Collection<TmNeuronMetadata> neuronList) {
         saveSelection();
