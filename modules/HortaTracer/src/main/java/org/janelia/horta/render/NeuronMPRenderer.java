@@ -495,7 +495,10 @@ public class NeuronMPRenderer extends MultipassRenderer implements NeuronUpdateL
     }
 
     @Override
-    public void neuronsUpdated(Collection<TmNeuronMetadata> createdNeurons) {
+    public void neuronsUpdated(Collection<TmNeuronMetadata> updatedNeurons) {
+        for (TmNeuronMetadata neuron : updatedNeurons) {
+            markAsDirty(neuron.getId());
+        }
         allSwcActor.checkForChanges();
     }
 

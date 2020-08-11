@@ -11,6 +11,7 @@ import org.janelia.workstation.controller.SpatialIndexManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.tileimagery.TileLoader;
+import org.janelia.workstation.controller.tileimagery.TileServer;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.geom.BoundingBox3d;
@@ -48,6 +49,7 @@ public class TmModelManager {
     private NeuronModel neuronModel;
     private final TiledMicroscopeDomainMgr tmDomainMgr;
     private TileLoader tileLoader;
+    private TileServer tileServer;
     private Vec3 voxelCenter;
     private BoundingBox3d sampleBoundingBox;
     private SpatialIndexManager spatialIndexManager;
@@ -62,6 +64,7 @@ public class TmModelManager {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         neuronModel = NeuronModel.getInstance();
         currentView = new TmViewState();
+        spatialIndexManager = new SpatialIndexManager();
     }
 
     public TmSample getCurrentSample() {
@@ -70,10 +73,6 @@ public class TmModelManager {
 
     public SpatialIndexManager getSpatialIndexManager() {
         return spatialIndexManager;
-    }
-
-    public void setSpatialIndexManager(SpatialIndexManager spatialIndexManager) {
-        this.spatialIndexManager = spatialIndexManager;
     }
 
     public void setSampleMatrices(Matrix micronToVoxMatrix, Matrix voxToMicronMatrix) throws Exception {
@@ -220,6 +219,14 @@ public class TmModelManager {
 
     public void setTileLoader(TileLoader tileLoader) {
         this.tileLoader = tileLoader;
+    }
+
+    public TileServer getTileServer() {
+        return tileServer;
+    }
+
+    public void setTileServer(TileServer tileServer) {
+        this.tileServer = tileServer;
     }
 
     public BoundingBox3d getSampleBoundingBox() {

@@ -285,13 +285,18 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     @Override
     public void update(Anchor anchor) {
         if (anchor != null) {
-            TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(anchor.getNeuronID());
-            TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(anchor.getGuid());
-            NeuronManager.getInstance().updateFragsByAnnotation(anchor.getNeuronID(), anchor.getGuid());
-            TmGeoAnnotation ann = NeuronManager.getInstance().getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
-            SelectionAnnotationEvent event = new SelectionAnnotationEvent();
-            event.setItems(Arrays.asList(new TmGeoAnnotation[]{ann}));
-            ViewerEventBus.postEvent(event);
+            TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(anchor.getNeuronID());
+            TmGeoAnnotation annotation = NeuronManager.getInstance().getGeoAnnotationFromID(neuron.getId(),
+                    anchor.getGuid());
+            if (neuron!=null && annotation!=null) {
+                TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(neuron);
+                TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(annotation);
+                NeuronManager.getInstance().updateFragsByAnnotation(anchor.getNeuronID(), anchor.getGuid());
+                TmGeoAnnotation ann = NeuronManager.getInstance().getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid());
+                SelectionAnnotationEvent event = new SelectionAnnotationEvent();
+                event.setItems(Arrays.asList(new TmGeoAnnotation[]{ann}));
+                ViewerEventBus.postEvent(event);
+            }
         }
     }
 
@@ -315,7 +320,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public TileFormat getTileFormat() {
-        return tileServer.getLoadAdapter().getTileFormat();
+        return TmModelManager.getInstance().getTileServer().getLoadAdapter().getTileFormat();
     }
 
     // ----- methods called from UI
