@@ -125,24 +125,7 @@ public class PanelController {
         if (neuronSelected==null)
             return;
 
-        wsNeuronList.selectNeuron(neuronSelected);
-        SimpleWorker selector = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                filteredAnnotationList.loadNeuron(neuronSelected);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                filteredAnnotationList.selectAnnotation(vertexSelected);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                FrameworkAccess.handleException(error);
-            }
-        };
-        selector.execute();
+       // filteredAnnotationList.selectAnnotation(vertexSelected);
     }
 
     @Subscribe

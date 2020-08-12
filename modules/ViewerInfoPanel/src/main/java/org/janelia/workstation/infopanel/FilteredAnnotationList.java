@@ -11,6 +11,7 @@ import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.listener.AnnotationSelectionListener;
 import org.janelia.workstation.controller.listener.CameraPanToListener;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.model.annotations.neuron.AnnotationGeometry;
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
 import org.janelia.workstation.controller.model.annotations.neuron.InterestingAnnotation;
@@ -138,10 +139,17 @@ public class FilteredAnnotationList extends JPanel {
                            SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent();
                            selectionEvent.setItems(Arrays.asList(new TmGeoAnnotation[]{annotation}));
                            ViewerEventBus.postEvent(selectionEvent);
+                           float[] microLocation = TmModelManager.getInstance().getLocationInMicrometers(annotation.getX(),
+                                   annotation.getY(), annotation.getZ());
+                           TmModelManager.getInstance().getCurrentView().setCameraFocusX(annotation.getX());
+                           TmModelManager.getInstance().getCurrentView().setCameraFocusY(annotation.getY());
+                           TmModelManager.getInstance().getCurrentView().setCameraFocusZ(annotation.getZ());
+                           TmModelManager.getInstance().getCurrentView().setZoomLevel(100);
                            ViewEvent viewEvent = new ViewEvent();
-                           viewEvent.setCameraFocusX(annotation.getX());
-                           viewEvent.setCameraFocusY(annotation.getY());
-                           viewEvent.setCameraFocusZ(annotation.getZ());
+                           viewEvent.setCameraFocusX(microLocation[0]);
+                           viewEvent.setCameraFocusY(microLocation[1]);
+                           viewEvent.setCameraFocusZ(microLocation[2]);
+                           viewEvent.setZoomLevel(100);
                            ViewerEventBus.postEvent(viewEvent);
                         }
                     }

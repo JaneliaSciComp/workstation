@@ -99,6 +99,7 @@ import org.janelia.scenewindow.SceneRenderer.CameraType;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -402,6 +403,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         //metaWorksopace.notifyObservers();
         playback = new PlayReviewManager(sceneWindow, this, neuronTraceLoader);
         initSampleLocation();
+        ViewerEventBus.registerForEvents(this);
 
     }
 
