@@ -129,6 +129,7 @@ implements MouseMode, KeyListener
 	private void appendAnchor(Vec3 xyz) {
 		autoFocusNextAnchor = true; // center on new position
 		skeleton.addAnchorAtXyz(xyz, skeletonActor.getModel().getNextParent());
+		camera.setFocus(xyz);
 	}
 	
 	private void seedAnchor(Vec3 xyz) {
@@ -155,6 +156,7 @@ implements MouseMode, KeyListener
                 }
                 // finally we're cleared to annotate
                 Vec3 xyz = worldFromPixel(event.getPoint());
+
                 TraceMode.startTimer();
                 appendAnchor(xyz);
             }

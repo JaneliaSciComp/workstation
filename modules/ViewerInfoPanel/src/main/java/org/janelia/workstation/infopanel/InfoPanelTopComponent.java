@@ -43,7 +43,7 @@ import java.util.*;
 @TopComponent.Description(
         preferredID = InfoPanelTopComponent.PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
-        persistenceType = TopComponent.PERSISTENCE_ALWAYS
+        persistenceType = TopComponent.PERSISTENCE_NEVER
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = false, position = 500)
 @ActionID(category = "Window", id = "org.janelia.workstation.gui.task_workflow.InfoPanelTopComponentTopComponent")

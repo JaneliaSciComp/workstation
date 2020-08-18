@@ -86,8 +86,7 @@ public class TracingInteractor extends MouseAdapter
     // For selection affordance
     // For GUI feedback on existing model, contains zero or one vertex.
     // Larger yellow overlay over an existing vertex under the mouse pointer.
-    private final TmNeuronMetadata highlightHoverModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
-            "Hover highlight");
+    private TmNeuronMetadata highlightHoverModel;
     private VertexHighlightActor highlightActor;
     private SpheresActor densityCursorActor;
     private SpheresActor parentActor;
@@ -98,8 +97,7 @@ public class TracingInteractor extends MouseAdapter
     // For Tracing
     // Larger blueish vertex with a "P" for current selected persisted parent
     // first model is an ephemeral single vertex neuron model for display of "P"
-    private final TmNeuronMetadata parentVertexModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
-            "Selected parent vertex"); // TODO: begin point of auto tracing
+    private TmNeuronMetadata parentVertexModel; // TODO: begin point of auto tracing
     private TmGeoAnnotation cachedParentVertex = null;
     // second model is the actual associated in-memory full parent neuron domain model
     private TmNeuronMetadata cachedParentNeuronModel = null;
@@ -107,12 +105,10 @@ public class TracingInteractor extends MouseAdapter
     // White ghost vertex for potential new vertex under cursor 
     // TODO: Maybe color RED until a good path from parent is found
     // This is the new neuron cursor
-    private final TmNeuronMetadata densityCursorModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
-            "Hover density");
+    private TmNeuronMetadata densityCursorModel;
     private Vector3 cachedDensityCursorXyz = null;
     
-    private final TmNeuronMetadata anchorEditModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
-            "Interactive anchor edit view");
+    private TmNeuronMetadata anchorEditModel;
     
     // Data structure to help unravel serial undo/redo appendVertex commands
     // Map<List<Float>, VertexAdder> appendCommandForVertex = new HashMap<>();
@@ -210,6 +206,15 @@ public class TracingInteractor extends MouseAdapter
     }
     
     public List<GL3Actor> createActors(NeuronVertexUpdateListener listener) {
+        highlightHoverModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
+                "Hover highlight");
+        densityCursorModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
+                "Hover density");
+        parentVertexModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
+                "Selected parent vertex");
+        anchorEditModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
+                "Interactive anchor edit view");
+
         updateActorListener = listener;
         List<GL3Actor> result = new ArrayList<>();
 

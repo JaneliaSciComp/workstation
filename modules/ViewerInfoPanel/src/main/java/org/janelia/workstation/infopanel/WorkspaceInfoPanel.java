@@ -7,6 +7,8 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -43,8 +45,6 @@ public class WorkspaceInfoPanel extends JPanel {
 
         sampleNameLabel = new JLabel("", JLabel.LEADING);
         add(sampleNameLabel);
-
-        loadWorkspace(null);
     }
 
     @Override
@@ -63,39 +63,20 @@ public class WorkspaceInfoPanel extends JPanel {
      * update the labels that display data about the workspace
      */
     private void updateMetaData(final TmWorkspace workspace) {
+        if (workspace==null && TmModelManager.getInstance().getCurrentSample()==null)
+            return;
+        setSampleName(TmModelManager.getInstance().getCurrentSample().getName());
         if (workspace == null) {
             setWorkspaceName("(no workspace)");
-            setSampleName("");
-        } 
+        }
         else {
             setWorkspaceName(workspace.getName());
-
-            SimpleWorker labelFiller = new SimpleWorker() {
-                String sampleName;
-
-                @Override
-                protected void doStuff() throws Exception {
-                    sampleName = TiledMicroscopeDomainMgr.getDomainMgr().getSample(workspace).getName();
-                }
-
-                @Override
-                protected void hadSuccess() {
-                    if (ClientDomainUtils.hasWriteAccess(workspace)) {
-                        setTitle("Workspace");
-                    }
-                    else {
-                        setTitle("Workspace (read-only)");
-                    }
-                    
-                    setSampleName(sampleName);
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    FrameworkAccess.handleException(error);
-                }
-            };
-            labelFiller.execute();
+            if (ClientDomainUtils.hasWriteAccess(workspace)) {
+                setTitle("Workspace");
+            }
+            else {
+                setTitle("Workspace (read-only)");
+            }
         }
     }
 

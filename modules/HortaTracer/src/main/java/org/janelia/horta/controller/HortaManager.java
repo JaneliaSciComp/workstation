@@ -92,7 +92,19 @@ public class HortaManager {
 
     // When Horta TopComponent opens
     public void onOpened() {
-        // get latest workspace and initializa neurons
+        try {
+            renderer.clearNeuronReconstructions();
+
+            if (TmModelManager.getInstance().getCurrentWorkspace() != null) {
+                for (TmNeuronMetadata neuron : NeuronManager.getInstance().getNeuronList()) {
+                    renderer.addNeuronActors(neuron);
+                }
+            }
+            topComponent.initSampleLocation();
+            topComponent.redrawNow();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     // When Horta TopComponent closes

@@ -102,6 +102,7 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
+import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
@@ -137,7 +138,7 @@ import org.slf4j.LoggerFactory;
 @TopComponent.Description(
         preferredID = NeuronTracerTopComponent.PREFERRED_ID,
         iconBase = "org/janelia/horta/images/neuronTracerCubic16.png",
-        persistenceType = TopComponent.PERSISTENCE_ALWAYS
+        persistenceType = TopComponent.PERSISTENCE_NEVER
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.horta.NeuronTracerTopComponent")
@@ -581,11 +582,17 @@ public final class NeuronTracerTopComponent extends TopComponent
 
 
         // 3) Neurite model
-        tracingActors.clear();
-        for (GL3Actor tracingActor : tracingInteractor.createActors(this)) {
-            tracingActors.add(tracingActor);
-            sceneWindow.getRenderer().addActor(tracingActor);
+        if (TmModelManager.getInstance().getCurrentWorkspace()!=null) {
+            tracingActors.clear();
+            for (GL3Actor tracingActor : tracingInteractor.createActors(this)) {
+                tracingActors.add(tracingActor);
+                sceneWindow.getRenderer().addActor(tracingActor);
 
+            }
+
+            for (TmNeuronMetadata neuron: NeuronManager.getInstance().getNeuronList()) {
+                neuronMPRenderer0.addNeuronActors(neuron);
+            }
         }
 
         // 4) Scale bar
@@ -596,13 +603,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         crossHairActor = new CenterCrossHairActor();
         sceneWindow.getRenderer().addActor(crossHairActor);
         /* */
-
-        // add in all neurons from workspace
-        if (TmModelManager.getInstance().getCurrentWorkspace()!=null) {
-            for (TmNeuronMetadata neuron: NeuronManager.getInstance().getNeuronList()) {
-                neuronMPRenderer0.addNeuronActors(neuron);
-            }
-        }
 
         return neuronMPRenderer0;
     }
@@ -1961,6 +1961,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         } catch (Exception e) {
             logger.warn("exception suppressed when closing Horta top component", e);
         }
+
+        // fire off notice for checkboxes, etc.
+        ViewerCloseEvent viewerCloseEvent = new ViewerCloseEvent();
+        viewerCloseEvent.setViewer(ViewerCloseEvent.VIEWER.HORTA);
+        ViewerEventBus.postEvent(viewerCloseEvent);
     }
 
     @Override

@@ -17,6 +17,7 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.MergeNeuronsAction;
 import org.janelia.workstation.controller.eventbus.*;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceListener;
 import org.janelia.workstation.controller.listener.TmGeoAnnotationAnchorListener;
 import org.janelia.workstation.controller.listener.ViewStateListener;
@@ -388,13 +389,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 StopWatch stopwatch = new StopWatch();
                 final TmWorkspace currentWorkspace = TmModelManager.getInstance().getCurrentWorkspace();
                 activityLog.logAddAnchor(currentWorkspace.getSampleRef().getTargetId(), currentWorkspace.getId(),
-                    currentNeuron.getId(), finalLocation);
+                        currentNeuron.getId(), finalLocation);
+                TmGeoAnnotation newAnn;
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
-                    annotationModel.addRootAnnotation(currentNeuron, finalLocation);
-                } 
-                else {
-                    annotationModel.addChildAnnotation(currentNeuron.getGeoAnnotationMap().get(parentID), finalLocation);
+                    newAnn = annotationModel.addRootAnnotation(currentNeuron, finalLocation);
+                } else {
+                    newAnn = annotationModel.addChildAnnotation(currentNeuron.getGeoAnnotationMap().get(parentID), finalLocation);
                 }
                 stopwatch.stop();
                 log.info("added annotation; elapsed time = {} ms", stopwatch.getElapsedTime());
@@ -482,7 +483,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     @Subscribe
     public void cameraPanTo(ViewEvent event) {
-        Vec3 location = new Vec3(event.getCameraFocusX(), event.getCameraFocusY(), event.getCameraFocusZ());
+        // get the voxel coordinates from current view
+        TmViewState currView = TmModelManager.getInstance().getCurrentView();
+        Vec3 location = new Vec3(currView.getCameraFocusX(), currView.getCameraFocusY(), currView.getCameraFocusZ());
         TileFormat tileFormat = getTileFormat();
         quadViewUi.setCameraFocus(
                 tileFormat.micronVec3ForVoxelVec3Centered(location)
