@@ -10,8 +10,10 @@ import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.eventbus.NeuronHideEvent;
 import org.janelia.workstation.controller.eventbus.NeuronUnhideEvent;
+import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.infopanel.action.*;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.windows.TopComponent;
@@ -82,6 +84,9 @@ public class AnnotationPanel extends JPanel
     private AbstractAction bulkNeuronTagAction;
     private AbstractAction bulkNeuronOwnerAction;
     private AbstractAction bulkExportNeuronAction;
+
+    private JCheckBox openHorta;
+    private JCheckBox openLVV;
     PanelController panelController;
     
 
@@ -110,8 +115,8 @@ public class AnnotationPanel extends JPanel
         }
     
         // Disable all change functionality if the user has no write access to the workspace
-        boolean enabled = true;
-                //annotationMgr.editsAllowed();
+        boolean enabled = TmViewerManager.getInstance().editsAllowed() && workspace!=null;
+
         automaticRefinementMenuItem.setEnabled(enabled);
         automaticTracingMenuItem.setEnabled(enabled);
         importSWCAction.setEnabled(enabled);
@@ -124,11 +129,6 @@ public class AnnotationPanel extends JPanel
         hideAllNeuronsAction.setEnabled(enabled);
         sortSubmenu.setEnabled(enabled);
 
-        // These actions override isEnabled, but they still need to be set in order to fire the right updates
-        //createNeuronAction.fireEnabledChangeEvent();
-        //deleteNeuronAction.fireEnabledChangeEvent();
-        //exportAllSWCAction.fireEnabledChangeEvent();
-        //saveAsAction.fireEnabledChangeEvent();
         updateUI();
     }
 
@@ -175,30 +175,38 @@ public class AnnotationPanel extends JPanel
         workspaceButtonsPanel.setLayout(new BoxLayout(workspaceButtonsPanel, BoxLayout.LINE_AXIS));
         mainPanel.add(workspaceButtonsPanel, cVert);
 
-        // testing
+        // testingFil
         // showOutline(workspaceButtonsPanel, Color.green);
 
-        JCheckBox openLVV = new JCheckBox("Open LVV");
+        openLVV = new JCheckBox("Open LVV");
         workspaceButtonsPanel.add(openLVV);
         openLVV.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 TopComponent tc = WindowManager.getDefault().findTopComponent("LargeVolumeViewerTopComponent");
                 if (tc != null) {
-                    tc.open();
+                    if (!tc.isOpened()) {
+                        tc.open();
+                    } else {
+                        tc.close();
+                    }
                     tc.requestActive();
                 }
             }
         });
 
-        JCheckBox openHorta = new JCheckBox("Open Horta");
+        openHorta = new JCheckBox("Open Horta");
         workspaceButtonsPanel.add(openHorta);
         openHorta.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 TopComponent tc = WindowManager.getDefault().findTopComponent("NeuronTracerTopComponent");
                 if (tc != null) {
-                    tc.open();
+                    if (!tc.isOpened()) {
+                        tc.open();
+                    } else {
+                        tc.close();
+                    }
                     tc.requestActive();
                 }
             }
@@ -500,5 +508,18 @@ public class AnnotationPanel extends JPanel
         cBottom.weighty = 1.0;
         mainPanel.add(Box.createVerticalGlue(), cBottom);
     }
+
+    public void viewerClosed(ViewerCloseEvent event) {
+        switch (event.getViewer()) {
+            case HORTA:
+                openHorta.setSelected(false);
+                break;
+            case LVV:
+                openLVV.setSelected(false);
+                break;
+        }
+    }
+
+
 }
 

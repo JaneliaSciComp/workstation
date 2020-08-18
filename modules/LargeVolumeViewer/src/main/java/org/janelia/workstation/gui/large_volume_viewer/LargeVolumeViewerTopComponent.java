@@ -11,6 +11,7 @@ import com.google.common.eventbus.*;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
+import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
 import org.janelia.workstation.integration.activity_logging.ToolString;
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
 @TopComponent.Description(
         preferredID = LargeVolumeViewerTopComponent.LVV_PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
-        persistenceType = TopComponent.PERSISTENCE_ALWAYS
+        persistenceType = TopComponent.PERSISTENCE_NEVER
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "LargeVolumeViewerTopComponent")
@@ -137,6 +138,10 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
             jPanel1.remove(viewUI);
         }
         closeGroup();
+        // fire off notice for checkboxes, etc.
+        ViewerCloseEvent viewerCloseEvent = new ViewerCloseEvent();
+        viewerCloseEvent.setViewer(ViewerCloseEvent.VIEWER.LVV);
+        ViewerEventBus.postEvent(viewerCloseEvent);
     }
 
     protected void closeGroup() {

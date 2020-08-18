@@ -116,6 +116,8 @@ public class TmViewerManager implements GlobalViewerController {
     public void loadProject(DomainObject project) {
         if (TmModelManager.getInstance().getCurrentSample()!=null) {
             boolean isSample = (TmModelManager.getInstance().getCurrentWorkspace()==null) ? true : false;
+            TmModelManager.getInstance().setCurrentSample(null);
+            TmModelManager.getInstance().setCurrentWorkspace(null);
             UnloadProjectEvent event = new UnloadProjectEvent(isSample);
             event.setSample(TmModelManager.getInstance().getCurrentSample());
             event.setWorkspace(TmModelManager.getInstance().getCurrentWorkspace());
@@ -218,8 +220,7 @@ public class TmViewerManager implements GlobalViewerController {
     public void loadComplete(LoadProjectEvent event) {
         final TmWorkspace workspace = modelManager.getCurrentWorkspace();
         if (workspace==null) {
-            // this is a sample
-
+           return;
         }
 
         String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();

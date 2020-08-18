@@ -19,6 +19,8 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.janelia.workstation.controller.eventbus.ViewerCloseEvent.VIEWER.HORTA;
+
 /**
  * This will have access to setters, etc. on the panels, to provide
  * control feeds from external events.
@@ -59,14 +61,16 @@ public class PanelController {
 
     @Subscribe
     public void workspaceLoaded(LoadProjectEvent loadEvent) {
-        if (loadEvent.isSample())
-            return;
-
         TmWorkspace workspace = loadEvent.getWorkspace();
         annotationPanel.loadWorkspace(workspace);
         filteredAnnotationList.loadWorkspace(workspace);
         wsNeuronList.loadWorkspace(workspace);
         wsInfoPanel.loadWorkspace(workspace);
+    }
+
+    @Subscribe
+    public void viewerClosed(ViewerCloseEvent closeEvent) {
+        annotationPanel.viewerClosed(closeEvent);
     }
 
     @Subscribe
