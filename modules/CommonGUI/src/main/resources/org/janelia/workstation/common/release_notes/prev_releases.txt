@@ -1,3 +1,17 @@
+// 8.18
+
+Data Browser
+* Added new right-click actions for FlyLight:
+    * Change Data Set for Sample
+    * Change Slide Code for Sample
+    * Synchronize Slide Codes with SAGE
+* Split channels now produces files with a "-CH1" suffix instead of "-c0", for consistency with color depth MIPs
+* Fixed some issues with annotations being applied to previously selected objects
+* Improvements to background threading and network timeouts
+* Purge and Block is now called in batches, allow larger numbers of samples to be purged with a single action
+* The connection string can now be specified on the command line
+* Fixed bug with viewing Batch Search results
+
 // 8.17
 
 Data Browser
