@@ -91,7 +91,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     /** relevant results for the currently selected mask */
     private List<ColorDepthResult> results = new ArrayList<>();
     private ColorDepthResult currResult;
-    private ColorDepthResultImageModel imageModel;
     private String sortCriteria;
     private ColorDepthSearchResults searchResults;
     private final Set<SplitHalfType> selectedSplitTypes = new HashSet<>();
@@ -313,7 +312,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         
         this.search = search;
         this.mask = mask;
-        this.imageModel = null;
 
         log.info("Preparing matching results from {} results", resultList.size());
 
@@ -491,14 +489,14 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         }
         
         // Create and set image model
-        this.imageModel = new ColorDepthResultImageModel(mask, maskMatches, images, samples, splitInfos);
+        ColorDepthResultImageModel imageModel = new ColorDepthResultImageModel(mask, maskMatches, images, samples, splitInfos);
         resultsPanel.setImageModel(imageModel);
 
         log.info("selectedSplitTypes: {}",selectedSplitTypes);
 
         // Filter matches
         maskMatches = maskMatches.stream()
-                .filter(match -> showMatch(match))
+                .filter(match -> showMatch(match, imageModel))
                 .filter(match -> {
         
                     // Filter by split type. If no split types are selected, then assume the user wants to see everything.
@@ -586,7 +584,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         
         List<ColorDepthMatch> orderedMatches = new ArrayList<>();
         for (LineMatches lineMatches : lines.values()) {
-            for (ColorDepthMatch match : lineMatches.getOrderedFilteredMatches(resultsPerLine)) {
+            for (ColorDepthMatch match : lineMatches.getOrderedFilteredMatches(resultsPerLine, imageModel)) {
                 orderedMatches.add(match);
             }
         }
@@ -627,7 +625,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         updateUI();
     }
     
-    private boolean showMatch(ColorDepthMatch match) {
+    private boolean showMatch(ColorDepthMatch match, ColorDepthResultImageModel imageModel) {
         ColorDepthImage image = imageModel.getImage(match);
         if (image==null) {
             log.warn("Image not found for match: "+match.getImageRef());
@@ -662,7 +660,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             matches.add(match);
         }
         
-        public List<ColorDepthMatch> getOrderedFilteredMatches(Integer resultsPerLine) {
+        public List<ColorDepthMatch> getOrderedFilteredMatches(Integer resultsPerLine, ColorDepthResultImageModel imageModel) {
 
             log.debug("Getting matches for line {} with {} max results", line, resultsPerLine);
             
@@ -764,7 +762,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     }
 
     public ColorDepthResultImageModel getImageModel() {
-        return imageModel;
+        return (ColorDepthResultImageModel)resultsPanel.getImageModel();
     }
 
     @Override
