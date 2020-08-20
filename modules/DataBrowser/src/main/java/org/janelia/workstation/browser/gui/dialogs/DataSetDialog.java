@@ -1,12 +1,12 @@
 package org.janelia.workstation.browser.gui.dialogs;
 
 import net.miginfocom.swing.MigLayout;
-
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.PipelineProcess;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
@@ -15,30 +15,11 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.awt.*;
+import java.util.*;
 
 import static org.janelia.workstation.core.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
 
@@ -55,6 +36,25 @@ public class DataSetDialog extends ModalDialog {
     private static final String SLIDE_CODE_PATTERN = "{Slide Code}";
     private static final String DEFAULT_SAMPLE_NAME_PATTERN = "{Line}-" + SLIDE_CODE_PATTERN;
 
+    private static final String VALID_CONFIG_PATHS[][] = {
+            {"Dickson Lab Light Imagery","/groups/scicomp/informatics/data/dickson_light_imagery-config.xml"},
+            {"FlyLight Light Imagery","/groups/scicomp/informatics/data/flylightflip_light_imagery-config.xml"},
+            {"Lee Lab Light Imagery","/groups/scicomp/informatics/data/leetlineage_light_imagery-config.xml"},
+    };
+
+    private static final String VALID_GRAMMAR_PATHS[][] = {
+            {"Dickson Lab","/misc/local/pipeline/grammar/dickson.gra"},
+            {"FlyLight Polarity","/misc/local/pipeline/grammar/flylightpolarity.gra"},
+            {"FlyLight FLIP","/misc/local/pipeline/grammar/flylightflip.gra"},
+            {"FlyLight Split Screen Review","/misc/local/pipeline/grammar/split_screen_review.gra"},
+            {"Project Technical Resources","/misc/local/pipeline/grammar/projtechres.gra"},
+            {"FlyLight Test","/misc/local/pipeline/grammar/flylighttest.gra"},
+            {"FlyLight Polarity","/misc/local/pipeline/grammar/flylightpolarity.gra "},
+            {"Truman Lab Larval Split Screen","/misc/local/pipeline/grammar/trumanj_larval_ss.gra"},
+            {"Lee Lab Pan Lineage","/misc/local/pipeline/grammar/leet_pan_lineage.gra"},
+            {"Lee Lab Central Brain Lineage","/misc/local/pipeline/grammar/leet_central_brain_lineage.gra"},
+    };
+
     private JPanel attrPanel;
     private JTextField nameInput;
     private JTextField identifierInput;
@@ -66,7 +66,7 @@ public class DataSetDialog extends ModalDialog {
     private JTextField unalignedCompressionInput;
     private JTextField alignedCompressionInput;
     private JTextField separationCompressionInput;
-    private HashMap<String, JRadioButton> processCheckboxes = new LinkedHashMap<>();
+    private String currPipelineProcess;
 
     private DataSet dataSet;
 
@@ -86,21 +86,11 @@ public class DataSetDialog extends ModalDialog {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
+        cancelButton.addActionListener(e -> setVisible(false));
 
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                saveAndClose();
-            }
-        });
+        okButton.addActionListener(e -> saveAndClose());
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
@@ -137,7 +127,7 @@ public class DataSetDialog extends ModalDialog {
 
         addSeparator(attrPanel, "Data Set Attributes", true);
 
-        final JLabel nameLabel = new JLabel("Data Set Name: ");
+        final JLabel nameLabel = new JLabel("Data Set Suffix: ");
         nameInput = new JTextField(40);
 
         nameInput.getDocument().addDocumentListener(new DocumentListener() {
@@ -158,77 +148,113 @@ public class DataSetDialog extends ModalDialog {
         attrPanel.add(nameLabel, "gap para");
         attrPanel.add(nameInput);
 
-        final JLabel identifierLabel = new JLabel("Data Set Identifier: ");
+        final JLabel identifierLabel = new JLabel("Data Set Name: ");
         identifierInput = new JTextField(40);
         identifierInput.setEditable(false);
         identifierLabel.setLabelFor(identifierInput);
         attrPanel.add(identifierLabel, "gap para");
         attrPanel.add(identifierInput);
 
-        final JLabel sampleNamePatternLabel = new JLabel("Sample Name Pattern: ");
+        //final JLabel sampleNamePatternLabel = new JLabel("Sample Name Pattern: ");
         sampleNamePatternInput = new JTextField(40);
         sampleNamePatternInput.setText(DEFAULT_SAMPLE_NAME_PATTERN);
-        sampleNamePatternLabel.setLabelFor(sampleNamePatternInput);
-        attrPanel.add(sampleNamePatternLabel, "gap para");
-        attrPanel.add(sampleNamePatternInput);
+        // Hide this for now, because no one is using it, and it just adds to confusion around creating data sets
+        //sampleNamePatternLabel.setLabelFor(sampleNamePatternInput);
+        //attrPanel.add(sampleNamePatternLabel, "gap para");
+        //attrPanel.add(sampleNamePatternInput);
 
-        final JLabel sageConfigPathLabel = new JLabel("SAGE Config Path: ");
-        sageConfigPathInput = new JTextField(80);
-        sageConfigPathLabel.setLabelFor(sageConfigPathInput);
-        attrPanel.add(sageConfigPathLabel, "gap para");
-        attrPanel.add(sageConfigPathInput);
+        sageConfigPathInput = new JTextField(40);
+        String currConfigPath = null;
+        if (dataSet != null && dataSet.getSageConfigPath() != null) {
+            currConfigPath = dataSet.getSageConfigPath().trim();
+        }
+        addPathControls(VALID_CONFIG_PATHS, sageConfigPathInput, currConfigPath,"SAGE Config: ",
+                "", "Choose SAGE Config");
 
-        final JLabel sageGrammarPathLabel = new JLabel("SAGE Grammar Path: ");
-        sageGrammarPathInput = new JTextField(80);
-        sageGrammarPathLabel.setLabelFor(sageGrammarPathInput);
-        attrPanel.add(sageGrammarPathLabel, "gap para");
-        attrPanel.add(sageGrammarPathInput);
+        sageGrammarPathInput = new JTextField(40);
+        String currGrammarPath = null;
+        if (dataSet != null && dataSet.getSageGrammarPath() != null) {
+            currGrammarPath = dataSet.getSageGrammarPath().trim();
+        }
+        addPathControls(VALID_GRAMMAR_PATHS, sageGrammarPathInput, currGrammarPath,"SAGE Grammar: ",
+                "", "Choose SAGE Grammar");
 
+        DropDownButton pipelineProcessButton = new DropDownButton();
+        pipelineProcessButton.setText("Select Sample Processing Pipeline"); // default value
 
-        final JLabel unalignedCompressionLabel = new JLabel("Default Unaligned Compression: ");
+        if (dataSet==null) {
+            // Default pipeline for new data sets
+            currPipelineProcess = PipelineProcess.FlyLightSample.name();
+        }
+        else if (dataSet.getPipelineProcesses() != null && !dataSet.getPipelineProcesses().isEmpty()) {
+            currPipelineProcess = dataSet.getPipelineProcesses().get(0);
+        }
+
+        ButtonGroup typeGroup = new ButtonGroup();
+        for (PipelineProcess process : PipelineProcess.values()) {
+            JMenuItem menuItem = new JRadioButtonMenuItem(process.getName());
+            if (process.name().equals(currPipelineProcess)) {
+                menuItem.setSelected(true);
+                pipelineProcessButton.setText(process.getName());
+            }
+            menuItem.addActionListener(e -> {
+                currPipelineProcess = process.name();
+                pipelineProcessButton.setText(process.getName());
+            });
+            typeGroup.add(menuItem);
+            pipelineProcessButton.addMenuItem(menuItem);
+        }
+
+        final JLabel pipelineProcessLabel = new JLabel("Sample Processing Pipeline");
+        pipelineProcessLabel.setLabelFor(pipelineProcessButton);
+        attrPanel.add(pipelineProcessLabel, "gap para");
+        attrPanel.add(pipelineProcessButton);
+
         unalignedCompressionInput = new JTextField(40);
         unalignedCompressionInput.setEditable(false);
-        unalignedCompressionLabel.setLabelFor(unalignedCompressionInput);
-        attrPanel.add(unalignedCompressionLabel, "gap para");
-        attrPanel.add(unalignedCompressionInput);
-
-        final JLabel alignedCompressionLabel = new JLabel("Default Aligned Compression: ");
         alignedCompressionInput = new JTextField(40);
         alignedCompressionInput.setEditable(false);
-        alignedCompressionLabel.setLabelFor(alignedCompressionInput);
-        attrPanel.add(alignedCompressionLabel, "gap para");
-        attrPanel.add(alignedCompressionInput);
-        
-        final JLabel separationCompressionLabel = new JLabel("Default Separation Compression: ");
         separationCompressionInput = new JTextField(40);
         separationCompressionInput.setEditable(false);
-        separationCompressionLabel.setLabelFor(separationCompressionInput);
-        attrPanel.add(separationCompressionLabel, "gap para");
-        attrPanel.add(separationCompressionInput);
-        
-        
+
+        if (dataSet != null) {
+            final JLabel unalignedCompressionLabel = new JLabel("Default Unaligned Compression: ");
+            unalignedCompressionLabel.setLabelFor(unalignedCompressionInput);
+            attrPanel.add(unalignedCompressionLabel, "gap para");
+            attrPanel.add(unalignedCompressionInput);
+
+            final JLabel alignedCompressionLabel = new JLabel("Default Aligned Compression: ");
+            alignedCompressionLabel.setLabelFor(alignedCompressionInput);
+            attrPanel.add(alignedCompressionLabel, "gap para");
+            attrPanel.add(alignedCompressionInput);
+
+            final JLabel separationCompressionLabel = new JLabel("Default Separation Compression: ");
+            separationCompressionLabel.setLabelFor(separationCompressionInput);
+            attrPanel.add(separationCompressionLabel, "gap para");
+            attrPanel.add(separationCompressionInput);
+        }
+
+        JPanel optionsPanel = new JPanel();
+        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.PAGE_AXIS));
+
         sageSyncCheckbox = new JCheckBox("Synchronize images from SAGE");
-        attrPanel.add(sageSyncCheckbox, "gap para");
+        sageSyncCheckbox.setSelected(true);
+        optionsPanel.add(sageSyncCheckbox);
 
-        neuronSeparationCheckbox = new JCheckBox("Support Neuron Separation");
-        neuronSeparationCheckbox.setToolTipText("If pipeline does Neuron Separation by default, unchecking avoids it");
+        neuronSeparationCheckbox = new JCheckBox("Run neuron separation (if pipeline supports it)");
         neuronSeparationCheckbox.setEnabled(SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI);
-        attrPanel.add(neuronSeparationCheckbox, "gap para, span 2");
+        optionsPanel.add(neuronSeparationCheckbox);
 
-        JPanel pipelinesPanel = new JPanel();
-        pipelinesPanel.setLayout(new BoxLayout(pipelinesPanel, BoxLayout.PAGE_AXIS));
-        addRadioButtons(PipelineProcess.values(), processCheckboxes, pipelinesPanel);
-
-        JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setViewportView(pipelinesPanel);
-        scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 300));
-
-        addSeparator(attrPanel, "Pipelines", false);
-        attrPanel.add(scrollPane, "span 2, growx");
+        final JLabel processingOptionsLabel = new JLabel("Processing Options: ");
+        processingOptionsLabel.setLabelFor(optionsPanel);
+        attrPanel.add(processingOptionsLabel, "gap para, top");
+        attrPanel.add(optionsPanel);
 
         if (dataSet != null) {
 
-            nameInput.setText(dataSet.getName());
+            String identifier = dataSet.getIdentifier();
+            int first = identifier.indexOf('_');
+            nameInput.setText(identifier.substring(first+1));
 
             identifierInput.setText(dataSet.getIdentifier());
             sampleNamePatternInput.setText(dataSet.getSampleNamePattern());
@@ -245,20 +271,78 @@ public class DataSetDialog extends ModalDialog {
             
             sageSyncCheckbox.setSelected(dataSet.isSageSync());
             neuronSeparationCheckbox.setSelected(dataSet.isNeuronSeparationSupported());
-            if (dataSet.getPipelineProcesses()!=null && !dataSet.getPipelineProcesses().isEmpty()) {
-                applyRadioButtonValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
-            }
 
             ActivityLogHelper.logUserAction("DataSetDialog.showDialog", dataSet);
         }
         else {
             nameInput.setText("");
-            applyRadioButtonValues(processCheckboxes, PipelineProcess.FlyLightUnaligned.toString());
-
             ActivityLogHelper.logUserAction("DataSetDialog.showDialog");
         }
 
         packAndShow();
+
+    }
+
+    private void addPathControls(final String[][] validNamedPaths, final JTextField rawPathInput, String currValue,
+                                 String buttonLabelText, String overrideFieldLabelText, String defaultButtonText) {
+
+        DropDownButton dropDownButton = new DropDownButton();
+        ButtonGroup typeGroup = new ButtonGroup();
+        String selectedName = null;
+        for (String[] namedPath : validNamedPaths) {
+            String name = namedPath[0];
+            String path = namedPath[1];
+            JMenuItem menuItem = new JRadioButtonMenuItem(name);
+            if (path.equals(currValue)) {
+                menuItem.setSelected(true);
+                selectedName = name;
+            }
+            menuItem.addActionListener(e -> {
+                rawPathInput.setText(path);
+                dropDownButton.setText(name);
+            });
+            typeGroup.add(menuItem);
+            dropDownButton.addMenuItem(menuItem);
+        }
+        if (selectedName!=null) {
+            dropDownButton.setText(selectedName);
+        }
+        else {
+            dropDownButton.setText(defaultButtonText);
+        }
+
+        JCheckBox overrideCheckbox = new JCheckBox("Override");
+        overrideCheckbox.addChangeListener(e -> {
+            rawPathInput.setEnabled(overrideCheckbox.isSelected());
+            dropDownButton.setEnabled(!overrideCheckbox.isSelected());
+        });
+
+        JPanel overridePanel = new JPanel();
+        overridePanel.setLayout(new BoxLayout(overridePanel, BoxLayout.LINE_AXIS));
+        overridePanel.add(dropDownButton);
+        overridePanel.add(Box.createHorizontalStrut(10));
+        overridePanel.add(overrideCheckbox);
+
+        final JLabel buttonLabel = new JLabel(buttonLabelText);
+        attrPanel.add(buttonLabel, "gap para");
+        attrPanel.add(overridePanel);
+
+        final JLabel rawFieldLabel = new JLabel(overrideFieldLabelText);
+        rawFieldLabel.setLabelFor(rawPathInput);
+        attrPanel.add(rawFieldLabel, "gap para");
+        attrPanel.add(rawPathInput);
+
+        // By default, ask the user to choose from the list
+        overrideCheckbox.setSelected(false);
+        rawPathInput.setEnabled(false);
+        dropDownButton.setEnabled(true);
+
+        if (currValue!=null && selectedName==null) {
+            // But enable raw override if the current value is not in the list (custom value)
+            overrideCheckbox.setSelected(true);
+            rawPathInput.setEnabled(true);
+            dropDownButton.setEnabled(false);
+        }
     }
 
     private void saveAndClose() {
@@ -293,11 +377,9 @@ public class DataSetDialog extends ModalDialog {
                     dataSet.setIdentifier(identifierInput.getText());
                 } 
 
-                dataSet.setName(nameInput.getText());
+                dataSet.setName(dataSet.getIdentifier());
                 dataSet.setSampleNamePattern(sampleNamePattern);
-                java.util.List<String> pipelineProcesses = new ArrayList<>();
-                pipelineProcesses.add(getRadioButtonValues(processCheckboxes));
-                dataSet.setPipelineProcesses(pipelineProcesses);
+                dataSet.setPipelineProcesses(Collections.singletonList(currPipelineProcess));
                 dataSet.setSageSync(sageSyncCheckbox.isSelected());
                 dataSet.setNeuronSeparationSupported(neuronSeparationCheckbox.isSelected());
                 dataSet.setSageConfigPath(sageConfigPath);
@@ -321,50 +403,6 @@ public class DataSetDialog extends ModalDialog {
         };
 
         worker.execute();
-    }
-
-    private void addRadioButtons(final PipelineProcess[] choices, final HashMap<String, JRadioButton> radioButtons, final JPanel panel) {
-        ButtonGroup group = new ButtonGroup();
-        for (PipelineProcess choice : choices) {
-            JRadioButton checkBox = new JRadioButton(choice.getName());
-            radioButtons.put(choice.toString(), checkBox);
-            panel.add(checkBox);
-            group.add(checkBox);
-        }
-    }
-
-    private void applyRadioButtonValues(final HashMap<String, JRadioButton> radioButtons, String selectedButtons) {
-
-        for (JRadioButton checkbox : radioButtons.values()) {
-            checkbox.setSelected(false);
-        }
-
-        if (StringUtils.isEmpty(selectedButtons)) {
-            return;
-        }
-
-        for (String value : selectedButtons.split(",")) {
-            JRadioButton checkbox = radioButtons.get(value);
-            if (checkbox != null) {
-                checkbox.setSelected(true);
-            }
-        }
-    }
-
-    private String getRadioButtonValues(final HashMap<String, JRadioButton> radioButtons) {
-
-        StringBuilder sb = new StringBuilder();
-        for (String key : radioButtons.keySet()) {
-            JRadioButton checkbox = radioButtons.get(key);
-            if (checkbox != null && checkbox.isSelected()) {
-                if (sb.length() > 0) {
-                    sb.append(",");
-                }
-                sb.append(key);
-            }
-        }
-
-        return sb.toString();
     }
 
     private String createDenormIdentifierFromName (String username, String name) {

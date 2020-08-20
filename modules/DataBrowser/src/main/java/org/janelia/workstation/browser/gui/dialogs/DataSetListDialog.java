@@ -7,7 +7,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -22,6 +24,7 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
+import org.janelia.model.domain.sample.PipelineProcess;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
@@ -61,9 +64,15 @@ public class DataSetListDialog extends ModalDialog {
     private final DataSetDialog dataSetDialog;
     private final DomainDetailsDialog detailsDialog;
     private final ChangeSampleCompressionDialog compressionDialog;
-    
+
+    private final Map<String,String> pipelineProcessLabels = new HashMap<>();
+
     public DataSetListDialog() {
         setTitle("Data Sets");
+
+        for (PipelineProcess process : PipelineProcess.values()) {
+            pipelineProcessLabels.put(process.name(), process.getName());
+        }
 
         dataSetDialog = new DataSetDialog(this);
         detailsDialog = new DomainDetailsDialog(this);
@@ -85,18 +94,15 @@ public class DataSetListDialog extends ModalDialog {
             public Object getValue(Object userObject, DynamicColumn column) {
                 DataSet dataSet = (DataSet) userObject;
                 if (dataSet != null) {
-                    if ((DomainModelViewConstants.DATASET_OWNER).equals(column.getName())) {
-                        return dataSet.getOwnerName();
-                    }
                     if (DomainModelViewConstants.DATASET_NAME.equals(column.getName())) {
                         return dataSet.getName();
                     }
                     else if ((DomainModelViewConstants.DATASET_PIPELINE_PROCESS).equals(column.getName())) {
                         List<String> processes = dataSet.getPipelineProcesses();
-                        return processes == null || processes.isEmpty() ? null : dataSet.getPipelineProcesses().get(0);
-                    }
-                    else if ((DomainModelViewConstants.DATASET_SAMPLE_NAME).equals(column.getName())) {
-                        return dataSet.getSampleNamePattern();
+                        String value = processes == null || processes.isEmpty() ? null : dataSet.getPipelineProcesses().get(0);
+                        String label = pipelineProcessLabels.get(value);
+                        if (label != null) return label;
+                        return value; // fallback on value if no label can be found
                     }
                     else if ((DomainModelViewConstants.DATASET_SAGE_SYNC).equals(column.getName())) {
                         return dataSet.isSageSync();
@@ -242,13 +248,10 @@ public class DataSetListDialog extends ModalDialog {
             }
         };
 
-        dynamicTable.addColumn(DomainModelViewConstants.DATASET_OWNER);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_NAME);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_PIPELINE_PROCESS);
-        dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAMPLE_NAME);
-        // Disable editable columns because it's too easy to make a mistake, and there is no undo or cancel
-        dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAGE_SYNC);//.setEditable(true);
-        dynamicTable.addColumn(DomainModelViewConstants.DATASET_NEURON_SEPARATION);//.setEditable(SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI);
+        dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAGE_SYNC);
+        dynamicTable.addColumn(DomainModelViewConstants.DATASET_NEURON_SEPARATION);
 
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new data set definition");
