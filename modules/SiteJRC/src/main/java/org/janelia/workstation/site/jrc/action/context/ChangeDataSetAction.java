@@ -127,50 +127,47 @@ public class ChangeDataSetAction extends BaseContextualNodeAction {
     private void changeDataSet(Collection<Sample> samples, String newDataSet) {
 
         int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
-                "Are you sure you want to change the data set for these samples to "+newDataSet+"? " +
+                "Are you sure you want to change the data set for these samples to "+newDataSet+"?\n" +
                         "This will affect all the images in these sample in both the Workstation and SAGE, " +
                         "and may also move files on disk, if the owner of the sample changes.",
                 "Are you sure?", JOptionPane.OK_CANCEL_OPTION);
         if (result != 0) return;
 
-        Task task;
-        try {
-            StringBuilder sampleIdBuf = new StringBuilder();
-            for (Sample sample : samples) {
-                if (sampleIdBuf.length() > 0) sampleIdBuf.append(",");
-                sampleIdBuf.append(sample.getId());
-            }
+        for (Sample sample : samples) {
+            Task task;
+            try {
+                HashSet<TaskParameter> taskParameters = new HashSet<>();
+                taskParameters.add(new TaskParameter("sample entity id", sample.getId().toString(), null));
+                taskParameters.add(new TaskParameter("new data set", newDataSet, null));
+                task = StateMgr.getStateMgr().submitJob("PostPipeline_ChangeSamplePrimaryKey", "Change Sample Data Set", taskParameters);
 
-            HashSet<TaskParameter> taskParameters = new HashSet<>();
-            taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
-            taskParameters.add(new TaskParameter("new data set", newDataSet, null));
-            task = StateMgr.getStateMgr().submitJob("PostPipeline_ChangeSamplePrimaryKey", "Change Sample Data Set", taskParameters);
+                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
+
+                    @Override
+                    public String getName() {
+                        return "Changing data set for " + sample.getName();
+                    }
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        setStatus("Executing");
+                        super.doStuff();
+                        DomainMgr.getDomainMgr().getModel().invalidate(sample);
+                    }
+                };
+
+                taskWorker.setSuccessCallback(() -> {
+                    SimpleWorker.runInBackground(() -> DomainMgr.getDomainMgr().getModel().invalidate(sample));
+                    return null;
+                });
+
+                taskWorker.executeWithEvents();
+
+            }
+            catch (Exception ex) {
+                FrameworkAccess.handleException(ex);
+                return;
+            }
         }
-        catch (Exception ex) {
-            FrameworkAccess.handleException(ex);
-            return;
-        }
-
-        TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
-
-            @Override
-            public String getName() {
-                return "Changing data set for " + samples.size() + " samples";
-            }
-
-            @Override
-            protected void doStuff() throws Exception {
-                setStatus("Executing");
-                super.doStuff();
-                DomainMgr.getDomainMgr().getModel().invalidate(samples);
-            }
-        };
-
-        taskWorker.setSuccessCallback(() -> {
-            SimpleWorker.runInBackground(() -> DomainMgr.getDomainMgr().getModel().invalidate(samples));
-            return null;
-        });
-
-        taskWorker.executeWithEvents();
     }
 }
