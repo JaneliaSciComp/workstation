@@ -2,6 +2,7 @@ package org.janelia.workstation.gui.large_volume_viewer.model_adapter;
 
 import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.model.util.TmNeuronUtils;
+import org.janelia.workstation.geom.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -189,6 +190,7 @@ public class NeuronManager {
         neuronMap.clear();
         // addNeurons() must be done serially, so flatten the stream:
         for (TmNeuronMetadata n: neuronModelAdapter.loadNeurons(workspace).collect(Collectors.toList())) {
+            // doublecheck neuron for distance between vertices
             addNeuron(n);
         }
         LOG.info("NeuronManager.loadWorkspaceNeurons() loaded {} neurons", neuronMap.size());

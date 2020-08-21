@@ -51,4 +51,9 @@ public class BasicNeuronEdge implements NeuronEdge
         return true;
     }
 
+
+    @Override
+    public int getSize() {
+        return vertices.size();
+    }
 }

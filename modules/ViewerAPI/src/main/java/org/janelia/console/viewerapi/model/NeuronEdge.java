@@ -6,4 +6,5 @@ package org.janelia.console.viewerapi.model;
  */
 public interface NeuronEdge extends Iterable<NeuronVertex>
 {
+    public int getSize();
 }

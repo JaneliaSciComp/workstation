@@ -300,13 +300,20 @@ public class Skeleton {
         controller.annotationSelected(anchor.getGuid());
         return anchor;
     }
-    
+
     public List<Anchor> addTmGeoAnchors(List<TmGeoAnnotation> annotationList) {
         List<Anchor> anchorList = new ArrayList<>();
-        Map<Long, Anchor> tempAnchorsByGuid = new HashMap<>();
+        Map<String, Anchor> tempAnchorsByGuid = new HashMap<>();
         for (TmGeoAnnotation ann : annotationList) {
             Vec3 location = new Vec3(ann.getX(), ann.getY(), ann.getZ());
-
+            Anchor anchor = new Anchor(location, null, ann.getNeuronId(), tileFormat);
+            anchor.setGuid(ann.getId());
+            tempAnchorsByGuid.put(ann.getNeuronId()+"-"+ann.getId(), anchor);
+        }
+        for (TmGeoAnnotation ann : annotationList) {
+            Anchor anchor = tempAnchorsByGuid.get(ann.getNeuronId()+"-"+ann.getId());
+            Anchor parentAnchor = tempAnchorsByGuid.get(ann.getNeuronId()+"-"+ann.getParentId());
+            anchor.addNeighbor(parentAnchor);
             // only check the current batch of anchors for the parent, not the cache;
             //  we need to work with the latest anchor objects, not
             //  retrieve older objects that aren't connected right;
@@ -317,12 +324,10 @@ public class Skeleton {
             //  should probably handle situations where we aren't getting
             //  the full neuron (so do need to check the cache), and are
             //  possibly getting parents out of order (so ugh)
-            Anchor parentAnchor = tempAnchorsByGuid.get(ann.getParentId());
-            Anchor anchor = new Anchor(location, parentAnchor, ann.getNeuronId(), tileFormat);
-            anchor.setGuid(ann.getId());
-            tempAnchorsByGuid.put(anchor.getGuid(), anchor);
+
             anchorList.add(anchor);
         }
+
         addAnchors(anchorList);
         return anchorList;
     }

@@ -50,5 +50,9 @@ public class NeuronEdgeAdapter implements NeuronEdge
         }
         return true;
     }
-    
+
+    @Override
+    public int getSize() {
+        return vertices.size();
+    }
 }

@@ -341,6 +341,10 @@ public class NeuronVbo implements Iterable<NeuronModel>
             for (NeuronEdge edge : neuron.getEdges()) {
                 Iterator<NeuronVertex> eit = edge.iterator();
                 NeuronVertex v1 = eit.next();
+                if (!eit.hasNext()) {
+                    log.info ("Not enough vertices");
+                    continue;
+                }
                 NeuronVertex v2 = eit.next();
                 Integer i1 = vertexIndices.get(v1);
                 Integer i2 = vertexIndices.get(v2);
