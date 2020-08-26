@@ -1,11 +1,4 @@
 // 8.19
 
-Data Browser
-* Improved Data Set configuration dialog
-* Fixed permission issue with Change Data Set action
-
-Large Volume Viewer
-* Fixed duplicate annotation ids in different neurons causing crosslinks
-
-Horta
-* Fixed edges with one vertex causing recursive exceptions
+Color Depth Search
+* Added checkboxes to mirror images in the color depth search result comparison HUD

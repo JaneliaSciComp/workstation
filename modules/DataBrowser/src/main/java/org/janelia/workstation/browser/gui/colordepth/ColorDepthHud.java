@@ -6,7 +6,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -62,12 +65,16 @@ public class ColorDepthHud extends ModalDialog {
 
     // GUI
     private final JPanel headPanel;
+    private final JCheckBox mirrorCheckbox1;
+    private final JCheckBox mirrorCheckbox2;
     private final JScrollPane scrollPane1;
     private final JLabel previewLabel1;
     private final JScrollPane scrollPane2;
     private final JLabel previewLabel2;
     private final JLayer<JScrollPane> scrollLayer1;
     private final JLayer<JScrollPane> scrollLayer2;
+    private BufferedImage image1;
+    private BufferedImage image2;
 
     // Current state
     private boolean firstShowing = true;
@@ -169,10 +176,28 @@ public class ColorDepthHud extends ModalDialog {
         headPanel.setLayout(new MigLayout("gap 50, fillx, wrap 2"));
         add(headPanel, BorderLayout.NORTH);
 
+        mirrorCheckbox1 = new JCheckBox("Mirror");
+        mirrorCheckbox1.setFocusable(false);
+        mirrorCheckbox1.addChangeListener((e) -> updateMaskImage());
+
+        mirrorCheckbox2 = new JCheckBox("Mirror");
+        mirrorCheckbox2.setFocusable(false);
+        mirrorCheckbox2.addChangeListener((e) -> updateResultImage());
+
+        JPanel imagePanel1 = new JPanel();
+        imagePanel1.setLayout(new BorderLayout());
+        imagePanel1.add(mirrorCheckbox1, BorderLayout.NORTH);
+        imagePanel1.add(scrollLayer1, BorderLayout.CENTER);
+
+        JPanel imagePanel2 = new JPanel();
+        imagePanel2.setLayout(new BorderLayout());
+        imagePanel2.add(mirrorCheckbox2, BorderLayout.NORTH);
+        imagePanel2.add(scrollLayer2, BorderLayout.CENTER);
+
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.LINE_AXIS));
-        mainPanel.add(scrollLayer1);
-        mainPanel.add(scrollLayer2);
+        mainPanel.add(imagePanel1);
+        mainPanel.add(imagePanel2);
 
         add(mainPanel, BorderLayout.CENTER);
 
@@ -253,8 +278,6 @@ public class ColorDepthHud extends ModalDialog {
             private List<Annotation> annotations;
             private ColorDepthImage image;
             private Sample sample;
-            private BufferedImage image1;
-            private BufferedImage image2;
 
             @Override
             protected void doStuff() throws Exception {
@@ -275,10 +298,16 @@ public class ColorDepthHud extends ModalDialog {
 
                 // Load images
                 try (InputStream imageStream = FileMgr.getFileMgr().openFileInputStream(mask.getFilepath(), false)) {
-                    this.image1 = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(mask.getFilepath()));
+                    image1 = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(mask.getFilepath()));
+                }
+                catch (FileNotFoundException e) {
+                    log.warn("Mask image not found: ", mask.getFilepath());
                 }
                 try (InputStream imageStream = FileMgr.getFileMgr().openFileInputStream(image.getFilepath(), false)) {
-                    this.image2 = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(image.getFilepath()));
+                    image2 = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(image.getFilepath()));
+                }
+                catch (FileNotFoundException e) {
+                    log.warn("Result image not found: ", image.getFilepath());
                 }
             }
 
@@ -310,16 +339,16 @@ public class ColorDepthHud extends ModalDialog {
                 headPanel.add(new JLabel(subtitle), "al right center");
                 headPanel.updateUI();
 
-                previewLabel1.setIcon(image1 == null ? null : new ImageIcon(image1));
-                previewLabel2.setIcon(image2 == null ? null : new ImageIcon(image2));
+                updateMaskImage();
+                updateResultImage();
 
                 if (toggle) {
                     Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-                    int width = (int)Math.round((double)screenSize.width*(0.9/2));
+                    int width = (int)Math.round((double)screenSize.width*0.9);
                     int height = (int)Math.round((double)screenSize.height*0.9);
                     log.debug("Got screen size: {}x{}", width, height);
-                    width = Math.min(image1.getWidth(), width);
-                    height = Math.min(image1.getHeight(), height);
+                    width = Math.min(image1.getWidth()+12, width);
+                    height = Math.min(image1.getHeight()+12, height);
                     log.debug("Setting scroll pane size: {}x{}", width, height);
 
                     scrollPane1.setPreferredSize(new Dimension(width, height));
@@ -339,5 +368,44 @@ public class ColorDepthHud extends ModalDialog {
         worker.execute();
     }
 
+    private void updateMaskImage() {
+        if (image1 != null) {
+            if (mirrorCheckbox1.isSelected()) {
+                previewLabel1.setIcon(new ImageIcon(mirror(image1)));
+            }
+            else {
+                previewLabel1.setIcon(new ImageIcon(image1));
+            }
+        }
+        else {
+            previewLabel1.setIcon(null);
+        }
+    }
+
+    private void updateResultImage() {
+        if (image1 != null) {
+            if (mirrorCheckbox2.isSelected()) {
+                previewLabel2.setIcon(new ImageIcon(mirror(image2)));
+            }
+            else {
+                previewLabel2.setIcon(new ImageIcon(image2));
+            }
+        }
+        else {
+            previewLabel2.setIcon(null);
+        }
+    }
+
+    /**
+     * Flip the given image horizontally and return the result
+     * @param image
+     * @return
+     */
+    private BufferedImage mirror(BufferedImage image) {
+        AffineTransform tx = AffineTransform.getScaleInstance(-1, 1);
+        tx.translate(-image.getWidth(null), 0);
+        AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
+        return op.filter(image, null);
+    }
 
 }

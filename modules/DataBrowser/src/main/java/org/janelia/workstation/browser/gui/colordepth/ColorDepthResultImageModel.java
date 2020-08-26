@@ -76,7 +76,8 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, R
     public Sample getSample(ColorDepthMatch match) {
         ColorDepthImage image = getImage(match);
         if (image==null) {
-            throw new IllegalStateException("Image does not exist: "+match.getImageRef());
+            log.warn("Image does not exist: "+match.getImageRef());
+            return null;
         }
         if (image.getSampleRef()==null) {
             return null;
