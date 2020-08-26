@@ -23,14 +23,14 @@ import java.util.logging.Logger;
  */
 public class ErrorPopups {
 
-    private static final Logger logger = Logger.getLogger(ErrorPopups.class.getName());
+    private static final Logger log = Logger.getLogger(ErrorPopups.class.getName());
 
     /**
      * Analyzes the given exception and displays any relevant error popups to the user
      * using SwingUtilities.invokeLater. Returns true if the exception has been handled,
      * or false if it needs to be escalated to the user.
      * @param e
-     * @return
+     * @return true if the exception has been handled
      */
     public static boolean attemptExceptionHandling(Throwable e) {
         ExceptionTriage.ExceptionCategory exceptionCategory = ExceptionTriage.getExceptionCategory(e);
@@ -46,39 +46,37 @@ public class ErrorPopups {
                 return true;
         }
 
-        logger.warning("New exception category should be handled in org.janelia.workstation.common.logging.ErrorPopups: "+exceptionCategory);
+        log.warning("New exception category should be handled in org.janelia.workstation.common.logging.ErrorPopups: "+exceptionCategory);
         return false;
     }
 
     private static boolean authIssue() {
+        log.info("Alerting user that there is an authentication issue");
         // Show the login dialog and allow the user to re-authenticate.
-        SwingUtilities.invokeLater(() -> {
-            LoginDialog.getInstance().showDialog(LoginErrorType.TokenExpiredError);
-        });
+        SwingUtilities.invokeLater(() -> LoginDialog.getInstance().showDialog(LoginErrorType.TokenExpiredError));
         return true;
     }
 
     private static boolean networkIssue() {
-        SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                    "<html>The server is currently unreachable. There may be a <br>"
-                            + "network issue, or the system may be down for maintenance.</html>",
-                    "Network error", JOptionPane.ERROR_MESSAGE);
-        });
+        log.info("Alerting user that there is a network issue");
+        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                "<html>The server is currently unreachable. There may be a <br>"
+                        + "network issue, or the system may be down for maintenance.</html>",
+                "Network error", JOptionPane.ERROR_MESSAGE));
         return true;
     }
 
     private static boolean filePermission(String message) {
-        SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                    "<html>Encountered a file permission problem when accessing local disk:<br>"
-                            + message+"</html>",
-                    "File permission error", JOptionPane.ERROR_MESSAGE);
-        });
+        log.info("Alerting user that there is a file permission problem");
+        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                "<html>Encountered a file permission problem when accessing local disk:<br>"
+                        + message+"</html>",
+                "File permission error", JOptionPane.ERROR_MESSAGE));
         return true;
     }
 
     private static boolean outOfMemory() {
+        log.info("Alerting user that we have run out of memory");
         // Show dialog to allow user to increase their memory setting
         SwingUtilities.invokeLater(() -> {
 
@@ -87,7 +85,7 @@ public class ErrorPopups {
                 maxMem = Utils.getMemoryAllocation();
             }
             catch (Exception e1) {
-                logger.log(CustomLoggingLevel.SEVERE, "Error getting memory allocation", e1);
+                log.log(CustomLoggingLevel.SEVERE, "Error getting memory allocation", e1);
             }
 
             StringBuilder html = new StringBuilder("<html><body>");
@@ -110,11 +108,10 @@ public class ErrorPopups {
     }
 
     private static boolean outOfDisk() {
-        SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                    "<html>There is no space left on the disk you are using.</html>",
-                    "No Space on Disk", JOptionPane.ERROR_MESSAGE);
-        });
+        log.info("Alerting user that there is no space left on disk");
+        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                "<html>There is no space left on the disk you are using.</html>",
+                "No Space on Disk", JOptionPane.ERROR_MESSAGE));
         return true;
     }
 }
