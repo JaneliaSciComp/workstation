@@ -55,6 +55,7 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.SpatialIndexManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.NeuronCreateAction;
+import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
 import org.janelia.workstation.controller.eventbus.SelectionAnnotationEvent;
 import org.janelia.workstation.controller.eventbus.ViewerEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -186,6 +187,9 @@ public class TracingInteractor extends MouseAdapter
 
                         }
                     }
+                    NeuronUpdateEvent updateEvent = new NeuronUpdateEvent();
+                    updateEvent.setNeurons(neurons);
+                    ViewerEventBus.postEvent(updateEvent);
                 }
             }
         }
@@ -1327,7 +1331,7 @@ public class TracingInteractor extends MouseAdapter
 
            // anchorEditModel.getVertexUpdatedObservable().setChanged();
            // anchorEditModel.getVertexUpdatedObservable().notifyObservers(new VertexWithNeuron(anchor, anchorEditModel));
-            
+
             slider = new JSlider();
             slider.setMaximum(sliderMax);
             slider.setValue(sliderValueForRadius(currentRadius));
@@ -1337,31 +1341,31 @@ public class TracingInteractor extends MouseAdapter
                 public void stateChanged(ChangeEvent e) {
                     int sliderValue = slider.getValue();
                     int oldValue = sliderValueForRadius(currentRadius);
-                    
+
                     if (oldValue == sliderValue) {
                         return; // no (significant) change
                     }
-                    
+
                     float newRadius = radiusForSliderValue(sliderValue);
-                    
+
                     int sanityCheck = sliderValueForRadius(newRadius);
                     if (sliderValue != sanityCheck) {
                         log.error("Radius slider value {} diverged to {} with radius {}", sliderValue, sanityCheck, newRadius);
                     }
                     // log.info("Radius visually adjusted to {} micrometers", newRadius);
-                    
+
                     anchor.setRadius(new Double(currentRadius));
-                    
+
                     // Update the display only, by signalling change to the model, but not to the neuron (yet)
                    // anchorEditModel.getVertexUpdatedObservable().setChanged();
                     //anchorEditModel.getVertexUpdatedObservable().notifyObservers(new VertexWithNeuron(anchor, anchorEditModel));
-                    
+
                     currentRadius = newRadius;
                     radiusField.setValue(newRadius);
                 }
             });
-            
-            NumberFormat radiusFormat = new DecimalFormat("#.##"); 
+
+            NumberFormat radiusFormat = new DecimalFormat("#.##");
             radiusField = new JFormattedTextField(radiusFormat);
             radiusField.setValue(currentRadius);
             radiusField.addPropertyChangeListener("value", new PropertyChangeListener() {
@@ -1378,23 +1382,24 @@ public class TracingInteractor extends MouseAdapter
                     slider.setValue(sliderValue);
                 }
             });
-            
+
             setMessage(new Object[] {
                 "Adjust Radius for Neuron Anchor",
                 slider,
                 radiusField
             });
             setOptionType(JOptionPane.OK_CANCEL_OPTION);
-            
+
             JDialog dialog = createDialog("Adjust Radius");
             dialog.setVisible(true);
-            
+
             // Turn off editing model after dialog is done displaying
             anchorEditModel.getGeoAnnotationMap().clear();
             anchorEditModel.getEdges().clear();
             //anchorEditModel.getVertexesRemovedObservable().setChanged();
             //anchorEditModel.getVertexesRemovedObservable().notifyObservers(null);
         }
+
     }
 
 }

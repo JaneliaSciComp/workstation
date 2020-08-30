@@ -1,10 +1,6 @@
 package org.janelia.workstation.controller.model.annotations.neuron;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -16,6 +12,9 @@ import org.janelia.messaging.core.MessageSender;
 import org.janelia.messaging.core.impl.MessageSenderImpl;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.model.TmHistoricalEvent;
+import org.janelia.workstation.controller.model.TmHistory;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronMessageConstants;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -119,6 +118,25 @@ class NeuronModelAdapter {
         neuronIds.add(neuron.getId());
         ObjectMapper mapper = new ObjectMapper();
         byte[] neuronData = mapper.writeValueAsBytes(neuron);
+
+        // add historical event
+        TmHistoricalEvent event = new TmHistoricalEvent();
+        Map<Long,byte[]> map = new HashMap<>();
+        map.put(neuron.getId(), neuronData);
+        event.setNeurons(map);
+        event.setTimestamp(new Date());
+        switch (type) {
+            case NEURON_CREATE:
+                event.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_CREATE);
+                break;
+            case NEURON_DELETE:
+                event.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_DELETE);
+                break;
+            case NEURON_SAVE_NEURONDATA:
+                event.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+                break;
+        }
+        TmModelManager.getInstance().getNeuronHistory().addHistoricalEvent(event);
 
         Map<String, Object> updateHeaders = new HashMap<String, Object>();
         updateHeaders.put(NeuronMessageConstants.Headers.TYPE, type.toString());

@@ -1,13 +1,6 @@
 package org.janelia.workstation.controller.model.annotations.neuron;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -18,6 +11,8 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.TmNeuronUtils;
+import org.janelia.workstation.controller.model.TmHistoricalEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -471,6 +466,12 @@ public class NeuronModel {
     }
 
     public void saveNeuronData(TmNeuronMetadata neuron) throws Exception {
+        // save historical event data for undo/redo
+        neuronModelAdapter.asyncSaveNeuron(neuron);
+    }
+
+    public void restoreNeuronFromHistory(TmNeuronMetadata neuron) throws Exception {
+        neuronMap.put(neuron.getId(), neuron);
         neuronModelAdapter.asyncSaveNeuron(neuron);
     }
 
