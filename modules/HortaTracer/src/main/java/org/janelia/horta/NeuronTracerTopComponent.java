@@ -101,6 +101,8 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
+import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
+import org.janelia.workstation.controller.dialog.NeuronHistoryDialog;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -1622,7 +1624,16 @@ public final class NeuronTracerTopComponent extends TopComponent
                     topMenu.add(new AbstractAction("Edit Neuron Groups") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            //add edit Note
+                            NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
+                            ngDialog.showDialog();
+                        }
+                    });
+
+                    topMenu.add(new AbstractAction("View Neuron History") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            NeuronHistoryDialog historyDialog = new NeuronHistoryDialog();
+                            historyDialog.showDialog();
                         }
                     });
 
@@ -1634,22 +1645,32 @@ public final class NeuronTracerTopComponent extends TopComponent
                             public void actionPerformed(ActionEvent e) {
                                 PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
                                 TmGeoAnnotation ann = interactorContext.getCurrentParentAnchor();
-                                Vector3 xyz = new Vector3(ann.getX(),ann.getY(), ann.getZ());
-                                neuronTraceLoader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                                ViewEvent event = new ViewEvent();
+                                float[] vtxLocation = TmModelManager.getInstance().getLocationInMicrometers(ann.getX(),
+                                        ann.getY(), ann.getZ());
+                                event.setCameraFocusX(vtxLocation[0]);
+                                event.setCameraFocusY(vtxLocation[1]);
+                                event.setCameraFocusZ(vtxLocation[2]);
+                                event.setZoomLevel(300);
+                                setSampleLocation(event);
                             }
                         });
 
                         topMenu.add(new AbstractAction("Add/Edit Note on Anchor") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                //add edit Note
+                                TmGeoAnnotation ann = interactorContext.getCurrentParentAnchor();
+                                AddEditNoteAction action = new AddEditNoteAction();
+                                action.execute(ann.getNeuronId(), ann.getId());
                             }
                         });
 
                         topMenu.add(new AbstractAction("Edit Neuron Tags") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                //add edit Note
+                                TmGeoAnnotation ann = interactorContext.getCurrentParentAnchor();
+                                TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(ann.getNeuronId());
+                                NeuronManager.getInstance().editNeuronTags(neuron);
                             }
                         });
 
@@ -1662,7 +1683,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 }
                             });
 
-                            topMenu.add(new AbstractAction("Delete Vertex Link") {
+                            topMenu.add(new AbstractAction("Delete Vertex") {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
                                     DeleteVertexLinkAction action = new DeleteVertexLinkAction();
@@ -1678,7 +1699,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 }
                             });
 
-                            topMenu.add(new AbstractAction("Split Neuron Between Vertices") {
+                            topMenu.add(new AbstractAction("Split Neuron Edge Between Vertices") {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
                                     SplitNeuronBetweenVerticesAction action = new SplitNeuronBetweenVerticesAction();

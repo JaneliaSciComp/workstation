@@ -42,6 +42,7 @@ import org.janelia.model.security.Subject;
 import org.janelia.workstation.controller.action.NeuronTagsAction;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.listener.ViewStateListener;
+import org.janelia.workstation.controller.model.TmHistoricalEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
@@ -768,6 +769,16 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                 //activityLog.logEndOfOperation(getWsId(), location);
             }
         });
+    }
+
+    public synchronized void restoreNeuron (TmNeuronMetadata restoredNeuron) throws Exception {
+        neuronModel.restoreNeuronFromHistory(restoredNeuron);
+        fireNeuronDeleted(restoredNeuron);
+        fireNeuronCreated(restoredNeuron);
+        if (applyFilter) {
+            NeuronUpdates updates = neuronFilter.updateNeuron(restoredNeuron);
+            updateFrags(updates);
+        }
     }
 
     /**

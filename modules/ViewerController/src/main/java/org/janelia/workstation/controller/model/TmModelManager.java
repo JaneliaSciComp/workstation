@@ -21,6 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -44,6 +47,8 @@ public class TmModelManager {
 
     private TmViewState currentView;
     private TmSelectionState currentSelections;
+    private TmHistory neuronHistory;
+
     private Jama.Matrix voxToMicronMatrix;
     private Jama.Matrix micronToVoxMatrix;
     private NeuronModel neuronModel;
@@ -65,6 +70,7 @@ public class TmModelManager {
         neuronModel = NeuronModel.getInstance();
         currentView = new TmViewState();
         spatialIndexManager = new SpatialIndexManager();
+        neuronHistory = new TmHistory();
     }
 
     public TmSample getCurrentSample() {
@@ -291,5 +297,13 @@ public class TmModelManager {
             return false;
         }
         return true;
+    }
+
+    public TmHistory getNeuronHistory() {
+        return neuronHistory;
+    }
+
+    public void setNeuronHistory(TmHistory neuronHistory) {
+        this.neuronHistory = neuronHistory;
     }
 }
