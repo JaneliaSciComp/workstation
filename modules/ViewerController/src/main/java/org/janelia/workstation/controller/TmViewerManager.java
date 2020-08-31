@@ -219,22 +219,22 @@ public class TmViewerManager implements GlobalViewerController {
     @Subscribe
     public void loadComplete(LoadProjectEvent event) {
         final TmWorkspace workspace = modelManager.getCurrentWorkspace();
-        if (workspace==null) {
-           return;
+        if (workspace == null) {
+            return;
         }
 
         String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
         modelManager.getCurrentView().setFilter(false);
         int nFragments = 0;
-        for (TmNeuronMetadata neuron: modelManager.getNeuronModel().getNeurons()) {
+        for (TmNeuronMetadata neuron : modelManager.getNeuronModel().getNeurons()) {
             if (neuron.getOwnerKey().equals(systemNeuron)) {
                 nFragments += 1;
             }
-            if (neuron.getColor()==null) {
+            if (neuron.getColor() == null) {
                 neuron.setColor(TmViewState.getColorForNeuron(neuron.getId()));
             }
-            for (TmGeoAnnotation ann: neuron.getGeoAnnotationMap().values()) {
-                if (ann.getRadius()==null) {
+            for (TmGeoAnnotation ann : neuron.getGeoAnnotationMap().values()) {
+                if (ann.getRadius() == null) {
                     ann.setRadius(1.0);
                 }
             }
@@ -257,13 +257,16 @@ public class TmViewerManager implements GlobalViewerController {
             FrameworkAccess.handleException(error);
         }
 
-        TmNeuronTagMap currentTagMap = new TmNeuronTagMap();
+        TmNeuronTagMap currentTagMap = TmModelManager.getInstance().getCurrentTagMap();
+        if (currentTagMap == null) {
+            currentTagMap = new TmNeuronTagMap();
+            modelManager.setCurrentTagMap(currentTagMap);
+        }
         for (TmNeuronMetadata tmNeuronMetadata : NeuronModel.getInstance().getNeurons()) {
             for(String tag : tmNeuronMetadata.getTags()) {
                 currentTagMap.addTag(tag, tmNeuronMetadata);
             }
         }
-        modelManager.setCurrentTagMap(currentTagMap);
 
         // this is for displaying the neurons
         LoadNeuronsEvent neuronsEvent = new LoadNeuronsEvent();

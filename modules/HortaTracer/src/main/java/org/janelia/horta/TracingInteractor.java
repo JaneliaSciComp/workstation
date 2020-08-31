@@ -132,12 +132,7 @@ public class TracingInteractor extends MouseAdapter
     public void setDefaultWorkspace(TmWorkspace defaultWorkspace) {
         if (this.defaultWorkspace == defaultWorkspace)
             return;
-        if (this.defaultWorkspace != null) {
-            //this.defaultWorkspace.getPrimaryAnchorObservable().deleteObserver(primaryAnchorObserver);
-        }
         this.defaultWorkspace = defaultWorkspace;
-       // this.undoRedoManager = defaultWorkspace.getUndoRedo();
-       // this.defaultWorkspace.getPrimaryAnchorObservable().addObserver(primaryAnchorObserver);
     }
     
     @Override
@@ -212,8 +207,12 @@ public class TracingInteractor extends MouseAdapter
     public List<GL3Actor> createActors(NeuronVertexUpdateListener listener) {
         highlightHoverModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
                 "Hover highlight");
+        highlightHoverModel.setId(new Long(123123123L));
+
         densityCursorModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
                 "Hover density");
+
+        densityCursorModel.setId(new Long(343445345345L));
         parentVertexModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
                 "Selected parent vertex");
         anchorEditModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
@@ -649,6 +648,7 @@ public class TracingInteractor extends MouseAdapter
             NeuronManager.getInstance().moveAnnotation(neuron.getId(),
                     anchor.getId(),
                     destination);
+            clearParentVertex();
             updateActorListener.neuronVertexUpdated(new VertexWithNeuron(
                     highlightHoverModel.getGeoAnnotationMap().get(0), highlightHoverModel));
             updateActorListener.neuronVertexUpdated(new VertexWithNeuron(
@@ -1099,7 +1099,7 @@ public class TracingInteractor extends MouseAdapter
             if (hoveredVertex == null) return false;
             if (parentVertex == null) return false;
             if (hoveredVertex == parentVertex) return false;
-            // if (hoveredNeuron == parentNeuron) return false; // cannot merge a neuron with itself
+            if (hoveredNeuron == parentNeuron) return false; // cannot merge a neuron with itself
             // TODO: same neuron is OK, but not same connected "neurite"
             if (TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) return false;
             return true;

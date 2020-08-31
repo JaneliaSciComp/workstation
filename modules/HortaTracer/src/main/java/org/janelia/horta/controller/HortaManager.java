@@ -149,6 +149,19 @@ public class HortaManager {
     }
 
     @Subscribe
+    private void neuronsHide(NeuronHideEvent event) {
+        for (NeuronUpdateListener listener: neuronUpdateListeners) {
+            listener.neuronsUpdated(event.getNeurons());
+        }
+    }
+
+    @Subscribe
+    private void neuronsUnhide(NeuronUnhideEvent event) {
+        for (NeuronUpdateListener listener: neuronUpdateListeners) {
+            listener.neuronsUpdated(event.getNeurons());
+        }
+    }
+    @Subscribe
     private void neuronCreated(NeuronCreateEvent event) {
         for (NeuronCreationListener listener: neuronCreationListeners) {
             listener.neuronsCreated(event.getNeurons());

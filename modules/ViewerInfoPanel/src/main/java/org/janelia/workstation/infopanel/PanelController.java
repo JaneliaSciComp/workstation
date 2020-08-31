@@ -74,6 +74,16 @@ public class PanelController {
     }
 
     @Subscribe
+    public void neuronsHidden(NeuronHideEvent event) {
+        wsNeuronList.neuronsVisibilityChanged(event.getNeurons());
+    }
+
+    @Subscribe
+    public void neuronsShown(NeuronUnhideEvent event) {
+        wsNeuronList.neuronsVisibilityChanged(event.getNeurons());
+    }
+
+    @Subscribe
     public void neuronsCreated(NeuronCreateEvent annoEvent) {
         Collection<TmNeuronMetadata> neurons = annoEvent.getNeurons();
         for (TmNeuronMetadata neuron : neurons) {

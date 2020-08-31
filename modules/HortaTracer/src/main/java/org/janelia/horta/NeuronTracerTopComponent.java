@@ -2233,7 +2233,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     public void reloadSampleLocation() {
-        //if (currLocation!=null)
+        //if (currLocation!=
          //   setSampleLocation();
     }
 

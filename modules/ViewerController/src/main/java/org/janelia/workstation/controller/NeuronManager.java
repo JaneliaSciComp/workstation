@@ -2079,11 +2079,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         currentTagMap.saveTagGroupMappings(allTagMeta);
         // persist this map as a user preference for now
         saveUserPreferences();
-        
-        // sync up with Horta
-        //if (neuronSetAdapter.getMetaWorkspace()!=null) {
-          //  neuronSetAdapter.getMetaWorkspace().setTagMetadata(currentTagMap);
-       // }
     }
     
     public Map<String, Map<String,Object>> getTagGroupMappings() {

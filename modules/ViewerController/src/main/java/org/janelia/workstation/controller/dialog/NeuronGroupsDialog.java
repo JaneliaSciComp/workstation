@@ -1,7 +1,9 @@
 package org.janelia.workstation.controller.dialog;
 
+import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.keybind.ShortcutTextField;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
@@ -87,7 +89,8 @@ public class NeuronGroupsDialog extends ModalDialog {
         
         NeuronGroupsTableModel tableModel = new NeuronGroupsTableModel();
         NeuronManager neuronManager = NeuronManager.getInstance();
-        tableModel.loadTable(neuronManager.getAllNeuronTags(), neuronManager.getTagGroupMappings());
+        TmNeuronTagMap currentTagMap = TmModelManager.getInstance().getCurrentTagMap();
+        tableModel.loadTable(neuronManager.getAllNeuronTags(), currentTagMap.getAllTagGroupMappings());
         bindingsTable = new JTable(tableModel); 
         bindingsTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         
