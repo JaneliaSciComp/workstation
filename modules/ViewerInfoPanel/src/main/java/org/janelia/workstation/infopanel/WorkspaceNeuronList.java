@@ -775,6 +775,12 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         neuronTableModel.updateNeurons(neuronList);
         restoreSelection();
     }
+
+    public void neuronsVisibilityChanged(Collection<TmNeuronMetadata> neuronList) {
+        saveSelection();
+        neuronTableModel.updateNeurons(neuronList);
+        restoreSelection();
+    }
     
     /**
      * return the list of currently visible neurons in the UI

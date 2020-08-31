@@ -176,9 +176,6 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 //  fireNeuronSpatialFilterUpdated(applyFilter, neuronFilter);
 
                 // Create the local tag map for cached access to tags
-                log.info("Creating tag map for workspace {}", workspace.getId());
-                TmNeuronTagMap currentTagMap = new TmNeuronTagMap();
-                modelManager.setCurrentTagMap(currentTagMap);
                 Collection<TmNeuronMetadata> neuronList;
                 if (applyFilter) {
                     neuronList = new ArrayList<>();
@@ -189,11 +186,6 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                     }
                 } else
                     neuronList = modelManager.getNeuronModel().getNeurons();
-                for (TmNeuronMetadata tmNeuronMetadata : neuronList) {
-                    for(String tag : tmNeuronMetadata.getTags()) {
-                        currentTagMap.addTag(tag, tmNeuronMetadata);
-                    }
-                }
 
                 // Clear neuron selection
                 log.info("Clearing current neuron for workspace {}", workspace.getId());
