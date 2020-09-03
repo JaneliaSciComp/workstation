@@ -42,6 +42,6 @@ public class DomainModelViewUtils {
 
     public static List<DomainObject> map(DomainObject domainObject, MappingType targetType) throws Exception {
         DomainObjectMapper mapper = new DomainObjectMapper(Arrays.asList(domainObject));
-        return mapper.map(targetType, DomainObject.class);
+        return mapper.map(targetType);
     }
 }

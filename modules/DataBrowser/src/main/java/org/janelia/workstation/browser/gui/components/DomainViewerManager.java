@@ -1,6 +1,9 @@
 package org.janelia.workstation.browser.gui.components;
 
 import java.awt.Component;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
@@ -16,6 +19,8 @@ import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
+import org.janelia.workstation.core.model.DomainObjectMapper;
+import org.janelia.workstation.core.model.MappingType;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
@@ -158,31 +163,53 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
 
         worker.execute();   
     }
-    
-    public static DomainObject getObjectToLoad(DomainObject domainObject) {
+
+    public static MappingType getMappingTypeToLoad(Class<? extends DomainObject> clazz) {
         try {
-            if (domainObject instanceof NeuronFragment) {
-                NeuronFragment fragment = (NeuronFragment) domainObject;
-                    return DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
+            if (Sample.class.isAssignableFrom(clazz)) {
+                return MappingType.Sample;
             }
-            else if (domainObject instanceof LSMImage) {
-                LSMImage lsmImage = (LSMImage) domainObject;
-                Reference sampleRef = lsmImage.getSample();
-                if (sampleRef!=null) {
-                    return DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
-                }
-                else {
-                    return null;
-                }
+            else if (NeuronFragment.class.isAssignableFrom(clazz)) {
+                return MappingType.Sample;
+            }
+            else if (LSMImage.class.isAssignableFrom(clazz)) {
+                return MappingType.Sample;
+            }
+            else if (ColorDepthMatch.class.isAssignableFrom(clazz)) {
+                return MappingType.Sample;
+            }
+            else if (ColorDepthImage.class.isAssignableFrom(clazz)) {
+                return MappingType.Sample;
             }
             else {
-                return domainObject;
+                return null;
             }
         }
         catch (Exception e) {
             FrameworkAccess.handleException(e);
             return null;
         }
+    }
+
+    /**
+     * Get the object that should be loaded when the the given object is double clicked.
+     * TODO: this method does database lookups, so it should always be called in a background thread
+     * @param domainObject
+     * @return
+     */
+    public static DomainObject getObjectToLoad(DomainObject domainObject) {
+        MappingType mappingTypeToLoad = getMappingTypeToLoad(domainObject.getClass());
+        DomainObjectMapper mapper = new DomainObjectMapper(Collections.singletonList(domainObject));
+        try {
+            List<DomainObject> mapped = mapper.map(mappingTypeToLoad);
+            if (mapped != null && !mapped.isEmpty()) {
+                return mapped.get(0);
+            }
+        }
+        catch (Exception e) {
+            FrameworkAccess.handleException(e);
+        }
+        return null;
     }
     
 }

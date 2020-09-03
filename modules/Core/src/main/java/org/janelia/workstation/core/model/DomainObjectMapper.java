@@ -1,30 +1,19 @@
 package org.janelia.workstation.core.model;
 
 import com.google.common.collect.Lists;
-
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.SampleUtils;
+import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
+import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
-import org.janelia.model.domain.sample.LSMImage;
-import org.janelia.model.domain.sample.NeuronFragment;
-import org.janelia.model.domain.sample.NeuronSeparation;
-import org.janelia.model.domain.sample.PipelineResult;
-import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.sample.SampleAlignmentResult;
-import org.janelia.model.domain.sample.SamplePipelineRun;
-import org.janelia.model.domain.sample.SampleProcessingResult;
+import org.janelia.model.domain.sample.*;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Mapping from one domain object type to another. For example, converting a set of Samples to their 
@@ -40,7 +29,7 @@ public class DomainObjectMapper {
     
     private Collection<DomainObject> domainObjects;
     private String alignmentSpace;
-   
+
     public DomainObjectMapper(Collection<DomainObject> domainObjects) {
         this.domainObjects = domainObjects;
     }
@@ -53,29 +42,31 @@ public class DomainObjectMapper {
 
         Set<MappingType> types = new LinkedHashSet<>();
         for (DomainObject domainObject : domainObjects) {
-            types.addAll(getMappableTypes(domainObject));
+            types.addAll(getMappableTypes(domainObject.getClass()));
         }
         
         return types;
     }
-    
+
     /**
-     * Returns a list of the types which the given domain object can be mapped to using the map functions.
-     * @param domainObject
-     * @return
+     * Returns a list of the types which the given domain object class can be mapped to using the map functions.
+     * @param clazz
+     * @return list of mapping targets
      */
-    private Collection<MappingType> getMappableTypes(DomainObject domainObject) {
+    private Collection<MappingType> getMappableTypes(Class<? extends DomainObject> clazz) {
 
         List<MappingType> types = new ArrayList<>();
-        
-        if (domainObject instanceof Sample) {
+
+        if (Sample.class.isAssignableFrom(clazz)) {
             types.add(MappingType.LSM);
         }
-        else if (domainObject instanceof LSMImage) {
+        else if (LSMImage.class.isAssignableFrom(clazz)) {
             types.add(MappingType.Sample);
         }
-
-        else if (domainObject instanceof NeuronFragment) {
+        else if (ColorDepthImage.class.isAssignableFrom(clazz)) {
+            types.add(MappingType.Sample);
+        }
+        else if (NeuronFragment.class.isAssignableFrom(clazz)) {
             types.add(MappingType.Sample);
             types.add(MappingType.LSM);
             types.add(MappingType.AlignedNeuronFragment);
@@ -84,15 +75,14 @@ public class DomainObjectMapper {
 
         return types;
     }
-    
+
     /**
-     * Map the given objects to the given class, and return a list of joined objects.
+     * Map the given objects to related objects of the given target type.
      * @param targetType
-     * @param outputClass
      * @return
      * @throws Exception
      */
-    public <T extends DomainObject> List<T> map(MappingType targetType, Class<T> outputClass) throws Exception {
+    public <T extends DomainObject> List<T> map(MappingType targetType) throws Exception {
 
         List<T> mapped = new ArrayList<>();
         for (DomainObject domainObject : domainObjects) {
@@ -121,8 +111,7 @@ public class DomainObjectMapper {
             Sample sample = (Sample)domainObject;
             
             if (targetType==MappingType.LSM) {
-                List<LSMImage> lsms = DomainMgr.getDomainMgr().getModel().getDomainObjectsAs(LSMImage.class, sample.getLsmReferences());
-                mapped.addAll(lsms);
+                mapped.addAll(DomainMgr.getDomainMgr().getModel().getDomainObjectsAs(LSMImage.class, sample.getLsmReferences()));
             }
             else if (targetType==MappingType.Sample) {
                 mapped.add(sample);
@@ -136,8 +125,7 @@ public class DomainObjectMapper {
             LSMImage lsm = (LSMImage)domainObject;
             
             if (targetType==MappingType.Sample) {
-                Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(lsm.getSample());
-                mapped.add(sample);
+                mapped.add(DomainMgr.getDomainMgr().getModel().getDomainObject(lsm.getSample()));
             }
             else if (targetType==MappingType.LSM) {
                 mapped.add(lsm);
@@ -147,9 +135,33 @@ public class DomainObjectMapper {
             }
             
         }
+        else if (domainObject instanceof ColorDepthMatch) {
+            ColorDepthMatch cdm = (ColorDepthMatch)domainObject;
+            ColorDepthImage image = DomainMgr.getDomainMgr().getModel().getDomainObject(cdm.getImageRef());
+            if (image!=null) {
+                if (targetType == MappingType.Sample) {
+                    mapped.add(DomainMgr.getDomainMgr().getModel().getDomainObject(image.getSampleRef()));
+                } else {
+                    log.warn("Cannot map ColorDepthImage to " + targetType);
+                }
+            }
+            else {
+                log.warn("Could not retrieve " + cdm.getImageRef());
+            }
+        }
+        else if (domainObject instanceof ColorDepthImage) {
+            ColorDepthImage image = (ColorDepthImage)domainObject;
+
+            if (targetType==MappingType.Sample) {
+                mapped.add(DomainMgr.getDomainMgr().getModel().getDomainObject(image.getSampleRef()));
+            }
+            else {
+                log.warn("Cannot map ColorDepthImage to "+targetType);
+            }
+        }
         else if (domainObject instanceof NeuronFragment) {
             NeuronFragment fragment = (NeuronFragment)domainObject;
-            Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
+            Sample sample = DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
 
             if (targetType==MappingType.Sample) {
                 mapped.add(sample);

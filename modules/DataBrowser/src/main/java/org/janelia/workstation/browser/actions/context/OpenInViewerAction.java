@@ -9,6 +9,8 @@ import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.model.MappingType;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -33,21 +35,23 @@ import org.openide.util.NbBundle;
 @NbBundle.Messages("CTL_OpenInViewerAction=Open In Viewer")
 public class OpenInViewerAction extends BaseContextualNodeAction {
 
-    private DomainObject objectToLoad;
-    private AbstractDomainObjectNode nodeToLoad;
+    protected AbstractDomainObjectNode nodeToLoad;
+    protected MappingType mappingTypeToLoad;
+    protected DomainObject domainObject;
 
     @Override
     protected void processContext() {
-        this.objectToLoad = null;
         this.nodeToLoad = null;
+        this.mappingTypeToLoad = null;
+        this.domainObject = null;
         if (getNodeContext().isSingleNodeOfType(AbstractDomainObjectNode.class)) {
             this.nodeToLoad = getNodeContext().getSingleNodeOfType(AbstractDomainObjectNode.class);
             setEnabledAndVisible(DomainListViewTopComponent.isSupported(nodeToLoad.getDomainObject()));
         }
         else if (getNodeContext().isSingleObjectOfType(DomainObject.class)) {
-            DomainObject domainObject = getNodeContext().getSingleObjectOfType(DomainObject.class);
-            this.objectToLoad = DomainViewerManager.getObjectToLoad(domainObject);
-            setEnabledAndVisible(DomainViewerTopComponent.isSupported(domainObject));
+            this.domainObject = getNodeContext().getSingleObjectOfType(DomainObject.class);
+            this.mappingTypeToLoad = DomainViewerManager.getMappingTypeToLoad(domainObject.getClass());
+            setEnabledAndVisible(mappingTypeToLoad!=null && DomainViewerTopComponent.isSupported(mappingTypeToLoad.getClazz()));
         }
         else {
             setEnabledAndVisible(false);
@@ -56,30 +60,59 @@ public class OpenInViewerAction extends BaseContextualNodeAction {
 
     @Override
     public String getName() {
-        if (objectToLoad!=null) {
-            return "Open " + objectToLoad.getType() + " In Viewer";
+        if (mappingTypeToLoad !=null) {
+            return "Open " + mappingTypeToLoad.getLabel() + " In Viewer";
         }
         return super.getName();
     }
 
     @Override
     public void performAction() {
-        DomainObject objectToLoad = this.objectToLoad;
-        AbstractDomainObjectNode nodeToLoad = this.nodeToLoad;
+        AbstractDomainObjectNode<?> nodeToLoad = this.nodeToLoad;
+        MappingType mappingTypeToLoad = this.mappingTypeToLoad;
         try {
             if (nodeToLoad != null) {
-                ActivityLogHelper.logUserAction("OpenInViewerAction.actionPerformed", nodeToLoad);
-                DomainListViewTopComponent viewer = ViewerUtils.provisionViewer(DomainListViewManager.getInstance(), "editor");
-                viewer.loadDomainObjectNode(nodeToLoad, true);
+                openInViewer(nodeToLoad);
             }
-            else if (objectToLoad != null) {
-                ActivityLogHelper.logUserAction("OpenInViewerAction.actionPerformed", objectToLoad);
-                DomainViewerTopComponent viewer = ViewerUtils.provisionViewer(DomainViewerManager.getInstance(), "editor2");
-                viewer.loadDomainObject(objectToLoad, true);
+            else if (mappingTypeToLoad != null) {
+
+                SimpleWorker worker = new SimpleWorker() {
+
+                    private DomainObject objectToLoad;
+                    @Override
+                    protected void doStuff() throws Exception {
+                        this.objectToLoad = DomainViewerManager.getObjectToLoad(domainObject);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        openInViewer(objectToLoad);
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        FrameworkAccess.handleException(error);
+                    }
+                };
+
+                worker.execute();
             }
 
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             FrameworkAccess.handleException(ex);
         }
+    }
+
+    protected void openInViewer(AbstractDomainObjectNode nodeToLoad) {
+        ActivityLogHelper.logUserAction("OpenInViewerAction.actionPerformed", nodeToLoad);
+        DomainListViewTopComponent viewer = ViewerUtils.provisionViewer(DomainListViewManager.getInstance(), "editor2");
+        viewer.loadDomainObjectNode(nodeToLoad, true);
+    }
+
+    protected void openInViewer(DomainObject objectToLoad) {
+        ActivityLogHelper.logUserAction("OpenInViewerAction.actionPerformed", objectToLoad);
+        DomainViewerTopComponent viewer = ViewerUtils.provisionViewer(DomainViewerManager.getInstance(), "editor2");
+        viewer.loadDomainObject(objectToLoad, true);
     }
 }

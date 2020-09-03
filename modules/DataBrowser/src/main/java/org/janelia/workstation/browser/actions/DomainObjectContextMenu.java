@@ -42,27 +42,27 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     public void runDefaultAction() {
         if (selectionModel.getObjects().size()>1) return;
         DomainObject domainObject = selectionModel.getLastSelectedObject();
-        DomainObject contextObject = (DomainObject)selectionModel.getParentObject();
-        if (DomainViewerTopComponent.isSupported(domainObject)) {
-            DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
-            if (viewer == null || !viewer.isCurrent(domainObject)) {
-                viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
-                viewer.requestActive();
-                viewer.loadDomainObject(domainObject, true);
-            }
-        }
-        else if (DomainExplorerTopComponent.isSupported(domainObject)) {
-            // TODO: here we should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
-            DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
-            if (DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(domainObject.getId()) == null) {
-                // Node could not be found in tree. Try navigating directly.
-                log.info("Node not found in tree: {}", domainObject);
-                Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Collections.singletonList(domainObject), true, true, true));
-            }
-        }
-        else {
-            if (DomainObjectAcceptorHelper.isSupported(domainObject)) {
-                DomainObjectAcceptorHelper.service(domainObject);
+        if (domainObject != null) {
+            if (DomainViewerTopComponent.isSupported(domainObject)) {
+                DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
+                if (viewer == null || !viewer.isCurrent(domainObject)) {
+                    viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
+                    viewer.requestActive();
+                    viewer.loadDomainObject(domainObject, true);
+                }
+            } else if (DomainExplorerTopComponent.isSupported(domainObject)) {
+                // TODO: here we should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
+                DomainObject contextObject = (DomainObject) selectionModel.getParentObject();
+                DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
+                if (DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(domainObject.getId()) == null) {
+                    // Node could not be found in tree. Try navigating directly.
+                    log.info("Node not found in tree: {}", domainObject);
+                    Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Collections.singletonList(domainObject), true, true, true));
+                }
+            } else {
+                if (DomainObjectAcceptorHelper.isSupported(domainObject)) {
+                    DomainObjectAcceptorHelper.service(domainObject);
+                }
             }
         }
     }

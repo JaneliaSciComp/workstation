@@ -4,6 +4,7 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronFragment;
@@ -11,14 +12,12 @@ import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.editor.SampleEditorPanel;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
 import org.janelia.workstation.common.gui.util.UIUtils;
-import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
 import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
-import org.janelia.workstation.core.nodes.ChildObjectsNode;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -30,13 +29,8 @@ import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.JComponent;
-import javax.swing.SwingUtilities;
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * Top component which displays domain object viewers. 
@@ -223,16 +217,13 @@ public final class DomainViewerTopComponent extends TopComponent {
         log.info("Reading state: {}",objectStrRef);
         if (TC_VERSION.equals(version) && objectStrRef!=null) {
             // Must write to instance variables from EDT only
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    refToOpen = Reference.createFor(objectStrRef);
-                    if (AccessManager.loggedIn()) {
-                        loadPreviousSession();
-                    }
-                    else {
-                        // Not logged in yet, wait for a SessionStartEvent
-                    }
+            SwingUtilities.invokeLater(() -> {
+                refToOpen = Reference.createFor(objectStrRef);
+                if (AccessManager.loggedIn()) {
+                    loadPreviousSession();
+                }
+                else {
+                    // Not logged in yet, wait for a SessionStartEvent
                 }
             });
         }
@@ -335,7 +326,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             log.info("loadDomainObject({}, isUserDriven={})", domainObject, isUserDriven);
             if (domainObject==null) return;
             
-            final Class<? extends DomainObjectEditor<?>> editorClass = getEditorClass(domainObject);
+            final Class<? extends DomainObjectEditor<?>> editorClass = getEditorClass(domainObject.getClass());
             if (editorClass == null) {
                 log.debug("No viewer defined for domain object of type {}", domainObject.getClass().getName());
                 return;
@@ -358,23 +349,30 @@ public final class DomainViewerTopComponent extends TopComponent {
         }
     }
 
-    private static Class<? extends DomainObjectEditor<?>> getEditorClass(Object object) {
-        if (object instanceof Sample) {
+    private static Class<? extends DomainObjectEditor<?>> getEditorClass(Class<?> clazz) {
+        if (Sample.class.isAssignableFrom(clazz)) {
             return SampleEditorPanel.class;
         }
-        else if (object instanceof NeuronFragment) {
+        else if (NeuronFragment.class.isAssignableFrom(clazz)) {
             return SampleEditorPanel.class;
         }
-        else if (object instanceof LSMImage) {
+        else if (LSMImage.class.isAssignableFrom(clazz)) {
             return SampleEditorPanel.class;
         }
-        else if (object instanceof ColorDepthMatch) {
+        else if (ColorDepthMatch.class.isAssignableFrom(clazz)) {
+            return SampleEditorPanel.class;
+        }
+        else if (ColorDepthImage.class.isAssignableFrom(clazz)) {
             return SampleEditorPanel.class;
         }
         return null;
     }
-    
+
+    public static boolean isSupported(Class<?> clazz) {
+        return clazz!=null && getEditorClass(clazz)!=null;
+    }
+
     public static boolean isSupported(Object object) {
-        return object!=null && getEditorClass(object)!=null;
+        return object!=null && getEditorClass(object.getClass())!=null;
     }
 }

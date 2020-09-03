@@ -1,20 +1,5 @@
 package org.janelia.workstation.browser.actions.context;
 
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.swing.JComponent;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.Sample;
@@ -25,7 +10,6 @@ import org.janelia.model.domain.workspace.Workspace;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
 import org.janelia.workstation.browser.gui.support.TreeNodeChooser;
-import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.actions.BaseContextualPopupAction;
 import org.janelia.workstation.common.nodes.NodeUtils;
 import org.janelia.workstation.common.nodes.UserViewConfiguration;
@@ -47,6 +31,11 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
+import java.util.*;
 
 @ActionID(
         category = "Actions",
@@ -98,79 +87,72 @@ public class AddRelatedItemsAction extends BaseContextualPopupAction {
         JMenu classMenu = new JMenu(targetType.getLabel());
         JMenuItem createNewItem = new JMenuItem("Create New Folder...");
 
-        createNewItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
+        createNewItem.addActionListener(actionEvent -> {
 
-                ActivityLogHelper.logUserAction("AddToFolderAction.createNewFolder");
+            ActivityLogHelper.logUserAction("AddToFolderAction.createNewFolder");
 
-                // Add button clicked
-                final String folderName = (String) JOptionPane.showInputDialog(
-                        mainFrame, "Folder Name:\n",
-                        "Create new folder in workspace", JOptionPane.PLAIN_MESSAGE, null, null, null);
-                if ((folderName == null) || (folderName.length() <= 0)) {
-                    return;
+            // Add button clicked
+            final String folderName = (String) JOptionPane.showInputDialog(
+                    mainFrame, "Folder Name:\n",
+                    "Create new folder in workspace", JOptionPane.PLAIN_MESSAGE, null, null, null);
+            if ((folderName == null) || (folderName.length() <= 0)) {
+                return;
+            }
+
+            SimpleWorker worker = new SimpleWorker() {
+
+                private TreeNode folder;
+                private Long[] idPath;
+
+                @Override
+                protected void doStuff() throws Exception {
+                    DomainModel model = DomainMgr.getDomainMgr().getModel();
+                    folder = new TreeNode();
+                    folder.setName(folderName);
+                    folder = model.create(folder);
+                    Workspace workspace = model.getDefaultWorkspace();
+                    idPath = NodeUtils.createIdPath(workspace, folder);
+                    model.addChild(workspace, folder);
+                    addUniqueItemsToFolder(domainObjects, folder, idPath, targetType);
                 }
 
-                SimpleWorker worker = new SimpleWorker() {
+                @Override
+                protected void hadSuccess() {
+                    log.debug("Added selected items to folder {}",folder.getId());
+                    SwingUtilities.invokeLater(() -> {
+                        explorer.expand(idPath);
+                        explorer.selectNodeByPath(idPath);
+                    });
+                }
 
-                    private TreeNode folder;
-                    private Long[] idPath;
+                @Override
+                protected void hadError(Throwable error) {
+                    FrameworkAccess.handleException(error);
+                }
+            };
 
-                    @Override
-                    protected void doStuff() throws Exception {
-                        DomainModel model = DomainMgr.getDomainMgr().getModel();
-                        folder = new TreeNode();
-                        folder.setName(folderName);
-                        folder = model.create(folder);
-                        Workspace workspace = model.getDefaultWorkspace();
-                        idPath = NodeUtils.createIdPath(workspace, folder);
-                        model.addChild(workspace, folder);
-                        addUniqueItemsToFolder(domainObjects, folder, idPath, targetType);
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        log.debug("Added selected items to folder {}",folder.getId());
-                        SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                explorer.expand(idPath);
-                                explorer.selectNodeByPath(idPath);
-                            }
-                        });
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        FrameworkAccess.handleException(error);
-                    }
-                };
-
-                worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating folder...", ""));
-                worker.execute();
-            }
+            worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating folder...", ""));
+            worker.execute();
         });
 
         classMenu.add(createNewItem);
 
         JMenuItem chooseItem = new JMenuItem("Choose Folder...");
 
-        chooseItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
+        chooseItem.addActionListener(actionEvent -> {
 
-                ActivityLogHelper.logUserAction("AddToFolderAction.chooseFolder");
+            ActivityLogHelper.logUserAction("AddToFolderAction.chooseFolder");
 
-                TreeNodeChooser nodeChooser = new TreeNodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class)), "Choose folder to add to", true);
-                nodeChooser.setRootVisible(false);
+            TreeNodeChooser nodeChooser = new TreeNodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class)), "Choose folder to add to", true);
+            nodeChooser.setRootVisible(false);
 
-                int returnVal = nodeChooser.showDialog(explorer);
-                if (returnVal != TreeNodeChooser.CHOOSE_OPTION) return;
-                if (nodeChooser.getChosenElements().isEmpty()) return;
-                final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
-                final TreeNode folder = selectedNode.getTreeNode();
+            int returnVal = nodeChooser.showDialog(explorer);
+            if (returnVal != TreeNodeChooser.CHOOSE_OPTION) return;
+            if (nodeChooser.getChosenElements().isEmpty()) return;
+            final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
+            final TreeNode folder = selectedNode.getTreeNode();
 
-                addUniqueItemsToFolder(domainObjects, folder, NodeUtils.createIdPath(selectedNode), targetType);
-            }
+            addUniqueItemsToFolder(domainObjects, folder, NodeUtils.createIdPath(selectedNode), targetType);
         });
 
         classMenu.add(chooseItem);
@@ -195,11 +177,9 @@ public class AddRelatedItemsAction extends BaseContextualPopupAction {
                 final Long folderId = idPath[idPath.length-1];
 
                 JMenuItem commonRootItem = new JMenuItem(recentFolder.getLabel());
-                commonRootItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent actionEvent) {
-                        ActivityLogHelper.logUserAction("AddToFolderAction.recentFolder", folderId);
-                        addUniqueItemsToFolder(domainObjects, folderId, idPath, targetType);
-                    }
+                commonRootItem.addActionListener(actionEvent -> {
+                    ActivityLogHelper.logUserAction("AddToFolderAction.recentFolder", folderId);
+                    addUniqueItemsToFolder(domainObjects, folderId, idPath, targetType);
                 });
 
                 classMenu.add(commonRootItem);
@@ -255,7 +235,8 @@ public class AddRelatedItemsAction extends BaseContextualPopupAction {
             protected void doStuff() throws Exception {
 
                 // Map the items first
-                List<DomainObject> mapped = mapper.map(targetType, DomainObject.class);
+                List<DomainObject> mapped = mapper.map(targetType);
+                log.info("Mapped {} objects to {} objects of type {}", domainObjects.size(), mapped.size(), targetType.getLabel());
 
                 existing = 0;
                 for(DomainObject domainObject : mapped) {
@@ -280,6 +261,7 @@ public class AddRelatedItemsAction extends BaseContextualPopupAction {
                         message = existing + " items are already in the target folder. "+(domainObjects.size()-existing)+" item(s) will be added.";
                     }
 
+                    log.info("message");
                     int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
                             message, "Items already present", JOptionPane.OK_CANCEL_OPTION);
                     if (result != 0) {
@@ -309,7 +291,7 @@ public class AddRelatedItemsAction extends BaseContextualPopupAction {
                 protected void doStuff() throws Exception {
 
                     // Map the fragments to samples first
-                    List<Sample> samples = mapper.map(MappingType.Sample, Sample.class);
+                    List<Sample> samples = mapper.map(MappingType.Sample);
 
                     Set<String> alignmentSpaces = new HashSet<>();
 
@@ -368,5 +350,7 @@ public class AddRelatedItemsAction extends BaseContextualPopupAction {
         // Update history
         String pathString = NodeUtils.createPathString(idPath);
         DataBrowserMgr.getDataBrowserMgr().updateAddToFolderHistory(new RecentFolder(pathString, treeNode.getName()));
+
+        log.info("Added {} objects to folder '{}' ({})", objects.size(), treeNode.getName(), treeNode);
     }
 }
