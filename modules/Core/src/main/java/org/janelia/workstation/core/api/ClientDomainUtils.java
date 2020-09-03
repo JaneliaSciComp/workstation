@@ -11,6 +11,8 @@ import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Preference;
 import org.janelia.model.domain.interfaces.HasName;
 import org.janelia.workstation.core.model.ImageModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Miscellaneous utility methods for dealing with the Domain model on the client side. Generic utility methods for the domain model 
@@ -20,6 +22,7 @@ import org.janelia.workstation.core.model.ImageModel;
  */
 public class ClientDomainUtils {
 
+    private static final Logger log = LoggerFactory.getLogger(ClientDomainUtils.class);
     /**
      * Returns true if the current user owns the given domain object.
      * @param domainObject
@@ -64,7 +67,20 @@ public class ClientDomainUtils {
         if (AccessManager.getAccessManager().isAdmin()) return true;
         return DomainUtils.hasWriteAccess(domainObject, AccessManager.getWriterSet());
     }
-    
+
+    /**
+     * Returns true if the current user has admin access to the given domain object.
+     * Always returns true if the current user is an admin, but also true if the user has Admin role in a group
+     * that has write access to the object.
+     * @param domainObject can they write this?
+     * @return T=Yes; F=No
+     */
+    public static boolean hasAdminAccess(DomainObject domainObject) {
+        if (domainObject==null) return false;
+        //if (AccessManager.getAccessManager().isAdmin()) return true;
+        return DomainUtils.hasWriteAccess(domainObject, AccessManager.getAdminSet());
+    }
+
     /**
      * Given a list of named things and a potential name, choose a name which is not already used, by adding #<number>
      * suffix.

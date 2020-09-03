@@ -76,7 +76,7 @@ public final class AccessManager {
     private boolean isAdmin;
     private Set<String> readerSet;
     private Set<String> writerSet;
-
+    private Set<String> adminSet;
 
     // Singleton
     private static AccessManager accessManager;
@@ -269,6 +269,9 @@ public final class AccessManager {
     public Set<String> getActualWriterSet() {
         return writerSet;
     }
+    public Set<String> getActualAdminSet() {
+        return adminSet;
+    }
     
     /**
      * Returns the current authentication token.
@@ -362,11 +365,13 @@ public final class AccessManager {
         if (actualSubject != null) {
             this.readerSet = SubjectUtils.getReaderSet(actualSubject);
             this.writerSet = SubjectUtils.getWriterSet(actualSubject);
+            this.adminSet = SubjectUtils.getAdminSet(actualSubject);
             Events.getInstance().postOnEventBus(new SessionStartEvent(actualSubject));
         }
         else {
             this.readerSet = new HashSet<>();
             this.writerSet = new HashSet<>();
+            this.adminSet = new HashSet<>();
         }
     }
 
@@ -411,6 +416,10 @@ public final class AccessManager {
     
     public static Set<String> getWriterSet() {
         return getAccessManager().getActualWriterSet();
+    }
+
+    public static Set<String> getAdminSet() {
+        return getAccessManager().getActualAdminSet();
     }
 
     /**

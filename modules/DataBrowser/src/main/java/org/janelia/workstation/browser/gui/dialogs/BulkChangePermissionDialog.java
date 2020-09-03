@@ -153,8 +153,8 @@ public class BulkChangePermissionDialog extends ModalDialog {
                 if (annotations) {
                     log.info("Modifying permissions for annotations {} items", selected.size());
                     for (Annotation annotation : model.getAnnotations(selected)) {
-                        // Must be owner to grant access
-                        if (!ClientDomainUtils.isOwner(annotation)) continue;
+                        // Must be group to grant access
+                        if (!ClientDomainUtils.hasAdminAccess(annotation)) continue;
                         model.changePermissions(annotation, subject.getKey(), rights);
                         numObjectsModified++;
                     }
@@ -162,8 +162,8 @@ public class BulkChangePermissionDialog extends ModalDialog {
                 else {
                     log.info("Modifying permissions for {} items", selected);
                     for (DomainObject domainObject : model.getDomainObjects(selected)) {
-                        // Must be owner to grant access
-                        if (!ClientDomainUtils.isOwner(domainObject)) continue;
+                        // Must be group admin to grant access
+                        if (!ClientDomainUtils.hasAdminAccess(domainObject)) continue;
                         model.changePermissions(domainObject, subject.getKey(), rights);
                         numObjectsModified++;
                     }

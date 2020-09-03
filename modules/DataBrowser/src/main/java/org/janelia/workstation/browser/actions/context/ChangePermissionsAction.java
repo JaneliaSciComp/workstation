@@ -39,14 +39,14 @@ public class ChangePermissionsAction extends BaseContextualNodeAction {
             Collection<DomainObject> selectedObjects = getNodeContext().getOnlyObjectsOfType(DomainObject.class);
             setVisible(true);
             domainObjects.clear();
-            boolean isOwner = true;
+            boolean isAdmin = true;
             for (DomainObject object : selectedObjects) {
                 domainObjects.add(object);
-                if (!ClientDomainUtils.isOwner(object)) {
-                    isOwner = false;
+                if (!ClientDomainUtils.hasAdminAccess(object)) {
+                    isAdmin = false;
                 }
             }
-            setEnabled(isOwner);
+            setEnabled(isAdmin);
         }
         else {
             setEnabledAndVisible(false);

@@ -4,11 +4,7 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.DomainObjectAttribute;
-import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.DynamicDomainObjectProxy;
-import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.*;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.DataSet;
@@ -32,35 +28,11 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 
 /**
@@ -218,48 +190,40 @@ public class DomainInspectorPanel extends JPanel {
                         // No menu for the permanent owner permission. In the future this might show a "gifting" option
                         // if the owner wants to transfer ownership.
                     }
-                    else if (ClientDomainUtils.isOwner(domainObject)) {
+                    else if (ClientDomainUtils.hasAdminAccess(domainObject)) {
 
                         JMenuItem editItem = new JMenuItem("Edit Permission");
-                        editItem.addActionListener(new ActionListener() {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                dopDialog.showForPermission(dop);
-                            }
-                        });
+                        editItem.addActionListener(e1 -> dopDialog.showForPermission(dop));
                         menu.add(editItem);
 
                         JMenuItem deleteItem = new JMenuItem("Delete Permission");
-                        deleteItem.addActionListener(new ActionListener() {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
+                        deleteItem.addActionListener(e12 -> {
 
-                                SimpleWorker worker = new SimpleWorker() {
+                            SimpleWorker worker = new SimpleWorker() {
 
-                                    @Override
-                                    protected void doStuff() throws Exception {
-                                        DomainModel model = DomainMgr.getDomainMgr().getModel();
-                                        model.changePermissions(domainObject, dop.getSubjectKey(), "");
-                                    }
+                                @Override
+                                protected void doStuff() throws Exception {
+                                    DomainModel model = DomainMgr.getDomainMgr().getModel();
+                                    model.changePermissions(domainObject, dop.getSubjectKey(), "");
+                                }
 
-                                    @Override
-                                    protected void hadSuccess() {
-                                        UIUtils.setDefaultCursor(DomainInspectorPanel.this);
-                                        refresh();
-                                    }
+                                @Override
+                                protected void hadSuccess() {
+                                    UIUtils.setDefaultCursor(DomainInspectorPanel.this);
+                                    refresh();
+                                }
 
-                                    @Override
-                                    protected void hadError(Throwable error) {
-                                        FrameworkAccess.handleException(error);
-                                        UIUtils.setDefaultCursor(DomainInspectorPanel.this);
-                                        refresh();
-                                    }
-                                };
+                                @Override
+                                protected void hadError(Throwable error) {
+                                    FrameworkAccess.handleException(error);
+                                    UIUtils.setDefaultCursor(DomainInspectorPanel.this);
+                                    refresh();
+                                }
+                            };
 
-                                UIUtils.setWaitingCursor(DomainInspectorPanel.this);
-                                worker.setProgressMonitor(new IndeterminateProgressMonitor(DomainInspectorPanel.this, "Revoking permissions...", ""));
-                                worker.execute();
-                            }
+                            UIUtils.setWaitingCursor(DomainInspectorPanel.this);
+                            worker.setProgressMonitor(new IndeterminateProgressMonitor(DomainInspectorPanel.this, "Revoking permissions...", ""));
+                            worker.execute();
                         });
                         menu.add(deleteItem);
                     }
@@ -285,12 +249,7 @@ public class DomainInspectorPanel extends JPanel {
         addPermissionButton = new JButton("Grant permission");
         addPermissionButton.setEnabled(false);
         addPermissionButton.setToolTipText("Grant permission to a user or group");
-        addPermissionButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dopDialog.showForNewPermission(domainObject);
-            }
-        });
+        addPermissionButton.addActionListener(e -> dopDialog.showForNewPermission(domainObject));
 
         permissionsButtonPane = new JPanel();
         permissionsButtonPane.setLayout(new BoxLayout(permissionsButtonPane, BoxLayout.LINE_AXIS));
@@ -314,11 +273,7 @@ public class DomainInspectorPanel extends JPanel {
 
         tabbedPane.addTab("Annotations", Icons.getIcon("page_white_edit.png"), annotationsPanel, "Annotations on the selected item");
         
-        tabbedPane.addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent e) {
-                refresh();   
-            }
-        });
+        tabbedPane.addChangeListener(e -> refresh());
     }
 
     public void showNothing() {
@@ -479,7 +434,7 @@ public class DomainInspectorPanel extends JPanel {
 
         final List<DomainObjectPermission> eaps = new ArrayList<>(getPermissions(domainObject));
 
-        Collections.sort(eaps, (o1, o2) -> {
+        eaps.sort((o1, o2) -> {
             ComparisonChain chain = ComparisonChain.start()
                     .compare(o2.isOwner(), o1.isOwner(), Ordering.natural())
                     .compare(o1.getSubjectKey(), o2.getSubjectKey(), Ordering.natural().nullsFirst());
@@ -516,7 +471,8 @@ public class DomainInspectorPanel extends JPanel {
         permissionsPanel.updateUI();
 
         log.trace("Setting permission button state to {}", addPermissionButton.isEnabled());
-        addPermissionButton.setEnabled(ClientDomainUtils.isOwner(domainObject));
+
+        addPermissionButton.setEnabled(ClientDomainUtils.hasAdminAccess(domainObject));
     }
 
     public void loadAnnotations() {
