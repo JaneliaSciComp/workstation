@@ -7,10 +7,9 @@ import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.workstation.common.flavors.DomainObjectFlavor;
 import org.janelia.workstation.common.flavors.DomainObjectNodeFlavor;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
+import org.janelia.workstation.core.actions.ContextualNodeActionUtils;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
-import org.janelia.workstation.core.nodes.IdentifiableNode;
 import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.core.nodes.UserObjectNode;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -200,7 +199,7 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
 
     @Override
     public Action[] getActions(boolean context) {
-        Collection<Action> actions = DomainObjectAcceptorHelper.getCurrentContextActions();
+        Collection<Action> actions = ContextualNodeActionUtils.getCurrentContextActions();
         return actions.toArray(new Action[0]);
     }
 

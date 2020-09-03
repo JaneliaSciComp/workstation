@@ -1,14 +1,13 @@
 package org.janelia.workstation.integration.spi.domain;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-
 import org.janelia.model.domain.DomainObject;
 import org.openide.util.Lookup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Delegate class to facilitate dealing with finding compatible acceptors
@@ -44,22 +43,6 @@ public class ServiceAcceptorHelper {
             }
         }
         return rtnVal;
-    }
-    
-    public static <S, T extends Compatible<S>> T findFirstHandler(S criterion, Class<T> clazz) {
-        Collection<T> rtnVal = findHandler(criterion, clazz);
-        if (rtnVal.isEmpty()) return null;
-        return rtnVal.iterator().next();
-    }
-
-    public static Collection<ContextualActionBuilder> findAcceptors(Object obj) {
-        return findHandler(obj, ContextualActionBuilder.class);
-    }
-    
-    public static ContextualActionBuilder findFirstAcceptor(Object domainObject) {
-        Collection<ContextualActionBuilder> handlers = findAcceptors(domainObject);
-        if (handlers.isEmpty()) return null;
-        return handlers.iterator().next();
     }
 
     public static Collection<DomainObjectHandler> findHelpers(DomainObject domainObject) {

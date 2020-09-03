@@ -10,7 +10,7 @@ import org.janelia.workstation.browser.gui.components.DomainViewerManager;
 import org.janelia.workstation.browser.gui.components.DomainViewerTopComponent;
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
-import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
+import org.janelia.workstation.core.actions.ContextualNodeActionUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
@@ -59,16 +59,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     log.info("Node not found in tree: {}", domainObject);
                     Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Collections.singletonList(domainObject), true, true, true));
                 }
-            } else {
-                if (DomainObjectAcceptorHelper.isSupported(domainObject)) {
-                    DomainObjectAcceptorHelper.service(domainObject);
-                }
             }
         }
     }
 
     public void addMenuItems() {
-        for (Component currentContextMenuItem : DomainObjectAcceptorHelper.getCurrentContextMenuItems()) {
+        for (Component currentContextMenuItem : ContextualNodeActionUtils.getCurrentContextMenuItems()) {
             add(currentContextMenuItem);
         }
     }

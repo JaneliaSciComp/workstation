@@ -20,7 +20,7 @@ import org.janelia.workstation.common.flavors.OntologyTermFlavor;
 import org.janelia.workstation.common.flavors.OntologyTermNodeFlavor;
 import org.janelia.workstation.common.nodes.InternalNode;
 import org.janelia.workstation.common.nodes.NodeUtils;
-import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
+import org.janelia.workstation.core.actions.ContextualNodeActionUtils;
 import org.janelia.workstation.browser.gui.components.OntologyExplorerTopComponent;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -224,7 +224,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     
     @Override
     public Action[] getActions(boolean context) {
-        Collection<Action> actions = DomainObjectAcceptorHelper.getCurrentContextActions();
+        Collection<Action> actions = ContextualNodeActionUtils.getCurrentContextActions();
         return actions.toArray(new Action[0]);
     }
 

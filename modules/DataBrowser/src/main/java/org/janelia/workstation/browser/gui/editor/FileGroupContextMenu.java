@@ -4,7 +4,7 @@ import java.awt.Component;
 
 import org.janelia.model.domain.sample.FileGroup;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
-import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
+import org.janelia.workstation.core.actions.ContextualNodeActionUtils;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,7 @@ public class FileGroupContextMenu extends PopupContextMenu {
     private ChildSelectionModel<FileGroup,String> selectionModel;
 
     public void addMenuItems() {
-        for (Component currentContextMenuItem : DomainObjectAcceptorHelper.getCurrentContextMenuItems()) {
+        for (Component currentContextMenuItem : ContextualNodeActionUtils.getCurrentContextMenuItems()) {
             add(currentContextMenuItem);
         }
     }

@@ -7,7 +7,7 @@ import javax.swing.Action;
 
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.core.actions.DomainObjectAcceptorHelper;
+import org.janelia.workstation.core.actions.ContextualNodeActionUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
@@ -65,7 +65,7 @@ public class OntologyNode extends OntologyTermNode implements DomainObjectNode<O
 
     @Override
     public Action[] getActions(boolean context) {
-        Collection<Action> actions = DomainObjectAcceptorHelper.getCurrentContextActions();
+        Collection<Action> actions = ContextualNodeActionUtils.getCurrentContextActions();
         return actions.toArray(new Action[0]);
     }
     
