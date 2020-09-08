@@ -1,4 +1,9 @@
-// 8.19
+// 8.20
+
+Browser
+* Group owners and admins may now share the data in their group
+* Technicians may now create data sets on behalf of annotators
 
 Color Depth Search
 * Added checkboxes to mirror images in the color depth search result comparison HUD
+* Browsing Color Depth Libraries now links to the related Samples

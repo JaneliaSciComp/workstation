@@ -5,6 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.SampleUtils;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.PipelineProcess;
+import org.janelia.model.security.Subject;
+import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.common.gui.util.UIUtils;
@@ -14,12 +16,18 @@ import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.util.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ItemEvent;
+import java.util.Collections;
+import java.util.Set;
 
 import static org.janelia.workstation.core.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
 
@@ -36,13 +44,13 @@ public class DataSetDialog extends ModalDialog {
     private static final String SLIDE_CODE_PATTERN = "{Slide Code}";
     private static final String DEFAULT_SAMPLE_NAME_PATTERN = "{Line}-" + SLIDE_CODE_PATTERN;
 
-    private static final String VALID_CONFIG_PATHS[][] = {
+    private static final String[][] VALID_CONFIG_PATHS = {
             {"Dickson Lab Light Imagery","/groups/scicomp/informatics/data/dickson_light_imagery-config.xml"},
             {"FlyLight Light Imagery","/groups/scicomp/informatics/data/flylightflip_light_imagery-config.xml"},
             {"Lee Lab Light Imagery","/groups/scicomp/informatics/data/leetlineage_light_imagery-config.xml"},
     };
 
-    private static final String VALID_GRAMMAR_PATHS[][] = {
+    private static final String[][] VALID_GRAMMAR_PATHS = {
             {"Dickson Lab","/misc/local/pipeline/grammar/dickson.gra"},
             {"FlyLight Polarity","/misc/local/pipeline/grammar/flylightpolarity.gra"},
             {"FlyLight FLIP","/misc/local/pipeline/grammar/flylightflip.gra"},
@@ -55,7 +63,20 @@ public class DataSetDialog extends ModalDialog {
             {"Lee Lab Central Brain Lineage","/misc/local/pipeline/grammar/leet_central_brain_lineage.gra"},
     };
 
+    DocumentListener dataSetListener = new DocumentListener() {
+        public void changedUpdate(DocumentEvent e) {
+            updateDataSetIdentifier();
+        }
+        public void removeUpdate(DocumentEvent e) {
+            updateDataSetIdentifier();
+        }
+        public void insertUpdate(DocumentEvent e) {
+            updateDataSetIdentifier();
+        }
+    };
+
     private JPanel attrPanel;
+    private JTextField ownerInput;
     private JTextField nameInput;
     private JTextField identifierInput;
     private JTextField sampleNamePatternInput;
@@ -88,7 +109,7 @@ public class DataSetDialog extends ModalDialog {
         cancelButton.setToolTipText("Close without saving changes");
         cancelButton.addActionListener(e -> setVisible(false));
 
-        JButton okButton = new JButton("OK");
+        JButton okButton = new JButton("Save");
         okButton.setToolTipText("Close and save changes");
         okButton.addActionListener(e -> saveAndClose());
 
@@ -100,23 +121,22 @@ public class DataSetDialog extends ModalDialog {
         buttonPane.add(okButton);
 
         add(buttonPane, BorderLayout.SOUTH);
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentShown(ComponentEvent e) {
+                if (nameInput.isEditable()) {
+                    nameInput.requestFocus();
+                }
+                else {
+                    okButton.requestFocus();
+                }
+            }
+        });
     }
 
     public void showForNewDataSet() {
         showForDataSet(null);
-    }
-
-    public void addSeparator(JPanel panel, String text, boolean first) {
-        JLabel label = new JLabel(text);
-        label.setFont(separatorFont);
-        panel.add(label, "split 2, span" + (first ? "" : ", gaptop 10lp"));
-        panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
-    }
-
-    private void updateDataSetIdentifier() {
-        if (dataSet == null) {
-            identifierInput.setText(createDenormIdentifierFromName(AccessManager.getSubjectKey(), nameInput.getText()));
-        }
     }
 
     public void showForDataSet(final DataSet dataSet) {
@@ -127,28 +147,27 @@ public class DataSetDialog extends ModalDialog {
 
         addSeparator(attrPanel, "Data Set Attributes", true);
 
-        final JLabel nameLabel = new JLabel("Data Set Suffix: ");
+        final JLabel ownerLabel = new JLabel("Data Set Owner: ");
+        ownerInput = new JTextField(16);
+
+        ownerLabel.setLabelFor(nameInput);
+        if (AccessManager.getAccessManager().isDataSetCreator()) {
+            attrPanel.add(ownerLabel, "gap para");
+            attrPanel.add(ownerInput);
+        }
+
+        final JLabel nameLabel = new JLabel("Data Set Name: ");
         nameInput = new JTextField(40);
-
-        nameInput.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) {
-                updateDataSetIdentifier();
-            }
-
-            public void removeUpdate(DocumentEvent e) {
-                updateDataSetIdentifier();
-            }
-
-            public void insertUpdate(DocumentEvent e) {
-                updateDataSetIdentifier();
-            }
-        });
 
         nameLabel.setLabelFor(nameInput);
         attrPanel.add(nameLabel, "gap para");
         attrPanel.add(nameInput);
 
-        final JLabel identifierLabel = new JLabel("Data Set Name: ");
+        // Set up listeners
+        ownerInput.getDocument().addDocumentListener(dataSetListener);
+        nameInput.getDocument().addDocumentListener(dataSetListener);
+
+        final JLabel identifierLabel = new JLabel("Data Set Identifier: ");
         identifierInput = new JTextField(40);
         identifierInput.setEditable(false);
         identifierLabel.setLabelFor(identifierInput);
@@ -252,9 +271,13 @@ public class DataSetDialog extends ModalDialog {
 
         if (dataSet != null) {
 
+            ownerInput.setText(dataSet.getOwnerName());
             String identifier = dataSet.getIdentifier();
-            int first = identifier.indexOf('_');
-            nameInput.setText(identifier.substring(first+1));
+            nameInput.setText(identifier.substring(identifier.indexOf('_')+1));
+
+            // It's not possible to edit the identifier (and thus owner or name) of an existing data set
+            ownerInput.setEnabled(false);
+            nameInput.setEnabled(false);
 
             identifierInput.setText(dataSet.getIdentifier());
             sampleNamePatternInput.setText(dataSet.getSampleNamePattern());
@@ -275,12 +298,17 @@ public class DataSetDialog extends ModalDialog {
             ActivityLogHelper.logUserAction("DataSetDialog.showDialog", dataSet);
         }
         else {
+            ownerInput.setText(AccessManager.getSubjectName());
             nameInput.setText("");
+
+            // Allow editing
+            ownerInput.setEnabled(true);
+            nameInput.setEnabled(true);
+
             ActivityLogHelper.logUserAction("DataSetDialog.showDialog");
         }
 
         packAndShow();
-
     }
 
     private void addPathControls(final String[][] validNamedPaths, final JTextField rawPathInput, String currValue,
@@ -312,9 +340,17 @@ public class DataSetDialog extends ModalDialog {
         }
 
         JCheckBox overrideCheckbox = new JCheckBox("Override");
-        overrideCheckbox.addChangeListener(e -> {
-            rawPathInput.setEnabled(overrideCheckbox.isSelected());
-            dropDownButton.setEnabled(!overrideCheckbox.isSelected());
+        overrideCheckbox.addItemListener(e -> {
+            boolean selected = e.getStateChange()==ItemEvent.SELECTED;
+            rawPathInput.setEnabled(selected);
+            dropDownButton.setEnabled(!selected);
+            if (selected) {
+                dropDownButton.setText("Custom Path");
+            }
+            else {
+                dropDownButton.setText(defaultButtonText);
+                rawPathInput.setText("");
+            }
         });
 
         JPanel overridePanel = new JPanel();
@@ -362,19 +398,76 @@ public class DataSetDialog extends ModalDialog {
             return;
         }
 
+        final String name = nameInput.getText();
         final String sageConfigPath = sageConfigPathInput.getText();
         final String sageGrammarPath = sageGrammarPathInput.getText();
 
+        if (dataSet == null && StringUtils.isBlank(name)) {
+            JOptionPane.showMessageDialog(this,
+                    "You must give this data set a name in order to save it",
+                    "Data set name is empty",
+                    JOptionPane.ERROR_MESSAGE);
+            nameInput.requestFocus();
+            return;
+        }
+
+        if (StringUtils.isBlank(sageConfigPath)) {
+            JOptionPane.showMessageDialog(this,
+                    "Samples added to this data set cannot be processed without a SAGE configuration",
+                    "SAGE Config Path is empty",
+                    JOptionPane.ERROR_MESSAGE);
+            sageConfigPathInput.requestFocus();
+            return;
+        }
+
+        if (StringUtils.isBlank(sageGrammarPath)) {
+            JOptionPane.showMessageDialog(this,
+                    "Samples added to this data set cannot be processed without a SAGE grammar",
+                    "SAGE Grammar Path is empty",
+                    JOptionPane.ERROR_MESSAGE);
+            sageGrammarPathInput.requestFocus();
+            return;
+        }
+
         UIUtils.setWaitingCursor(DataSetDialog.this);
 
+        String owner = getOwnerText();
+
         SimpleWorker worker = new SimpleWorker() {
+
+            boolean subjectNotFound = false;
 
             @Override
             protected void doStuff() throws Exception {
 
                 if (dataSet == null) {
+
+                    // Determine owner
+                    Subject subject = DomainMgr.getDomainMgr().getModel().getSubjectByNameOrKey(owner);
+                    if (subject == null) {
+                        subjectNotFound = true;
+                        return;
+                    }
+
+                    // Create new data set
                     dataSet = new DataSet();
+                    dataSet.setOwnerKey(subject.getKey());
                     dataSet.setIdentifier(identifierInput.getText());
+
+                    if (!AccessManager.getSubjectKey().equals(subject.getKey())) {
+                        // Ths user is creating this data set on behalf of someone else
+                        Set<String> writerSet = AccessManager.getAccessManager().getActualWriterSet();
+                        // TODO: This logic should at least be moved to to the server side
+                        // Share the data set back to the technician group that created it
+                        if (writerSet.contains(AccessManager.FLYLIGHT_GROUP)) {
+                            dataSet.getReaders().add(AccessManager.FLYLIGHT_GROUP);
+                            dataSet.getWriters().add(AccessManager.FLYLIGHT_GROUP);
+                        }
+                        if (writerSet.contains(AccessManager.PTR_GROUP)) {
+                            dataSet.getReaders().add(AccessManager.PTR_GROUP);
+                            dataSet.getWriters().add(AccessManager.PTR_GROUP);
+                        }
+                    }
                 } 
 
                 dataSet.setName(dataSet.getIdentifier());
@@ -391,22 +484,54 @@ public class DataSetDialog extends ModalDialog {
             @Override
             protected void hadSuccess() {
                 UIUtils.setDefaultCursor(DataSetDialog.this);
-                setVisible(false);
+                if (subjectNotFound) {
+                    JOptionPane.showMessageDialog(
+                            DataSetDialog.this,
+                            "Owner could not be found: "+owner,
+                            "Data set owner not found",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                else {
+                    setVisible(false);
+                }
             }
 
             @Override
             protected void hadError(Throwable error) {
-                FrameworkAccess.handleException(error);
                 UIUtils.setDefaultCursor(DataSetDialog.this);
                 setVisible(false);
+                FrameworkAccess.handleException(error);
             }
         };
 
         worker.execute();
     }
 
-    private String createDenormIdentifierFromName (String username, String name) {
-        if (username.contains(":")) username = username.split(":")[1];
+
+    public void addSeparator(JPanel panel, String text, boolean first) {
+        JLabel label = new JLabel(text);
+        label.setFont(separatorFont);
+        panel.add(label, "split 2, span" + (first ? "" : ", gaptop 10lp"));
+        panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
+    }
+
+    private void updateDataSetIdentifier() {
+        if (dataSet == null) {
+            identifierInput.setText(createDenormalizedIdentifier(ownerInput.getText(), nameInput.getText()));
+        }
+    }
+
+    private String getOwnerText() {
+        String owner = ownerInput.getText();
+        if (StringUtils.isBlank(owner)) owner = AccessManager.getSubjectName();
+        return owner;
+    }
+
+    private String createDenormalizedIdentifier(String username, String name) {
+        // default ownership to current user
+        if (StringUtils.isBlank(username)) username = AccessManager.getSubjectName();
+        // strip off any prefix
+        username = SubjectUtils.getSubjectName(username);
         return username+"_"+name.toLowerCase().replaceAll("\\W+", "_");
     }
 }

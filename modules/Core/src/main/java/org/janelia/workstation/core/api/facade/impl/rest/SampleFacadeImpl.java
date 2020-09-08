@@ -1,18 +1,8 @@
 package org.janelia.workstation.core.api.facade.impl.rest;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
-
 import org.janelia.it.jacs.model.entity.json.JsonTask;
-import org.janelia.model.domain.dto.DomainQuery;
 import org.janelia.model.domain.DomainObjectComparator;
+import org.janelia.model.domain.dto.DomainQuery;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.sample.DataSet;
@@ -24,6 +14,14 @@ import org.janelia.workstation.core.api.http.RESTClientBase;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
@@ -53,7 +51,8 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
     @Override
     public DataSet create(DataSet dataSet) throws Exception {
         DomainQuery query = new DomainQuery();
-        query.setSubjectKey(AccessManager.getSubjectKey());
+        // This allows for the creation of data sets owned by someone other than the user
+        query.setSubjectKey(dataSet.getOwnerKey());
         query.setDomainObject(dataSet);
         WebTarget target = getDomainService("data/dataset");
         Response response = target
