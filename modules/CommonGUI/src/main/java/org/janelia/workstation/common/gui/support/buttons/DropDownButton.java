@@ -27,6 +27,8 @@ import org.openide.util.ImageUtilities;
  * A simple drop down button supporting text and/or an icon, with a rollover effect, and a scrolling menu. 
  * 
  * Parts of this code were adapted from the DropDownButton in OpenIDE.
+ *
+ * TODO: needs a keylistener for keyboard access
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -54,7 +56,7 @@ public class DropDownButton extends JButton {
         
         setText(text);
         setIcon(icon);
-        setFocusable(false);
+        //setFocusable(false);
         setRolloverEnabled(true);
         setVerticalTextPosition(AbstractButton.CENTER);
         setHorizontalTextPosition(AbstractButton.LEADING);
