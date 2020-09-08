@@ -1,12 +1,16 @@
 package org.janelia.workstation.infopanel;
 
-import javax.swing.Action;
-import javax.swing.JMenuItem;
+import javax.swing.*;
 
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.controller.eventbus.CreateNeuronReviewEvent;
+import org.janelia.workstation.controller.task_workflow.TaskWorkflowViewTopComponent;
+
+import java.awt.event.ActionEvent;
 
 /**
  * Popup context menu for neurons.
@@ -31,6 +35,7 @@ public class NeuronContextMenu extends PopupContextMenu {
         setNextAddRequiresSeparator(true);
         add(getRenameNeuronItem());
         add(getDeleteNeuronItem());
+        add(getNeuronReviewItem());
 
         setNextAddRequiresSeparator(true);
         add(getExportSWCItem());
@@ -70,6 +75,18 @@ public class NeuronContextMenu extends PopupContextMenu {
     protected JMenuItem getDeleteNeuronItem() {
         Action action = new NeuronDeleteAction();
         return new JMenuItem(action);
+    }
+
+    protected JMenuItem getNeuronReviewItem() {
+        AbstractAction generateReviewPointList = new AbstractAction("Show Neuron Tree") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                CreateNeuronReviewEvent neuronReviewEvent = new CreateNeuronReviewEvent();
+                neuronReviewEvent.setNeuron(tmNeuronMetadata);
+                ViewerEventBus.postEvent(neuronReviewEvent);
+            }
+        };
+        return new JMenuItem(generateReviewPointList);
     }
     
     protected JMenuItem getExportSWCItem() {

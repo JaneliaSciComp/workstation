@@ -103,9 +103,11 @@ import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
 import org.janelia.workstation.controller.dialog.NeuronHistoryDialog;
+import org.janelia.workstation.controller.eventbus.AnimationEvent;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
@@ -491,13 +493,12 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new URI(currentSource).toURL();
     }
 
-    void playSampleLocations(final List<SampleLocation> locationList, boolean autoRotation, int speed, int stepScale) {
+    @Subscribe
+    void playSampleLocations(AnimationEvent event) {
+        List<TmViewState> locationList = event.getAnimationSteps();
         // do a quick check to see if
         sceneWindow.setControlsVisibility(true);
-        currentSource = locationList.get(0).getSampleUrl().toString();
-        defaultColorChannel = locationList.get(0).getDefaultColorChannel();
-        volumeCache.setColorChannel(defaultColorChannel);        
-        playback.reviewPoints(locationList, autoRotation, speed, stepScale);
+        playback.reviewPoints(locationList, event.isAutoRotation(), event.getSpeed(), event.getStepScale());
     }
 
     // center on the brain sample
