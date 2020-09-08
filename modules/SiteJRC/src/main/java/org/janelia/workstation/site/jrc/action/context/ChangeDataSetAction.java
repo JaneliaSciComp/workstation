@@ -9,10 +9,7 @@ import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.gui.dialogs.ConnectDialog;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.core.api.ConnectionMgr;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.StateMgr;
+import org.janelia.workstation.core.api.*;
 import org.janelia.workstation.core.model.ConnectionResult;
 import org.janelia.workstation.core.model.DomainModelViewUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
@@ -53,11 +50,13 @@ public class ChangeDataSetAction extends BaseContextualNodeAction {
     protected void processContext() {
         samples.clear();
         setVisible(false);
-        if (getNodeContext().isOnlyObjectsOfType(Sample.class)) {
-            for (Sample sample : getNodeContext().getOnlyObjectsOfType(Sample.class)) {
-                setVisible(true);
-                if (ClientDomainUtils.hasWriteAccess(sample)) {
-                    samples.add(sample);
+        if (AccessManager.getAccessManager().isAdmin() || AccessManager.getAccessManager().isTechnician()) {
+            if (getNodeContext().isOnlyObjectsOfType(Sample.class)) {
+                for (Sample sample : getNodeContext().getOnlyObjectsOfType(Sample.class)) {
+                    setVisible(true);
+                    if (ClientDomainUtils.hasWriteAccess(sample)) {
+                        samples.add(sample);
+                    }
                 }
             }
         }

@@ -6,6 +6,7 @@ import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.StateMgr;
@@ -44,12 +45,14 @@ public class ChangeSlideCodeAction extends BaseContextualNodeAction {
     protected void processContext() {
         this.sample = null;
         setEnabledAndVisible(false);
-        if (getNodeContext().isSingleObjectOfType(Sample.class)) {
-            this.sample = getNodeContext().getSingleObjectOfType(Sample.class);
-            if (sample != null) {
-                setVisible(true);
-                if (ClientDomainUtils.hasWriteAccess(sample)) {
-                    setEnabled(true);
+        if (AccessManager.getAccessManager().isAdmin() || AccessManager.getAccessManager().isTechnician()) {
+            if (getNodeContext().isSingleObjectOfType(Sample.class)) {
+                this.sample = getNodeContext().getSingleObjectOfType(Sample.class);
+                if (sample != null) {
+                    setVisible(true);
+                    if (ClientDomainUtils.hasWriteAccess(sample)) {
+                        setEnabled(true);
+                    }
                 }
             }
         }

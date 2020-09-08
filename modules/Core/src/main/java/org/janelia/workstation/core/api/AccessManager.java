@@ -47,10 +47,14 @@ public final class AccessManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(AccessManager.class);
 
-    public static String RUN_AS_USER = "RunAs";
-    public static String USER_NAME = "console.serverLogin";
-    public static String USER_PASSWORD = "console.serverPassword";
-    public static String REMEMBER_PASSWORD = "console.rememberPassword";
+    public static final String RUN_AS_USER = "RunAs";
+    public static final String USER_NAME = "console.serverLogin";
+    public static final String USER_PASSWORD = "console.serverPassword";
+    public static final String REMEMBER_PASSWORD = "console.rememberPassword";
+
+    // TODO: technician groups should be modeled explicitly in the Subject model via a Group attribute
+    public static final String FLYLIGHT_GROUP = "group:flylighttechnical";
+    public static final String PTR_GROUP = "group:projtechres";
 
     private enum AuthState {
         Starting,
@@ -263,6 +267,14 @@ public final class AccessManager {
         return isAdmin;
     }
 
+    /**
+     * Checks to see if the current user is a writer in one of the technican groups.
+     * @return true if writer is a technician
+     */
+    public boolean isTechnician() {
+        return writerSet.contains(FLYLIGHT_GROUP) || writerSet.contains(PTR_GROUP);
+    }
+
     public Set<String> getActualReaderSet() {
         return readerSet;
     }
@@ -272,7 +284,17 @@ public final class AccessManager {
     public Set<String> getActualAdminSet() {
         return adminSet;
     }
-    
+
+    /**
+     * Can the current user create data sets on behalf of others?
+     * @return
+     */
+    public boolean isDataSetCreator() {
+        return writerSet.contains("group:admin")
+                || writerSet.contains("group:flylighttechnical")
+                || writerSet.contains("group:projtechres");
+    }
+
     /**
      * Returns the current authentication token.
      * @return JWS token 

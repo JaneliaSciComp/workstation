@@ -5,6 +5,7 @@ import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.StateMgr;
@@ -43,11 +44,13 @@ public class SyncWithSAGEAction extends BaseContextualNodeAction {
     protected void processContext() {
         samples.clear();
         setVisible(false);
-        if (getNodeContext().isOnlyObjectsOfType(Sample.class)) {
-            for (Sample sample : getNodeContext().getOnlyObjectsOfType(Sample.class)) {
-                setVisible(true);
-                if (ClientDomainUtils.hasWriteAccess(sample)) {
-                    samples.add(sample);
+        if (AccessManager.getAccessManager().isAdmin() || AccessManager.getAccessManager().isTechnician()) {
+            if (getNodeContext().isOnlyObjectsOfType(Sample.class)) {
+                for (Sample sample : getNodeContext().getOnlyObjectsOfType(Sample.class)) {
+                    setVisible(true);
+                    if (ClientDomainUtils.hasWriteAccess(sample)) {
+                        samples.add(sample);
+                    }
                 }
             }
         }
