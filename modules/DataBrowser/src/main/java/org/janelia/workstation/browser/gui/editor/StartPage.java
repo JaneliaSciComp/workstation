@@ -1,24 +1,5 @@
 package org.janelia.workstation.browser.gui.editor;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Image;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.lang.annotation.Annotation;
-import java.util.Map;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import com.google.common.eventbus.Subscribe;
 import net.miginfocom.swing.MigLayout;
 import org.janelia.model.domain.report.DatabaseSummary;
@@ -28,10 +9,10 @@ import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.workstation.common.gui.support.ViewerToolbar;
-import org.janelia.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.workstation.browser.actions.NewFilterActionListener;
+import org.janelia.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.ViewerToolbar;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
@@ -44,6 +25,17 @@ import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.lang.annotation.Annotation;
+import java.util.Map;
 
 /**
  * Start Page which is automatically shown to the user on every startup (unless disabled by user preference) 
@@ -239,12 +231,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         // Lower panel
         
         openOnStartupCheckbox.setSelected(ApplicationOptions.getInstance().isShowStartPageOnStartup());
-        openOnStartupCheckbox.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                ApplicationOptions.getInstance().setShowStartPageOnStartup(openOnStartupCheckbox.isSelected());
-            }
-        });
+        openOnStartupCheckbox.addItemListener(e -> ApplicationOptions.getInstance().setShowStartPageOnStartup(openOnStartupCheckbox.isSelected()));
         
         lowerPanel.setLayout(new BorderLayout());
         lowerPanel.add(openOnStartupCheckbox);

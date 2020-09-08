@@ -178,11 +178,11 @@ public class ColorDepthHud extends ModalDialog {
 
         mirrorCheckbox1 = new JCheckBox("Mirror");
         mirrorCheckbox1.setFocusable(false);
-        mirrorCheckbox1.addChangeListener((e) -> updateMaskImage());
+        mirrorCheckbox1.addItemListener((e) -> updateMaskImage());
 
         mirrorCheckbox2 = new JCheckBox("Mirror");
         mirrorCheckbox2.setFocusable(false);
-        mirrorCheckbox2.addChangeListener((e) -> updateResultImage());
+        mirrorCheckbox2.addItemListener((e) -> updateResultImage());
 
         JPanel imagePanel1 = new JPanel();
         imagePanel1.setLayout(new BorderLayout());
