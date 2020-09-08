@@ -8,6 +8,7 @@ import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.horta.NeuronTracerTopComponent;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
@@ -119,8 +120,7 @@ implements ExplorerManager.Provider,  LookupListener
     
     @Override
     public void componentOpened() {
-        workspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaMetaWorkspace.class);
-        workspaceResult.addLookupListener(this);
+
     }
     
     @Override 
@@ -143,10 +143,6 @@ implements ExplorerManager.Provider,  LookupListener
             logger.info("Creating new scene root");
             cachedWorkspace = workspace;
             mgr.setRootContext( new HortaWorkspaceNode(hortaTracer.getMeshActors(), hortaTracer.getMeshObserver()) );
-            
-            // try to set column widths to better defaults...
-            // http://markmail.org/message/t3igjgr53dnibfr7
-            // treeView.getOutline().setModel(treeView.getOutline().getModel());
         }
     }
 }

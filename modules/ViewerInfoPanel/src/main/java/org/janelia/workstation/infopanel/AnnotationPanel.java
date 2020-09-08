@@ -87,6 +87,7 @@ public class AnnotationPanel extends JPanel
 
     private JCheckBox openHorta;
     private JCheckBox openLVV;
+    private JCheckBox openNeuronCam;
     PanelController panelController;
     
 
@@ -201,6 +202,23 @@ public class AnnotationPanel extends JPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 TopComponent tc = WindowManager.getDefault().findTopComponent("NeuronTracerTopComponent");
+                if (tc != null) {
+                    if (!tc.isOpened()) {
+                        tc.open();
+                    } else {
+                        tc.close();
+                    }
+                    tc.requestActive();
+                }
+            }
+        });
+
+        openNeuronCam = new JCheckBox("Open NeuronCam");
+        workspaceButtonsPanel.add(openNeuronCam);
+        openNeuronCam.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TopComponent tc = WindowManager.getDefault().findTopComponent("TaskWorkflowViewTopComponent");
                 if (tc != null) {
                     if (!tc.isOpened()) {
                         tc.open();

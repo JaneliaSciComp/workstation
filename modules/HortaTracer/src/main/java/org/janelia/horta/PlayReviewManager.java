@@ -15,6 +15,7 @@ import org.janelia.horta.camera.CatmullRomSplineKernel;
 import org.janelia.horta.camera.Interpolator;
 import org.janelia.horta.camera.PrimitiveInterpolator;
 import org.janelia.horta.camera.Vector3Interpolator;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.scenewindow.SceneWindow;
 
@@ -64,7 +65,7 @@ public class PlayReviewManager {
         });
     }
 
-    void reviewPoints(final List<SampleLocation> locationList, final boolean autoRotation, final int speed, final int stepScale) {
+    void reviewPoints(List<TmViewState> locationList, final boolean autoRotation, final int speed, final int stepScale) {
         clearPlayState();          
         playState.setPlayList(locationList);
         setPausePlayback(false);
@@ -76,9 +77,9 @@ public class PlayReviewManager {
             @Override
             protected void doStuff() throws Exception {
                 fpsAnimator.start();
-                SampleLocation sampleLocation = locationList.get(0);
+                TmViewState sampleLocation = locationList.get(0);
                 Quaternion q = new Quaternion();
-                float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
+                float[] quaternionRotation =  sampleLocation.getCameraRotation();
                 if (quaternionRotation != null) {
                     q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
                 }
@@ -96,7 +97,7 @@ public class PlayReviewManager {
                     sampleLocation = locationList.get(i);
 
                     q = new Quaternion();
-                    quaternionRotation = sampleLocation.getRotationAsQuaternion();
+                    quaternionRotation = sampleLocation.getCameraRotation();
                     if (quaternionRotation != null) {
                         q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
                     }
@@ -107,9 +108,9 @@ public class PlayReviewManager {
                     // figure out number of steps
                     vantage = sceneWindow.getVantage();
                     float[] startLocation = vantage.getFocus();
-                    double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm() - startLocation[0], 2)
-                            + Math.pow(sampleLocation.getFocusYUm() - startLocation[1], 2)
-                            + Math.pow(sampleLocation.getFocusZUm() - startLocation[2], 2));
+                    double distance = Math.sqrt(Math.pow(sampleLocation.getCameraFocusX() - startLocation[0], 2)
+                            + Math.pow(sampleLocation.getCameraFocusY() - startLocation[1], 2)
+                            + Math.pow(sampleLocation.getCameraFocusZ() - startLocation[2], 2));
                     // # of steps is 1 per uM
                     int steps = (int) Math.round(distance);
                     if (steps < 1) {
@@ -117,7 +118,7 @@ public class PlayReviewManager {
                     }
                     steps = steps * stepScale;
                     boolean interrupt = false;
-                    //animateToLocationWithRotation(acceptor, q, sampleLocation, steps, null);
+                    animateToLocationWithRotation(q, sampleLocation, steps, null);
                     if (interrupt) {
                         playState.setCurrentNode(i);
                         break;
@@ -147,8 +148,8 @@ public class PlayReviewManager {
             protected void doStuff() throws Exception {
                 int startNode = playState.getCurrentNode();
                 sceneWindow.setControlsVisibility(true);
-                List<SampleLocation> locationList = playState.getPlayList();
-                SampleLocation sampleLocation;
+                List<TmViewState> locationList = playState.getPlayList();
+                TmViewState sampleLocation;
                 fpsAnimator.setFPS(playState.getFps());
                 fpsAnimator.start();
                 boolean interrupt;
@@ -206,10 +207,10 @@ public class PlayReviewManager {
         scrollWorker.execute();
     }
 
-    private boolean animateToNextPoint(SampleLocation sampleLocation, Integer startStep) throws Exception {
+    private boolean animateToNextPoint(TmViewState sampleLocation, Integer startStep) throws Exception {
         Quaternion q = new Quaternion();
 
-        float[] quaternionRotation = sampleLocation.getRotationAsQuaternion();
+        float[] quaternionRotation = sampleLocation.getCameraRotation();
         if (quaternionRotation != null) {
             q.set(quaternionRotation[0], quaternionRotation[1], quaternionRotation[2], quaternionRotation[3]);
         }
@@ -220,9 +221,9 @@ public class PlayReviewManager {
         // figure out number of steps
         Vantage vantage = sceneWindow.getVantage();
         float[] startLocation = vantage.getFocus();
-        double distance = Math.sqrt(Math.pow(sampleLocation.getFocusXUm() - startLocation[0], 2)
-                + Math.pow(sampleLocation.getFocusYUm() - startLocation[1], 2)
-                + Math.pow(sampleLocation.getFocusZUm() - startLocation[2], 2));
+        double distance = Math.sqrt(Math.pow(sampleLocation.getCameraFocusX() - startLocation[0], 2)
+                + Math.pow(sampleLocation.getCameraFocusY() - startLocation[1], 2)
+                + Math.pow(sampleLocation.getCameraFocusZ() - startLocation[2], 2));
         // # of steps is 1 per uM
         int steps = (int) Math.round(distance);
         if (steps < 1) {
@@ -233,14 +234,14 @@ return true;
         //return animateToLocationWithRotation(acceptor, q, sampleLocation, steps, startStep);
     }
 
-    private boolean animateToLocationWithRotation(ViewerLocationAcceptor acceptor, Quaternion endRotation, SampleLocation endLocation, int steps, Integer startStep) throws Exception {
+    private boolean animateToLocationWithRotation(Quaternion endRotation, TmViewState endLocation, int steps, Integer startStep) throws Exception {
         Vantage vantage = sceneWindow.getVantage();
         CatmullRomSplineKernel splineKernel = new CatmullRomSplineKernel();
         Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(splineKernel);
         Interpolator<Quaternion> rotationInterpolator = new PrimitiveInterpolator(splineKernel);
         double stepSize = 1.0 / (float) steps;
 
-        double zoom = endLocation.getMicrometersPerWindowHeight();
+        double zoom = endLocation.getZoomLevel();
         if (zoom > 0) {
             vantage.setSceneUnitsPerViewportHeight((float) zoom);
             vantage.setDefaultSceneUnitsPerViewportHeight((float) zoom);
@@ -251,8 +252,8 @@ return true;
         sceneWindow.getVantage().getFocusPosition().copy(startFocus);
         Quaternion startRotation = sceneWindow.getVantage().getRotationInGround().convertRotationToQuaternion();
 
-        Vector3 endFocus = new Vector3((float) endLocation.getFocusXUm(), (float) endLocation.getFocusYUm(),
-                (float) endLocation.getFocusZUm());
+        Vector3 endFocus = new Vector3((float) endLocation.getCameraFocusX(), (float) endLocation.getCameraFocusY(),
+                (float) endLocation.getCameraFocusZ());
         double currWay = 0;
         int startIndex = 0;
         if (startStep!=null) {
