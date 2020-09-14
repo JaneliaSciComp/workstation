@@ -467,18 +467,19 @@ public class NeuronModel {
 
     public void saveNeuronData(TmNeuronMetadata neuron) throws Exception {
         // save historical event data for undo/redo
-        neuronModelAdapter.asyncSaveNeuron(neuron);
+        neuronModelAdapter.asyncSaveNeuron(neuron, null);
     }
 
     public void restoreNeuronFromHistory(TmNeuronMetadata neuron) throws Exception {
-        neuronMap.put(neuron.getId(), neuron);
-        neuronModelAdapter.asyncSaveNeuron(neuron);
+        TmNeuronMetadata oldNeuron = neuronMap.get(neuron.getId());
+        oldNeuron.setNeuronData(neuron.getNeuronData());
+        Map<String, String> extraArguments = new HashMap<>();
+        extraArguments.put("undo", "true");
+        neuronModelAdapter.asyncSaveNeuron(neuron, extraArguments);
     }
 
     public void splitNeurite(TmNeuronMetadata tmNeuronMetadata, TmGeoAnnotation newRoot) throws Exception {
-        if (newRoot == null || tmNeuronMetadata == null) {
-            return;
-        }
+        if (newRoot == null || tmNeuronMetadata == null)
 
         if (!tmNeuronMetadata.getGeoAnnotationMap().containsKey(newRoot.getId())) {
             throw new Exception(String.format("input neuron %d doesn't contain new root annotation %d",

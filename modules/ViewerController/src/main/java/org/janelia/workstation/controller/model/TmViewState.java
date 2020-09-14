@@ -22,6 +22,7 @@ public class TmViewState {
     private boolean applyFilter;
     private boolean projectReadOnly;
     private Set<Long> hiddenAnnotations;
+    private Set<String> hiddenMeshes;
     private Set<Long> nonInteractableAnnotations;
     private Set<Long> neuronRadiusToggle;
     private Set<Long> reviewModeNeurons;
@@ -40,6 +41,7 @@ public class TmViewState {
         neuronFilter = new NeuronSelectionSpatialFilter();
         ConcurrentHashMap<Long, Long> threadSafeMap = new ConcurrentHashMap<>();
         hiddenAnnotations = threadSafeMap.newKeySet();
+        hiddenMeshes = threadSafeMap.newKeySet();
         nonInteractableAnnotations = threadSafeMap.newKeySet();
         neuronRadiusToggle = threadSafeMap.newKeySet();
         colorModels = new ConcurrentHashMap<>();
@@ -82,6 +84,18 @@ public class TmViewState {
 
     public boolean isHidden(Long annId) {
         return hiddenAnnotations.contains(annId);
+    }
+
+    public void addMeshToHidden(String meshName) {
+        hiddenMeshes.add(meshName);
+    }
+
+    public void removeMeshFromHidden(String meshName) {
+        hiddenMeshes.remove(meshName);
+    }
+
+    public boolean isHidden(String meshName) {
+        return hiddenMeshes.contains(meshName);
     }
 
     public Set<Long> getNonInteractableAnnotations() {

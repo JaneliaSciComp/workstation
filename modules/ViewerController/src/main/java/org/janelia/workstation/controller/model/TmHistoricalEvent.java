@@ -9,6 +9,7 @@ public class TmHistoricalEvent {
     public enum EVENT_TYPE {NEURON_UPDATE, NEURON_DELETE, NEURON_CREATE, NEURON_MERGE};
     EVENT_TYPE type;
     Date timestamp;
+    Boolean multiAction = false;
 
     public Date getTimestamp() {
         return timestamp;
@@ -32,5 +33,13 @@ public class TmHistoricalEvent {
 
     public void setType(EVENT_TYPE type) {
         this.type = type;
+    }
+
+    public Boolean isMultiAction() {
+        return multiAction;
+    }
+
+    public void setMultiAction(Boolean multiAction) {
+        this.multiAction = multiAction;
     }
 }

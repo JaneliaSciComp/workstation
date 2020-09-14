@@ -136,7 +136,10 @@ class NeuronModelAdapter {
                 event.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
                 break;
         }
-        TmModelManager.getInstance().getNeuronHistory().addHistoricalEvent(event);
+        if (extraArguments==null || !extraArguments.containsKey("undo") ||
+                    !extraArguments.get("undo").equals("true")) {
+            TmModelManager.getInstance().getNeuronHistory().addHistoricalEvent(event);
+        }
 
         Map<String, Object> updateHeaders = new HashMap<String, Object>();
         updateHeaders.put(NeuronMessageConstants.Headers.TYPE, type.toString());
@@ -161,8 +164,8 @@ class NeuronModelAdapter {
         return new CompletableFuture<>();
     }
 
-    void asyncSaveNeuron(TmNeuronMetadata neuron) throws Exception {
-        sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_SAVE_NEURONDATA, null);
+    void asyncSaveNeuron(TmNeuronMetadata neuron, Map<String, String> extraArgs) throws Exception {
+        sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_SAVE_NEURONDATA, extraArgs);
     }
 
     void asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {

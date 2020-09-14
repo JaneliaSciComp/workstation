@@ -19,9 +19,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TmHistory {
     List<TmHistoricalEvent> historyOperations = new ArrayList<>();
     int undoStep = 0;
-    int markUndo = 0;
     boolean undoMode = false;
-    int actionstack = 0;
+    boolean transaction = false;
+    boolean recordHistory = true;
 
     public List<TmHistoricalEvent> getHistoryOperations() {
         return historyOperations;
@@ -38,32 +38,82 @@ public class TmHistory {
         return event;
     }
 
-    public TmHistoricalEvent undoAction() {
+    public void clearHistory() {
+        this.historyOperations.clear();
+    }
+
+    public List<TmHistoricalEvent> undoAction() {
+        List<TmHistoricalEvent> actions = new ArrayList<>();
         if (undoMode) {
             if (undoStep>0)
                 undoStep--;
         } else {
-            markUndo = historyOperations.size()-1;
             undoMode = true;
-            undoStep = markUndo-1;
+            undoStep = historyOperations.size()-2;
+            if (undoStep<0)
+                undoStep = 0;
         }
-        actionstack = 0;
-        return historyOperations.get(undoStep);
+
+        int range = undoStep;
+        while (historyOperations.get(undoStep).isMultiAction() && undoStep>0) {
+            undoStep--;
+        }
+        if (range!=undoStep) {
+            int startRange = undoStep;
+            if (startRange>0)
+                startRange++;
+            actions.addAll(historyOperations.subList(startRange, range+1));
+        } else {
+            actions.add(historyOperations.get(undoStep));
+        }
+
+        return actions;
     }
 
-    public TmHistoricalEvent redoAction() {
-        actionstack = 0;
-        if (!undoMode || undoStep==markUndo) {
+    public List<TmHistoricalEvent> redoAction() {
+        if (!undoMode || undoStep==historyOperations.size()-1) {
             return null;
         } else {
             undoStep++;
-            return historyOperations.get(undoStep);
         }
+
+        while (historyOperations.get(undoStep).isMultiAction() && undoStep<historyOperations.size()-1) {
+            undoStep++;
+        }
+
+        List<TmHistoricalEvent> actions = new ArrayList<>();
+        int range = undoStep;
+        if (range!=undoStep) {
+            actions.addAll(historyOperations.subList(undoStep+1, range+1));
+        } else {
+            actions.add(historyOperations.get(undoStep));
+        }
+
+        return actions;
+    }
+
+    public void startTransaction() {
+        transaction = true;
+    }
+
+    public void endTransaction() {
+        transaction = false;
+    }
+
+    public void setRecordHistory(Boolean recordHistory) {
+        this.recordHistory = recordHistory;
     }
 
     public void addHistoricalEvent (TmHistoricalEvent event) {
+        if (!recordHistory)
+            return;
+
+        // if part of a transaction mark for future undo
+        if (transaction)
+            event.setMultiAction(true);
+
         // check if we haven't changed this neuron yet; so we can make an initial backup
-        boolean createInit = true;
+       /* boolean createInit = true;
         try {
             if (historyOperations.size()>0) {
                 Iterator<Long> newNeuronIter = event.getNeurons().keySet().iterator();
@@ -91,18 +141,15 @@ public class TmHistory {
             }
         } catch (JsonProcessingException e) {
             FrameworkAccess.handleException(e);
-        }
+        }*/
 
-        // if undo mode, wait for two events before saving this information
-        actionstack++;
-        if (undoMode && actionstack<2)
-            return;
-        else {
-            historyOperations.add(event);
-            undoMode = false;
-            markUndo = 0;
-            undoStep = 0;
-        }
+        if (undoMode)
+            historyOperations.clear();
+
+        historyOperations.add(event);
+        undoMode = false;
+        undoStep = 0;
+
         if (historyOperations.size()>10)
             historyOperations.remove(0);
     }

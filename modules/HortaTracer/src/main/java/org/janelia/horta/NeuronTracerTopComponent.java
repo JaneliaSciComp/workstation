@@ -1,6 +1,10 @@
 package org.janelia.horta;
 
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -15,14 +19,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
 import java.util.concurrent.Executors;
 import java.util.prefs.Preferences;
 
@@ -103,9 +101,7 @@ import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
 import org.janelia.workstation.controller.dialog.NeuronHistoryDialog;
-import org.janelia.workstation.controller.eventbus.AnimationEvent;
-import org.janelia.workstation.controller.eventbus.ViewEvent;
-import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
+import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.core.api.LocalCacheMgr;
@@ -1040,11 +1036,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         droppedFileHandler.addLoader(new TilebaseYamlLoader(this));
         droppedFileHandler.addLoader(new ObjMeshLoader(this));
         droppedFileHandler.addLoader(new HortaKtxLoader(this.getNeuronMPRenderer()));
-        // Put dropped neuron models into "Temporary neurons"
-       /* WorkspaceUtil ws = new WorkspaceUtil(metaWorkspace);
-        NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
-        final HortaSwcLoader swcLoader = new HortaSwcLoader(ns, getNeuronMPRenderer());
-        droppedFileHandler.addLoader(swcLoader);
 
         // Allow user to drop tilebase.cache.yml on this window
         setDropTarget(new DropTarget(this, new DropTargetListener() {
@@ -1089,30 +1080,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                         droppedFileHandler.handleFile(f);
                     }
 
-                    // Update after asynchronous load completes
-                    swcLoader.runAfterLoad(new Runnable() {
-                        @Override
-                        public void run() {
-                            // Update models after drop.
-                            if (metaWorkspace == null) return;
-                            WorkspaceUtil ws = new WorkspaceUtil(metaWorkspace);
-                            NeuronSet ns = ws.getTemporaryNeuronSetOrNull();
-                            if (ns == null) return;
-                            if (!ns.getMembershipChangeObservable().hasChanged()) return;
-                            ns.getMembershipChangeObservable().notifyObservers();
-                            // force repaint - just once per drop action though.
-                            //metaWorkspace.setChanged();
-                           // metaWorkspace.notifyObservers();
-                        }
-                    });
-
                 } catch (UnsupportedFlavorException | IOException ex) {
                     logger.warn("Error loading dragged file", ex);
                     JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading dragged file");
                 }
 
             }
-        }));*/
+        }));
     }
 
     private void setupContextMenu(Component innerComponent) {
@@ -2093,21 +2067,20 @@ public final class NeuronTracerTopComponent extends TopComponent
         getNeuronMPRenderer().addMeshActor(meshActor);
     }
     
-    public void removeMeshActor(MeshActor meshActor) {
-        getNeuronMPRenderer().removeMeshActor(meshActor);
-        try {
-            TmObjectMesh deleteMesh = null;
-            List<TmObjectMesh> meshList = TmModelManager.getInstance().getCurrentWorkspace().getObjectMeshList();
-            for (TmObjectMesh mesh: meshList) {
-                if (mesh.getName().equals(meshActor.getMeshName())) {
-                    deleteMesh = mesh;
-                }
+    public void removeMeshActor(TmObjectMesh mesh) {
+        List<MeshActor> meshActorList = getNeuronMPRenderer().getMeshActors();
+        MeshActor targetMesh = null;
+        for (MeshActor meshActor: meshActorList) {
+            if (meshActor.getMeshName().equals(mesh.getName())) {
+                targetMesh = meshActor;
             }
-            if (deleteMesh!=null) {
-                TmModelManager.getInstance().getCurrentWorkspace().removeObjectMesh(deleteMesh);
-            }
-        } catch (Exception error) {
-            FrameworkAccess.handleException(error);
+        }
+        if (targetMesh!=null)
+            getNeuronMPRenderer().removeMeshActor(targetMesh);
+        TmModelManager.getInstance().getCurrentWorkspace().removeObjectMesh(mesh);
+        TmViewState viewState = TmModelManager.getInstance().getCurrentView();
+        if (viewState.isHidden(targetMesh.getName())) {
+            viewState.removeMeshFromHidden(mesh.getName());
         }
     }
     
@@ -2116,6 +2089,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         try {
             TmModelManager.getInstance().getCurrentWorkspace().addObjectMesh(newObjMesh);
             TmModelManager.getInstance().saveCurrentWorkspace();
+
+            // fire off event for scene editor
+            MeshCreateEvent meshEvent = new MeshCreateEvent();
+            meshEvent.setMeshes(Arrays.asList(new TmObjectMesh[]{newObjMesh}));
+            ViewerEventBus.postEvent(meshEvent);
         } catch (Exception error) {
             FrameworkAccess.handleException(error);
         }

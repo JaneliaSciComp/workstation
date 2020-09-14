@@ -26,9 +26,6 @@ import org.slf4j.LoggerFactory;
         displayName = "Decrease Speed Of NeuronCam",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "A-5")
-})
 public class DecreaseSpeedNeuronCamAction extends AbstractAction {
 
     private static final Logger log = LoggerFactory.getLogger(DecreaseSpeedNeuronCamAction.class);
