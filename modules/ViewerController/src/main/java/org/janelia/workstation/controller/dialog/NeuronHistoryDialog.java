@@ -200,6 +200,7 @@ public class NeuronHistoryDialog extends ModalDialog {
                             for (Long neuronId: neuronMap.keySet()) {
                                 TmNeuronMetadata restoredNeuron = objectMapper.readValue(
                                         neuronMap.get(neuronId), TmNeuronMetadata.class);
+                                restoredNeuron.initNeuronData();
                                 NeuronManager.getInstance().restoreNeuron(restoredNeuron);
                             }
                         }

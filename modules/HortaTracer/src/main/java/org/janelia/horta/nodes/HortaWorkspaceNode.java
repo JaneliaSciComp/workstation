@@ -7,6 +7,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -21,6 +22,7 @@ import org.janelia.horta.loader.GZIPFileLoader;
 import org.janelia.horta.loader.SwcLoader;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.openide.ErrorManager;
@@ -42,23 +44,19 @@ import org.slf4j.LoggerFactory;
  */
 public class HortaWorkspaceNode extends AbstractNode
 {
-    private TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+    private TmWorkspace workspace;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public HortaWorkspaceNode(List<MeshActor> meshActors, ObservableInterface meshObserver) {
-        super(Children.create(new HortaWorkspaceChildFactory(meshActors, meshObserver), true));
+    public HortaWorkspaceNode(TmWorkspace workspace) {
+        super(Children.create(new HortaWorkspaceChildFactory(workspace.getObjectMeshList()), true));
+        this.workspace = workspace;
         updateDisplayName();
-        // The factory is already listening on behalf of the children, 
-        // so we just need to update the label, in case the neuron count has changed.
-     /*   workspace.addObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg)
-            {
-                updateDisplayName();
-            }
-        });*/
     }
-    
+
+    public HortaWorkspaceNode(Children children) {
+        super(children);
+    }
+
     private void updateDisplayName() {
         setDisplayName("Scene"); //  (" + workspace.getNeuronSets().size() + " neurons)");
     }
@@ -70,13 +68,13 @@ public class HortaWorkspaceNode extends AbstractNode
     
     @Override
     public PasteType getDropType(final Transferable transferable, int action, int index) {
+        /** move this to a common location
+         *
+         */
         final DroppedFileHandler droppedFileHandler = new DroppedFileHandler();
         droppedFileHandler.addLoader(new GZIPFileLoader());
         droppedFileHandler.addLoader(new TarFileLoader());
-        droppedFileHandler.addLoader(new TgzFileLoader());        
-       // final NeuronSet neuronList = new WorkspaceUtil(workspace).getOrCreateTemporaryNeuronSet();
-       // final SwcLoader swcLoader = new SwcLoader(neuronList);
-       // droppedFileHandler.addLoader(swcLoader);
+        droppedFileHandler.addLoader(new TgzFileLoader());
         
         return new PasteType() {
             @Override
@@ -124,16 +122,10 @@ public class HortaWorkspaceNode extends AbstractNode
     }
 
     // need to figure out how to support object meshes
-    public Integer getSize() {return 1;}
-    
-    public Color getBackgroundColor() {
-        return null;
-        //return workspace.getBackgroundColor();
-    }
-    
-    public void setBackgroundColor(Color color) {
-        //workspace.setBackgroundColor(color);
-        //workspace.notifyObservers();
+    public Integer getSize() {
+        if (workspace!=null)
+            return workspace.getObjectMeshList().size();
+        return 0;
     }
     
     @Override 
@@ -145,10 +137,6 @@ public class HortaWorkspaceNode extends AbstractNode
             Property prop = new PropertySupport.Reflection(this, Integer.class, "getSize", null); 
             prop.setName("size");
             set.put(prop);
-            // color
-            prop = new PropertySupport.Reflection(this, Color.class, "getBackgroundColor", "setBackgroundColor");
-            prop.setName("color");
-            set.put(prop);
         } 
         catch (NoSuchMethodException ex) {
             ErrorManager.getDefault(); 
@@ -156,12 +144,5 @@ public class HortaWorkspaceNode extends AbstractNode
         sheet.put(set); 
         return sheet; 
     } // - See more at: https://platform.netbeans.org/tutorials/nbm-nodesapi2.html#sthash.0xrEv8DO.dpuf
-
-    void triggerRepaint()
-    {
-        // logger.info("Workspace repaint triggered");
-        //workspace.setChanged();
-        //workspace.notifyObservers();
-    }
     
 }

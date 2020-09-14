@@ -43,6 +43,7 @@ import org.janelia.workstation.controller.action.NeuronTagsAction;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.controller.model.TmHistoricalEvent;
+import org.janelia.workstation.controller.model.TmHistory;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
@@ -772,13 +773,24 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public synchronized void restoreNeuron (TmNeuronMetadata restoredNeuron) throws Exception {
-        neuronModel.restoreNeuronFromHistory(restoredNeuron);
-        fireNeuronDeleted(restoredNeuron);
-        fireNeuronCreated(restoredNeuron);
-        if (applyFilter) {
-            NeuronUpdates updates = neuronFilter.updateNeuron(restoredNeuron);
-            updateFrags(updates);
+        if (neuronModel.getNeuronById(restoredNeuron.getId())==null) {
+            neuronModel.addNeuron(restoredNeuron);
+            neuronModel.saveNeuronData(restoredNeuron);
+            if (applyFilter) {
+                NeuronUpdates updates = neuronFilter.addNeuron(restoredNeuron);
+                updateFrags(updates);
+            }
+
+            fireNeuronCreated(restoredNeuron);
+        } else {
+            neuronModel.restoreNeuronFromHistory(restoredNeuron);
+            fireNeuronChanged(restoredNeuron);
+            if (applyFilter) {
+                NeuronUpdates updates = neuronFilter.updateNeuron(restoredNeuron);
+                updateFrags(updates);
+            }
         }
+
     }
 
     /**
@@ -891,14 +903,25 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             final Long targetNeuronID, final Long targetAnnotationID) throws Exception {
 
         Stopwatch stopwatch = Stopwatch.createStarted();
-
         final TmNeuronMetadata targetNeuron = getNeuronFromNeuronID(targetNeuronID);
         final TmGeoAnnotation targetAnnotation = targetNeuron.getGeoAnnotationMap().get(targetAnnotationID);
         final TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceNeuronID, sourceAnnotationID);
 
-        final TmNeuronMetadata sourceNeuron = 
-                !sourceNeuronID.equals(targetNeuronID) ? 
+        final TmNeuronMetadata sourceNeuron =
+                !sourceNeuronID.equals(targetNeuronID) ?
                 getNeuronFromNeuronID(sourceNeuronID) :  targetNeuron;
+
+        // create backups of two neurons for undo
+        TmHistory historian = TmModelManager.getInstance().getNeuronHistory();
+        TmHistoricalEvent sourceBackup = createSerialization(sourceNeuron);
+        sourceBackup.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+        sourceBackup.setMultiAction(true);
+        historian.addHistoricalEvent(sourceBackup);
+        TmHistoricalEvent targetBackup = createSerialization(targetNeuron);
+        targetBackup.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+        targetBackup.setMultiAction(true);
+        historian.addHistoricalEvent(targetBackup);
+        historian.setRecordHistory(false);
 
         // reroot source neurite to source ann
         if (!sourceAnnotation.isRoot()) {
@@ -917,7 +940,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         // reparent source annotation to dest annotation:
         // log.info("Reparenting annotations.");
         neuronModel.reparentGeometricAnnotation(sourceAnnotation, targetAnnotationID, targetNeuron);
-        
+
         log.info("Merged source annotation {} into target annotation {} in neuron {}", sourceAnnotationID, targetAnnotationID, targetNeuron);
 
         // Establish p/c linkage between target and source.
@@ -932,7 +955,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         // log.info("Stripping predef notes.");
         final boolean notesChangedSource = stripPredefNotes(targetNeuron, sourceAnnotationID);
         final boolean notesChangedTarget = stripPredefNotes(targetNeuron, targetAnnotationID);
-        
+
         // Save the target neurons; this has more side effects than one would like
         //  first, order matters; do source first so moved annotations are removed there
         //      before being added to the target; this prevents a double-delete in the
@@ -970,18 +993,17 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             @Override
             public void run() {
                 try {
-                    
-                log.info("MERGE A: {}",stopwatch.elapsed().toMillis());
+                    log.info("MERGE A: {}",stopwatch.elapsed().toMillis());
                     // temporary fix to set index properly
                     final List<TmNeuronMetadata> neuronList = new ArrayList<>();
                     neuronList.add(targetNeuron);
-                    
+
                     if (notesChangedSource) {
                         fireNotesUpdated(sourceAnnotation);
                     }
                     if (notesChangedTarget) {
                         fireNotesUpdated(targetAnnotation);
-                    }                   
+                    }
                     if (sourceDeleted) {
                         fireNeuronDeleted(sourceNeuron);
                     }
@@ -989,8 +1011,16 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                         fireNeuronChanged(sourceNeuron);
                     }
                     fireNeuronChanged(targetNeuron);
-                    
-                log.info("MERGE B: {}",stopwatch.elapsed().toMillis());
+                    historian.setRecordHistory(true);
+                    try {
+                        TmHistoricalEvent targetFinal = createSerialization(targetNeuron);
+                        targetFinal.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+                        historian.addHistoricalEvent(targetFinal);
+                    } catch (Exception e) {
+                        FrameworkAccess.handleException(e);
+                    }
+
+                    log.info("MERGE B: {}",stopwatch.elapsed().toMillis());
                 }
                 finally {
                     //endTransaction();
@@ -1001,6 +1031,19 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             }
         });
 
+    }
+
+    private TmHistoricalEvent createSerialization (TmNeuronMetadata neuron) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        byte[] neuronData = mapper.writeValueAsBytes(neuron);
+
+        // add historical event
+        TmHistoricalEvent event = new TmHistoricalEvent();
+        Map<Long,byte[]> map = new HashMap<>();
+        map.put(neuron.getId(), neuronData);
+        event.setNeurons(map);
+        event.setTimestamp(new Date());
+        return event;
     }
 
     /**

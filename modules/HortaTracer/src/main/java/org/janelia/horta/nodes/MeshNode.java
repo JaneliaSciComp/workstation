@@ -3,12 +3,18 @@ package org.janelia.horta.nodes;
 import java.awt.Event;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
+import java.util.Arrays;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.horta.NeuronTracerTopComponent;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.MeshUpdateEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
@@ -26,16 +32,15 @@ import org.slf4j.LoggerFactory;
  */
 public class MeshNode extends AbstractNode
 {
-    private final MeshActor meshActor;
+    private final TmObjectMesh meshActor;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public MeshNode(final MeshActor meshActor) {
-        super(Children.create(new MeshChildFactory(), true), Lookups.singleton(meshActor));
+    public MeshNode(final TmObjectMesh meshActor) {
+        super(Children.create(new MeshChildFactory(), true));
         this.meshActor = meshActor;
-        String name = meshActor.getMeshName();
+        String name = meshActor.getName();
         setDisplayName(name);
     }
-    
     @Override
     public Image getIcon(int type) {
         return ImageUtilities.loadImage("org/janelia/horta/images/mesh.png");
@@ -54,33 +59,29 @@ public class MeshNode extends AbstractNode
     }
     
     public boolean isVisible() {
-        return meshActor.isVisible();
+        return TmModelManager.getInstance().getCurrentView().isHidden(meshActor.getName());
     }
     
     public void setVisible(boolean visible) {
-        if (meshActor.isVisible() == visible)
-            return;
-        meshActor.setVisible(visible);
-        triggerRepaint();
+        if (visible) {
+            TmModelManager.getInstance().getCurrentView().addMeshToHidden(meshActor.getName());
+        } else {
+            TmModelManager.getInstance().getCurrentView().removeMeshFromHidden(meshActor.getName());
+        }
+        MeshUpdateEvent event = new MeshUpdateEvent();
+        event.setMeshes(Arrays.asList(new TmObjectMesh[]{meshActor}));
+        ViewerEventBus.postEvent(event);
     }
     
     public String getName() {
-        return meshActor.getMeshName();
+        return meshActor.getName();
     }
     
     public void setName(String name) {
         NeuronTracerTopComponent hortaTracer = NeuronTracerTopComponent.getInstance();
-        hortaTracer.updateObjectMeshName(meshActor.getMeshName(), name);        
-        meshActor.setMeshName(name);
+        hortaTracer.updateObjectMeshName(meshActor.getName(), name);
+        meshActor.setName(name);
         setDisplayName(name);
-    }
-    
-    public void triggerRepaint() {
-        // logger.info("NeuronNode repaint triggered");
-        // Maybe the parent node would have better access to repainting...
-        HortaWorkspaceNode parentNode = (HortaWorkspaceNode)getParentNode();
-        if (parentNode != null)
-            parentNode.triggerRepaint();
     }
     
     @Override 
@@ -107,8 +108,8 @@ public class MeshNode extends AbstractNode
     }
     
     private class DeleteAction extends AbstractAction {
-        MeshActor mesh;
-        public DeleteAction(MeshActor mesh) {
+        TmObjectMesh mesh;
+        public DeleteAction(TmObjectMesh mesh) {
             putValue (NAME, "DELETE");
             this.mesh = mesh;
         }

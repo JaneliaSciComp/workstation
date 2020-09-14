@@ -4,16 +4,24 @@ import java.awt.BorderLayout;
 import java.util.Collection;
 import java.util.List;
 import java.util.Observable;
+
+import com.google.common.eventbus.Subscribe;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.horta.NeuronTracerTopComponent;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
+import org.janelia.workstation.controller.eventbus.UnloadProjectEvent;
+import org.janelia.workstation.controller.eventbus.ViewerEvent;
+import org.janelia.workstation.controller.eventbus.WorkspaceUpdateEvent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
 import org.openide.explorer.view.OutlineView;
+import org.openide.explorer.view.TreeTableView;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -48,7 +56,7 @@ import org.slf4j.LoggerFactory;
     "HINT_HortaSceneEditorTopComponent=Horta Scene Editor"
 })
 public class HortaSceneEditorTopComponent extends TopComponent
-implements ExplorerManager.Provider,  LookupListener
+implements ExplorerManager.Provider
 {
     // private final InstanceContent content = new InstanceContent();
     private final ExplorerManager mgr = new ExplorerManager();
@@ -84,6 +92,7 @@ implements ExplorerManager.Provider,  LookupListener
         add(
                treeView, 
                BorderLayout.CENTER);
+        ViewerEventBus.registerForEvents(this);
     }
 
     /**
@@ -125,24 +134,15 @@ implements ExplorerManager.Provider,  LookupListener
     
     @Override 
     public void componentClosed() {
-        workspaceResult.removeLookupListener(this);
+
     }
     
-    @Override 
-    public void resultChanged(LookupEvent lookupEvent) {
-        Collection<? extends HortaMetaWorkspace> allWorkspaces = workspaceResult.allInstances();
-        if (allWorkspaces.isEmpty()) {
-            // mgr.setRootContext(null); 
-            return;
-        }
-        HortaMetaWorkspace workspace = allWorkspaces.iterator().next();
-        if (workspace != cachedWorkspace) {
-            // lookup the mesh renderer for initialization of the workspace
-            NeuronTracerTopComponent hortaTracer = NeuronTracerTopComponent.getInstance();
-            
+    @Subscribe
+    public void workspaceLoaded(LoadProjectEvent loadEvent) {
+        TmWorkspace workspace = loadEvent.getWorkspace();
+        if (workspace!=null) {
             logger.info("Creating new scene root");
-            cachedWorkspace = workspace;
-            mgr.setRootContext( new HortaWorkspaceNode(hortaTracer.getMeshActors(), hortaTracer.getMeshObserver()) );
+            mgr.setRootContext( new HortaWorkspaceNode(workspace) );
         }
     }
 }

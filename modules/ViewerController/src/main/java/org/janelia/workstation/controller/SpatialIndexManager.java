@@ -2,6 +2,7 @@ package org.janelia.workstation.controller;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.scripts.spatialfilter.SpatialFilter;
 import java.util.List;
@@ -53,6 +54,18 @@ public class SpatialIndexManager {
     public void annotationUpdated(AnnotationUpdateEvent event) {
         for (TmGeoAnnotation annotation : event.getAnnotations()) {
             spatialIndex.updateIndex(annotation);
+        }
+    }
+
+    @Subscribe
+    public void neuronUpdated(NeuronUpdateEvent event) {
+        for (TmNeuronMetadata neuron : event.getNeurons()) {
+            for (TmGeoAnnotation annotation : neuron.getGeoAnnotationMap().values()) {
+                spatialIndex.removeFromIndex(annotation);
+            }
+            for (TmGeoAnnotation annotation : neuron.getGeoAnnotationMap().values()) {
+                spatialIndex.addToIndex(annotation);
+            }
         }
     }
 
