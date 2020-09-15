@@ -124,14 +124,13 @@ public class SampleFacadeImpl extends RESTClientBase implements SampleFacade {
 
         LineRelease release = new LineRelease();
         release.setName(name);
-        release.setTargetWebsite(LineRelease.TARGET_WEBSITES[0]);
 
         query.setDomainObject(release);
         query.setSubjectKey(AccessManager.getSubjectKey());
         WebTarget target = getDomainService("process/release");
         Response response = target
                 .request("application/json")
-                .post(Entity.json(query));
+                .put(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(LineRelease.class);
     }
