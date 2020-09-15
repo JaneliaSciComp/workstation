@@ -51,6 +51,7 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
 
     private OntologyTerm publishingNameTerm;
     private int numPublishingNamesApplied = 0;
+    private int numPublishingNamesExisting = 0;
 
     public ApplyPublishingNamesActionListener(Collection<Sample> samples, boolean overrideExisting, boolean async, boolean userInteraction, Window parent) {
         this.samples = samples;
@@ -62,6 +63,10 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
 
     public int getNumPublishingNamesApplied() {
         return numPublishingNamesApplied;
+    }
+
+    public int getNumPublishingNamesExisting() {
+        return numPublishingNamesExisting;
     }
 
     @Override
@@ -129,6 +134,8 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
                 }
             }
         }
+
+        numPublishingNamesExisting += hasPublishingName.size();
 
         final SageRestClient sageClient = DomainMgr.getDomainMgr().getSageClient();
 

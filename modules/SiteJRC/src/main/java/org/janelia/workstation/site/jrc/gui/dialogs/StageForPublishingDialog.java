@@ -419,7 +419,7 @@ public class StageForPublishingDialog extends ModalDialog {
     private int annotatePublishNames(Collection<Sample> samples) {
         ApplyPublishingNamesActionListener a = new ApplyPublishingNamesActionListener(samples, false,false,true, this);
         a.actionPerformed(null);
-        return a.getNumPublishingNamesApplied();
+        return a.getNumPublishingNamesApplied() + a.getNumPublishingNamesExisting();
     }
 
     private Ontology getPublicationOntology() throws Exception {
