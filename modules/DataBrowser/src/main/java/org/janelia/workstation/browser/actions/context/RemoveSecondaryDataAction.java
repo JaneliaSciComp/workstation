@@ -30,7 +30,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Sample", position = 531)
+        @ActionReference(path = "Menu/Actions/Sample", position = 531)
 })
 @NbBundle.Messages("CTL_RemoveSecondaryDataAction=Remove Secondary Data")
 public class RemoveSecondaryDataAction extends BaseContextualPopupAction {

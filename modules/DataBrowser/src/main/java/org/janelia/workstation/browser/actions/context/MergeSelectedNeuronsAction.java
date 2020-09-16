@@ -41,7 +41,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Sample", position = 560)
+        @ActionReference(path = "Menu/Actions/Sample", position = 560)
 })
 @NbBundle.Messages("CTL_MergeSelectedNeuronsAction=Merge Selected Neurons")
 public class MergeSelectedNeuronsAction extends BaseContextualNodeAction {

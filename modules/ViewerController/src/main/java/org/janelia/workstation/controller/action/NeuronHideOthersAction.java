@@ -9,7 +9,7 @@ import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 
 @ActionID(
-        category = "Large Volume Viewer",
+        category = "Horta",
         id = "NeuronHideOtherNeuronsAction"
 )
 @ActionRegistration(
@@ -17,7 +17,7 @@ import org.openide.awt.ActionRegistration;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "OS-O")
+    @ActionReference(path = "Shortcuts", name = "S-H")
 })
 public class NeuronHideOthersAction extends EditAction {
 

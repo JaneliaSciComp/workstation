@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Ontology", position = 145)
+        @ActionReference(path = "Menu/Actions/Ontology", position = 145)
 })
 @NbBundle.Messages("CTL_OntologyAddTermAction=Add Item")
 public class OntologyAddTermAction extends BaseContextualPopupAction {

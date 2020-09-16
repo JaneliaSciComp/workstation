@@ -2,22 +2,21 @@ package org.janelia.workstation.controller.action;
 
 import java.awt.event.ActionEvent;
 
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 
 @ActionID(
-        category = "Large Volume Viewer",
+        category = "Horta",
         id = "NeuronToggleAction"
 )
 @ActionRegistration(
         displayName = "Toggle selected neuron's visibility",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "OS-V")
-})
 public class NeuronToggleAction extends EditAction {
 
     public NeuronToggleAction() {
@@ -26,7 +25,8 @@ public class NeuronToggleAction extends EditAction {
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        /*AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        annotationMgr.toggleSelectedNeurons();*/
+        TmNeuronMetadata currentNeuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
+        if (currentNeuron!=null)
+            TmModelManager.getInstance().getCurrentView().toggleHidden(currentNeuron.getId());
     }
 }

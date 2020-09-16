@@ -15,16 +15,13 @@ import org.openide.awt.ActionRegistration;
 import javax.swing.*;
 
 @ActionID(
-        category = "Large Volume Viewer",
+        category = "Horta",
         id = "NeuronRenameAction"
 )
 @ActionRegistration(
         displayName = "Rename neuron",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "OS-R")
-})
 public class NeuronRenameAction extends EditAction {
 
     public NeuronRenameAction() {

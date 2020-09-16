@@ -23,8 +23,7 @@ import org.slf4j.LoggerFactory;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/View", position = 1410),
-    @ActionReference(path = "Shortcuts", name = "D-R")
+    @ActionReference(path = "Shortcuts", name = "R")
 })
 @Messages("CTL_ResetHortaRotation=Reset Horta Rotation")
 // Based on example at http://wiki.netbeans.org/DevFaqActionNodePopupSubmenu

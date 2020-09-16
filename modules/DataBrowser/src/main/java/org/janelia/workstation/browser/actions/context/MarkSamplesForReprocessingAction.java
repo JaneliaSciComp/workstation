@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Sample", position = 510)
+        @ActionReference(path = "Menu/Actions/Sample", position = 510)
 })
 @NbBundle.Messages("CTL_MarkSamplesForReprocessingAction=Mark Samples for Reprocessing...")
 public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {

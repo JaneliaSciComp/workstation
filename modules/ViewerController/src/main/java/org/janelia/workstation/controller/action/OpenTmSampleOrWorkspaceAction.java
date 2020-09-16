@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  * Launches the Data Viewer from a context-menu.
  */
 @ActionID(
-        category = "actions",
+        category = "Actions",
         id = "OpenTmSampleOrWorkspaceAction"
 )
 @ActionRegistration(
@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Large Volume", position = 1510, separatorBefore = 1499)
+        @ActionReference(path = "Menu/Actions/Horta", position = 1510, separatorBefore = 1499)
 })
 @NbBundle.Messages("CTL_OpenTmSampleOrWorkspaceAction=Load Workspace into 3D Viewers")
 public class OpenTmSampleOrWorkspaceAction extends BaseContextualNodeAction {

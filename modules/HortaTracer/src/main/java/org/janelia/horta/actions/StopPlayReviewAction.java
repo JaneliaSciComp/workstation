@@ -24,6 +24,9 @@ import org.slf4j.LoggerFactory;
         displayName = "Stop Playback",
         lazy = true
 )
+@ActionReferences({
+        @ActionReference(path = "Shortcuts", name = "X")
+})
 public class StopPlayReviewAction extends AbstractAction {
 
     private static final Logger log = LoggerFactory.getLogger(StopPlayReviewAction.class);

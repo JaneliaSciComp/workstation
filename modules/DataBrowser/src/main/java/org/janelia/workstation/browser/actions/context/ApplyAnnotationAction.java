@@ -30,7 +30,7 @@ import org.openide.util.actions.SystemAction;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Ontology", position = 650, separatorBefore = 649)
+        @ActionReference(path = "Menu/Actions/Ontology", position = 650, separatorBefore = 649)
 })
 @NbBundle.Messages("CTL_ApplyAnnotationAction=Apply To Selected Objects")
 public class ApplyAnnotationAction extends BaseContextualNodeAction {

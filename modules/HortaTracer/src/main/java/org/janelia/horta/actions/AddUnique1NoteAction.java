@@ -22,10 +22,6 @@ import org.slf4j.LoggerFactory;
         displayName = "#CTL_AddUnique1Note",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Menu/View", position = 1406),
-    @ActionReference(path = "Shortcuts", name = "D-1")
-})
 @Messages("CTL_AddUnique1Note=Add Unique 1 Note")
 // Based on example at http://wiki.netbeans.org/DevFaqActionNodePopupSubmenu
 public final class AddUnique1NoteAction
@@ -39,7 +35,7 @@ implements ActionListener
     // contains a NeuronTracerTopComponent
     public AddUnique1NoteAction(NeuronTracerTopComponent horta) {
         context = horta;
-        putValue(NAME, Bundle.CTL_AddEditNote());
+        putValue(NAME, Bundle.CTL_AddUnique1Note());
         // Repeat key shortcut, so it could appear on the Horta context menu item
         putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_1, KeyEvent.CTRL_DOWN_MASK));
     }

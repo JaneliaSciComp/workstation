@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Large Volume", position = 1530)
+        @ActionReference(path = "Menu/Actions/Large Volume", position = 1530)
 })
 @NbBundle.Messages("CTL_ShowWorkspaceInfo=Show Sample Info")
 public class ShowWorkspaceInfo extends BaseContextualNodeAction {

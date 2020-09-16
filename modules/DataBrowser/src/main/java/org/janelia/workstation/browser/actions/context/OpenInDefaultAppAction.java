@@ -27,7 +27,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 210)
+        @ActionReference(path = "Menu/Actions", position = 210)
 })
 @NbBundle.Messages("CTL_OpenInDefaultAppAction=Open With Default App")
 public class OpenInDefaultAppAction extends BaseOpenExternallyAction {

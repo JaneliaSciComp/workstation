@@ -28,7 +28,7 @@ import java.awt.event.ActionEvent;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Large Volume", position = 1510, separatorBefore = 1499)
+        @ActionReference(path = "Menu/Actions/Large Volume", position = 1510, separatorBefore = 1499)
 })
 @NbBundle.Messages("CTL_SplitNeuronAtVertexAction=Split Neuron At Vertex")
 

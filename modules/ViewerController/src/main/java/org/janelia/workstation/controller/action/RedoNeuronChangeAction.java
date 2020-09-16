@@ -26,7 +26,7 @@ import java.util.Map;
         lazy = true
 )
 @ActionReferences({
-        @ActionReference(path = "Shortcuts", name = "C-Y")
+        @ActionReference(path = "Shortcuts", name = "C-E")
 })
 public class RedoNeuronChangeAction extends AbstractAction {
 

@@ -28,7 +28,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 51, separatorBefore = 49)
+        @ActionReference(path = "Menu/Actions", position = 51, separatorBefore = 49)
 })
 @NbBundle.Messages("CTL_OpenInNewViewerAction=Open in New Viewer")
 public class OpenInNewViewerAction extends BaseContextualNodeAction {

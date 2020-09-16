@@ -24,9 +24,6 @@ import org.openide.awt.ActionRegistration;
         displayName = "Export current neuron to SWC file",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "OS-E")
-})
 public class NeuronExportCurrentAction extends AbstractAction {
 
     public NeuronExportCurrentAction() {

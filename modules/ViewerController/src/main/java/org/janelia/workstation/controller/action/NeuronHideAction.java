@@ -17,7 +17,7 @@ import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 
 @ActionID(
-        category = "LVV-Horta",
+        category = "Horta",
         id = "NeuronHideAction"
 )
 @ActionRegistration(

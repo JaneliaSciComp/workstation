@@ -33,7 +33,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 130)
+        @ActionReference(path = "Menu/Actions", position = 130)
 })
 @NbBundle.Messages("CTL_NewDomainObjectAction=New")
 public class NewDomainObjectAction extends BaseContextualPopupAction {

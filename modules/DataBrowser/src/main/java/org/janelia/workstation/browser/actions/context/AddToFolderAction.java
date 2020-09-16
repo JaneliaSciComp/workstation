@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 140)
+        @ActionReference(path = "Menu/Actions", position = 140)
 })
 @NbBundle.Messages("CTL_AddToFolderAction=Add to Folder")
 public class AddToFolderAction extends BaseContextualPopupAction {

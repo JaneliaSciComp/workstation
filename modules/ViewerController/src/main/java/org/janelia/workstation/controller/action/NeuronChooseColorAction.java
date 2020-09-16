@@ -27,9 +27,6 @@ import javax.swing.*;
         displayName = "Choose neuron color",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "OS-C")
-})
 public class NeuronChooseColorAction extends EditAction {
     public NeuronChooseColorAction() {
         super("Choose neuron color..");

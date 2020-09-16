@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 1000, separatorBefore = 999),
+        @ActionReference(path = "Menu/Actions", position = 1000, separatorBefore = 999),
         @ActionReference(path = "Shortcuts", name = "SPACE")
 })
 @NbBundle.Messages("CTL_LightboxToggleAction=Show in Lightbox")

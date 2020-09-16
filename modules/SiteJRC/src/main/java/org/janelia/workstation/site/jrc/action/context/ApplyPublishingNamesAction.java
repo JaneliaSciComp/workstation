@@ -29,7 +29,7 @@ import org.openide.util.NbBundle.Messages;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Sample", position = 541),
+        @ActionReference(path = "Menu/Actions/Sample", position = 541),
         @ActionReference(path = "Shortcuts", name = "S-D-P")
 
 })

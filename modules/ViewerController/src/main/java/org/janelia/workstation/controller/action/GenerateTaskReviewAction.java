@@ -28,17 +28,6 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.util.List;
 
-;
-
-@ActionID(
-        category = "Horta",
-        id = "GenerateTaskReviewAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_GenerateTaskReviewAction",
-        lazy = false
-)
-@NbBundle.Messages("CTL_GenerateTaskReviewAction=Generate New Task Review")
 public class GenerateTaskReviewAction extends AbstractAction {
     private TmWorkspace origWorkspace;
     private static final Logger log = LoggerFactory.getLogger(GenerateTaskReviewAction.class);

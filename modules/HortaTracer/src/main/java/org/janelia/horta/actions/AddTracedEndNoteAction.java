@@ -23,8 +23,7 @@ import org.slf4j.LoggerFactory;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/View", position = 1405),
-    @ActionReference(path = "Shortcuts", name = "D-E")
+    @ActionReference(path = "Shortcuts", name = "T")
 })
 @Messages("CTL_AddTracedEndNote=Add Traced End Note")
 // Based on example at http://wiki.netbeans.org/DevFaqActionNodePopupSubmenu
@@ -39,7 +38,7 @@ implements ActionListener
     // contains a NeuronTracerTopComponent
     public AddTracedEndNoteAction(NeuronTracerTopComponent horta) {
         context = horta;
-        putValue(NAME, Bundle.CTL_AddEditNote());
+        putValue(NAME, Bundle.CTL_AddTracedEndNote());
         // Repeat key shortcut, so it could appear on the Horta context menu item
         putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK));
     }
