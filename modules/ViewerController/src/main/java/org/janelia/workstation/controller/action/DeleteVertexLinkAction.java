@@ -18,16 +18,13 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 @ActionID(
-        category = "actions",
+        category = "Horta",
         id = "DeleteVertexLinkAction"
 )
 @ActionRegistration(
         displayName = "#CTL_DeleteVertexLinkAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/actions/Large Volume", position = 1510, separatorBefore = 1499)
-})
 @NbBundle.Messages("CTL_DeleteVertexLinkAction=Delete Vertex Link")
 /**
  * delete the annotation with the input ID; the annotation must be a "link",

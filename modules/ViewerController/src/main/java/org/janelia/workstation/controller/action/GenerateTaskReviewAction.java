@@ -31,16 +31,13 @@ import java.util.List;
 ;
 
 @ActionID(
-        category = "actions",
+        category = "Horta",
         id = "GenerateTaskReviewAction"
 )
 @ActionRegistration(
         displayName = "#CTL_GenerateTaskReviewAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/actions/Large Volume", position = 1510, separatorBefore = 1499)
-})
 @NbBundle.Messages("CTL_GenerateTaskReviewAction=Generate New Task Review")
 public class GenerateTaskReviewAction extends AbstractAction {
     private TmWorkspace origWorkspace;

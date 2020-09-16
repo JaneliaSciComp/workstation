@@ -18,7 +18,7 @@ public class OctreeDisplayBlockChooser implements BlockChooser<KtxOctreeBlockTil
     private static final Logger LOG = LoggerFactory.getLogger(OctreeDisplayBlockChooser.class);
     private List<Float> zoomLevels = new ArrayList<>();
     private double BLOCK_WIDTH_ACROSS_VIEWPORT = 2.35;
-    private int MAX_SIMULTANEOUS_BLOCKS = 10;
+    private int MAX_SIMULTANEOUS_BLOCKS = 14;
 
     private void initBlockSizes(KtxOctreeBlockTileSource source, Vantage vantage) {
         int numLevels = (int)source.getZoomLevels();
@@ -108,6 +108,7 @@ public class OctreeDisplayBlockChooser implements BlockChooser<KtxOctreeBlockTil
         int zoomLevel = ((KtxOctreeBlockTileKey)finishedTile).getKeyDepth();
 
         Iterator<BlockTileKey> iter = currentTiles.keySet().iterator();
+        boolean blockAtZoomLoaded = false;
         while (iter.hasNext()) {
             KtxOctreeBlockTileKey tileKey = (KtxOctreeBlockTileKey)iter.next();
 
@@ -115,8 +116,10 @@ public class OctreeDisplayBlockChooser implements BlockChooser<KtxOctreeBlockTil
             float distance = tileKey.getCentroid().distance(currFocus);
             if (tileKey.getKeyDepth()!=zoomLevel) {
                 obsoleteTiles.put(tileKey, currentTiles.get(tileKey));
-            } else if (!desiredTiles.containsKey(tileKey)) {
-                sortedCurrZoomTiles.put(distance,tileKey);
+            } else {
+                blockAtZoomLoaded = true;
+                if (!desiredTiles.containsKey(tileKey))
+                    sortedCurrZoomTiles.put(distance,tileKey);
             }
         }
         int i=0;
@@ -129,7 +132,7 @@ public class OctreeDisplayBlockChooser implements BlockChooser<KtxOctreeBlockTil
             i++;
         }
 
-        if (sortedCurrZoomTiles.size()<MAX_SIMULTANEOUS_BLOCKS) {
+        if (!blockAtZoomLoaded) {
             obsoleteTiles.clear();
         }
 

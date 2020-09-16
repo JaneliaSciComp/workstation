@@ -21,16 +21,13 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 @ActionID(
-        category = "actions",
+        category = "Horta",
         id = "ChangeNeuronOwnerAction"
 )
 @ActionRegistration(
         displayName = "#CTL_ChangeNeuronOwnerAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/actions/Large Volume", position = 1510, separatorBefore = 1499)
-})
 @NbBundle.Messages("CTL_ChangeNeuronOwnerAction=Change Neuron Owner")
 
 /**

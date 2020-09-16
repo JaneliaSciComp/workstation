@@ -21,16 +21,13 @@ import java.awt.event.ActionEvent;
 ;
 
 @ActionID(
-        category = "actions",
+        category = "Horta",
         id = "MergeNeuronsAction"
 )
 @ActionRegistration(
         displayName = "#CTL_MergeNeuronsAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/actions/Large Volume", position = 1510, separatorBefore = 1499)
-})
 @NbBundle.Messages("CTL_MergeNeuronsAction=Merge Neurons")
 public class MergeNeuronsAction extends AbstractAction {
     private static final Logger log = LoggerFactory.getLogger(MergeNeuronsAction.class);

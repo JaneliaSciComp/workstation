@@ -21,16 +21,13 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 
 @ActionID(
-        category = "actions",
+        category = "Horta",
         id = "AddEditNoteAction"
 )
 @ActionRegistration(
         displayName = "#CTL_AddEditNoteAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/actions/LVV-Horta", position = 1510, separatorBefore = 1499)
-})
 @NbBundle.Messages("CTL_AddEditNoteAction=Add/Edit Note")
 /**
  * delete the annotation with the input ID; the annotation must be a "link",

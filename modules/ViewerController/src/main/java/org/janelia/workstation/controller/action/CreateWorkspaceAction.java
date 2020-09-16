@@ -22,16 +22,13 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 @ActionID(
-        category = "actions",
+        category = "Horta",
         id = "CreateWorkspaceAction"
 )
 @ActionRegistration(
         displayName = "#CTL_CreateWorkspaceAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/actions/Large Volume", position = 1510, separatorBefore = 1499)
-})
 @NbBundle.Messages("CTL_CreateWorkspaceAction=Create New Workspace in Sample")
 public class CreateWorkspaceAction extends AbstractAction {
     private TmWorkspace origWorkspace;
