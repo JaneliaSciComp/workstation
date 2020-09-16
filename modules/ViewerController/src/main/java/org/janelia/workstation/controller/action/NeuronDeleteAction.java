@@ -9,7 +9,7 @@ import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 
 @ActionID(
-        category = "Large Volume Viewer",
+        category = "Horta",
         id = "NeuronDeleteAction"
 )
 @ActionRegistration(

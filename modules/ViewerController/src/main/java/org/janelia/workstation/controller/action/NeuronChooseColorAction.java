@@ -20,7 +20,7 @@ import org.openide.awt.ActionRegistration;
 import javax.swing.*;
 
 @ActionID(
-        category = "Large Volume Viewer",
+        category = "Horta",
         id = "NeuronChooseColorAction"
 )
 @ActionRegistration(

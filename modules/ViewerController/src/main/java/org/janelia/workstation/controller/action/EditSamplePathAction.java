@@ -14,16 +14,13 @@ import org.openide.util.NbBundle;
  * Right-click context menu that allows user to edit a TmSample file path.
  */
 @ActionID(
-        category = "actions",
+        category = "Horta",
         id = "EditSamplePathAction"
 )
 @ActionRegistration(
         displayName = "#CTL_EditSamplePathAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/actions/Large Volume", position = 1520)
-})
 @NbBundle.Messages("CTL_EditSamplePathAction=Edit Sample Paths")
 public class EditSamplePathAction extends BaseContextualNodeAction {
 

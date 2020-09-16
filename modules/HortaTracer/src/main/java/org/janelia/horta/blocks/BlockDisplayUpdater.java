@@ -27,6 +27,7 @@ public class BlockDisplayUpdater<BTK extends BlockTileKey, BTS extends BlockTile
     private Viewport viewport;
     private BTS blockTileSource;
     private ConstVector3 cachedFocus;
+    private float cachedZoom;
     private BlockChooser blockChooser;
     private List<BTK> cachedDesiredBlocks;
     private boolean doAutoUpdate = true;
@@ -71,11 +72,12 @@ public class BlockDisplayUpdater<BTK extends BlockTileKey, BTS extends BlockTile
         if (focus == null) {
             return;
         }
-        if (focus.equals(cachedFocus)) {
+        if (focus.equals(cachedFocus) && cachedZoom==vantage.getSceneUnitsPerViewportHeight()) {
             return; // short circuit when nothing has changed...
         }
         ConstVector3 previousFocus = cachedFocus;
         cachedFocus = new Vector3(focus);
+        cachedZoom = vantage.getSceneUnitsPerViewportHeight();
         List<BTK> desiredBlocks = getBlockChooser().chooseBlocks(blockTileSource, focus, previousFocus,
                 vantage);
         if (desiredBlocks.equals(cachedDesiredBlocks)) {

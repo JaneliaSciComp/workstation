@@ -20,16 +20,13 @@ import java.awt.event.ActionEvent;
 ;
 
     @ActionID(
-            category = "actions",
+            category = "Horta",
             id = "DeleteNeuronSubtreeAction"
     )
     @ActionRegistration(
             displayName = "#CTL_DeleteNeuronSubtreeAction",
             lazy = false
     )
-    @ActionReferences({
-            @ActionReference(path = "Menu/actions/Large Volume", position = 1510, separatorBefore = 1499)
-    })
     @NbBundle.Messages("CTL_DeleteNeuronSubtreeAction=Delete Neuron Subtree")
     public class DeleteNeuronSubtreeAction extends AbstractAction {
         private static final Logger log = LoggerFactory.getLogger(org.janelia.workstation.controller.action.MergeNeuronsAction.class);

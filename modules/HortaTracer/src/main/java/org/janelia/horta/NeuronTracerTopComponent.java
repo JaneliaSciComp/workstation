@@ -123,6 +123,7 @@ import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
 import org.openide.util.actions.SystemAction;
+import org.openide.util.lookup.Lookups;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
@@ -157,7 +158,6 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     static final String PREFERRED_ID = "NeuronTracerTopComponent";
     private static final int CACHE_CONCURRENCY = 10;
-
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor worldInteractor;
     private TmWorkspace metaWorkspace;
@@ -406,6 +406,10 @@ public final class NeuronTracerTopComponent extends TopComponent
         initSampleLocation();
         ViewerEventBus.registerForEvents(this);
 
+    }
+
+    public SceneWindow getSceneWindow() {
+        return sceneWindow;
     }
 
     public void loadWorkspaceNeurons() {
@@ -849,7 +853,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         Vantage vantage = sceneWindow.getVantage();
         vantage.setConstrainedToUpDirection(prefs.getBoolean("dorsalIsUp", vantage.isConstrainedToUpDirection()));
         vantage.setSceneUnitsPerViewportHeight(prefs.getFloat("zoom", vantage.getSceneUnitsPerViewportHeight()));
-        float focusX = prefs.getFloat("focusX", vantage.getFocus()[0]);
+        float focusX = prefs.getFloat("focusXvantage.getFocus()[2]", vantage.getFocus()[0]);
         float focusY = prefs.getFloat("focusY", vantage.getFocus()[1]);
         float focusZ = prefs.getFloat("focusZ", vantage.getFocus()[2]);
         vantage.setFocus(focusX, focusY, focusZ);
@@ -1017,6 +1021,10 @@ public final class NeuronTracerTopComponent extends TopComponent
                 redrawNow();
             }
         });
+
+        associateLookup(Lookups.fixed(
+                vantage,
+                vp));
 
         sceneWindow.setBackgroundColor(Color.DARK_GRAY);
         this.add(sceneWindow.getOuterComponent(), BorderLayout.CENTER);
