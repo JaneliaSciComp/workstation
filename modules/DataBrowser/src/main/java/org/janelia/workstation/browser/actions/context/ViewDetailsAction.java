@@ -18,7 +18,7 @@ import org.openide.util.NbBundle.Messages;
         lazy = false
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/actions", position = 100, separatorBefore = 99),
+    @ActionReference(path = "Menu/Actions", position = 100, separatorBefore = 99),
     @ActionReference(path = "Shortcuts", name = "D-I")
 })
 @Messages("CTL_ViewDetailsAction=View Details")

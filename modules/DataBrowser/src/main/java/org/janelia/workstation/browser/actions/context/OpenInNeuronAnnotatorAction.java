@@ -22,7 +22,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 220)
+        @ActionReference(path = "Menu/Actions", position = 220)
 })
 @NbBundle.Messages("CTL_OpenInNeuronAnnotatorAction=Open With Neuron Annotator")
 public class OpenInNeuronAnnotatorAction extends BaseContextualNodeAction {

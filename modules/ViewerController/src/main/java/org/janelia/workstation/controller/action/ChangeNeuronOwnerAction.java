@@ -20,16 +20,6 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 
-@ActionID(
-        category = "Horta",
-        id = "ChangeNeuronOwnerAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_ChangeNeuronOwnerAction",
-        lazy = false
-)
-@NbBundle.Messages("CTL_ChangeNeuronOwnerAction=Change Neuron Owner")
-
 /**
  * pop up a dialog so the user can choose a new owner for the target neuron, which is
  * passed in, or if not, is the currently selected neuron

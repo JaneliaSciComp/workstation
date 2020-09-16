@@ -41,7 +41,7 @@ import java.util.List;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 405, separatorAfter = 499)
+        @ActionReference(path = "Menu/Actions", position = 405, separatorAfter = 499)
 })
 @NbBundle.Messages("CTL_ExportFolderStructureAction=Export Folder Structure")
 public class ExportFolderStructureAction extends BaseContextualNodeAction {

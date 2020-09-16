@@ -20,7 +20,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 20)
+        @ActionReference(path = "Menu/Actions", position = 20)
 })
 @NbBundle.Messages("CTL_CheckTrueAction=Check Selected")
 public class CheckTrueAction extends BaseCheckAction {

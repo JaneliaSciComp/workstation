@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 
-;
-
     @ActionID(
             category = "Horta",
             id = "DeleteNeuronSubtreeAction"

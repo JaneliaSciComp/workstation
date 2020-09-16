@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "C-X")
+    @ActionReference(path = "Shortcuts", name = "RIGHT")
 })
 public class ForwardPlayReviewAction extends AbstractAction {
 

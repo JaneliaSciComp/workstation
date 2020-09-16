@@ -26,7 +26,7 @@ import java.util.List;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 110)
+        @ActionReference(path = "Menu/Actions", position = 110)
 })
 @NbBundle.Messages("CTL_ChangePermissionsAction=Change Permissions")
 public class ChangePermissionsAction extends BaseContextualNodeAction {

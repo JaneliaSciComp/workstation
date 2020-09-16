@@ -24,9 +24,6 @@ import org.slf4j.LoggerFactory;
         displayName = "Go To Previous Review Point",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "A-P")
-})
 public class PreviousPointReviewAction extends AbstractAction {
 
     private static final Logger log = LoggerFactory.getLogger(PreviousPointReviewAction.class);

@@ -21,10 +21,6 @@ import org.slf4j.LoggerFactory;
         displayName = "#CTL_LoadHortaTileAtFocusAction",
         key = "loadTileAtFocus"
 )
-@ActionReferences({
-    @ActionReference(path = "Menu/View", position = 1300, separatorBefore = 1250),
-    @ActionReference(path = "Shortcuts", name = "D-T")
-})
 @Messages("CTL_LoadHortaTileAtFocusAction=Load Horta Tile At Focus")
 
 public final class LoadHortaTileAtFocusAction implements ActionListener {

@@ -25,6 +25,9 @@ import org.slf4j.LoggerFactory;
         displayName = "Reverse Playback",
         lazy = true
 )
+@ActionReferences({
+        @ActionReference(path = "Shortcuts", name = "LEFT")
+})
 public class ReversePlayReviewAction extends AbstractAction {
 
     private static final Logger log = LoggerFactory.getLogger(ReversePlayReviewAction.class);

@@ -16,9 +16,6 @@ import org.openide.awt.ActionRegistration;
         displayName = "Delete neuron",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "OS-Delete")
-})
 public class NeuronDeleteAction extends EditAction {
 
     public NeuronDeleteAction() {

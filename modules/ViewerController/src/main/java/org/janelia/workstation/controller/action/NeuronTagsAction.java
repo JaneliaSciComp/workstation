@@ -40,16 +40,13 @@ import org.slf4j.LoggerFactory;
  * neuron (by default) or a target neuron set later
  */
 @ActionID(
-        category = "Large Volume Viewer",
+        category = "Horta",
         id = "NeuronTagsAction"
 )
 @ActionRegistration(
         displayName = "Edit neuron tags",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "OS-T")
-})
 public class NeuronTagsAction extends EditAction {
 
     private static final Logger logger = LoggerFactory.getLogger(NeuronTagsAction.class);

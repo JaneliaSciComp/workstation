@@ -40,7 +40,7 @@ import org.yaml.snakeyaml.Yaml;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Ontology", position = 602, separatorAfter = 605)
+        @ActionReference(path = "Menu/Actions/Ontology", position = 602, separatorAfter = 605)
 })
 @NbBundle.Messages("CTL_OntologyExportAction=Export Ontology...")
 public class OntologyExportAction extends BaseContextualNodeAction {

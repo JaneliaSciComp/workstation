@@ -20,7 +20,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 230)
+        @ActionReference(path = "Menu/Actions", position = 230)
 })
 @NbBundle.Messages("CTL_OpenInVaa3dTriViewAction=Open With Default App")
 public class OpenInVaa3dTriViewAction extends BaseOpenExternallyAction {

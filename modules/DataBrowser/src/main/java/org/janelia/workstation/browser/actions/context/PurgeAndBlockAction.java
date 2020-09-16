@@ -37,7 +37,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Sample", position = 530)
+        @ActionReference(path = "Menu/Actions/Sample", position = 530)
 })
 @NbBundle.Messages("CTL_PurgeAndBlockAction=Purge And Block Sample")
 public class PurgeAndBlockAction extends BaseContextualNodeAction {

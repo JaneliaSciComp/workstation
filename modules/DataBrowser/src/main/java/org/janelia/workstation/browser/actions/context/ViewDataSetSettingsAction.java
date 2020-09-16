@@ -29,7 +29,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Sample", position = 550)
+        @ActionReference(path = "Menu/Actions/Sample", position = 550)
 })
 @NbBundle.Messages("CTL_ViewDataSetSettingsAction=View Data Set Settings")
 public class ViewDataSetSettingsAction extends BaseContextualNodeAction {

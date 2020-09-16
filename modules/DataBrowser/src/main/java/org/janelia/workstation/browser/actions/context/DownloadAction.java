@@ -23,7 +23,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 400, separatorBefore = 399),
+        @ActionReference(path = "Menu/Actions", position = 400, separatorBefore = 399),
         @ActionReference(path = "Shortcuts", name = "D-D")
 })
 @NbBundle.Messages("CTL_DownloadAction=Download Files...")

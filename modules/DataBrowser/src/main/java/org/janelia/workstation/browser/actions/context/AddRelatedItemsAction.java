@@ -46,7 +46,7 @@ import java.util.*;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 150),
+        @ActionReference(path = "Menu/Actions", position = 150),
 })
 @NbBundle.Messages("CTL_AddRelatedItemsAction=Add Related Items To Folder")
 public class AddRelatedItemsAction extends BaseContextualPopupAction {

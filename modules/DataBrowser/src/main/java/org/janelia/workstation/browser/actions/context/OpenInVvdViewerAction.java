@@ -23,7 +23,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 240)
+        @ActionReference(path = "Menu/Actions", position = 240)
 })
 @NbBundle.Messages("CTL_OpenInVvdViewerAction=Open With VVD Viewer")
 public class OpenInVvdViewerAction extends BaseOpenExternallyAction {

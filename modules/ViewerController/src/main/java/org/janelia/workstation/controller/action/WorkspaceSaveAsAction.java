@@ -10,16 +10,13 @@ import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 
 @ActionID(
-        category = "Large Volume Viewer",
+        category = "Horta",
         id = "WorkspaceSaveAsAction"
 )
 @ActionRegistration(
         displayName = "Save a copy of the current workspace",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "O-S")
-})
 public class WorkspaceSaveAsAction extends AbstractAction {
 
     public WorkspaceSaveAsAction() {

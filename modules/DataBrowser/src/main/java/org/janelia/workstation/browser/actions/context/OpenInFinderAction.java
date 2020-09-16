@@ -28,7 +28,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions", position = 200, separatorBefore = 199)
+        @ActionReference(path = "Menu/Actions", position = 200, separatorBefore = 199)
 })
 @NbBundle.Messages("CTL_OpenInFinderAction=Reveal in Finder")
 public class OpenInFinderAction extends BaseOpenExternallyAction {

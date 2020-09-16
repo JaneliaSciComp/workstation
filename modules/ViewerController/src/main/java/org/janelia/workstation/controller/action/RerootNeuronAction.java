@@ -27,9 +27,6 @@ import java.awt.event.ActionEvent;
         displayName = "#CTL_RerootNeuronAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/actions/Large Volume", position = 1510, separatorBefore = 1499)
-})
 @NbBundle.Messages("CTL_RerootNeuronAction=Split Neuron Between Vertices")
 
 public class RerootNeuronAction extends AbstractAction {

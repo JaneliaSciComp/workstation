@@ -21,15 +21,6 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 
-@ActionID(
-        category = "Horta",
-        id = "CreateWorkspaceAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_CreateWorkspaceAction",
-        lazy = false
-)
-@NbBundle.Messages("CTL_CreateWorkspaceAction=Create New Workspace in Sample")
 public class CreateWorkspaceAction extends AbstractAction {
     private TmWorkspace origWorkspace;
     private static final Logger log = LoggerFactory.getLogger(CreateWorkspaceAction.class);

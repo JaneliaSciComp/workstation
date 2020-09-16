@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/actions/Sample", position = 570)
+        @ActionReference(path = "Menu/Actions/Sample", position = 570)
 })
 @NbBundle.Messages("CTL_CreateColorDepthMaskAction=Create Color Depth Mask")
 public class CreateColorDepthMaskAction extends BaseContextualNodeAction {

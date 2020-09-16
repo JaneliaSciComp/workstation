@@ -29,9 +29,6 @@ import javax.swing.*;
         displayName = "Create a new neuron",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "OS-Insert")
-})
 public class NeuronCreateAction extends EditAction {
     
     public NeuronCreateAction() {
