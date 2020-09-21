@@ -3,6 +3,7 @@
 Browser
 * Group owners and admins may now share the data in their group
 * Technicians may now create data sets on behalf of annotators
+* New fly line releases are now automatically shared with the FlyLight Technical group
 
 Color Depth Search
 * Added checkboxes to mirror images in the color depth search result comparison HUD
