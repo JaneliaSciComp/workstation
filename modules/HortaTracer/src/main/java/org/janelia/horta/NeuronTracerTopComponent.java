@@ -236,26 +236,6 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         setupMouseNavigation();
 
-        /*// Redraw the density when annotations are added/deleted/moved
-        hortaManager.addNeuronVertexCreationListener(new NeuronVertexCreationListener() {
-            @Override
-            public void neuronVertexCreated(VertexWithNeuron vertexWithNeuron) {
-                getNeuronMPRenderer().setIntensityBufferDirty();
-            }
-        });
-        hortaManager.addNeuronVertexDeletionListener(new NeuronVertexDeletionListener() {
-            @Override
-            public void neuronVertexesDeleted(VertexCollectionWithNeuron vertexesWithNeurons) {
-                getNeuronMPRenderer().setIntensityBufferDirty();
-            }
-        });
-        hortaManager.addNeuronVertexUpdateListener(new NeuronVertexUpdateListener() {
-            @Override
-            public void neuronVertexUpdated(VertexWithNeuron vertexWithNeuron) {
-                getNeuronMPRenderer().setIntensityBufferDirty();
-            }
-        });*/
-
         // Create right-click context menu
         setupContextMenu(sceneWindow.getInnerComponent());
 
@@ -378,6 +358,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         hortaManager.addNeuronVertexDeletionListener(this);
         hortaManager.addNeuronVertexUpdateListener(this);
         hortaManager.addNeuronSelectionListener(tracingInteractor);
+        hortaManager.addNeuronDeletionListener(tracingInteractor);
 
         hortaManager.addNeuronCreationListener(neuronMPRenderer);
         hortaManager.addNeuronDeletionListener(neuronMPRenderer);

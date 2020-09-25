@@ -212,6 +212,17 @@ public class HortaManager {
     }
 
     @Subscribe
+    private void selectNeurons(SelectionNeuronsEvent event) {
+        TmNeuronMetadata neuron = (TmNeuronMetadata)event.getItems().iterator().next();
+        if (neuron==null)
+            return;
+
+        for (NeuronSelectionListener listener: neuronSelectionListeners) {
+            listener.neuronSelected(neuron);
+        }
+    }
+
+    @Subscribe
     private void vertexUpdated(AnnotationUpdateEvent event) {
         TmGeoAnnotation annotation = event.getAnnotations().iterator().next();
         if (annotation==null)

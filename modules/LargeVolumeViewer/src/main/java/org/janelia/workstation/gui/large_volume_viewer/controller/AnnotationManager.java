@@ -800,7 +800,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
         TmNeuronMetadata neuron = annotationModel.getNeuronFromNeuronID(neuronId);
-        annotationModel.selectNeuron(neuron);
+        //annotationModel.selectNeuronInDataInspector(neuron);
     }
 
     /**

@@ -70,6 +70,15 @@ public class SpatialIndexManager {
     }
 
     @Subscribe
+    public void neuronDeleted(NeuronDeleteEvent event) {
+        for (TmNeuronMetadata neuron : event.getNeurons()) {
+            for (TmGeoAnnotation annotation : neuron.getGeoAnnotationMap().values()) {
+                spatialIndex.removeFromIndex(annotation);
+            }
+        }
+    }
+
+    @Subscribe
     public void projectLoaded(LoadProjectEvent event) {
         spatialIndex.clear();
         spatialIndex.rebuildIndex(NeuronManager.getInstance().getNeuronList());

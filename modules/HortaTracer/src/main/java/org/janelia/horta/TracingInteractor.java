@@ -33,10 +33,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 
 import Jama.Matrix;
-import org.janelia.console.viewerapi.listener.NeuronSelectionListener;
-import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
-import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
-import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
+import org.janelia.console.viewerapi.listener.*;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
@@ -79,7 +76,7 @@ import org.slf4j.LoggerFactory;
 public class TracingInteractor extends MouseAdapter
         implements MouseInputListener, KeyListener,
         NeuronVertexDeletionListener, NeuronVertexCreationListener,
-        NeuronVertexUpdateListener, NeuronSelectionListener {
+        NeuronVertexUpdateListener, NeuronSelectionListener, NeuronDeletionListener {
     private final VolumeProjection volumeProjection;
     private TmWorkspace metaWorkspace;
     private int snapRadius = 5; // pixels
@@ -283,8 +280,10 @@ public class TracingInteractor extends MouseAdapter
                 
                 // everything else requires a shift
                 if (event.isShiftDown()) {
-                    // another chance to add a point
-                    if (context.canAppendVertex()) {
+                    // another chance tadd a o point
+                    if (context.canCreateRootVertex()) {
+                        context.createRootVertex();
+                    } else if (context.canAppendVertex()) {
                         context.appendVertex();
                     } else if (context.canMergeNeurite()) { // Maybe merge two neurons
                         context.mergeNeurites();
@@ -905,6 +904,17 @@ public class TracingInteractor extends MouseAdapter
         selectParentVertex(selectedVertex, NeuronManager.getInstance().getNeuronFromNeuronID(selectedVertex.getNeuronId()));
     }
 
+    @Override
+    public void neuronSelected(TmNeuronMetadata selectedNeuron) {
+        InteractorContext context = createContext();
+        context.selectNeuron(selectedNeuron);
+    }
+
+    @Override
+    public void neuronsDeleted(Collection<TmNeuronMetadata> deletedNeurons) {
+        clearParentVertex();
+    }
+
 
     // Cached state of interactor at one moment in time, so hovered density, for
     // example, does not go stale before the user selects a menu option.
@@ -946,6 +956,14 @@ public class TracingInteractor extends MouseAdapter
             if (TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) return false;
             return true;
         }
+
+        public boolean canCreateRootVertex() {
+            TmNeuronMetadata currNeuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
+            if (currNeuron == null) return false;
+            if (currNeuron.getAnnotationCount()>0) return false;
+            if (TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) return false;
+            return true;
+        }
         
         public boolean appendVertex() {
             long beginAppendTime = System.nanoTime();
@@ -980,9 +998,10 @@ public class TracingInteractor extends MouseAdapter
             return true;
         }
 
-        private boolean createRootVertex(TmNeuronMetadata newNeuron) {
+        private boolean createRootVertex() {
             try {
-                if (densityVertex!=null) {
+                TmNeuronMetadata currNeuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
+                if (densityVertex!=null && currNeuron!=null) {
                     Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
                     Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
                             {densityVertex.getX(),},
@@ -993,9 +1012,9 @@ public class TracingInteractor extends MouseAdapter
                     Jama.Matrix voxLoc = m2v.times(micLoc);
                     Vec3 newLoc = new Vec3(voxLoc.get(0, 0), voxLoc.get(1, 0),
                             voxLoc.get(2, 0));
-                    TmGeoAnnotation newAnn = NeuronManager.getInstance().addRootAnnotation(newNeuron, newLoc);
+                    TmGeoAnnotation newAnn = NeuronManager.getInstance().addRootAnnotation(currNeuron, newLoc);
                     if (newAnn!=null)
-                        selectParentVertex(newAnn, newNeuron);
+                        selectParentVertex(newAnn, currNeuron);
                 }
             }  catch (Exception error) {
                 JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
@@ -1154,6 +1173,10 @@ public class TracingInteractor extends MouseAdapter
             if (hoveredVertex == null) return false;
             if (hoveredNeuron == null) return false;
             return true;
+        }
+
+        public void selectNeuron(TmNeuronMetadata neuron) {
+            cachedParentNeuronModel = neuron;
         }
         
         public void selectParent() {
