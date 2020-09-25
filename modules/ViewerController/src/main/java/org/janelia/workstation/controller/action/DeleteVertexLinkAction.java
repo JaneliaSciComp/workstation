@@ -3,6 +3,8 @@ package org.janelia.workstation.controller.action;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.SelectionAnnotationEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -16,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.util.Arrays;
 
 @ActionID(
         category = "Horta",
@@ -69,6 +72,7 @@ public class DeleteVertexLinkAction extends AbstractAction {
         // verify it's a link and not a root or branch:
         NeuronManager manager = NeuronManager.getInstance();
         final TmGeoAnnotation annotation = manager.getGeoAnnotationFromID(neuronID, annotationID);
+        final TmGeoAnnotation parentAnnotation = manager.getGeoAnnotationFromID(neuronID, annotation.getParentId());
         if (annotation == null) {
             FrameworkAccess.handleException(new Throwable(
                     "No annotation to delete."));
@@ -97,7 +101,12 @@ public class DeleteVertexLinkAction extends AbstractAction {
 
             @Override
             protected void hadSuccess() {
-                // nothing here; annotationModel emits signals
+                if (parentAnnotation!=null) {
+                    TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(parentAnnotation);
+                    SelectionAnnotationEvent event = new SelectionAnnotationEvent();
+                    event.setItems(Arrays.asList(new TmGeoAnnotation[]{parentAnnotation}));
+                    ViewerEventBus.postEvent(event);
+                }
             }
 
             @Override
