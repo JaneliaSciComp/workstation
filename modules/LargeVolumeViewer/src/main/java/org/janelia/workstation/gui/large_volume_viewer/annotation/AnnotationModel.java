@@ -772,7 +772,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // rename whatever neuron was current at time of start of this call.
         final TmNeuronMetadata neuron = getCurrentNeuron();
         neuron.setName(name);
-        this.neuronManager.saveNeuronData(neuron);
+        this.neuronManager.saveNeuronData(neuron, "Rename Neuron");
         log.info("Neuron was renamed: "+neuron);
 
         final TmWorkspace workspace = getCurrentWorkspace();
@@ -1009,7 +1009,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         try {
             // Update value in database.
             synchronized(neuron) {
-                neuronManager.saveNeuronData(neuron);
+                neuronManager.saveNeuronData(neuron, "Move Vertex");
             }
             
             SwingUtilities.invokeLater(new Runnable() {
@@ -1082,7 +1082,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         try {
             // Update value in database.
             synchronized(neuron) {
-                neuronManager.saveNeuronData(neuron);
+                neuronManager.saveNeuronData(neuron, "Change Vertex Radius");
             }
             
         } catch (Exception e) {
@@ -1135,7 +1135,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
         try {
             synchronized (neuron) {
-                neuronManager.saveNeuronData(neuron);
+                neuronManager.saveNeuronData(neuron, "Update Neuron Radius");
             }
         } catch (Exception e) {
             // roll back
@@ -1224,8 +1224,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         //      again so the annotation moves will be properly accounted for
         //  this is all needed to get around the fact that moving annotations
         //      from one neuron to another isn't atomic like it should be
-        neuronManager.saveNeuronData(sourceNeuron);
-        neuronManager.saveNeuronData(targetNeuron);
+        neuronManager.saveNeuronData(sourceNeuron, "Merge Neuron");
+        neuronManager.saveNeuronData(targetNeuron, "Merge Neuron");
 
         // trace new path; must be done after neuron save, so the path tracer
         //  can grab the new neuron data; also note that the source annotation
@@ -1295,8 +1295,8 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
         final TmNeuronMetadata sourceNeuron = getNeuronFromNeuronID(annotation.getNeuronId());
         neuronManager.moveNeurite(annotation, sourceNeuron, destNeuron);
-        neuronManager.saveNeuronData(sourceNeuron);
-        neuronManager.saveNeuronData(destNeuron);
+        neuronManager.saveNeuronData(sourceNeuron, "Transfer Vertex to Neuron");
+        neuronManager.saveNeuronData(destNeuron, "Transfer Vertex to Neuron");
         if (applyFilter) {
             NeuronUpdates updates = neuronFilter.updateNeuron(sourceNeuron);
             updates = neuronFilter.updateNeuron(destNeuron);
@@ -1399,7 +1399,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
         
         // Async update
-        neuronManager.saveNeuronData(neuron);
+        neuronManager.saveNeuronData(neuron, "Delete Vertex");
 
         log.info("Deleted link annotation {} in neuron {}", link.getId(),  neuron);
         
@@ -1484,7 +1484,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         }
 
         // Must serialize the neuron, after having made changes.
-        neuronManager.saveNeuronData(neuron);
+        neuronManager.saveNeuronData(neuron, "Delete Subtree");
 
         log.info("Deleted sub tree rooted at {} in neuron {}", rootAnnotation.getId(),  neuron);
         
@@ -1590,7 +1590,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
 
         // if that segment had a trace, remove it
         removeAnchoredPath(neuron, annotation1, annotation2);
-        neuronManager.saveNeuronData(neuron);
+        neuronManager.saveNeuronData(neuron, "Split Annotation");
 
         log.info("Split at annotation {} in neuron {}", annotation.getId(),  neuron);
         
@@ -1642,7 +1642,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         // in this case, the new root is the only annotation we need to check
         final boolean notesChangedFinal = stripPredefNotes(neuron, newRootID);
         
-        neuronManager.saveNeuronData(neuron);
+        neuronManager.saveNeuronData(neuron, "Reroot Neuron");
 
         log.info("Rerooted at annotation {} in neuron {}", newRootID,  neuron);
         
@@ -1677,7 +1677,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         neuronManager.splitNeurite(neuron, newRoot);
 
         // update domain objects and database, and notify
-        neuronManager.saveNeuronData(neuron);
+        neuronManager.saveNeuronData(neuron, "Split Neurite");
 
         log.info("Split neuron at annotation {} in neuron {}", newRootID,  neuron);
         
@@ -1871,7 +1871,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         geoAnnotation.updateModificationDate();
 
         // Send the data back to the server to save.
-        neuronManager.saveNeuronData(neuron);
+        neuronManager.saveNeuronData(neuron, "Set Note");
 
         log.info("Set note on annotation {} in neuron {}", geoAnnotation.getId(),  neuron);
         
@@ -1890,7 +1890,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getParentId());
         final TmGeoAnnotation ann = getGeoAnnotationFromID(neuron, textAnnotation.getParentId());
         ann.updateModificationDate();
-        neuronManager.saveNeuronData(neuron);
+        neuronManager.saveNeuronData(neuron, "Remove Note");
 
         log.info("Removed note on annotation {} in neuron {}", ann.getId(),  neuron);
         
@@ -1956,7 +1956,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
     public synchronized void setNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) throws Exception {
         neuron.setColor(style.getColor());
         setNeuronVisibility(neuron, style.isVisible());
-        neuronManager.saveNeuronData(neuron);
+        neuronManager.saveNeuronData(neuron, "Change Neuron Style");
         SwingUtilities.invokeLater(() -> fireNeuronStyleChanged(neuron, style));
         activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
     }
@@ -2318,7 +2318,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
         try {
             // need to save neuron now; notes have to be attached to the final
             //  annotation IDs, not the placeholders that exist before the save
-            neuronManager.saveNeuronData(neuron);
+            neuronManager.saveNeuronData(neuron, "Bulk Import");
 
             // check for corresponding notes file; if present, import notes
             // find file; read and parse it
@@ -2351,7 +2351,7 @@ public class AnnotationModel implements DomainObjectSelectionSupport {
                         }
                     }
                     // now save again, with the note data
-                    neuronManager.saveNeuronData(neuron);
+                    neuronManager.saveNeuronData(neuron, "Bulk Import");
                 }
             }
             if (applyFilter) {

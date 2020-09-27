@@ -122,7 +122,7 @@ public class NeuronSetAdapter
                 return;
             }
             neuron.setOwnerKey(AccessManager.getSubjectKey());
-            annotationModel.getNeuronManager().saveNeuronData(neuron);
+            annotationModel.getNeuronManager().saveNeuronData(neuron, "Change Ownership");
             //return LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getAnnotationModel().getNeuronManager().requestOwnershipChange(neuron);
         } catch (Exception error) {
             FrameworkAccess.handleException(error);

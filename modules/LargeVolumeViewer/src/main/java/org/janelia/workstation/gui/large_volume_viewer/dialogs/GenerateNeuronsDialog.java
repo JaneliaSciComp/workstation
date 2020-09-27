@@ -243,7 +243,7 @@ public class GenerateNeuronsDialog extends ModalDialog {
                         CompletableFuture<TmNeuronMetadata> future = annotationModel.getNeuronManager().createTiledMicroscopeNeuron(currentWorkspace, neuronName);
                         TmNeuronMetadata neuron = future.get(2, TimeUnit.SECONDS);
                         generator.generateArtificialNeuronData(neuron);
-                        annotationModel.getNeuronManager().saveNeuronData(neuron);
+                        annotationModel.getNeuronManager().saveNeuronData(neuron, "Generate Neuron");
                         setProgress(index++, total);
                     }
                     

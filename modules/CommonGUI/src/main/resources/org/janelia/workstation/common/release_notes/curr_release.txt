@@ -8,3 +8,6 @@ Browser
 Color Depth Search
 * Added checkboxes to mirror images in the color depth search result comparison HUD
 * Browsing Color Depth Libraries now links to the related Samples
+
+Large Volume Viewer
+* Added logging for tracing operations

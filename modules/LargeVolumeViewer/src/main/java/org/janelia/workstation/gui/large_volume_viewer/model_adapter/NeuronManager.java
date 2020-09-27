@@ -6,6 +6,7 @@ import org.janelia.workstation.geom.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -57,7 +58,7 @@ public class NeuronManager {
         final TmAnchoredPathEndpoints key = new TmAnchoredPathEndpoints(annotationID1, annotationID2);
         final TmAnchoredPath value = new TmAnchoredPath( idSource.next(), key, pointlist );
         tmNeuronMetadata.getAnchoredPathMap().put(key,value);
-        saveNeuronData(tmNeuronMetadata);
+        saveNeuronData(tmNeuronMetadata, "Anchored Path");
         return value;
     }
 
@@ -102,7 +103,7 @@ public class NeuronManager {
 
         tmNeuronMetadata.getGeoAnnotationMap().put(rtnVal.getId(), rtnVal);
 
-        saveNeuronData(tmNeuronMetadata);
+        saveNeuronData(tmNeuronMetadata, "Add Vertex");
         // Ensure that the geo-annotation known to the neuron, after the
         // save, is the one we return.  Get the other one out of circulation.
         rtnVal = tmNeuronMetadata.getGeoAnnotationMap().get(rtnVal.getId());
@@ -172,7 +173,7 @@ public class NeuronManager {
     }
 
     private void deleteNeuronData(TmNeuronMetadata neuron) throws Exception {
-        neuronModelAdapter.asyncDeleteNeuron(neuron);
+        neuronModelAdapter.asyncDeleteNeuron(neuron, generateOperationLog("Delete Neuron"));
     }
 
     public void deleteStructuredTextAnnotation(TmNeuronMetadata neuron, long annotationId) {
@@ -210,12 +211,22 @@ public class NeuronManager {
             throw new IllegalStateException("Tiled Neuron must be created in a valid workspace.");
         }
         TmNeuronMetadata neuron = new TmNeuronMetadata(workspace, name);
-        createNeuronRequest = createTiledMicroscopeNeuron(neuron);
+
+        createNeuronRequest = createTiledMicroscopeNeuron(neuron, generateOperationLog("Create Neuron"));
         return createNeuronRequest;
     }
 
-    private CompletableFuture<TmNeuronMetadata> createTiledMicroscopeNeuron(TmNeuronMetadata neuron) throws Exception {
-        return neuronModelAdapter.asyncCreateNeuron(neuron);
+    private Map<String,String> generateOperationLog(String opName) {
+        Map<String,String> eventLog = new HashMap<>();
+        SimpleDateFormat DateFor = new SimpleDateFormat("MM-dd-yyyy hh:mm:ss");
+        String stringDate = DateFor.format(new Date());
+        eventLog.put("timestamp",stringDate);
+        eventLog.put("operation", opName);
+        return eventLog;
+    }
+
+    private CompletableFuture<TmNeuronMetadata> createTiledMicroscopeNeuron(TmNeuronMetadata neuron, Map<String,String> extraHeaders) throws Exception {
+        return neuronModelAdapter.asyncCreateNeuron(neuron,extraHeaders);
     }
 
     /**
@@ -368,7 +379,7 @@ public class NeuronManager {
      * @throws Exception
      */
     public CompletableFuture<Boolean> requestOwnershipChange(TmNeuronMetadata neuron) throws Exception {
-        ownershipRequest = neuronModelAdapter.requestOwnership(neuron);
+        ownershipRequest = neuronModelAdapter.requestOwnership(neuron, generateOperationLog("Change Ownership"));
         return ownershipRequest;
     }
 
@@ -448,8 +459,8 @@ public class NeuronManager {
         }
     }
 
-    public void saveNeuronData(TmNeuronMetadata neuron) throws Exception {
-        neuronModelAdapter.asyncSaveNeuron(neuron);
+    public void saveNeuronData(TmNeuronMetadata neuron, String opName) throws Exception {
+        neuronModelAdapter.asyncSaveNeuron(neuron,generateOperationLog(opName));
     }
 
     public void splitNeurite(TmNeuronMetadata tmNeuronMetadata, TmGeoAnnotation newRoot) throws Exception {

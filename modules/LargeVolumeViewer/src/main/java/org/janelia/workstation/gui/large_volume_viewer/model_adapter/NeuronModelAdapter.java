@@ -133,23 +133,23 @@ class NeuronModelAdapter {
         getSender().sendMessage(updateHeaders, neuronData);
     }
 
-    CompletableFuture<TmNeuronMetadata> asyncCreateNeuron(TmNeuronMetadata neuron) throws Exception {
+    CompletableFuture<TmNeuronMetadata> asyncCreateNeuron(TmNeuronMetadata neuron, Map<String, String> extraHeaders) throws Exception {
         // make sure the neuron contains the current user's ownerKey;
         neuron.setOwnerKey(AccessManager.getSubjectKey());
-        sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE, null);
+        sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE, extraHeaders);
         return new CompletableFuture<>();
     }
 
-    void asyncSaveNeuron(TmNeuronMetadata neuron) throws Exception {
-        sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_SAVE_NEURONDATA, null);
+    void asyncSaveNeuron(TmNeuronMetadata neuron, Map<String, String> extraHeaders) throws Exception {
+        sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_SAVE_NEURONDATA, extraHeaders);
     }
 
-    void asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {
-        sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE, null);
+    void asyncDeleteNeuron(TmNeuronMetadata neuron, Map<String, String> extraHeaders) throws Exception {
+        sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE, extraHeaders);
     }
 
-    CompletableFuture<Boolean> requestOwnership(TmNeuronMetadata neuron) throws Exception {
-        sendMessage(neuron, NeuronMessageConstants.MessageType.REQUEST_NEURON_OWNERSHIP, null);
+    CompletableFuture<Boolean> requestOwnership(TmNeuronMetadata neuron, Map<String, String> extraHeaders) throws Exception {
+        sendMessage(neuron, NeuronMessageConstants.MessageType.REQUEST_NEURON_OWNERSHIP, extraHeaders);
         return new CompletableFuture<>();
     }
 
