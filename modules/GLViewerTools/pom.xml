@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.19</version>
+        <version>8.20</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>GLViewerTools</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>gltools</artifactId>
-    <version>8.19</version>
+    <version>8.20</version>
     <packaging>nbm</packaging>
 
     <dependencies>
