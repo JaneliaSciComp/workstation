@@ -1,13 +1,4 @@
-// 8.20
+// 8.21
 
 Browser
-* Group owners and admins may now share the data in their group
-* Technicians may now create data sets on behalf of annotators
-* New fly line releases are now automatically shared with the FlyLight Technical group
-
-Color Depth Search
-* Added checkboxes to mirror images in the color depth search result comparison HUD
-* Browsing Color Depth Libraries now links to the related Samples
-
-Large Volume Viewer
-* Added logging for tracing operations
+* Fixed bug where the space bar was no longer hiding the Lightbox

@@ -56,7 +56,7 @@ public class DropDownButton extends JButton {
         
         setText(text);
         setIcon(icon);
-        //setFocusable(false);
+        setFocusable(false);
         setRolloverEnabled(true);
         setVerticalTextPosition(AbstractButton.CENTER);
         setHorizontalTextPosition(AbstractButton.LEADING);
