@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.20</version>
+        <version>8.21</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>SceneWindow</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>scenegraph</artifactId>
-    <version>8.20</version>
+    <version>8.21</version>
     <packaging>nbm</packaging>
 
     <dependencies>
