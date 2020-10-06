@@ -66,11 +66,8 @@ public class ColorDepthSearchEditorPanel
 
     // Utilities
     private final Debouncer debouncer = new Debouncer();
-    private final AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
-    
+
     // UI Components
-//    private final JButton saveButton;
-//    private final JButton saveAsButton;
     private final ColorDepthSearchOptionsPanel searchOptionsPanel;
     private final JSplitPane splitPane;
     private final JPanel helpPanel;
@@ -196,7 +193,7 @@ public class ColorDepthSearchEditorPanel
             return;
         }
 
-        if (search.getLibraries().isEmpty()) {
+        if (search.getCDSTargets().isEmpty()) {
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "You need to select some color depth libraries to search against.");
             return;
         }
@@ -531,13 +528,15 @@ public class ColorDepthSearchEditorPanel
         }
     }
     
-    private Map<String,Object> getProperties(ColorDepthMatch match) {
+    private Map<String, Object> getProperties(ColorDepthMatch match) {
 
-        Map<String,Object> values = new HashMap<>();
+        Map<String, Object> values = new HashMap<>();
 
         try {
             values.put("Score (Pixels)", match.getScore());
             values.put("Score (Percent)", MaskUtils.getFormattedScorePct(match));
+            if (match.getGradientAreaGap() != null) values.put("Area gap", match.getGradientAreaGap());
+            if (match.getHighExpressionArea() != null) values.put("High Expression", match.getHighExpressionArea());
 
             ColorDepthResultImageModel imageModel = colorDepthResultPanel.getImageModel();
             if (imageModel==null) {
@@ -547,7 +546,6 @@ public class ColorDepthSearchEditorPanel
 
             ColorDepthImage image = imageModel.getImage(match);
             if (image!=null) {
-
                     values.put("Channel Number", image.getChannelNumber());
                     values.put("Owner", image.getOwnerName());
                     values.put("File Name", image.getName());
@@ -569,9 +567,7 @@ public class ColorDepthSearchEditorPanel
                         }
                     }
             }
-
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             FrameworkAccess.handleExceptionQuietly(e);
         }
 

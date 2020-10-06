@@ -67,15 +67,20 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, R
     }
 
     public ColorDepthImage getImage(ColorDepthMatch match) {
-        if (match.getImageRef()==null) {
+        Reference imageRef  = getUsedImageRef(match);
+        if (imageRef==null) {
             throw new IllegalStateException("Null image ref: "+match);
         }
-        return imageMap.get(match.getImageRef());
+        return imageMap.get(imageRef);
+    }
+
+    protected Reference getUsedImageRef(ColorDepthMatch match) {
+        return match.getImageRef();
     }
 
     public Sample getSample(ColorDepthMatch match) {
         ColorDepthImage image = getImage(match);
-        if (image==null) {
+        if (image == null) {
             log.warn("Image does not exist: "+match.getImageRef());
             return null;
         }
@@ -84,7 +89,7 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, R
         }
         return sampleMap.get(image.getSampleRef());
     }
-    
+
     public Collection<Sample> getSamples() {
         return sampleMap.values();
     }

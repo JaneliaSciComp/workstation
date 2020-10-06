@@ -1,9 +1,28 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
+import java.awt.BorderLayout;
+import java.awt.event.MouseEvent;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
+import org.janelia.model.domain.gui.cdmip.ColorDepthLibraryUtils;
 import org.janelia.model.domain.gui.cdmip.ColorDepthParameters;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.workstation.browser.gui.editor.ConfigPanel;
@@ -17,16 +36,6 @@ import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.List;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 /**
  * User options panel for a color depth search. Reused between the color depth search editor and the mask dialog. 
  * 
@@ -39,9 +48,6 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
     private static final String THRESHOLD_LABEL_PREFIX = "Data Threshold: ";
     private static final int DEFAULT_THRESHOLD_VALUE = 100;
 
-    private static final NumberFormat PX_FORMATTER = new DecimalFormat("#0.00");
-
-    private static final String PCT_POSITIVE_THRESHOLD_TITLE = "Min match %";
     private static final String PIX_COLOR_FLUCTUATION_TITLE = "Z Slice Range";
     private static final String XY_SHIFT_TITLE = "XY Shift";
     private static final String MAX_RESULTS_TITLE = "Max Results";
@@ -77,6 +83,8 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
     private final SingleSelectionButton<LabeledValue> xyShiftButton;
     private final SingleSelectionButton<LabeledValue> pixFlucButton;
     private final JCheckBox mirrorCheckbox;
+    private final JCheckBox useSegmentationCheckbox;
+    private final JCheckBox useGradScoresCheckbox;
     private final JCheckBox allMasks;
     private final SingleSelectionButton<LabeledValue> maxResultsButton;
     private final SelectionButton<ColorDepthLibrary> libraryButton;
@@ -122,6 +130,10 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
 
         mirrorCheckbox = new JCheckBox("Mirror mask");
 
+        useSegmentationCheckbox = new JCheckBox("Use segmentation");
+
+        useGradScoresCheckbox = new JCheckBox("Use gradient scores");
+
         allMasks = new JCheckBox("Rerun all masks");
         allMasks.setToolTipText("Rerun all masks or just the currently selected mask?");
 
@@ -129,7 +141,7 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
             
             @Override
             public Collection<ColorDepthLibrary> getValues() {
-                if (libraries ==null) return ImmutableSet.of();
+                if (libraries == null) return Collections.emptySet();
                 return libraries.stream()
                         .filter(library -> isShowLibrary(library))
                         .sorted(Comparator.comparing(ColorDepthLibrary::getIdentifier))
@@ -138,9 +150,9 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
 
             @Override
             public Set<ColorDepthLibrary> getSelectedValues() {
-                if (libraries ==null) return ImmutableSet.of();
+                if (libraries == null) return Collections.emptySet();
                 Map<String, ColorDepthLibrary> libraryLookup = libraries.stream().collect(Collectors.toMap(ColorDepthLibrary::getIdentifier, Function.identity()));
-                return search.getLibraries().stream()
+                return search.getCDSTargets().stream()
                         .map(libraryLookup::get)
                         .filter(Objects::nonNull)
                         .collect(Collectors.toSet());
@@ -160,7 +172,9 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
             
             @Override
             protected void selectAll() {
-                if (libraries ==null) return;
+                if (libraries ==null) {
+                    return;
+                }
                 List<String> all = libraries.stream()
                         .sorted(Comparator.comparing(ColorDepthLibrary::getIdentifier))
                         .map(ColorDepthLibrary::getIdentifier)
@@ -171,17 +185,17 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
             
             @Override
             protected void clearSelected() {
-                search.getLibraries().clear();
+                search.clearAllCDSTargets();
                 dirty = true;
             }
 
             @Override
             protected void updateSelection(ColorDepthLibrary library, boolean selected) {
+                String cdsTarget = library.getIdentifier();
                 if (selected) {
-                    search.getLibraries().add(library.getIdentifier());
-                }
-                else {
-                    search.getLibraries().remove(library.getIdentifier());
+                    search.addCDSTarget(cdsTarget);
+                } else {
+                    search.removeCDSTarget(cdsTarget);
                 }
                 dirty = true;
             }
@@ -274,6 +288,8 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
 
         parameters.setMirrorMask(mirrorCheckbox.isSelected());
         parameters.setDataThreshold(thresholdSlider.getValue());
+        parameters.setUseSegmentation(useSegmentationCheckbox.isSelected());
+        parameters.setUseGradientScores(useGradScoresCheckbox.isSelected());
         parameters.setMaxResultsPerMask(maxResultsButton.getSelectedValue().getValue());
     }
     
@@ -312,6 +328,12 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         Boolean mirrorMask = parameters.getMirrorMask();
         mirrorCheckbox.setSelected(mirrorMask != null && mirrorMask);
 
+        Boolean useSegmentation = parameters.getUseSegmentation();
+        useSegmentationCheckbox.setSelected(useSegmentation != null && useSegmentation);
+
+        Boolean useGradientScores = parameters.getUseGradientScores();
+        useGradScoresCheckbox.setSelected(useGradientScores != null && useGradientScores);
+
         int currMaxResults = parameters.getMaxResultsPerMask() == null ? -1 : parameters.getMaxResultsPerMask();
         LabeledValue value3 = maxResultsValues.stream().filter(lv -> lv.getValue()==currMaxResults).findFirst().orElse(defaultMaxResults);
         maxResultsButton.setSelectedValue(value3);
@@ -337,6 +359,8 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         addConfigComponent(pixFlucButton);
         addConfigComponent(xyShiftButton);
         addConfigComponent(mirrorCheckbox);
+        addConfigComponent(useSegmentationCheckbox);
+        addConfigComponent(useGradScoresCheckbox);
         addConfigComponent(allMasks);
         addConfigComponent(maxResultsButton);
         addConfigComponent(libraryButton);
@@ -349,7 +373,7 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
     }
 
     private boolean isShowLibrary(ColorDepthLibrary library) {
-        return ClientDomainUtils.hasReadAccess(library);
+        return ClientDomainUtils.hasReadAccess(library) && ColorDepthLibraryUtils.isSearchableVariant(library.getVariant());
     }
     
     public static final class LabeledValue {

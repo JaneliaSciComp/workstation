@@ -185,7 +185,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
         SimpleWorker worker = new SimpleWorker() {
             
             private List<ColorDepthLibrary> libraries;
-            private List<ColorDepthSearch> searches = new ArrayList<>();
+            private final List<ColorDepthSearch> searches = new ArrayList<>();
                     
             @Override
             protected void doStuff() throws Exception {
@@ -289,7 +289,7 @@ public class ColorDepthSearchDialog extends ModalDialog {
         }
 
         if (execute) {
-            if (searchOptionsPanel.getSearch().getLibraries().isEmpty()) {
+            if (searchOptionsPanel.getSearch().getCDSTargets().isEmpty()) {
                 JOptionPane.showMessageDialog(this, "You need to select some color depth libraries to search against.");
                 return;
             }

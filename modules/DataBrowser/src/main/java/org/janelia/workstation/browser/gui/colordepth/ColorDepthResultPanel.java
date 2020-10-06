@@ -79,6 +79,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
     private final JPanel topPanel;
     private final SingleSelectionButton<ColorDepthResult> historyButton;
     private final JCheckBox newOnlyCheckbox;
+    private final JCheckBox showMatchedImage;
     private final JTextField resultsPerLineField;
     private final PaginatedResultsPanel<ColorDepthMatch,Reference> resultsPanel;
     private final JLabel noRunLabel;
@@ -160,7 +161,10 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
                         .addListener(() -> refreshView());
             }
         );
-        
+
+        this.showMatchedImage = new JCheckBox("Show matched image");
+        this.showMatchedImage.addActionListener(e -> refreshView());
+
         this.resultsPerLineField = new JTextField(3);
         resultsPerLineField.setHorizontalAlignment(JTextField.RIGHT);
         resultsPerLineField.addKeyListener(new KeyAdapter() {
@@ -269,6 +273,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         topPanel.add(historyButton);
         topPanel.add(new JSeparator(SwingConstants.VERTICAL));
         topPanel.add(newOnlyCheckbox);
+        topPanel.add(showMatchedImage);
         topPanel.add(perLinePanel);
         topPanel.add(splitTypeButton);
         
@@ -352,15 +357,13 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
                 if (newResultPreference != null) {
                     boolean newResults = Boolean.parseBoolean(newResultPreference);
                     newOnlyCheckbox.setSelected(newResults);
-                }
-                else {
+                } else {
                     newOnlyCheckbox.setSelected(false);
                 }
                 
                 if (resultsPerLinePreference != null) {
                     resultsPerLineField.setText(resultsPerLinePreference);
-                }
-                else {
+                } else {
                     resultsPerLineField.setText(""+DEFAULT_RESULTS_PER_LINE);
                 }
 
@@ -447,9 +450,11 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         DomainModel model = DomainMgr.getDomainMgr().getModel();
 
         // Fetch associated images
-        Set<Reference> imageRefs = new HashSet<>();
-        for (ColorDepthMatch match : maskMatches) {
-            imageRefs.add(match.getImageRef());
+        Set<Reference> imageRefs;
+        if (showMatchedImage.isSelected()) {
+            imageRefs = maskMatches.stream().map(ColorDepthMatch::getMatchingImageRef).collect(Collectors.toSet());
+        } else {
+            imageRefs = maskMatches.stream().map(ColorDepthMatch::getImageRef).collect(Collectors.toSet());
         }
 
         List<ColorDepthImage> images = model.getDomainObjectsAs(ColorDepthImage.class, new ArrayList<>(imageRefs));
@@ -489,7 +494,12 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         }
         
         // Create and set image model
-        ColorDepthResultImageModel imageModel = new ColorDepthResultImageModel(mask, maskMatches, images, samples, splitInfos);
+        ColorDepthResultImageModel imageModel = new ColorDepthResultImageModel(mask, maskMatches, images, samples, splitInfos) {
+            @Override
+            protected Reference getUsedImageRef(ColorDepthMatch match) {
+                return showMatchedImage.isSelected() ? match.getMatchingImageRef() : match.getImageRef();
+            }
+        };
         resultsPanel.setImageModel(imageModel);
 
         log.info("selectedSplitTypes: {}",selectedSplitTypes);
@@ -498,9 +508,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         maskMatches = maskMatches.stream()
                 .filter(match -> showMatch(match, imageModel))
                 .filter(match -> {
-        
                     // Filter by split type. If no split types are selected, then assume the user wants to see everything.
-                    
                     Sample sample = imageModel.getSample(match);
                     SplitTypeInfo splitTypeInfo = imageModel.getSplitTypeInfo(sample);
                     
@@ -667,7 +675,6 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
             Set<Long> seenSamples = new HashSet<>();
             List<ColorDepthMatch> orderedMatches = new ArrayList<>();
             for (ColorDepthMatch match : matches) {
-
                 ColorDepthImage image = imageModel.getImage(match);
                 if (image.getSampleRef() == null) {
                     orderedMatches.add(match);

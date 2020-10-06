@@ -11,7 +11,7 @@ import org.janelia.model.domain.DomainObject;
  */
 public interface InspectionController {
 
-    public static final String LOOKUP_PATH = "Handlers/InspectionController";
+    String LOOKUP_PATH = "Handlers/InspectionController";
     
     void inspect(Object object);
     
