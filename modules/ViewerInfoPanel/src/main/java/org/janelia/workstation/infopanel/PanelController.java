@@ -114,6 +114,13 @@ public class PanelController {
     }
 
     @Subscribe
+    public void neuronsOwnerChanged (NeuronOwnerChangedEvent event) {
+        for (TmNeuronMetadata neuron : event.getNeurons()) {
+            wsNeuronList.updateModel(neuron);
+        }
+    }
+
+    @Subscribe
     public void neuronsSelected(SelectionNeuronsEvent selectionEvent) {
         List<DomainObject> neurons = selectionEvent.getItems();
         if (selectionEvent.isClear())

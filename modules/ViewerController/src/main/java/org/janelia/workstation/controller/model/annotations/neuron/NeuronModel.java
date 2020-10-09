@@ -372,9 +372,8 @@ public class NeuronModel {
      * ownership change request; this version expects to happen immediately (user already
      * has authority to change the owner (they own it or it's a common neuron)
      */
-    public CompletableFuture<Boolean> requestAssignmentChange(TmNeuronMetadata neuron, String userKey) throws Exception {
-        ownershipRequest = neuronModelAdapter.requestAssignment(neuron, userKey);
-        return ownershipRequest;
+    public void requestAssignmentChange(TmNeuronMetadata neuron, String userKey) throws Exception {
+        neuronModelAdapter.requestAssignment(neuron, userKey);
     }
 
     /**

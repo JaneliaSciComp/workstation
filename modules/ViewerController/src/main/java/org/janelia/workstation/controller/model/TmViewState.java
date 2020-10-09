@@ -263,7 +263,13 @@ public class TmViewState {
         if (customNeuronColors.containsKey(neuronID)) {
             return customNeuronColors.get(neuronID);
         }
-        return neuronColors[(int) (neuronID % neuronColors.length)];
+        return null;
+    }
+
+    public static Color generateNewColor(Long neuronID) {
+        Color newColor = neuronColors[(int) (neuronID % neuronColors.length)];
+        setColorForNeuron(neuronID, newColor);
+        return newColor;
     }
 
     public static float[] getColorForNeuronAsFloatArray(Long neuronID) {

@@ -29,7 +29,7 @@ import javax.swing.event.ChangeListener;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ToolButton;
-import org.janelia.console.viewerapi.color_slider.SliderPanel;
+import org.janelia.workstation.controller.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.workstation.controller.model.TmSelectionState;

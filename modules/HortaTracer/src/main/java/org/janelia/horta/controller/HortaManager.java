@@ -135,6 +135,7 @@ public class HortaManager {
                 }
             }
             topComponent.initSampleLocation();
+            topComponent.initColorModel();
             topComponent.redrawNow();
         } catch (Exception e) {
             e.printStackTrace();

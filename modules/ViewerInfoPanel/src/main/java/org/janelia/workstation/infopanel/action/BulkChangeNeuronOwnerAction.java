@@ -2,6 +2,7 @@ package org.janelia.workstation.infopanel.action;
 
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.AbstractAction;
@@ -10,12 +11,15 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.workstation.controller.ComponentUtil;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.controller.dialog.ChangeNeuronOwnerDialog;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.security.Subject;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +86,7 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
         }
 
         // user is allowed; ask them who the new owner should be:
-        ChangeNeuronOwnerDialog dialog = new ChangeNeuronOwnerDialog((Frame) SwingUtilities.windowForComponent(ComponentUtil.getMainWindow()));
+        ChangeNeuronOwnerDialog dialog = new ChangeNeuronOwnerDialog(null);
         dialog.setVisible(true);
         if (!dialog.isSuccess()) {
             return;
@@ -130,9 +134,10 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
                     //  in the dialog above
                     Subject newOwner = dialog.getNewOwnerKey();
                     NeuronManager manager = NeuronManager.getInstance();
-                    for (TmNeuronMetadata neuron: neurons) {
-                         manager.changeNeuronOwner(neuron.getId(), newOwner);
-                    }
+                    manager.changeNeuronOwner(neurons, newOwner);
+                    NeuronUpdateEvent neuronEvent = new NeuronUpdateEvent();
+                    neuronEvent.setNeurons(neurons);
+                    ViewerEventBus.postEvent(neuronEvent);
                 }
 
                 @Override
@@ -142,7 +147,7 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
 
                 @Override
                 protected void hadError(Throwable error) {
-                    logger.error("error changing owner for multiple neurons");
+                    FrameworkAccess.handleException("error changing owner for multiple neurons", error);
                     JOptionPane.showMessageDialog(
                             ComponentUtil.getMainWindow(),
                             "Error changing neuron owner!",

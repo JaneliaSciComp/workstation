@@ -87,6 +87,7 @@ import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.LocalVolumeBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
+import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
@@ -98,6 +99,7 @@ import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.access.ModelTranslation;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
 import org.janelia.workstation.controller.dialog.NeuronHistoryDialog;
@@ -289,12 +291,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         sceneWindow.getCamera().addObserver(cursorCacheDestroyer);
 
         TmModelManager.getInstance().getCurrentView().setColorModel("default", imageColorModel);
-        imageColorModel.addColorModelListener(new ColorModelListener() {
-            @Override
-            public void colorModelChanged() {
-                redrawNow();
-            }
-        });
 
         // Load new volume data when the focus moves
         volumeCache = new HortaVolumeCache(
@@ -385,6 +381,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         //metaWorksopace.notifyObservers();
         playback = new PlayReviewManager(sceneWindow, this, neuronTraceLoader);
         initSampleLocation();
+        initColorModel();
         ViewerEventBus.registerForEvents(this);
 
     }
@@ -492,6 +489,27 @@ public final class NeuronTracerTopComponent extends TopComponent
         event.setCameraFocusZ(voxelCenter.getZ());
         event.setZoomLevel(1000);
         setSampleLocation(event);
+    }
+
+    public void initColorModel() {
+        TmWorkspace tmWorkspace = TmModelManager.getInstance().getCurrentWorkspace();
+        // check if preferences, otherwise use workspace default color model
+        TmColorModel userWorkspaceColorModel = null;
+        try {
+            userWorkspaceColorModel = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_COLORMODEL,
+                    tmWorkspace.getId().toString(), null);
+        } catch (Exception e) {
+            FrameworkAccess.handleException("Problems retrieving user color model for workspace", e);
+        }
+        if (userWorkspaceColorModel==null) {
+            userWorkspaceColorModel = tmWorkspace.getColorModel3d();
+        }
+        if (userWorkspaceColorModel!=null) {
+            ModelTranslation.updateColorModel(userWorkspaceColorModel, imageColorModel);
+        }
+        TmModelManager.getInstance().getCurrentView().setColorModel("default", imageColorModel);
+        ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(tmWorkspace, imageColorModel);
+        ViewerEventBus.postEvent(modelEvent);
     }
 
     @Subscribe
@@ -807,28 +825,10 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new Vector3(worldXyz.get(0), worldXyz.get(1), worldXyz.get(2));
     }
 
-    private final ImageColorModel imageColorModel = new ImageColorModel(65535, 3);
+    private ImageColorModel imageColorModel = new ImageColorModel(65535, 3);
 
     private void loadStartupPreferences() {
         Preferences prefs = NbPreferences.forModule(getClass());
-
-        // Load brightness and visibility settings for each channel
-        for (int cix = 0; cix < imageColorModel.getChannelCount(); ++cix) {
-            ChannelColorModel c = imageColorModel.getChannel(cix);
-            c.setBlackLevel((int) (c.getDataMax() * prefs.getFloat("startupMinIntensityChan" + cix, c.getNormalizedMinimum())));
-            c.setWhiteLevel((int) (c.getDataMax() * prefs.getFloat("startupMaxIntensityChan" + cix, c.getNormalizedMaximum())));
-            c.setVisible(prefs.getBoolean("startupVisibilityChan" + cix, c.isVisible()));
-            int red = prefs.getInt("startupRedChan" + cix, c.getColor().getRed());
-            int green = prefs.getInt("startupGreenChan" + cix, c.getColor().getGreen());
-            int blue = prefs.getInt("startupBlueChan" + cix, c.getColor().getBlue());
-            c.setColor(new Color(red, green, blue));
-        }
-        // Load channel unmixing parameters
-        float[] unmix = TetVolumeActor.getInstance().getUnmixingParams();
-        for (int i = 0; i < unmix.length; ++i) {
-            unmix[i] = prefs.getFloat("startupUnmixingParameter" + i, unmix[i]);
-        }
-        imageColorModel.setUnmixParameters(unmix);
 
         // Load camera state
         Vantage vantage = sceneWindow.getVantage();
@@ -951,14 +951,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         });
 
         TetVolumeActor.getInstance().setHortaVantage(vantage);
-
-        imageColorModel.addColorModelListener(new ColorModelListener() {
-            @Override
-            public void colorModelChanged() {
-                if (getNeuronMPRenderer() != null)
-                    getNeuronMPRenderer().setIntensityBufferDirty();
-            }
-        });
 
         // Set default colors to mouse light standard...
         imageColorModel.getChannel(0).setColor(Color.green);

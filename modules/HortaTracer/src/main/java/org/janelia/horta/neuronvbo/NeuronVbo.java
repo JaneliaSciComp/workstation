@@ -290,9 +290,14 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
             neuronVertexCounts.put(neuron, neuron.getAnnotationCount());
             neuronEdgeCounts.put(neuron, neuron.getEdges().size());
             float visibility = viewState.isHidden(neuron.getId()) ? 0 : 1;
-            Color color = neuron.getColor();
-            if (color==null)
-                color = TmViewState.getColorForNeuron(neuron.getId());
+            Color color = TmViewState.getColorForNeuron(neuron.getId());
+            if (color == null) {
+                if (neuron.getColor()==null) {
+                    color = TmViewState.generateNewColor(neuron.getId());
+                } else {
+                    color = neuron.getColor();
+                }
+            }
             color.getColorComponents(rgb);
             Map<TmGeoAnnotation, Integer> vertexIndices = new HashMap<>();
             for (TmGeoAnnotation vertex : neuron.getGeoAnnotationMap().values()) {

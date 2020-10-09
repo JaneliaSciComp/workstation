@@ -1,24 +1,15 @@
 package org.janelia.horta;
 
 import java.awt.BorderLayout;
-import java.util.Collection;
-import java.util.Timer;
-import java.util.TimerTask;
-import org.janelia.console.viewerapi.color_slider.SliderPanel;
-import org.janelia.console.viewerapi.controller.ColorModelListener;
+
+import org.janelia.workstation.controller.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.model.domain.tiledMicroscope.TmColorModel;
-import org.janelia.workstation.controller.access.ModelTranslation;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.util.Lookup;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.Utilities;
 
 /**
  * Top component which displays something.

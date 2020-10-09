@@ -172,6 +172,7 @@
                         <publicPackage>org.janelia.workstation.controller</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.access</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.action</publicPackage>
+                        <publicPackage>org.janelia.workstation.controller.color_slider</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.dialog</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.eventbus</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.listener</publicPackage>

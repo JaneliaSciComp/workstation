@@ -177,10 +177,9 @@ class NeuronModelAdapter {
         return new CompletableFuture<>();
     }
 
-    CompletableFuture<Boolean> requestAssignment(TmNeuronMetadata neuron, String targetUser) throws Exception {
+    void requestAssignment(TmNeuronMetadata neuron, String targetUser) throws Exception {
         Map<String, String> extraArgs = new HashMap<>();
         extraArgs.put(NeuronMessageConstants.Headers.TARGET_USER, targetUser);
         sendMessage(neuron, NeuronMessageConstants.MessageType.REQUEST_NEURON_ASSIGNMENT, extraArgs);
-        return new CompletableFuture<>();
     }
 }
