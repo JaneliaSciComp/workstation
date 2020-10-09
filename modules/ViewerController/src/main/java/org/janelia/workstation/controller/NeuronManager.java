@@ -450,44 +450,29 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     /**
      * change the ownership of the input neuron
      */
-    public synchronized void changeNeuronOwner(Long neuronID, Subject newOwner) throws Exception {
-        final TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronID);
-        CompletableFuture<Boolean> future = getNeuronModel().requestAssignmentChange(neuron, newOwner.getKey());
-        if (future == null) {
-            presentError("Error while attempting to request ownership of " + neuron.getName(), "Error changing owner");
-            log.error("Completeable future is null when requesting owner change of neuron " + neuron.getName() +
-                " to owner " + newOwner.getKey());
-            return;
-        } else {
-            // wait for the future to finish (blocks)
-            Boolean ownershipDecision = future.get();
-            if (!ownershipDecision) {
-                presentError("Error while attempting to request ownership of " + neuron.getName(), "Error changing owner");
-                log.error("Ownership change rejected; neuron " + neuron.getName() + " owned by " +
-                    neuron.getOwnerName() + " not " + newOwner.getKey());
-                return;
+    public void changeNeuronOwner(List<TmNeuronMetadata> neuronList, Subject newOwner) throws Exception {
+        for (TmNeuronMetadata neuron: neuronList) {
+            Long neuronID = neuron.getId();
+
+            getNeuronModel().requestAssignmentChange(neuron, newOwner.getKey());
+
+            // it's now safe to change local object
+            neuron.setOwnerKey(newOwner.getKey());
+
+            // if filter, find new fragments that might be affected
+            if (applyFilter && neuron.getOwnerKey().equals(AccessManager.getAccessManager().getActualSubject().getKey())) {
+                NeuronUpdates updates = neuronFilter.addNeuron(neuron);
+                updateFrags(updates);
             }
+
+            log.info("Neuron " + neuron.getName() + " owner changed to  " + newOwner.getKey());
+
+            final TmWorkspace workspace = modelManager.getCurrentWorkspace();
         }
-
-        // it's now safe to change local object
-        neuron.setOwnerKey(newOwner.getKey());
-
-        // if filter, find new fragments that might be affected
-        if (applyFilter && neuron.getOwnerKey().equals(AccessManager.getAccessManager().getActualSubject().getKey())) {
-            NeuronUpdates updates = neuronFilter.addNeuron(neuron);
-            updateFrags(updates);
-        }
-
-        log.info("Neuron " + neuron.getName() + " owner changed to  " + newOwner.getKey());
-
-        final TmWorkspace workspace = modelManager.getCurrentWorkspace();
-        final List<TmNeuronMetadata> neuronList = new ArrayList<>();
-        neuronList.add(neuron);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireNeuronsOwnerChanged(neuronList);
-                //activityLog.logChangeNeuronOwner(workspace.getId(), neuron.getId());
             }
         });
     }
@@ -1067,6 +1052,14 @@ public class NeuronManager implements DomainObjectSelectionSupport {
       //  SkeletonController.getInstance().endTransaction();
       //  FilteredAnnotationList.getInstance().endTransaction();
         TransactionManager.getInstance().endTransaction();
+    }
+
+    public void updateNeuronMetadata(TmNeuronMetadata neuron) throws Exception {
+        neuronModel.saveNeuronData(neuron);
+        if (applyFilter) {
+            NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+            updateFrags(updates);
+        }
     }
 
     /**
@@ -2376,37 +2369,14 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         ViewerEventBus.postEvent(selectionEvent);
     }
 
-    /*void fireNeuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
-        for (GlobalAnnotationListener l: globalAnnotationListeners) {
-            l.neuronStyleChanged(neuron, style);
-        }
-    }
-
-    void fireNeuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
-        for (GlobalAnnotationListener l: globalAnnotationListeners) {
-            l.neuronStylesChanged(neuronStyleMap);
-        }et
-
-
-     */
-
-
     void fireNotesUpdated(TmGeoAnnotation ann) {
         AnnotationNotesUpdateEvent notesEvent = new AnnotationNotesUpdateEvent();
         notesEvent.setAnnotations( Arrays.asList(ann));
         ViewerEventBus.postEvent(notesEvent);
     }
 
-   /* public NeuronSet getNeuronSet() {
-        return neuronSetAdapter;
-    }*/
-
     public NeuronModel getNeuronModel() {
         return NeuronModel.getInstance();
-    }
-
-    public boolean getSelectMode() {
-        return select;
     }
 
     public void setSelectMode(boolean select) {

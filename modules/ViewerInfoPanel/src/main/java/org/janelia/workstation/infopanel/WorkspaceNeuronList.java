@@ -282,7 +282,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                                 SimpleWorker changer = new SimpleWorker() {
                                     @Override
                                     protected void doStuff() throws Exception {
-                                        NeuronManager.getInstance().changeNeuronOwner(selectedNeuron.getId(), dialog.getNewOwnerKey());
+                                        NeuronManager.getInstance().changeNeuronOwner(Arrays.asList(new TmNeuronMetadata[]{selectedNeuron}),
+                                                dialog.getNewOwnerKey());
                                     }
 
                                     @Override
@@ -1072,8 +1073,15 @@ class NeuronTableModel extends AbstractTableModel {
                     return peopleIcon;
                 }
             case COLUMN_COLOR:
-                // Note that is not the same as targetNeuron.getColor(). If the persisted color is null, it picks a default.
-                return TmViewState.getColorForNeuron(targetNeuron.getId());
+                Color color = TmViewState.getColorForNeuron(targetNeuron.getId());
+                if (color == null) {
+                    if (targetNeuron.getColor()==null) {
+                        color = TmViewState.generateNewColor(targetNeuron.getId());
+                    } else {
+                        color = targetNeuron.getColor();
+                    }
+                }
+                return color;
             case COLUMN_VISIBILITY:
                 if (!modelManager.getCurrentView().isHidden(targetNeuron.getId())) {
                     return visibleIcon;

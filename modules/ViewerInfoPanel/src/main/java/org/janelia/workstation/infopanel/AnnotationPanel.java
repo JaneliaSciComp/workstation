@@ -13,6 +13,7 @@ import org.janelia.workstation.controller.eventbus.NeuronUnhideEvent;
 import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.infopanel.action.*;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -25,6 +26,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.ArrayList;
 
 /**
  * this is the main class for large volume viewer annotation GUI; it instantiates and contains
@@ -384,11 +386,13 @@ public class AnnotationPanel extends JPanel
         hideOtherNeuronsAction = new AbstractAction("Hide other neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
+                java.util.List<TmNeuronMetadata> hiddenNeurons = new ArrayList<>();
                 for (TmNeuronMetadata neuron: workspaceNeuronList.getUnshownNeuronList()) {
                     TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
+                    hiddenNeurons.add(neuron);
                 }
                 NeuronHideEvent event = new NeuronHideEvent();
-                event.setNeurons(workspaceNeuronList.getNeuronList());
+                event.setNeurons(hiddenNeurons);
                 ViewerEventBus.postEvent(event);
             }
         };
@@ -416,7 +420,9 @@ public class AnnotationPanel extends JPanel
 
         neuronToolMenu.add(new WorkspaceInformationAction(annotationModel, workspaceNeuronList));
 
-        neuronToolMenu.add(new MessageSnooperAction());
+        if (AccessManager.getAccessManager().isAdmin()) {
+            neuronToolMenu.add(new MessageSnooperAction());
+        }
 
         sortSubmenu = new JMenu("Sort");
         JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical by name") {

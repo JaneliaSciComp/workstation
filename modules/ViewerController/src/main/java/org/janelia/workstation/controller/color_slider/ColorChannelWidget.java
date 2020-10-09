@@ -1,4 +1,4 @@
-package org.janelia.console.viewerapi.color_slider;
+package org.janelia.workstation.controller.color_slider;
 
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;

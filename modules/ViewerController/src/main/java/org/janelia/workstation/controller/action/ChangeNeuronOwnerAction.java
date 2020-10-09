@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.util.Arrays;
 
 /**
  * pop up a dialog so the user can choose a new owner for the target neuron, which is
@@ -79,7 +80,8 @@ public class ChangeNeuronOwnerAction extends AbstractAction {
                 SimpleWorker changer = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        NeuronManager.getInstance().changeNeuronOwner(targetNeuron.getId(), dialog.getNewOwnerKey());
+                        NeuronManager.getInstance().changeNeuronOwner(Arrays.asList(new TmNeuronMetadata[]{targetNeuron}),
+                                dialog.getNewOwnerKey());
                     }
 
                     @Override

@@ -4,7 +4,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
 
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.EditAction;
 import org.janelia.workstation.controller.dialog.NeuronColorDialog;
@@ -12,6 +14,9 @@ import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.model.TmViewState;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -54,28 +59,54 @@ public class NeuronChooseColorAction extends EditAction {
     }
 
     public void chooseNeuronColor(final TmNeuronMetadata neuron) {
-        // called from neuron list, clicking on color swatch
-        if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-            return;
-        }
-        if (neuron == null) {
-            // should not happen
-            return;
-        }
+        SimpleWorker colorSelector = new SimpleWorker() {
+            TmNeuronMetadata newNeuron;
+            @Override
+            protected void doStuff() throws Exception {
+                // called from neuron list, clicking on color swatch
+                if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
+                    return;
+                }
+                if (neuron == null) {
+                    // should not happen
+                    return;
+                }
 
-        Color color = askForNeuronColor(neuron);
-        if (color != null) {
-            TmViewState.setColorForNeuron(neuron.getId(), color);
-            NeuronUpdateEvent neuronEvent = new NeuronUpdateEvent();
-            neuronEvent.setNeurons(Arrays.asList(neuron));
-            ViewerEventBus.postEvent(neuronEvent);
-        }
+                Color color = askForNeuronColor(neuron);
+                if (color != null) {
+                    TmViewState.setColorForNeuron(neuron.getId(), color);
+                    if (neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
+                        neuron.setColor(color);
+                        NeuronManager.getInstance().updateNeuronMetadata(neuron);
+                    }
+                    NeuronUpdateEvent neuronEvent = new NeuronUpdateEvent();
+                    neuronEvent.setNeurons(Arrays.asList(neuron));
+                    ViewerEventBus.postEvent(neuronEvent);
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(new Exception( "Could not set neuron color",
+                        error));
+            }
+        };
+        colorSelector.execute();
     }
 
     public static Color askForNeuronColor(TmNeuronMetadata neuron) {
+        Color initColor = TmViewState.getColorForNeuron(neuron.getId());
+        if (initColor==null) {
+            initColor = TmViewState.generateNewColor(neuron.getId());
+        }
+
         NeuronColorDialog dialog = new NeuronColorDialog(
                 null,
-                TmViewState.getColorForNeuron(neuron.getId()));
+                initColor);
         dialog.setVisible(true);
         if (dialog.styleChosen()) {
             return dialog.getChosenColor();

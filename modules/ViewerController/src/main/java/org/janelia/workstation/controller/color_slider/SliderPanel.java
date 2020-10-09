@@ -1,4 +1,4 @@
-package org.janelia.console.viewerapi.color_slider;
+package org.janelia.workstation.controller.color_slider;
 
 import java.awt.Insets;
 import java.io.File;
@@ -20,12 +20,23 @@ import javax.swing.event.ChangeListener;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.console.viewerapi.SimpleIcons;
-import org.janelia.console.viewerapi.actions.ImportExportColorModelAction;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.UnmixingParameters;
+import org.janelia.model.domain.DomainConstants;
+import org.janelia.model.domain.tiledMicroscope.TmColorModel;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.access.ModelTranslation;
+import org.janelia.workstation.controller.action.ImportExportColorModelAction;
+import org.janelia.workstation.controller.eventbus.ColorModelUpdateEvent;
+import org.janelia.workstation.controller.eventbus.ViewerEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +67,7 @@ public class SliderPanel extends JPanel {
     private VIEW top;
 
     public SliderPanel() { // empty constructor so I can drag this widget in netbeans GUI builder
+        ViewerEventBus.registerForEvents(this);
     }
     
     public SliderPanel( ImageColorModel imageColorModel ) {
@@ -69,8 +81,16 @@ public class SliderPanel extends JPanel {
     public VIEW getTop() {
         return top;
     }
+
+    @Subscribe
+    public void updateColorModel(ColorModelUpdateEvent event) {
+        ImageColorModel colorModel = event.getImageColorModel();
+        if (colorModel!=null) {
+            setImageColorModel(colorModel);
+        }
+    }
     
-    public final void setImageColorModel( ImageColorModel imageColorModel ) {
+    public final synchronized void setImageColorModel( ImageColorModel imageColorModel ) {
         if ( colorWidgets != null ) {
             for ( ColorChannelWidget ccw: colorWidgets ) {
                 this.remove( ccw );
@@ -231,6 +251,20 @@ public class SliderPanel extends JPanel {
         exportColorModelAction.putValue("top", this.top);
         sliderPanelMenu.add(new JMenuItem(exportColorModelAction));
 
+        ImportExportColorModelAction saveWorkspaceColorModelAction = new ImportExportColorModelAction(ImportExportColorModelAction.MODE.SAVE_WORKSPACE, this, colorLockPanel);
+        saveWorkspaceColorModelAction.putValue(Action.NAME, "Save Color Model To Workspace");
+        saveWorkspaceColorModelAction.putValue(Action.SHORT_DESCRIPTION,
+                "Save color model to be default for this sample/workspace");
+        saveWorkspaceColorModelAction.putValue("top", this.top);
+        sliderPanelMenu.add(new JMenuItem(saveWorkspaceColorModelAction));
+
+        ImportExportColorModelAction saveUserColorModelAction = new ImportExportColorModelAction(ImportExportColorModelAction.MODE.SAVE_USER, this, colorLockPanel);
+        saveUserColorModelAction.putValue(Action.NAME, "Save Color Model As User Preference");
+        saveUserColorModelAction.putValue(Action.SHORT_DESCRIPTION,
+                "Save color model as a user preference for this sample/workspace");
+        saveUserColorModelAction.putValue("top", this.top);
+        sliderPanelMenu.add(new JMenuItem(saveUserColorModelAction));
+
         colorLockPanel.setComponentPopupMenu(sliderPanelMenu);
         for (int i=0; i<colorWidgets.length; i++) {
              ColorChannelWidget cw = colorWidgets[i];
@@ -262,6 +296,30 @@ public class SliderPanel extends JPanel {
         }
         catch (Exception e) {
             log.error("Error importing color model", e);
+        }
+    }
+
+    public void saveColorModel(ImportExportColorModelAction.MODE saveMode) {
+        Long projectId = null;
+        TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+        TmSample sample = TmModelManager.getInstance().getCurrentSample();
+        projectId=(workspace==null)?sample.getId():workspace.getId();
+        ImageColorModel imageColorModel = colorWidgets[0].getImageColorModel();
+        TmColorModel tmColorModel = ModelTranslation.translateColorModel(imageColorModel);
+
+        try {
+            switch (saveMode) {
+                case SAVE_USER:
+                    FrameworkAccess.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_COLORMODEL,
+                            projectId.toString(), tmColorModel);
+                    break;
+                case SAVE_WORKSPACE:
+                    workspace.setColorModel3d(tmColorModel);
+                    TmModelManager.getInstance().saveWorkspace(workspace);
+                    break;
+            }
+        } catch (Exception e) {
+            FrameworkAccess.handleException("Problem saving color model", e);
         }
     }
 

@@ -1,4 +1,4 @@
-package org.janelia.console.viewerapi.color_slider;
+package org.janelia.workstation.controller.color_slider;
 
 
 import java.awt.Color;
