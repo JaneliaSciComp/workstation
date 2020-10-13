@@ -268,6 +268,8 @@ public class TmViewerManager implements GlobalViewerController {
             }
         }
 
+        TmModelManager.getInstance().getNeuronHistory().clearHistory();
+
         // this is for displaying the neurons
         LoadNeuronsEvent neuronsEvent = new LoadNeuronsEvent();
         neuronsEvent.setWorkspace(workspace);

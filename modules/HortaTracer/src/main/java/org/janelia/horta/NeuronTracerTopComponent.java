@@ -32,6 +32,7 @@ import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.MouseInputListener;
 import javax.swing.text.Keymap;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
@@ -496,8 +497,10 @@ public final class NeuronTracerTopComponent extends TopComponent
         // check if preferences, otherwise use workspace default color model
         TmColorModel userWorkspaceColorModel = null;
         try {
-            userWorkspaceColorModel = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_COLORMODEL,
+            LinkedHashMap<String, Object> modelMap = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MOUSELIGHT_COLORMODEL,
                     tmWorkspace.getId().toString(), null);
+            ObjectMapper mapper = new ObjectMapper();
+            userWorkspaceColorModel = mapper.convertValue(modelMap, TmColorModel.class);
         } catch (Exception e) {
             FrameworkAccess.handleException("Problems retrieving user color model for workspace", e);
         }

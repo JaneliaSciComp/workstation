@@ -58,6 +58,18 @@ public class SpatialIndexManager {
     }
 
     @Subscribe
+    public void neuronCreated(NeuronCreateEvent event) {
+        for (TmNeuronMetadata neuron : event.getNeurons()) {
+            for (TmGeoAnnotation annotation : neuron.getGeoAnnotationMap().values()) {
+                spatialIndex.removeFromIndex(annotation);
+            }
+            for (TmGeoAnnotation annotation : neuron.getGeoAnnotationMap().values()) {
+                spatialIndex.addToIndex(annotation);
+            }
+        }
+    }
+
+    @Subscribe
     public void neuronUpdated(NeuronUpdateEvent event) {
         for (TmNeuronMetadata neuron : event.getNeurons()) {
             for (TmGeoAnnotation annotation : neuron.getGeoAnnotationMap().values()) {

@@ -22,6 +22,7 @@ public class TmHistory {
     boolean undoMode = false;
     boolean transaction = false;
     boolean recordHistory = true;
+    Set<Long> neuronsLogged = new HashSet<>();
 
     public List<TmHistoricalEvent> getHistoryOperations() {
         return historyOperations;
@@ -40,6 +41,9 @@ public class TmHistory {
 
     public void clearHistory() {
         this.historyOperations.clear();
+        neuronsLogged.clear();
+        undoMode = false;
+
     }
 
     public List<TmHistoricalEvent> undoAction() {
@@ -104,6 +108,30 @@ public class TmHistory {
         this.recordHistory = recordHistory;
     }
 
+    public void checkBackup(TmNeuronMetadata neuron) {
+        if (undoMode) {
+            historyOperations.clear();
+            neuronsLogged.clear();
+            undoMode = false;
+        }
+        if (!neuronsLogged.contains(neuron.getId())) {
+            try {
+                // add historical event
+                ObjectMapper mapper = new ObjectMapper();
+                byte[] neuronData = mapper.writeValueAsBytes(neuron);
+                TmHistoricalEvent event = new TmHistoricalEvent();
+                Map<Long, byte[]> map = new HashMap<>();
+                map.put(neuron.getId(), neuronData);
+                event.setNeurons(map);
+                event.setTimestamp(new Date());
+                addHistoricalEvent(event);
+                neuronsLogged.add(neuron.getId());
+            } catch (JsonProcessingException e) {
+                FrameworkAccess.handleException(e);
+            }
+        }
+    }
+
     public void addHistoricalEvent (TmHistoricalEvent event) {
         if (!recordHistory)
             return;
@@ -112,42 +140,13 @@ public class TmHistory {
         if (transaction)
             event.setMultiAction(true);
 
-        // check if we haven't changed this neuron yet; so we can make an initial backup
-       /* boolean createInit = true;
-        try {
-            if (historyOperations.size()>0) {
-                Iterator<Long> newNeuronIter = event.getNeurons().keySet().iterator();
-                Long newNeuronID = newNeuronIter.next();
-
-                TmHistoricalEvent prevEvent = historyOperations.get(0);
-                if (prevEvent.getNeurons().keySet().contains(newNeuronID)) {
-                    createInit = false;
-                }
-            }
-            if (createInit) {
-                TmHistoricalEvent backupEvent = new TmHistoricalEvent();
-                ObjectMapper objectMapper = new ObjectMapper();
-                Iterator<Long> newNeuronIter = event.getNeurons().keySet().iterator();
-                Map<Long,byte[]> backupMap = new HashMap<>();
-                while (newNeuronIter.hasNext()) {
-                    Long newNeuronID = newNeuronIter.next();
-                    TmNeuronMetadata backupNeuron = NeuronManager.getInstance().getNeuronFromNeuronID(newNeuronID);
-                    backupMap.put(backupNeuron.getId(), objectMapper.writeValueAsBytes(backupNeuron));
-                }
-                backupEvent.setNeurons(backupMap);
-                backupEvent.setTimestamp(new Date());
-                backupEvent.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
-                historyOperations.add(backupEvent);
-            }
-        } catch (JsonProcessingException e) {
-            FrameworkAccess.handleException(e);
-        }*/
-
-        if (undoMode)
+        if (undoMode) {
             historyOperations.clear();
+            neuronsLogged.clear();
+            undoMode = false;
+        }
 
         historyOperations.add(event);
-        undoMode = false;
         undoStep = 0;
 
         if (historyOperations.size()>10)
