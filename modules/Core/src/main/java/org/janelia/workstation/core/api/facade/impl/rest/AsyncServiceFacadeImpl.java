@@ -29,6 +29,7 @@ public class AsyncServiceFacadeImpl implements AsyncServiceFacade {
             args.add("-maskId");
             args.add(maskRef.getTargetId().toString());
         }
+        args.add("-use-java-process");
 
         // Invoke the service
         ActivityLogHelper.logUserAction("AsyncServiceFacadeImpl.executeColorDepthService", search);
