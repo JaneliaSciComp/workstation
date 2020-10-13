@@ -473,7 +473,6 @@ public class NeuronModel {
         TmNeuronMetadata oldNeuron = neuronMap.get(neuron.getId());
         oldNeuron.setNeuronData(neuron.getNeuronData());
         oldNeuron.setColor(neuron.getColor());
-        oldNeuron.setId(neuron.getId());
         oldNeuron.setName(neuron.getName());
         Map<String, String> extraArguments = new HashMap<>();
         extraArguments.put("undo", "true");

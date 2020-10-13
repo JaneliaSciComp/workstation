@@ -4,6 +4,7 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.NeuronHideEvent;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
@@ -273,7 +274,16 @@ public class TmViewState {
     }
 
     public static float[] getColorForNeuronAsFloatArray(Long neuronID) {
+        TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(neuronID);
         Color color = getColorForNeuron(neuronID);
+        if (color == null) {
+            if (neuron.getColor()==null) {
+                color = generateNewColor(neuronID);
+            } else {
+                color = neuron.getColor();
+            }
+        }
+
         return new float[]{color.getRed() / 255.0f,
                 color.getGreen() / 255.0f, color.getBlue() / 255.0f};
     }

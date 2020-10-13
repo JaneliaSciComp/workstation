@@ -433,6 +433,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public synchronized void renameCurrentNeuron(String name) throws Exception {
         // rename whatever neuron was current at time of start of this call.
         final TmNeuronMetadata neuron = TmSelectionState.getInstance().getCurrentNeuron();
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
         neuron.setName(name);
         this.neuronModel.saveNeuronData(neuron);
         log.info("Neuron was renamed: "+neuron);
@@ -683,6 +684,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public synchronized void moveAnnotation(final Long neuronID, final Long annotationID, final Vec3 location) throws Exception {
         final TmNeuronMetadata neuron = this.getNeuronFromNeuronID(neuronID);
         final TmGeoAnnotation annotation = getGeoAnnotationFromID(neuron, annotationID);
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
 
         // find each connecting annotation; if there's a traced path to it,
         //  remove it (refresh annotation!)
@@ -762,15 +764,20 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public synchronized void restoreNeuron (TmNeuronMetadata restoredNeuron) throws Exception {
         if (neuronModel.getNeuronById(restoredNeuron.getId())==null) {
+            restoredNeuron.setId(null);
+            restoredNeuron = tmDomainMgr.save(restoredNeuron);
+            restoredNeuron.initNeuronData();
             neuronModel.addNeuron(restoredNeuron);
-            neuronModel.saveNeuronData(restoredNeuron);
             if (applyFilter) {
                 NeuronUpdates updates = neuronFilter.addNeuron(restoredNeuron);
                 updateFrags(updates);
             }
-
             fireNeuronCreated(restoredNeuron);
         } else {
+            NeuronDeleteEvent deleteEvent = new NeuronDeleteEvent();
+            deleteEvent.setNeurons(Arrays.asList(
+                    new TmNeuronMetadata[]{getNeuronFromNeuronID(restoredNeuron.getId())}));
+            TmModelManager.getInstance().getSpatialIndexManager().neuronDeleted(deleteEvent);
             neuronModel.restoreNeuronFromHistory(restoredNeuron);
             fireNeuronChanged(restoredNeuron);
             if (applyFilter) {
@@ -791,6 +798,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public synchronized void updateAnnotationRadius(final Long neuronID, final Long annotationID, final float radius) throws Exception {
         final TmNeuronMetadata neuron = this.getNeuronFromNeuronID(neuronID);
         final TmGeoAnnotation annotation = getGeoAnnotationFromID(neuron, annotationID);
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
 
         // update local annotation object
         final Double oldRadius = annotation.getRadius();
@@ -840,8 +848,9 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      * @throws Exception
      */
     public synchronized void updateNeuronRadius(final Long neuronID, final float radius) throws Exception {
-
         final TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronID);
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
+
         Map<Long, Double> oldRadii = new HashMap<>();
 
         for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
@@ -1070,9 +1079,33 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             return;
         }
         final TmNeuronMetadata sourceNeuron = getNeuronFromNeuronID(annotation.getNeuronId());
+
+        TmHistory historian = TmModelManager.getInstance().getNeuronHistory();
+        TmHistoricalEvent sourceBackup = createSerialization(sourceNeuron);
+        sourceBackup.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+        sourceBackup.setMultiAction(true);
+        historian.addHistoricalEvent(sourceBackup);
+        TmHistoricalEvent targetBackup = createSerialization(destNeuron);
+        targetBackup.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+        targetBackup.setMultiAction(true);
+        historian.addHistoricalEvent(targetBackup);
+        historian.setRecordHistory(false);
         neuronModel.moveNeurite(annotation, sourceNeuron, destNeuron);
         neuronModel.saveNeuronData(sourceNeuron);
         neuronModel.saveNeuronData(destNeuron);
+
+        historian.setRecordHistory(true);
+        try {
+            TmHistoricalEvent sourceFinal = createSerialization(sourceNeuron);
+            sourceFinal.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+            historian.addHistoricalEvent(sourceFinal);
+            TmHistoricalEvent destFinal = createSerialization(destNeuron);
+            destFinal.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+            historian.addHistoricalEvent(destFinal);
+        } catch (Exception e) {
+            FrameworkAccess.handleException(e);
+        }
+
         if (applyFilter) {
             NeuronUpdates updates = neuronFilter.updateNeuron(sourceNeuron);
             updates = neuronFilter.updateNeuron(destNeuron);
@@ -1121,6 +1154,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
         // check that we can find the neuron
         final TmNeuronMetadata neuron = getNeuronFromNeuronID(link.getNeuronId());
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
         if (neuron == null) {
             // should this be an error?  it's a sign that the annotation has already
             //  been deleted, or something else that shouldn't happen
@@ -1226,6 +1260,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         }
 
         final TmNeuronMetadata neuron = getNeuronFromNeuronID(rootAnnotation.getNeuronId());
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
         if (neuron == null) {
             // should this be an error?  it's a sign that the annotation has already
             //  been deleted, or something else that shouldn't happen
@@ -1309,6 +1344,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         // ann1 is the child of ann2 in both cases; if reverse, place the new point
         //  near ann2 instead of ann1
         final TmNeuronMetadata neuron = getNeuronFromNeuronID(annotation.getNeuronId());
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
         TmGeoAnnotation annotation1;
         TmGeoAnnotation annotation2;
         boolean reverse;
@@ -1417,6 +1453,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         // do it in the DAO layer
         final TmGeoAnnotation newRoot = getGeoAnnotationFromID(neuronId, newRootID);
         TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronId);
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
         neuronModel.rerootNeurite(neuron, newRoot);
 
         // see notes in addChildAnnotation re: the predef notes
@@ -1453,6 +1490,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public synchronized void splitNeurite(final Long neuronID, final Long newRootID) throws Exception {
         final TmGeoAnnotation newRoot = getGeoAnnotationFromID(neuronID, newRootID);
         final TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronID);
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
         TmGeoAnnotation newRootParent = neuron.getParentOf(newRoot);
         removeAnchoredPath(neuron, newRoot, newRootParent);
         neuronModel.splitNeurite(neuron, newRoot);
@@ -1608,6 +1646,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      */
     public synchronized void setNote(final TmGeoAnnotation geoAnnotation, final String noteString) throws Exception {
         TmNeuronMetadata neuron = getNeuronFromNeuronID(geoAnnotation.getNeuronId());
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
+
         if (neuron == null) {
             throw new Exception("can't find neuron for annotation with ID " + geoAnnotation.getId());
         }
@@ -1662,6 +1702,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public synchronized void removeNote(final Long neuronID, final TmStructuredTextAnnotation textAnnotation) throws Exception {
         TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronID);
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
+
         neuronModel.deleteStructuredTextAnnotation(neuron, textAnnotation.getParentId());
         final TmGeoAnnotation ann = getGeoAnnotationFromID(neuron, textAnnotation.getParentId());
         ann.updateModificationDate();
