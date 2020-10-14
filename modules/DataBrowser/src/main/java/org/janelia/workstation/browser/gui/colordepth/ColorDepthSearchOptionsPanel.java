@@ -1,6 +1,7 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
 import java.awt.BorderLayout;
+import java.awt.event.ItemEvent;
 import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,6 +36,7 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 /**
  * User options panel for a color depth search. Reused between the color depth search editor and the mask dialog. 
@@ -133,6 +135,23 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         useSegmentationCheckbox = new JCheckBox("Use segmentation");
 
         useGradScoresCheckbox = new JCheckBox("Use gradient scores");
+        useGradScoresCheckbox.addActionListener(e -> {
+            JCheckBox cb = (JCheckBox) e.getSource();
+            if (cb.isSelected()) {
+                StringBuilder html = new StringBuilder("<html><body>")
+                        .append("Gradient scoring is 5 times more expensive then using pixel match scoring.")
+                        .append("<br>Are you sure you want to use it?</br>")
+                        .append("</body></html>");
+
+                String[] buttons = { "Yes", "Cancel" };
+                int selectedOption = JOptionPane.showOptionDialog(this, html,
+                        "Gradient Selection", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, buttons, buttons[1]);
+                if (selectedOption == 1) {
+                    // cancel selection
+                    cb.setSelected(false);
+                }
+            }
+        });
 
         allMasks = new JCheckBox("Rerun all masks");
         allMasks.setToolTipText("Rerun all masks or just the currently selected mask?");

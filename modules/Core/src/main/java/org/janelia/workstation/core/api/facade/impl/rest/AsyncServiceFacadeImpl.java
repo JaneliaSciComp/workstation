@@ -17,6 +17,8 @@ import org.janelia.workstation.core.workers.SearchMonitoringWorker;
  */
 public class AsyncServiceFacadeImpl implements AsyncServiceFacade {
 
+    private static final String DEFAULT_PROCESSING_LOCATION = "LSF_JAVA";
+
     private AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
 
     public AsyncServiceMonitoringWorker executeColorDepthService(ColorDepthSearch search, Reference maskRef) {
@@ -29,12 +31,12 @@ public class AsyncServiceFacadeImpl implements AsyncServiceFacade {
             args.add("-maskId");
             args.add(maskRef.getTargetId().toString());
         }
-        args.add("-use-java-process");
+//        args.add("-use-java-process");
 
         // Invoke the service
         ActivityLogHelper.logUserAction("AsyncServiceFacadeImpl.executeColorDepthService", search);
         Long serviceId = asyncServiceClient.invokeService("colorDepthObjectSearch",
-                args, null, ImmutableMap.of());
+                args, DEFAULT_PROCESSING_LOCATION, ImmutableMap.of());
 
         // Create a monitoring worker
         AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(search, serviceId);
