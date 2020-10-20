@@ -390,7 +390,7 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
     }
 
     private boolean isShowLibrary(ColorDepthLibrary library) {
-        return ClientDomainUtils.hasReadAccess(library) && ColorDepthLibraryUtils.isSearchableVariant(library.getVariant());
+        return library.isEnabled() && ClientDomainUtils.hasReadAccess(library) && ColorDepthLibraryUtils.isSearchableVariant(library.getVariant());
     }
     
     public static final class LabeledValue {

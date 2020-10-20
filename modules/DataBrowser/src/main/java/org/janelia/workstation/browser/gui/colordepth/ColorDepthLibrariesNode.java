@@ -149,7 +149,7 @@ public class ColorDepthLibrariesNode extends IdentifiableNode {
         }
 
         private boolean isSearchableLibrary(ColorDepthLibrary library) {
-            return ClientDomainUtils.hasReadAccess(library) && ColorDepthLibraryUtils.isSearchableVariant(library.getVariant());
+            return library.isEnabled() && ClientDomainUtils.hasReadAccess(library) && ColorDepthLibraryUtils.isSearchableVariant(library.getVariant());
         }
 
         @Override
