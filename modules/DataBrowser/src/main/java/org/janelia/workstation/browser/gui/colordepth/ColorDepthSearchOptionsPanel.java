@@ -1,7 +1,6 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
 import java.awt.BorderLayout;
-import java.awt.event.ItemEvent;
 import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,7 +35,6 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 
 /**
  * User options panel for a color depth search. Reused between the color depth search editor and the mask dialog. 

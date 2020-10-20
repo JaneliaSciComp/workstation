@@ -5,14 +5,18 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JOptionPane;
 
 import com.google.common.eventbus.Subscribe;
+
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
+import org.janelia.model.domain.gui.cdmip.ColorDepthLibraryUtils;
 import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
@@ -132,12 +136,20 @@ public class ColorDepthLibrariesNode extends IdentifiableNode {
         protected boolean createKeys(List<ColorDepthLibrary> list) {
             try {
                 log.debug("Creating children keys for ColorDepthLibrariesNode");
-                list.addAll(DomainMgr.getDomainMgr().getModel().getColorDepthLibraries());
+                list.addAll(
+                        DomainMgr.getDomainMgr().getModel().getColorDepthLibraries().stream()
+                                .filter(library -> isSearchableLibrary(library))
+                                .collect(Collectors.toList())
+                );
             }
             catch (Exception ex) {
                 FrameworkAccess.handleException(ex);
             }
             return true;
+        }
+
+        private boolean isSearchableLibrary(ColorDepthLibrary library) {
+            return ClientDomainUtils.hasReadAccess(library) && ColorDepthLibraryUtils.isSearchableVariant(library.getVariant());
         }
 
         @Override
