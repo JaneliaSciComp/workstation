@@ -20,11 +20,16 @@ import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
+import Jama.Matrix;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
+import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.MenuItemGenerator;
 import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.MouseMode;
@@ -377,6 +382,41 @@ implements MouseMode, KeyListener
                 final Anchor hover = getHoverAnchor();
                 Anchor parent = skeletonActor.getModel().getNextParent();
                 result.add(null); // separator
+
+                AbstractAction syncViewsAction = new AbstractAction("Synchronize Views At This Location") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        // send out a view event to synchronize
+                        Point cursorPos = event.getPoint();
+                        Vec3 location = worldFromPixel(cursorPos);
+                        ViewEvent syncViewEvent = new ViewEvent();
+                        Camera3d camera = getCamera();
+
+                        Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
+                        Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
+                                {location.getX(),},
+                                {location.getY(),},
+                                {location.getZ(),},
+                                {1.0,},});
+                        // NeuronVertex API requires coordinates in micrometers
+                        Jama.Matrix voxLoc = m2v.times(micLoc);
+                        Vec3 voxelXyz = new Vec3(
+                                (float) voxLoc.get(0, 0),
+                                (float) voxLoc.get(1, 0),
+                                (float) voxLoc.get(2, 0));
+                        TmViewState currView = TmModelManager.getInstance().getCurrentView();
+                        currView.setCameraFocusX(voxelXyz.getX());
+                        currView.setCameraFocusY(voxelXyz.getY());
+                        currView.setCameraFocusZ(voxelXyz.getZ());
+                        currView.setZoomLevel(camera.getPixelsPerSceneUnit());
+                        syncViewEvent.setCameraFocusX(camera.getFocus().getX());
+                        syncViewEvent.setCameraFocusY(camera.getFocus().getY());
+                        syncViewEvent.setCameraFocusZ(camera.getFocus().getZ());
+                        ViewerEventBus.postEvent(syncViewEvent);
+                    }
+                };
+                syncViewsAction.setEnabled(controller.editsAllowed());
+                result.add(new JMenuItem(syncViewsAction));
 
                 // always available:
                 AbstractAction scrollBrainAction = new AbstractAction("Scroll through Sample(Z)") {
