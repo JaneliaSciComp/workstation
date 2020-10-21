@@ -17,13 +17,11 @@ public class ReviewPointPropertyEditor extends PropertyEditorSupport implements 
 
     @Override
     public String getAsText() {
-        System.out.println("ASDFASDF");
         return value;
     }
 
     @Override
     public void setAsText(String s) {
-        System.out.println("ASDFASDF");
         value = s;
     }
 

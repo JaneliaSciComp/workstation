@@ -32,6 +32,7 @@ import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.MouseInputListener;
 import javax.swing.text.Keymap;
 
+import Jama.Matrix;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -51,16 +52,7 @@ import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
-import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.MeshGeometry;
-import org.janelia.geometry3d.PerspectiveCamera;
-import org.janelia.geometry3d.Quaternion;
-import org.janelia.geometry3d.Rotation;
-import org.janelia.geometry3d.Vantage;
-import org.janelia.geometry3d.Vector3;
-import org.janelia.geometry3d.Vector4;
-import org.janelia.geometry3d.Viewport;
-import org.janelia.geometry3d.WavefrontObjLoader;
+import org.janelia.geometry3d.*;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.MultipassRenderer;
@@ -113,6 +105,7 @@ import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
@@ -1096,21 +1089,39 @@ public final class NeuronTracerTopComponent extends TopComponent
                 topMenu.add("Options:").setEnabled(false); // TODO should I place title in constructor?
 
                 // SECTION: View options
-                if (mouseStageLocation != null) {
-                    // Synchronize with LVV
-                    // TODO - is LVV present?
-                    // Want to lookup, get URL and get focus.
-                    SynchronizationHelper helper = new SynchronizationHelper();
-                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
-                            helper.getSampleLocationProviders(HortaLocationProvider.UNIQUE_NAME);
-                    Tiled3dSampleLocationProviderAcceptor origin =
-                            helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
-                    logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
-                    ViewLoader acceptor = new ViewLoader(
-                            neuronTraceLoader, NeuronTracerTopComponent.this, sceneWindow
-                    );
-                    topMenu.add(new JPopupMenu.Separator());
-                }
+                AbstractAction syncViewsAction = new AbstractAction("Synchronize Views At This Location") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        // send out a view event to synchronize
+                        ViewEvent syncViewEvent = new ViewEvent();
+                        Vantage vantage = sceneWindow.getVantage();
+                        Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
+                        Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
+                                {vantage.getFocus()[0],},
+                                {vantage.getFocus()[1],},
+                                {vantage.getFocus()[2],},
+                                {1.0,},});
+                        // NeuronVertex API requires coordinates in micrometers
+                        Jama.Matrix voxLoc = m2v.times(micLoc);
+                        Vec3 voxelXyz = new Vec3(
+                                (float) voxLoc.get(0, 0),
+                                (float) voxLoc.get(1, 0),
+                                (float) voxLoc.get(2, 0));
+                        TmViewState currView = TmModelManager.getInstance().getCurrentView();
+                        currView.setCameraFocusX(voxelXyz.getX());
+                        currView.setCameraFocusY(voxelXyz.getY());
+                        currView.setCameraFocusZ(voxelXyz.getZ());
+                        currView.setZoomLevel(vantage.getDefaultSceneUnitsPerViewportHeight());
+                        syncViewEvent.setCameraFocusX(vantage.getFocus()[0]);
+                        syncViewEvent.setCameraFocusY(vantage.getFocus()[1]);
+                        syncViewEvent.setCameraFocusZ(vantage.getFocus()[2]);
+                        syncViewEvent.setZoomLevel(vantage.getDefaultSceneUnitsPerViewportHeight());
+                        ViewerEventBus.postEvent(syncViewEvent);
+                    }
+                };
+                topMenu.add(syncViewsAction);
+                topMenu.add(new JPopupMenu.Separator());
+
 
                 Action resetRotationAction =
                         new ResetHortaRotationAction(NeuronTracerTopComponent.this);
