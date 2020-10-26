@@ -8,7 +8,6 @@ import com.mxgraph.util.mxEventObject;
 import com.mxgraph.util.mxEventSource;
 import com.mxgraph.view.mxGraphSelectionModel;
 import org.janelia.console.viewerapi.SimpleIcons;
-import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
@@ -19,10 +18,8 @@ import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
-import org.janelia.workstation.controller.tileimagery.TileServer;
 import org.janelia.workstation.geom.Quaternion;
 import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseHandler;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.core.api.AccessManager;
@@ -51,7 +48,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
@@ -60,6 +56,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -86,9 +83,55 @@ import java.util.*;
     "CTL_TaskWorkflowViewTopComponentTopComponent=" + TaskWorkflowViewTopComponent.LABEL_TEXT,
     "HINT_TaskWorkflowViewTopComponentTopComponent=Task Workflow View"
 })
-public final class TaskWorkflowViewTopComponent extends TopComponent implements ExplorerManager.Provider, mxEventSource.mxIEventListener {
+public final class TaskWorkflowViewTopComponent extends TopComponent implements ExplorerManager.Provider, MouseListener {
     public static final String PREFERRED_ID = "TaskWorkflowViewTopComponent";
-    public static final String LABEL_TEXT = "Task Workflow";
+    public static final String LABEL_TEXT = "Proofreader";
+
+    @Override
+    public void mouseClicked(MouseEvent event) {
+        mxCell selectedCell = navigator.getCellAt(event.getX(), event.getY());
+        if (selectedCell != null) {
+            PointDisplay point = pointLookup.get(selectedCell.getId());
+            // we have a cell; check for double-click for folding or single-click for selection
+            if ( (event.getClickCount() == 2) && (event.getButton() == MouseEvent.BUTTON1) && point!=null) {
+                // determine the fold status of cell and hide/show subcells
+                List<NeuronTree> children = ((NeuronTree)point).getChildren();
+                point.toggleFolded();
+                foldTree(children, point.isFolded());
+                navigator.foldCell(selectedCell, ((NeuronTree)point).getTotalNumChildren(), point.isFolded());
+                navigator.repaint();
+            } else if (event.getClickCount() == 1) {
+                Integer branch = branchLookup.get(selectedCell.getId());
+                if (branch!=null) {
+                    clearSelection();
+                    selectBranch(branch);
+                }
+                if (point!=null) {
+                    selectPoint(point);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
 
     enum REVIEW_CATEGORY {
         NEURON_REVIEW, POINT_REVIEW
@@ -117,9 +160,9 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     private JCheckBox rotationCheckbox;
     private JTextField speedSpinner;
     private JTextField numStepsSpinner;
-    JPanel taskButtonsPanel;
-    JToolBar selectActionsToolbar;
-    JToolBar regularActionsToolbar;
+    JPanel taskButtonsPanel1;
+    JPanel taskButtonsPanel2;
+    JToolBar parametersToolbar;
     JToolBar flyThroughActionsToolbar;
         
     boolean firstTime = true;
@@ -221,7 +264,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         }  
     }
     
-    public void nextBranch() {
+    public void nextBranch(boolean nextToReview) {
         if (groupList != null && currGroupIndex!=-1) {
             ReviewGroup currGroup = groupList.get(currGroupIndex);
             if (currCategory==REVIEW_CATEGORY.NEURON_REVIEW) {
@@ -243,6 +286,10 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 currGroupIndex++;
                 selectedPoints.clear();
                 currGroup = groupList.get(currGroupIndex);
+                while (nextToReview && currGroup.isReviewed() && currGroupIndex<groupList.size()-1) {
+                    currGroupIndex++;
+                    currGroup = groupList.get(currGroupIndex);
+                }
                 if (!currGroup.isReviewed() && currCategory == REVIEW_CATEGORY.NEURON_REVIEW) {
                     List<ReviewPoint> pointList = currGroup.getPointList();
 
@@ -255,30 +302,6 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                 }
             }            
         }        
-    }
-    
-    private void switchSelectMode() {
-        taskButtonsPanel.remove(flyThroughActionsToolbar);
-        taskButtonsPanel.add(selectActionsToolbar);        
-        dendroContainerPanel.validate();
-        dendroContainerPanel.repaint();
-        selectMode = true;
-        if (groupList!=null) 
-            clearSelection();
-    }
-    
-    private void switchFlyThroughMode() {
-        // clear selections from select mode; select the current branch
-        
-        taskButtonsPanel.remove(selectActionsToolbar);
-        taskButtonsPanel.add(flyThroughActionsToolbar);
-        dendroContainerPanel.validate();
-        dendroContainerPanel.repaint();        
-        selectMode = false;
-        if (groupList!=null) {
-            clearSelection();
-            selectBranch(currGroupIndex);
-        }
     }
     
     private void clearSelection() {
@@ -298,16 +321,6 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         navigator.updateCellStatus(normalCells.toArray(), ReviewTaskNavigator.CELL_STATUS.OPEN);
         navigator.updateCellStatus(reviewedCells.toArray(), ReviewTaskNavigator.CELL_STATUS.REVIEWED);
     }
-
-    private void selectAll() {
-        Object[] cells = new Object[pointList.size()];
-        for (ReviewGroup group: groupList) {
-            List<ReviewPoint> pointList = group.getPointList();
-            for (int i=0; i<pointList.size(); i++) {
-                 cells[i] = (((NeuronTree)pointList.get(i).getDisplay()).getGUICell());                
-            }
-        }
-    }    
     
     public void selectBranch(int groupIndex) {
         if (currGroupIndex != -1) {
@@ -347,24 +360,15 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     
     public void selectPoint(PointDisplay point) {
         Object[] cellArray = new Object[]{((NeuronTree)point).getGUICell()};
-        if (selectedPoints.contains(point)) {
-            selectedPoints.remove(point);
-            if (point.isReviewed()) {
-                navigator.updateCellStatus(cellArray, ReviewTaskNavigator.CELL_STATUS.REVIEWED);
-            } else {
-                navigator.updateCellStatus(cellArray, ReviewTaskNavigator.CELL_STATUS.OPEN);
-            }
-        } else {
-            selectedPoints.add(point);
-            navigator.updateCellStatus(cellArray, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
-        } 
+        selectedPoints.add(point);
+        navigator.updateCellStatus(cellArray, ReviewTaskNavigator.CELL_STATUS.UNDER_REVIEW);
     }
     
     public void selectPoint(Long annotationId) {
-        switchSelectMode();
         PointDisplay point = annotationLookup.get(annotationId);
         selectPoint(point);
     }
+
     public void loadHistory() {        
         ((TaskReviewTableModel)taskReviewTable.getModel()).clear();
         retrieveTasks();
@@ -577,34 +581,12 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         return pathList;
     }
 
-    // Cell Selection
-    @Override
-    public void invoke(Object o, mxEventObject eo) {
-        mxGraphSelectionModel model = (mxGraphSelectionModel)o;
-        mxCell selectedCell = (mxCell)model.getCell();
-        String cellId;
-        if (selectedCell!=null) {
-            if (selectedCell.isEdge()) {
-                if (selectedCell.getTarget()!=null) {
-                    cellId = selectedCell.getTarget().getId();
-                } else {
-                    cellId = selectedCell.getSource().getId();
-                }
-            } else {
-                cellId = selectedCell.getId();
-            }
-
-            if (selectMode) {
-                PointDisplay point = pointLookup.get(cellId);
-                if (point!=null) {
-                    selectPoint(point);
-                }
-            } else {
-                Integer branch = branchLookup.get(cellId);
-                if (branch!=null) {
-                    clearSelection();
-                    selectBranch(branch);
-                }
+    private void foldTree(List<NeuronTree> children, boolean fold) {
+        for (NeuronTree neuronTree: children) {
+            neuronTree.getGUICell().setVisible(!fold);
+            if (neuronTree.getChildren()!=null && neuronTree.getChildren().size()>0 &&
+                    !neuronTree.isFolded()) {
+                foldTree(neuronTree.getChildren(), fold);
             }
         }
     }
@@ -643,43 +625,19 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         currGroupIndex = 0;
         selectBranch(0);
 
-        navigator.addCellListener(this);
         repaint();
     }
 
     private void addTaskButtons() {
         dendroContainerPanel.removeAll();
-        taskButtonsPanel = new JPanel();
-        taskButtonsPanel.setLayout(new BoxLayout(taskButtonsPanel, BoxLayout.LINE_AXIS));
-        taskButtonsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-        taskButtonsPanel.setAlignmentX(LEFT_ALIGNMENT);
-
-        // top level toolbar with toggles for select or flythrough mode
-        JToolBar modeToolBar = new JToolBar();
-        modeToolBar.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        // TODO - create a shared base class for these mode buttons
-        JToggleButton flyThroughModeButton = new JToggleButton("");
-        flyThroughModeButton.setIcon(SimpleIcons.getIcon("jet_icon.png"));
-        flyThroughModeButton.setToolTipText("Toggles the Task Mode to NeuronCam");
-        dendroModeGroup.add(flyThroughModeButton);
-        flyThroughModeButton.addActionListener(event -> switchFlyThroughMode());
-        flyThroughModeButton.setMargin(new Insets(0, 0, 0, 0));
-        flyThroughModeButton.setHideActionText(true);
-        flyThroughModeButton.setFocusable(false);
-        modeToolBar.add(flyThroughModeButton);
-
-        JToggleButton selectModeButton = new JToggleButton("");
-        selectModeButton.setToolTipText("Toggles the Task Mode to Select/Review");
-        selectModeButton.setIcon(Icons.getIcon("nib.png"));
-        dendroModeGroup.add(selectModeButton);
-        selectModeButton.addActionListener(event -> switchSelectMode());
-        selectModeButton.setMargin(new Insets(0, 0, 0, 0));
-        selectModeButton.setHideActionText(true);
-        selectModeButton.setFocusable(false);
-        modeToolBar.add(selectModeButton);
-
-        taskButtonsPanel.add(modeToolBar);
+        taskButtonsPanel1 = new JPanel();
+        taskButtonsPanel1.setLayout(new BoxLayout(taskButtonsPanel1, BoxLayout.LINE_AXIS));
+        taskButtonsPanel1.setBorder(new EmptyBorder(5, 5, 5, 5));
+        taskButtonsPanel1.setAlignmentX(LEFT_ALIGNMENT);
+        taskButtonsPanel2 = new JPanel();
+        taskButtonsPanel2.setLayout(new BoxLayout(taskButtonsPanel2, BoxLayout.LINE_AXIS));
+        taskButtonsPanel2.setBorder(new EmptyBorder(5, 5, 5, 5));
+        taskButtonsPanel2.setAlignmentX(LEFT_ALIGNMENT);
 
         // FLYTHRU TOOLBAR
         flyThroughActionsToolbar = new JToolBar();
@@ -691,55 +649,16 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         flyThroughActionsToolbar.add(prevBranchButton);
 
         JButton nextBranchButton = new JButton("");
-        nextBranchButton.setToolTipText("Next Neuron Branch");
+        nextBranchButton.setToolTipText("Next Branch");
         nextBranchButton.setIcon(SimpleIcons.getIcon("next_node.png"));
-        nextBranchButton.addActionListener(event -> nextBranch());
+        nextBranchButton.addActionListener(event -> nextBranch(false));
         flyThroughActionsToolbar.add(nextBranchButton);
 
-        JButton playButton = new JButton("");
-        playButton.setToolTipText("Play Branch");
-        playButton.setIcon(SimpleIcons.getIcon("play.png"));
-        playButton.addActionListener(event -> playBranch());
-        flyThroughActionsToolbar.add(playButton);
-
-        rotationCheckbox = new JCheckBox("Auto Rotation");
-        flyThroughActionsToolbar.add(rotationCheckbox);
-
-        speedSpinner = new JTextField(3);
-        speedSpinner.setText("20");
-        speedSpinner.setMaximumSize(new Dimension(100, 50));
-        flyThroughActionsToolbar.add(speedSpinner);
-        JLabel speedSpinnerLabel = new JLabel("Speed");
-        flyThroughActionsToolbar.add(speedSpinnerLabel);
-
-        numStepsSpinner = new JTextField(3);
-        numStepsSpinner.setText("1");
-        numStepsSpinner.setMaximumSize(new Dimension(50,50));
-        flyThroughActionsToolbar.add(numStepsSpinner);
-        JLabel numStepsSpinnerLabel = new JLabel("Smoothness");
-        flyThroughActionsToolbar.add(numStepsSpinnerLabel);
-
-        // SELECT TOOLBAR
-        selectActionsToolbar = new JToolBar();
-        selectActionsToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JButton clearSelectButton = new JButton("");
-        clearSelectButton.setToolTipText("Clear Selection");
-        clearSelectButton.setIcon(SimpleIcons.getIcon("clear_all.png"));
-        clearSelectButton.addActionListener(event -> clearSelection());
-        selectActionsToolbar.add(clearSelectButton);
-
-        JButton selectAllButton = new JButton("");
-        selectAllButton.addActionListener(event -> selectAll());
-        selectAllButton.setToolTipText("Select All Nodes");
-        selectAllButton.setIcon(SimpleIcons.getIcon("select_all.png"));
-        selectActionsToolbar.add(selectAllButton);
-
-        // REGULAR ACTIONS TOOLBAR
-        regularActionsToolbar = new JToolBar();
-        regularActionsToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JPanel infoPane = new JPanel();
-        infoPane.setPreferredSize(new Dimension(100, 50));
+        JButton nextUnreviewedButton = new JButton("");
+        nextUnreviewedButton.setToolTipText("Next Unreviewed Branch");
+        nextUnreviewedButton.setIcon(SimpleIcons.getIcon("next_item.png"));
+        nextUnreviewedButton.addActionListener(event -> nextBranch(true));
+        flyThroughActionsToolbar.add(nextUnreviewedButton);
 
         JButton reviewButton = new JButton("");
         reviewButton.setToolTipText("Mark selected items as reviewed");
@@ -748,7 +667,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         reviewButton.setMargin(new Insets(0, 0, 0, 0));
         reviewButton.setHideActionText(true);
         reviewButton.setFocusable(false);
-        regularActionsToolbar.add(reviewButton);
+        flyThroughActionsToolbar.add(reviewButton);
 
         JButton unreviewButton = new JButton("");
         unreviewButton.setToolTipText("Clear selected items from being reviewed");
@@ -757,16 +676,44 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         reviewButton.setMargin(new Insets(0, 0, 0, 0));
         reviewButton.setHideActionText(true);
         reviewButton.setFocusable(false);
-        regularActionsToolbar.add(unreviewButton);
+        flyThroughActionsToolbar.add(unreviewButton);
 
-        taskButtonsPanel.add(regularActionsToolbar);
+        JButton playButton = new JButton("");
+        playButton.setToolTipText("Play Branch");
+        playButton.setIcon(SimpleIcons.getIcon("play.png"));
+        playButton.addActionListener(event -> playBranch());
+        flyThroughActionsToolbar.add(playButton);
+        taskButtonsPanel1.add(flyThroughActionsToolbar);
 
-        dendroContainerPanel.add(taskButtonsPanel);
+        // REGULAR ACTIONS TOOLBAR
+        parametersToolbar = new JToolBar();
+        parametersToolbar.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel infoPane = new JPanel();
+        infoPane.setPreferredSize(new Dimension(100, 50));
+
+        rotationCheckbox = new JCheckBox("Auto Rotation");
+        parametersToolbar.add(rotationCheckbox);
+
+        speedSpinner = new JTextField(3);
+        speedSpinner.setText("20");
+        speedSpinner.setMaximumSize(new Dimension(100, 50));
+        parametersToolbar.add(speedSpinner);
+        JLabel speedSpinnerLabel = new JLabel("Speed");
+        parametersToolbar.add(speedSpinnerLabel);
+
+        numStepsSpinner = new JTextField(3);
+        numStepsSpinner.setText("1");
+        numStepsSpinner.setMaximumSize(new Dimension(50,50));
+        parametersToolbar.add(numStepsSpinner);
+        JLabel numStepsSpinnerLabel = new JLabel("Smoothness");
+        parametersToolbar.add(numStepsSpinnerLabel);
+
+        taskButtonsPanel2.add(parametersToolbar);
+
+        dendroContainerPanel.add(taskButtonsPanel1);
+        dendroContainerPanel.add(taskButtonsPanel2);
         dendroContainerPanel.add(dendroPane);
-
-        // set as initial mode
-        flyThroughModeButton.setSelected(true);
-        switchFlyThroughMode();
 
         dendroContainerPanel.validate();
         dendroContainerPanel.repaint();
@@ -784,12 +731,17 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
              point.setReviewed(review);
              annotationList.add(point.getAnnotationId());
              guiCells[i] = point.getGUICell();
+             if (review)
+                 TmModelManager.getInstance().getCurrentReviews().addReviewedAnnotation(point.getAnnotationId());
+             else
+                 TmModelManager.getInstance().getCurrentReviews().removeReviewedAnnotation(point.getAnnotationId());
         }
         if (review) {
             navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.REVIEWED);
         } else {
             navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.OPEN);
         }
+
         NeuronBranchReviewedEvent branchReviewedEvent = new NeuronBranchReviewedEvent();
         Collection<TmGeoAnnotation> realAnnList = new ArrayList<>();
         NeuronManager manager = NeuronManager.getInstance();
@@ -1024,6 +976,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             NeuronTree tree = generateNeuronTreeForReview(neuron.getId());
             createNeuronReview(neuron, tree);
         }
+        navigator.addMouseListener(this);
     }
 
     public NeuronTree generateNeuronTreeForReview(Long neuronId) {
@@ -1107,10 +1060,10 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
             currGroupIndex = 0;
             selectBranch(0);
 
-            navigator.addCellListener(this);
             repaint();
         }
         currTask = reviewTask;
+        navigator.addMouseListener(this);
     }
 
     /**

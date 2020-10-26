@@ -1,10 +1,13 @@
 package org.janelia.horta.controller;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.console.viewerapi.listener.*;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
@@ -113,7 +116,21 @@ public class HortaManager {
     }
 
     @Subscribe
-    private void workspaceClosed(UnloadProjectEvent event) {
+    public void neuronBranchReviewed(NeuronBranchReviewedEvent event) {
+        Collection<TmGeoAnnotation> annotations = event.getAnnotations();
+
+        if (annotations.size()>0) {
+            TmGeoAnnotation branchNode = annotations.iterator().next();
+            List<TmNeuronMetadata> neurons = Arrays.asList(new TmNeuronMetadata[]{
+                    NeuronManager.getInstance().getNeuronFromNeuronID(branchNode.getNeuronId())});
+            for (NeuronUpdateListener listener: neuronUpdateListeners) {
+                listener.neuronsUpdated(neurons);
+            }
+        }
+    }
+
+    @Subscribe
+    public void workspaceClosed(UnloadProjectEvent event) {
         try {
             renderer.clearNeuronReconstructions();
 
@@ -125,7 +142,7 @@ public class HortaManager {
 
 
     @Subscribe
-    private void workspaceLoaded(LoadNeuronsEvent event) {
+    public void workspaceLoaded(LoadNeuronsEvent event) {
         try {
             renderer.clearNeuronReconstructions();
 

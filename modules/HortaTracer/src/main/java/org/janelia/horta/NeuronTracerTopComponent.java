@@ -470,6 +470,17 @@ public final class NeuronTracerTopComponent extends TopComponent
         List<TmViewState> locationList = event.getAnimationSteps();
         // do a quick check to see if
         sceneWindow.setControlsVisibility(true);
+        ViewEvent initAnimation = new ViewEvent();
+        initAnimation.setCameraFocusX(locationList.get(0).getCameraFocusX());
+        initAnimation.setCameraFocusY(locationList.get(0).getCameraFocusY());
+        initAnimation.setCameraFocusZ(locationList.get(0).getCameraFocusZ());
+        initAnimation.setZoomLevel(locationList.get(0).getZoomLevel());
+        setSampleLocation(initAnimation);
+        try {
+            Thread.sleep(500);
+        } catch (Exception e) {
+            FrameworkAccess.handleException(e);
+        }
         playback.reviewPoints(locationList, event.isAutoRotation(), event.getSpeed(), event.getStepScale());
     }
 

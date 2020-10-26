@@ -14,4 +14,6 @@ public interface PointDisplay {
     public boolean isReviewed();
     public void setReviewed(boolean review);
     public Vec3 getVertexLocation();
+    public boolean isFolded();
+    public void toggleFolded();
 }

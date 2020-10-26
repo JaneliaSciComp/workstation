@@ -15,6 +15,7 @@ import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.model.TmReviewState;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
@@ -223,6 +224,8 @@ public class TmViewerManager implements GlobalViewerController {
             return;
         }
 
+
+        TmModelManager.getInstance().setCurrentReviews(new TmReviewState());
         String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
         modelManager.getCurrentView().setFilter(false);
         int nFragments = 0;

@@ -18,6 +18,7 @@ public class NeuronTree implements PointDisplay {
     private boolean visited;
     private mxCell cell;
     private boolean reviewed;
+    private boolean folded;
 
     public NeuronTree(NeuronTree parentNode, Vec3 vertexLoc, Long annotation) {
         parent = parentNode;       
@@ -25,6 +26,7 @@ public class NeuronTree implements PointDisplay {
         annotationId = annotation;
         children = new ArrayList<NeuronTree>();        
         visited = false;
+        folded = false;
         width = 0;
     }
     
@@ -44,7 +46,17 @@ public class NeuronTree implements PointDisplay {
     public Vec3 getVertexLocation() {
         return loc;
     }
-    
+
+    @Override
+    public boolean isFolded() {
+        return folded;
+    }
+
+    @Override
+    public void toggleFolded() {
+        folded = !folded;
+    }
+
     public List<PointDisplay> generateRootToLeaf() {
         List<PointDisplay> rootToLeaf = new ArrayList<PointDisplay>();        
         NeuronTree currentNode = this;
@@ -71,6 +83,14 @@ public class NeuronTree implements PointDisplay {
         if (children.size()==0)
             return true;
         return false;
+    }
+
+    public int getTotalNumChildren() {
+        int numChildren = getChildren().size();
+        for (NeuronTree tree: getChildren()) {
+             numChildren += tree.getTotalNumChildren();
+        }
+        return numChildren;
     }
 
     public int getWidth() {
