@@ -12,6 +12,7 @@ import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronEdge;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmReviewState;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -300,6 +301,7 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
             }
             color.getColorComponents(rgb);
             Map<TmGeoAnnotation, Integer> vertexIndices = new HashMap<>();
+            TmReviewState reviews = TmModelManager.getInstance().getCurrentReviews();
             for (TmGeoAnnotation vertex : neuron.getGeoAnnotationMap().values()) {
                 int index = vertexCount;
                 vertexIndices.put(vertex, index);
@@ -316,16 +318,15 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
                     radius = 0.3f;
                 }
                 vertexAttributes.add(radius); // radius
-                /*if (neuron.getReviewMode() && neuron.isReviewedVertex(vertex)) {
+                if (reviews.isReviewedAnnotation(vertex.getId())) {
                     vertexAttributes.add(REVIEWED_GRAY_COLOR); // red
                     vertexAttributes.add(REVIEWED_GRAY_COLOR); // green
                     vertexAttributes.add(REVIEWED_GRAY_COLOR); // blue
                 } else {
-                 */
-                vertexAttributes.add(rgb[0]); // red
-                vertexAttributes.add(rgb[1]); // green
-                vertexAttributes.add(rgb[2]); // blue
-                //}
+                    vertexAttributes.add(rgb[0]); // red
+                    vertexAttributes.add(rgb[1]); // green
+                    vertexAttributes.add(rgb[2]); // blue
+                }
                 vertexAttributes.add(visibility); // visibility
                 vertexCount += 1;
             }

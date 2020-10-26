@@ -39,7 +39,7 @@ public class NextBranchNeuronCamAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         TaskWorkflowViewTopComponent taskView = TaskWorkflowViewTopComponent.getInstance();
         if (taskView!=null)
-            taskView.nextBranch();
+            taskView.nextBranch(false);
     }
     
     @Override

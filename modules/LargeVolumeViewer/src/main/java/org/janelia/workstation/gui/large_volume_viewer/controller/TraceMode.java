@@ -779,16 +779,6 @@ implements MouseMode, KeyListener
                 action.execute(nextParent.getNeuronID(), nextParent.getGuid());
 			}
 			break;
-        case KeyEvent.VK_P:
-            if (event.getModifiers() == 0) {
-                TaskWorkflowViewTopComponent.getInstance().nextBranch();
-            }
-            break;
-        case KeyEvent.VK_O:
-            if (event.getModifiers() == 0) {
-                TaskWorkflowViewTopComponent.getInstance().prevBranch();
-            }
-            break;
 		}
                 
         // if not normal key event, check our group toggle events

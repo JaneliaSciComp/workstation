@@ -1128,7 +1128,12 @@ public class TracingInteractor extends MouseAdapter
             if (hoveredVertex == null) return false;
             if (parentVertex == null) return false;
             if (hoveredVertex == parentVertex) return false;
-            if (hoveredNeuron == parentNeuron) return false; // cannot merge a neuron with itself
+            // cannot merge a neuron with itself
+            if (hoveredNeuron == parentNeuron) {
+                // add code to indicate looped neuron
+
+                return false;
+            }
             // TODO: same neuron is OK, but not same connected "neurite"
             if (TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) return false;
             return true;

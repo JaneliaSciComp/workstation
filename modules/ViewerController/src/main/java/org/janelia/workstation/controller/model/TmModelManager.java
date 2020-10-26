@@ -1,10 +1,7 @@
 package org.janelia.workstation.controller.model;
 
 import Jama.Matrix;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.model.util.MatrixUtilities;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.SpatialIndexManager;
@@ -47,6 +44,7 @@ public class TmModelManager {
 
     private TmViewState currentView;
     private TmSelectionState currentSelections;
+    private TmReviewState currentReviews;
     private TmHistory neuronHistory;
 
     private Jama.Matrix voxToMicronMatrix;
@@ -167,6 +165,14 @@ public class TmModelManager {
 
     public TmViewState getCurrentView() {
         return currentView;
+    }
+
+    public void setCurrentReviews(TmReviewState currentReviews) {
+        this.currentReviews = currentReviews;
+    }
+
+    public TmReviewState getCurrentReviews() {
+        return currentReviews;
     }
 
     public void setCurrentView(TmViewState currentView) {

@@ -1,5 +1,6 @@
 package org.janelia.workstation.controller.task_workflow;
 
+import com.mxgraph.model.mxGeometry;
 import com.mxgraph.swing.mxGraphComponent;
 import com.mxgraph.view.*;
 import com.mxgraph.model.mxCell;
@@ -14,6 +15,7 @@ import java.awt.event.MouseEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
@@ -43,9 +45,17 @@ public class ReviewTaskNavigator implements MouseWheelListener {
     ReviewTaskNavigator() {
         
     }
-    
-    public void addCellListener (mxIEventListener listener) {
-        graph.getSelectionModel().addListener(mxEvent.CHANGE, listener);
+
+    public void addMouseListener (MouseListener listener) {
+        graphComponent.getGraphControl().addMouseListener(listener);
+    }
+
+    public mxCell getCellAt(int x, int y) {
+        Object cell = graphComponent.getCellAt(x,y);
+        if (cell!=null) {
+            return (mxCell)cell;
+        }
+        return null;
     }
     
     public JScrollPane createGraph(NeuronTree tree, int leaves, int width, int height) {
@@ -65,9 +75,10 @@ public class ReviewTaskNavigator implements MouseWheelListener {
             } 
             
             @Override
-            public boolean isCellMovable(Object cell){                
-                return false; 
-            }     
+            public boolean isCellMovable(Object cell){
+                return false;
+            }
+
         };
 
         parent = graph.getDefaultParent();
@@ -122,9 +133,14 @@ public class ReviewTaskNavigator implements MouseWheelListener {
         graphComponent.scrollToCenter(true);
         graphComponent.setPanning(true);
         graphComponent.setAutoExtend(true);
+        graphComponent.setFoldingEnabled(true);
         graphComponent.refresh();
 
         return graphComponent;        
+    }
+
+    public void repaint() {
+        graphComponent.refresh();
     }
     
     private void traceNode(int level, mxCell prevPoint, NeuronTree node, int currx, int curry) {
@@ -153,7 +169,21 @@ public class ReviewTaskNavigator implements MouseWheelListener {
             traceNode (level+1,nodePoint, childNode, currx, curry);
             currx += centerOffset;
 
-        }        
+        }
+    }
+
+    // size the folded cell based off the number of children
+    public void foldCell (mxCell cell, int children, boolean fold) {
+        mxGeometry geometry = cell.getGeometry();
+        double scale;
+        if (fold) {
+            scale =  1 + children/10.0;
+        } else {
+            scale = 1/(1+children/10.0);
+        }
+        geometry.setWidth(geometry.getWidth()*scale);
+        geometry.setHeight(geometry.getHeight()*scale);
+        cell.setCollapsed(fold);
     }
     
     public void updateCellStatus (Object[] cells, CELL_STATUS status) {   
@@ -182,7 +212,7 @@ public class ReviewTaskNavigator implements MouseWheelListener {
         if (e.getWheelRotation() < 0){
             graphComponent.zoomIn();                     
         } else {
-            graphComponent.zoomOut();                        
+            graphComponent.zoomOut();
         }
     }
 }
