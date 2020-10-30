@@ -637,6 +637,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         addTimer.mark("start addChildAnn");
 
         final TmNeuronMetadata neuron = getNeuronFromNeuronID(parentAnn.getNeuronId());
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
 
         final TmGeoAnnotation annotation = neuronModel.addGeometricAnnotation(
                 neuron, parentAnn.getId(), xyz.x(), xyz.y(), xyz.z());
@@ -652,20 +653,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                 viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
         }
 
-        /*SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-          */
         fireAnnotationAdded(annotation);
         updateFragsByAnnotation(neuron.getId(), annotation.getId());
-                /*if (applyFilter) {
-                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
-                    updateFrags(updates);
-                }
-                updateFragsByAnnotation(neuron.getId(), annotation.getId());
-                //activityLog.logEndOfOperation(getWsId(), xyz);
-            }
-        });*/
 
         addTimer.mark("end addChildAnn");
         // reset timer state; we don't care about end > start
@@ -778,6 +767,11 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             deleteEvent.setNeurons(Arrays.asList(
                     new TmNeuronMetadata[]{getNeuronFromNeuronID(restoredNeuron.getId())}));
             TmModelManager.getInstance().getSpatialIndexManager().neuronDeleted(deleteEvent);
+
+            TmNeuronMetadata currNeuron = getNeuronFromNeuronID(restoredNeuron.getId());
+            AnnotationDeleteEvent deleteAnnEvent = new AnnotationDeleteEvent(currNeuron.getGeoAnnotationMap().values());
+            ViewerEventBus.postEvent(deleteAnnEvent);
+
             neuronModel.restoreNeuronFromHistory(restoredNeuron);
             fireNeuronChanged(restoredNeuron);
             if (applyFilter) {

@@ -36,7 +36,7 @@ public class SplitNeuronAtVertexAction extends AbstractAction {
     private static final Logger log = LoggerFactory.getLogger(SplitNeuronAtVertexAction.class);
 
     public SplitNeuronAtVertexAction() {
-        super("Split neuron between vertices");
+        super("Split neuron at vertex");
     }
 
     @Override

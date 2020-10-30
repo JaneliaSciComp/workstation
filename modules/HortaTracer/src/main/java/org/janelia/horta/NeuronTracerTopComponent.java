@@ -1681,6 +1681,22 @@ public final class NeuronTracerTopComponent extends TopComponent
                                     action.execute(vertex.getNeuronId(), vertex.getId());
                                 }
                             });
+
+                            topMenu.add(new AbstractAction("Split Neurite At Vertex") {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    SplitNeuronAtVertexAction action = new SplitNeuronAtVertexAction();
+                                    action.execute(vertex.getNeuronId(), vertex.getId());
+                                }
+                            });
+
+                            topMenu.add(new AbstractAction("Transfer Neurite") {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    TransferNeuriteAction action = new TransferNeuriteAction();
+                                    action.execute(vertex.getNeuronId(), vertex.getId());
+                                }
+                            });
                         }
                     }
                 }
@@ -1722,15 +1738,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                             @Override
                             public void actionPerformed(ActionEvent e) {
                                 interactorContext.mergeNeurites();
-                            }
-                        });
-                    }
-
-                    if (interactorContext.canSplitNeurite()) {
-                        topMenu.add(new AbstractAction("Split neurite...") {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                interactorContext.splitNeurite();
                             }
                         });
                     }

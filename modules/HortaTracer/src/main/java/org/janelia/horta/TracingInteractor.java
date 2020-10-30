@@ -984,16 +984,8 @@ public class TracingInteractor extends MouseAdapter
             }
             try {
                 if (densityVertex!=null) {
-                    Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
-                    Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
-                            {densityVertex.getX(),},
-                            {densityVertex.getY(),},
-                            {densityVertex.getZ(),},
-                            {1.0,},});
-                    // NeuronVertex API requires coordinates in micrometers
-                    Jama.Matrix voxLoc = m2v.times(micLoc);
-                    Vec3 newLoc = new Vec3(voxLoc.get(0, 0), voxLoc.get(1, 0),
-                            voxLoc.get(2, 0));
+                    Vec3 newLoc = new Vec3(densityVertex.getX(), densityVertex.getY(),
+                            densityVertex.getZ());
                     TmGeoAnnotation newAnn = NeuronManager.getInstance().addChildAnnotation(parentVertex, newLoc);
                     if (newAnn!=null) {
                         selectParentVertex(newAnn, parentNeuron);
@@ -1092,11 +1084,9 @@ public class TracingInteractor extends MouseAdapter
         }
         
         public boolean canSplitNeurite() {
-            if (parentNeuron == null) return false;
+            if (hoveredNeuron == null) return false;
             if (hoveredVertex == null) return false;
-            if (parentVertex == null) return false;
-            if (hoveredVertex == parentVertex) return false;
-            if (hoveredNeuron != parentNeuron) return false;
+            if (hoveredVertex.isRoot()) return false;
             // TODO: ensure the two anchors/vertices are connected
             if (TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) return false;
             return true;
@@ -1109,18 +1099,19 @@ public class TracingInteractor extends MouseAdapter
                 return false;
             }
 
-          /*  SplitNeuriteCommand cmd = new SplitNeuriteCommand(defaultWorkspace, hoveredVertex, parentVertex);
-            if (cmd.execute()) {
-                log.info("User split neurites in Horta");
-                if (undoRedoManager != null) {
-                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
-                }
-                return true;
-            }
-            else {
-                return false;
-            }*/
           return true;
+        }
+
+        private List<Long> findAncestors(Long neuronId, TmGeoAnnotation vertex) {
+            List<Long> ancestors = new ArrayList<>();
+            TmGeoAnnotation temp = vertex;
+            while (temp!=null && temp.getParentId()!=temp.getNeuronId()) {
+                Long parentId = temp.getParentId();
+                ancestors.add(parentId);
+                TmGeoAnnotation parentAnn = NeuronManager.getInstance().getGeoAnnotationFromID(neuronId, parentId);
+                temp = parentAnn;
+            }
+            return ancestors;
         }
         
         public boolean canMergeNeurite() {
@@ -1130,8 +1121,29 @@ public class TracingInteractor extends MouseAdapter
             if (hoveredVertex == parentVertex) return false;
             // cannot merge a neuron with itself
             if (hoveredNeuron == parentNeuron) {
-                // add code to indicate looped neuron
+                List<Long> targetAncestors = findAncestors(hoveredNeuron.getId(), hoveredVertex);
+                List<Long> sourceAncestors = findAncestors(hoveredNeuron.getId(), parentVertex);
 
+                Set<Long> loopVertices = new HashSet<>();
+                for (Long sourceAncestor: sourceAncestors) {
+                    if (targetAncestors.contains(sourceAncestor)) {
+                        int sourceIndex = sourceAncestors.indexOf(sourceAncestor);
+                        int targetIndex = targetAncestors.indexOf(sourceAncestor);
+                        loopVertices.addAll(sourceAncestors.subList(0, sourceIndex));
+                        loopVertices.addAll(targetAncestors.subList(0, targetIndex));
+                        break;
+                    }
+                }
+                if (loopVertices.size()>0) {
+                    TmModelManager.getInstance().getCurrentReviews().clearLoopedAnnotations();
+                    TmModelManager.getInstance().getCurrentReviews().addLoopedAnnotationsList(loopVertices);
+
+                    NeuronUpdateEvent updateEvent = new NeuronUpdateEvent();
+                    updateEvent.setNeurons(Arrays.asList(hoveredNeuron));
+                    ViewerEventBus.postEvent(updateEvent);
+                }
+
+                // find the common parent between hovered vertex and
                 return false;
             }
             // TODO: same neuron is OK, but not same connected "neurite"
