@@ -177,11 +177,14 @@ public class AnnotationPanel extends JPanel
         JPanel workspaceButtonsPanel = new JPanel();
         workspaceButtonsPanel.setLayout(new BoxLayout(workspaceButtonsPanel, BoxLayout.LINE_AXIS));
         mainPanel.add(workspaceButtonsPanel, cVert);
+        JPanel workspaceButtonsPanel2 = new JPanel();
+        workspaceButtonsPanel2.setLayout(new BoxLayout(workspaceButtonsPanel2, BoxLayout.LINE_AXIS));
+        mainPanel.add(workspaceButtonsPanel2, cVert);
 
         // testingFil
         // showOutline(workspaceButtonsPanel, Color.green);
 
-        openLVV = new JCheckBox("Open LVV");
+        openLVV = new JCheckBox("Open 2D");
         workspaceButtonsPanel.add(openLVV);
         openLVV.addActionListener(new ActionListener() {
             @Override
@@ -198,7 +201,7 @@ public class AnnotationPanel extends JPanel
             }
         });
 
-        openHorta = new JCheckBox("Open Horta");
+        openHorta = new JCheckBox("Open 3D");
         workspaceButtonsPanel.add(openHorta);
         openHorta.addActionListener(new ActionListener() {
             @Override
@@ -215,7 +218,7 @@ public class AnnotationPanel extends JPanel
             }
         });
 
-        openNeuronCam = new JCheckBox("Open NeuronCam");
+        openNeuronCam = new JCheckBox("Open Proofreader");
         workspaceButtonsPanel.add(openNeuronCam);
         openNeuronCam.addActionListener(new ActionListener() {
             @Override
@@ -233,7 +236,7 @@ public class AnnotationPanel extends JPanel
         });
 
         createWorkspaceButtonPlus = new JButton("+");
-        workspaceButtonsPanel.add(createWorkspaceButtonPlus);
+        workspaceButtonsPanel2.add(createWorkspaceButtonPlus);
         createWorkspaceAction.putValue(Action.NAME, "+");
         createWorkspaceAction.putValue(Action.SHORT_DESCRIPTION, "Create a new workspace");
         createWorkspaceButtonPlus.setAction(createWorkspaceAction);
@@ -335,7 +338,7 @@ public class AnnotationPanel extends JPanel
         workspaceToolButton.setIcon(gearIcon);
         workspaceToolButton.setHideActionText(true);
         workspaceToolButton.setMinimumSize(workspaceButtonsPanel.getPreferredSize());
-        workspaceButtonsPanel.add(workspaceToolButton);
+        workspaceButtonsPanel2.add(workspaceToolButton);
         workspaceToolButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ev) {
                 workspaceToolMenu.show(workspaceToolButton,

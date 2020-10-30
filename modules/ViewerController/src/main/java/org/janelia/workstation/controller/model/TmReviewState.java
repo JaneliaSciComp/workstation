@@ -8,6 +8,7 @@ import java.util.Set;
 
 public class TmReviewState {
     Set<Long> reviewedAnnotations = new HashSet<Long>();
+    Set<Long> loopedAnnotations = new HashSet<Long>();
     private TmReviewTask currentTask;
 
     public void addReviewedAnnotation(Long annId) {
@@ -36,5 +37,21 @@ public class TmReviewState {
 
     public void setCurrentTask(TmReviewTask currentTask) {
         this.currentTask = currentTask;
+    }
+
+    public void addLoopedAnnotation(Long annId) {
+        loopedAnnotations.add(annId);
+    }
+
+    public void addLoopedAnnotationsList(Collection<Long> annList) {
+        loopedAnnotations.addAll(annList);
+    }
+
+    public boolean isLoopedAnnotation(Long annId) {
+        return (loopedAnnotations.contains(annId));
+    }
+
+    public void clearLoopedAnnotations() {
+        loopedAnnotations.clear();
     }
 }

@@ -47,6 +47,8 @@ public class TmHistory {
     }
 
     public List<TmHistoricalEvent> undoAction() {
+        if (historyOperations.size()==0)
+            return null;
         List<TmHistoricalEvent> actions = new ArrayList<>();
         if (undoMode) {
             if (undoStep>0)
@@ -75,6 +77,8 @@ public class TmHistory {
     }
 
     public List<TmHistoricalEvent> redoAction() {
+        if (historyOperations.size()==0)
+            return null;
         if (!undoMode || undoStep==historyOperations.size()-1) {
             return null;
         } else {
