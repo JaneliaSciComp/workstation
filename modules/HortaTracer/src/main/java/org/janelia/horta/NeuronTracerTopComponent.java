@@ -40,8 +40,6 @@ import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.console.viewerapi.SynchronizationHelper;
-import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.controller.UnmixingListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
@@ -105,7 +103,6 @@ import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
@@ -156,7 +153,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     private static final int CACHE_CONCURRENCY = 10;
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor worldInteractor;
-    private TmWorkspace metaWorkspace;
 
     private VolumeMipMaterial.VolumeState volumeState = new VolumeMipMaterial.VolumeState();
 
@@ -374,24 +370,17 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         //metaWorksopace.notifyObservers();
         playback = new PlayReviewManager(sceneWindow, this, neuronTraceLoader);
-        initSampleLocation();
-        initColorModel();
+        if (TmModelManager.getInstance().getCurrentWorkspace()!=null) {
+            initSampleLocation();
+            initColorModel();
+            initMeshes();
+        }
         ViewerEventBus.registerForEvents(this);
 
     }
 
     public SceneWindow getSceneWindow() {
         return sceneWindow;
-    }
-
-    public void loadWorkspaceNeurons() {
-        // Update background color
-        // setBackgroundColor(metaWorkspace.getBackgroundColor());
-
-        // load all meshes from the workspace
-        loadMeshActors();
-
-        redrawNow();
     }
     
     public void stopPlaybackReview() {
@@ -859,9 +848,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         setPreferKtx(prefs.getBoolean("bPreferKtxTiles", isPreferKtx()));
     }
 
-    private void loadMeshActors() {
-
-        List<TmObjectMesh> meshActorList = metaWorkspace.getObjectMeshList();
+    public void initMeshes() {
+        List<TmObjectMesh> meshActorList = TmModelManager.getInstance().getCurrentWorkspace().getObjectMeshList();
 
         HashMap<String, TmObjectMesh> meshMap = new HashMap<>();
         for (TmObjectMesh meshActor : meshActorList) {
@@ -877,8 +865,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 //  can't be loaded by everyone who sees the workspace;
                 //  that's ok, but log it
                 if (!Paths.get(mesh.getPathToObjFile()).toFile().exists()) {
-                    logger.warn("unable to load mesh " + mesh.getName());
-                    continue;
+                    throw new RuntimeException("unable to load mesh " + mesh.getName());
                 }
                 meshGeometry = WavefrontObjLoader.load(Files.newInputStream(Paths.get(mesh.getPathToObjFile())));
                 TransparentEnvelope material = new TransparentEnvelope();
@@ -898,8 +885,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                         addMeshActor(meshActor);
                     }
                 });
-            } catch (IOException ex) {
-                logger.error("Failed to load mesh actors", ex);
+            } catch (Exception ex) {
+                FrameworkAccess.handleException("Failed to load mesh actors. Please check the scene editor for path information",
+                        ex);
             }
         }
     }
@@ -2017,8 +2005,19 @@ public final class NeuronTracerTopComponent extends TopComponent
         return false;
     }
 
+    @Subscribe
+    public void toggleMeshVisibility(MeshVisibilityEvent event) {
+        TmObjectMesh mesh = event.getMesh();
+        for (MeshActor meshActor : this.getMeshActors()) {
+            if (meshActor.getMeshName().equals(mesh.getName())) {
+                meshActor.setIsVisible(!event.isVisible());
+                getNeuronMPRenderer().setOpaqueBufferDirty();
+                break;
+            }
+        }
+    }
+
     public void setVisibleMeshes(Collection<String> visibleMeshes) {
-        // TODO: This is just neurons for now...
         for (MeshActor meshActor : this.getMeshActors()) {
             String meshName = meshActor.getMeshName();
             boolean bWas = meshActor.isVisible();
@@ -2079,9 +2078,11 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void addMeshActor(MeshActor meshActor) {
         getNeuronMPRenderer().addMeshActor(meshActor);
     }
-    
-    public void removeMeshActor(TmObjectMesh mesh) {
+
+    @Subscribe
+    public void deleteMeshActor(MeshDeleteEvent deleteEvent) {
         List<MeshActor> meshActorList = getNeuronMPRenderer().getMeshActors();
+        TmObjectMesh mesh = deleteEvent.getMesh();
         MeshActor targetMesh = null;
         for (MeshActor meshActor: meshActorList) {
             if (meshActor.getMeshName().equals(mesh.getName())) {
@@ -2090,38 +2091,22 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
         if (targetMesh!=null)
             getNeuronMPRenderer().removeMeshActor(targetMesh);
-        TmModelManager.getInstance().getCurrentWorkspace().removeObjectMesh(mesh);
-        TmViewState viewState = TmModelManager.getInstance().getCurrentView();
-        if (viewState.isHidden(targetMesh.getName())) {
-            viewState.removeMeshFromHidden(mesh.getName());
-        }
-    }
-    
-    public void saveObjectMesh (String meshName, String filename) {
-        TmObjectMesh newObjMesh = new TmObjectMesh(meshName, filename);
-        try {
-            TmModelManager.getInstance().getCurrentWorkspace().addObjectMesh(newObjMesh);
-            TmModelManager.getInstance().saveCurrentWorkspace();
-
-            // fire off event for scene editor
-            MeshCreateEvent meshEvent = new MeshCreateEvent();
-            meshEvent.setMeshes(Arrays.asList(new TmObjectMesh[]{newObjMesh}));
-            ViewerEventBus.postEvent(meshEvent);
-        } catch (Exception error) {
-            FrameworkAccess.handleException(error);
-        }
+        redrawNow();
     }
 
-    public void updateObjectMeshName(String oldName, String updatedName) {
+    @Subscribe
+    public void meshUpdateEvent(MeshUpdateEvent event) {
         try {
-            List<TmObjectMesh> objectMeshes = TmModelManager.getInstance().getCurrentWorkspace().getObjectMeshList();
-            for (TmObjectMesh objectMesh : objectMeshes) {
-                if (objectMesh.getName().equals(oldName)) {
-                    objectMesh.setName(updatedName);
-                    break;
+            if (event.getProperty()== MeshUpdateEvent.PROPERTY.NAME) {
+                String oldName = event.getOldValue();
+                for (MeshActor meshActor : this.getMeshActors()) {
+                    String meshName = meshActor.getMeshName();
+                    if (meshName.equals(oldName)) {
+                        meshActor.setMeshName(event.getMesh().getName());
+                        break;
+                    }
                 }
             }
-            TmModelManager.getInstance().saveCurrentWorkspace();
         } catch (Exception error) {
             FrameworkAccess.handleException(error);
         }

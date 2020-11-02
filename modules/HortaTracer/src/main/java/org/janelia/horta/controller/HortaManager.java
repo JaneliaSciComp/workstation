@@ -21,6 +21,7 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -153,9 +154,10 @@ public class HortaManager {
             }
             topComponent.initSampleLocation();
             topComponent.initColorModel();
+            topComponent.initMeshes();
             topComponent.redrawNow();
         } catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException("Problem loading workspace into Horta", e);
         }
     }
 

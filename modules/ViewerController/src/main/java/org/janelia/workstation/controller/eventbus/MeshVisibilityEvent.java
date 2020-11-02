@@ -2,18 +2,21 @@ package org.janelia.workstation.controller.eventbus;
 
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class MeshDeleteEvent {
+public class MeshVisibilityEvent {
     TmObjectMesh mesh;
+    private final boolean visible;
 
-    public MeshDeleteEvent(TmObjectMesh mesh) {
+    public MeshVisibilityEvent(TmObjectMesh mesh, boolean visible) {
         this.mesh = mesh;
+        this.visible = visible;
     }
 
     public TmObjectMesh getMesh() {
         return mesh;
+    }
+
+    public boolean isVisible() {
+        return visible;
     }
 }
 

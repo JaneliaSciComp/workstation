@@ -4,6 +4,7 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.NeuronHideEvent;
@@ -72,6 +73,16 @@ public class TmViewState {
             removeAnnotationFromHidden(annId);
         } else {
             addAnnotationToHidden(annId);
+        }
+    }
+
+    public boolean toggleHidden(TmObjectMesh mesh) {
+        if (hiddenMeshes.contains(mesh.getName())) {
+            removeMeshFromHidden(mesh.getName());
+            return false;
+        } else {
+            addMeshToHidden(mesh.getName());
+            return true;
         }
     }
 
