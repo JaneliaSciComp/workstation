@@ -224,7 +224,6 @@ public class TmViewerManager implements GlobalViewerController {
             return;
         }
 
-
         TmModelManager.getInstance().setCurrentReviews(new TmReviewState());
         String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
         modelManager.getCurrentView().setFilter(false);

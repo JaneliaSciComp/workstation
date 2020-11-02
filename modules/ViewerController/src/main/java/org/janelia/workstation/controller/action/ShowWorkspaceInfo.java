@@ -1,4 +1,4 @@
-package org.janelia.console.viewerapi.actions;
+package org.janelia.workstation.controller.action;
 
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;

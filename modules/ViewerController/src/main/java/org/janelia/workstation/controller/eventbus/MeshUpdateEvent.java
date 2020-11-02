@@ -2,18 +2,28 @@ package org.janelia.workstation.controller.eventbus;
 
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class MeshUpdateEvent {
-    public List<TmObjectMesh> getMeshes() {
-        return meshes;
+    TmObjectMesh mesh;
+    String oldValue;
+    PROPERTY property;
+    public enum PROPERTY { PATH, NAME};
+
+    public MeshUpdateEvent(TmObjectMesh mesh, String oldValue, PROPERTY property) {
+        this.mesh = mesh;
+        this.oldValue = oldValue;
+        this.property = property;
     }
 
-    public void setMeshes(List<TmObjectMesh> meshes) {
-        this.meshes = meshes;
+    public TmObjectMesh getMesh() {
+        return mesh;
     }
 
-    List<TmObjectMesh> meshes = new ArrayList<>();
+    public String getOldValue() {
+        return oldValue;
+    }
+
+    public PROPERTY getProperty() {
+        return property;
+    }
 }
 
