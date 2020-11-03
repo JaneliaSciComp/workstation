@@ -850,7 +850,8 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     public void initMeshes() {
         List<TmObjectMesh> meshActorList = TmModelManager.getInstance().getCurrentWorkspace().getObjectMeshList();
-
+        if (meshActorList==null)
+            return;
         HashMap<String, TmObjectMesh> meshMap = new HashMap<>();
         for (TmObjectMesh meshActor : meshActorList) {
             meshMap.put(meshActor.getName(), meshActor);

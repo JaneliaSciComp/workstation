@@ -71,6 +71,8 @@ public class SpatialIndexManager {
 
     @Subscribe
     public void neuronUpdated(NeuronUpdateEvent event) {
+        if (event.getNeurons()==null)
+            return;
         for (TmNeuronMetadata neuron : event.getNeurons()) {
             for (TmGeoAnnotation annotation : neuron.getGeoAnnotationMap().values()) {
                 spatialIndex.removeFromIndex(annotation);
