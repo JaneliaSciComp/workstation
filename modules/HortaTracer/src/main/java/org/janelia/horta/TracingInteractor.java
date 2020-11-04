@@ -202,17 +202,19 @@ public class TracingInteractor extends MouseAdapter
     }
     
     public List<GL3Actor> createActors(NeuronVertexUpdateListener listener) {
-        highlightHoverModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
+        TmWorkspace dummyWorkspace = new TmWorkspace();
+        dummyWorkspace.setId(12345678L);
+        highlightHoverModel = new TmNeuronMetadata(dummyWorkspace,
                 "Hover highlight");
         highlightHoverModel.setId(new Long(123123123L));
 
-        densityCursorModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
+        densityCursorModel = new TmNeuronMetadata(dummyWorkspace,
                 "Hover density");
 
         densityCursorModel.setId(new Long(343445345345L));
-        parentVertexModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
+        parentVertexModel = new TmNeuronMetadata(dummyWorkspace,
                 "Selected parent vertex");
-        anchorEditModel = new TmNeuronMetadata(TmModelManager.getInstance().getCurrentWorkspace(),
+        anchorEditModel = new TmNeuronMetadata(dummyWorkspace,
                 "Interactive anchor edit view");
 
         updateActorListener = listener;

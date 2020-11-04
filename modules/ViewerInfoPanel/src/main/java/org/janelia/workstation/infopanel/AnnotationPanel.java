@@ -132,6 +132,8 @@ public class AnnotationPanel extends JPanel
         hideAllNeuronsAction.setEnabled(enabled);
         sortSubmenu.setEnabled(enabled);
 
+        saveAsAction.fireEnabledChangeEvent();
+
         updateUI();
     }
 

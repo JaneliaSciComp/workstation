@@ -28,6 +28,10 @@ public class ResetZoomAction extends AbstractAction {
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		resetZoom();
+	}
+
+	public void resetZoom() {
 		if (volumeImage == null)
 			return;
 		if (volumeImage.getBoundingBox3d().isEmpty())
@@ -40,8 +44,8 @@ public class ResetZoomAction extends AbstractAction {
 		for (TileConsumer viewer : widgets) {
 			if (camera == null)
 				camera = viewer.getCamera();
-			if (! viewer.isShowing())
-				continue;
+			//if (! viewer.isShowing())
+			//	continue;
 			double z = getZoom(viewer);
 			if (Double.isNaN(z))
 				continue;

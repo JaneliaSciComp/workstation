@@ -131,6 +131,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             if (workspace.getColorModel() != null && viewStateListener != null) {
                 viewStateListener.loadColorModel(workspace.getColorModel());
             }
+
+            quadViewUi.resetZoom();
         }
     }
 

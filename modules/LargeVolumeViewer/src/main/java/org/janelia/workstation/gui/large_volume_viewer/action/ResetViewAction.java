@@ -26,6 +26,10 @@ public class ResetViewAction
                 "Recenter and show entire volume.");
     }
 
+    public void resetZoom() {
+        resetZoomAction.resetZoom();
+    }
+
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         if (widgets.size() < 1) {

@@ -153,8 +153,10 @@ public class HortaManager {
                 }
             }
             topComponent.initSampleLocation();
-            topComponent.initColorModel();
-            topComponent.initMeshes();
+            if (TmModelManager.getInstance().getCurrentWorkspace()!=null) {
+                topComponent.initColorModel();
+                topComponent.initMeshes();
+            }
             topComponent.redrawNow();
         } catch (Exception e) {
             FrameworkAccess.handleException("Problem loading workspace into Horta", e);
