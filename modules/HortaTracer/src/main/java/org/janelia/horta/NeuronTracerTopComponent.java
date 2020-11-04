@@ -10,6 +10,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -280,8 +281,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         };
         sceneWindow.getCamera().addObserver(cursorCacheDestroyer);
 
-        TmModelManager.getInstance().getCurrentView().setColorModel("default", imageColorModel);
-
         // Load new volume data when the focus moves
         volumeCache = new HortaVolumeCache(
                 (PerspectiveCamera) sceneWindow.getCamera(),
@@ -370,8 +369,8 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         //metaWorksopace.notifyObservers();
         playback = new PlayReviewManager(sceneWindow, this, neuronTraceLoader);
+        initSampleLocation();
         if (TmModelManager.getInstance().getCurrentWorkspace()!=null) {
-            initSampleLocation();
             initColorModel();
             initMeshes();
         }
@@ -481,12 +480,20 @@ public final class NeuronTracerTopComponent extends TopComponent
         event.setCameraFocusX(voxelCenter.getX());
         event.setCameraFocusY(voxelCenter.getY());
         event.setCameraFocusZ(voxelCenter.getZ());
-        event.setZoomLevel(1000);
+
+        event.setZoomLevel(5000);
         setSampleLocation(event);
     }
 
     public void initColorModel() {
         TmWorkspace tmWorkspace = TmModelManager.getInstance().getCurrentWorkspace();
+        if (tmWorkspace==null) {
+            imageColorModel = new ImageColorModel();
+            TmModelManager.getInstance().getCurrentView().setColorModel("default", imageColorModel);
+            ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(tmWorkspace, imageColorModel);
+            ViewerEventBus.postEvent(modelEvent);
+            return;
+        }
         // check if preferences, otherwise use workspace default color model
         TmColorModel userWorkspaceColorModel = null;
         try {
@@ -574,14 +581,13 @@ public final class NeuronTracerTopComponent extends TopComponent
 
 
         // 3) Neurite model
+        tracingActors.clear();
+        for (GL3Actor tracingActor : tracingInteractor.createActors(this)) {
+            tracingActors.add(tracingActor);
+            sceneWindow.getRenderer().addActor(tracingActor);
+
+        }
         if (TmModelManager.getInstance().getCurrentWorkspace()!=null) {
-            tracingActors.clear();
-            for (GL3Actor tracingActor : tracingInteractor.createActors(this)) {
-                tracingActors.add(tracingActor);
-                sceneWindow.getRenderer().addActor(tracingActor);
-
-            }
-
             for (TmNeuronMetadata neuron: NeuronManager.getInstance().getNeuronList()) {
                 neuronMPRenderer0.addNeuronActors(neuron);
             }
@@ -996,6 +1002,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 vp));
 
         sceneWindow.setBackgroundColor(Color.DARK_GRAY);
+
         this.add(sceneWindow.getOuterComponent(), BorderLayout.CENTER);
     }
 
@@ -1111,11 +1118,11 @@ public final class NeuronTracerTopComponent extends TopComponent
                         currView.setCameraFocusX(voxelXyz.getX());
                         currView.setCameraFocusY(voxelXyz.getY());
                         currView.setCameraFocusZ(voxelXyz.getZ());
-                        currView.setZoomLevel(vantage.getDefaultSceneUnitsPerViewportHeight());
+                        currView.setZoomLevel(vantage.getSceneUnitsPerViewportHeight());
                         syncViewEvent.setCameraFocusX(vantage.getFocus()[0]);
                         syncViewEvent.setCameraFocusY(vantage.getFocus()[1]);
                         syncViewEvent.setCameraFocusZ(vantage.getFocus()[2]);
-                        syncViewEvent.setZoomLevel(vantage.getDefaultSceneUnitsPerViewportHeight());
+                        syncViewEvent.setZoomLevel(vantage.getSceneUnitsPerViewportHeight());
                         ViewerEventBus.postEvent(syncViewEvent);
                     }
                 };

@@ -140,11 +140,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
     private final AnnotationManager annotationMgr;
 
     // actions
-    private final Action openFolderAction = new OpenFolderAction(largeVolumeViewer.getComponent(), this);
+    private final OpenFolderAction openFolderAction = new OpenFolderAction(largeVolumeViewer.getComponent(), this);
     private RecentFileList recentFileList = new RecentFileList(new JMenu("Open Recent"));
-    private final Action resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
-    private final Action resetColorsAction = new ResetColorsAction(imageColorModel);
-    private final Action refreshSharedUpdatesAction = new RefreshSharedUpdatesAction();
+    private final ResetViewAction resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
+    private final ResetColorsAction resetColorsAction = new ResetColorsAction(imageColorModel);
+    private final RefreshSharedUpdatesAction refreshSharedUpdatesAction = new RefreshSharedUpdatesAction();
     // mode actions (and groups)
     private final ZoomMouseModeAction zoomMouseModeAction = new ZoomMouseModeAction();
     private final PanModeAction panModeAction = new PanModeAction();
@@ -157,10 +157,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
     private final ButtonGroup scrollModeGroup = new ButtonGroup();
     private final OrthogonalModeAction orthogonalModeAction = new OrthogonalModeAction(this);
     // zoom actions
-    private final Action zoomInAction = new ZoomInAction(camera);
-    private final Action zoomOutAction = new ZoomOutAction(camera);
-    private final Action zoomMaxAction = new ZoomMaxAction(camera, volumeImage);
-    private final Action resetZoomAction = new ResetZoomAction(allSliceViewers, volumeImage);
+    private final ZoomInAction zoomInAction = new ZoomInAction(camera);
+    private final ZoomOutAction zoomOutAction = new ZoomOutAction(camera);
+    private final ZoomMaxAction zoomMaxAction = new ZoomMaxAction(camera, volumeImage);
+    private final ResetZoomAction resetZoomAction = new ResetZoomAction(allSliceViewers, volumeImage);
     // Z scan actions
     private final SliceScanAction nextZSliceAction = new NextZSliceAction(volumeImage, camera);
     private final SliceScanAction previousZSliceAction = new PreviousZSliceAction(volumeImage, camera);
@@ -1331,6 +1331,14 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     public AnnotationManager getAnnotationMgr() {
         return annotationMgr;
+    }
+
+    public void resetZoom() {
+        resetViewAction.resetZoom();
+    }
+
+    public BasicObservableCamera3d getCamera() {
+        return camera;
     }
 
 }
