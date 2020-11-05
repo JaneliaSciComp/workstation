@@ -43,10 +43,7 @@ import org.janelia.model.security.Subject;
 import org.janelia.workstation.controller.action.NeuronTagsAction;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.listener.ViewStateListener;
-import org.janelia.workstation.controller.model.TmHistoricalEvent;
-import org.janelia.workstation.controller.model.TmHistory;
-import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.controller.model.TmSelectionState;
+import org.janelia.workstation.controller.model.*;
 import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
@@ -1850,9 +1847,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                 headers = new ArrayList<>();
                 neuronHeaders.put(neuron.getId(), headers);
             }
-            //NeuronStyle style = getNeuronStyle(neuron);
-            //float[] color = style.getColorAsFloatArray();
-            //headers.add(String.format(COLOR_FORMAT, color[0], color[1], color[2]));
+            float[] color = TmViewState.getColorForNeuronAsFloatArray(neuron.getId());
+            headers.add(String.format(COLOR_FORMAT, color[0], color[1], color[2]));
             if (neuronList.size() > 1) {
                 // Allow user to pick name as name of file, if saving individual neuron.
                 // Do not save the internal name.
