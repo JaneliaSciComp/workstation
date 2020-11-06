@@ -245,11 +245,12 @@ public class TmViewerManager implements GlobalViewerController {
             modelManager.getCurrentView().setFilter(true);
             NeuronSelectionSpatialFilter neuronFilter = new NeuronSelectionSpatialFilter();
             neuronManager.setFilterStrategy(neuronFilter);
+            NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(true);
+            spatialEvent.setDescription("Neuron Selection Filter");
+            ViewerEventBus.postEvent(spatialEvent);
         }
 
         TmModelManager.getInstance().getSpatialIndexManager().initialize();
-        NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(true);
-        ViewerEventBus.postEvent(spatialEvent);
 
         try {
             loadUserPreferences();

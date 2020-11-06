@@ -10,6 +10,7 @@ import com.google.common.eventbus.*;
 
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.LoadNeuronsEvent;
 import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
 import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -179,11 +180,12 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
                 boolean isSample = true;
                 if (workspace != null)
                     isSample = false;
-                LoadProjectEvent event = new LoadProjectEvent(isSample);
+
+                LoadNeuronsEvent event = new LoadNeuronsEvent();
                 // note: null workspace OK here; indicates a sample
                 event.setWorkspace(workspace);
                 event.setSample(TmModelManager.getInstance().getCurrentSample());
-                ViewerEventBus.postEvent(event);
+                getQuadViewUi().loadNeurons(event);
 
                 revalidate();
                 repaint();

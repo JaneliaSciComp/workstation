@@ -496,6 +496,8 @@ public class NeuronMPRenderer extends MultipassRenderer implements NeuronUpdateL
 
     @Override
     public void neuronsUpdated(Collection<TmNeuronMetadata> updatedNeurons) {
+        if (updatedNeurons==null)
+            return;
         for (TmNeuronMetadata neuron : updatedNeurons) {
             markAsDirty(neuron.getId());
         }
