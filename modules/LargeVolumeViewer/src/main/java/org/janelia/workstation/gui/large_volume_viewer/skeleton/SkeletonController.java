@@ -142,8 +142,8 @@ public class SkeletonController implements NextParentListener {
             for (TmNeuronMetadata neuron : NeuronManager.getInstance().getNeuronList()) {
                 processNeuronCreated(neuron);
             }
-            setSkipSkeletonChange(false);
             skeletonChanged(true);
+            setSkipSkeletonChange(false);
         }
     }
 

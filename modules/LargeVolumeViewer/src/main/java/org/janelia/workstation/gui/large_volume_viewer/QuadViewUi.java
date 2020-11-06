@@ -32,6 +32,7 @@ import org.janelia.console.viewerapi.ToolButton;
 import org.janelia.workstation.controller.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.eventbus.LoadNeuronsEvent;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
@@ -1187,6 +1188,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         boolean rtnVal = volumeImage.loadURL(url);
         loadedUrl = url;
         return rtnVal;
+    }
+
+    public void loadNeurons(LoadNeuronsEvent loadNeuronsEvent) {
+        skeletonController.workspaceNeuronsLoaded(loadNeuronsEvent);
     }
 
     public void setStatusLabelText(String text) {

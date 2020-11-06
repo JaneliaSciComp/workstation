@@ -7,14 +7,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
-import java.util.Set;
+import java.util.*;
 
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
@@ -24,6 +17,7 @@ import Jama.Matrix;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
+import org.janelia.workstation.controller.eventbus.SelectionAnnotationEvent;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
@@ -151,6 +145,14 @@ implements MouseMode, KeyListener
             if (hoverAnchor != null) {
                 NeuronManager.getInstance().updateFragsByAnnotation(hoverAnchor.getNeuronID(), hoverAnchor.getGuid());
                 controller.setNextParent(hoverAnchor);
+                TmNeuronMetadata neuron = neuronManager.getNeuronFromNeuronID(hoverAnchor.getNeuronID());
+                TmGeoAnnotation annotation = neuronManager.getGeoAnnotationFromID(neuron.getId(),
+                        hoverAnchor.getGuid());
+                TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(neuron);
+                TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(annotation);
+                SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent();
+                selectionEvent.setItems(Arrays.asList(new TmGeoAnnotation[]{annotation}));
+                ViewerEventBus.postEvent(selectionEvent);
             } else {
                 // original behavior: shift-click to annotate; new behavior (2018):
                 //  shift not required to annotate; check preference for which:
