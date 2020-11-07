@@ -1,17 +1,12 @@
 package org.janelia.workstation.controller.model;
 
-import com.google.common.eventbus.Subscribe;
-import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.model.domain.tiledMicroscope.TmColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.workstation.controller.NeuronManager;
-import org.janelia.workstation.controller.ViewerEventBus;
-import org.janelia.workstation.controller.eventbus.NeuronHideEvent;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
 
 import java.awt.*;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;

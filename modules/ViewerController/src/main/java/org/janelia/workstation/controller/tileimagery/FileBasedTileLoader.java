@@ -1,20 +1,14 @@
 package org.janelia.workstation.controller.tileimagery;
 
-import org.janelia.console.viewerapi.OsFilePathRemapper;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.FileBasedRenderedVolumeLocation;
-import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.io.File;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;

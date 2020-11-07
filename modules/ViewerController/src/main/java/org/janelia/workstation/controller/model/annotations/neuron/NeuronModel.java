@@ -212,7 +212,7 @@ public class NeuronModel {
         for (TmNeuronMetadata n: neuronModelAdapter.loadNeurons(workspace).collect(Collectors.toList())) {
             addNeuron(n);
         }
-        LOG.info("NeuronModel.loadWorkspaceNeurons() loaded {} neurons", neuronMap.size());
+        LOG.info("loadWorkspaceNeurons() loaded {} neurons", neuronMap.size());
     }
 
     /**

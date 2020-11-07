@@ -29,12 +29,6 @@
             <artifactId>jogl224lib</artifactId>
         </dependency>
 
-        <!-- Viewer API --> 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewerapi</artifactId>
-        </dependency>
-
         <!-- Viewer API -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>

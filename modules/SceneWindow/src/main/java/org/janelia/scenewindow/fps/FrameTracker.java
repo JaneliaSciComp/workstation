@@ -1,7 +1,7 @@
 package org.janelia.scenewindow.fps;
 
 import java.util.Observable;
-import org.janelia.console.viewerapi.ComposableObservable;
+import org.janelia.geometry3d.ComposableObservable;
 
 /**
  *

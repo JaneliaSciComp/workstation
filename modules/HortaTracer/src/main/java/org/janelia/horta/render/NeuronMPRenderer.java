@@ -1,39 +1,30 @@
 package org.janelia.horta.render;
 
 import java.awt.Color;
-import java.awt.Point;
 import java.awt.geom.Point2D;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 
-import com.google.common.eventbus.Subscribe;
-import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.console.viewerapi.controller.TransactionManager;
-import org.janelia.console.viewerapi.listener.NeuronCreationListener;
-import org.janelia.console.viewerapi.listener.NeuronDeletionListener;
-import org.janelia.console.viewerapi.listener.NeuronUpdateListener;
+import org.janelia.geometry3d.ObservableInterface;
+import org.janelia.workstation.controller.listener.NeuronCreationListener;
+import org.janelia.workstation.controller.listener.NeuronDeletionListener;
+import org.janelia.workstation.controller.listener.NeuronUpdateListener;
 import org.janelia.geometry3d.AbstractCamera;
-// import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.BasicScreenBlitActor;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.LightingBlitActor;
 import org.janelia.gltools.MultipassRenderer;
-import org.janelia.gltools.RemapColorActor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.GL3Resource;
 import org.janelia.gltools.MeshActor;
@@ -43,9 +34,6 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
-import org.openide.util.Exceptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Multi-pass renderer for Horta volumes and neuron models
@@ -56,8 +44,7 @@ public class NeuronMPRenderer extends MultipassRenderer implements NeuronUpdateL
     private final BackgroundRenderPass backgroundRenderPass;
     private final OpaqueRenderPass opaqueRenderPass;
     private final VolumeRenderPass volumeRenderPass;
-    
-    private final Set<NeuronSet> currentNeuronLists = new HashSet<>();
+
     private final TmWorkspace workspace;
     private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
     
@@ -444,14 +431,12 @@ public class NeuronMPRenderer extends MultipassRenderer implements NeuronUpdateL
 */
         // Update neuron models
         Set<TmNeuronMetadata> latestNeurons = new java.util.HashSet<>();
-        Set<NeuronSet> latestNeuronLists = new java.util.HashSet<>();
         // 1 - enumerate latest neurons
 
         latestNeurons.addAll(NeuronManager.getInstance().getNeuronList());
 
         // 2 - remove obsolete neurons
         Set<TmNeuronMetadata> obsoleteNeurons = new HashSet<>();
-        Set<TmNeuronMetadata> newNeurons = new HashSet<>();
 
         for (TmNeuronMetadata neuron : allSwcActor) {
             if (!latestNeurons.remove(neuron))

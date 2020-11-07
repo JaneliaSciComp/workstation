@@ -2,16 +2,11 @@ package org.janelia.workstation.controller.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.workstation.controller.NeuronManager;
-import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * stores history information for doing undo-redos

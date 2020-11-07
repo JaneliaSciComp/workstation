@@ -1,11 +1,9 @@
 
 package org.janelia.geometry3d;
 
-import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.console.viewerapi.ComposableObservable;
 import java.util.Collection;
 import java.util.Observer;
-import org.janelia.console.viewerapi.model.VantageInterface;
+
 import org.janelia.geometry3d.camera.ConstRotation;
 import org.janelia.geometry3d.camera.ConstVantage;
 

@@ -1,7 +1,6 @@
 package org.janelia.horta;
 
 import java.util.List;
-import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.workstation.controller.model.TmViewState;
 
 /**

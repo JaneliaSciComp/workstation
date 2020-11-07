@@ -7,9 +7,9 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.console.viewerapi.model.ChannelColorModel;
-import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.console.viewerapi.controller.ColorModelListener;
+import org.janelia.workstation.controller.listener.ColorModelListener;
+import org.janelia.workstation.controller.model.color.ChannelColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 
 public class UglyColorSlider extends JSlider 
 {

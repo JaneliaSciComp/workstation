@@ -1,16 +1,14 @@
 package org.janelia.horta.controller;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.console.viewerapi.listener.*;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
-import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.workstation.controller.model.annotations.neuron.VertexCollectionWithNeuron;
+import org.janelia.workstation.controller.model.annotations.neuron.VertexWithNeuron;
 import org.janelia.horta.NeuronTracerTopComponent;
 import org.janelia.horta.TracingInteractor;
 import org.janelia.horta.render.NeuronMPRenderer;
@@ -20,6 +18,7 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.*;
+import org.janelia.workstation.controller.listener.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
@@ -28,12 +27,9 @@ import org.slf4j.LoggerFactory;
 /**
  * HortaManager helps synchronize neuron models between Horta and Large Volume Viewer.
  * HortaManager listens for neuron editing changes in a NeuronSet in the Netbeans Lookup
- * and HortaManager broadcasts those edits as instantiations of GenericObservable to interested parties, such as
- *   a) the Horta Neuron spatial index
- *   b) the Horta Neuron renderer
- * 
- * 
- * @author Christopher Bruns
+ * and HortaManager broadcasts those edits
+ *
+ * @author David Schauder
  */
 public class HortaManager {
 

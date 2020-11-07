@@ -1,8 +1,6 @@
 
 package org.janelia.geometry3d;
 
-import org.janelia.console.viewerapi.Parent;
-
 /**
  * Interface for scene graph objects.
  * 

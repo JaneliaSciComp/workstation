@@ -13,14 +13,13 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.console.viewerapi.ObservableInterface;
+import org.janelia.geometry3d.ComposableObservable;
+import org.janelia.geometry3d.ObservableInterface;
 import org.janelia.geometry3d.Quaternion;
 import org.janelia.geometry3d.Rotation;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.NeuronTracerTopComponent;
-import org.janelia.workstation.controller.eventbus.MeshVisibilityEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

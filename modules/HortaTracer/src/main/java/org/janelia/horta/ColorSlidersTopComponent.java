@@ -3,7 +3,7 @@ package org.janelia.horta;
 import java.awt.BorderLayout;
 
 import org.janelia.workstation.controller.color_slider.SliderPanel;
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;

@@ -36,7 +36,6 @@ public class NeuronVboPool implements Iterable<TmNeuronMetadata> {
     // private final List<NeuronVbo> vbos;
     // private int nextVbo = 0;
 
-    // private Set<NeuronModel> dirtyNeurons; // Track incremental updates
     private Map<Long, NeuronVbo> neuronMap = new HashMap<>();
     // TODO: increase after initial debugging
     // Shaders...

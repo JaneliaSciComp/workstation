@@ -25,13 +25,10 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
-import org.janelia.console.viewerapi.BasicSampleLocation;
-import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.console.viewerapi.ToolButton;
+import org.janelia.workstation.controller.widgets.ToolButton;
 import org.janelia.workstation.controller.color_slider.SliderPanel;
-import org.janelia.console.viewerapi.controller.ColorModelInitListener;
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.listener.ColorModelInitListener;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.workstation.controller.eventbus.LoadNeuronsEvent;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.geom.CoordinateAxis;
@@ -53,7 +50,6 @@ import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.gui.large_volume_viewer.action.*;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
-import org.janelia.console.viewerapi.components.SpinnerCalculationValue;
 import org.janelia.workstation.gui.large_volume_viewer.listener.CameraListener;
 import org.janelia.workstation.gui.large_volume_viewer.listener.PathTraceRequestListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.QuadViewController;
@@ -1232,73 +1228,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
      */
     public void setPathTraceListener(PathTraceRequestListener pathTraceListener) {
         this.pathTraceListener = pathTraceListener;
-    }
-
-    SampleLocation getSampleLocation() {
-        BasicSampleLocation result = new BasicSampleLocation();
-        result.setSampleUrl(loadedUrl);
-
-        result.setSampleId(getSampleId());
-        result.setSample(TmModelManager.getInstance().getCurrentSample());
-        result.setWorkspaceId(getWorkspaceId());
-
-        // Use the pointer location, not camera focus
-        Vec3 focus = null;
-        for (TileConsumer viewer : allSliceViewers) {
-            Vec3 w = null;
-            if (viewer instanceof OrthogonalViewer) {
-                w = ((OrthogonalViewer) viewer).getPopupPositionInWorld();
-            }
-            if (w != null) {
-                focus = w;
-                break;
-            }
-        }
-        if (focus == null) {
-            focus = camera.getFocus();
-        }
-
-        result.setFocusUm(focus.getX(), focus.getY(), focus.getZ());
-        TileConsumer viewer = allSliceViewers.get(0);
-        result.setMicrometersPerWindowHeight(
-                viewer.getViewport().getHeight()
-                / camera.getPixelsPerSceneUnit());
-
-        // TODO neurons
-        return result;
-    }
-
-    void setSampleLocation(SampleLocation sampleLocation) {
-        Vec3 focus = new Vec3(
-                sampleLocation.getFocusXUm(),
-                sampleLocation.getFocusYUm(),
-                sampleLocation.getFocusZUm());
-        URL url = sampleLocation.getSampleUrl();
-        TileConsumer viewer = allSliceViewers.get(0);
-        float zoom = (float) (viewer.getViewport().getHeight() / sampleLocation.getMicrometersPerWindowHeight());
-
-        if (url != null) {
-            if (!loadedUrl.equals(url)) {
-                loadRender(url);
-            }
-        }
-        camera.setFocus(focus);
-        camera.setPixelsPerSceneUnit(zoom);
-    }
-
-    private Long getWorkspaceId() {
-        if (TmModelManager.getInstance().getCurrentWorkspace() != null) {
-            return TmModelManager.getInstance().getCurrentWorkspace().getId();
-        } else {
-            return null;
-        }
-    }
-
-    private Long getSampleId() {
-        if (annotationModel == null || TmModelManager.getInstance().getCurrentWorkspace() == null) {
-            return null;
-        }
-        return TmModelManager.getInstance().getCurrentWorkspace().getSampleRef().getTargetId();
     }
 
     static class LoadStatusLabel extends JLabel {

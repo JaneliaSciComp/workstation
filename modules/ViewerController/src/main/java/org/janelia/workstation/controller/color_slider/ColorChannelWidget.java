@@ -1,7 +1,5 @@
 package org.janelia.workstation.controller.color_slider;
 
-import org.janelia.console.viewerapi.model.ChannelColorModel;
-import org.janelia.console.viewerapi.model.ImageColorModel;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,12 +13,15 @@ import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import org.janelia.console.viewerapi.SimpleIcons;
-import org.janelia.console.viewerapi.ToolButton;
-import org.janelia.console.viewerapi.ToolModeButton;
 
-import org.janelia.console.viewerapi.controller.ColorModelInitListener;
-import org.janelia.console.viewerapi.controller.ColorModelListener;
+import org.janelia.workstation.controller.model.color.ChannelColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
+import org.janelia.workstation.controller.widgets.SimpleIcons;
+import org.janelia.workstation.controller.widgets.ToolButton;
+import org.janelia.workstation.controller.widgets.ToolModeButton;
+
+import org.janelia.workstation.controller.listener.ColorModelInitListener;
+import org.janelia.workstation.controller.listener.ColorModelListener;
 
 public class ColorChannelWidget extends JPanel 
 {

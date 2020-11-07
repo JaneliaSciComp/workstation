@@ -46,12 +46,6 @@
             <groupId>org.janelia.workstation</groupId>
             <artifactId>geometry3d</artifactId>
         </dependency>
-
-        <!-- Viewer API --> 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewerapi</artifactId>
-        </dependency>
         
         <!-- NetBeans Modules -->
         <dependency>

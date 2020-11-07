@@ -4,7 +4,6 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.eventbus.*;
-import org.janelia.workstation.controller.scripts.spatialfilter.SpatialFilter;
 import java.util.List;
 
 public class SpatialIndexManager {
@@ -26,10 +25,6 @@ public class SpatialIndexManager {
 
     public List<TmGeoAnnotation> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
         return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n);
-    }
-
-    public List<TmGeoAnnotation> getAnchorClosestToMicronLocation(double[] micronXYZ, int n, SpatialFilter filter) {
-        return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n, filter);
     }
 
     public TmGeoAnnotation getAnchorClosestToMicronLocation(double[] voxelXYZ) {

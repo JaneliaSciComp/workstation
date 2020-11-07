@@ -2,8 +2,8 @@ package org.janelia.workstation.controller.access;
 
 import java.awt.Color;
 
-import org.janelia.console.viewerapi.model.ChannelColorModel;
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.model.color.ChannelColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmChannelColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.model.util.ColorUtils;

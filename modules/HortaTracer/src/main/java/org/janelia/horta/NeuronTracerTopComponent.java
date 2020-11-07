@@ -10,7 +10,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,24 +38,23 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 
-import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.console.viewerapi.controller.ColorModelListener;
-import org.janelia.console.viewerapi.controller.UnmixingListener;
-import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
-import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
-import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
-import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
-import org.janelia.console.viewerapi.model.ChannelColorModel;
-import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
-import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.geometry3d.ObservableInterface;
+import org.janelia.workstation.controller.listener.ColorModelListener;
+import org.janelia.workstation.controller.listener.UnmixingListener;
+import org.janelia.workstation.controller.listener.NeuronVertexCreationListener;
+import org.janelia.workstation.controller.listener.NeuronVertexDeletionListener;
+import org.janelia.workstation.controller.listener.NeuronVertexUpdateListener;
+import org.janelia.workstation.controller.listener.TolerantMouseClickListener;
+import org.janelia.workstation.controller.model.color.ChannelColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
+import org.janelia.workstation.controller.model.annotations.neuron.VertexCollectionWithNeuron;
+import org.janelia.workstation.controller.model.annotations.neuron.VertexWithNeuron;
 import org.janelia.geometry3d.*;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.MultipassRenderer;
 import org.janelia.gltools.material.TransparentEnvelope;
-import org.janelia.gltools.material.VolumeMipMaterial;
+import org.janelia.horta.volume.VolumeMipMaterial;
 import org.janelia.horta.actions.ResetHortaRotationAction;
 import org.janelia.horta.activity_logging.ActivityLogHelper;
 import org.janelia.horta.actors.CenterCrossHairActor;
@@ -163,7 +161,6 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     // Cache latest hover information
     private Vector3 mouseStageLocation = null;
-    private SampleLocation currLocation = null;
     private final Observer cursorCacheDestroyer;
 
     private TracingInteractor tracingInteractor;

@@ -1,8 +1,6 @@
 package org.janelia.workstation.controller;
 
-import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import org.janelia.console.viewerapi.dialogs.NeuronGroupsDialog;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.model.security.GroupRole;
@@ -11,6 +9,7 @@ import org.janelia.model.security.User;
 import org.janelia.workstation.controller.access.ProjectInitFacade;
 import org.janelia.workstation.controller.access.ProjectInitFacadeImpl;
 import org.janelia.workstation.controller.access.RefreshHandler;
+import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -18,21 +17,13 @@ import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.model.TmReviewState;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
-import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
-import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import javax.swing.text.View;
-import java.net.URI;
-import java.net.URL;
 import java.util.*;
 
 public class TmViewerManager implements GlobalViewerController {

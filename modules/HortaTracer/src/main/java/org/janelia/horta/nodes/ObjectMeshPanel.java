@@ -1,6 +1,6 @@
 package org.janelia.horta.nodes;
 
-import org.janelia.console.viewerapi.SimpleIcons;
+import org.janelia.workstation.controller.widgets.SimpleIcons;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmViewState;

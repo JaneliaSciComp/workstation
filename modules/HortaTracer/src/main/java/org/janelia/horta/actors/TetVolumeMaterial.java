@@ -13,7 +13,7 @@ import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.ShaderStep;
 import org.janelia.gltools.material.BasicMaterial;
-import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
+import org.janelia.horta.volume.VolumeMipMaterial.VolumeState;
 import org.janelia.horta.ktx.KtxData;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
