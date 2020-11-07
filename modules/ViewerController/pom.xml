@@ -41,12 +41,6 @@
             <artifactId>core</artifactId>
         </dependency>
 
-        <!-- Viewer API -->
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewerapi</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>viewer3d</artifactId>
@@ -160,12 +154,14 @@
                         <publicPackage>org.janelia.workstation.controller.listener</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.model</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.model.annotations.neuron</publicPackage>
+                        <publicPackage>org.janelia.workstation.controller.model.color</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.nodes</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.scripts.spatialfilter</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.task_workflow</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.tileimagery</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.tileimagery.generator</publicPackage>
                         <publicPackage>org.janelia.workstation.controller.tileimagery.raster</publicPackage>
+                        <publicPackage>org.janelia.workstation.controller.widgets</publicPackage>
                     </publicPackages>
                 </configuration>
             </plugin>

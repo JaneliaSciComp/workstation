@@ -10,12 +10,12 @@ import javax.swing.JOptionPane;
 
 import Jama.Matrix;
 import com.google.common.eventbus.Subscribe;
-import org.janelia.console.viewerapi.dialogs.NeuronGroupsDialog;
 import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.model.util.MatrixUtilities;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.MergeNeuronsAction;
+import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceListener;

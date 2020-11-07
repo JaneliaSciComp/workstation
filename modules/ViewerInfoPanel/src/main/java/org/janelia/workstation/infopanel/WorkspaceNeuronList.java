@@ -1,6 +1,6 @@
 package org.janelia.workstation.infopanel;
 
-import org.janelia.console.viewerapi.SimpleIcons;
+import org.janelia.workstation.controller.widgets.SimpleIcons;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.action.NeuronChooseColorAction;
 import org.janelia.workstation.controller.dialog.ChangeNeuronOwnerDialog;

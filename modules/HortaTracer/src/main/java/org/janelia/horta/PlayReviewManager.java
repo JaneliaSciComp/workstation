@@ -4,9 +4,6 @@ import com.jogamp.opengl.util.FPSAnimator;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
-
-import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.Quaternion;
 import org.janelia.geometry3d.Rotation;
 import org.janelia.geometry3d.Vantage;

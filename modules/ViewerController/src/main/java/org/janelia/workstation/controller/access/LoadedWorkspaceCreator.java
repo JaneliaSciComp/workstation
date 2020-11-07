@@ -18,7 +18,7 @@ import javax.swing.JTextField;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.console.viewerapi.actions.PathCorrectionKeyListener;
+import org.janelia.workstation.controller.action.PathCorrectionKeyListener;
 import org.janelia.workstation.controller.dialog.EditWorkspaceNameDialog;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;

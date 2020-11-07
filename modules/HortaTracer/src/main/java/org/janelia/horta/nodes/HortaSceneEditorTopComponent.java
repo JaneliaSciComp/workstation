@@ -1,15 +1,6 @@
 package org.janelia.horta.nodes;
 
-import java.awt.*;
-import java.util.Collection;
-import java.util.List;
-import java.util.Observable;
-
 import com.google.common.eventbus.Subscribe;
-import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
-import org.janelia.gltools.GL3Actor;
-import org.janelia.horta.NeuronTracerTopComponent;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.ViewerEventBus;
@@ -17,22 +8,12 @@ import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.explorer.ExplorerManager;
-import org.openide.explorer.ExplorerUtils;
-import org.openide.explorer.view.OutlineView;
-import org.openide.explorer.view.TreeTableView;
-import org.openide.util.Lookup;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.util.NbBundle;
-import org.openide.util.Utilities;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-
-import static org.janelia.horta.nodes.HortaSceneEditorTopComponent.LABEL_TEXT;
 
 /**
  *

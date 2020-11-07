@@ -11,8 +11,6 @@ import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
-import  org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.utils.HttpClientHelper;
 import org.janelia.model.security.AppAuthorization;
 import org.janelia.rendering.JADEBasedRenderedVolumeLocation;

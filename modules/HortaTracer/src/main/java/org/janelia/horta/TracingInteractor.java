@@ -17,8 +17,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
 import java.util.Set;
 import java.util.prefs.Preferences;
 
@@ -33,11 +31,9 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 
 import Jama.Matrix;
-import org.janelia.console.viewerapi.listener.*;
-import org.janelia.console.viewerapi.model.DefaultNeuron;
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
-import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.workstation.controller.model.DefaultNeuron;
+import org.janelia.workstation.controller.model.annotations.neuron.VertexCollectionWithNeuron;
+import org.janelia.workstation.controller.model.annotations.neuron.VertexWithNeuron;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
@@ -54,7 +50,7 @@ import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.NeuronCreateAction;
 import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
 import org.janelia.workstation.controller.eventbus.SelectionAnnotationEvent;
-import org.janelia.workstation.controller.eventbus.ViewerEvent;
+import org.janelia.workstation.controller.listener.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.keybind.KeymapUtil;
@@ -334,8 +330,6 @@ public class TracingInteractor extends MouseAdapter
         parentVertexModel.getGeoAnnotationMap().clear();
         parentVertexModel.getEdges().clear();
 
-        // NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
-        // NeuronModel neuron = vix.neuronForVertex(vertex);
         float[] loc = new float[]{vertex.getX().floatValue(),
                 vertex.getY().floatValue(), vertex.getZ().floatValue()};
 
@@ -665,7 +659,6 @@ public class TracingInteractor extends MouseAdapter
     }
 
     // Show provisional Anchor radius and position for current mouse location
-    private NeuronSet unsupportedSet = null; // Cache set lacking spatial index, so we only warn about it one time.
     private Point previousHoverPoint = null;
     public void moveHoverCursor(Point screenPoint) {
         if (screenPoint == previousHoverPoint)
@@ -1347,7 +1340,6 @@ public class TracingInteractor extends MouseAdapter
             if (currentRadius == initialRadius)
                 return; // no change
             String errorMessage = "Failed to adjust anchor radius";
-            //UpdateNeuronAnchorRadiusCommand cmd = new UpdateNeuronAnchorRadiusCommand(neuron, anchor, initialRadius, currentRadius);
             try {
                // if (cmd.execute()) {
                     log.info("User adjusted anchor radius in Horta");

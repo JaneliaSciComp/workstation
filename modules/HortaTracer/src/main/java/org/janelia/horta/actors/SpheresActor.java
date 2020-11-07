@@ -1,12 +1,8 @@
 package org.janelia.horta.actors;
 
 import java.awt.Color;
-import java.io.IOException;
-import java.util.Observable;
-import java.util.Observer;
 import javax.media.opengl.GL3;
-import org.janelia.console.viewerapi.GenericObservable;
-import org.janelia.console.viewerapi.model.DefaultNeuron;
+import org.janelia.workstation.controller.model.DefaultNeuron;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.MeshGeometry;
@@ -54,48 +50,6 @@ public class SpheresActor extends BasicGL3Actor
         setMinPixelRadius(0.8f);
         
         updateGeometry();
-        
-        /*neuron.getVisibilityChangeObservable().addObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg)
-            {
-                setVisible(neuron.isVisible());
-            }
-        });
-        neuron.getColorChangeObservable().addObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg)
-            {
-                setColor(neuron.getColor());
-            }
-        });
-        neuron.getGeometryChangeObservable().addObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg)
-            {
-                updateGeometry();
-            }
-        });
-        neuron.getVertexCreatedObservable().addObserver(new NeuronVertexCreationObserver() {
-            @Override
-            public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg)
-            {
-                updateGeometry();
-            }
-        });
-        neuron.getVertexUpdatedObservable().addObserver(new NeuronVertexUpdateObserver() {
-            @Override
-            public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg)
-            {
-                updateGeometry();
-            }
-        });
-        neuron.getVertexesRemovedObservable().addObserver(new NeuronVertexDeletionObserver() {
-            @Override
-            public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
-                updateGeometry();
-            }
-        });*/
     }
     
     public void updateGeometry() {

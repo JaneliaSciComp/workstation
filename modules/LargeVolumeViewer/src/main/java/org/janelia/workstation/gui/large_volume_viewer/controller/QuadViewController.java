@@ -1,20 +1,17 @@
 package org.janelia.workstation.gui.large_volume_viewer.controller;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.console.viewerapi.controller.ColorModelListener;
+import org.janelia.workstation.controller.listener.ColorModelListener;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.swing.JComponent;
-import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
 import org.janelia.workstation.controller.eventbus.UnloadProjectEvent;
-import org.janelia.workstation.controller.eventbus.WorkspaceEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.geom.Vec3;
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.workstation.controller.listener.LoadStatusListener;
 import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewer;
@@ -275,19 +272,4 @@ public class QuadViewController implements ViewStateListener {
         }
         
     }
-    
-    private class QuadViewLocationAcceptor implements ViewerLocationAcceptor {
-
-        @Override
-        public void acceptLocation(SampleLocation sampleLocation) throws Exception {
-            Vec3 newFocus = new Vec3( 
-                    sampleLocation.getFocusXUm(),
-                    sampleLocation.getFocusYUm(),
-                    sampleLocation.getFocusZUm() );
-            ui.loadRender(sampleLocation.getSampleUrl());
-            ui.focusChanged(newFocus);
-        }
-        
-    }
-        
 }

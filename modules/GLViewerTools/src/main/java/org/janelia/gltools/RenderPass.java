@@ -5,11 +5,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Observer;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.media.opengl.GL3;
-import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.console.viewerapi.ObservableInterface;
+import org.janelia.geometry3d.ComposableObservable;
+import org.janelia.geometry3d.ObservableInterface;
 import org.janelia.geometry3d.AbstractCamera;
 
 /**

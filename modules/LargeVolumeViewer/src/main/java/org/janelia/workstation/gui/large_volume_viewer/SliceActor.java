@@ -3,7 +3,7 @@ package org.janelia.workstation.gui.large_volume_viewer;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import  org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.geom.BoundingBox3d;

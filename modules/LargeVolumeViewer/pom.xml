@@ -53,12 +53,6 @@
             <artifactId>viewercontroller</artifactId>
         </dependency>
 
-        <!-- Viewer API --> 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewerapi</artifactId>
-        </dependency>
-
         <!-- Viewer 3D --> 
         <dependency>
             <groupId>org.janelia.workstation</groupId>

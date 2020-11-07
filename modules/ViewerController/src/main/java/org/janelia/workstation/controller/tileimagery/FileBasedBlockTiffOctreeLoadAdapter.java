@@ -7,9 +7,6 @@ import java.util.concurrent.Executors;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import org.janelia.console.viewerapi.CachedRenderedVolumeLocation;
-import org.janelia.console.viewerapi.OsFilePathRemapper;
-import  org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.rendering.FileBasedRenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;

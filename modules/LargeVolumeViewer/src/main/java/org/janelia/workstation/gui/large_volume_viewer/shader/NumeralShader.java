@@ -8,8 +8,8 @@ import java.nio.ByteBuffer;
 import javax.media.opengl.GL2;
 import javax.swing.ImageIcon;
 
-import org.janelia.console.viewerapi.model.ChannelColorModel;
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.model.color.ChannelColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.workstation.common.gui.support.Icons;
 
 public class NumeralShader extends PassThroughTextureShader

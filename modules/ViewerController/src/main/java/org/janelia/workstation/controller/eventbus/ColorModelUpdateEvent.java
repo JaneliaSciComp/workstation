@@ -1,6 +1,6 @@
 package org.janelia.workstation.controller.eventbus;
 
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
 public class ColorModelUpdateEvent extends WorkspaceEvent {

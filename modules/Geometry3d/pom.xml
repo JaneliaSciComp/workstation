@@ -22,12 +22,6 @@
             <groupId>org.janelia.workstation</groupId>
             <artifactId>libraries</artifactId>
         </dependency>
-        
-        <!-- Viewer API --> 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewerapi</artifactId>
-        </dependency>
        
         <!-- NetBeans Modules -->
         <dependency>

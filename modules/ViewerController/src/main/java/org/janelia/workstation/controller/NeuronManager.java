@@ -15,7 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import javax.swing.*;
@@ -27,8 +26,7 @@ import com.google.common.base.Stopwatch;
 
 import com.google.common.eventbus.Subscribe;
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.console.viewerapi.controller.TransactionManager;
-import org.janelia.console.viewerapi.model.DefaultNeuron;
+import org.janelia.workstation.controller.model.DefaultNeuron;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
@@ -71,8 +69,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is responsible for handling model changes related to neuron annotation.
- * Generally, this works with the NeuronModel to make c
  * 
  * Public methods in this class that throw exceptions are the ones that involve db calls, and
  * they should all be called from worker threads.  the others, typically getters of
@@ -401,22 +397,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
         log.trace("getClosestAnnotation to {}", excludedAnnotationID);
 
-       /* List<NeuronVertex> vertexList = neuronSetAdapter.getAnchorClosestToMicronLocation(new double[]{x, y, z}, 1, new SpatialFilter() {
-            @Override
-            public boolean include(NeuronVertex vertex, TmGeoAnnotation annotation) {
-                boolean notItself = !annotation.getId().equals(excludedAnnotationID);
-                NeuronStyle style = getNeuronStyle(getNeuronFromNeuronID(annotation.getNeuronId()));
-                boolean visible = style.isVisible();
-                return notItself && visible;
-            }
-        });
-
-        if (vertexList != null && !vertexList.isEmpty()) {
-            log.trace("Got {} anchors closest to {}", vertexList.size(), micronLocation);
-            NeuronVertex vertex = vertexList.get(0);
-           // closest = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
-        }
-*/
         if (closest!=null) {
             log.trace("Returning closest anchor: {}", closest.getId());
         }

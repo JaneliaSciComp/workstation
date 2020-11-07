@@ -1,7 +1,6 @@
 
 package org.janelia.geometry3d;
 
-import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.geometry3d.camera.ConstViewport;
 
 /**

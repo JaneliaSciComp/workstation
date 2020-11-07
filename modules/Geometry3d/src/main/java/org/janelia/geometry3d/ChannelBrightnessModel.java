@@ -1,9 +1,6 @@
 package org.janelia.geometry3d;
 
 import java.util.Observer;
-import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.console.viewerapi.Copyable;
-import org.janelia.console.viewerapi.ObservableInterface;
 
 /**
  *

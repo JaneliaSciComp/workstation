@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.controller.scripts.spatialfilter.SpatialFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,25 +67,6 @@ public class NeuronVertexSpatialIndex {
      * @return
      */
     public List<TmGeoAnnotation> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
-        if (index==null) return Collections.emptyList();
-        try {
-            return index.nearest(micronXYZ, n);
-        } 
-        catch (KeySizeException ex) {
-            log.warn("Exception while finding anchor in spatial index", ex);
-            return null;
-        }
-    }
-
-    /**
-     * Returns the N closest anchors to the location given in micron units. The locations are sorted in 
-     * order from closest to farthest.
-     * @param micronXYZ micron location
-     * @param n number of results to return
-     * @param filter filter which anchors to exclude
-     * @return list of matching anchors
-     */
-    public List<TmGeoAnnotation> getAnchorClosestToMicronLocation(double[] micronXYZ, int n, final SpatialFilter filter) {
         if (index==null) return Collections.emptyList();
         try {
             return index.nearest(micronXYZ, n);

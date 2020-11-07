@@ -321,13 +321,6 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- Viewer API -->
-            <dependency>
-                <groupId>org.janelia.workstation</groupId>
-                <artifactId>viewerapi</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
             <!-- Janelia Site Customizations -->
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
@@ -1120,7 +1113,6 @@
         <module>modules/HortaTracer</module>
         <module>modules/LargeVolumeViewer</module>
         <module>modules/Viewer3D</module>
-        <module>modules/ViewerAPI</module>
         <module>modules/ViewerController</module>
         <module>modules/ViewerInfoPanel</module>
         <module>modules/GLViewerTools</module>
