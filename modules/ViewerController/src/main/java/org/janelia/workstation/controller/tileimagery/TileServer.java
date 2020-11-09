@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer;
+package org.janelia.workstation.controller.tileimagery;
 
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;

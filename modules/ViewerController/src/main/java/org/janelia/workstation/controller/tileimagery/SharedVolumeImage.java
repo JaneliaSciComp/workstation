@@ -4,9 +4,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.workstation.controller.listener.VolumeLoadListener;
+import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

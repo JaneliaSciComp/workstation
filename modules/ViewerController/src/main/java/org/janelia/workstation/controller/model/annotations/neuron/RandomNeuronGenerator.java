@@ -1,5 +1,6 @@
 package org.janelia.workstation.controller.model.annotations.neuron;
 
+import org.janelia.workstation.controller.model.IdSource;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Rotation3d;
 import org.janelia.workstation.geom.UnitVec3;

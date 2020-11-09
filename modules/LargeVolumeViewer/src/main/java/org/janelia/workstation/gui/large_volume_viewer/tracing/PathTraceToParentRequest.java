@@ -1,8 +1,8 @@
 package org.janelia.workstation.gui.large_volume_viewer.tracing;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.workstation.controller.tileimagery.SharedVolumeImage;
 import org.janelia.workstation.controller.tileimagery.TextureCache;
+import org.janelia.workstation.geom.Vec3;
 
 /**
  * this class encapsulates a request for a path to be traced from an

@@ -2,9 +2,9 @@ package org.janelia.workstation.controller.tileimagery.generator;
 
 import java.util.Iterator;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.controller.tileimagery.TileIndex;
+import org.janelia.workstation.geom.CoordinateAxis;
 
 /**
  * Generates tile indices that span entire volume at lowest resolution.

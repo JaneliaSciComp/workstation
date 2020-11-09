@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.model_adapter;
+package org.janelia.workstation.controller.model;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
 

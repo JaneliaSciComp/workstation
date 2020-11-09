@@ -1,8 +1,8 @@
 package org.janelia.workstation.gui.large_volume_viewer.annotation;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.workstation.controller.tileimagery.Subvolume;
 import org.janelia.workstation.controller.tileimagery.SubvolumeProvider;
+import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.octree.ZoomLevel;
 import org.janelia.workstation.octree.ZoomedVoxelIndex;
 import org.slf4j.Logger;
