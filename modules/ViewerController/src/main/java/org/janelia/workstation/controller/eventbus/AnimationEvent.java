@@ -5,42 +5,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AnimationEvent {
+
     List<TmViewState> animationSteps = new ArrayList<>();
     boolean autoRotation;
     int speed;
     int stepScale;
 
-    public List<TmViewState> getAnimationSteps() {
-        return animationSteps;
+    public AnimationEvent(List<TmViewState> steps, boolean autoRotation, int speed, int stepScale) {
+        this.animationSteps = steps;
+        this.autoRotation = autoRotation;
+        this.speed = speed;
+        this.stepScale = stepScale;
     }
 
-    public void setAnimationSteps(List<TmViewState> animationSteps) {
-        this.animationSteps = animationSteps;
+    public List<TmViewState> getAnimationSteps() {
+        return animationSteps;
     }
 
     public boolean isAutoRotation() {
         return autoRotation;
     }
 
-    public void setAutoRotation(boolean autoRotation) {
-        this.autoRotation = autoRotation;
-    }
-
     public int getSpeed() {
         return speed;
-    }
-
-    public void setSpeed(int speed) {
-        this.speed = speed;
     }
 
     public int getStepScale() {
         return stepScale;
     }
-
-    public void setStepScale(int stepScale) {
-        this.stepScale = stepScale;
-    }
-
 }
 

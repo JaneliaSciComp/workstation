@@ -11,14 +11,6 @@ abstract public class AnnotationEvent extends ViewerEvent {
         return annotations;
     }
 
-    public void setAnnotations(Collection<TmGeoAnnotation> annotations) {
-        this.annotations = annotations;
-    }
-
-    public void setRequestedNextParent(TmGeoAnnotation nextParent) {
-        this.requestedNextParent = nextParent;
-    }
-
     public TmGeoAnnotation getRequestedNextParent() {
         return requestedNextParent;
     }

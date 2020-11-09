@@ -7,20 +7,15 @@ public class LoadEvent  extends ViewerEvent {
     TmWorkspace workspace;
     TmSample sample;
 
-    public TmWorkspace getWorkspace() {
-        return workspace;
-    }
-
-    public void setWorkspace(TmWorkspace workspace) {
+    public LoadEvent(TmWorkspace workspace, TmSample sample) {
         this.workspace = workspace;
-    }
-
-    public TmSample getSample() {
-        return sample;
-    }
-
-    public void setSample(TmSample sample) {
         this.sample = sample;
     }
 
+    public TmWorkspace getWorkspace() {
+        return workspace;
+    }
+    public TmSample getSample() {
+        return sample;
+    }
 }

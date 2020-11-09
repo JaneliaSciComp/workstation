@@ -48,8 +48,7 @@ public class ObjMeshLoader implements FileTypeLoader
             TmModelManager.getInstance().saveCurrentWorkspace();
 
             // fire off event for scene editor
-            MeshCreateEvent meshEvent = new MeshCreateEvent();
-            meshEvent.setMeshes(Arrays.asList(new TmObjectMesh[]{newObjMesh}));
+            MeshCreateEvent meshEvent = new MeshCreateEvent(Arrays.asList(new TmObjectMesh[]{newObjMesh}));
             ViewerEventBus.postEvent(meshEvent);
         } catch (Exception error) {
             FrameworkAccess.handleException(error);

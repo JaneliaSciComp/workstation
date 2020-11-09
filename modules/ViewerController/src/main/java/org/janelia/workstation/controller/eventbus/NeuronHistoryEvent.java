@@ -4,13 +4,12 @@ import org.janelia.workstation.controller.model.TmHistoricalEvent;
 
 public class NeuronHistoryEvent extends ViewerEvent {
     TmHistoricalEvent historicalEvent;
+    public NeuronHistoryEvent(TmHistoricalEvent event) {
+        historicalEvent = event;
+    }
 
     public TmHistoricalEvent getHistoricalEvent() {
         return historicalEvent;
-    }
-
-    public void setHistoricalEvent(TmHistoricalEvent historicalEvent) {
-        this.historicalEvent = historicalEvent;
     }
 }
 

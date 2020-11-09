@@ -77,10 +77,9 @@ public class ObjectMeshPanel extends JPanel {
         objectMeshTable.addMouseListener(new MouseHandler() {
 
             private void selectMesh(TmObjectMesh mesh) {
-                SelectionMeshEvent event = new SelectionMeshEvent();
                 List<TmObjectMesh> meshList = new ArrayList<>();
                 meshList.add(mesh);
-                event.setItems(meshList);
+                SelectionMeshEvent event = new SelectionMeshEvent(meshList, true, false);
                 ViewerEventBus.postEvent(event);
             }
 

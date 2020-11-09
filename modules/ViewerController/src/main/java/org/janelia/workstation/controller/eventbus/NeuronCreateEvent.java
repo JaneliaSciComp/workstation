@@ -6,6 +6,6 @@ import java.util.Collection;
 
 public class NeuronCreateEvent extends NeuronEvent {
     public NeuronCreateEvent(Collection<TmNeuronMetadata> neurons) {
-        this.neurons = neurons;
+        super(neurons);
     }
 }

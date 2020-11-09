@@ -5,15 +5,15 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 
 import java.util.Collection;
 
-public class AnnotationNotesUpdateEvent extends NeuronEvent {
+public class AnnotationNotesUpdateEvent {
     protected Collection<TmGeoAnnotation> annotations;
+
+    public AnnotationNotesUpdateEvent(Collection<TmGeoAnnotation> annotations) {
+        this.annotations = annotations;
+    }
 
     public Collection<TmGeoAnnotation> getAnnotations() {
         return annotations;
-    }
-
-    public void setAnnotations(Collection<TmGeoAnnotation> annotations) {
-        this.annotations = annotations;
     }
 }
 

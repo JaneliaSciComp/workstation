@@ -513,11 +513,9 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
              sampleLocation.setCameraRotation(point.getRotation());
              playList.add(sampleLocation);
          }
-         AnimationEvent event = new AnimationEvent();
-         event.setAnimationSteps(playList);
-         event.setAutoRotation(rotationCheckbox.isSelected());
-         event.setSpeed(Integer.parseInt(speedSpinner.getText()));
-         event.setStepScale(Integer.parseInt(numStepsSpinner.getText()));
+         AnimationEvent event = new AnimationEvent(playList, rotationCheckbox.isSelected(),
+                 Integer.parseInt(speedSpinner.getText()),
+                 Integer.parseInt(numStepsSpinner.getText()));
          ViewerEventBus.postEvent(event);
      }
 
@@ -533,13 +531,12 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 
         // not sure what the try/catch is preventing, but it was in the code I copied
         try {
-            ViewEvent cameraEvent = new ViewEvent();
-            cameraEvent.setCameraFocusX(point.getLocation().getX());
-            cameraEvent.setCameraFocusY(point.getLocation().getY());
-            cameraEvent.setCameraFocusZ(point.getLocation().getZ());
-            cameraEvent.setZoomLevel(point.getZoomLevel());
-            cameraEvent.setCameraRotation(point.getRotation());
-            cameraEvent.setInterpolate(false);
+            ViewEvent cameraEvent = new ViewEvent(point.getLocation().getX(),
+                    point.getLocation().getY(),
+                    point.getLocation().getZ(),
+                    point.getZoomLevel(),
+                    point.getRotation(),
+                    false);
 
             ViewerEventBus.postEvent(cameraEvent);
         } catch (Exception e) {
@@ -738,14 +735,12 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         } else {
             navigator.updateCellStatus(guiCells, ReviewTaskNavigator.CELL_STATUS.OPEN);
         }
-
-        NeuronBranchReviewedEvent branchReviewedEvent = new NeuronBranchReviewedEvent();
         Collection<TmGeoAnnotation> realAnnList = new ArrayList<>();
         NeuronManager manager = NeuronManager.getInstance();
         for (Long annId: annotationList) {
             realAnnList.add(manager.getGeoAnnotationFromID(currNeuron.getId(), annId));
         }
-        branchReviewedEvent.setAnnotations(realAnnList);
+        NeuronBranchReviewedEvent branchReviewedEvent = new NeuronBranchReviewedEvent(realAnnList);
         ViewerEventBus.postEvent(branchReviewedEvent);
 
         // update persistence

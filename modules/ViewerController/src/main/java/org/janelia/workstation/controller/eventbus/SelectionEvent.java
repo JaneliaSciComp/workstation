@@ -8,27 +8,19 @@ public class SelectionEvent {
     private boolean select = true;
     private boolean clear = false;
 
+    public SelectionEvent(List items, boolean select, boolean clear) {
+        this.items = items;
+        this.select = select;
+        this.clear = clear;
+    }
+
     public List getItems() {
         return items;
     }
-
-    public void setItems(List items) {
-        this.items = items;
-    }
-
     public boolean isSelect() {
         return select;
     }
-
-    public void setSelect(boolean select) {
-        this.select = select;
-    }
-
     public boolean isClear() {
         return clear;
-    }
-
-    public void setClear(boolean clear) {
-        this.clear = clear;
     }
 }

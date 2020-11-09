@@ -455,11 +455,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         List<TmViewState> locationList = event.getAnimationSteps();
         // do a quick check to see if
         sceneWindow.setControlsVisibility(true);
-        ViewEvent initAnimation = new ViewEvent();
-        initAnimation.setCameraFocusX(locationList.get(0).getCameraFocusX());
-        initAnimation.setCameraFocusY(locationList.get(0).getCameraFocusY());
-        initAnimation.setCameraFocusZ(locationList.get(0).getCameraFocusZ());
-        initAnimation.setZoomLevel(locationList.get(0).getZoomLevel());
+        ViewEvent initAnimation = new ViewEvent(locationList.get(0).getCameraFocusX(),
+                locationList.get(0).getCameraFocusY(),
+                locationList.get(0).getCameraFocusZ(),
+                locationList.get(0).getZoomLevel(),
+        null, false);
         setSampleLocation(initAnimation);
         try {
             Thread.sleep(500);
@@ -473,12 +473,9 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void initSampleLocation() {
         volumeCache.clearAllTiles();
         Vec3 voxelCenter = TmModelManager.getInstance().getVoxelCenter();
-        ViewEvent event = new ViewEvent();
-        event.setCameraFocusX(voxelCenter.getX());
-        event.setCameraFocusY(voxelCenter.getY());
-        event.setCameraFocusZ(voxelCenter.getZ());
-
-        event.setZoomLevel(5000);
+        ViewEvent event = new ViewEvent(voxelCenter.getX(),
+                voxelCenter.getY(),voxelCenter.getZ(),5000,
+                null, false);
         setSampleLocation(event);
     }
 
@@ -1097,7 +1094,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         // send out a view event to synchronize
-                        ViewEvent syncViewEvent = new ViewEvent();
                         Vantage vantage = sceneWindow.getVantage();
                         Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
                         Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
@@ -1116,10 +1112,10 @@ public final class NeuronTracerTopComponent extends TopComponent
                         currView.setCameraFocusY(voxelXyz.getY());
                         currView.setCameraFocusZ(voxelXyz.getZ());
                         currView.setZoomLevel(vantage.getSceneUnitsPerViewportHeight());
-                        syncViewEvent.setCameraFocusX(vantage.getFocus()[0]);
-                        syncViewEvent.setCameraFocusY(vantage.getFocus()[1]);
-                        syncViewEvent.setCameraFocusZ(vantage.getFocus()[2]);
-                        syncViewEvent.setZoomLevel(vantage.getSceneUnitsPerViewportHeight());
+                        ViewEvent syncViewEvent = new ViewEvent(vantage.getFocus()[0],
+                                vantage.getFocus()[1],vantage.getFocus()[2],
+                                vantage.getSceneUnitsPerViewportHeight(),
+                                null, false);
                         ViewerEventBus.postEvent(syncViewEvent);
                     }
                 };
@@ -1613,13 +1609,14 @@ public final class NeuronTracerTopComponent extends TopComponent
                             public void actionPerformed(ActionEvent e) {
                                 PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
                                 TmGeoAnnotation ann = interactorContext.getCurrentParentAnchor();
-                                ViewEvent event = new ViewEvent();
                                 float[] vtxLocation = TmModelManager.getInstance().getLocationInMicrometers(ann.getX(),
                                         ann.getY(), ann.getZ());
-                                event.setCameraFocusX(vtxLocation[0]);
-                                event.setCameraFocusY(vtxLocation[1]);
-                                event.setCameraFocusZ(vtxLocation[2]);
-                                event.setZoomLevel(300);
+                                ViewEvent event = new ViewEvent(vtxLocation[0],
+                                        vtxLocation[1],
+                                        vtxLocation[2],
+                                        300,
+                                        null,
+                                        false);
                                 setSampleLocation(event);
                             }
                         });
@@ -1959,8 +1956,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
 
         // fire off notice for checkboxes, etc.
-        ViewerCloseEvent viewerCloseEvent = new ViewerCloseEvent();
-        viewerCloseEvent.setViewer(ViewerCloseEvent.VIEWER.HORTA);
+        ViewerCloseEvent viewerCloseEvent = new ViewerCloseEvent(ViewerCloseEvent.VIEWER.HORTA);
         ViewerEventBus.postEvent(viewerCloseEvent);
     }
 
