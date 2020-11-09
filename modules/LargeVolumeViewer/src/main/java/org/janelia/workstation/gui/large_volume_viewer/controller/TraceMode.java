@@ -150,8 +150,8 @@ implements MouseMode, KeyListener
                         hoverAnchor.getGuid());
                 TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(neuron);
                 TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(annotation);
-                SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent();
-                selectionEvent.setItems(Arrays.asList(new TmGeoAnnotation[]{annotation}));
+                SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent(
+                        Arrays.asList(new TmGeoAnnotation[]{annotation}), true, false);
                 ViewerEventBus.postEvent(selectionEvent);
             } else {
                 // original behavior: shift-click to annotate; new behavior (2018):
@@ -391,7 +391,10 @@ implements MouseMode, KeyListener
                         // send out a view event to synchronize
                         Point cursorPos = event.getPoint();
                         Vec3 location = worldFromPixel(cursorPos);
-                        ViewEvent syncViewEvent = new ViewEvent();
+                        ViewEvent syncViewEvent = new ViewEvent(camera.getFocus().getX(),
+                                camera.getFocus().getY(),
+                                camera.getFocus().getZ(),
+                                500, null, false);
                         Camera3d camera = getCamera();
 
                         Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
@@ -411,9 +414,6 @@ implements MouseMode, KeyListener
                         currView.setCameraFocusY(voxelXyz.getY());
                         currView.setCameraFocusZ(voxelXyz.getZ());
                         currView.setZoomLevel(camera.getPixelsPerSceneUnit());
-                        syncViewEvent.setCameraFocusX(camera.getFocus().getX());
-                        syncViewEvent.setCameraFocusY(camera.getFocus().getY());
-                        syncViewEvent.setCameraFocusZ(camera.getFocus().getZ());
                         ViewerEventBus.postEvent(syncViewEvent);
                     }
                 };

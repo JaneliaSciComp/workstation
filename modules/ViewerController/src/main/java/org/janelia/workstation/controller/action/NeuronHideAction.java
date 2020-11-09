@@ -36,8 +36,7 @@ public class NeuronHideAction extends EditAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         TmNeuronMetadata neuron = TmSelectionState.getInstance().getCurrentNeuron();
-        NeuronHideEvent event = new NeuronHideEvent();
-        event.setNeurons(Arrays.asList(new TmNeuronMetadata[]{neuron}));
+        NeuronHideEvent event = new NeuronHideEvent(Arrays.asList(new TmNeuronMetadata[]{neuron}));
         ViewerEventBus.postEvent(event);
     }
 }

@@ -10,15 +10,9 @@ abstract public class AnchoredPathEvent extends ViewerEvent {
     public Long getNeuronID() {
         return neuronID;
     }
-    public void setNeuronID(Long neuronID) {
-        this.neuronID = neuronID;
-    }
 
     public Collection<TmAnchoredPath> getPaths() {
         return paths;
-    }
-    public void setAnnotations(Collection<TmAnchoredPath> paths) {
-        this.paths = paths;
     }
 
 }

@@ -81,8 +81,7 @@ public class NeuronContextMenu extends PopupContextMenu {
         AbstractAction generateReviewPointList = new AbstractAction("Show Neuron Tree") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                CreateNeuronReviewEvent neuronReviewEvent = new CreateNeuronReviewEvent();
-                neuronReviewEvent.setNeuron(tmNeuronMetadata);
+                CreateNeuronReviewEvent neuronReviewEvent = new CreateNeuronReviewEvent(tmNeuronMetadata);
                 ViewerEventBus.postEvent(neuronReviewEvent);
             }
         };

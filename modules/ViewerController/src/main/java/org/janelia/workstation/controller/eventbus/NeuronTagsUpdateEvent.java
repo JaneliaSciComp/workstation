@@ -7,12 +7,12 @@ import java.util.Collection;
 public class NeuronTagsUpdateEvent extends NeuronEvent {
     protected Collection<TmNeuronMetadata> neurons;
 
-    public Collection<TmNeuronMetadata> getNeurons() {
-        return neurons;
+    public NeuronTagsUpdateEvent(Collection<TmNeuronMetadata> neurons) {
+        super(neurons);
     }
 
-    public void setAnnotations(Collection<TmNeuronMetadata> annotations) {
-        this.neurons = neurons;
+    public Collection<TmNeuronMetadata> getNeurons() {
+        return neurons;
     }
 }
 

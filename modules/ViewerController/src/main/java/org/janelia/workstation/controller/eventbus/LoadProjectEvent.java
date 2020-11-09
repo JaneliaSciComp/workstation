@@ -1,9 +1,13 @@
 package org.janelia.workstation.controller.eventbus;
 
-public class LoadProjectEvent extends LoadEvent {
-    boolean isSample = false;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
-    public LoadProjectEvent(boolean isSample) {
+public class LoadProjectEvent extends LoadEvent {
+    boolean isSample;
+
+    public LoadProjectEvent(TmWorkspace workspace, TmSample sample, boolean isSample) {
+        super(workspace, sample);
         this.isSample = isSample;
     }
 
@@ -11,7 +15,4 @@ public class LoadProjectEvent extends LoadEvent {
         return isSample;
     }
 
-    public void setSample(boolean sample) {
-        isSample = sample;
-    }
 }

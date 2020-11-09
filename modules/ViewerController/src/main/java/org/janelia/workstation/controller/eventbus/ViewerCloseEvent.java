@@ -6,13 +6,12 @@ public class ViewerCloseEvent {
     };
 
     private VIEWER viewer;
+    public ViewerCloseEvent(VIEWER viewer) {
+        this.viewer = viewer;
+    }
 
     public VIEWER getViewer() {
         return viewer;
-    }
-
-    public void setViewer(VIEWER viewer) {
-        this.viewer = viewer;
     }
 }
 

@@ -135,8 +135,7 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
                     Subject newOwner = dialog.getNewOwnerKey();
                     NeuronManager manager = NeuronManager.getInstance();
                     manager.changeNeuronOwner(neurons, newOwner);
-                    NeuronUpdateEvent neuronEvent = new NeuronUpdateEvent();
-                    neuronEvent.setNeurons(neurons);
+                    NeuronUpdateEvent neuronEvent = new NeuronUpdateEvent(neurons);
                     ViewerEventBus.postEvent(neuronEvent);
                 }
 

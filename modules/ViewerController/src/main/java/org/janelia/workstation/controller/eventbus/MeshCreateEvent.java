@@ -6,14 +6,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MeshCreateEvent {
-    public List<TmObjectMesh> getMeshes() {
-        return meshes;
-    }
-
-    public void setMeshes(List<TmObjectMesh> meshes) {
+    List<TmObjectMesh> meshes = new ArrayList<>();
+    public MeshCreateEvent(List<TmObjectMesh> meshes) {
         this.meshes = meshes;
     }
 
-    List<TmObjectMesh> meshes = new ArrayList<>();
+    public List<TmObjectMesh> getMeshes() {
+        return meshes;
+    }
 }
 

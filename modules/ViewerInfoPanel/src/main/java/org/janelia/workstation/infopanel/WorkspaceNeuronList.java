@@ -209,10 +209,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         neuronTable.addMouseListener(new MouseHandler() {
 
             private void selectNeuron(TmNeuronMetadata neuron) {
-                SelectionNeuronsEvent event = new SelectionNeuronsEvent();
                 List<DomainObject> neuronList = new ArrayList<>();
                 neuronList.add(neuron);
-                event.setItems(neuronList);
+                SelectionNeuronsEvent event = new SelectionNeuronsEvent(neuronList, true, false);
                 ViewerEventBus.postEvent(event);
             }
 
@@ -259,8 +258,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                         // single click visibility = toggle visibility
                         modelManager.getCurrentView().toggleHidden(selectedNeuron.getId());
                         neuronTableModel.updateNeuron(selectedNeuron);
-                        NeuronUpdateEvent updateEvent = new NeuronUpdateEvent();
-                        updateEvent.setNeurons(Arrays.asList(new TmNeuronMetadata[]{selectedNeuron}));
+                        NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(
+                                Arrays.asList(new TmNeuronMetadata[]{selectedNeuron}));
                         ViewerEventBus.postEvent(updateEvent);
                         // the click might move the neuron selection, which we don't want
                         syncSelection();
@@ -749,10 +748,10 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     private void sendViewEvent(Vec3 location) {
-        ViewEvent event = new ViewEvent();
-        event.setCameraFocusX(location.getX());
-        event.setCameraFocusY(location.getY());
-        event.setCameraFocusZ(location.getZ());
+        ViewEvent event = new ViewEvent(location.getX(),
+                location.getY(),
+                location.getZ(),
+        500, null, false);
         ViewerEventBus.postEvent(event);
     }
 

@@ -175,8 +175,7 @@ public class TracingInteractor extends MouseAdapter
 
                         }
                     }
-                    NeuronUpdateEvent updateEvent = new NeuronUpdateEvent();
-                    updateEvent.setNeurons(neurons);
+                    NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(neurons);
                     ViewerEventBus.postEvent(updateEvent);
                 }
             }
@@ -1033,8 +1032,7 @@ public class TracingInteractor extends MouseAdapter
             if (! canClearParent())
                 return;
             clearParentVertex();
-            SelectionAnnotationEvent annEvent = new SelectionAnnotationEvent();
-            annEvent.setClear(true);
+            SelectionAnnotationEvent annEvent = new SelectionAnnotationEvent(null, false, true);
             ViewerEventBus.postEvent(annEvent);
         }
         
@@ -1133,8 +1131,7 @@ public class TracingInteractor extends MouseAdapter
                     TmModelManager.getInstance().getCurrentReviews().clearLoopedAnnotations();
                     TmModelManager.getInstance().getCurrentReviews().addLoopedAnnotationsList(loopVertices);
 
-                    NeuronUpdateEvent updateEvent = new NeuronUpdateEvent();
-                    updateEvent.setNeurons(Arrays.asList(hoveredNeuron));
+                    NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(Arrays.asList(hoveredNeuron));
                     ViewerEventBus.postEvent(updateEvent);
                 }
 
@@ -1205,8 +1202,9 @@ public class TracingInteractor extends MouseAdapter
             TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(hoveredNeuron);
             TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(hoveredVertex);
             NeuronManager.getInstance().updateFragsByAnnotation(hoveredNeuron.getId(), hoveredVertex.getId());
-            SelectionAnnotationEvent event = new SelectionAnnotationEvent();
-            event.setItems(Arrays.asList(new TmGeoAnnotation[]{hoveredVertex}));
+            SelectionAnnotationEvent event = new SelectionAnnotationEvent(
+                    Arrays.asList(new TmGeoAnnotation[]{hoveredVertex}), true, false
+            );
             ViewerEventBus.postEvent(event);
             selectParentVertex(hoveredVertex, hoveredNeuron);
         }

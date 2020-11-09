@@ -7,15 +7,12 @@ import java.util.Collection;
 public class AnnotationParentReparentedEvent extends AnnotationEvent {
     private Long prevNeuronId;
 
-    public AnnotationParentReparentedEvent(Collection<TmGeoAnnotation> annotations) {
+    public AnnotationParentReparentedEvent(Collection<TmGeoAnnotation> annotations, Long prevNeuronId) {
         this.annotations = annotations;
+        this.prevNeuronId = prevNeuronId;
     }
 
     public Long getPrevNeuronId() {
         return prevNeuronId;
-    }
-
-    public void setPrevNeuronId(Long parentId) {
-        this.prevNeuronId = parentId;
     }
 }

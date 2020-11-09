@@ -41,8 +41,8 @@ public class GenerateTaskReviewAction extends AbstractAction {
     public void generateTaskReview() {
         TmNeuronMetadata currNeuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
         if (currNeuron!=null) {
-            CreateNeuronReviewEvent event = new CreateNeuronReviewEvent();
-            event.setNeuron(NeuronManager.getInstance().getNeuronFromNeuronID(currNeuron.getId()));
+            CreateNeuronReviewEvent event = new CreateNeuronReviewEvent(
+                    NeuronManager.getInstance().getNeuronFromNeuronID(currNeuron.getId()));
             ViewerEventBus.postEvent(event);
         }
     }
