@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.util.Map;
 
 @ActionID(
         category = "actions",
@@ -54,6 +55,15 @@ public class NeuronSetRadiusAction extends AbstractAction {
     public void setNeuronRadius(Long neuronID) {
         if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
+        double defaultRadius = 1.0f;
+        TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(neuronID);
+        Map<Long, TmGeoAnnotation> map = neuron.getGeoAnnotationMap();
+        if (!map.isEmpty()) {
+             TmGeoAnnotation ann = map.values().iterator().next();
+             if (ann!=null) {
+                 defaultRadius = ann.getRadius();
+             }
+        }
 
         String ans = (String) JOptionPane.showInputDialog(
                 null,
@@ -62,7 +72,7 @@ public class NeuronSetRadiusAction extends AbstractAction {
                 JOptionPane.PLAIN_MESSAGE,
                 null,
                 null,
-                "1.0");
+                defaultRadius);
 
         if (ans == null || ans.length() == 0) {
             // canceled or no input

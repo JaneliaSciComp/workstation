@@ -18,6 +18,7 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
+import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
 import org.janelia.workstation.controller.eventbus.SelectionAnnotationEvent;
 import org.janelia.workstation.controller.eventbus.ViewEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -667,7 +668,11 @@ implements MouseMode, KeyListener
                     AbstractAction hideNeuronAction = new AbstractAction("Hide neuron") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-
+                            TmModelManager.getInstance().getCurrentView().toggleHidden(hover.getNeuronID());
+                            TmNeuronMetadata neuron = neuronManager.getNeuronFromNeuronID(hover.getNeuronID());
+                            NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(
+                                    Arrays.asList(new TmNeuronMetadata[]{neuron}));
+                            ViewerEventBus.postEvent(updateEvent);
                         }
                     };
                     hideNeuronAction.setEnabled(controller.editsAllowed());
