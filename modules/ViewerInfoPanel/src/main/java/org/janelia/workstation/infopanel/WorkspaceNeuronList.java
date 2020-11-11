@@ -748,9 +748,15 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     private void sendViewEvent(Vec3 location) {
-        ViewEvent event = new ViewEvent(location.getX(),
-                location.getY(),
-                location.getZ(),
+        float[] microLocation = TmModelManager.getInstance().getLocationInMicrometers(location.getX(),
+                location.getY(), location.getZ());
+        TmModelManager.getInstance().getCurrentView().setCameraFocusX(location.getX());
+        TmModelManager.getInstance().getCurrentView().setCameraFocusY(location.getY());
+        TmModelManager.getInstance().getCurrentView().setCameraFocusZ(location.getZ());
+        TmModelManager.getInstance().getCurrentView().setZoomLevel(500);
+        ViewEvent event = new ViewEvent(microLocation[0],
+                microLocation[1],
+                microLocation[2],
         500, null, false);
         ViewerEventBus.postEvent(event);
     }
