@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "A-6")
+        @ActionReference(path = "Shortcuts", name = "DOWN")
 })
 public class IncreaseSpeedNeuronCamAction extends AbstractAction {
 

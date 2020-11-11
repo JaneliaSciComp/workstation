@@ -2,8 +2,6 @@
 package org.janelia.geometry3d;
 
 import java.awt.Color;
-import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.console.viewerapi.ObservableInterface;
 
 import java.util.*;
 

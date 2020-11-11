@@ -11,10 +11,10 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.support.StringMemberListPanel;
 import org.janelia.workstation.gui.large_volume_viewer.action.LargeVolumeSampleDiscoveryAction;
-import org.janelia.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

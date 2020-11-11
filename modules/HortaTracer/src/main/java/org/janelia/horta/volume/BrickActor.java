@@ -2,11 +2,10 @@ package org.janelia.horta.volume;
 
 import java.io.IOException;
 
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.DepthSlabClipper;
-import org.janelia.gltools.material.VolumeMipMaterial;
-import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
+import org.janelia.horta.volume.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
 import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.BrainTileInfo;

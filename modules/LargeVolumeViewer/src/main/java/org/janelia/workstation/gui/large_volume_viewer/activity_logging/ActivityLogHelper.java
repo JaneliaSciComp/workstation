@@ -1,24 +1,22 @@
 package org.janelia.workstation.gui.large_volume_viewer.activity_logging;
 
-
-import org.janelia.workstation.integration.activity_logging.ActionString;
-
-import org.janelia.workstation.integration.activity_logging.CategoryString;
-
-import org.janelia.workstation.integration.activity_logging.ToolString;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.tileimagery.TileFormat;
+import org.janelia.workstation.controller.tileimagery.TileIndex;
+import org.janelia.workstation.core.api.SessionMgr;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.core.api.SessionMgr;
-import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.workstation.integration.activity_logging.ActionString;
+import org.janelia.workstation.integration.activity_logging.CategoryString;
+import org.janelia.workstation.integration.activity_logging.ToolString;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_LOGSTAMP_ID;
+import static org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent.LVV_LOGSTAMP_ID;
 
 /**
  * Keep all the logging code in one place, to declutter.
@@ -77,7 +75,7 @@ public class ActivityLogHelper {
 
     private static final int LONG_TIME_LOAD_LOG_THRESHOLD = 5 * 1000;
 
-    private Map<Long,TileFormat> sampleToTileFormat = new HashMap<>();
+    private Map<Long, TileFormat> sampleToTileFormat = new HashMap<>();
 
     public static ActivityLogHelper getInstance() {
         return instance;
@@ -284,12 +282,12 @@ public class ActivityLogHelper {
         );
     }
 
-    public void logLandmarkViewPick(AnnotationModel annotationModel, Long annotationId) {
+    public void logLandmarkViewPick(NeuronManager annotationModel, Long annotationId) {
         String action = "Unknown";
         if (annotationModel != null
-                && annotationModel.getCurrentWorkspace() != null
-                && annotationModel.getCurrentWorkspace().getId() != null) {
-            action = "Sample/Annotation:" + annotationModel.getCurrentWorkspace().getSampleRef().getTargetId() + ":" + annotationId;
+                && TmModelManager.getInstance().getCurrentWorkspace() != null
+                && TmModelManager.getInstance().getCurrentWorkspace().getId() != null) {
+            action = "Sample/Annotation:" + TmModelManager.getInstance().getCurrentWorkspace().getSampleRef().getTargetId() + ":" + annotationId;
         }
         SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,

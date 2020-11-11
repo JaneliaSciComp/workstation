@@ -1,0 +1,21 @@
+package org.janelia.workstation.gui.large_volume_viewer.listener;
+
+import org.janelia.workstation.geom.Vec3;
+
+/**
+ * Extend this with a listener that does not need to hear all information.
+ * Convenience class only.
+ * @author fosterl
+ */
+public class CameraListenerAdapter implements CameraListener {
+
+    @Override
+    public void viewChanged() {}
+
+    @Override
+    public void zoomChanged(Double zoom) {}
+
+    @Override
+    public void focusChanged(Vec3 focus) {}
+
+}

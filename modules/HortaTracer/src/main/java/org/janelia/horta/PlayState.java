@@ -1,7 +1,7 @@
 package org.janelia.horta;
 
 import java.util.List;
-import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.workstation.controller.model.TmViewState;
 
 /**
  * @author schauderd
@@ -11,7 +11,7 @@ import org.janelia.console.viewerapi.SampleLocation;
 
 
 public class PlayState {
-    private List<SampleLocation> playList;
+    private List<TmViewState> playList;
     private int currentNode;
     private int currentStep;
     private int fps;
@@ -19,14 +19,14 @@ public class PlayState {
     /**
      * @return the playList
      */
-    public List<SampleLocation> getPlayList() {
+    public List<TmViewState> getPlayList() {
         return playList;
     }
 
     /**
      * @param playList the playList to set
      */
-    public void setPlayList(List<SampleLocation> playList) {
+    public void setPlayList(List<TmViewState> playList) {
         this.playList = playList;
     }
 

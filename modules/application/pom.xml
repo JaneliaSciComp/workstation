@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.21</version>
+        <version>8.22</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>Janelia Workstation</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>application</artifactId>
-    <version>8.21</version>
+    <version>8.22</version>
     <packaging>nbm-application</packaging>
 
     <properties>
@@ -56,6 +56,18 @@
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>browser</artifactId>
+        </dependency>
+
+        <!-- Viewer Controller -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewercontroller</artifactId>
+        </dependency>
+
+        <!-- Viewer Info Panel -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>infopanel</artifactId>
         </dependency>
 
         <!-- Large Volume Viewer --> 

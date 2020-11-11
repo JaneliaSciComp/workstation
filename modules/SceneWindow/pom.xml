@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.21</version>
+        <version>8.22</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>SceneWindow</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>scenegraph</artifactId>
-    <version>8.21</version>
+    <version>8.22</version>
     <packaging>nbm</packaging>
 
     <dependencies>
@@ -29,10 +29,10 @@
             <artifactId>jogl224lib</artifactId>
         </dependency>
 
-        <!-- Viewer API --> 
+        <!-- Viewer API -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewerapi</artifactId>
+            <artifactId>viewercontroller</artifactId>
         </dependency>
 
         <!-- Geometry 3D --> 

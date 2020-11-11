@@ -8,7 +8,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
-import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.horta.actions.LoadHortaTileAtFocusAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.slf4j.Logger;

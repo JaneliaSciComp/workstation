@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.janelia</groupId>
+        <artifactId>workstation</artifactId>
+        <version>8.22</version>
+        <relativePath>../..</relativePath>
+    </parent>
+
+    <name>ViewerInfoPanel</name>
+    <groupId>org.janelia.workstation</groupId>
+    <artifactId>infopanel</artifactId>
+    <version>8.22</version>
+    <packaging>nbm</packaging>
+
+    <dependencies>
+        
+        <!-- ConsoleWrapper --> 
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>libraries</artifactId>
+        </dependency>
+        
+        <!-- Integration APIs --> 
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>integration</artifactId>
+        </dependency>
+
+        <!-- CommonGUI -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>common-gui</artifactId>
+        </dependency>
+
+        <!-- Core -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+
+        <!-- Viewer API -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewercontroller</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewer3d</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <version>2.4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.spockframework</groupId>
+            <artifactId>spock-core</artifactId>
+            <version>1.1-groovy-2.4</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- NetBeans Modules --> 
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-api-progress</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-api-progress-nb</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-settings</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-options-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-awt</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-explorer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-nodes</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util-ui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-util-lookup</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-windows</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-nbjunit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-libs-junit4</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+            </plugin>
+
+        </plugins>
+
+    </build>
+
+</project>

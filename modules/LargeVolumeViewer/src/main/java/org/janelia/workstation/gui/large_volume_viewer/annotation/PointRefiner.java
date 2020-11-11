@@ -1,8 +1,8 @@
 package org.janelia.workstation.gui.large_volume_viewer.annotation;
 
+import org.janelia.workstation.controller.tileimagery.Subvolume;
+import org.janelia.workstation.controller.tileimagery.SubvolumeProvider;
 import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.gui.large_volume_viewer.Subvolume;
-import org.janelia.workstation.gui.large_volume_viewer.SubvolumeProvider;
 import org.janelia.workstation.octree.ZoomLevel;
 import org.janelia.workstation.octree.ZoomedVoxelIndex;
 import org.slf4j.Logger;
@@ -29,11 +29,11 @@ public class PointRefiner {
 
     SubvolumeProvider dataProvider;
 
-    PointRefiner(SubvolumeProvider dataProvider) {
+    public PointRefiner(SubvolumeProvider dataProvider) {
         this.dataProvider = dataProvider;
     }
 
-    Vec3 refine(Vec3 point) {
+    public Vec3 refine(Vec3 point) {
         return maxIntensityZ(point, 5);
     }
 

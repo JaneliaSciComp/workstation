@@ -4,7 +4,6 @@ import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 
 /**
  * Utilities relay to avoid direct dependencies on things like the top component.

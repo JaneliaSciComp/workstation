@@ -210,7 +210,7 @@ public class DomainObjectIconGridViewer
         JPanel panel = new JPanel();
         panel.add(new JLabel("<html>All items are hidden by your chosen settings.<br><br>"
                 + "Check your selected result and display settings, such as the '"
-                + HelpTextUtils.getBoldedLabel("Show only items with selected imagery")+"' setting.<br>"
+                + HelpTextUtils.getBoldedLabel("Show only items with selected tileimagery")+"' setting.<br>"
                 + "</html>"));
         helpPanel.add(panel, new GridBagConstraints());
     }

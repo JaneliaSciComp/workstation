@@ -26,7 +26,7 @@ import java.util.concurrent.Callable;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "OpenSeparationInNewViewerAction"
 )
 @ActionRegistration(

@@ -13,8 +13,8 @@ import java.util.prefs.PreferenceChangeEvent;
 import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
 
-import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.console.viewerapi.ObservableInterface;
+import org.janelia.geometry3d.ComposableObservable;
+import org.janelia.geometry3d.ObservableInterface;
 import org.janelia.horta.options.TileLoadingPanel;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;

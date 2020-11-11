@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "ShowInLightboxAction"
 )
 @ActionRegistration(

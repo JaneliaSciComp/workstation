@@ -1,21 +1,15 @@
 package org.janelia.horta.neuronvbo;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import javax.media.opengl.GL3;
-import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.ShaderStep;
 import org.janelia.gltools.texture.Texture2d;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +22,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author brunsc
  */
-public class NeuronVboPool implements Iterable<NeuronModel> {
+public class NeuronVboPool implements Iterable<TmNeuronMetadata> {
 
     // Use pool size to balance:
     //  a) static rendering performance (more vbos means more draw calls, means slower rendering)
@@ -42,8 +36,7 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
     // private final List<NeuronVbo> vbos;
     // private int nextVbo = 0;
 
-    // private Set<NeuronModel> dirtyNeurons; // Track incremental updates
-    // private Map<NeuronModel, NeuronVbo> neuronVbos;
+    private Map<Long, NeuronVbo> neuronMap = new HashMap<>();
     // TODO: increase after initial debugging
     // Shaders...
     // Be sure to synchronize these constants with the actual shader source uniform layout
@@ -182,7 +175,7 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
         }
     }
 
-    synchronized void add(NeuronModel neuron) {
+    synchronized void add(TmNeuronMetadata neuron) {
         // To keep the vbos balanced, always insert into the emptiest vbo
         NeuronVbo emptiestVbo = popEmptiestVbo();
         final boolean doLogStats = false;
@@ -193,6 +186,7 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
                     emptiestVbo.getVertexCount());
         }
         emptiestVbo.add(neuron);
+        neuronMap.put(neuron.getId(), emptiestVbo);
         if (doLogStats) {
             log.info("Emptiest vbo ({}) now contains {} neurons and {} vertices after insersion",
                     emptiestVbo.toString(),
@@ -202,7 +196,7 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
         insertVbo(emptiestVbo); // Reinsert into its new sorted location
     }
 
-    synchronized boolean remove(NeuronModel neuron) {
+    synchronized boolean remove(TmNeuronMetadata neuron) {
         for (NeuronVbo vbo : new VboIterable()) {
             if (vbo.remove(neuron)) {
                 return true;
@@ -227,7 +221,7 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
         }
     }
 
-    boolean contains(NeuronModel neuron) {
+    boolean contains(TmNeuronMetadata neuron) {
         for (Iterator<NeuronVbo> it = new VboIterator(); it.hasNext();) {
             NeuronVbo vbo = it.next();
             if (vbo.contains(neuron)) {
@@ -238,8 +232,15 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
     }
 
     @Override
-    public Iterator<NeuronModel> iterator() {
+    public Iterator<TmNeuronMetadata> iterator() {
         return new NeuronIterator();
+    }
+
+    public void markAsDirty(Long neuronId) {
+        NeuronVbo dirtyVbo = neuronMap.get(neuronId);
+        if (dirtyVbo!=null) {
+            dirtyVbo.markAsDirty();
+        }
     }
 
     void checkForChanges() {
@@ -249,7 +250,7 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
         }
     }
 
-    void checkForChanges(NeuronModel neuron) {
+    void checkForChanges(TmNeuronMetadata neuron) {
         for (Iterator<NeuronVbo> it = new VboIterator(); it.hasNext();) {
             NeuronVbo vbo = it.next();
             if (vbo.contains(neuron)) {
@@ -373,12 +374,12 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
         }
     }
 
-    private class NeuronIterator implements Iterator<NeuronModel> {
+    private class NeuronIterator implements Iterator<TmNeuronMetadata> {
 
-        private final Collection<NeuronModel> EMPTY_LIST = Collections.<NeuronModel>emptyList();
+        private final Collection<TmNeuronMetadata> EMPTY_LIST = Collections.<TmNeuronMetadata>emptyList();
 
         private final Iterator<NeuronVbo> vboIterator;
-        private Iterator<NeuronModel> neuronIterator = EMPTY_LIST.iterator(); // iterator for one vbo
+        private Iterator<TmNeuronMetadata> neuronIterator = EMPTY_LIST.iterator(); // iterator for one vbo
 
         public NeuronIterator() {
             vboIterator = new VboIterator();
@@ -403,7 +404,7 @@ public class NeuronVboPool implements Iterable<NeuronModel> {
         }
 
         @Override
-        public NeuronModel next() {
+        public TmNeuronMetadata next() {
             advanceToNextNeuron();
             return neuronIterator.next();
         }

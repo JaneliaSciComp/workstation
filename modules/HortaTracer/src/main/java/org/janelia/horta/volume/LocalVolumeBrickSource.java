@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 
 import com.google.common.collect.ImmutableSet;
 
-import org.janelia.console.viewerapi.OsFilePathRemapper;
+import org.janelia.workstation.controller.tileimagery.OsFilePathRemapper;
 import org.janelia.horta.BrainTileInfoBuilder;
 import org.janelia.horta.FileBasedTileLoader;
 import org.janelia.horta.TileLoader;

@@ -54,8 +54,8 @@ public final class NbLogging {
 //       return new DispatchingHandler(handler, flushDelay);
 //   }
 //   
-//   /** Factory that creates <em>messages.log</em> handler in provided directory.
-//    * @param dir directory to store logs in
+//   /** Factory that creates <em>messages.log</em> handler in provided dialog.
+//    * @param dir dialog to store logs in
 //    */
 //   public static Handler createMessagesHandler(File dir) {
 //       return new MessagesHandler(dir);

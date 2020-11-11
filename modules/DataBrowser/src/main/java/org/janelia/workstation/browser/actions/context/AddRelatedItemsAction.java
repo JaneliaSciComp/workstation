@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.*;
 
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "AddRelatedItemsAction"
 )
 @ActionRegistration(

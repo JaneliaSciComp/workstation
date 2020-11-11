@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.21</version>
+        <version>8.22</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>LargeVolumeViewer</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>large_volume_viewer</artifactId>
-    <version>8.21</version>
+    <version>8.22</version>
     <packaging>nbm</packaging>
 
     <dependencies>
@@ -47,10 +47,10 @@
             <artifactId>jogl213lib</artifactId>
         </dependency>
 
-        <!-- Viewer API --> 
+        <!-- Viewer Controller -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewerapi</artifactId>
+            <artifactId>viewercontroller</artifactId>
         </dependency>
 
         <!-- Viewer 3D --> 
@@ -69,11 +69,6 @@
                     <artifactId>slf4j-log4j12</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.github.vlsi.mxgraph</groupId>
-            <artifactId>jgraphx</artifactId>
-            <version>3.9.8.1</version>
         </dependency>
 
         <!-- NetBeans Modules --> 
@@ -137,6 +132,14 @@
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
             <version>5.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewercontroller</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewercontroller</artifactId>
         </dependency>
     </dependencies>
 

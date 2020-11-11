@@ -5,10 +5,10 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.camera.Camera3d;
-import org.janelia.workstation.gui.large_volume_viewer.TileConsumer;
-import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.workstation.controller.tileimagery.TileConsumer;
 import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 public class ResetZoomAction extends AbstractAction {
@@ -28,6 +28,10 @@ public class ResetZoomAction extends AbstractAction {
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		resetZoom();
+	}
+
+	public void resetZoom() {
 		if (volumeImage == null)
 			return;
 		if (volumeImage.getBoundingBox3d().isEmpty())
@@ -40,8 +44,8 @@ public class ResetZoomAction extends AbstractAction {
 		for (TileConsumer viewer : widgets) {
 			if (camera == null)
 				camera = viewer.getCamera();
-			if (! viewer.isShowing())
-				continue;
+			//if (! viewer.isShowing())
+			//	continue;
 			double z = getZoom(viewer);
 			if (Double.isNaN(z))
 				continue;

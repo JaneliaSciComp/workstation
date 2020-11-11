@@ -14,11 +14,9 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 import javax.media.opengl.GLProfile;
@@ -27,22 +25,15 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-
-import org.janelia.console.viewerapi.BasicSampleLocation;
-import org.janelia.console.viewerapi.RelocationMenuBuilder;
-import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.console.viewerapi.SynchronizationHelper;
-import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
-import org.janelia.console.viewerapi.ToolButton;
-import org.janelia.console.viewerapi.color_slider.SliderPanel;
-import org.janelia.console.viewerapi.controller.ColorModelInitListener;
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.widgets.ToolButton;
+import org.janelia.workstation.controller.color_slider.SliderPanel;
+import org.janelia.workstation.controller.listener.ColorModelInitListener;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
+import org.janelia.workstation.controller.eventbus.LoadNeuronsEvent;
+import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.swc.MatrixDrivenSWCExchanger;
-import org.janelia.workstation.swc.SWCDataConverter;
 import org.janelia.workstation.geom.BoundingBox3d;
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -52,36 +43,29 @@ import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.workstation.common.gui.dialogs.MemoryCheckDialog;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.access.ModelTranslation;
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.gui.large_volume_viewer.action.*;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
-import org.janelia.workstation.gui.large_volume_viewer.api.ModelTranslation;
+import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
 import org.janelia.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
-import org.janelia.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
-import org.janelia.workstation.gui.large_volume_viewer.components.TileStackCacheStatusPanel;
-import org.janelia.workstation.gui.large_volume_viewer.controller.CameraListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.CameraListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.PathTraceRequestListener;
 import org.janelia.workstation.gui.large_volume_viewer.controller.QuadViewController;
-import org.janelia.workstation.gui.large_volume_viewer.controller.SkeletonController;
-import org.janelia.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
+import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
+import org.janelia.workstation.controller.listener.VolumeLoadListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.WorkspaceClosureListener;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
-import org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
-import org.janelia.workstation.gui.passive_3d.Snapshot3DLauncher;
-import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewLauncher;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.tracing.PathTraceToParentRequest;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.janelia.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_PREFERRED_ID;
+import static org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewerTopComponent.LVV_PREFERRED_ID;
 
 /**
  * Main window for QuadView application. Maintained using Google WindowBuilder
@@ -90,7 +74,7 @@ import static org.janelia.workstation.gui.large_volume_viewer.top_component.Larg
  * @author Christopher M. Bruns
  */
 @SuppressWarnings("serial")
-public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
+public class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(QuadViewUi.class);
 
@@ -104,8 +88,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     private static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
-    private boolean bAllowOrthoView = false;    // this disabled switching between single and multiple ortho views
-
     // One shared camera for all viewers.
     // (there's only one viewer now actually, but you know...)
     private BasicObservableCamera3d camera = new BasicObservableCamera3d();
@@ -118,17 +100,13 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
             camera);
 
     private TileServer tileServer = largeVolumeViewer.getTileServer();
-    private SharedVolumeImage volumeImage = tileServer.getSharedVolumeImage();
+    private SharedVolumeImage volumeImage = TmModelManager.getInstance().getTileServer().getSharedVolumeImage();
     private ImageColorModel imageColorModel = new ImageColorModel(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
-    private NeuronStyleModel neuronStyleModel = new NeuronStyleModel();
 
     // Four quadrants for orthogonal views
-    private OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
-    private OrthogonalPanel swViewer = new OrthogonalPanel(CoordinateAxis.Y, orthoViewContextSharer);
     private OrthogonalPanel nwViewer = new OrthogonalPanel(CoordinateAxis.Z, orthoViewContextSharer);
 
     private JPanel zViewerPanel = new JPanel();
-    private JComponent seViewer = zViewerPanel; // should be same as Z...
     private JPanel viewerPanel = new JPanel();
 
     // we never finished the multi-panel orthogonal view, and it's not
@@ -155,17 +133,15 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     private ZScanMode zScanMode = new ZScanMode(volumeImage);
 
     // annotation things
-    private final AnnotationModel annotationModel;
+    private final NeuronManager annotationModel;
     private final AnnotationManager annotationMgr;
-    private final LargeVolumeViewerTranslator largeVolumeViewerTranslator;
-    private AnnotationPanel annotationPanel;
 
-    // Actions
-    private final Action openFolderAction = new OpenFolderAction(largeVolumeViewer.getComponent(), this);
+    // actions
+    private final OpenFolderAction openFolderAction = new OpenFolderAction(largeVolumeViewer.getComponent(), this);
     private RecentFileList recentFileList = new RecentFileList(new JMenu("Open Recent"));
-    private final Action resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
-    private final Action resetColorsAction = new ResetColorsAction(imageColorModel);
-    private final Action refreshSharedUpdatesAction = new RefreshSharedUpdatesAction();
+    private final ResetViewAction resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
+    private final ResetColorsAction resetColorsAction = new ResetColorsAction(imageColorModel);
+    private final RefreshSharedUpdatesAction refreshSharedUpdatesAction = new RefreshSharedUpdatesAction();
     // mode actions (and groups)
     private final ZoomMouseModeAction zoomMouseModeAction = new ZoomMouseModeAction();
     private final PanModeAction panModeAction = new PanModeAction();
@@ -178,10 +154,10 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     private final ButtonGroup scrollModeGroup = new ButtonGroup();
     private final OrthogonalModeAction orthogonalModeAction = new OrthogonalModeAction(this);
     // zoom actions
-    private final Action zoomInAction = new ZoomInAction(camera);
-    private final Action zoomOutAction = new ZoomOutAction(camera);
-    private final Action zoomMaxAction = new ZoomMaxAction(camera, volumeImage);
-    private final Action resetZoomAction = new ResetZoomAction(allSliceViewers, volumeImage);
+    private final ZoomInAction zoomInAction = new ZoomInAction(camera);
+    private final ZoomOutAction zoomOutAction = new ZoomOutAction(camera);
+    private final ZoomMaxAction zoomMaxAction = new ZoomMaxAction(camera, volumeImage);
+    private final ResetZoomAction resetZoomAction = new ResetZoomAction(allSliceViewers, volumeImage);
     // Z scan actions
     private final SliceScanAction nextZSliceAction = new NextZSliceAction(volumeImage, camera);
     private final SliceScanAction previousZSliceAction = new PreviousZSliceAction(volumeImage, camera);
@@ -198,10 +174,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     private final BacktrackNeuronAction backtrackNeuronAction = new BacktrackNeuronAction(this);
     private TileFormat tileFormat;
 
-    private Snapshot3DLauncher snapshot3dLauncher;
     private SkeletonController skeletonController;
-    private AnnotationSkeletonViewLauncher annotationSkeletonViewLauncher;
-    private TaskWorkflowViewLauncher taskWorkflowViewLauncher;
     private PathTraceRequestListener pathTraceListener;
     private WorkspaceClosureListener wsCloseListener;
 
@@ -267,7 +240,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return camera.getFocus();
     }
 
-    void setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
+    public void setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
         camera.setPixelsPerSceneUnit(pixelsPerSceneUnit);
     }
 
@@ -279,7 +252,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
      * move toward the neuron root to the next branch or the root
      */
     public void backtrackNeuronMicron() {
-        TmNeuronMetadata neuron = annotationModel.getCurrentNeuron();
+        TmNeuronMetadata neuron = TmSelectionState.getInstance().getCurrentNeuron();
         if (neuron != null) {
             Anchor anchor = getSkeletonActor().getModel().getNextParent();
             if (anchor != null) {
@@ -305,17 +278,14 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
     /**
      * Create the frame.
      */
-    public QuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel) {
+    public QuadViewUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
         new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, FrameworkAccess.getMainFrame());
 
-        this.annotationModel = annotationModel;
-        this.largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
-        this.annotationMgr = new AnnotationManager(annotationModel, this, largeVolumeViewerTranslator, tileServer);
+        this.annotationModel = NeuronManager.getInstance();
+        this.annotationMgr = new AnnotationManager(this, largeVolumeViewer, tileServer);
 
         volumeImage.addVolumeLoadListener(this);
-        volumeImage.addVolumeLoadListener(annotationMgr);
         largeVolumeViewer.setImageColorModel(imageColorModel);
-        largeVolumeViewer.setNeuronStyleModel(neuronStyleModel);
         sliderPanel.setVisible(false);
 
         camera.addCameraListener(new CameraListener() {
@@ -355,11 +325,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         // connect up text UI and model with graphic UI(s):
         getSkeletonActor().getModel().addAnchorUpdateListener(annotationMgr);
 
-        // Nb: skeleton.anchorMovedSilentSignal intentionally does *not* connect to annotationMgr!
-        largeVolumeViewerTranslator.setViewStateListener(quadViewController);
-        annotationPanel.setViewStateListener(quadViewController);
-        annotationModel.setViewStateListener(quadViewController);
-
         // Toggle skeleton actor with v key
         // see note in interceptModeChangeGestures() regarding which input map
         InputMap inputMap = viewerPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
@@ -382,10 +347,7 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         skeletonController = SkeletonController.getInstance();
         skeletonController.reestablish(skeleton, annotationMgr);
         skeletonController.registerForEvents(largeVolumeViewer.getSkeletonActor());
-        largeVolumeViewerTranslator.connectSkeletonSignals(skeleton, skeletonController);
-
-        // must come after setupUi() (etc), since it triggers UI changes:
-        annotationMgr.setInitialObject(initialObject);
+        annotationMgr.connectSkeletonSignals(skeleton, skeletonController);
 
         clearCacheAction.putValue(Action.NAME, "Clear Cache");
         clearCacheAction.putValue(Action.SHORT_DESCRIPTION, "Empty image cache (for testing only)");
@@ -410,35 +372,17 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         quadViewController.registerForEvents(tileServer);
         quadViewController.registerForEvents(goToLocationAction);
 
-        OrthogonalPanel[] viewPanels = {neViewer, swViewer, nwViewer};
+        OrthogonalPanel[] viewPanels = {nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
         quadViewController.registerForEvents(imageColorModel);
         quadViewController.unregisterOrthPanels();
-        quadViewController.registerAsOrthPanelForRepaint(seViewer); // Must do separately.
+      //  quadViewController.registerAsOrthPanelForRepaint(seViewer); // Must do separately.
         skeletonController.registerForEvents(quadViewController);  // Pass-through
+        NeuronManager.getInstance().setViewStateListener(quadViewController);
         for (OrthogonalPanel v : viewPanels) {
             quadViewController.registerForEvents(v);
             v.setCamera(camera);
             v.setSharedVolumeImage(volumeImage);
-            v.setNavigationMenuItemGenerator(new MenuItemGenerator() {
-                @Override
-                public List<JMenuItem> getMenus(MouseEvent event) {
-                    List<JMenuItem> result = new ArrayList<>();
-
-                    // Add menus/items for relocating per other views.
-                    SynchronizationHelper helper = new SynchronizationHelper();
-                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders
-                            = helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                    Tiled3dSampleLocationProviderAcceptor originator
-                            = helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-
-                    for (JMenuItem navItem : menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor())) {
-                        result.add(navItem);
-                    }
-                    return result;
-                }
-            });
             v.setSystemMenuItemGenerator(new MenuItemGenerator() {
                 @Override
                 public List<JMenuItem> getMenus(MouseEvent event) {
@@ -446,11 +390,8 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
                     result.add(addFileMenuItem());
                     result.add(addCopyMicronLocMenuItem());
                     result.add(addCopyTileLocMenuItem());
-                    result.add(addCopyRawTileFileLocMenuItem(annotationModel.getCurrentSample()));
-                    result.add(addCopyOctreePathMenuItem(annotationModel.getCurrentSample()));
-                    result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
-                    result.addAll(annotationSkeletonViewLauncher.getMenuItems());
-                    result.addAll(taskWorkflowViewLauncher.getMenuItems());
+                    result.add(addCopyRawTileFileLocMenuItem(TmModelManager.getInstance().getCurrentSample()));
+                    result.add(addCopyOctreePathMenuItem(TmModelManager.getInstance().getCurrentSample()));
                     result.add(addViewMenuItem());
 
                     return result;
@@ -508,19 +449,15 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return skeleton;
     }
 
-    public NeuronStyleModel getNeuronStyleModel() {
-        return neuronStyleModel;
-    }
-
-    public AnnotationModel getAnnotationModel() {
+    public NeuronManager getAnnotationModel() {
         return annotationModel;
     }
 
-    void clear() {
+    public void clear() {
         tileServer.stop();
     }
 
-    void clearCache() {
+    public void clearCache() {
         tileServer.clearCache();
     }
 
@@ -530,22 +467,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     public TileFormat getTileFormat() {
         return tileFormat;
-    }
-
-    Snapshot3DLauncher initializeSnapshot3dLauncher(URL volumeBaseURL) {
-        snapshot3dLauncher = new Snapshot3DLauncher(
-                largeVolumeViewer.getTileServer(),
-                largeVolumeViewer.getSliceAxis(),
-                camera,
-                getSubvolumeProvider(),
-                volumeBaseURL,
-                imageColorModel
-        );
-        snapshot3dLauncher.setAnnotationManager(annotationMgr);
-        annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
-        taskWorkflowViewLauncher = new TaskWorkflowViewLauncher();
-        volumeImage.setVolumeBaseURL(volumeBaseURL);
-        return snapshot3dLauncher;
     }
 
     private void updateRanges() {
@@ -588,7 +509,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
                             1
                     )
             );
-            updateSWCDataConverter();
 
             zScanMode.setTileFormat(tileFormat);
             nextZSliceAction.setTileFormat(tileFormat);
@@ -601,9 +521,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
             zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
             zScanScrollModeAction.setEnabled(false);
         }
-
-        snapshot3dLauncher.setMaxIntensity(volumeImage.getMaximumIntensity());
-        snapshot3dLauncher.setNumberOfChannels(volumeImage.getNumberOfChannels());
     }
 
     private double getMaxZoom() {
@@ -636,19 +553,8 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return result;
     }
 
-    private void updateSWCDataConverter() {
-        SWCDataConverter swcDataConverter = new SWCDataConverter();
-        swcDataConverter.setSWCExchanger(
-                new MatrixDrivenSWCExchanger(tileFormat.getMicronToVoxMatrix(), tileFormat.getVoxToMicronMatrix())
-        );
-        annotationModel.setSWCDataConverter(swcDataConverter);
-    }
-
     private void setOrthogonalMode() {
         nwViewer.setVisible(true);
-        neViewer.setVisible(true);
-        swViewer.setVisible(true);
-        seViewer.setVisible(true);
         tileServer.refreshCurrentTileSet();
     }
 
@@ -658,9 +564,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     private void setZViewMode() {
         nwViewer.setVisible(true);
-        neViewer.setVisible(false);
-        swViewer.setVisible(false);
-        seViewer.setVisible(false);
         tileServer.refreshCurrentTileSet();
     }
 
@@ -726,11 +629,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         // Four quadrants for orthogonal views
         // One panel for Z slice viewer (upper left northwest)
         viewerPanel.add(nwViewer, new QuadrantConstraints(0, 0));
-        // other three quadrants
-        viewerPanel.add(neViewer, new QuadrantConstraints(1, 0));
-        viewerPanel.add(swViewer, new QuadrantConstraints(0, 1));
-        viewerPanel.add(seViewer, new QuadrantConstraints(1, 1));
-
         largeVolumeViewer.setCamera(camera);
         largeVolumeViewer.getComponent().setBackground(Color.DARK_GRAY);
         zViewerPanel.setLayout(new BoxLayout(zViewerPanel, BoxLayout.Y_AXIS));
@@ -869,11 +767,11 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() == ItemEvent.DESELECTED) {
                     receiveSharedUpdatesCheckbox.setSelected(false);
-                    annotationModel.setReceiveUpdates(false);
+                  //  annotationModel.setReceiveUpdates(false);
                     loadUpdatesButton.setEnabled(true);
                 } else if (e.getStateChange() == ItemEvent.SELECTED) {
                     receiveSharedUpdatesCheckbox.setSelected(true);
-                    annotationModel.setReceiveUpdates(true);
+                   // annotationModel.setReceiveUpdates(true);
                     loadUpdatesButton.setEnabled(false);
                 }
             }
@@ -919,9 +817,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         JButton resetColorsButton = new JButton();
         resetColorsButton.setAction(resetColorsAction);
         buttonsPanel.add(resetColorsButton);
-
-        annotationPanel = new AnnotationPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
-        controlsPanel.add(annotationPanel);
 
         JPanel statusBar = new JPanel();
         statusBar.setMaximumSize(new Dimension(32767, 30));
@@ -1094,17 +989,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
 
         toolBar.addSeparator();
 
-        // disable orthogonal mode button; we never finished the feature
-        // we use a single ortho view, but we can't switch to a multi-panel ortho view
-        if (bAllowOrthoView) {
-            JButton orthogonalModeButton = new JButton("");
-            orthogonalModeButton.setAction(orthogonalModeAction);
-            orthogonalModeButton.setMargin(new Insets(0, 0, 0, 0));
-            orthogonalModeButton.setHideActionText(true);
-            orthogonalModeButton.setFocusable(false);
-            toolBar.add(orthogonalModeButton);
-        }
-
         return toolBarPanel;
     }
 
@@ -1274,21 +1158,13 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         return mnCopyTileFileLoc;
     }
 
-    abstract RenderedVolumeLocation getRenderedVolumeLocation(TmSample tmSample);
+    private RenderedVolumeLocation getRenderedVolumeLocation(TmSample tmSample) {
+        return TmModelManager.getInstance().getTileLoader().getRenderedVolumeLocation(tmSample);
+    }
 
     private RenderedVolumeLoader getRenderedVolumeLoader() {
         return new RenderedVolumeLoaderImpl();
     }
-
-    /**
-     * given a string containing the canonical Linux path to the data, open the
-     * data in the viewer
-     *
-     * @param sample
-     * @return
-     * @throws MalformedURLException
-     */
-    public abstract boolean loadData(TmSample sample);
 
     /**
      * this is called only via right-click File > Open folder menu
@@ -1300,16 +1176,18 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         }
         // then just go ahead and load the file
         boolean rtnVal = loadDataFromURL(url);
-        updateSWCDataConverter();
         return rtnVal;
     }
 
-    boolean loadDataFromURL(URL url) {
+    public boolean loadDataFromURL(URL url) {
         LOG.info("loadDataFromURL: {}", url);
         boolean rtnVal = volumeImage.loadURL(url);
         loadedUrl = url;
-        new AnnotationSkeletonViewLauncher(false).refreshTopComponent();
         return rtnVal;
+    }
+
+    public void loadNeurons(LoadNeuronsEvent loadNeuronsEvent) {
+        skeletonController.workspaceNeuronsLoaded(loadNeuronsEvent);
     }
 
     public void setStatusLabelText(String text) {
@@ -1352,80 +1230,6 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
         this.pathTraceListener = pathTraceListener;
     }
 
-    /**
-     * @param wsCloseListener the wsCloseListener to set
-     */
-    public void setWsCloseListener(WorkspaceClosureListener wsCloseListener) {
-        this.wsCloseListener = wsCloseListener;
-    }
-
-    SampleLocation getSampleLocation() {
-        BasicSampleLocation result = new BasicSampleLocation();
-        result.setSampleUrl(loadedUrl);
-
-        result.setSampleId(getSampleId());
-        result.setSample(this.annotationModel.getCurrentSample());
-        result.setWorkspaceId(getWorkspaceId());
-
-        // Use the pointer location, not camera focus
-        Vec3 focus = null;
-        for (TileConsumer viewer : allSliceViewers) {
-            Vec3 w = null;
-            if (viewer instanceof OrthogonalViewer) {
-                w = ((OrthogonalViewer) viewer).getPopupPositionInWorld();
-            }
-            if (w != null) {
-                focus = w;
-                break;
-            }
-        }
-        if (focus == null) {
-            focus = camera.getFocus();
-        }
-
-        result.setFocusUm(focus.getX(), focus.getY(), focus.getZ());
-        TileConsumer viewer = allSliceViewers.get(0);
-        result.setMicrometersPerWindowHeight(
-                viewer.getViewport().getHeight()
-                / camera.getPixelsPerSceneUnit());
-
-        // TODO neurons
-        return result;
-    }
-
-    void setSampleLocation(SampleLocation sampleLocation) {
-        Vec3 focus = new Vec3(
-                sampleLocation.getFocusXUm(),
-                sampleLocation.getFocusYUm(),
-                sampleLocation.getFocusZUm());
-        URL url = sampleLocation.getSampleUrl();
-        TileConsumer viewer = allSliceViewers.get(0);
-        float zoom = (float) (viewer.getViewport().getHeight() / sampleLocation.getMicrometersPerWindowHeight());
-
-        if (url != null) {
-            if (!loadedUrl.equals(url)) {
-                loadRender(url);
-            }
-        }
-        camera.setFocus(focus);
-        camera.setPixelsPerSceneUnit(zoom);
-    }
-
-    private Long getWorkspaceId() {
-        if (this.annotationModel.getCurrentWorkspace() != null) {
-            return this.annotationModel.getCurrentWorkspace().getId();
-        } else {
-            return null;
-        }
-    }
-
-    private Long getSampleId() {
-        if (annotationModel == null || annotationModel.getCurrentWorkspace() == null) {
-            return null;
-        }
-        return this.annotationModel.getCurrentWorkspace().getSampleRef().getTargetId();
-    }
-
     static class LoadStatusLabel extends JLabel {
 
         private TileServer.LoadStatus loadStatus = null;
@@ -1461,6 +1265,14 @@ public abstract class QuadViewUi extends JPanel implements VolumeLoadListener {
 
     public AnnotationManager getAnnotationMgr() {
         return annotationMgr;
+    }
+
+    public void resetZoom() {
+        resetViewAction.resetZoom();
+    }
+
+    public BasicObservableCamera3d getCamera() {
+        return camera;
     }
 
 }

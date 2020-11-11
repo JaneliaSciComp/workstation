@@ -7,8 +7,8 @@ import java.net.MalformedURLException;
 
 import org.janelia.workstation.octree.ZoomLevel;
 import org.janelia.workstation.octree.ZoomedVoxelIndex;
-import org.janelia.workstation.gui.large_volume_viewer.SharedVolumeImage;
-import org.janelia.workstation.gui.large_volume_viewer.Subvolume;
+import org.janelia.workstation.controller.tileimagery.SharedVolumeImage;
+import org.janelia.workstation.controller.tileimagery.Subvolume;
 import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,7 +29,7 @@ public class TestExtractSubvolume {
             wholeImage.loadURL(new File(octreeFolder).toURI().toURL());
         } catch (MalformedURLException e) {
             e.printStackTrace();
-            fail("Error opening octree directory "+octreeFolder);
+            fail("Error opening octree dialog "+octreeFolder);
         }
         // Create some padding around the neurite ends
         ZoomedVoxelIndex v1pad = new ZoomedVoxelIndex(

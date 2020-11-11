@@ -10,7 +10,7 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "ViewDetailsAction"
 )
 @ActionRegistration(

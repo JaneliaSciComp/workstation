@@ -3,12 +3,11 @@ package org.janelia.workstation.gui.large_volume_viewer.skeleton;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.geom.Vec3;
-import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.workstation.tracing.AnchoredVoxelPath;
-import org.janelia.workstation.tracing.SegmentIndex;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.SegmentIndex;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,8 +122,6 @@ public class Skeleton {
 	private final Map<SegmentIndex, AnchoredVoxelPath> tracedSegments = new ConcurrentHashMap<>();
 	
 	private final Map<Long, Anchor> anchorsByGuid = new HashMap<>();
-	// TODO - anchor browsing history should maybe move farther back
-//	private final HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
 
     public void setController(SkeletonController controller) {
         this.controller = controller;
@@ -139,7 +136,6 @@ public class Skeleton {
 		Long guid = anchor.getGuid();
 		if (guid != null)
 			anchorsByGuid.put(guid, anchor);
-//		anchorHistory.push(anchor);
 		return anchor;
 	}
 
@@ -219,52 +215,12 @@ public class Skeleton {
         this.hoverAnchor = hoverAnchor;
     }
 
-    public void deleteLinkRequest(Anchor anchor) {
-        controller.deleteLinkRequested(anchor);
-    }
-
-    public void deleteSubtreeRequest(Anchor anchor){        
-        controller.deleteSubtreeRequested(anchor);
-    }
-
-    public void splitAnchorRequest(Anchor anchor) {
-        controller.splitAnchorRequested(anchor);
-    }
-
-    public void rerootNeuriteRequest(Anchor anchor) {
-        controller.rerootNeuriteRequested(anchor);
-    }
-
-    public void addEditNoteRequest(Anchor anchor) {
-        controller.addEditNoteRequested(anchor);
-    }
-
-    public void editNeuronTagRequest(Anchor anchor) {
-        controller.editNeuronTagRequested(anchor);
-    }
-
-    public void setNeuronRadiusRequest(Anchor anchor) {
-        controller.setNeuronRadiusRequested(anchor);
-    }
-
     public void moveNeuriteRequest(Anchor anchor) {
         controller.moveNeuriteRequested(anchor);
     }
 
     public void smartMergeNeuriteRequest(Anchor clickedAnchor) {
         controller.smartMergeNeuriteRequested(clickedAnchor, getNextParent());
-    }
-
-    public void changeNeuronStyle(Anchor anchor) {
-        controller.changeNeuronStyleRequested(anchor);
-    }
-
-    public void setNeuronVisitility(Anchor anchor, boolean visibility) {
-        controller.setNeuronVisibilityRequested(anchor, visibility);
-    }
-
-    public void splitNeuriteRequest(Anchor anchor) {
-        controller.splitNeuriteRequested(anchor);
     }
 
 	public boolean delete(Anchor anchor) {
@@ -280,8 +236,6 @@ public class Skeleton {
 		Long guid = anchor.getGuid();
 		if (guid != null)
 			anchorsByGuid.remove(guid);
-		//
-//		anchorHistory.remove(anchor);
 		return true;
 	}
 
@@ -289,45 +243,31 @@ public class Skeleton {
     public void skeletonChanged() {
         controller.skeletonChanged();
     }
-
-    //---------------------Servicing TmGeoAnnotation anchor changes
-    public Anchor addTmGeoAnchor(TmGeoAnnotation tga) {
-        Vec3 location = new Vec3(tga.getX(), tga.getY(), tga.getZ());
-        Anchor parentAnchor = anchorsByGuid.get(tga.getParentId());
-        Anchor anchor = new Anchor(location, parentAnchor, tga.getNeuronId(), tileFormat);
-        anchor.setGuid(tga.getId());
-        addAnchor(anchor);
-        controller.annotationSelected(anchor.getGuid());
-        return anchor;
-    }
-
+    
     public List<Anchor> addTmGeoAnchors(List<TmGeoAnnotation> annotationList) {
         List<Anchor> anchorList = new ArrayList<>();
-        Map<String, Anchor> tempAnchorsByGuid = new HashMap<>();
+        Map<Long, Anchor> tempAnchorsByGuid = new HashMap<>();
         for (TmGeoAnnotation ann : annotationList) {
             Vec3 location = new Vec3(ann.getX(), ann.getY(), ann.getZ());
-            Anchor anchor = new Anchor(location, null, ann.getNeuronId(), tileFormat);
+            // update in 2020 refactor: this method used to only be passed whole
+            //  neurons, and we could therefore create all the anchors at once,
+            //  in proper order, and their parents would be hooked up neatly;
+            //  now we use this method for individual anchor updates, so we
+            //  need to search existing anchors for parents as well as the
+            //  incoming batch; this is not the most elegant way to do it,
+            //  but it is an easy evolution of what was here, and should not
+            //  be significantly different, performance-wise
+            Anchor parentAnchor = tempAnchorsByGuid.get(ann.getParentId());
+            if (parentAnchor == null) {
+                // maybe we've already got it; if it's null here,
+                //  then it's likely a root annotation, and we leave it null
+                parentAnchor = anchorsByGuid.get(ann.getParentId());
+            }
+            Anchor anchor = new Anchor(location, parentAnchor, ann.getNeuronId(), tileFormat);
             anchor.setGuid(ann.getId());
-            tempAnchorsByGuid.put(ann.getNeuronId()+"-"+ann.getId(), anchor);
-        }
-        for (TmGeoAnnotation ann : annotationList) {
-            Anchor anchor = tempAnchorsByGuid.get(ann.getNeuronId()+"-"+ann.getId());
-            Anchor parentAnchor = tempAnchorsByGuid.get(ann.getNeuronId()+"-"+ann.getParentId());
-            anchor.addNeighbor(parentAnchor);
-            // only check the current batch of anchors for the parent, not the cache;
-            //  we need to work with the latest anchor objects, not
-            //  retrieve older objects that aren't connected right;
-            //  currently parents are guaranteed to precede children in
-            //  the input list (true as of July 2017); also true in July
-            //  2017: list will include only complete neurons (ie, all
-            //  annotations in one neuron); this is fragile! in the future,
-            //  should probably handle situations where we aren't getting
-            //  the full neuron (so do need to check the cache), and are
-            //  possibly getting parents out of order (so ugh)
-
+            tempAnchorsByGuid.put(anchor.getGuid(), anchor);
             anchorList.add(anchor);
         }
-
         addAnchors(anchorList);
         return anchorList;
     }
@@ -384,7 +324,6 @@ public class Skeleton {
 		}
 		anchors.clear();
 		anchorsByGuid.clear();
-//		anchorHistory.clear();
 	}
 	
     /** given an anchor, update its neighbors to match the input set of
@@ -436,10 +375,6 @@ public class Skeleton {
     public Anchor getAnchorByID(Long anchorID) {
         return anchorsByGuid.get(anchorID);
     }
-
-//	public HistoryStack<Anchor> getHistory() {
-//		return anchorHistory;
-//	}
 
     /**
      * request trace path to parent

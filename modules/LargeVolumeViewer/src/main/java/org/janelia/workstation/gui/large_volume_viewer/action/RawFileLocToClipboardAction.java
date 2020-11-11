@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
-import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

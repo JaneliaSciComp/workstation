@@ -13,7 +13,7 @@ import org.openide.util.NbBundle;
  */
 
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "CheckFalseAction"
 )
 @ActionRegistration(

@@ -1,31 +1,32 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
 import org.apache.commons.lang.SystemUtils;
-import org.janelia.console.viewerapi.model.ChannelColorModel;
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.model.color.ChannelColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Rotation3d;
 import org.janelia.workstation.common.gui.support.MouseHandler;
+import org.janelia.workstation.controller.tileimagery.ChannelBrightnessStats;
+import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.PanMode;
-import org.janelia.workstation.gui.large_volume_viewer.action.TraceMode;
+import org.janelia.workstation.gui.large_volume_viewer.controller.TraceMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.WheelMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.ZScanMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.ZoomMode;
 import org.janelia.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
-import org.janelia.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
-import org.janelia.workstation.gui.large_volume_viewer.controller.MessageListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.RepaintListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.CameraListenerAdapter;
+import org.janelia.workstation.gui.large_volume_viewer.listener.MessageListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.RepaintListener;
 import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActorStateUpdater;
-import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
-import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.openide.util.NbPreferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,9 +65,6 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
     protected Viewport viewport = renderer.getViewport();
     protected RubberBand rubberBand = new RubberBand();
 
-    private SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
-    protected TileServer tileServer = new TileServer(sharedVolumeImage);
-    protected VolumeImage3d volumeImage = sharedVolumeImage;
     protected SliceActor sliceActor;
     private ImageColorModel imageColorModel;
     private final BasicMouseMode pointComputer = new BasicMouseMode();
@@ -130,9 +128,12 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
         setCamera(camera);
 
         ViewTileManager viewTileManager = new ViewTileManager(this);
-        viewTileManager.setVolumeImage(tileServer.getSharedVolumeImage());
-        viewTileManager.setTextureCache(tileServer.getTextureCache());
-        tileServer.addViewTileManager(viewTileManager);
+        TileServer tileServer = TmModelManager.getInstance().getTileServer();
+        if (tileServer!=null) {
+            viewTileManager.setVolumeImage(tileServer.getSharedVolumeImage());
+            viewTileManager.setTextureCache(tileServer.getTextureCache());
+            tileServer.addViewTileManager(viewTileManager);
+        }
         sliceActor = new SliceActor(viewTileManager);
 
         // black background for production
@@ -199,6 +200,7 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
     }
 
     void autoContrastNow() {
+        TileServer tileServer = TmModelManager.getInstance().getTileServer();
         ImageBrightnessStats bs = tileServer.getCurrentBrightnessStats();
         if (bs == null) {
             return;
@@ -328,6 +330,7 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
 
     @Override
     public void setWheelMode(WheelMode.Mode wheelModeId) {
+        TileServer tileServer = TmModelManager.getInstance().getTileServer();
         if (this.wheelModeId == wheelModeId) {
             return;
         }
@@ -335,7 +338,7 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
         if (wheelModeId == WheelMode.Mode.ZOOM) {
             this.wheelMode = new ZoomMode();
         } else if (wheelModeId == WheelMode.Mode.SCAN) {
-            this.wheelMode = new ZScanMode(volumeImage);
+            this.wheelMode = new ZScanMode(tileServer.getSharedVolumeImage());
         }
         this.wheelMode.setWidget(this, false);
         this.wheelMode.setCamera(camera);
@@ -372,7 +375,7 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
     private CameraListenerAdapter cameraListener;
 
     public TileServer getTileServer() {
-        return tileServer;
+        return TmModelManager.getInstance().getTileServer();
     }
 
     void setImageColorModel(ImageColorModel imageColorModel) {
@@ -381,10 +384,6 @@ public class LargeVolumeViewer implements MouseModalWidget, TileConsumer, Repain
         }
         this.imageColorModel = imageColorModel;
         sliceActor.setImageColorModel(imageColorModel);
-    }
-
-    void setNeuronStyleModel(NeuronStyleModel nsModel) {
-        skeletonActor.getModel().setNeuronStyleModel(nsModel);
     }
 
     public Skeleton getSkeleton() {

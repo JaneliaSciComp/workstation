@@ -1,18 +1,23 @@
 package org.janelia.workstation.gui.large_volume_viewer.controller;
 
-import org.janelia.console.viewerapi.controller.ColorModelListener;
+import com.google.common.eventbus.Subscribe;
+import org.janelia.workstation.controller.listener.ColorModelListener;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.swing.JComponent;
-import org.janelia.console.viewerapi.SampleLocation;
-import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
+import org.janelia.workstation.controller.eventbus.UnloadProjectEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.geom.Vec3;
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
+import org.janelia.workstation.controller.listener.LoadStatusListener;
+import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.workstation.gui.large_volume_viewer.OrthogonalPanel;
 import org.janelia.workstation.gui.large_volume_viewer.QuadViewUi;
-import org.janelia.workstation.gui.large_volume_viewer.TileServer;
+import org.janelia.workstation.controller.tileimagery.TileServer;
 import org.janelia.workstation.gui.large_volume_viewer.action.GoToLocationAction;
 import org.janelia.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.PanModeAction;
@@ -22,8 +27,8 @@ import org.janelia.workstation.gui.large_volume_viewer.action.WheelMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.ZScanScrollModeAction;
 import org.janelia.workstation.gui.large_volume_viewer.action.ZoomMouseModeAction;
 import org.janelia.workstation.gui.large_volume_viewer.action.ZoomScrollModeAction;
-import org.janelia.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.workstation.tracing.PathTraceToParentRequest;
+import org.janelia.workstation.gui.large_volume_viewer.listener.*;
+import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceToParentRequest;
 import org.janelia.model.domain.tiledMicroscope.TmColorModel;
 
 /**
@@ -41,7 +46,6 @@ public class QuadViewController implements ViewStateListener {
     private final Collection<MouseWheelModeListener> relayMwmListeners = new ArrayList<>();
     private final Collection<ColorModelListener> relayCMListeners = new ArrayList<>();
     private final Collection<JComponent> orthPanels = new ArrayList<>();
-    private ViewerLocationAcceptor viewerLocationAcceptor = new QuadViewLocationAcceptor();
            
     public QuadViewController(QuadViewUi ui, AnnotationManager annoMgr, LargeVolumeViewer lvv) {
         this.ui = ui;
@@ -49,7 +53,22 @@ public class QuadViewController implements ViewStateListener {
         this.lvv = lvv;
         lvv.setMessageListener(new QvucMessageListener());
         this.ui.setPathTraceListener(new QvucPathRequestListener());
-        this.ui.setWsCloseListener(new QvucWsClosureListener());
+        registerLoadRequests();
+    }
+
+    private void registerLoadRequests() {
+        ViewerEventBus.registerForEvents(this);
+    }
+
+    @Subscribe
+    public void loadProject(LoadProjectEvent event) {
+        URL tileURL = TmModelManager.getInstance().getTileLoader().getUrl();
+        ui.loadDataFromURL(tileURL);
+    }
+
+   // @Subscribe
+    public void unloadProject(UnloadProjectEvent event) {
+
     }
     
     @Override
@@ -147,10 +166,6 @@ public class QuadViewController implements ViewStateListener {
     
     public void registerForEvents(GoToLocationAction action) {
         action.setListener(new QvucGotoListener());
-    }
-    
-    public ViewerLocationAcceptor getLocationAcceptor() {
-        return viewerLocationAcceptor;
     }
     
     public void mouseModeChanged(MouseMode.Mode mode) {
@@ -257,28 +272,4 @@ public class QuadViewController implements ViewStateListener {
         }
         
     }
-    
-    private class QvucWsClosureListener implements WorkspaceClosureListener {
-
-        @Override
-        public void closeWorkspace() {
-            annoMgr.setInitialObject(null);
-        }
-        
-    }
-    
-    private class QuadViewLocationAcceptor implements ViewerLocationAcceptor {
-
-        @Override
-        public void acceptLocation(SampleLocation sampleLocation) throws Exception {
-            Vec3 newFocus = new Vec3( 
-                    sampleLocation.getFocusXUm(),
-                    sampleLocation.getFocusYUm(),
-                    sampleLocation.getFocusZUm() );
-            ui.loadRender(sampleLocation.getSampleUrl());
-            ui.focusChanged(newFocus);
-        }
-        
-    }
-        
 }

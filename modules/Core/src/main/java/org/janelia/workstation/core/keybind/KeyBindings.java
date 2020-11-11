@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Maintains a set of key bindings for the user. Maps KeyboardShortcuts to Actions. Enforces a one-to-one mapping,
+ * Maintains a set of key bindings for the user. Maps KeyboardShortcuts to actions. Enforces a one-to-one mapping,
  * i.e. a single shortcut for each action, and a single action for each shortcut.
  *
  * Emits a KeyBindChangedEvent whenever a key binding is updated.

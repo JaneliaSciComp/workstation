@@ -5,7 +5,7 @@ import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.MouseWheelModeListener;
 
 public class ZoomMouseModeAction extends AbstractAction
 {

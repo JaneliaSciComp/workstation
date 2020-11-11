@@ -49,7 +49,7 @@ public abstract class PreferenceManager {
 
     // These attributes handle the files used as Strings
     protected String defaultFilename = "";
-    // Group files are determined by directory and not explicitly set.
+    // Group files are determined by dialog and not explicitly set.
     private String groupFilename = "";
     protected String userFilename = "";
     protected String userFileDescription = "No Description.";
@@ -88,7 +88,7 @@ public abstract class PreferenceManager {
     }
 
     /**
-     * This method takes the group directory provided and finds the appropriate
+     * This method takes the group dialog provided and finds the appropriate
      * preference file that is to be used.
      */
     public void setGroupPreferenceDirectory(String newDir) {
@@ -98,7 +98,7 @@ public abstract class PreferenceManager {
                 try {
                     if (dirFiles.length == 0)
                         groupFilename = "";
-                        // There should be only one file in the group directory.
+                        // There should be only one file in the group dialog.
                         // This needs
                         // to be enforced somehow.
                     else

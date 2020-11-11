@@ -2,6 +2,7 @@ package org.janelia.horta.loader;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.util.Arrays;
 import javax.swing.SwingUtilities;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.geometry3d.MeshGeometry;
@@ -12,6 +13,11 @@ import org.janelia.gltools.material.DiffuseMaterial;
 import org.janelia.gltools.material.IBLDiffuseMaterial;
 import org.janelia.gltools.material.TransparentEnvelope;
 import org.janelia.horta.NeuronTracerTopComponent;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.MeshCreateEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.util.Exceptions;
 
 /**
@@ -33,6 +39,20 @@ public class ObjMeshLoader implements FileTypeLoader
         if (ext.equals("OBJ"))
             return true;
         return false;
+    }
+
+    public void saveObjectMesh (String meshName, String filename) {
+        TmObjectMesh newObjMesh = new TmObjectMesh(meshName, filename);
+        try {
+            TmModelManager.getInstance().getCurrentWorkspace().addObjectMesh(newObjMesh);
+            TmModelManager.getInstance().saveCurrentWorkspace();
+
+            // fire off event for scene editor
+            MeshCreateEvent meshEvent = new MeshCreateEvent(Arrays.asList(new TmObjectMesh[]{newObjMesh}));
+            ViewerEventBus.postEvent(meshEvent);
+        } catch (Exception error) {
+            FrameworkAccess.handleException(error);
+        }
     }
 
     @Override
@@ -60,7 +80,8 @@ public class ObjMeshLoader implements FileTypeLoader
                             meshActor.setMeshName("Object Mesh #" + meshNum);
                             horta.addMeshActor(meshActor);
                             if (source instanceof FileDataSource) {                                
-                                horta.saveObjectMesh(meshActor.getMeshName(), ((FileDataSource)source).getFile().getAbsolutePath());
+                                saveObjectMesh(meshActor.getMeshName(),
+                                        ((FileDataSource)source).getFile().getAbsolutePath());
                             }
                         }
                     });

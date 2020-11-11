@@ -27,18 +27,22 @@ import org.janelia.workstation.geom.Rotation3d;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseHandler;
+import org.janelia.workstation.controller.tileimagery.AbstractTextureLoadAdapter;
+import org.janelia.workstation.controller.tileimagery.TileConsumer;
+import org.janelia.workstation.controller.tileimagery.TileServer;
+import org.janelia.workstation.controller.tileimagery.TileSet;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.PanMode;
-import org.janelia.workstation.gui.large_volume_viewer.action.TraceMode;
+import org.janelia.workstation.gui.large_volume_viewer.controller.TraceMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.WheelMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.ZScanMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.ZoomMode;
 import org.janelia.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
-import org.janelia.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
-import org.janelia.workstation.gui.large_volume_viewer.controller.MessageListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.RepaintListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.CameraListenerAdapter;
+import org.janelia.workstation.gui.large_volume_viewer.listener.MessageListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.RepaintListener;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.gui.viewer3d.interfaces.AwtActor;
@@ -188,13 +192,13 @@ public class OrthogonalViewer
                 JPopupMenu popupMenu = new JPopupMenu();
 
                 // Annotators requested "Navigate to Horta..." menus to appear first
-                for (JMenuItem item : navigationMenuItemGenerator.getMenus(e)) {
+               /* for (JMenuItem item : navigationMenuItemGenerator.getMenus(e)) {
                     if (item == null) {
                         popupMenu.addSeparator();
                     } else {
                         popupMenu.add(item);
                     }
-                }
+                }*/
 
                 // Mode specific menu items first
                 List<JMenuItem> modeItems = modeMenuItemGenerator.getMenus(e);

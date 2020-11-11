@@ -7,7 +7,7 @@ import java.util.Vector;
 import java.util.prefs.Preferences;
 
 import javax.swing.JMenu;
-import org.janelia.workstation.gui.large_volume_viewer.controller.UrlLoadListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.UrlLoadListener;
 
 /**
  *  Memorized list of recently opened files for display in a menu.

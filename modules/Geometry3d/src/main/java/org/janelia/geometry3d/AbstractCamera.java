@@ -3,10 +3,9 @@ package org.janelia.geometry3d;
 
 import java.util.Deque;
 import java.util.LinkedList;
-import org.janelia.console.viewerapi.ComposableObservable;
 import java.util.Observable;
 import java.util.Observer;
-import org.janelia.console.viewerapi.ObservableInterface;
+
 import org.janelia.geometry3d.camera.BasicViewSlab;
 import org.janelia.geometry3d.camera.ConstRotation;
 import org.janelia.geometry3d.camera.ConstVantage;

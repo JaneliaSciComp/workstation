@@ -20,6 +20,13 @@ public class Vector3 extends BasicVector implements ConstVector3 {
         data[2] = xyz[2];
     }
 
+    public Vector3(Double x, Double y, Double z) {
+        super(3);
+        data[0] = x.floatValue();
+        data[1] = y.floatValue();
+        data[2] = z.floatValue();
+    }
+
     /**
      * Copy constructor, to avoid broken Java clone() approach.
      * @param cloned 

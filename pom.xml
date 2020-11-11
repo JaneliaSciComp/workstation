@@ -6,7 +6,7 @@
     <name>Janelia Workstation</name>
     <groupId>org.janelia</groupId>
     <artifactId>workstation</artifactId>
-    <version>8.21</version>
+    <version>8.22</version>
     <packaging>pom</packaging>
 
     <!-- Project Metadata -->
@@ -72,7 +72,7 @@
         <netbeans.version>RELEASE82</netbeans.version>
 
         <!-- Modules specification version, for modules which track together -->
-        <janeliaws.modules.specification.version>3.40</janeliaws.modules.specification.version>
+        <janeliaws.modules.specification.version>3.41</janeliaws.modules.specification.version>
 
         <!-- Java compilation settings -->
         <janeliaws.javac.source>1.8</janeliaws.javac.source>
@@ -108,7 +108,7 @@
 
         <janeliaws.jetty.version>9.4.19.v20190610</janeliaws.jetty.version>
 
-        <janeliaws.jacs-model.version>2.36.0</janeliaws.jacs-model.version>
+        <janeliaws.jacs-model.version>2.37.1</janeliaws.jacs-model.version>
 
         <janeliaws.jacs-messaging.version>2.5.0</janeliaws.jacs-messaging.version>
 
@@ -278,6 +278,20 @@
                 <artifactId>horta</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <!-- Viewer Info Panel -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>infopanel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Viewer Controller -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>viewercontroller</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             
             <!-- Viewer 3D -->
             <dependency>
@@ -304,13 +318,6 @@
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
                 <artifactId>geometry3d</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- Viewer API -->
-            <dependency>
-                <groupId>org.janelia.workstation</groupId>
-                <artifactId>viewerapi</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -537,21 +544,40 @@
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.12</version>
+                <version>4.13.1</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>org.spockframework</groupId>
+                <artifactId>spock-core</artifactId>
+                <version>1.1-groovy-2.4</version>
+                <scope>test</scope>
+            </dependency>
+
 
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-        <!-- TestNG dependency -->
+        <!-- TestNG dependency
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>${janeliaws.testng.version}</version>
             <scope>test</scope>
         </dependency>
+-->
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <version>2.4.11</version>
+        </dependency>
+        <dependency>
+            <groupId>org.spockframework</groupId>
+            <artifactId>spock-core</artifactId>
+            <version>1.1-groovy-2.4</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -559,6 +585,20 @@
         <!-- Plugins installed with versions -->
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.codehaus.gmavenplus</groupId>
+                    <artifactId>gmavenplus-plugin</artifactId>
+                    <version>1.5</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>addTestSources</goal>
+                                <goal>compile</goal>
+                                <goal>testCompile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
@@ -617,7 +657,20 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${janeliaws.maven-surefire-plugin.version}</version>
+                    <configuration>
+                        <includes>
+                            <include>*/*Spec.*</include>
+                        </includes>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.maven.surefire</groupId>
+                            <artifactId>surefire-junit47</artifactId>
+                            <version>${janeliaws.maven-surefire-plugin.version}</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jarsigner-plugin</artifactId>
@@ -699,7 +752,20 @@
         <!-- Plugins configuration ===============================================================-->
 
         <plugins>
-
+            <plugin>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>addTestSources</goal>
+                            <goal>compile</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Compiler -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -723,8 +789,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <skipTests>true</skipTests>
-                    <trimStackTrace>false</trimStackTrace>                                                              
+                    <includes>
+                        <include>**/*Spec.*</include>
+                    </includes>
                 </configuration>
             </plugin>
              
@@ -872,9 +939,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <skipTests>false</skipTests>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -898,6 +962,9 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <skipTests>false</skipTests>
+                            <includes>
+                                <include>**/*Spec.*</include>
+                            </includes>
                         </configuration>
                     </plugin>
 
@@ -1046,7 +1113,8 @@
         <module>modules/HortaTracer</module>
         <module>modules/LargeVolumeViewer</module>
         <module>modules/Viewer3D</module>
-        <module>modules/ViewerAPI</module>
+        <module>modules/ViewerController</module>
+        <module>modules/ViewerInfoPanel</module>
         <module>modules/GLViewerTools</module>
         <module>modules/Geometry3d</module>
         <module>modules/SceneWindow</module>

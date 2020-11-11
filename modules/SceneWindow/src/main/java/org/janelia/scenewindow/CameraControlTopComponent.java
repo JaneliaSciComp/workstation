@@ -884,7 +884,7 @@ implements LookupListener
             return;
         // TODO:
     }
-    
+
     private void updateVantageProperties() {
         if (! doUpdateVantage)
             return;
@@ -992,6 +992,10 @@ implements LookupListener
             viewSlabObserver = new Observer() {
                 @Override
                 public void update(Observable o, Object arg) {
+                    if (selectedViewSlab.getzFarRelative()==1.001f) {
+                        farSlabSlider.setValue(0); // 1.001
+                        nearSlabSlider.setValue(100);
+                    }
                     throttledUpdateControllerFields();
                 }
             };

@@ -21,7 +21,7 @@ import org.openide.util.NbBundle.Messages;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "ApplyPublishingNamesAction"
 )
 @ActionRegistration(

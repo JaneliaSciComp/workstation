@@ -175,7 +175,7 @@ public final class DownloadVisualPanel3 extends JPanel {
                 JFileChooser fileChooser = new JFileChooser() {
                     @Override
                     public void approveSelection() {
-                        log.info("User selected download directory: {}",getSelectedFile());
+                        log.info("User selected download dialog: {}",getSelectedFile());
                         super.approveSelection();
                     }
                 };

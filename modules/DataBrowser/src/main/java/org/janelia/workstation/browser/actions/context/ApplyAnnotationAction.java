@@ -21,7 +21,7 @@ import java.util.Collection;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "ApplyAnnotationAction"
 )
 @ActionRegistration(

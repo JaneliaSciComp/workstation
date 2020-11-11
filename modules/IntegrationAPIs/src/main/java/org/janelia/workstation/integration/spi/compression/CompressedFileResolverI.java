@@ -42,7 +42,7 @@ public interface CompressedFileResolverI {
     /**
      * Given an example file name, return an object which can pick the name
      * for anything 'like it'.  The similarity will (at t-o-w) be 'resides
-     * in same directory structure'.
+     * in same dialog structure'.
      *
      * @param decompressedFile example file
      * @return something which can apply names to all like it.

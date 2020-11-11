@@ -3,11 +3,11 @@ package org.janelia.horta.neuronvbo;
 import java.util.Collection;
 import java.util.Iterator;
 import javax.media.opengl.GL3;
-import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Object3d;
 import org.janelia.gltools.GL3Actor;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  * @author brunsc
  */
 public class NeuronVboActor 
-        implements GL3Actor, Iterable<NeuronModel>
+        implements GL3Actor, Iterable<TmNeuronMetadata>
 {
     private final NeuronVboPool vboPool = new NeuronVboPool();
     private boolean bDoHideAllNeurons = false; // for short user-oriented all-neuron toggling
@@ -27,17 +27,25 @@ public class NeuronVboActor
     public NeuronVboActor() 
     {}
     
-    public void addNeuron(NeuronModel neuron) {
+    public void addNeuron(TmNeuronMetadata neuron) {
         if (contains(neuron)) 
             return;
         vboPool.add(neuron);
     }
 
-    public void removeNeuron(NeuronModel neuron) {
+    public void markAsDirty(Long neuronId) {
+        vboPool.markAsDirty(neuronId);
+    }
+
+    public void removeNeuron(TmNeuronMetadata neuron) {
         vboPool.remove(neuron);
     }
-    
-    public boolean contains(NeuronModel neuron) {
+
+    public void clear() {
+        vboPool.clear();
+    }
+
+    public boolean contains(TmNeuronMetadata neuron) {
         return vboPool.contains(neuron);
     }
 
@@ -131,7 +139,7 @@ public class NeuronVboActor
     }
 
     @Override
-    public Iterator<NeuronModel> iterator() {
+    public Iterator<TmNeuronMetadata> iterator() {
         return vboPool.iterator();
     }
 
@@ -139,7 +147,7 @@ public class NeuronVboActor
         vboPool.checkForChanges();
     }
     
-    public void checkForChanges(NeuronModel neuron) {
+    public void checkForChanges(TmNeuronMetadata neuron) {
         vboPool.checkForChanges(neuron);
     }
     

@@ -33,7 +33,7 @@ import java.util.Collection;
 import java.util.List;
 
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "ExportFolderStructureAction"
 )
 @ActionRegistration(

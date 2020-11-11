@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>8.21</version>
+        <version>8.22</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>Geometry3d</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>geometry3d</artifactId>
-    <version>8.21</version>
+    <version>8.22</version>
     <packaging>nbm</packaging>
 
     <dependencies>
@@ -21,12 +21,6 @@
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>libraries</artifactId>
-        </dependency>
-        
-        <!-- Viewer API --> 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewerapi</artifactId>
         </dependency>
        
         <!-- NetBeans Modules -->

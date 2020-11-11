@@ -1,9 +1,9 @@
 package org.janelia.horta.loader;
 
-import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vector3;
-import org.janelia.gltools.material.VolumeMipMaterial;
+import org.janelia.horta.volume.VolumeMipMaterial;
 import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.BrainTileInfo;
 import org.janelia.horta.NeuronTraceLoader;
@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -31,7 +30,7 @@ import java.util.prefs.Preferences;
 
 /**
  * Keeps in memory a configurable number of nearby volume tiles.
- * Manages transfer of volume imagery:
+ * Manages transfer of volume tileimagery:
  *   A) from disk/network, 
  *   B) to RAM, 
  *   C) and thence to GPU video memory

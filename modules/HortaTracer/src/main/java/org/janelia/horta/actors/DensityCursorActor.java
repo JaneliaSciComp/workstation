@@ -1,8 +1,8 @@
 package org.janelia.horta.actors;
 
 import java.io.IOException;
-import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.gltools.texture.Texture2d;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.openide.util.Exceptions;
 
 /**
@@ -12,7 +12,7 @@ import org.openide.util.Exceptions;
 
 public class DensityCursorActor extends SpheresActor {
 
-    public DensityCursorActor(NeuronModel neuron) {
+    public DensityCursorActor(TmNeuronMetadata neuron) {
         super(neuron, 
                 new DensityHighlightTexture(), 
                 null);

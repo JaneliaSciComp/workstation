@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "C-S")
+        @ActionReference(path = "Shortcuts", name = "X")
 })
 public class StopPlayReviewAction extends AbstractAction {
 

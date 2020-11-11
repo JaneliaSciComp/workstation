@@ -5,7 +5,7 @@ import java.awt.event.MouseWheelEvent;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.MouseModalWidget;
-import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 public class ZScanMode 

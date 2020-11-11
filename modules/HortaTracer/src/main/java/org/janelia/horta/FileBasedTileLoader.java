@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-import org.janelia.console.viewerapi.OsFilePathRemapper;
+import org.janelia.workstation.controller.tileimagery.OsFilePathRemapper;
 import org.janelia.rendering.Streamable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -305,7 +305,7 @@ public class AutoUpdater extends SimpleWorker {
         
         try {
             String installDir = SystemInfo.getInstallDir();
-            log.info("Install directory: "+installDir);
+            log.info("Install dialog: "+installDir);
             if (installDir!=null && installDir.startsWith("/misc/local/workstation")) {
                 log.warn("Shared Linux installation detected. Forcing global installation.");
                 // if using the shared Linux installation disallow user dir upgrades so that all users stay in sync

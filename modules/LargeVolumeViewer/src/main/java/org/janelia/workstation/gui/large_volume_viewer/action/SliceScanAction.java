@@ -7,8 +7,8 @@ import javax.swing.AbstractAction;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.camera.Camera3d;
-import org.janelia.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.workstation.gui.large_volume_viewer.TileIndex;
+import org.janelia.workstation.controller.tileimagery.TileFormat;
+import org.janelia.workstation.controller.tileimagery.TileIndex;
 import org.janelia.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 /**

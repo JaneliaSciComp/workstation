@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 
 /**
- * Preferences which are stored in the special JaneliaWorkstation directory in the user's home. These properties
+ * Preferences which are stored in the special JaneliaWorkstation dialog in the user's home. These properties
  * are machine-specific, but they persist across reinstallations. 
  * 
  * Most of this code was inherited from the old SessionModel/GenericModel, but it has been adapted to work with the
@@ -65,7 +65,7 @@ public class LocalPreferenceMgr {
         this.modelProperties = new TreeMap<>();
         this.settingsFile = new File(prefsFile);
         try {
-            new File(prefsDir).mkdirs(); // Ensure that the settings directory exists
+            new File(prefsDir).mkdirs(); // Ensure that the settings dialog exists
             boolean success = settingsFile.createNewFile();  // only creates if does not exist
             if (success) {
                 log.info("Created a new settings file in {}",settingsFile.getAbsolutePath());

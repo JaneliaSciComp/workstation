@@ -1,17 +1,19 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import org.janelia.console.viewerapi.ToolButton;
-import org.janelia.workstation.geom.CoordinateAxis;
+import org.janelia.workstation.controller.widgets.ToolButton;
+import  org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.workstation.controller.tileimagery.SharedVolumeImage;
+import org.janelia.workstation.controller.tileimagery.TileServer;
+import org.janelia.workstation.controller.tileimagery.ViewTileManager;
 import org.janelia.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.WheelMode;
 import org.janelia.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
-import org.janelia.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
-import org.janelia.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
-import org.janelia.workstation.gui.large_volume_viewer.controller.MessageListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.MouseWheelModeListener;
-import org.janelia.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.CameraListenerAdapter;
+import org.janelia.workstation.gui.large_volume_viewer.listener.MessageListener;
+import org.janelia.workstation.gui.large_volume_viewer.listener.MouseWheelModeListener;
+import org.janelia.workstation.controller.listener.VolumeLoadListener;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;

@@ -16,7 +16,7 @@ class TestFileUtils {
     private static int fileCount = 0;
 
     /**
-     * @return a new timestamp directory name based on the current time.
+     * @return a new timestamp dialog name based on the current time.
      */
     synchronized static String buildTimestampName() {
         fileCount++;

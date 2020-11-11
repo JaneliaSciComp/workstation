@@ -15,7 +15,7 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "DownloadAction"
 )
 @ActionRegistration(

@@ -9,7 +9,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponent;
+import org.janelia.workstation.controller.task_workflow.TaskWorkflowViewTopComponent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -39,7 +39,7 @@ public class NextBranchNeuronCamAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         TaskWorkflowViewTopComponent taskView = TaskWorkflowViewTopComponent.getInstance();
         if (taskView!=null)
-            taskView.nextBranch();
+            taskView.nextBranch(false);
     }
     
     @Override

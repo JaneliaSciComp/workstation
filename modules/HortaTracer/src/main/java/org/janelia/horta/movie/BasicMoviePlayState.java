@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage;
 import java.util.Observable;
 import java.util.Observer;
 import javax.swing.SwingUtilities;
-import org.janelia.console.viewerapi.GenericObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
