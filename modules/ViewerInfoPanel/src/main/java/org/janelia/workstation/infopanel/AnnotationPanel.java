@@ -10,6 +10,7 @@ import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.eventbus.NeuronHideEvent;
 import org.janelia.workstation.controller.eventbus.NeuronUnhideEvent;
+import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
 import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
@@ -367,7 +368,7 @@ public class AnnotationPanel extends JPanel
                 for (TmNeuronMetadata neuron: workspaceNeuronList.getNeuronList()) {
                     TmModelManager.getInstance().getCurrentView().removeAnnotationFromHidden(neuron.getId());
                 }
-                NeuronUnhideEvent event = new NeuronUnhideEvent(workspaceNeuronList.getNeuronList());
+                NeuronUpdateEvent event = new NeuronUpdateEvent(workspaceNeuronList.getNeuronList());
                 ViewerEventBus.postEvent(event);
             }
 
@@ -380,7 +381,7 @@ public class AnnotationPanel extends JPanel
                 for (TmNeuronMetadata neuron: workspaceNeuronList.getNeuronList()) {
                     TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
                 }
-                NeuronHideEvent event = new NeuronHideEvent(workspaceNeuronList.getNeuronList());
+                NeuronUpdateEvent event = new NeuronUpdateEvent(workspaceNeuronList.getNeuronList());
                 ViewerEventBus.postEvent(event);
             }
         };
@@ -394,7 +395,7 @@ public class AnnotationPanel extends JPanel
                     TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
                     hiddenNeurons.add(neuron);
                 }
-                NeuronHideEvent event = new NeuronHideEvent(hiddenNeurons);
+                NeuronUpdateEvent event = new NeuronUpdateEvent(hiddenNeurons);
                 ViewerEventBus.postEvent(event);
             }
         };
