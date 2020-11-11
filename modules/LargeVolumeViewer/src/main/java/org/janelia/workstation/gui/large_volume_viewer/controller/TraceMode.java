@@ -779,13 +779,6 @@ implements MouseMode, KeyListener
 						AnnotationNavigationDirection.NEXT_PARALLEL);
 			}
 			break;
-		case KeyEvent.VK_A:
-			// add/edit note dialog
-			if (event.getModifiers() == 0 && nextParent != null) {
-                AddEditNoteAction action = new AddEditNoteAction();
-                action.execute(nextParent.getNeuronID(), nextParent.getGuid());
-			}
-			break;
 		}
                 
         // if not normal key event, check our group toggle events
