@@ -165,6 +165,10 @@ public class NeuronTagsAction extends EditAction {
 
         NeuronManager annModel = NeuronManager.getInstance();
         final TmNeuronMetadata target = getTargetNeuron();
+        if (target.getTags().size() == 0) {
+            // nothing to do
+            return;
+        }
         SimpleWorker remover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
