@@ -535,6 +535,7 @@ public class ColorDepthSearchEditorPanel
         try {
             values.put("Score (Pixels)", match.getScore());
             values.put("Score (Percent)", MaskUtils.getFormattedScorePct(match));
+            if (match.getNormalizedScore() != null) values.put("Normalized score", match.getNormalizedScore());
             if (match.getGradientAreaGap() != null) values.put("Area gap", match.getGradientAreaGap());
             if (match.getHighExpressionArea() != null) values.put("High Expression", match.getHighExpressionArea());
 
