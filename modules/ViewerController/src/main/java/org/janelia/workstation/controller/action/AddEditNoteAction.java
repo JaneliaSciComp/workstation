@@ -28,9 +28,6 @@ import java.awt.event.ActionEvent;
         displayName = "#CTL_AddEditNoteAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Shortcuts", name = "A")
-})
 @NbBundle.Messages("CTL_AddEditNoteAction=Add/Edit Note")
 /**
  * delete the annotation with the input ID; the annotation must be a "link",

@@ -9,6 +9,7 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.EditAction;
 import org.janelia.workstation.controller.eventbus.NeuronHideEvent;
+import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.openide.awt.ActionID;
@@ -35,8 +36,12 @@ public class NeuronHideAction extends EditAction {
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        TmNeuronMetadata neuron = TmSelectionState.getInstance().getCurrentNeuron();
-        NeuronHideEvent event = new NeuronHideEvent(Arrays.asList(new TmNeuronMetadata[]{neuron}));
-        ViewerEventBus.postEvent(event);
+        TmNeuronMetadata neuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
+        if (neuron!=null) {
+            TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
+            NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(
+                    Arrays.asList(new TmNeuronMetadata[]{neuron}));
+            ViewerEventBus.postEvent(updateEvent);
+        }
     }
 }
