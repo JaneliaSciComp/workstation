@@ -998,16 +998,8 @@ public class TracingInteractor extends MouseAdapter
             try {
                 TmNeuronMetadata currNeuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
                 if (densityVertex!=null && currNeuron!=null) {
-                    Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
-                    Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
-                            {densityVertex.getX(),},
-                            {densityVertex.getY(),},
-                            {densityVertex.getZ(),},
-                            {1.0,},});
-                    // NeuronVertex API requires coordinates in micrometers
-                    Jama.Matrix voxLoc = m2v.times(micLoc);
-                    Vec3 newLoc = new Vec3(voxLoc.get(0, 0), voxLoc.get(1, 0),
-                            voxLoc.get(2, 0));
+                    Vec3 newLoc = new Vec3(densityVertex.getX(), densityVertex.getY(),
+                            densityVertex.getZ());
                     TmGeoAnnotation newAnn = NeuronManager.getInstance().addRootAnnotation(currNeuron, newLoc);
                     if (newAnn!=null)
                         selectParentVertex(newAnn, currNeuron);
@@ -1052,16 +1044,8 @@ public class TracingInteractor extends MouseAdapter
 
             NeuronCreateAction createAction = new NeuronCreateAction();
             if (densityVertex!=null) {
-                Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
-                Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
-                        {densityVertex.getX(),},
-                        {densityVertex.getY(),},
-                        {densityVertex.getZ(),},
-                        {1.0,},});
-                // NeuronVertex API requires coordinates in micrometers
-                Jama.Matrix voxLoc = m2v.times(micLoc);
-                Vec3 newLoc = new Vec3(voxLoc.get(0, 0), voxLoc.get(1, 0),
-                        voxLoc.get(2, 0));
+                Vec3 newLoc = new Vec3(densityVertex.getX(), densityVertex.getY(),
+                        densityVertex.getZ());
                 createAction.execute(true, newLoc);
             }
         }

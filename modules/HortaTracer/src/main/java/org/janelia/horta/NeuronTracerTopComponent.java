@@ -1517,49 +1517,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
-                // SECTION: Undo/redo
-                UndoRedo.Manager undoRedo = getUndoRedoManager();
-                if ((undoRedo != null) && (undoRedo.canUndoOrRedo())) {
-                    topMenu.add(new JPopupMenu.Separator());
-                    if (undoRedo.canUndo()) {
-                        UndoAction undoAction = SystemAction.get(UndoAction.class);
-                        JMenuItem undoItem = undoAction.getPopupPresenter();
-                        KeyStroke shortcut = undoItem.getAccelerator();
-                        // For some reason, getPopupPresenter() does not include a keyboard shortcut
-                        if (shortcut == null) {
-                            // Sadly, this attempt to access the global keymap does not work.
-                            Keymap keymap = Lookup.getDefault().lookup(Keymap.class);
-                            if (keymap != null) {
-                                KeyStroke[] keyStrokes = keymap.getKeyStrokesForAction(undoAction);
-                                if (keyStrokes.length > 0)
-                                    shortcut = keyStrokes[0];
-                            }
-                            // KeyStroke undoKey2 = (KeyStroke)undoAction.getProperty(Action.ACCELERATOR_KEY); // Nope, protected
-                            if (shortcut == null) {
-                                shortcut = KeyStroke.getKeyStroke(
-                                        KeyEvent.VK_Z,
-                                        Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() // CTRL on Win/Linux, flower on Mac
-                                );
-                            }
-                            undoItem.setAccelerator(shortcut);
-                        }
-                        topMenu.add(undoItem);
-                    }
-                    if (undoRedo.canRedo()) {
-                        RedoAction redoAction = SystemAction.get(RedoAction.class);
-                        JMenuItem redoItem = redoAction.getPopupPresenter();
-                        // For some reason, getPopupPresenter() does not include a keyboard shortcut
-                        KeyStroke shortcut = redoItem.getAccelerator();
-                        if (shortcut == null) {
-                            redoItem.setAccelerator(KeyStroke.getKeyStroke(
-                                    KeyEvent.VK_Y, // TODO: Shift-flower-Z on Mac
-                                    Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() // CTRL on Win/Linux, flower on Mac
-                            ));
-                        }
-                        topMenu.add(redoItem);
-                    }
-                }
-
                 final TracingInteractor.InteractorContext interactorContext = tracingInteractor.createContext();
 
                 // SECTION: Anchors
@@ -1601,16 +1558,15 @@ public final class NeuronTracerTopComponent extends TopComponent
                         }
                     });
 
-                    if (interactorContext.getCurrentParentAnchor() != null) {
-                        TmGeoAnnotation vertex = interactorContext.getCurrentParentAnchor();
+                    if (interactorContext.getHighlightedAnchor() != null) {
+                        TmGeoAnnotation vertex = interactorContext.getHighlightedAnchor();
 
-                        topMenu.add(new AbstractAction("Center on Current Parent Anchor") {
+                        topMenu.add(new AbstractAction("Center on Current Anchor") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
                                 PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-                                TmGeoAnnotation ann = interactorContext.getCurrentParentAnchor();
-                                float[] vtxLocation = TmModelManager.getInstance().getLocationInMicrometers(ann.getX(),
-                                        ann.getY(), ann.getZ());
+                                float[] vtxLocation = TmModelManager.getInstance().getLocationInMicrometers(vertex.getX(),
+                                        vertex.getY(), vertex.getZ());
                                 ViewEvent event = new ViewEvent(vtxLocation[0],
                                         vtxLocation[1],
                                         vtxLocation[2],
@@ -1624,17 +1580,15 @@ public final class NeuronTracerTopComponent extends TopComponent
                         topMenu.add(new AbstractAction("Add/Edit Note on Anchor") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                TmGeoAnnotation ann = interactorContext.getCurrentParentAnchor();
                                 AddEditNoteAction action = new AddEditNoteAction();
-                                action.execute(ann.getNeuronId(), ann.getId());
+                                action.execute(vertex.getNeuronId(), vertex.getId());
                             }
                         });
 
                         topMenu.add(new AbstractAction("Edit Neuron Tags") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                TmGeoAnnotation ann = interactorContext.getCurrentParentAnchor();
-                                TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(ann.getNeuronId());
+                                TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(vertex.getNeuronId());
                                 NeuronManager.getInstance().editNeuronTags(neuron);
                             }
                         });
