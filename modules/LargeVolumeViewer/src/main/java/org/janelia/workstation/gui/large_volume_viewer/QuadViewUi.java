@@ -25,6 +25,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.workstation.controller.widgets.ToolButton;
 import org.janelia.workstation.controller.color_slider.SliderPanel;
 import org.janelia.workstation.controller.listener.ColorModelInitListener;
@@ -34,10 +36,6 @@ import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.geom.BoundingBox3d;
-import org.janelia.model.domain.tiledMicroscope.TmColorModel;
-import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.rendering.RenderedVolumeLocation;
@@ -1216,7 +1214,18 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         updateRanges();
 
         recentFileList.add(url);
-        imageColorModel.reset(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
+
+        // this is a little sketchy; right now, Horta 2d (aka LVV) only loads color models
+        //  from the workspace once, at first load; so we do that directly here; really we
+        //  probably ought to have an event bus message that triggers this, but I just cannot
+        //  figure out where to wire that in; this is cleaner and easier, but it cannot
+        //  be extended in the future should we choose to implement loadable color models
+        //  for Horta 2d
+        TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+        if (workspace != null) {
+            setImageColorModel(workspace.getColorModel());
+        }
+
         resetViewAction.actionPerformed(null);
 
         getSkeletonActor().getModel().setTileFormat(
