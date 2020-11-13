@@ -210,6 +210,10 @@ public class TmViewerManager implements GlobalViewerController {
     @Subscribe
     public void loadComplete(LoadProjectEvent event) {
         final TmWorkspace workspace = modelManager.getCurrentWorkspace();
+
+        MovieEvent movieEvent = new MovieEvent();
+        ViewerEventBus.postEvent(movieEvent);
+        
         if (workspace == null) {
             return;
         }

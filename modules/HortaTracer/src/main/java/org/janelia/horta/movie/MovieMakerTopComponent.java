@@ -1,5 +1,6 @@
 package org.janelia.horta.movie;
 
+import com.google.common.eventbus.Subscribe;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -15,6 +16,11 @@ import java.util.Collection;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.janelia.horta.NeuronTracerTopComponent;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.MovieEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -25,6 +31,7 @@ import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.Utilities;
+import org.openide.windows.WindowManager;
 
 /**
  * Top component which displays something.
@@ -50,9 +57,7 @@ import org.openide.util.Utilities;
     "CTL_MovieMakerTopComponent=Movie Maker",
     "HINT_MovieMakerTopComponent=Horta Movie Maker controls"
 })
-public final class MovieMakerTopComponent 
-extends TopComponent 
-implements LookupListener
+public final class MovieMakerTopComponent extends TopComponent
 {
     private Timeline movieTimeline;
     private MoviePlayState playState;
@@ -432,21 +437,18 @@ implements LookupListener
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // add custom code on component opening
-        
-        // Movie Sources
-        movieSourcesResult = Utilities.actionsGlobalContext().lookupResult(MovieSource.class);
-        movieSourcesResult.addLookupListener(this);
-        Collection<? extends MovieSource> allSources = movieSourcesResult.allInstances();
-        if (allSources.isEmpty())
-            setMovieSource(null);
-        else
-            setMovieSource((MovieSource)allSources.iterator().next());
+        setUpMovieMaker();
+        ViewerEventBus.registerForEvents(this);
     }
 
     @Override
     public void componentClosed() {
-        movieSourcesResult.removeLookupListener(this);
+
+    }
+
+    @Subscribe
+    public void movieSourceUpdates(MovieEvent event) {
+        setUpMovieMaker();
     }
 
     void writeProperties(java.util.Properties p) {
@@ -488,19 +490,24 @@ implements LookupListener
         return movieSource;
     }
 
+    private void setUpMovieMaker() {
+        NeuronTracerTopComponent topComponent = NeuronTracerTopComponent.findThisComponent();
+        if (topComponent!=null && TmModelManager.getInstance().getCurrentSample()!=null) {
+            movieSource = new HortaMovieSource(topComponent);
+            setMovieSource(movieSource);
+        } else {
+            movieSource = null;
+        }
+    }
+
     public void setMovieSource(MovieSource movieSource) 
     {
-        if ((movieSource == null) && (this.movieSource == null)) 
+        if (movieSource == null)
         {
             addFrameButton.setEnabled(false); // disable controls
             return;
         }
-        if (this.movieSource == movieSource)
-            return; // no change
-        if (movieSource == null)
-            return; // remember the old source, when the new one seems to be null
-        this.movieSource = movieSource;
-        
+
         if (movieTimeline == null)
             movieTimeline = new BasicMovieTimeline(movieSource.getDefaultInterpolator());
         movieTimeline.clear();
@@ -515,18 +522,5 @@ implements LookupListener
     
     public void setPlaybackFramesPerSecond(float fps) {
         playState.setFramesPerSecond(fps);
-    }
-    
-    @Override
-    public void resultChanged(LookupEvent le) 
-    {   
-        // MovieSources
-        if (movieSourcesResult == null)
-            return;
-        Collection<? extends MovieSource> sources = movieSourcesResult.allInstances();
-        if (sources.isEmpty())
-            setMovieSource(null);
-        else
-            setMovieSource((MovieSource)sources.iterator().next());
     }
 }

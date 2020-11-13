@@ -198,7 +198,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     private int defaultColorChannel = 0;
 
     private final HortaVolumeCache volumeCache;
-    private final HortaMovieSource movieSource = new HortaMovieSource(this);
 
     private final KtxBlockMenuBuilder ktxBlockMenuBuilder = new KtxBlockMenuBuilder();
 
@@ -372,6 +371,9 @@ public final class NeuronTracerTopComponent extends TopComponent
             initMeshes();
         }
         ViewerEventBus.registerForEvents(this);
+
+        MovieEvent movieEvent = new MovieEvent();
+        ViewerEventBus.postEvent(movieEvent);
 
     }
 
@@ -2159,8 +2161,19 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     public void reloadSampleLocation() {
-        //if (currLocation!=
-         //   setSampleLocation();
+        try {
+            ViewLoader viewLoader = new ViewLoader(
+                    neuronTraceLoader,this, sceneWindow
+            );
+            Vantage vantage = sceneWindow.getVantage();
+            Vec3 currFocus = new Vec3(vantage.getFocus()[0], vantage.getFocus()[1],
+                    vantage.getFocus()[2]);
+            double currZoom = vantage.getSceneUnitsPerViewportHeight();
+
+            viewLoader.loadView(currFocus, currZoom);
+        } catch (Exception e) {
+            FrameworkAccess.handleException("Problems reloading tile strategy.",e);
+        }
     }
 
     @Override
