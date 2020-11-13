@@ -67,26 +67,6 @@ public class CommonActions {
         }
     }
 
-    public static void saveQuadViewColorModel() {
-        log.info("saveQuadViewColorModel()");
-        try {
-            if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-                presentError("You must create a workspace to be able to save the color model!", "No workspace");
-            }
-            else {
-                TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
-
-                //REFACTOR IMAGE COLOR MODEL - messy and unnecessary
-                //workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
-                log.info("Setting color model: {}",workspace.getColorModel());
-                //saveCurrentWorkspace();
-            }
-        }
-        catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
-    }
-
     public static void presentError(String message, String title) throws HeadlessException {
         JOptionPane.showMessageDialog(
                 null,

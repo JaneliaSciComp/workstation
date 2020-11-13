@@ -1,26 +1,22 @@
 package org.janelia.workstation.controller.color_slider;
 
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.file.Path;
 import java.util.*;
 
-import javax.swing.AbstractButton;
-import javax.swing.Action;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JToggleButton;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.controller.model.color.ChannelColorModel;
 import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.workstation.controller.widgets.SimpleIcons;
@@ -59,16 +55,27 @@ public class SliderPanel extends JPanel {
     private JToggleButton lockBlackButton;
     private JToggleButton lockGrayButton;
     private JToggleButton lockWhiteButton;
+    private JButton gearButton;
 	private JPanel colorLockPanel = new JPanel();
     private ImageColorModel imageColorModel;
     private ColorModelListener visibilityListener;
     private VIEW top;
 
-    public SliderPanel() { // empty constructor so I can drag this widget in netbeans GUI builder
+    public enum ModelType {
+        COLORMODEL_2D,
+        COLORMODEL_3D
+    }
+    private ModelType modelType;
+
+    public SliderPanel(ModelType modelType) {
+        // currently used by Horta 3D viewer
+        this.modelType = modelType;
         ViewerEventBus.registerForEvents(this);
     }
     
-    public SliderPanel( ImageColorModel imageColorModel ) {
+    public SliderPanel(ImageColorModel imageColorModel, ModelType modelType) {
+        // currently used by Horta 2D viewer
+        this.modelType = modelType;
         setImageColorModel(imageColorModel);
     }
     
@@ -223,6 +230,15 @@ public class SliderPanel extends JPanel {
 		});
 		
 		colorLockPanel.add(Box.createHorizontalStrut(30));
+
+		gearButton = new JButton("");
+		gearButton.setToolTipText("Color model options");
+        ImageIcon gearIcon = Icons.getIcon("cog.png");
+		gearButton.setIcon(gearIcon);
+		gearButton.setHideActionText(true);
+		gearButton.setMinimumSize(gearButton.getPreferredSize());
+		colorLockPanel.add(gearButton);
+
         if ( visibilityListener == null ) {
             visibilityListener = new ColorModelListener() {
                 @Override
@@ -263,11 +279,13 @@ public class SliderPanel extends JPanel {
         saveUserColorModelAction.putValue("top", this.top);
         sliderPanelMenu.add(new JMenuItem(saveUserColorModelAction));
 
-        colorLockPanel.setComponentPopupMenu(sliderPanelMenu);
-        for (int i=0; i<colorWidgets.length; i++) {
-             ColorChannelWidget cw = colorWidgets[i];
-             cw.setComponentPopupMenu(sliderPanelMenu);
-        }
+        gearButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sliderPanelMenu.show(gearButton,0, gearButton.getHeight());
+            }
+        });
+
     }
 
     public void importCompleteColorModel(File modelFile) {
@@ -312,7 +330,12 @@ public class SliderPanel extends JPanel {
                             projectId.toString(), tmColorModel);
                     break;
                 case SAVE_WORKSPACE:
-                    workspace.setColorModel3d(tmColorModel);
+                    // these sliders are used for both 2d and 3d viewers; save the correct color model
+                    if (modelType == ModelType.COLORMODEL_3D) {
+                        workspace.setColorModel3d(tmColorModel);
+                    } else if (modelType == ModelType.COLORMODEL_2D) {
+                        workspace.setColorModel(tmColorModel);
+                    }
                     TmModelManager.getInstance().saveWorkspace(workspace);
                     break;
             }

@@ -39,7 +39,7 @@ public final class ColorSlidersTopComponent extends TopComponent
 {
     private ImageColorModel colorMap = null;
     private ImageColorModel selectedColorMap = null;
-    private final SliderPanel sliderPanel = new SliderPanel();
+    private final SliderPanel sliderPanel = new SliderPanel(SliderPanel.ModelType.COLORMODEL_3D);
 
     public ColorSlidersTopComponent() {
         initComponents();

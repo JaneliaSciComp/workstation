@@ -78,7 +78,6 @@ public class AnnotationPanel extends JPanel
     private NeuronFilterAction neuronFilterAction;
     private ImportSWCAction importSWCAction;
     private ImportSWCAction importSWCActionMulti;
-    private AbstractAction saveColorModelAction;
 
     private AbstractAction showAllNeuronsAction;
     private AbstractAction hideAllNeuronsAction;
@@ -125,7 +124,6 @@ public class AnnotationPanel extends JPanel
         automaticTracingMenuItem.setEnabled(enabled);
         importSWCAction.setEnabled(enabled);
         importSWCActionMulti.setEnabled(enabled);
-        saveColorModelAction.setEnabled(enabled);
         bulkNeuronTagAction.setEnabled(enabled);
         bulkChangeNeuronStyleAction.setEnabled(enabled);
         bulkNeuronOwnerAction.setEnabled(enabled);
@@ -297,14 +295,6 @@ public class AnnotationPanel extends JPanel
         importSWCActionMulti.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCActionMulti));
-
-        saveColorModelAction = new AbstractAction("Save color model") {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                CommonActions.saveQuadViewColorModel();
-            }
-        };
-        workspaceToolMenu.add(new JMenuItem(saveColorModelAction));
 
         saveAsAction = new WorkspaceSaveAsAction();
         workspaceToolMenu.add(new JMenuItem(saveAsAction));
