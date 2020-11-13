@@ -16,8 +16,6 @@ import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -28,8 +26,6 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.util.Collections;
 import java.util.Set;
-
-import static org.janelia.workstation.core.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
 
 /**
  * A dialog for viewing the list of accessible data sets, editing them, and
@@ -83,6 +79,7 @@ public class DataSetDialog extends ModalDialog {
     private JTextField sageConfigPathInput;
     private JTextField sageGrammarPathInput;
     private JCheckBox sageSyncCheckbox;
+    private JCheckBox distortionCorrectionCheckbox;
     private JCheckBox neuronSeparationCheckbox;
     private JTextField unalignedCompressionInput;
     private JTextField alignedCompressionInput;
@@ -258,10 +255,17 @@ public class DataSetDialog extends ModalDialog {
 
         sageSyncCheckbox = new JCheckBox("Synchronize images from SAGE");
         sageSyncCheckbox.setSelected(true);
-        optionsPanel.add(sageSyncCheckbox);
+        if (dataSet != null) {
+            // Assume true during data set creation
+            optionsPanel.add(sageSyncCheckbox);
+        }
 
-        neuronSeparationCheckbox = new JCheckBox("Run neuron separation (if pipeline supports it)");
-        neuronSeparationCheckbox.setEnabled(SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI);
+        distortionCorrectionCheckbox = new JCheckBox("Distortion correction");
+        distortionCorrectionCheckbox.setSelected(true);
+        optionsPanel.add(distortionCorrectionCheckbox);
+
+        neuronSeparationCheckbox = new JCheckBox("Neuron separation");
+        neuronSeparationCheckbox.setSelected(false);
         optionsPanel.add(neuronSeparationCheckbox);
 
         final JLabel processingOptionsLabel = new JLabel("Processing Options: ");
@@ -293,6 +297,7 @@ public class DataSetDialog extends ModalDialog {
             separationCompressionInput.setText(currSepCompression);
             
             sageSyncCheckbox.setSelected(dataSet.isSageSync());
+            distortionCorrectionCheckbox.setSelected(dataSet.isDistortionCorrectionSupported());
             neuronSeparationCheckbox.setSelected(dataSet.isNeuronSeparationSupported());
 
             ActivityLogHelper.logUserAction("DataSetDialog.showDialog", dataSet);
@@ -474,6 +479,7 @@ public class DataSetDialog extends ModalDialog {
                 dataSet.setSampleNamePattern(sampleNamePattern);
                 dataSet.setPipelineProcesses(Collections.singletonList(currPipelineProcess));
                 dataSet.setSageSync(sageSyncCheckbox.isSelected());
+                dataSet.setDistortionCorrectionSupported(distortionCorrectionCheckbox.isSelected());
                 dataSet.setNeuronSeparationSupported(neuronSeparationCheckbox.isSelected());
                 dataSet.setSageConfigPath(sageConfigPath);
                 dataSet.setSageGrammarPath(sageGrammarPath);

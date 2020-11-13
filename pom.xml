@@ -108,7 +108,7 @@
 
         <janeliaws.jetty.version>9.4.19.v20190610</janeliaws.jetty.version>
 
-        <janeliaws.jacs-model.version>2.37.1</janeliaws.jacs-model.version>
+        <janeliaws.jacs-model.version>2.37.2</janeliaws.jacs-model.version>
 
         <janeliaws.jacs-messaging.version>2.5.0</janeliaws.jacs-messaging.version>
 
