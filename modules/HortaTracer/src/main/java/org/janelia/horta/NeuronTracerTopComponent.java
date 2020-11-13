@@ -1664,6 +1664,18 @@ public final class NeuronTracerTopComponent extends TopComponent
                     };
                     topMenu.add(toggleVisAction);
 
+                    // Toggle Visiblity (maybe we could only hide from here though...)
+                    AbstractAction clearLoopIndicator = new AbstractAction("Clear Loop Indicator") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            TmModelManager.getInstance().getCurrentReviews().clearLoopedAnnotations();
+
+                            NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(Arrays.asList(indicatedNeuron));
+                            ViewerEventBus.postEvent(updateEvent);
+                        }
+                    };
+                    topMenu.add(clearLoopIndicator);
+
                     // Change Neuron Color
                     if (interactorContext.canRecolorNeuron()) {
                         topMenu.add(new AbstractAction("Change Neuron Color...") {

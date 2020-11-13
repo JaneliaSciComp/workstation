@@ -1097,6 +1097,14 @@ public class TracingInteractor extends MouseAdapter
             if (parentVertex == null) return false;
             if (hoveredVertex == parentVertex) return false;
             // cannot merge a neuron with itself
+            // TODO: same neuron is OK, but not same connected "neurite"
+            if (TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) return false;
+            return true;
+        }
+        
+        public boolean mergeNeurites() {
+            if (!canMergeNeurite())
+                return false;
             if (hoveredNeuron == parentNeuron) {
                 List<Long> targetAncestors = findAncestors(hoveredNeuron.getId(), hoveredVertex);
                 List<Long> sourceAncestors = findAncestors(hoveredNeuron.getId(), parentVertex);
@@ -1118,18 +1126,8 @@ public class TracingInteractor extends MouseAdapter
                     NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(Arrays.asList(hoveredNeuron));
                     ViewerEventBus.postEvent(updateEvent);
                 }
-
-                // find the common parent between hovered vertex and
                 return false;
             }
-            // TODO: same neuron is OK, but not same connected "neurite"
-            if (TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) return false;
-            return true;
-        }
-        
-        public boolean mergeNeurites() {
-            if (!canMergeNeurite())
-                return false;
             if (!checkOwnership(NeuronManager.getInstance().getNeuronFromNeuronID(hoveredVertex.getNeuronId()))) {
                 return false;
             }       
