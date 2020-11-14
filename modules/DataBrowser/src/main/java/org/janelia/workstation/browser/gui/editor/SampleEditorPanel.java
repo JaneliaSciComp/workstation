@@ -441,56 +441,61 @@ public class SampleEditorPanel
     }
 
     @Override
-    public void loadDomainObject(final Sample sample, final boolean isUserDriven, final Callable<Void> success) {
+    public void loadDomainObject(final Sample domainObject, final boolean isUserDriven, final Callable<Void> success) {
 
-        if (sample==null) return;
+        if (domainObject==null) return;
         
         if (!debouncer.queue(success)) {
             log.info("Skipping load, since there is one already in progress");
             return;
         }
         
-        log.info("loadDomainObject({},isUserDriven={})",sample.getName(),isUserDriven);
+        log.info("loadDomainObject({},isUserDriven={})",domainObject.getName(),isUserDriven);
         final StopWatch w = new StopWatch();
 
         // Save the scroll horizontal position on the table, so that users can compare attributes more easily
         final ListViewerState viewerState = MODE_LSMS.equals(currMode) ? lsmPanel.getViewer().saveState() : null;
 
         currRunMap.clear();
-        configPanel.setTitle(sample.getName());
         selectionModel.reset();
-        selectionModel.setParentObject(sample);
 
-        this.sample = sample;
-        this.lsms = null;
-        
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-                if (MODE_LSMS.equals(currMode))  {
-                    DomainModel model = DomainMgr.getDomainMgr().getModel();
-                    lsms = model.getLsmsForSample(sample);
-                    lsmAnnotations = model.getAnnotations(DomainUtils.getReferences(lsms));
-                    loadPreferences();
-                    prepareLsmResults();
-                }
-                else {
-                    loadContainers();
+
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                sample = model.getDomainObject(domainObject);
+
+                if (sample!=null) {
+                    configPanel.setTitle(sample.getName());
+                    selectionModel.setParentObject(sample);
+
+                    if (MODE_LSMS.equals(currMode)) {
+                        lsms = model.getLsmsForSample(sample);
+                        lsmAnnotations = model.getAnnotations(DomainUtils.getReferences(lsms));
+                        loadPreferences();
+                        prepareLsmResults();
+                    } else {
+                        lsms = null;
+                        loadContainers();
+                    }
                 }
             }
             
             @Override
             protected void hadSuccess() {
-                showResults(isUserDriven);
-                
-                if (MODE_LSMS.equals(currMode))  {
-                    lsmPanel.getViewer().restoreState(viewerState);
+                if (sample==null) {
+                    showNothing();
                 }
                 else {
-                    mainPanel.selectFirst(isUserDriven);
+                    showResults(isUserDriven);
+                    if (MODE_LSMS.equals(currMode)) {
+                        lsmPanel.getViewer().restoreState(viewerState);
+                    } else {
+                        mainPanel.selectFirst(isUserDriven);
+                    }
                 }
-                
                 ConcurrentUtils.invokeAndHandleExceptions(success);
                 debouncer.success();
                 Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(lsmPanel, getViewerContext()));
@@ -1127,29 +1132,20 @@ public class SampleEditorPanel
 		    if (sample==null) return;
             if (event.isTotalInvalidation()) {
                 log.info("total invalidation, reloading...");
-                Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-                if (updatedSample!=null) {
-                    loadDomainObject(updatedSample, false, null);
-                }
+                loadDomainObject(sample, false, null);
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
                     if (StringUtilsExtra.areEqual(domainObject.getId(), sample.getId())) {
                         log.info("Sample invalidated, reloading...");
-                        Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-                        if (updatedSample!=null) {
-                            loadDomainObject(updatedSample, false, null);
-                        }
+                        loadDomainObject(sample, false, null);
                         break;
                     }
                     else if (lsms!=null) {
                         for(LSMImage lsm : lsms) {
                             if (StringUtilsExtra.areEqual(domainObject.getId(), lsm.getId())) {
                                 log.info("LSM invalidated, reloading...");
-                                Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-                                if (updatedSample!=null) {
-                                    loadDomainObject(updatedSample, false, null);
-                                }
+                                loadDomainObject(sample, false, null);
                                 break;
                             }
                         }

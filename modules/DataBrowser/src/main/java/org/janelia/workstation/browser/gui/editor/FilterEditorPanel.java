@@ -37,6 +37,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectAttribute;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.gui.search.Filtering;
 import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
@@ -114,6 +115,7 @@ public class FilterEditorPanel
     
     // Utilities
     private final Debouncer debouncer = new Debouncer();
+    private final Debouncer reloadDebouncer = new Debouncer();
     private final Debouncer refreshDebouncer = new Debouncer();
     
     // UI Elements
@@ -788,20 +790,46 @@ public class FilterEditorPanel
             restoreState(saveState());
             return;
         }
-        
-        Filter updatedFilter = getDomainMgr().getModel().getDomainObject(filter.getClass(), filter.getId());
-        if (updatedFilter!=null) {
-            if (filterNode!=null && !filterNode.getFilter().equals(updatedFilter)) {
-                filterNode.update(updatedFilter);
+
+        if (!reloadDebouncer.queue()) {
+            log.info("Skipping reload, since there is one already in progress");
+            return;
+        }
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            Filter updatedFilter;
+
+            @Override
+            protected void doStuff() throws Exception {
+                updatedFilter = getDomainMgr().getModel().getDomainObject(filter.getClass(), filter.getId());
             }
-            this.filter = updatedFilter;
-            restoreState(saveState());
-        }
-        else {
-            // The filter no longer exists, or we no longer have access to it (perhaps running as a different user?) 
-            // Either way, there's nothing to show. 
-            showNothing();
-        }
+
+            @Override
+            protected void hadSuccess() {
+                if (updatedFilter!=null) {
+                    if (filterNode!=null && !filterNode.getFilter().equals(updatedFilter)) {
+                        filterNode.update(updatedFilter);
+                    }
+                    filter = updatedFilter;
+                    restoreState(saveState());
+                }
+                else {
+                    // The filter no longer exists, or we no longer have access to it (perhaps running as a different user?)
+                    // Either way, there's nothing to show.
+                    showNothing();
+                }
+                reloadDebouncer.success();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+                reloadDebouncer.failure();
+            }
+        };
+
+        worker.execute();
     }
 
     public static Filter createUnsavedFilter(Class<?> searchClass, String name) {

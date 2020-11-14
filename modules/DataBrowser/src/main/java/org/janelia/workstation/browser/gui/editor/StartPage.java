@@ -77,8 +77,6 @@ public class StartPage extends JPanel implements PropertyChangeListener {
     private JLabel lsmCountLabel;
     private JLabel annotationCountLabel;
 
-    private DiskUsageSummary diskUsageSummary;
-    private DatabaseSummary dataSummary;
     private ImageIcon diskUsageIcon;
     private ImageIcon sampleIcon;
     private ImageIcon colorDepthIcon;
@@ -274,22 +272,19 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         
         JButton userManualButton = new JButton("Learn more in the User Manual");
         userManualButton.setFont(mediumFont);
-        userManualButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String manualUrl = ConsoleProperties.getInstance().getProperty("manual.color.depth.url", null);
-                if (manualUrl==null) {
-                    JOptionPane.showMessageDialog(
-                            FrameworkAccess.getMainFrame(),
-                            "No color depth user manual can be found.",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE,
-                            null
-                    );
-                }
-                else {
-                    Utils.openUrlInBrowser(manualUrl);
-                }
+        userManualButton.addActionListener(e -> {
+            String manualUrl = ConsoleProperties.getInstance().getProperty("manual.color.depth.url", null);
+            if (manualUrl==null) {
+                JOptionPane.showMessageDialog(
+                        FrameworkAccess.getMainFrame(),
+                        "No color depth user manual can be found.",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE,
+                        null
+                );
+            }
+            else {
+                Utils.openUrlInBrowser(manualUrl);
             }
         });
         
@@ -300,8 +295,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         colorDepthPanel.add(new JLabel(colorDepthTxt), "al left top");
         colorDepthPanel.add(Box.createHorizontalGlue(), "spany2");
         colorDepthPanel.add(userManualButton, "al left");
-        
-        
+
         mainPanel.updateUI();
 
         diskSpacePanel.setVisible(false);
@@ -322,15 +316,13 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
             @Override
             protected void hadSuccess() {
-                diskUsageSummary = summary;
-                populateDiskView(diskUsageSummary);
+                populateDiskView(summary);
             }
 
             @Override
             protected void hadError(Throwable e) {
                 FrameworkAccess.handleException(e);
-                diskUsageSummary = null;
-                populateDiskView(diskUsageSummary);
+                populateDiskView(null);
             }
         };
 
@@ -347,23 +339,21 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
             @Override
             protected void hadSuccess() {
-                dataSummary = summary;
-                populateDataView(dataSummary);
+                populateDataView(summary);
             }
 
             @Override
             protected void hadError(Throwable e) {
                 FrameworkAccess.handleException(e);
-                dataSummary = null;
-                populateDataView(dataSummary);
+                populateDataView(null);
             }
         };
 
         worker2.execute();
     }
 
-    private void populateDiskView(DiskUsageSummary dataSummary) {
-        
+    private void populateDiskView(DiskUsageSummary diskUsageSummary) {
+
         // Reset components
         diskSpacePanel.removeAll();
         
@@ -383,14 +373,14 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         diskSpacePanel.add(getMediumLabel("Free space:"), "al left top");
         diskSpacePanel.add(spaceAvailableLabel, "al left top");
         
-        if (dataSummary==null) return;
+        if (diskUsageSummary==null) return;
         
-        Double userDataSetsTB = dataSummary.getUserDataSetsTB();
+        Double userDataSetsTB = diskUsageSummary.getUserDataSetsTB();
         if (userDataSetsTB!=null) {
             spaceUsedLabel.setText(String.format("%2.2f TB", userDataSetsTB));
         }
         
-        QuotaUsage quotaUsage = dataSummary.getQuotaUsage();
+        QuotaUsage quotaUsage = diskUsageSummary.getQuotaUsage();
         if (quotaUsage!=null) {
             Double spaceUsedTB = quotaUsage.getSpaceUsedTB();
             Double totalSpaceTB = quotaUsage.getTotalSpaceTB();

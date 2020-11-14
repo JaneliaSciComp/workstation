@@ -1,29 +1,17 @@
 package org.janelia.workstation.browser.gui.editor;
 
-import java.awt.BorderLayout;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.swing.BorderFactory;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.interfaces.HasFileGroups;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.FileGroup;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
 import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
@@ -49,6 +37,15 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.Callable;
+
 /**
  * An editor which can display the file groups for a given sample result.
  * 
@@ -62,6 +59,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
     // Utilities
     private final Debouncer debouncer = new Debouncer();
+    private final Debouncer reloadDebouncer = new Debouncer();
 
     // UI Elements
     private final ConfigPanel configPanel;
@@ -231,25 +229,49 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
     }
 
     private void refreshResult() {
-        try {
-            Sample sample = result.getParentRun().getParent().getParent();
-            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
-            if (updatedSample!=null) {
-                List<PipelineResult> results = updatedSample.getResultsById(PipelineResult.class, result.getId());
-                if (results.isEmpty()) {
-                    log.info("Sample no longer has result with id: "+ result.getId());
-                    showNothing();
-                    return;
-                }
-                showResult(results.get(results.size()-1), false, null);
-            }
-            else {
-                showNothing();
-            }
-        }  
-        catch (Exception e) {
-            FrameworkAccess.handleException(e);
+
+        if (!reloadDebouncer.queue()) {
+            log.info("Skipping reload, since there is one already in progress");
+            return;
         }
+
+        PipelineResult pipelineResult = this.result;
+        Sample sample = pipelineResult.getParentRun().getParent().getParent();
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            Sample updatedSample;
+
+            @Override
+            protected void doStuff() throws Exception {
+                updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
+            }
+
+            @Override
+            protected void hadSuccess() {
+                if (updatedSample!=null) {
+                    List<PipelineResult> results = updatedSample.getResultsById(PipelineResult.class, pipelineResult.getId());
+                    if (results.isEmpty()) {
+                        log.info("Sample no longer has result with id: "+ pipelineResult.getId());
+                        showNothing();
+                        return;
+                    }
+                    showResult(results.get(results.size()-1), false, null);
+                }
+                else {
+                    showNothing();
+                }
+                reloadDebouncer.success();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+                reloadDebouncer.failure();
+            }
+        };
+
+        worker.execute();
     }
 
     private FileGroup getFileGroup(String key) {

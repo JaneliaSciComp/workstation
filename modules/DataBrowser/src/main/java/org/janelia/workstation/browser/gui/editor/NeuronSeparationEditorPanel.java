@@ -7,6 +7,7 @@ import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.NeuronFragment;
@@ -80,6 +81,7 @@ public class NeuronSeparationEditorPanel
     
     // Utilities
     private final Debouncer debouncer = new Debouncer();
+    private final Debouncer reloadDebouncer = new Debouncer();
     
     // UI Elements
     private final ConfigPanel configPanel;
@@ -580,21 +582,7 @@ public class NeuronSeparationEditorPanel
                 for (DomainObject domainObject : event.getDomainObjects()) {
                     if (domainObject.getId().equals(sample.getId())) {
                         log.info("Sample invalidated, reloading...");
-                        Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
-                        List<NeuronSeparation> separations = updatedSample.getResultsById(NeuronSeparation.class, separation.getId());
-                        if (separations.isEmpty()) {
-                            log.info("Sample no longer has result with id: "+separation.getId());
-                            showNothing();
-                            return;
-                        }
-                        NeuronSeparation separation = separations.get(separations.size()-1);
-                        loadSampleResult(separation.getParentResult(), false, new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                // TODO: reselect the selected neurons
-                                return null;
-                            }
-                        });
+                        reload(sample);
                         break;
                     }
                     else if (domainObject.getClass().equals(NeuronFragment.class)) {
@@ -606,5 +594,47 @@ public class NeuronSeparationEditorPanel
         }  catch (Exception e) {
             FrameworkAccess.handleException(e);
         }
+    }
+
+    public void reload(Sample sample) {
+
+        if (!reloadDebouncer.queue()) {
+            log.info("Skipping reload, since there is one already in progress");
+            return;
+        }
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            List<NeuronSeparation> separations;
+
+            @Override
+            protected void doStuff() throws Exception {
+                Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
+                separations = updatedSample.getResultsById(NeuronSeparation.class, separation.getId());
+            }
+
+            @Override
+            protected void hadSuccess() {
+                if (separations.isEmpty()) {
+                    log.info("Sample no longer has result with id: "+separation.getId());
+                    showNothing();
+                    return;
+                }
+                NeuronSeparation separation = separations.get(separations.size()-1);
+                loadSampleResult(separation.getParentResult(), false, () -> {
+                    // TODO: reselect the selected neurons
+                    return null;
+                });
+                reloadDebouncer.success();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+                reloadDebouncer.failure();
+            }
+        };
+
+        worker.execute();
     }
 }
