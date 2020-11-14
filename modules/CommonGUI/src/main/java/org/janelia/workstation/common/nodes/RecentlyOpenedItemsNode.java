@@ -87,19 +87,7 @@ public class RecentlyOpenedItemsNode extends IdentifiableNode {
     }   
     
     private static boolean isSupportedAsChild(Class<? extends DomainObject> clazz) {
-        try {
-            // TODO: this should use the other isCompatible() method which takes a class, 
-            // instead of constructing a dummy object
-            DomainObject dummyChild = clazz.newInstance();
-            DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(dummyChild);
-            if (provider!=null) {
-                return true;
-            }
-        }
-        catch (InstantiationException | IllegalAccessException e) {
-            log.error("Error instantiating purported domain class "+clazz, e);
-        }
-        return false;
+        return ServiceAcceptorHelper.findFirstHelper(clazz) != null;
     }
     
     private static class DomainObjectNodeChildFactory extends ChildFactory<DomainObject> {
