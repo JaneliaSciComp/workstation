@@ -46,15 +46,15 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "LargeVolumeViewerTopComponent")
-@ActionReference(path = "Menu/Window/Large Volume Viewer", position = 100)
+@ActionReference(path = "Menu/Window/Horta", position = 100)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_LargeVolumeViewerAction",
         preferredID = LargeVolumeViewerTopComponent.LVV_PREFERRED_ID
 )
 @Messages({
-    "CTL_LargeVolumeViewerAction=Large Volume Viewer",
-    "CTL_LargeVolumeViewerTopComponent=Large Volume Viewer",
-    "HINT_LargeVolumeViewerTopComponent=Examine multi-tile brains."
+    "CTL_LargeVolumeViewerAction=Horta 2D",
+    "CTL_LargeVolumeViewerTopComponent=Horta 2D",
+    "HINT_LargeVolumeViewerTopComponent=Examine multi-tile brains using 2D slices."
 })
 public final class LargeVolumeViewerTopComponent extends TopComponent {
 
@@ -115,12 +115,6 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         }
         return true;
     }
-    
-    public void openLargeVolumeViewer(DomainObject domainObject) {
-        log.info("openLargeVolumeViewer({})",domainObject);
-        setCurrent(domainObject);
-        initialObjectReference = Reference.createFor(domainObject);
-    }
 
     private javax.swing.JPanel jPanel1;
 
@@ -168,14 +162,15 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     }
 
     public void initialize() {
+        TmModelManager modelManager = TmModelManager.getInstance();
         if (viewUI == null) {
             viewUI =  new QuadViewUi(FrameworkAccess.getMainFrame(), false);
             // load current workspace or sample, if there is one to load
-            if (TmModelManager.getInstance().getTileLoader() != null) {
-                viewUI.loadDataFromURL(TmModelManager.getInstance().getTileLoader().getUrl());
+            if (modelManager.getTileLoader() != null) {
+                viewUI.loadDataFromURL(modelManager.getTileLoader().getUrl());
 
                 // Repaint the skeleton
-                TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+                TmWorkspace workspace = modelManager.getCurrentWorkspace();
                 boolean isSample = true;
                 if (workspace != null)
                     isSample = false;
@@ -282,11 +277,6 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     private void setInitialViewFocus(Vec3 initialViewFocus, Double initialZoom) {
         this.initialViewFocus = initialViewFocus;
         this.initialZoom = initialZoom;
-    }
-
-    @Subscribe
-    public void sessionStarted(SessionStartEvent event) {
-        log.debug("Session started, loading initial state");
     }
 
     private Vec3 parseVec3(String vecStr) {

@@ -94,12 +94,15 @@ public class HortaManager {
     public void onOpened() {
         try {
             renderer.clearNeuronReconstructions();
-
+            if (TmModelManager.getInstance().getCurrentSample() == null) {
+                return;
+            }
             if (TmModelManager.getInstance().getCurrentWorkspace() != null) {
                 for (TmNeuronMetadata neuron : NeuronManager.getInstance().getNeuronList()) {
                     renderer.addNeuronActors(neuron);
                 }
             }
+
             topComponent.initSampleLocation();
             topComponent.redrawNow();
         } catch (Exception e) {
@@ -110,6 +113,7 @@ public class HortaManager {
     // When Horta TopComponent closes
     public void onClosed() {
         // strip down all things in the workspace
+        renderer.clearNeuronReconstructions();
     }
 
     @Subscribe

@@ -365,6 +365,8 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         //metaWorksopace.notifyObservers();
         playback = new PlayReviewManager(sceneWindow, this, neuronTraceLoader);
+        if (TmModelManager.getInstance().getCurrentSample()==null)
+            return;
         initSampleLocation();
         if (TmModelManager.getInstance().getCurrentWorkspace()!=null) {
             initColorModel();
