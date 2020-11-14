@@ -1,6 +1,7 @@
 package org.janelia.workstation.common.logging;
 
 import org.janelia.workstation.common.gui.dialogs.LoginDialog;
+import org.janelia.workstation.common.gui.dialogs.SingletonErrorDialog;
 import org.janelia.workstation.common.gui.options.ApplicationOptionsPanelController;
 import org.janelia.workstation.core.logging.CustomLoggingLevel;
 import org.janelia.workstation.core.logging.ExceptionTriage;
@@ -59,19 +60,18 @@ public class ErrorPopups {
 
     private static boolean networkIssue() {
         log.info("Alerting user that there is a network issue");
-        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+        SwingUtilities.invokeLater(() -> SingletonErrorDialog.getSingleton("networkIssue").showDialog("Network error",
                 "<html>The server is currently unreachable. There may be a <br>"
-                        + "network issue, or the system may be down for maintenance.</html>",
-                "Network error", JOptionPane.ERROR_MESSAGE));
+                + "network issue, or the system may be down for maintenance.</html>"));
         return true;
     }
 
     private static boolean filePermission(String message) {
         log.info("Alerting user that there is a file permission problem");
-        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+        SwingUtilities.invokeLater(() -> SingletonErrorDialog.getSingleton("filePermission").showDialog(
+                "File permission error",
                 "<html>Encountered a file permission problem when accessing local disk:<br>"
-                        + message+"</html>",
-                "File permission error", JOptionPane.ERROR_MESSAGE));
+                        + message+"</html>"));
         return true;
     }
 
@@ -109,9 +109,9 @@ public class ErrorPopups {
 
     private static boolean outOfDisk() {
         log.info("Alerting user that there is no space left on disk");
-        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                "<html>There is no space left on the disk you are using.</html>",
-                "No Space on Disk", JOptionPane.ERROR_MESSAGE));
+        SwingUtilities.invokeLater(() -> SingletonErrorDialog.getSingleton("outOfDisk").showDialog(
+                "No Space on Disk",
+                "<html>There is no space left on the disk you are using.</html>"));
         return true;
     }
 }
