@@ -66,8 +66,8 @@ public class ColorDepthSearchEditorPanel
 
     // Utilities
     private final Debouncer debouncer = new Debouncer();
-    private final AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
-    
+    private final Debouncer reloadDebouncer = new Debouncer();
+
     // UI Components
 //    private final JButton saveButton;
 //    private final JButton saveAsButton;
@@ -239,31 +239,52 @@ public class ColorDepthSearchEditorPanel
         worker.execute();
     }
 
-    private void reload() throws Exception {
+    private void reload() {
         
         if (search==null) {
             // Nothing to reload
             return;
         }
-        
-        try {
-            ColorDepthSearch updatedSearch = DomainMgr.getDomainMgr().getModel().getDomainObject(search.getClass(), search.getId());
-            if (updatedSearch!=null) {
-                if (searchNode!=null && !searchNode.getColorDepthSearch().equals(updatedSearch)) {
-                    searchNode.update(updatedSearch);
+
+        if (!reloadDebouncer.queue()) {
+            log.info("Skipping reload, since there is one already in progress");
+            return;
+        }
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            ColorDepthSearch updatedSearch;
+
+            @Override
+            protected void doStuff() throws Exception {
+                updatedSearch = DomainMgr.getDomainMgr().getModel().getDomainObject(search.getClass(), search.getId());
+            }
+
+            @Override
+            protected void hadSuccess() {
+                if (updatedSearch!=null) {
+                    if (searchNode!=null && !searchNode.getColorDepthSearch().equals(updatedSearch)) {
+                        searchNode.update(updatedSearch);
+                    }
+                    search = updatedSearch;
+                    restoreState(saveState());
                 }
-                this.search = updatedSearch;
-                restoreState(saveState());
+                else {
+                    // The search no longer exists, or we no longer have access to it (perhaps running as a different user?)
+                    // Either way, there's nothing to show.
+                    showNothing();
+                }
+                reloadDebouncer.success();
             }
-            else {
-                // The search no longer exists, or we no longer have access to it (perhaps running as a different user?) 
-                // Either way, there's nothing to show. 
-                showNothing();
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+                reloadDebouncer.failure();
             }
-        }
-        catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
+        };
+
+        worker.execute();
     }
     
     @Override

@@ -7,6 +7,7 @@ import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.interfaces.HasFilepath;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.GroupedFolder;
@@ -88,6 +89,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
     
     // Utilities
     private final Debouncer debouncer = new Debouncer();
+    private final Debouncer reloadDebouncer = new Debouncer();
     private final Debouncer groupDebouncer = new Debouncer();
     
     // UI Components
@@ -207,29 +209,51 @@ public class GroupedFolderEditorPanel extends JPanel implements
             // Nothing to reload
             return;
         }
-        
-        try {
-            GroupedFolder updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(groupedFolder);
-            if (updatedFolder!=null) {
-                if (groupedFolderNode!=null && !groupedFolderNode.getGroupedFolder().equals(updatedFolder)) {
-                    groupedFolderNode.update(updatedFolder);
+
+        if (!reloadDebouncer.queue()) {
+            log.info("Skipping reload, since there is one already in progress");
+            return;
+        }
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            GroupedFolder updatedFolder;
+
+            @Override
+            protected void doStuff() throws Exception {
+
+                updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(groupedFolder);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                if (updatedFolder!=null) {
+                    if (groupedFolderNode!=null && !groupedFolderNode.getGroupedFolder().equals(updatedFolder)) {
+                        groupedFolderNode.update(updatedFolder);
+                    }
+                    groupedFolder = updatedFolder;
+                    DomainObjectEditorState<GroupedFolder, DomainObject, Reference> state = saveState();
+                    loadDomainObject(updatedFolder, false, () -> {
+                        restoreState(state);
+                        return null;
+                    });
                 }
-                this.groupedFolder = updatedFolder; 
-                DomainObjectEditorState<GroupedFolder, DomainObject, Reference> state = saveState();
-                loadDomainObject(updatedFolder, false, () -> {
-                    restoreState(state);    
-                    return null;
-                });
+                else {
+                    // The search no longer exists, or we no longer have access to it (perhaps running as a different user?)
+                    // Either way, there's nothing to show.
+                    showNothing();
+                }
+                reloadDebouncer.success();
             }
-            else {
-                // The search no longer exists, or we no longer have access to it (perhaps running as a different user?) 
-                // Either way, there's nothing to show. 
-                showNothing();
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+                reloadDebouncer.failure();
             }
-        }
-        catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
+        };
+
+        worker.execute();
     }
     
     @Override

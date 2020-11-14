@@ -173,21 +173,40 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
             // Nothing to reload
             return;
         }
-        
-        Node updatedNode = DomainMgr.getDomainMgr().getModel().getDomainObject(node.getClass(), node.getId());
-        log.info("Got updated node: {}", updatedNode);
-        if (updatedNode!=null) {
-            if (nodeNode != null && !nodeNode.getDomainObject().equals(updatedNode)) {
-                nodeNode.update(updatedNode);
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            Node updatedNode;
+
+            @Override
+            protected void doStuff() throws Exception {
+                updatedNode = DomainMgr.getDomainMgr().getModel().getDomainObject(node.getClass(), node.getId());
             }
-            this.node = updatedNode;
-            restoreState(saveState());
-        }
-        else {
-            // The folder no longer exists, or we no longer have access to it (perhaps running as a different user?) 
-            // Either way, there's nothing to show. 
-            showNothing();
-        }
+
+            @Override
+            protected void hadSuccess() {
+                log.info("Got updated node: {}", updatedNode);
+                if (updatedNode!=null) {
+                    if (nodeNode != null && !nodeNode.getDomainObject().equals(updatedNode)) {
+                        nodeNode.update(updatedNode);
+                    }
+                    node = updatedNode;
+                    restoreState(saveState());
+                }
+                else {
+                    // The folder no longer exists, or we no longer have access to it (perhaps running as a different user?)
+                    // Either way, there's nothing to show.
+                    showNothing();
+                }
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+            }
+        };
+
+        worker.execute();
     }
 
     @Override
