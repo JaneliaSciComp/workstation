@@ -2,9 +2,7 @@ package org.janelia.workstation.gui.large_volume_viewer;
 
 import java.awt.*;
 
-import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
-import javax.swing.ToolTipManager;
+import javax.swing.*;
 
 import com.google.common.eventbus.*;
 
@@ -13,6 +11,7 @@ import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.LoadNeuronsEvent;
 import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
 import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
+import org.janelia.workstation.controller.eventbus.ViewerOpenEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.gui.large_volume_viewer.controller.AnnotationManager;
 import org.janelia.workstation.integration.activity_logging.ToolString;
@@ -116,22 +115,27 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         return true;
     }
 
-    private javax.swing.JPanel jPanel1;
-
     @Override
     public void componentOpened() {
+        if (TmModelManager.getInstance().getCurrentSample()==null) {
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                    "You can't open Horta 2D without a tiled microscope sample being selected.",
+                    "No Sample Loaded",
+                    JOptionPane.INFORMATION_MESSAGE);
+            close();
+            return;
+        }
+
         if (viewUI==null)
             initialize();
-        else {
-            jPanel1.add(viewUI, BorderLayout.CENTER );
-        }
+
+        // fire off notice for checkboxes, etc.
+        ViewerOpenEvent openEvent = new ViewerOpenEvent(ViewerOpenEvent.VIEWER.LVV);
+        ViewerEventBus.postEvent(openEvent);
     }
 
     @Override
     public void componentClosed() {
-        if (jPanel1 != null) {
-            jPanel1.remove(viewUI);
-        }
         closeGroup();
         // fire off notice for checkboxes, etc.
         ViewerCloseEvent viewerCloseEvent = new ViewerCloseEvent(ViewerCloseEvent.VIEWER.LVV);

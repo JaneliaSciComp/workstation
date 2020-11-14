@@ -69,6 +69,11 @@ public class PanelController {
     }
 
     @Subscribe
+    public void viewerOpened(ViewerOpenEvent openEvent) {
+        annotationPanel.viewerOpened(openEvent);
+    }
+
+    @Subscribe
     public void viewerClosed(ViewerCloseEvent closeEvent) {
         annotationPanel.viewerClosed(closeEvent);
     }

@@ -8,10 +8,7 @@ import org.janelia.workstation.controller.ComponentUtil;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
-import org.janelia.workstation.controller.eventbus.NeuronHideEvent;
-import org.janelia.workstation.controller.eventbus.NeuronUnhideEvent;
-import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
-import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
+import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
 import org.janelia.workstation.core.api.AccessManager;
@@ -533,6 +530,17 @@ public class AnnotationPanel extends JPanel
                 break;
             case LVV:
                 openLVV.setSelected(false);
+                break;
+        }
+    }
+
+    public void viewerOpened(ViewerOpenEvent event) {
+        switch (event.getViewer()) {
+            case HORTA:
+                openHorta.setSelected(true);
+                break;
+            case LVV:
+                openLVV.setSelected(true);
                 break;
         }
     }

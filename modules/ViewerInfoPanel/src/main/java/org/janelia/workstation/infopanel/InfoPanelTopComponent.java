@@ -23,7 +23,7 @@ import java.awt.*;
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = false, position = 500)
 @ActionID(category = "Window", id = "org.janelia.workstation.gui.task_workflow.InfoPanelTopComponentTopComponent")
-@ActionReference(path = "Menu/Window", position = 103)
+@ActionReference(path = "Menu/Window/Horta", position = 103)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_InfoPanelTopComponentAction",
         preferredID = InfoPanelTopComponent.PREFERRED_ID
@@ -36,7 +36,7 @@ import java.awt.*;
 public final class InfoPanelTopComponent extends TopComponent {
     private static final Logger log = LoggerFactory.getLogger(InfoPanelTopComponent.class);
     public static final String PREFERRED_ID = "InfoPanelTopComponent";
-    public static final String LABEL_TEXT = "Info Panel";
+    public static final String LABEL_TEXT = "Horta Control Center";
 
 
     // Annotation Panel Layout

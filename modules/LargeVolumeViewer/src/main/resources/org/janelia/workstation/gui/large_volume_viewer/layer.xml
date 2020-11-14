@@ -16,9 +16,6 @@
             <folder name="Horta">
                 <attr name="position" intvalue="20"/>
             </folder>
-            <folder name="Large Volume Viewer">
-                <attr name="position" intvalue="30"/>
-            </folder>
         </folder>
     </folder>
 </filesystem>

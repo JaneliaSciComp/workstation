@@ -70,7 +70,7 @@ import java.util.*;
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponentTopComponent")
-@ActionReference(path = "Menu/Window/Large Volume Viewer", position = 103)
+@ActionReference(path = "Menu/Window/Horta", position = 103)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_TaskWorkflowViewTopComponentAction",
         preferredID = TaskWorkflowViewTopComponent.PREFERRED_ID

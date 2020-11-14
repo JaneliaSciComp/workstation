@@ -1222,7 +1222,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         //  be extended in the future should we choose to implement loadable color models
         //  for Horta 2d
         TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
-        if (workspace != null) {
+        if (workspace != null && workspace.getColorModel()!=null) {
             setImageColorModel(workspace.getColorModel());
         }
 
