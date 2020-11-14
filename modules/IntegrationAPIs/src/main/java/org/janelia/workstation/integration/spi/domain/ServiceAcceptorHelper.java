@@ -25,15 +25,16 @@ public class ServiceAcceptorHelper {
      * the outline.
      * 
      * @param criterion this is used to judge compatibility of found items.
-     * @param clazz tells what type of thing to find.
      * @return a compatible handler for the criterion object.
      */
-    public static <S, T extends Compatible<S>> Collection<T> findHandler(S criterion, Class<T> clazz) {
-        if (criterion==null || clazz==null) return Collections.emptyList();
-        Collection<? extends T> candidates = Lookup.getDefault().lookupAll(clazz);
-        Collection<T> rtnVal = new ArrayList<>();
-        log.trace("Found {} handlers:", clazz.getSimpleName());
-        for (T nextAcceptor : candidates) {
+    public static Collection<DomainObjectHandler> findHandler(
+            Class<? extends DomainObject> criterion) {
+
+        if (criterion==null) return Collections.emptyList();
+        Collection<? extends DomainObjectHandler> candidates = Lookup.getDefault().lookupAll(DomainObjectHandler.class);
+        Collection<DomainObjectHandler> rtnVal = new ArrayList<>();
+        log.trace("Found DomainObjectHandler handlers:");
+        for (DomainObjectHandler nextAcceptor : candidates) {
             if (nextAcceptor.isCompatible(criterion)) {
                 log.trace("  [X] {} is compatible with criterion {}", nextAcceptor.getClass().getSimpleName(), criterion);
                 rtnVal.add(nextAcceptor);
@@ -45,14 +46,13 @@ public class ServiceAcceptorHelper {
         return rtnVal;
     }
 
-    public static Collection<DomainObjectHandler> findHelpers(DomainObject domainObject) {
-        return findHandler(domainObject, DomainObjectHandler.class);
-    }
-    
-    public static DomainObjectHandler findFirstHelper(DomainObject domainObject) {
-        Collection<DomainObjectHandler> handlers = findHelpers(domainObject);
+    public static DomainObjectHandler findFirstHelper(Class<? extends DomainObject> domainClass) {
+        Collection<DomainObjectHandler> handlers = findHandler(domainClass);
         if (handlers.isEmpty()) return null;
         return handlers.iterator().next();
     }
-    
+
+    public static DomainObjectHandler findFirstHelper(DomainObject domainObject) {
+        return findFirstHelper(domainObject.getClass());
+    }
 }

@@ -6,7 +6,9 @@ package org.janelia.workstation.integration.spi.domain;
  * @author fosterl
  */
 public interface Compatible<T> {
-    
+
+    boolean isCompatible(Class<? extends T> object);
+
     boolean isCompatible(T object);
     
 }
