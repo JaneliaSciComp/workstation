@@ -1,3 +1,9 @@
+// 8.21
+
+Browser
+* Fixed bug where the space bar was no longer hiding the Lightbox
+* Fixed blank Xmx bug causing "JVM creation failure" for new installations
+
 // 8.20
 
 Browser
