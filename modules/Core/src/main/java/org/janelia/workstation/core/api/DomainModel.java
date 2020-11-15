@@ -346,6 +346,10 @@ public class DomainModel {
             log.debug("getEntityById: returning cached domain object {}", DomainUtils.identify(domainObject));
             return (T) domainObject;
         }
+        if (SwingUtilities.isEventDispatchThread()) {
+            log.warn("getDomainObject called on EDT for {} which cannot be found in the cache.", ref);
+            return null;
+        }
         return putOrUpdate((T) loadDomainObject(ref));
     }
 
@@ -517,8 +521,8 @@ public class DomainModel {
     }
 
     public List<DomainObject> getDomainObjects(ReverseReference reverseReference) throws Exception {
-        // TODO: cache these?
-        return domainFacade.getDomainObjects(reverseReference);
+        List<DomainObject> domainObjects = domainFacade.getDomainObjects(reverseReference);
+        return putOrUpdate(domainObjects, false);
     }
 
     @SuppressWarnings("unchecked")
@@ -528,7 +532,7 @@ public class DomainModel {
         for (DomainObject domainObject : domainObjects) {
             asClass.add((T) domainObject);
         }
-        return asClass;
+        return putOrUpdate(asClass, false);
     }
 
     public List<Annotation> getAnnotations(DomainObject domainObject) throws Exception {

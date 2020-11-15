@@ -30,7 +30,7 @@ public abstract class SimpleWorker extends ResultWorker<Void> {
 
         SimpleWorker worker = new SimpleWorker() {
             @Override
-            protected void doStuff() {
+            protected void doStuff() throws Exception {
                 runnable.run();
             }
 

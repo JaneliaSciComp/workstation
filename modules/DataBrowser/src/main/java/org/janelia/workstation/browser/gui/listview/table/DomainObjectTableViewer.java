@@ -606,18 +606,16 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         if (viewerState instanceof TableViewerState) {
             final JScrollPane scrollPane = getDynamicTable().getScrollPane();
             final TableViewerState tableViewerState = (TableViewerState)viewerState;
-            SwingUtilities.invokeLater(new Runnable() {
-                   public void run() {
-                       
-                       int horizontalScrollValue = tableViewerState.getHorizontalScrollValue();
-                       log.debug("Restoring horizontalScrollValue={}",horizontalScrollValue);
-                       scrollPane.getHorizontalScrollBar().setValue(horizontalScrollValue);
-                       
-                       int verticalScrollValue = tableViewerState.getVerticalScrollValue();
-                       log.debug("Restoring verticalScrollValue={}",verticalScrollValue);
-                       scrollPane.getVerticalScrollBar().setValue(verticalScrollValue);
-                   }
-               }
+            SwingUtilities.invokeLater(() -> {
+
+                int horizontalScrollValue = tableViewerState.getHorizontalScrollValue();
+                log.debug("Restoring horizontalScrollValue={}",horizontalScrollValue);
+                scrollPane.getHorizontalScrollBar().setValue(horizontalScrollValue);
+
+                int verticalScrollValue = tableViewerState.getVerticalScrollValue();
+                log.debug("Restoring verticalScrollValue={}",verticalScrollValue);
+                scrollPane.getVerticalScrollBar().setValue(verticalScrollValue);
+            }
             );
         }
         else {

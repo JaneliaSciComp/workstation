@@ -601,18 +601,16 @@ public class ColorDepthResultTableViewer
         if (viewerState instanceof ColorDepthResultTableViewerState) {
             final ColorDepthResultTableViewerState tableViewerState = (ColorDepthResultTableViewerState)viewerState;
             final JScrollPane scrollPane = getDynamicTable().getScrollPane();
-            SwingUtilities.invokeLater(new Runnable() {
-                   public void run() {
-                       
-                       int horizontalScrollValue = tableViewerState.getHorizontalScrollValue();
-                       log.debug("Restoring horizontalScrollValue={}",horizontalScrollValue);
-                       scrollPane.getHorizontalScrollBar().setValue(horizontalScrollValue);
-                       
-                       int verticalScrollValue = tableViewerState.getVerticalScrollValue();
-                       log.debug("Restoring verticalScrollValue={}",verticalScrollValue);
-                       scrollPane.getVerticalScrollBar().setValue(verticalScrollValue);
-                   }
-               }
+            SwingUtilities.invokeLater(() -> {
+                
+                int horizontalScrollValue = tableViewerState.getHorizontalScrollValue();
+                log.debug("Restoring horizontalScrollValue={}",horizontalScrollValue);
+                scrollPane.getHorizontalScrollBar().setValue(horizontalScrollValue);
+
+                int verticalScrollValue = tableViewerState.getVerticalScrollValue();
+                log.debug("Restoring verticalScrollValue={}",verticalScrollValue);
+                scrollPane.getVerticalScrollBar().setValue(verticalScrollValue);
+            }
             );
         }
         else {

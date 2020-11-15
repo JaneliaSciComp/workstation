@@ -665,12 +665,7 @@ public class DomainObjectIconGridViewer
                 log.debug("Restoring maxImageWidth={}",maxImageWidth);
                 getToolbar().getImageSizeSlider().setValue(maxImageWidth);
                 // Wait until slider resizes images, then fix scroll:
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        scrollSelectedObjectsToCenter();
-                    }
-                });
+                SwingUtilities.invokeLater(() -> scrollSelectedObjectsToCenter());
             }
             );
         }

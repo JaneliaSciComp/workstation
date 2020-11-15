@@ -433,7 +433,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (state==null) return;
         
         if (!prepareForLoad(state.getDomainObject())) return;
-        editor.restoreState(state);
+        editor.restoreState(state, null);
 
         ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
         ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());

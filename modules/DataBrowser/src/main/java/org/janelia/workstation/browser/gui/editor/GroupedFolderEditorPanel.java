@@ -221,29 +221,33 @@ public class GroupedFolderEditorPanel extends JPanel implements
 
             @Override
             protected void doStuff() throws Exception {
-
                 updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(groupedFolder);
             }
 
             @Override
             protected void hadSuccess() {
                 if (updatedFolder!=null) {
+                    log.info("Got updated folder: {}", updatedFolder);
                     if (groupedFolderNode!=null && !groupedFolderNode.getGroupedFolder().equals(updatedFolder)) {
                         groupedFolderNode.update(updatedFolder);
                     }
                     groupedFolder = updatedFolder;
                     DomainObjectEditorState<GroupedFolder, DomainObject, Reference> state = saveState();
                     loadDomainObject(updatedFolder, false, () -> {
-                        restoreState(state);
+                        restoreState(state, () -> {
+                            reloadDebouncer.success();
+                            return null;
+                        });
                         return null;
                     });
                 }
                 else {
                     // The search no longer exists, or we no longer have access to it (perhaps running as a different user?)
                     // Either way, there's nothing to show.
+                    log.warn("Folder no longer exists: {}", groupedFolder);
                     showNothing();
+                    reloadDebouncer.success();
                 }
-                reloadDebouncer.success();
             }
 
             @Override
@@ -512,7 +516,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
     }
 
     @Override
-    public void restoreState(DomainObjectEditorState<GroupedFolder, DomainObject, Reference> state) {
+    public void restoreState(DomainObjectEditorState<GroupedFolder, DomainObject, Reference> state, Callable<Void> success) {
         if (state==null) {
             log.warn("Cannot restore null state");
             return;
@@ -537,10 +541,10 @@ public class GroupedFolderEditorPanel extends JPanel implements
         resultsPanel.getViewer().restoreState(state.getListViewerState());
            
         if (state.getDomainObjectNode()==null) {
-            loadDomainObject(state.getDomainObject(), false, null);
+            loadDomainObject(state.getDomainObject(), false, success);
         }
         else {
-            loadDomainObjectNode(state.getDomainObjectNode(), false, null);
+            loadDomainObjectNode(state.getDomainObjectNode(), false, success);
         }
     }
 

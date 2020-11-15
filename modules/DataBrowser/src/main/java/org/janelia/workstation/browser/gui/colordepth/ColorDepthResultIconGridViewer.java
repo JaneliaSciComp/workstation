@@ -438,15 +438,13 @@ public class ColorDepthResultIconGridViewer
     public void restoreState(ListViewerState viewerState) {
         if (viewerState instanceof ColorDepthResultIconGridViewerState) {
             final ColorDepthResultIconGridViewerState tableViewerState = (ColorDepthResultIconGridViewerState) viewerState;
-            SwingUtilities.invokeLater(new Runnable() {
-                   public void run() {
-                       int maxImageWidth = tableViewerState.getMaxImageWidth();
-                       log.debug("Restoring maxImageWidth={}",maxImageWidth);
-                       getToolbar().getImageSizeSlider().setValue(maxImageWidth);
-                       // Wait until slider resizes images, then fix scroll:
-                       SwingUtilities.invokeLater(() -> scrollSelectedObjectsToCenter());
-                   }
-               }
+            SwingUtilities.invokeLater(() -> {
+                int maxImageWidth = tableViewerState.getMaxImageWidth();
+                log.debug("Restoring maxImageWidth={}",maxImageWidth);
+                getToolbar().getImageSizeSlider().setValue(maxImageWidth);
+                // Wait until slider resizes images, then fix scroll:
+                SwingUtilities.invokeLater(() -> scrollSelectedObjectsToCenter());
+            }
             );
         }
         else {

@@ -88,12 +88,7 @@ public final class NewFilterActionListener implements ActionListener {
             protected void hadSuccess() {
                 initView();
                 final Long[] idPath = NodeUtils.createIdPath(parentNode, filter);
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        explorer.selectAndNavigateNodeByPath(idPath);
-                    }
-                });
+                SwingUtilities.invokeLater(() -> explorer.selectAndNavigateNodeByPath(idPath));
             }
 
             @Override
