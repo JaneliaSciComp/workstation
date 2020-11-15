@@ -29,7 +29,7 @@ public interface DomainObjectNodeEditor<P extends DomainObject, T, S> extends Ed
      * 
      * @param state Saved editor state 
      */
-    void restoreState(DomainObjectEditorState<P,T,S> state);
+    void restoreState(DomainObjectEditorState<P,T,S> state, Callable<Void> success);
     
     /**
      * Load the given domain object node into the editor. 

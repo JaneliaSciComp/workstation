@@ -3,6 +3,7 @@ package org.janelia.workstation.browser.gui.editor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -71,7 +72,7 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T> extends
     }
     
     @Override
-    public void restoreState(final DomainObjectEditorState<P,T,Reference> state) {
+    public void restoreState(final DomainObjectEditorState<P,T,Reference> state, Callable<Void> success) {
         
         if (state==null) {
             log.warn("Cannot restore null state");
@@ -87,7 +88,7 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T> extends
         getResultsPanel().setCurrPage(state.getPage());
 
         // Prepare to restore viewer state, after the reload
-        Callable<Void> success = () -> {
+        Callable<Void> success2 = () -> {
             if (state.getListViewerState()!=null) {
                 log.info("State load completed, restoring viewer state {}", state.getListViewerState());
                 // Restore viewer state
@@ -98,17 +99,19 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T> extends
                 selectedIds.addAll(state.getSelectedIds());
                 Collection<T> selectedObjects = ClientDomainUtils.getObjectsFromModel(selectedIds, getResultsPanel().getViewer().getImageModel());
                 if (selectedObjects != null && !selectedObjects.isEmpty()) {
-                    getResultsPanel().getViewer().select(selectedObjects.stream().filter(o -> o != null).collect(Collectors.toList()), true, true, false, true);
+                    List<T> selected = selectedObjects.stream().filter(Objects::nonNull).collect(Collectors.toList());
+                    getResultsPanel().getViewer().select(selected, true, true, false, true);
                 }
             }
+            success.call();
             return null;
         };
                 
         if (state.getDomainObjectNode()==null) {
-            loadDomainObject(state.getDomainObject(), true, success);
+            loadDomainObject(state.getDomainObject(), true, success2);
         }
         else {
-            loadDomainObjectNode(state.getDomainObjectNode(), true, success);
+            loadDomainObjectNode(state.getDomainObjectNode(), true, success2);
         }
     }
 

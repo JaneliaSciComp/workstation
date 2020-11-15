@@ -1,51 +1,13 @@
 package org.janelia.workstation.browser.gui.editor;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.net.URI;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
-
-import javax.swing.AbstractAction;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
-
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.access.domain.search.FacetValue;
-import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.DomainObjectAttribute;
-import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
+import org.janelia.model.domain.*;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.gui.search.Filtering;
-import org.janelia.model.domain.gui.search.criteria.AttributeCriteria;
-import org.janelia.model.domain.gui.search.criteria.AttributeValueCriteria;
-import org.janelia.model.domain.gui.search.criteria.Criteria;
-import org.janelia.model.domain.gui.search.criteria.DateRangeCriteria;
-import org.janelia.model.domain.gui.search.criteria.FacetCriteria;
-import org.janelia.model.domain.gui.search.criteria.TreeNodeCriteria;
+import org.janelia.model.domain.gui.search.criteria.*;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
@@ -54,13 +16,7 @@ import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent
 import org.janelia.workstation.browser.gui.dialogs.EditCriteriaDialog;
 import org.janelia.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.workstation.browser.gui.listview.table.DomainObjectTableViewer;
-import org.janelia.workstation.common.gui.support.Debouncer;
-import org.janelia.workstation.common.gui.support.DesktopApi;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.common.gui.support.PreferenceSupport;
-import org.janelia.workstation.common.gui.support.SearchProvider;
-import org.janelia.workstation.common.gui.support.SmartTextField;
+import org.janelia.workstation.common.gui.support.*;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.common.nodes.FilterNode;
 import org.janelia.workstation.core.actions.ViewerContext;
@@ -90,6 +46,19 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.net.URI;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import static org.janelia.workstation.core.api.DomainMgr.getDomainMgr;
 
@@ -183,67 +152,61 @@ public class FilterEditorPanel
         });
         
         this.saveAsButton = new JButton("Save As");
-        saveAsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+        saveAsButton.addActionListener(e -> {
 
-                String name = filter.getName().equals(DEFAULT_FILTER_NAME)?null:filter.getName();
-                String newName = null;
-                while (StringUtils.isEmpty(newName)) {
-                    newName = (String) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(),
-                            "Search Name:\n", "Save Search", JOptionPane.PLAIN_MESSAGE, null, null, name);
-                    log.info("newName:" + newName);
-                    if (newName == null) {
-                        // User chose "Cancel"
-                        return;
+            String name = filter.getName().equals(DEFAULT_FILTER_NAME)?null:filter.getName();
+            String newName = null;
+            while (StringUtils.isEmpty(newName)) {
+                newName = (String) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(),
+                        "Search Name:\n", "Save Search", JOptionPane.PLAIN_MESSAGE, null, null, name);
+                log.info("newName:" + newName);
+                if (newName == null) {
+                    // User chose "Cancel"
+                    return;
+                }
+                if (StringUtils.isBlank(newName)) {
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "Filter name cannot be blank");
+                    return;
+                }
+            }
+
+            final String finalName = newName;
+            final boolean isNewFilter = filter.getId()==null;
+
+            SimpleWorker worker = new SimpleWorker() {
+
+                @Override
+                protected void doStuff() throws Exception {
+                    Filter savedFilter = filter;
+                    if (!isNewFilter) {
+                        // This filter is already saved, duplicate it so that we don't overwrite the existing one
+                        savedFilter = DomainUtils.cloneFilter(filter);
                     }
-                    if (StringUtils.isBlank(newName)) {
-                        JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "Filter name cannot be blank");
-                        return;
-                    }
+                    savedFilter.setName(finalName);
+                    DomainModel model = getDomainMgr().getModel();
+                    savedFilter = model.save(savedFilter);
+                    model.addChild(model.getDefaultWorkspace(), savedFilter);
+                    setFilter(savedFilter);
+                    savePreferences();
                 }
 
-                final String finalName = newName;
-                final boolean isNewFilter = filter.getId()==null;
+                @Override
+                protected void hadSuccess() {
+                    // Wait for events to resolve
+                    SwingUtilities.invokeLater(() -> {
+                        // Select the filter and force it to reload
+                        DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(filter.getId());
+                    });
+                }
 
-                SimpleWorker worker = new SimpleWorker() {
-                        
-                    @Override
-                    protected void doStuff() throws Exception {
-                        Filter savedFilter = filter;
-                        if (!isNewFilter) {
-                            // This filter is already saved, duplicate it so that we don't overwrite the existing one
-                            savedFilter = DomainUtils.cloneFilter(filter);
-                        }
-                        savedFilter.setName(finalName);
-                        DomainModel model = getDomainMgr().getModel();
-                        savedFilter = model.save(savedFilter);
-                        model.addChild(model.getDefaultWorkspace(), savedFilter);
-                        setFilter(savedFilter);
-                        savePreferences();
-                    }
+                @Override
+                protected void hadError(Throwable error) {
+                    FrameworkAccess.handleException(error);
+                }
+            };
 
-                    @Override
-                    protected void hadSuccess() {
-                        // Wait for events to resolve
-                        SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                // Select the filter and force it to reload
-                                DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(filter.getId());
-                            }
-                        });
-                    }
+            worker.execute();
 
-                    @Override
-                    protected void hadError(Throwable error) {
-                        FrameworkAccess.handleException(error);
-                    }
-                };
-
-                worker.execute();
-                
-            }
         });
         
         this.typeCriteriaButton = new DropDownButton();
@@ -257,24 +220,21 @@ public class FilterEditorPanel
         infoButton.setOpaque(false);
         infoButton.setContentAreaFilled(false);
         infoButton.setBorderPainted(false);
-        infoButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // TODO: make a custom help page later
-                try {
-                    if (!DesktopApi.browseDesktop(new URI("http://lucene.apache.org/core/old_versioned_docs/versions/3_5_0/queryparsersyntax.html"))) {
-                        JOptionPane.showMessageDialog(
-                                FrameworkAccess.getMainFrame(),
-                                "Cannot open URL. Desktop API is not supported on this platform.",
-                                "Error",
-                                JOptionPane.ERROR_MESSAGE,
-                                null
-                        );
-                    }
+        infoButton.addActionListener(e -> {
+            // TODO: make a custom help page later
+            try {
+                if (!DesktopApi.browseDesktop(new URI("http://lucene.apache.org/core/old_versioned_docs/versions/3_5_0/queryparsersyntax.html"))) {
+                    JOptionPane.showMessageDialog(
+                            FrameworkAccess.getMainFrame(),
+                            "Cannot open URL. Desktop API is not supported on this platform.",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE,
+                            null
+                    );
                 }
-                catch (Exception ex) {
-                    FrameworkAccess.handleException(ex);
-                }
+            }
+            catch (Exception ex) {
+                FrameworkAccess.handleException(ex);
             }
         });
 
@@ -338,9 +298,12 @@ public class FilterEditorPanel
             log.info("Skipping load, since there is one already in progress");
             return;
         }
-        
+
+        log.info("Loading '{}' ({})", filter.getName(), filter);
+
         if (filter.getName()==null) {
             filter.setName(DEFAULT_FILTER_NAME);
+            // Do not run a new search automatically
         }
         
         log.debug("loadDomainObject(Filter:{})",filter.getName());
@@ -360,7 +323,7 @@ public class FilterEditorPanel
             }
             configPanel.addTitleComponent(saveAsButton, false, true);
             configPanel.setExpanded(filter.getId()==null);
-            
+
             refreshSearchResults(isUserDriven, () -> {
                 searchBox.requestFocus();
                 debouncer.success();
@@ -393,7 +356,7 @@ public class FilterEditorPanel
     }
     
     private void refreshSearchResults(final boolean isUserDriven, final Callable<Void> success, final Callable<Void> failure) {
-        log.trace("refresh");
+        log.info("Refreshing search results");
         
         String inputFieldValue = searchBox.getText();
         if (!StringUtilsExtra.areEqual(filter.getSearchString(), inputFieldValue)) {
@@ -787,7 +750,7 @@ public class FilterEditorPanel
         
         if (filter==null || filter.getId()==null) {
             // Nothing to reload, just rerun the search
-            restoreState(saveState());
+            restoreState(saveState(), null);
             return;
         }
 
@@ -812,14 +775,17 @@ public class FilterEditorPanel
                         filterNode.update(updatedFilter);
                     }
                     filter = updatedFilter;
-                    restoreState(saveState());
+                    restoreState(saveState(), () -> {
+                        reloadDebouncer.success();
+                        return null;
+                    });
                 }
                 else {
                     // The filter no longer exists, or we no longer have access to it (perhaps running as a different user?)
                     // Either way, there's nothing to show.
                     showNothing();
+                    reloadDebouncer.success();
                 }
-                reloadDebouncer.success();
             }
 
             @Override
@@ -835,7 +801,6 @@ public class FilterEditorPanel
     public static Filter createUnsavedFilter(Class<?> searchClass, String name) {
         Filter filter = new Filter();
         filter.setSearchClass(searchClass==null?DEFAULT_SEARCH_CLASS.getName():searchClass.getName());
-        filter.setName(name==null?DEFAULT_FILTER_NAME:name);
         if (Sample.class.equals(searchClass) || LSMImage.class.equals(searchClass)) {
             FacetCriteria facet = new FacetCriteria();
             facet.setAttributeName("sageSynced");

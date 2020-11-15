@@ -52,6 +52,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     
     // Utilities
     private final Debouncer debouncer = new Debouncer();
+    private final Debouncer reloadDebouncer = new Debouncer();
     
     // UI Elements
     private final PaginatedDomainResultsPanel resultsPanel;
@@ -118,12 +119,14 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
             protected void doStuff() throws Exception {
                 loadPreferences();
                 searchResults = queryConfiguration.performSearch();
-                log.debug("Displaying results: "+searchResults);
+                log.info("Got results: "+searchResults);
             }
 
             @Override
             protected void hadSuccess() {
+                log.info("Displaying results: "+searchResults);
                 resultsPanel.showSearchResults(searchResults, true, () -> {
+                    log.info("Displayed results: "+searchResults);
                     debouncer.success();
                     ActivityLogHelper.logElapsed("TreeNodeEditorPanel.loadDomainObject", node, w);
                     return null;
@@ -174,6 +177,11 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
             return;
         }
 
+        if (!reloadDebouncer.queue()) {
+            log.info("Skipping reload, since there is one already in progress");
+            return;
+        }
+
         SimpleWorker worker = new SimpleWorker() {
 
             Node updatedNode;
@@ -185,24 +193,30 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
 
             @Override
             protected void hadSuccess() {
-                log.info("Got updated node: {}", updatedNode);
                 if (updatedNode!=null) {
+                    log.info("Got updated node: {}", updatedNode);
                     if (nodeNode != null && !nodeNode.getDomainObject().equals(updatedNode)) {
                         nodeNode.update(updatedNode);
                     }
                     node = updatedNode;
-                    restoreState(saveState());
+                    restoreState(saveState(), () -> {
+                        reloadDebouncer.success();
+                        return null;
+                    });
                 }
                 else {
                     // The folder no longer exists, or we no longer have access to it (perhaps running as a different user?)
                     // Either way, there's nothing to show.
+                    log.warn("Node no longer exists: {}", node);
                     showNothing();
+                    reloadDebouncer.success();
                 }
             }
 
             @Override
             protected void hadError(Throwable error) {
                 FrameworkAccess.handleException(error);
+                reloadDebouncer.failure();
             }
         };
 

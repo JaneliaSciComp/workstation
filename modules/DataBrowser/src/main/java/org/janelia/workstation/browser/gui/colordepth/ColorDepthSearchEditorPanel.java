@@ -265,14 +265,17 @@ public class ColorDepthSearchEditorPanel
                         searchNode.update(updatedSearch);
                     }
                     search = updatedSearch;
-                    restoreState(saveState());
+                    restoreState(saveState(), () -> {
+                        reloadDebouncer.success();
+                        return null;
+                    });
                 }
                 else {
                     // The search no longer exists, or we no longer have access to it (perhaps running as a different user?)
                     // Either way, there's nothing to show.
                     showNothing();
+                    reloadDebouncer.success();
                 }
-                reloadDebouncer.success();
             }
 
             @Override
@@ -646,7 +649,7 @@ public class ColorDepthSearchEditorPanel
     }
 
     @Override
-    public void restoreState(DomainObjectEditorState<ColorDepthSearch,ColorDepthMatch,Reference> state) {
+    public void restoreState(DomainObjectEditorState<ColorDepthSearch,ColorDepthMatch,Reference> state, Callable<Void> success) {
         if (state==null) {
             log.warn("Cannot restore null state");
             return;
@@ -671,10 +674,10 @@ public class ColorDepthSearchEditorPanel
         colorDepthResultPanel.getResultPanel().getViewer().restoreState(state.getListViewerState());
         
         if (state.getDomainObjectNode()==null) {
-            loadDomainObject(state.getDomainObject(), false, null);
+            loadDomainObject(state.getDomainObject(), false, success);
         }
         else {
-            loadDomainObjectNode(state.getDomainObjectNode(), false, null);
+            loadDomainObjectNode(state.getDomainObjectNode(), false, success);
         }
     }
 
