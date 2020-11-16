@@ -4,6 +4,7 @@ import org.janelia.model.security.Subject;
 import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -72,7 +73,7 @@ public class ChangeNeuronOwnerDialog extends JDialog {
             activeTracersSubject = DomainMgr.getDomainMgr().getSubjectFacade().getSubjectByNameOrKey(activeTracersGroup);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }
 
         String message;

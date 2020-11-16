@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.io.FilenameUtils;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.swc.SWCDataConverter;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -119,12 +120,7 @@ public class NoteExporter {
                 writer.writeValue(noteFile, rootNode);
             }
             catch (IOException e) {
-
-                // decide how to handle this
-
-
-                System.out.println("note export exception");
-                e.printStackTrace();
+                FrameworkAccess.handleException(e);
             }
         }
 

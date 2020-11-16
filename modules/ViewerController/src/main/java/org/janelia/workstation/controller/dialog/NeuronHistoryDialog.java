@@ -157,7 +157,7 @@ public class NeuronHistoryDialog extends ModalDialog {
                             neuronMap.get(neuronId),TmNeuronMetadata.class));
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                FrameworkAccess.handleException(e);
             }
 
             int dataRow = getRowCount();

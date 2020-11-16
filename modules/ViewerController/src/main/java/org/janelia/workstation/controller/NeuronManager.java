@@ -2063,7 +2063,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             rootNode = mapper.readTree(notesFile);
         }
         catch (IOException e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }
         JsonNode offsetNode = rootNode.path("offset");
         JsonNode neuronsNode = rootNode.path("neurons");
@@ -2225,20 +2225,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public List<File> breakOutByRoots(File infile) throws IOException {
         return new SWCData().breakOutByRoots(infile);
-    }
-
-    /**
-     * tells the annotation mgr to pop up an error dialog; this is
-     * not a great way to do this, but hopefully it's going to be rare
-     */
-    private void presentError(String message, String title) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-             //   AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-             //   annotationMgr.presentError(message, title);
-            }
-        });
     }
 
 
@@ -2411,7 +2397,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
            // fireWorkspaceLoaded(currentWorkspace);
             fireSpatialIndexReady(currentWorkspace);
         } catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }
        // fireNeuronSpatialFilterUpdated(applyFilter, getFilterStrategy());
     }

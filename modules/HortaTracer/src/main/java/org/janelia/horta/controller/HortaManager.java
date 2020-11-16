@@ -106,7 +106,7 @@ public class HortaManager {
             topComponent.initSampleLocation();
             topComponent.redrawNow();
         } catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }
     }
     
@@ -137,7 +137,7 @@ public class HortaManager {
 
             topComponent.redrawNow();
         } catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }
     }
 

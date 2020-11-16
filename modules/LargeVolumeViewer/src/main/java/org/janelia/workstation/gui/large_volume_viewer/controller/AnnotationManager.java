@@ -327,9 +327,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void addAnnotation(final Vec3 xyz, final Long parentID) {
 
         if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-            presentError(
-                    "You must load a workspace before beginning annotation!",
-                    "No workspace!");
+            FrameworkAccess.handleException(
+                    new RuntimeException("You must load a workspace before beginning annotation!"));
             return;
         }
 
@@ -337,12 +336,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "Workspace is read-only", "Cannot add annotation", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        
+
         final TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
         if (currentNeuron == null) {
-            presentError(
-                    "You must select a neuron before beginning annotation!",
-                    "No neuron!");
+            FrameworkAccess.handleException(
+                    new RuntimeException("You must select a neuron before beginning annotation!"));
             return;
         }
 
@@ -353,9 +351,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         //  this is probably no longer needed, as the neuron ought to be selected
         //  when the parent annotation is selected
         if (parentID != null && !currentNeuron.getGeoAnnotationMap().containsKey(parentID)) {
-            presentError(
-                    "Current neuron does not contain selected root annotation!",
-                    "Wrong neuron!");
+            FrameworkAccess.handleException(new RuntimeException(
+                    "Wrong neuron! Current neuron does not contain selected root annotation!"));
             return;
         }
 
@@ -418,7 +415,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
-        
+
         SimpleWorker mover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
@@ -459,7 +456,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (sourceAnnotation==null || targetAnnotation==null) {
             return false;
         }
-        
+
         // distance: close enough?
         double dx = anchorLocation.getX() - targetAnnotation.getX();
         double dy = anchorLocation.getY() - targetAnnotation.getY();
@@ -497,8 +494,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public void smartMergeNeuriteRequested(Anchor sourceAnchor, Anchor targetAnchor) {
         if (targetAnchor == null) {
-            presentError("No neurite selected!  Select an annotation on target neurite, then choose this operation again.",
-                "No selected neurite");
+            FrameworkAccess.handleException(
+                    new RuntimeException("No neurite selected!  Select an annotation on target neurite, then choose this operation again."));
             return;
         }
 
@@ -516,9 +513,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // check for cycles (this can be tested before we check exactly which annotations to merge
         if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
-            presentError(
-                    "You can't merge a neurite with itself!",
-                    "Can't merge!");
+            FrameworkAccess.handleException(new RuntimeException(
+                    "Cannot merge a neurite with itself!"));
             return;
         }
 
@@ -528,13 +524,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             sourceNeuron, targetAnnotation, targetNeuron);
 
         if (result.size() != 2) {
-            presentError("There was an error in the smart merge algorithm!", "Smart merge error");
+            FrameworkAccess.handleException(new RuntimeException(
+                    "There was an error in the smart merge algorithm!"));
             return;
         }
         // returned annotations should be on same neurite as input ones:
         if (!annotationModel.sameNeurite(sourceAnnotation, result.get(0)) ||
                 !annotationModel.sameNeurite(targetAnnotation, result.get(1))) {
-            presentError("There was an error in the smart merge algorithm!", "Smart merge error");
+            FrameworkAccess.handleException(new RuntimeException(
+                    "There was an error in the smart merge algorithm!"));
             return;
         }
         sourceAnnotation = result.get(0);
@@ -595,15 +593,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     		return tmNeuronMetadata;
     	}
     }
-    
+
 
 
     public void moveNeuriteRequested(Anchor anchor) {
         if (anchor == null) {
-            presentError("Anchor unexpectedly null!", "Can't move neurite");
+            FrameworkAccess.handleException(new RuntimeException("Anchor unexpectedly null!"));
             return;
         }
-        
+
 
         // dialog box with list of neurons, not including current neuron; but
         //  throw in a dummy "create new neuron" option at the top
@@ -611,7 +609,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         TmNeuronMetadata sourceNeuron = annotationModel.getNeuronFromNeuronID(annotation.getNeuronId());
         if (!TmModelManager.getInstance().checkOwnership(sourceNeuron))
             return;
-        
+
         ArrayList<TmNeuronMetadata> neuronList = new ArrayList<>(annotationModel.getCurrentFilteredNeuronList());
         neuronList.remove(sourceNeuron);
         // not sure alphabetical is the best sort; neuron list is selectable (defaults to creation
@@ -634,7 +632,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         for(TmNeuronMetadata tmNeuronMetadata : neuronList) {
         	displayList.add(new TmDisplayNeuron(tmNeuronMetadata));
         }
-        
+
         Object [] choices = displayList.toArray();
         Object choice = JOptionPane.showInputDialog(
                 ComponentUtil.getLVVMainWindow(),
@@ -648,7 +646,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (choice == null) {
             return;
         }
-        
+
         final TmDisplayNeuron choiceNeuron = (TmDisplayNeuron) choice;
         final TmNeuronMetadata destinationNeuron = choiceNeuron.getTmNeuronMetadata();
 
@@ -678,7 +676,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
                 @Override
                 protected void hadError(Throwable error) {
-                    presentError(
+                    FrameworkAccess.handleException(
                             "Error while moving neurite!",
                             error);
                 }
@@ -706,7 +704,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
                 @Override
                 protected void hadError(Throwable error) {
-                    presentError(
+                    FrameworkAccess.handleException(
                             "Error while moving neurite!",
                             error);
                 }
@@ -727,7 +725,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
-        
+
 
         SimpleWorker adder = new SimpleWorker() {
             @Override
@@ -742,7 +740,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadError(Throwable error) {
-                presentError(
+                FrameworkAccess.handleException(
                         "Could not add anchored path!",
                         error);
             }
@@ -777,7 +775,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // turns out ? or * will mess with Java's file dialogs
             //  (something about how file filters works)
             if (neuronName.contains("?") || neuronName.contains("*")) {
-                presentError("Neuron names can't contain the ? or * characters!", "Could not rename neuron");
+                FrameworkAccess.handleException(new RuntimeException(
+                        "Could not rename neuron. Neuron names can't contain the ? or * characters!"));
                 return null;
             }
             return neuronName;
@@ -898,29 +897,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         PathTraceToParentWorker worker = new PathTraceToParentWorker(request, AUTOMATIC_TRACING_TIMEOUT);
         worker.setPathTraceListener(this);
         worker.execute();
-    }
-
-    /**
-     * Convenience method, to cut down on redundant code.
-     *
-     * @param message passed as message param
-     * @param title passed as title param.
-     * @throws HeadlessException by called methods.
-     */
-    public void presentError(String message, String title) throws HeadlessException {
-        JOptionPane.showMessageDialog(
-                ComponentUtil.getLVVMainWindow(),
-                message,
-                title,
-                JOptionPane.ERROR_MESSAGE);
-    }
-
-    /**
-     * usual error dialog is hiding too much info when it pops within
-     * a SimpleWorker's error clause; log those errors!
-     */
-    public void presentError(String message, Throwable error) throws HeadlessException {
-        FrameworkAccess.handleException(new Exception(message,error));
     }
 
     private Long getSampleID() {

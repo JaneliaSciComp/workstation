@@ -13,6 +13,7 @@ import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageEncoder;
 import com.sun.media.jai.codec.TIFFEncodeParam;
 import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 public class ExtractOctreeSubvolume {
 
@@ -45,8 +46,7 @@ public class ExtractOctreeSubvolume {
 			usage(args);
 			System.exit(1);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			FrameworkAccess.handleException(e);
 		}
 	}
 	

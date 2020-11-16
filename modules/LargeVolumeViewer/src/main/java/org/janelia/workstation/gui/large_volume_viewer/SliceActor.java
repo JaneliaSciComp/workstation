@@ -14,6 +14,7 @@ import org.janelia.workstation.gui.large_volume_viewer.shader.OutlineShader;
 import org.janelia.workstation.gui.large_volume_viewer.shader.SliceColorShader;
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -197,8 +198,7 @@ public class SliceActor implements GLActor {
             numeralShader.init(gl);
             outlineShader.init(gl);
         } catch (ShaderCreationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }
     }
 

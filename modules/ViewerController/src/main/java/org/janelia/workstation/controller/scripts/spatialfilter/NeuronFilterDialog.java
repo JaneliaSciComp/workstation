@@ -1,9 +1,6 @@
 package org.janelia.workstation.controller.scripts.spatialfilter;
 
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.beans.PropertyDescriptor;
 import java.util.*;
 
@@ -146,11 +143,11 @@ public class NeuronFilterDialog extends ModalDialog {
                         if (currentFilter==null || !currentFilter.getLabel().equals(label))
                             currentFilter = (NeuronSpatialFilter)Class.forName(key).newInstance();
                     } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
+                        FrameworkAccess.handleException(e);
                     } catch (InstantiationException e) {
-                        e.printStackTrace();
+                        FrameworkAccess.handleException(e);
                     } catch (IllegalAccessException e) {
-                        e.printStackTrace();
+                        FrameworkAccess.handleException(e);
                     }
                     generateFilterOptions();
                 }
@@ -227,7 +224,7 @@ public class NeuronFilterDialog extends ModalDialog {
                     try {
                         new PropertyDescriptor(paramName, currentFilter.getClass()).getWriteMethod().invoke(currentFilter, value);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        FrameworkAccess.handleException(e);
                     }
                 }
             });
@@ -236,7 +233,7 @@ public class NeuronFilterDialog extends ModalDialog {
                         .invoke(currentFilter).toString();
                 entry.setText(currVal);
             } catch (Exception e) {
-                e.printStackTrace();
+                FrameworkAccess.handleException(e);
             }
             Box horizontalBox = Box.createHorizontalBox();
             horizontalBox.add(entryLabel);

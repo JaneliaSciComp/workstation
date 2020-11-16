@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.janelia.it.jacs.model.util.ThreadUtils;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.octree.ZoomLevel;
 import org.janelia.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.workstation.controller.tileimagery.raster.VoxelIndex;
@@ -400,7 +401,7 @@ public class Subvolume {
                             "Exception during subvolume fetch.  Request {}..{}.  Exception report follows.",
                             origin, extent
                     );
-                    rte.printStackTrace();
+                    FrameworkAccess.handleException(rte);
                     failureOnResult = true;
                 }
                 if (failureOnResult) {
@@ -521,7 +522,7 @@ public class Subvolume {
         } catch (AbstractTextureLoadAdapter.TileLoadError | AbstractTextureLoadAdapter.MissingTileException e) {
             // TODO Auto-generated catch block
             logger.error("Request for {}..{} failed with error {}.", origin, extent, e.getMessage());
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
         }
         return filledToEnd;
     }

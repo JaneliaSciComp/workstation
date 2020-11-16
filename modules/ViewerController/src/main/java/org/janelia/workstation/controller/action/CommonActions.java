@@ -66,12 +66,4 @@ public class CommonActions {
             return;
         }
     }
-
-    public static void presentError(String message, String title) throws HeadlessException {
-        JOptionPane.showMessageDialog(
-                null,
-                message,
-                title,
-                JOptionPane.ERROR_MESSAGE);
-    }
 }

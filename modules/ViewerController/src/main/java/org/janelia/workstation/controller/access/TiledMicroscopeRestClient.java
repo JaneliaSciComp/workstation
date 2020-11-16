@@ -31,6 +31,7 @@ import org.janelia.workstation.core.api.exceptions.RemoteServiceException;
 import org.janelia.workstation.core.api.http.RESTClientBase;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -256,7 +257,7 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
             return neuronList;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            FrameworkAccess.handleException(e);
             LOG.error ("Problems parsing the neuron stream from the server for workspace id {}",workspaceId);
             throw new RemoteServiceException("Client had problems processing Neuron Server Stream");
         }
