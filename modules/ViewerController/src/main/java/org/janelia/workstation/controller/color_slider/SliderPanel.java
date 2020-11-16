@@ -295,6 +295,15 @@ public class SliderPanel extends JPanel {
             List<String> channelList = (List<String>)fullColorModel.get("channels");
 
             ImageColorModel importModel = mapper.convertValue(fullColorModel.get("topLevelModel"), ImageColorModel.class);
+            if (imageColorModel.getChannelCount() != channelList.size()) {
+                JOptionPane.showMessageDialog(this,
+                "This image has " + imageColorModel.getChannelCount() + " channels; imported color model has " +  channelList.size()
+                        + ". Are you sure you're loading an appropriate color model (2d vs 3d)?",
+                "Wrong channel count",
+                JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             for (int i=0; i<channelList.size(); i++) {
                 ChannelColorModel ccm = imageColorModel.getChannel(i);
                 ccm.fromString(channelList.get(i));
