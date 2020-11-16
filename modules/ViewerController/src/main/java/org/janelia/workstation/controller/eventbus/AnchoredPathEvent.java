@@ -7,6 +7,10 @@ abstract public class AnchoredPathEvent extends ViewerEvent {
     protected Collection<TmAnchoredPath> paths;
     protected Long neuronID;
 
+    public AnchoredPathEvent(Object sourceClass) {
+        super(sourceClass);
+    }
+
     public Long getNeuronID() {
         return neuronID;
     }

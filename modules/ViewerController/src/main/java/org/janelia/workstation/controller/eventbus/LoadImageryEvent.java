@@ -4,7 +4,7 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
 public class LoadImageryEvent extends LoadEvent {
-    public LoadImageryEvent(TmWorkspace workspace, TmSample sample) {
-        super(workspace, sample);
+    public LoadImageryEvent(Object source, TmWorkspace workspace, TmSample sample) {
+        super(source, workspace, sample);
     }
 }

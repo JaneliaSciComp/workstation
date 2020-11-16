@@ -5,9 +5,11 @@ import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MeshCreateEvent {
+public class MeshCreateEvent extends ViewerEvent {
     List<TmObjectMesh> meshes = new ArrayList<>();
-    public MeshCreateEvent(List<TmObjectMesh> meshes) {
+    public MeshCreateEvent(Object source,
+                           List<TmObjectMesh> meshes) {
+        super(source);
         this.meshes = meshes;
     }
 

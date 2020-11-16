@@ -130,7 +130,8 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
             initialize();
 
         // fire off notice for checkboxes, etc.
-        ViewerOpenEvent openEvent = new ViewerOpenEvent(ViewerOpenEvent.VIEWER.LVV);
+        ViewerOpenEvent openEvent = new ViewerOpenEvent(this,
+                ViewerOpenEvent.VIEWER.LVV);
         ViewerEventBus.postEvent(openEvent);
     }
 
@@ -138,7 +139,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     public void componentClosed() {
         closeGroup();
         // fire off notice for checkboxes, etc.
-        ViewerCloseEvent viewerCloseEvent = new ViewerCloseEvent(ViewerCloseEvent.VIEWER.LVV);
+        ViewerCloseEvent viewerCloseEvent = new ViewerCloseEvent(this, ViewerCloseEvent.VIEWER.LVV);
         ViewerEventBus.postEvent(viewerCloseEvent);
     }
 
@@ -179,7 +180,8 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
                 if (workspace != null)
                     isSample = false;
 
-                LoadNeuronsEvent event = new LoadNeuronsEvent(workspace,
+                LoadNeuronsEvent event = new LoadNeuronsEvent(this,
+                        workspace,
                         TmModelManager.getInstance().getCurrentSample());
 
                 getQuadViewUi().loadNeurons(event);

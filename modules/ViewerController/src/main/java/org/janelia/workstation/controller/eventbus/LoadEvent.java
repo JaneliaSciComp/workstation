@@ -7,7 +7,8 @@ public class LoadEvent  extends ViewerEvent {
     TmWorkspace workspace;
     TmSample sample;
 
-    public LoadEvent(TmWorkspace workspace, TmSample sample) {
+    public LoadEvent(Object source, TmWorkspace workspace, TmSample sample) {
+        super(source);
         this.workspace = workspace;
         this.sample = sample;
     }

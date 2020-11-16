@@ -1,6 +1,6 @@
 package org.janelia.workstation.controller;
 
-import java.awt.Color;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
@@ -223,7 +223,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     // this method sets the current neuron *and* updates the UI; null neuron means deselect
     @Subscribe
     public void selectNeuronInDataInspector(SelectionNeuronsEvent event) {
-        Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, event.getItems(), true, true, true));
+        Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(null,
+                event.getItems(), true, true, true));
     }
 
     // placeholder for any non listener methods that need to update neuron information
@@ -740,12 +741,13 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             }
             fireNeuronCreated(restoredNeuron);
         } else {
-            NeuronDeleteEvent deleteEvent = new NeuronDeleteEvent(Arrays.asList(
+            NeuronDeleteEvent deleteEvent = new NeuronDeleteEvent(this,Arrays.asList(
                     new TmNeuronMetadata[]{getNeuronFromNeuronID(restoredNeuron.getId())}));
             TmModelManager.getInstance().getSpatialIndexManager().neuronDeleted(deleteEvent);
 
             TmNeuronMetadata currNeuron = getNeuronFromNeuronID(restoredNeuron.getId());
-            AnnotationDeleteEvent deleteAnnEvent = new AnnotationDeleteEvent(currNeuron.getGeoAnnotationMap().values(), null);
+            AnnotationDeleteEvent deleteAnnEvent = new AnnotationDeleteEvent(this,
+                    currNeuron.getGeoAnnotationMap().values(), null);
             ViewerEventBus.postEvent(deleteAnnEvent);
 
             neuronModel.restoreNeuronFromHistory(restoredNeuron);
@@ -2168,7 +2170,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             currentTagMap.addTag(tag, neuron);
             neuron.getTags().add(tag);
         };
-        NeuronTagsUpdateEvent tagsEvent = new NeuronTagsUpdateEvent(neuronList);
+        NeuronTagsUpdateEvent tagsEvent = new NeuronTagsUpdateEvent(this,neuronList);
         ViewerEventBus.postEvent(tagsEvent);
     }
 
@@ -2211,7 +2213,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             modelManager.getAllTagMeta().removeTag(tag, neuron);
             neuron.getTags().remove(tag);
         }
-        NeuronTagsUpdateEvent tagsEvent = new NeuronTagsUpdateEvent(neuronList);
+        NeuronTagsUpdateEvent tagsEvent = new NeuronTagsUpdateEvent(this,neuronList);
         ViewerEventBus.postEvent(tagsEvent);
     }
 
@@ -2219,7 +2221,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         tmDomainMgr.bulkEditNeuronTags(Arrays.asList(neuron), new ArrayList<>(neuron.getTags()), false);
         modelManager.getAllTagMeta().clearTags(neuron);
         neuron.getTags().clear();
-        NeuronTagsUpdateEvent tagsEvent = new NeuronTagsUpdateEvent(Arrays.asList(neuron));
+        NeuronTagsUpdateEvent tagsEvent = new NeuronTagsUpdateEvent(this,Arrays.asList(neuron));
         ViewerEventBus.postEvent(tagsEvent);
     }
 
@@ -2238,19 +2240,21 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public void fireAnnotationMoved(TmGeoAnnotation annotation) {
-        AnnotationUpdateEvent annotationEvent = new AnnotationUpdateEvent(Arrays.asList(new TmGeoAnnotation[]{annotation}),
+        AnnotationUpdateEvent annotationEvent = new AnnotationUpdateEvent(this,
+                Arrays.asList(new TmGeoAnnotation[]{annotation}),
                 null);
         ViewerEventBus.postEvent(annotationEvent);
     }
 
     public void fireAnnotationRadiusUpdated(TmGeoAnnotation annotation) {
-        AnnotationUpdateEvent annotationEvent = new AnnotationUpdateEvent(Arrays.asList(new TmGeoAnnotation[]{annotation}),
+        AnnotationUpdateEvent annotationEvent = new AnnotationUpdateEvent(this,
+                Arrays.asList(new TmGeoAnnotation[]{annotation}),
                 null);
         ViewerEventBus.postEvent(annotationEvent);
     }
 
     public void fireNeuronRadiusUpdated(TmNeuronMetadata neuron) {
-        NeuronUpdateEvent neuronEvent = new NeuronUpdateEvent(Arrays.asList(neuron));
+        NeuronUpdateEvent neuronEvent = new NeuronUpdateEvent(this,Arrays.asList(neuron));
         ViewerEventBus.postEvent(neuronEvent);
     }
 
@@ -2259,46 +2263,50 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     void fireAnnotationAdded(TmGeoAnnotation annotation) {
-        AnnotationCreateEvent annotationEvent = new AnnotationCreateEvent(Arrays.asList(annotation),
+        AnnotationCreateEvent annotationEvent = new AnnotationCreateEvent(this,Arrays.asList(annotation),
                 annotation);
         ViewerEventBus.postEvent(annotationEvent);
     }
 
     void fireAnnotationsDeleted(List<TmGeoAnnotation> deleteList, TmGeoAnnotation nextParent) {
-        AnnotationDeleteEvent annotationEvent = new AnnotationDeleteEvent(deleteList, nextParent);
+        AnnotationDeleteEvent annotationEvent = new AnnotationDeleteEvent(this,deleteList, nextParent);
         ViewerEventBus.postEvent(annotationEvent);
     }
 
     void fireAnnotationReparented(TmGeoAnnotation annotation, Long prevNeuronId) {
-        AnnotationParentReparentedEvent annotationEvent = new AnnotationParentReparentedEvent(Arrays.asList(annotation),
+        AnnotationParentReparentedEvent annotationEvent = new AnnotationParentReparentedEvent(this,
+                Arrays.asList(annotation),
                 prevNeuronId);
         ViewerEventBus.postEvent(annotationEvent);
     }
 
     void fireAnchoredPathsRemoved(Long neuronID, List<TmAnchoredPath> deleteList) {
-        AnchoredPathDeleteEvent deleteEvent = new AnchoredPathDeleteEvent(neuronID, deleteList);
+        AnchoredPathDeleteEvent deleteEvent = new AnchoredPathDeleteEvent(this,neuronID, deleteList);
         ViewerEventBus.postEvent(deleteEvent);
     }
 
     void fireAnchoredPathAdded(Long neuronID, TmAnchoredPath path) {
-        AnchoredPathCreateEvent createEvent = new AnchoredPathCreateEvent(neuronID, Arrays.asList(path));
+        AnchoredPathCreateEvent createEvent = new AnchoredPathCreateEvent(this,
+                neuronID, Arrays.asList(path));
         ViewerEventBus.postEvent(createEvent);
     }
 
     void fireWorkspaceUnloaded(TmWorkspace workspace) {
-        UnloadProjectEvent workspaceEvent = new UnloadProjectEvent(workspace, null,false);
+        UnloadProjectEvent workspaceEvent = new UnloadProjectEvent(this,
+                workspace, null,false);
         ViewerEventBus.postEvent(workspaceEvent);
     }
 
     void fireWorkspaceLoaded(TmWorkspace workspace) {
-        LoadProjectEvent workspaceEvent = new LoadProjectEvent(workspace, null,false);
+        LoadProjectEvent workspaceEvent = new LoadProjectEvent(this,
+                workspace, null,false);
         ViewerEventBus.postEvent(workspaceEvent);
     }
 
     void fireBulkNeuronsChanged(List<TmNeuronMetadata> addList, List<TmNeuronMetadata> deleteList) {
-        NeuronCreateEvent addNeuronsEvent = new NeuronCreateEvent(addList);
+        NeuronCreateEvent addNeuronsEvent = new NeuronCreateEvent(this,addList);
         ViewerEventBus.postEvent(addNeuronsEvent);
-        NeuronDeleteEvent deleteNeuronsEvent = new NeuronDeleteEvent(deleteList);
+        NeuronDeleteEvent deleteNeuronsEvent = new NeuronDeleteEvent(this,deleteList);
         ViewerEventBus.postEvent(deleteNeuronsEvent);
     }
 
@@ -2312,22 +2320,26 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public void fireNeuronCreated(TmNeuronMetadata neuron) {
-        NeuronCreateEvent annotationEvent = new NeuronCreateEvent(Arrays.asList(new TmNeuronMetadata[]{neuron}));
+        NeuronCreateEvent annotationEvent = new NeuronCreateEvent(this,
+                Arrays.asList(new TmNeuronMetadata[]{neuron}));
         ViewerEventBus.postEvent(annotationEvent);
     }
 
     public void fireNeuronDeleted(TmNeuronMetadata neuron) {
-        NeuronDeleteEvent annotationEvent = new NeuronDeleteEvent(Arrays.asList(new TmNeuronMetadata[]{neuron}));
+        NeuronDeleteEvent annotationEvent = new NeuronDeleteEvent(this,
+                Arrays.asList(new TmNeuronMetadata[]{neuron}));
         ViewerEventBus.postEvent(annotationEvent);
     }
 
     public void fireNeuronChanged(TmNeuronMetadata neuron) {
-        NeuronUpdateEvent annotationEvent = new NeuronUpdateEvent(Arrays.asList(new TmNeuronMetadata[]{neuron}));
+        NeuronUpdateEvent annotationEvent = new NeuronUpdateEvent(this,
+                Arrays.asList(new TmNeuronMetadata[]{neuron}));
         ViewerEventBus.postEvent(annotationEvent);
     }
 
     public void fireNeuronRenamed(TmNeuronMetadata neuron) {
-        NeuronUpdateEvent annotationEvent = new NeuronUpdateEvent(Arrays.asList(new TmNeuronMetadata[]{neuron}));
+        NeuronUpdateEvent annotationEvent = new NeuronUpdateEvent(this,
+                Arrays.asList(new TmNeuronMetadata[]{neuron}));
         ViewerEventBus.postEvent(annotationEvent);
     }
 
@@ -2336,25 +2348,25 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public void fireNeuronsOwnerChanged(List<TmNeuronMetadata> neuronList) {
-        NeuronOwnerChangedEvent annotationEvent = new NeuronOwnerChangedEvent(neuronList);
+        NeuronOwnerChangedEvent annotationEvent = new NeuronOwnerChangedEvent(this,neuronList);
         ViewerEventBus.postEvent(annotationEvent);
     }
 
     void fireNeuronSelected(TmNeuronMetadata neuron) {
-        SelectionNeuronsEvent selectionEvent = new SelectionNeuronsEvent(
+        SelectionNeuronsEvent selectionEvent = new SelectionNeuronsEvent(this,
                 Arrays.asList(new TmNeuronMetadata[]{neuron}),
                 true, false);
         ViewerEventBus.postEvent(selectionEvent);
     }
 
     void fireClearSelections() {
-        SelectionNeuronsEvent selectionEvent = new SelectionNeuronsEvent(null,
+        SelectionNeuronsEvent selectionEvent = new SelectionNeuronsEvent(this,null,
                 false, true);
         ViewerEventBus.postEvent(selectionEvent);
     }
 
     void fireNotesUpdated(TmGeoAnnotation ann) {
-        AnnotationNotesUpdateEvent notesEvent = new AnnotationNotesUpdateEvent(Arrays.asList(ann));
+        AnnotationNotesUpdateEvent notesEvent = new AnnotationNotesUpdateEvent(this,Arrays.asList(ann));
         ViewerEventBus.postEvent(notesEvent);
     }
 

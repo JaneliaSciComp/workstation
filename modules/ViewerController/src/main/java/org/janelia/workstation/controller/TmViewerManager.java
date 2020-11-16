@@ -110,7 +110,8 @@ public class TmViewerManager implements GlobalViewerController {
             boolean isSample = (TmModelManager.getInstance().getCurrentWorkspace()==null) ? true : false;
             TmModelManager.getInstance().setCurrentSample(null);
             TmModelManager.getInstance().setCurrentWorkspace(null);
-            UnloadProjectEvent event = new UnloadProjectEvent(TmModelManager.getInstance().getCurrentWorkspace(),
+            UnloadProjectEvent event = new UnloadProjectEvent(this,
+                    TmModelManager.getInstance().getCurrentWorkspace(),
                     TmModelManager.getInstance().getCurrentSample(),isSample);
             ViewerEventBus.postEvent(event);
         }
@@ -211,7 +212,7 @@ public class TmViewerManager implements GlobalViewerController {
     public void loadComplete(LoadProjectEvent event) {
         final TmWorkspace workspace = modelManager.getCurrentWorkspace();
 
-        MovieEvent movieEvent = new MovieEvent();
+        MovieEvent movieEvent = new MovieEvent(this);
         ViewerEventBus.postEvent(movieEvent);
         
         if (workspace == null) {
@@ -240,7 +241,7 @@ public class TmViewerManager implements GlobalViewerController {
             NeuronSelectionSpatialFilter neuronFilter = new NeuronSelectionSpatialFilter();
             neuronManager.setFilterStrategy(neuronFilter);
             NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(
-                    true,neuronFilter, "Neuron Selection Filter");
+                    this, true,neuronFilter, "Neuron Selection Filter");
             ViewerEventBus.postEvent(spatialEvent);
         }
 
@@ -268,11 +269,12 @@ public class TmViewerManager implements GlobalViewerController {
         TmModelManager.getInstance().getNeuronHistory().clearHistory();
 
         // this is for displaying the neurons
-        LoadNeuronsEvent neuronsEvent = new LoadNeuronsEvent(workspace,null);
+        LoadNeuronsEvent neuronsEvent = new LoadNeuronsEvent(this, workspace,null);
         ViewerEventBus.postEvent(neuronsEvent);
 
         // this is for clearing selections
-        SelectionEvent selectionEvent = new SelectionEvent(null, false, true);
+        SelectionEvent selectionEvent = new SelectionEvent(this,
+                null, false, true);
         ViewerEventBus.postEvent(selectionEvent);
     }
 }

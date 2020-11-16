@@ -7,6 +7,10 @@ abstract public class AnnotationEvent extends ViewerEvent {
     protected Collection<TmGeoAnnotation> annotations;
     protected TmGeoAnnotation requestedNextParent;
 
+    public AnnotationEvent(Object sourceClass) {
+        super(sourceClass);
+    }
+
     public Collection<TmGeoAnnotation> getAnnotations() {
         return annotations;
     }

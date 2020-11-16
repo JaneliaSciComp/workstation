@@ -1,18 +1,16 @@
 package org.janelia.workstation.controller.eventbus;
 
-import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSpatialFilter;
 
-import java.util.Collection;
-
-public class NeuronSpatialFilterUpdateEvent {
+public class NeuronSpatialFilterUpdateEvent extends ViewerEvent {
     private boolean enabled = false;
     private NeuronSpatialFilter filter;
     private String description;
 
-    public NeuronSpatialFilterUpdateEvent( boolean enabled,
+    public NeuronSpatialFilterUpdateEvent( Object source,
+                                           boolean enabled,
                                           NeuronSpatialFilter filter, String description) {
+        super(source);
         this.enabled = enabled;
         this.filter = filter;
         this.description = description;

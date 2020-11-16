@@ -5,8 +5,10 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 
 public class ColorModelUpdateEvent extends WorkspaceEvent {
     ImageColorModel imageColorModel;
-    public ColorModelUpdateEvent(TmWorkspace workspace, ImageColorModel colorModel) {
-        super(workspace, workspace.getId());
+    public ColorModelUpdateEvent(Object source,
+                                 TmWorkspace workspace,
+                                 ImageColorModel colorModel) {
+        super(source, workspace, workspace.getId());
         imageColorModel = colorModel;
     }
 

@@ -8,12 +8,14 @@ public class ViewEvent extends ViewerEvent {
     private float[] cameraRotation; // as quaternion
     private boolean interpolate;
 
-    public ViewEvent(  double cameraFocusX,
+    public ViewEvent(Object source,
+                     double cameraFocusX,
              double cameraFocusY,
              double cameraFocusZ,
              double zoomLevel,
              float[] cameraRotation,
              boolean interpolate) {
+        super(source);
         this.cameraFocusX = cameraFocusX;
         this.cameraFocusY = cameraFocusY;
         this.cameraFocusZ = cameraFocusZ;

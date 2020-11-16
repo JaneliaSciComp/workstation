@@ -40,7 +40,7 @@ public class NeuronHideAction extends EditAction {
         if (neuron!=null) {
             TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
             NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(
-                    Arrays.asList(new TmNeuronMetadata[]{neuron}));
+                    this, Arrays.asList(new TmNeuronMetadata[]{neuron}));
             ViewerEventBus.postEvent(updateEvent);
         }
     }

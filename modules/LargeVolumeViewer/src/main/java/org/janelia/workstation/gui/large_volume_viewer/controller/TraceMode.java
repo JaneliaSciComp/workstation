@@ -151,7 +151,7 @@ implements MouseMode, KeyListener
                         hoverAnchor.getGuid());
                 TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(neuron);
                 TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(annotation);
-                SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent(
+                SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent(this,
                         Arrays.asList(new TmGeoAnnotation[]{annotation}), true, false);
                 ViewerEventBus.postEvent(selectionEvent);
             } else {
@@ -392,7 +392,7 @@ implements MouseMode, KeyListener
                         // send out a view event to synchronize
                         Point cursorPos = event.getPoint();
                         Vec3 location = worldFromPixel(cursorPos);
-                        ViewEvent syncViewEvent = new ViewEvent(camera.getFocus().getX(),
+                        ViewEvent syncViewEvent = new ViewEvent(this,camera.getFocus().getX(),
                                 camera.getFocus().getY(),
                                 camera.getFocus().getZ(),
                                 500, null, false);
@@ -671,7 +671,7 @@ implements MouseMode, KeyListener
                             TmModelManager.getInstance().getCurrentView().toggleHidden(hover.getNeuronID());
                             TmNeuronMetadata neuron = neuronManager.getNeuronFromNeuronID(hover.getNeuronID());
                             NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(
-                                    Arrays.asList(new TmNeuronMetadata[]{neuron}));
+                                    this, Arrays.asList(new TmNeuronMetadata[]{neuron}));
                             ViewerEventBus.postEvent(updateEvent);
                         }
                     };

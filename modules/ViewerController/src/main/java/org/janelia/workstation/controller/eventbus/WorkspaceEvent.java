@@ -6,7 +6,10 @@ public class WorkspaceEvent extends ViewerEvent {
     private long workspaceId;
     private TmWorkspace workspace;
 
-    public WorkspaceEvent(TmWorkspace workspace, Long workspaceId) {
+    public WorkspaceEvent(Object source,
+                          TmWorkspace workspace,
+                          Long workspaceId) {
+        super(source);
         this.workspaceId = workspaceId;
         this.workspace = workspace;
     }

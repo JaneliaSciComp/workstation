@@ -211,7 +211,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
             private void selectNeuron(TmNeuronMetadata neuron) {
                 List<DomainObject> neuronList = new ArrayList<>();
                 neuronList.add(neuron);
-                SelectionNeuronsEvent event = new SelectionNeuronsEvent(neuronList, true, false);
+                SelectionNeuronsEvent event = new SelectionNeuronsEvent(this,
+                        neuronList, true, false);
                 ViewerEventBus.postEvent(event);
             }
 
@@ -259,7 +260,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                         modelManager.getCurrentView().toggleHidden(selectedNeuron.getId());
                         neuronTableModel.updateNeuron(selectedNeuron);
                         NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(
-                                Arrays.asList(new TmNeuronMetadata[]{selectedNeuron}));
+                                this, Arrays.asList(new TmNeuronMetadata[]{selectedNeuron}));
                         ViewerEventBus.postEvent(updateEvent);
                         // the click might move the neuron selection, which we don't want
                         syncSelection();
@@ -754,7 +755,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         TmModelManager.getInstance().getCurrentView().setCameraFocusY(location.getY());
         TmModelManager.getInstance().getCurrentView().setCameraFocusZ(location.getZ());
         TmModelManager.getInstance().getCurrentView().setZoomLevel(500);
-        ViewEvent event = new ViewEvent(microLocation[0],
+        ViewEvent event = new ViewEvent(this,microLocation[0],
                 microLocation[1],
                 microLocation[2],
         500, null, false);

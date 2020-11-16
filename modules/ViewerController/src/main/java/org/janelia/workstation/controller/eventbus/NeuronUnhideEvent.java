@@ -5,8 +5,9 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import java.util.Collection;
 
 public class NeuronUnhideEvent extends NeuronEvent {
-    public NeuronUnhideEvent(Collection<TmNeuronMetadata> neurons) {
-        super(neurons);
+    public NeuronUnhideEvent(Object source,
+                             Collection<TmNeuronMetadata> neurons) {
+        super(source, neurons);
     }
 }
 

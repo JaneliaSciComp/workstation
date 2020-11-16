@@ -4,7 +4,9 @@ import org.janelia.workstation.controller.model.TmHistoricalEvent;
 
 public class NeuronHistoryEvent extends ViewerEvent {
     TmHistoricalEvent historicalEvent;
-    public NeuronHistoryEvent(TmHistoricalEvent event) {
+    public NeuronHistoryEvent(Object source,
+                              TmHistoricalEvent event) {
+        super(source);
         historicalEvent = event;
     }
 

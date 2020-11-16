@@ -21,7 +21,8 @@ import java.awt.Component;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainListViewManager implements ViewerManager<DomainListViewTopComponent> {
+public class
+DomainListViewManager implements ViewerManager<DomainListViewTopComponent> {
 
     private final static Logger log = LoggerFactory.getLogger(DomainListViewManager.class);
     

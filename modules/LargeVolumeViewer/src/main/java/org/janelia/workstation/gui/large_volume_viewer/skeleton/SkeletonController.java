@@ -190,7 +190,8 @@ public class SkeletonController implements NextParentListener {
 
 
         processNeuronDeleted(neuron);
-        NeuronCreateEvent nce = new NeuronCreateEvent(event.getNeurons());
+        NeuronCreateEvent nce = new NeuronCreateEvent(this,
+                event.getNeurons());
         neuronCreated(nce);
 
         // see above; don't know how to get next parent yet

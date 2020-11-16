@@ -513,7 +513,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
              sampleLocation.setCameraRotation(point.getRotation());
              playList.add(sampleLocation);
          }
-         AnimationEvent event = new AnimationEvent(playList, rotationCheckbox.isSelected(),
+         AnimationEvent event = new AnimationEvent(this,
+                 playList, rotationCheckbox.isSelected(),
                  Integer.parseInt(speedSpinner.getText()),
                  Integer.parseInt(numStepsSpinner.getText()));
          ViewerEventBus.postEvent(event);
@@ -531,7 +532,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 
         // not sure what the try/catch is preventing, but it was in the code I copied
         try {
-            ViewEvent cameraEvent = new ViewEvent(point.getLocation().getX(),
+            ViewEvent cameraEvent = new ViewEvent(this,point.getLocation().getX(),
                     point.getLocation().getY(),
                     point.getLocation().getZ(),
                     point.getZoomLevel(),
@@ -740,7 +741,8 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
         for (Long annId: annotationList) {
             realAnnList.add(manager.getGeoAnnotationFromID(currNeuron.getId(), annId));
         }
-        NeuronBranchReviewedEvent branchReviewedEvent = new NeuronBranchReviewedEvent(realAnnList);
+        NeuronBranchReviewedEvent branchReviewedEvent = new NeuronBranchReviewedEvent(this,
+                realAnnList);
         ViewerEventBus.postEvent(branchReviewedEvent);
 
         // update persistence

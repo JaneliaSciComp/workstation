@@ -79,7 +79,8 @@ public class ObjectMeshPanel extends JPanel {
             private void selectMesh(TmObjectMesh mesh) {
                 List<TmObjectMesh> meshList = new ArrayList<>();
                 meshList.add(mesh);
-                SelectionMeshEvent event = new SelectionMeshEvent(meshList, true, false);
+                SelectionMeshEvent event = new SelectionMeshEvent(this,
+                        meshList, true, false);
                 ViewerEventBus.postEvent(event);
             }
 
@@ -121,7 +122,8 @@ public class ObjectMeshPanel extends JPanel {
                         // single click visibility = toggle visibility
                         boolean vis = modelManager.getCurrentView().toggleHidden(selectedMesh);
                         objectMeshTableModel.updateMeshes(selectedMesh);
-                        MeshVisibilityEvent updateEvent = new MeshVisibilityEvent(selectedMesh, vis);
+                        MeshVisibilityEvent updateEvent = new MeshVisibilityEvent(this,
+                                selectedMesh, vis);
                         ViewerEventBus.postEvent(updateEvent);
                     }
                 }
@@ -158,7 +160,7 @@ public class ObjectMeshPanel extends JPanel {
                         }
                         objectMeshTableModel.deleteMesh(mesh.getName());
                         modelManager.saveWorkspace(modelManager.getCurrentWorkspace());
-                        MeshDeleteEvent event = new MeshDeleteEvent(mesh);
+                        MeshDeleteEvent event = new MeshDeleteEvent(this, mesh);
                         ViewerEventBus.postEvent(event);
                     }
 
@@ -197,7 +199,8 @@ public class ObjectMeshPanel extends JPanel {
                     protected void doStuff() throws Exception {
                         mesh.setName(newName);
                         modelManager.saveWorkspace(modelManager.getCurrentWorkspace());
-                        MeshUpdateEvent event = new MeshUpdateEvent(mesh, oldName, MeshUpdateEvent.PROPERTY.NAME);
+                        MeshUpdateEvent event = new MeshUpdateEvent(this,
+                                mesh, oldName, MeshUpdateEvent.PROPERTY.NAME);
                         ViewerEventBus.postEvent(event);
                     }
 

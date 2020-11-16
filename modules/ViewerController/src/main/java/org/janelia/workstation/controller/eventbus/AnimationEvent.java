@@ -4,14 +4,18 @@ import org.janelia.workstation.controller.model.TmViewState;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AnimationEvent {
+public class AnimationEvent extends ViewerEvent {
 
     List<TmViewState> animationSteps = new ArrayList<>();
     boolean autoRotation;
     int speed;
     int stepScale;
 
-    public AnimationEvent(List<TmViewState> steps, boolean autoRotation, int speed, int stepScale) {
+    public AnimationEvent(Object source,
+                          List<TmViewState> steps,
+                          boolean autoRotation,
+                          int speed, int stepScale) {
+        super(source);
         this.animationSteps = steps;
         this.autoRotation = autoRotation;
         this.speed = speed;

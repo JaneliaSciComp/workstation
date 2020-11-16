@@ -63,7 +63,8 @@ public class BulkChangeNeuronColorAction extends AbstractAction {
                                     neuron.setColor(color);
                                     NeuronManager.getInstance().updateNeuronMetadata(neuron);
                                 }
-                                NeuronUpdateEvent neuronEvent = new NeuronUpdateEvent(Arrays.asList(neuron));
+                                NeuronUpdateEvent neuronEvent = new NeuronUpdateEvent(this,
+                                        Arrays.asList(neuron));
                                 ViewerEventBus.postEvent(neuronEvent);
                             }
                         }

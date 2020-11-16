@@ -175,7 +175,8 @@ public class TracingInteractor extends MouseAdapter
 
                         }
                     }
-                    NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(neurons);
+                    NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(this,
+                            neurons);
                     ViewerEventBus.postEvent(updateEvent);
                 }
             }
@@ -1024,7 +1025,8 @@ public class TracingInteractor extends MouseAdapter
             if (! canClearParent())
                 return;
             clearParentVertex();
-            SelectionAnnotationEvent annEvent = new SelectionAnnotationEvent(null, false, true);
+            SelectionAnnotationEvent annEvent = new SelectionAnnotationEvent(this,
+                    null, false, true);
             ViewerEventBus.postEvent(annEvent);
         }
         
@@ -1123,7 +1125,8 @@ public class TracingInteractor extends MouseAdapter
                     TmModelManager.getInstance().getCurrentReviews().clearLoopedAnnotations();
                     TmModelManager.getInstance().getCurrentReviews().addLoopedAnnotationsList(loopVertices);
 
-                    NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(Arrays.asList(hoveredNeuron));
+                    NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(this,
+                            Arrays.asList(hoveredNeuron));
                     ViewerEventBus.postEvent(updateEvent);
                 }
                 return false;
@@ -1184,7 +1187,7 @@ public class TracingInteractor extends MouseAdapter
             TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(hoveredNeuron);
             TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(hoveredVertex);
             NeuronManager.getInstance().updateFragsByAnnotation(hoveredNeuron.getId(), hoveredVertex.getId());
-            SelectionAnnotationEvent event = new SelectionAnnotationEvent(
+            SelectionAnnotationEvent event = new SelectionAnnotationEvent(this,
                     Arrays.asList(new TmGeoAnnotation[]{hoveredVertex}), true, false
             );
             ViewerEventBus.postEvent(event);

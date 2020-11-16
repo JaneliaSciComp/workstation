@@ -1,10 +1,10 @@
 package org.janelia.workstation.controller.eventbus;
 
 public class ViewerEvent {
-    protected String sourceClass;
+    protected Object sourceClass;
     protected String sourceMethod;
 
-    public String getSourceClass() {
+    public Object getSourceClass() {
         return sourceClass;
     }
 
@@ -12,8 +12,7 @@ public class ViewerEvent {
         return sourceMethod;
     }
 
-    public void setSource(String sourceClass, String sourceMethod) {
+    public ViewerEvent (Object sourceClass) {
         this.sourceClass = sourceClass;
-        this.sourceMethod = sourceMethod;
     }
 }

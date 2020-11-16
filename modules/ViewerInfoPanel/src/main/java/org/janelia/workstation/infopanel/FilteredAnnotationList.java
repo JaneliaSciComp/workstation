@@ -124,7 +124,7 @@ public class FilteredAnnotationList extends JPanel {
                     TmGeoAnnotation annotation = neuronManager.getGeoAnnotationFromID(ann.getNeuronID(), ann.getAnnotationID());
                     if (me.getClickCount() == 1) {
                         table.setRowSelectionInterval(viewRow, viewRow);
-                        SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent(
+                        SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent(this,
                                 Arrays.asList(new TmGeoAnnotation[]{annotation}), true, false);
                         ViewerEventBus.postEvent(selectionEvent);
                     } else if (me.getClickCount() == 2) {
@@ -136,7 +136,7 @@ public class FilteredAnnotationList extends JPanel {
                             // double-click note: edit note dialog
                             CommonActions.addEditNote(interestingAnnotation.getNeuronID(), interestingAnnotation.getAnnotationID());
                         } else {
-                           SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent(
+                           SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent(this,
                                    Arrays.asList(new TmGeoAnnotation[]{annotation}), true, false);
                            ViewerEventBus.postEvent(selectionEvent);
                            float[] microLocation = TmModelManager.getInstance().getLocationInMicrometers(annotation.getX(),
@@ -145,7 +145,7 @@ public class FilteredAnnotationList extends JPanel {
                            TmModelManager.getInstance().getCurrentView().setCameraFocusY(annotation.getY());
                            TmModelManager.getInstance().getCurrentView().setCameraFocusZ(annotation.getZ());
                            TmModelManager.getInstance().getCurrentView().setZoomLevel(100);
-                           ViewEvent viewEvent = new ViewEvent(microLocation[0],
+                           ViewEvent viewEvent = new ViewEvent(this,microLocation[0],
                                    microLocation[1], microLocation[2],
                                    100,
                            null, false);

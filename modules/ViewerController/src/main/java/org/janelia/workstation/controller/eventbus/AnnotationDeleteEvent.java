@@ -4,7 +4,10 @@ import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import java.util.Collection;
 
 public class AnnotationDeleteEvent extends AnnotationEvent {
-    public AnnotationDeleteEvent(Collection<TmGeoAnnotation> annotations, TmGeoAnnotation nextParent) {
+    public AnnotationDeleteEvent(Object source,
+                                 Collection<TmGeoAnnotation> annotations,
+                                 TmGeoAnnotation nextParent) {
+        super(source);
         this.annotations = annotations;
         this.requestedNextParent = nextParent;
     }

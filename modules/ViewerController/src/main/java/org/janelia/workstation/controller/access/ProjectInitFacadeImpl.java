@@ -102,9 +102,11 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 LoadProjectEvent event;
                 modelManager.setCurrentSample(sample);
                 if (workspace!=null)
-                    event = new LoadProjectEvent(workspace, sample, true);
+                    event = new LoadProjectEvent(this,
+                            workspace, sample, true);
                 else
-                    event = new LoadProjectEvent(null, sample, true);
+                    event = new LoadProjectEvent(this,
+                            null, sample, true);
                 ViewerEventBus.postEvent(event);
                 progress.finish();
             }
@@ -200,9 +202,11 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 // now that data and tileimagery has been loaded sent out events to refresh the viewers
                 LoadMetadataEvent event;
                 if (workspace!=null)
-                    event = new LoadMetadataEvent(workspace, sample, true);
+                    event = new LoadMetadataEvent(this,
+                            workspace, sample, true);
                 else
-                    event = new LoadMetadataEvent(null, sample, true);
+                    event = new LoadMetadataEvent(this,
+                            null, sample, true);
                 ViewerEventBus.postEvent(event);
             }
 
@@ -220,7 +224,8 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
     @Override
     public void clearViewers() {
         // clear out the current model and send events to viewers to refresh
-        ViewerEventBus.postEvent(new UnloadProjectEvent(null, null,
+        ViewerEventBus.postEvent(new UnloadProjectEvent(this,
+                null, null,
                 modelManager.getCurrentWorkspace()==null));
     }
 

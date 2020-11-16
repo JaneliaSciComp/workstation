@@ -39,7 +39,8 @@ public class NeuronHideOthersAction extends EditAction {
         for (TmNeuronMetadata neuron: neuronList) {
             TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
         }
-        NeuronHideEvent neuronHideEvent = new NeuronHideEvent(neuronList);
+        NeuronHideEvent neuronHideEvent = new NeuronHideEvent(this,
+                neuronList);
         ViewerEventBus.postEvent(neuronHideEvent);
     }
 }

@@ -35,7 +35,7 @@ public class NeuronShowAction extends EditAction {
         TmNeuronMetadata neuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
         if (neuron!=null) {
             TmModelManager.getInstance().getCurrentView().removeAnnotationFromHidden(neuron.getId());
-            NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(
+            NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(this,
                     Arrays.asList(new TmNeuronMetadata[]{neuron}));
             ViewerEventBus.postEvent(updateEvent);
         }

@@ -253,7 +253,8 @@ public class NeuronFilterDialog extends ModalDialog {
     
     private boolean update() throws Exception {
         // set the filter on/off in the model and set the strategy/options
-        NeuronSpatialFilterUpdateEvent event = new NeuronSpatialFilterUpdateEvent(enableFiltering.isSelected(),
+        NeuronSpatialFilterUpdateEvent event = new NeuronSpatialFilterUpdateEvent(this,
+                enableFiltering.isSelected(),
                 currentFilter,(String)strategySelection.getSelectedItem());
         ViewerEventBus.postEvent(event);
 

@@ -355,7 +355,8 @@ public class AnnotationPanel extends JPanel
                 for (TmNeuronMetadata neuron: workspaceNeuronList.getNeuronList()) {
                     TmModelManager.getInstance().getCurrentView().removeAnnotationFromHidden(neuron.getId());
                 }
-                NeuronUpdateEvent event = new NeuronUpdateEvent(workspaceNeuronList.getNeuronList());
+                NeuronUpdateEvent event = new NeuronUpdateEvent(this,
+                        workspaceNeuronList.getNeuronList());
                 ViewerEventBus.postEvent(event);
             }
 
@@ -368,7 +369,8 @@ public class AnnotationPanel extends JPanel
                 for (TmNeuronMetadata neuron: workspaceNeuronList.getNeuronList()) {
                     TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
                 }
-                NeuronUpdateEvent event = new NeuronUpdateEvent(workspaceNeuronList.getNeuronList());
+                NeuronUpdateEvent event = new NeuronUpdateEvent(this,
+                        workspaceNeuronList.getNeuronList());
                 ViewerEventBus.postEvent(event);
             }
         };
@@ -382,7 +384,8 @@ public class AnnotationPanel extends JPanel
                     TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
                     hiddenNeurons.add(neuron);
                 }
-                NeuronUpdateEvent event = new NeuronUpdateEvent(hiddenNeurons);
+                NeuronUpdateEvent event = new NeuronUpdateEvent(this,
+                        hiddenNeurons);
                 ViewerEventBus.postEvent(event);
             }
         };

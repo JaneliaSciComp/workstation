@@ -6,8 +6,11 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 public class LoadProjectEvent extends LoadEvent {
     boolean isSample;
 
-    public LoadProjectEvent(TmWorkspace workspace, TmSample sample, boolean isSample) {
-        super(workspace, sample);
+    public LoadProjectEvent(Object source,
+                            TmWorkspace workspace,
+                            TmSample sample,
+                            boolean isSample) {
+        super(source,workspace, sample);
         this.isSample = isSample;
     }
 

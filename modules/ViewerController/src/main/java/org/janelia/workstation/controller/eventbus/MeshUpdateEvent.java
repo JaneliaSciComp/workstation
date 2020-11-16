@@ -2,13 +2,17 @@ package org.janelia.workstation.controller.eventbus;
 
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 
-public class MeshUpdateEvent {
+public class MeshUpdateEvent extends ViewerEvent {
     TmObjectMesh mesh;
     String oldValue;
     PROPERTY property;
     public enum PROPERTY { PATH, NAME};
 
-    public MeshUpdateEvent(TmObjectMesh mesh, String oldValue, PROPERTY property) {
+    public MeshUpdateEvent(Object source,
+                           TmObjectMesh mesh,
+                           String oldValue,
+                           PROPERTY property) {
+        super(source);
         this.mesh = mesh;
         this.oldValue = oldValue;
         this.property = property;

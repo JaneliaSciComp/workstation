@@ -103,7 +103,7 @@ public class DeleteVertexLinkAction extends AbstractAction {
             protected void hadSuccess() {
                 if (parentAnnotation!=null) {
                     TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(parentAnnotation);
-                    SelectionAnnotationEvent event = new SelectionAnnotationEvent(
+                    SelectionAnnotationEvent event = new SelectionAnnotationEvent(this,
                             Arrays.asList(new TmGeoAnnotation[]{parentAnnotation}),
                             true, false);
                     ViewerEventBus.postEvent(event);

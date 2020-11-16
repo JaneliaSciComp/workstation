@@ -374,7 +374,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
         ViewerEventBus.registerForEvents(this);
 
-        MovieEvent movieEvent = new MovieEvent();
+        MovieEvent movieEvent = new MovieEvent(this);
         ViewerEventBus.postEvent(movieEvent);
 
     }
@@ -459,7 +459,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         List<TmViewState> locationList = event.getAnimationSteps();
         // do a quick check to see if
         sceneWindow.setControlsVisibility(true);
-        ViewEvent initAnimation = new ViewEvent(locationList.get(0).getCameraFocusX(),
+        ViewEvent initAnimation = new ViewEvent(this,locationList.get(0).getCameraFocusX(),
                 locationList.get(0).getCameraFocusY(),
                 locationList.get(0).getCameraFocusZ(),
                 locationList.get(0).getZoomLevel(),
@@ -477,7 +477,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void initSampleLocation() {
         volumeCache.clearAllTiles();
         Vec3 voxelCenter = TmModelManager.getInstance().getVoxelCenter();
-        ViewEvent event = new ViewEvent(voxelCenter.getX(),
+        ViewEvent event = new ViewEvent(this,voxelCenter.getX(),
                 voxelCenter.getY(),voxelCenter.getZ(),5000,
                 null, false);
         setSampleLocation(event);
@@ -488,7 +488,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         if (tmWorkspace==null) {
             imageColorModel = new ImageColorModel();
             TmModelManager.getInstance().getCurrentView().setColorModel("default", imageColorModel);
-            ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(tmWorkspace, imageColorModel);
+            ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(this,
+                    tmWorkspace, imageColorModel);
             ViewerEventBus.postEvent(modelEvent);
             return;
         }
@@ -509,7 +510,8 @@ public final class NeuronTracerTopComponent extends TopComponent
             ModelTranslation.updateColorModel(userWorkspaceColorModel, imageColorModel);
         }
         TmModelManager.getInstance().getCurrentView().setColorModel("default", imageColorModel);
-        ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(tmWorkspace, imageColorModel);
+        ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(this,
+                tmWorkspace, imageColorModel);
         ViewerEventBus.postEvent(modelEvent);
     }
 
@@ -1116,7 +1118,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         currView.setCameraFocusY(voxelXyz.getY());
                         currView.setCameraFocusZ(voxelXyz.getZ());
                         currView.setZoomLevel(vantage.getSceneUnitsPerViewportHeight());
-                        ViewEvent syncViewEvent = new ViewEvent(vantage.getFocus()[0],
+                        ViewEvent syncViewEvent = new ViewEvent(this,vantage.getFocus()[0],
                                 vantage.getFocus()[1],vantage.getFocus()[2],
                                 vantage.getSceneUnitsPerViewportHeight(),
                                 null, false);
@@ -1571,7 +1573,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
                                 float[] vtxLocation = TmModelManager.getInstance().getLocationInMicrometers(vertex.getX(),
                                         vertex.getY(), vertex.getZ());
-                                ViewEvent event = new ViewEvent(vtxLocation[0],
+                                ViewEvent event = new ViewEvent(this,vtxLocation[0],
                                         vtxLocation[1],
                                         vtxLocation[2],
                                         300,
@@ -1672,7 +1674,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             TmModelManager.getInstance().getCurrentReviews().clearLoopedAnnotations();
 
-                            NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(Arrays.asList(indicatedNeuron));
+                            NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(this,
+                                    Arrays.asList(indicatedNeuron));
                             ViewerEventBus.postEvent(updateEvent);
                         }
                     };
@@ -1926,7 +1929,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
 
         // fire off notice for checkboxes, etc.
-        ViewerCloseEvent viewerCloseEvent = new ViewerCloseEvent(ViewerCloseEvent.VIEWER.HORTA);
+        ViewerCloseEvent viewerCloseEvent = new ViewerCloseEvent(this, ViewerCloseEvent.VIEWER.HORTA);
         ViewerEventBus.postEvent(viewerCloseEvent);
     }
 

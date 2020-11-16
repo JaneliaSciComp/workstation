@@ -6,7 +6,8 @@ public class SampleEvent extends ViewerEvent {
     private Long sampleId;
     private TmSample sample;
 
-    public SampleEvent(TmSample sample, Long sampleId) {
+    public SampleEvent(Object source, TmSample sample, Long sampleId) {
+        super(source);
         this.sampleId = sampleId;
         this.sample = sample;
     }

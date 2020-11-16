@@ -6,8 +6,9 @@ import java.util.Collection;
 
 public class NeuronOwnerChangedEvent extends NeuronUpdateEvent {
 
-    public NeuronOwnerChangedEvent(Collection<TmNeuronMetadata> neurons) {
-        super(neurons);
+    public NeuronOwnerChangedEvent(Object source,
+                                   Collection<TmNeuronMetadata> neurons) {
+        super(source, neurons);
     }
 }
 
