@@ -32,6 +32,7 @@ import javax.swing.event.MouseInputListener;
 
 import Jama.Matrix;
 import org.janelia.workstation.controller.model.DefaultNeuron;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.model.annotations.neuron.VertexCollectionWithNeuron;
 import org.janelia.workstation.controller.model.annotations.neuron.VertexWithNeuron;
 import org.janelia.geometry3d.ConstVector3;
@@ -491,6 +492,10 @@ public class TracingInteractor extends MouseAdapter
             float highlightColor[] = {1.0f, 1.0f, 0.6f, 0.5f}; // pale yellow and transparent
             float neuronColor[] = {1.0f, 0.0f, 1.0f, 1.0f};
             if (neuron != null) {
+                if (TmViewState.getColorForNeuron(neuron.getId())==null &&
+                        neuron.getColor()==null) {
+                    neuron.setColor(TmViewState.generateNewColor(neuron.getId()));
+                }
                 neuronColor = neuron.getColor().getColorComponents(neuronColor);
             }
             float highlightBlend = 0.75f;
@@ -613,6 +618,8 @@ public class TracingInteractor extends MouseAdapter
         if ( (cachedDragVertex != null) && (!TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) ) {
             assert(cachedDragVertex.getId() == cachedHighlightVertex.getId());
             // log.info("End drag vertex");
+            if (highlightHoverModel.getGeoAnnotationMap().isEmpty())
+                    return;
             TmGeoAnnotation hoverVertex = highlightHoverModel.getGeoAnnotationMap().values().iterator().next();
             float[] location = new float[]{hoverVertex.getX().floatValue(),
                     hoverVertex.getY().floatValue(), hoverVertex.getZ().floatValue()};

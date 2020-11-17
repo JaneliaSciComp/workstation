@@ -228,7 +228,7 @@ public class TmViewerManager implements GlobalViewerController {
                 nFragments += 1;
             }
             if (neuron.getColor() == null) {
-                neuron.setColor(TmViewState.getColorForNeuron(neuron.getId()));
+                neuron.setColor(TmViewState.generateNewColor(neuron.getId()));
             }
             for (TmGeoAnnotation ann : neuron.getGeoAnnotationMap().values()) {
                 if (ann.getRadius() == null) {

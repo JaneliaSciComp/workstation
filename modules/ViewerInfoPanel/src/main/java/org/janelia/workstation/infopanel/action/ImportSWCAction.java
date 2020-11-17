@@ -43,15 +43,14 @@ public class ImportSWCAction extends AbstractAction {
     private TmModelManager model;
     private NeuronManager neuronManager;
 
-    public ImportSWCAction(boolean neuronPerRoot, NeuronManager neuronManager,
-                           TmModelManager model) {
+    public ImportSWCAction(boolean neuronPerRoot) {
         this.neuronPerRoot = neuronPerRoot;
-        this.model = model;
-        this.neuronManager = neuronManager;
+        model = TmModelManager.getInstance();
+        neuronManager = NeuronManager.getInstance();
     }
 
-    public ImportSWCAction(NeuronManager neuronManager, TmModelManager  model) {
-        this(false, neuronManager, model);
+    public ImportSWCAction() {
+        this(false);
     }
 
     @Override

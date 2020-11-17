@@ -2385,6 +2385,9 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         while (addIter.hasNext()) {
             TmNeuronMetadata neuron = getNeuronFromNeuronID(addIter.next());
             if (neuron != null) {
+                if (neuron.getColor() == null) {
+                    neuron.setColor(TmViewState.generateNewColor(neuron.getId()));
+                }
                 addList.add(neuron);
             }
         }
