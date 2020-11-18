@@ -227,6 +227,18 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                 event.getItems(), true, true, true));
     }
 
+    @Subscribe
+    public void annotationSelected(SelectionAnnotationEvent event) {
+        TmGeoAnnotation annotation = (TmGeoAnnotation)event.getItems().iterator().next();
+        if (annotation != null) {
+            // selecting an annotation selects the neuron, too
+            TmNeuronMetadata neuron = getNeuronFromNeuronID(annotation.getNeuronId());
+            if (currentNeuron == null || !currentNeuron.getId().equals(neuron.getId())) {
+                fireNeuronSelected(neuron);
+            }
+        }
+    }
+
     // placeholder for any non listener methods that need to update neuron information
     // prior to listener methods
     public void updateNeuronFilter(TmNeuronMetadata neuronMeta, NeuronMessageConstants.MessageType remoteAction) {
