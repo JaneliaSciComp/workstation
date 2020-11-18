@@ -113,6 +113,7 @@ public class TmViewerManager implements GlobalViewerController {
             UnloadProjectEvent event = new UnloadProjectEvent(this,
                     TmModelManager.getInstance().getCurrentWorkspace(),
                     TmModelManager.getInstance().getCurrentSample(),isSample);
+            NeuronManager.getInstance().clearOutOldProject();
             ViewerEventBus.postEvent(event);
         }
 

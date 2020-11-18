@@ -7,6 +7,10 @@ import com.google.common.eventbus.Subscribe;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+
+import org.janelia.gltools.MeshActor;
+import org.janelia.horta.actors.TetVolumeActor;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.workstation.controller.model.annotations.neuron.VertexCollectionWithNeuron;
 import org.janelia.workstation.controller.model.annotations.neuron.VertexWithNeuron;
 import org.janelia.horta.NeuronTracerTopComponent;
@@ -134,7 +138,11 @@ public class HortaManager {
     public void workspaceClosed(UnloadProjectEvent event) {
         try {
             renderer.clearNeuronReconstructions();
-
+            TetVolumeActor.getInstance().clearAllBlocks();
+            List<MeshActor> meshActorList = renderer.getMeshActors();
+            for (MeshActor meshActor: meshActorList) {
+                renderer.removeMeshActor(meshActor);
+            }
             topComponent.redrawNow();
         } catch (Exception e) {
             FrameworkAccess.handleException(e);

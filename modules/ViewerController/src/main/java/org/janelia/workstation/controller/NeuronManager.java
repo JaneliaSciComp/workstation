@@ -2406,6 +2406,11 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         return applyFilter;
     }
 
+    public void clearOutOldProject() {
+        applyFilter = false;
+        neuronFilter = null;
+    }
+
     public void setNeuronFiltering(boolean filtering) {
         applyFilter = filtering;
         try {

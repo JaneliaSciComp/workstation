@@ -145,6 +145,14 @@ public class NeuronMPRenderer extends MultipassRenderer implements NeuronUpdateL
         setIntensityBufferDirty();
     }
 
+    public void clearMeshActors() {
+        for (GL3Actor actor: opaqueRenderPass.getActors()) {
+            obsoleteGLResources.add(actor);
+        }
+        opaqueRenderPass.clearActors();
+        setIntensityBufferDirty();
+    }
+
     public void markAsDirty(Long neuronId) {
         allSwcActor.markAsDirty(neuronId);
     }
