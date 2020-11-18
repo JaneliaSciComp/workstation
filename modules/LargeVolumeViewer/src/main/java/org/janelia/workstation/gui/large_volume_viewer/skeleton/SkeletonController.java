@@ -359,6 +359,8 @@ public class SkeletonController implements NextParentListener {
         }
         if (nextParent != null) {
             setNextParent(nextParent.getId());
+        } else {
+            clearNextParent();
         }
         skeletonChanged();
     }
@@ -410,6 +412,13 @@ public class SkeletonController implements NextParentListener {
     public void setNextParent(Anchor parent) {
         for (SkeletonActor actor : actors) {
             actor.getModel().setNextParent(parent);
+        }
+        fireComponentUpdate();
+    }
+
+    public void clearNextParent() {
+        for (SkeletonActor actor : actors) {
+            actor.getModel().setNextParent(null);
         }
         fireComponentUpdate();
     }
