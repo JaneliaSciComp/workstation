@@ -47,16 +47,16 @@ public class DataSetDialog extends ModalDialog {
     };
 
     private static final String[][] VALID_GRAMMAR_PATHS = {
-            {"Dickson Lab","/misc/local/pipeline/grammar/dickson.gra"},
-            {"FlyLight Polarity","/misc/local/pipeline/grammar/flylightpolarity.gra"},
-            {"FlyLight FLIP","/misc/local/pipeline/grammar/flylightflip.gra"},
-            {"FlyLight Split Screen Review","/misc/local/pipeline/grammar/split_screen_review.gra"},
-            {"Project Technical Resources","/misc/local/pipeline/grammar/projtechres.gra"},
-            {"FlyLight Test","/misc/local/pipeline/grammar/flylighttest.gra"},
-            {"FlyLight Polarity","/misc/local/pipeline/grammar/flylightpolarity.gra "},
-            {"Truman Lab Larval Split Screen","/misc/local/pipeline/grammar/trumanj_larval_ss.gra"},
-            {"Lee Lab Pan Lineage","/misc/local/pipeline/grammar/leet_pan_lineage.gra"},
-            {"Lee Lab Central Brain Lineage","/misc/local/pipeline/grammar/leet_central_brain_lineage.gra"},
+            {"Dickson Lab","/misc/sc/pipeline/grammar/dickson.gra"},
+            {"FlyLight Polarity","/misc/sc/pipeline/grammar/flylightpolarity.gra"},
+            {"FlyLight FLIP","/misc/sc/pipeline/grammar/flylightflip.gra"},
+            {"FlyLight Split Screen Review","/misc/sc/pipeline/grammar/split_screen_review.gra"},
+            {"Project Technical Resources","/misc/sc/pipeline/grammar/projtechres.gra"},
+            {"FlyLight Test","/misc/sc/pipeline/grammar/flylighttest.gra"},
+            {"FlyLight Polarity","/misc/sc/pipeline/grammar/flylightpolarity.gra "},
+            {"Truman Lab Larval Split Screen","/misc/sc/pipeline/grammar/trumanj_larval_ss.gra"},
+            {"Lee Lab Pan Lineage","/misc/sc/pipeline/grammar/leet_pan_lineage.gra"},
+            {"Lee Lab Central Brain Lineage","/misc/sc/pipeline/grammar/leet_central_brain_lineage.gra"},
     };
 
     DocumentListener dataSetListener = new DocumentListener() {
