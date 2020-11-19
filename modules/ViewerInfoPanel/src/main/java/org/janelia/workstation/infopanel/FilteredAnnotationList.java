@@ -1,5 +1,6 @@
 package org.janelia.workstation.infopanel;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
@@ -32,17 +33,14 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableRowSorter;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
 
 /**
  * this UI element displays a list of annotations according to a
@@ -159,16 +157,37 @@ public class FilteredAnnotationList extends JPanel {
         // set the current filter late, after both the filters and UI are
         //  set up
         setCurrentFilter(filters.get("default"));
+
+        // listen for outside annotation selection events
+        ViewerEventBus.registerForEvents(this);
+    }
+
+    @Subscribe
+    public void annotationSelected(SelectionAnnotationEvent event) {
+        TmGeoAnnotation annotation = (TmGeoAnnotation)event.getItems().iterator().next();
+        if (annotation != null) {
+            selectAnnotation(annotation);
+        }
     }
 
     public void selectAnnotation (TmGeoAnnotation ann) {
         int numAnnotations = model.getRowCount();
+        boolean success = false;
         for (int i=0; i<numAnnotations; i++) {
             InterestingAnnotation annAtRow = model.getAnnotationAtRow(i);
-            if (annAtRow.getAnnotationID()==ann.getId()) {
-                filteredTable.setRowSelectionInterval(i, i);
+            if (annAtRow.getAnnotationID().equals(ann.getId())) {
+                int viewRow = filteredTable.convertRowIndexToView(i);
+                filteredTable.setRowSelectionInterval(viewRow, viewRow);
+                // scroll to it
+                Rectangle rect = filteredTable.getCellRect(viewRow, 0, true);
+                filteredTable.scrollRectToVisible(rect);
+                success = true;
                 break;
             }
+        }
+        if (!success) {
+            // deselect
+            filteredTable.clearSelection();
         }
     }
 

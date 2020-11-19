@@ -220,7 +220,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         currentFilteredNeuronList = neuronList;
     }
 
-    // this method sets the current neuron *and* updates the UI; null neuron means deselect
     @Subscribe
     public void selectNeuronInDataInspector(SelectionNeuronsEvent event) {
         Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(null,
