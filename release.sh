@@ -16,7 +16,7 @@ fi
 CURR_BRANCH=`git rev-parse --abbrev-ref HEAD`
 if [ "$CURR_BRANCH" != "master" ]; then
     echo "You must have the master branch checked out in order to run this script."
-    exit 1
+    #exit 1
 fi
 
 UNPUSHED=`git log origin/master..master`
