@@ -176,6 +176,7 @@ public class HortaManager {
         for (NeuronUpdateListener listener: neuronUpdateListeners) {
             listener.neuronsUpdated(event.getNeurons());
         }
+        topComponent.redrawNow();
     }
 
     @Subscribe
@@ -183,6 +184,7 @@ public class HortaManager {
         for (NeuronUpdateListener listener: neuronUpdateListeners) {
             listener.neuronsUpdated(event.getNeurons());
         }
+        topComponent.redrawNow();
     }
 
     @Subscribe
@@ -190,12 +192,14 @@ public class HortaManager {
         for (NeuronUpdateListener listener: neuronUpdateListeners) {
             listener.neuronsUpdated(event.getNeurons());
         }
+        topComponent.redrawNow();
     }
     @Subscribe
     private void neuronCreated(NeuronCreateEvent event) {
         for (NeuronCreationListener listener: neuronCreationListeners) {
             listener.neuronsCreated(event.getNeurons());
         }
+        topComponent.redrawNow();
     }
 
     @Subscribe
@@ -203,6 +207,7 @@ public class HortaManager {
         for (NeuronDeletionListener listener: neuronDeletionListeners) {
             listener.neuronsDeleted(event.getNeurons());
         }
+        topComponent.redrawNow();
     }
 
     @Subscribe
@@ -215,6 +220,7 @@ public class HortaManager {
         for (NeuronVertexCreationListener listener: vertexCreationListeners) {
             listener.neuronVertexCreated(vn);
         }
+        topComponent.redrawNow();
     }
 
 
@@ -228,6 +234,7 @@ public class HortaManager {
         for (NeuronVertexDeletionListener listener: vertexDeletionListeners) {
             listener.neuronVertexesDeleted(vn);
         }
+        topComponent.redrawNow();
     }
 
     @Subscribe
@@ -239,6 +246,7 @@ public class HortaManager {
         for (NeuronSelectionListener listener: neuronSelectionListeners) {
             listener.vertexSelected(annotation);
         }
+        topComponent.redrawNow();
     }
 
     @Subscribe
@@ -250,6 +258,7 @@ public class HortaManager {
         for (NeuronSelectionListener listener: neuronSelectionListeners) {
             listener.neuronSelected(neuron);
         }
+        topComponent.redrawNow();
     }
 
     @Subscribe
@@ -262,6 +271,7 @@ public class HortaManager {
         for (NeuronVertexUpdateListener listener: vertexUpdateListeners) {
             listener.neuronVertexUpdated(vn);
         }
+        topComponent.redrawNow();
     }
 
     @Subscribe
@@ -269,6 +279,7 @@ public class HortaManager {
         for (NeuronWorkspaceChangeListener listener: neuronWorkspaceChangeListeners) {
             listener.workspaceChanged(event.getWorkspace());
         }
+        topComponent.redrawNow();
     }
 
     TmWorkspace getWorkspace() {

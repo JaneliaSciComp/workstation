@@ -688,6 +688,9 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             // Update value in database.
             synchronized(neuron) {
                 neuronModel.saveNeuronData(neuron);
+                NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(this,Arrays.asList(
+                        new TmNeuronMetadata[]{getNeuronFromNeuronID(neuron.getId())}));
+                TmModelManager.getInstance().getSpatialIndexManager().neuronUpdated(updateEvent);
             }
 
             SwingUtilities.invokeLater(new Runnable() {

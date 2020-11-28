@@ -651,10 +651,7 @@ public class TracingInteractor extends MouseAdapter
                     anchor.getId(),
                     destination);
             clearParentVertex();
-            updateActorListener.neuronVertexUpdated(new VertexWithNeuron(
-                    highlightHoverModel.getGeoAnnotationMap().get(0), highlightHoverModel));
-            updateActorListener.neuronVertexUpdated(new VertexWithNeuron(
-                    anchor, neuron));
+            selectParentVertex(anchor, neuron);
         } catch (Exception error) {
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "User drag-moved anchor in Horta", "Failed to move neuron anchor", JOptionPane.INFORMATION_MESSAGE);

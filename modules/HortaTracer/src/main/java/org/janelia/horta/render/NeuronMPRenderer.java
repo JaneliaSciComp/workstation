@@ -495,6 +495,7 @@ public class NeuronMPRenderer extends MultipassRenderer implements NeuronUpdateL
             markAsDirty(neuron.getId());
         }
         allSwcActor.checkForChanges();
+
     }
 
 }
