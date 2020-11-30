@@ -282,6 +282,14 @@ public class TiledMicroscopeDomainMgr {
         }
         return updatedMetadata;
     }
+
+    public TmNeuronMetadata createWithId(TmNeuronMetadata neuronMetadata) throws Exception {
+        LOG.debug("save({})", neuronMetadata);
+        TmNeuronMetadata savedMetadata;
+        savedMetadata = client.create(neuronMetadata);
+        getModel().notifyDomainObjectCreated(savedMetadata);
+        return savedMetadata;
+    }
     
     public TmNeuronMetadata save(TmNeuronMetadata neuronMetadata) throws Exception {
         LOG.debug("save({})", neuronMetadata);

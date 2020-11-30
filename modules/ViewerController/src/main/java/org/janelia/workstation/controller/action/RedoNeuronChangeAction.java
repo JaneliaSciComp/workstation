@@ -54,6 +54,13 @@ public class RedoNeuronChangeAction extends AbstractAction {
                     ObjectMapper objectMapper = new ObjectMapper();
 
                     for (Long neuronId : neuronMap.keySet()) {
+                        if (event.getType()== TmHistoricalEvent.EVENT_TYPE.NEURON_DELETE) {
+                            TmNeuronMetadata targetDelete = NeuronManager.getInstance().
+                                    getNeuronFromNeuronID(neuronId);
+                            if (targetDelete!=null)
+                                NeuronManager.getInstance().deleteNeuron(targetDelete);
+                            continue;
+                        }
                         TmNeuronMetadata restoredNeuron = objectMapper.readValue(
                                 neuronMap.get(neuronId), TmNeuronMetadata.class);
                         restoredNeuron.initNeuronData();

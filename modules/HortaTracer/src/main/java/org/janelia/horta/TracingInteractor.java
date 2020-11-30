@@ -544,7 +544,7 @@ public class TracingInteractor extends MouseAdapter
             return; // not allowed to move that vertex
         if (! SwingUtilities.isLeftMouseButton(event))
             return; // left button drag only
-        if (!checkOwnership(NeuronManager.getInstance().getNeuronFromNeuronID(cachedDragVertex.getNeuronId()))) {
+        if (!TmModelManager.checkOwnership(NeuronManager.getInstance().getNeuronFromNeuronID(cachedDragVertex.getNeuronId()))) {
             return;
         }
 
@@ -634,7 +634,7 @@ public class TracingInteractor extends MouseAdapter
     
     private boolean moveAnchor(TmNeuronMetadata neuron, TmGeoAnnotation anchor, ConstVector3 newLocation)
     {
-        if (!checkOwnership(neuron)) {
+        if (!TmModelManager.checkOwnership(neuron)) {
             JOptionPane.showMessageDialog(
                 volumeProjection.getMouseableComponent(),
                 "Could not gain ownership of neuron " + neuron.getName() + " owned by " + neuron.getOwnerKey(),
@@ -978,7 +978,8 @@ public class TracingInteractor extends MouseAdapter
             long beginAppendTime = System.nanoTime();
             if (! canAppendVertex())
                 return false;
-            if (!checkOwnership(NeuronManager.getInstance().getNeuronFromNeuronID(parentVertex.getNeuronId()))) {
+            if (!TmModelManager.checkOwnership(
+                    NeuronManager.getInstance().getNeuronFromNeuronID(parentVertex.getNeuronId()))) {
                 return false;
             }
             try {
@@ -1078,7 +1079,7 @@ public class TracingInteractor extends MouseAdapter
         public boolean splitNeurite() {
             if (!canSplitNeurite())
                 return false;
-            if (!checkOwnership(NeuronManager.getInstance().getNeuronFromNeuronID(hoveredVertex.getNeuronId()))) {
+            if (!TmModelManager.checkOwnership(NeuronManager.getInstance().getNeuronFromNeuronID(hoveredVertex.getNeuronId()))) {
                 return false;
             }
 
@@ -1135,17 +1136,20 @@ public class TracingInteractor extends MouseAdapter
                 }
                 return false;
             }
-            if (!checkOwnership(NeuronManager.getInstance().getNeuronFromNeuronID(hoveredVertex.getNeuronId()))) {
+            if (!TmModelManager.checkOwnership(
+                    NeuronManager.getInstance().getNeuronFromNeuronID(hoveredVertex.getNeuronId()))) {
                 return false;
             }       
-            if (!checkOwnership(NeuronManager.getInstance().getNeuronFromNeuronID(parentVertex.getNeuronId()))) {
+            if (!TmModelManager.checkOwnership(
+                    NeuronManager.getInstance().getNeuronFromNeuronID(parentVertex.getNeuronId()))) {
                 return false;
             }
 
             try {
-                NeuronManager.getInstance().mergeNeurite(parentNeuron.getId(), parentVertex.getId(),
-                        hoveredNeuron.getId(), hoveredVertex.getId());
-                selectParent();
+                NeuronManager.getInstance().mergeNeurite(
+                        hoveredNeuron.getId(), hoveredVertex.getId(),
+                        parentNeuron.getId(), parentVertex.getId());
+                //selectParent();
             } catch (Exception error) {
                 JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                         "Merge 2 neurites in Horta", "Failed to merge neurites", JOptionPane.INFORMATION_MESSAGE);
@@ -1168,7 +1172,7 @@ public class TracingInteractor extends MouseAdapter
         public void recolorNeuron() {
             if (! canRecolorNeuron())
                 return;
-            if (!checkOwnership(hoveredNeuron)) {
+            if (!TmModelManager.checkOwnership(hoveredNeuron)) {
                 return;
             }  
           /*  new RecolorNeuronAction(
@@ -1209,7 +1213,7 @@ public class TracingInteractor extends MouseAdapter
             if (! canUpdateAnchorRadius()) {
                 return false;
             }
-            if (!checkOwnership(hoveredNeuron)) {
+            if (!TmModelManager.checkOwnership(hoveredNeuron)) {
                 return false;
             }
             RadiusDialog radiusDialog = new RadiusDialog(hoveredNeuron, hoveredVertex);
@@ -1243,50 +1247,6 @@ public class TracingInteractor extends MouseAdapter
         TmNeuronMetadata getHighlightedNeuron() {
             return hoveredNeuron;   
         }
-    }
-    
-     public boolean checkOwnership(TmNeuronMetadata neuron) {
-        // create a future to hopefully 
-         if (neuron.getOwnerKey().equals(ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim())) {
-             // PATCH change owner to user and save neuron
-             neuron.setOwnerKey(AccessManager.getSubjectKey());
-            // defaultWorkspace.changeNeuronOwnership(neuron.getNeuronId());
-
-
-            /*CompletableFuture<Boolean> future = defaultWorkspace.changeNeuronOwnership(neuron.getNeuronId());
-            if (future==null)
-                return false;
-            try {
-                Boolean ownershipDecision = future.get(5, TimeUnit.SECONDS);
-                return ownershipDecision.booleanValue();
-            } catch (TimeoutException e) {
-                String errorMessage = "Request for ownership of System-owned neuron " + neuron.getName() +
-                        " apparently timed out. Check to see if operation actually succeeded.";
-                StartMessagingDiagnosticsCommand cmd = new StartMessagingDiagnosticsCommand(neuron, defaultWorkspace);
-                cmd.execute();
-            } catch (Exception e) {
-                String errorMessage = "Request for ownership of neuron " + neuron.getName() +
-                        "had an unspecified roundtrip failure.";
-                log.error(errorMessage, e);
-                JOptionPane.showMessageDialog(
-                        volumeProjection.getMouseableComponent(),
-                        errorMessage,
-                        "Failed to request neuron ownership",
-                        JOptionPane.WARNING_MESSAGE);
-            }*/
-
-             return true;
-         }
-        if (!neuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
-            JOptionPane.showMessageDialog(
-                    volumeProjection.getMouseableComponent(),
-                    "Neuron " + neuron.getName() + " is owned by " + neuron.getOwnerKey() +
-                            ". Ask them for ownership if you'd like to make changes.",
-                    "Neuron not owned",
-                    JOptionPane.WARNING_MESSAGE);
-            return false;
-        }
-        return true;
     }
     
     class RadiusDialog extends JOptionPane 

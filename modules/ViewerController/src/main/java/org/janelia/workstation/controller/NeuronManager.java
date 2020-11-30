@@ -440,7 +440,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     /**
      * change the ownership of the input neuron
      */
-    public void changeNeuronOwner(List<TmNeuronMetadata> neuronList, Subject newOwner) throws Exception {
+    public synchronized void changeNeuronOwner(List<TmNeuronMetadata> neuronList, Subject newOwner) throws Exception {
         for (TmNeuronMetadata neuron: neuronList) {
             Long neuronID = neuron.getId();
 
@@ -745,8 +745,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public synchronized void restoreNeuron (TmNeuronMetadata restoredNeuron) throws Exception {
         if (neuronModel.getNeuronById(restoredNeuron.getId())==null) {
-            restoredNeuron.setId(null);
-            restoredNeuron = tmDomainMgr.save(restoredNeuron);
+            restoredNeuron = tmDomainMgr.createWithId(restoredNeuron);
             restoredNeuron.initNeuronData();
             neuronModel.addNeuron(restoredNeuron);
             if (applyFilter) {
@@ -896,14 +895,21 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
         // create backups of two neurons for undo
         TmHistory historian = TmModelManager.getInstance().getNeuronHistory();
-        TmHistoricalEvent sourceBackup = createSerialization(sourceNeuron);
-        sourceBackup.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
-        sourceBackup.setMultiAction(true);
-        historian.addHistoricalEvent(sourceBackup);
-        TmHistoricalEvent targetBackup = createSerialization(targetNeuron);
-        targetBackup.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
-        targetBackup.setMultiAction(true);
-        historian.addHistoricalEvent(targetBackup);
+        List<TmNeuronMetadata> neuronList = new ArrayList<>();
+        neuronList.add(sourceNeuron);
+        neuronList.add(targetNeuron);
+        TmHistoricalEvent backupNeurons = createSerialization(neuronList);
+        backupNeurons.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+        historian.addHistoricalEvent(backupNeurons);
+
+        TmHistoricalEvent deleteSourceHistory = new TmHistoricalEvent();
+        deleteSourceHistory.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_DELETE);
+        Map<Long, byte[]> map = new HashMap<>();
+        map.put(sourceNeuron.getId(), null);
+        deleteSourceHistory.setNeurons(map);
+        deleteSourceHistory.setMultiAction(true);
+        historian.addHistoricalEvent(deleteSourceHistory);
+
         historian.setRecordHistory(false);
 
         // reroot source neurite to source ann
@@ -948,7 +954,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         //  this is all needed to get around the fact that moving annotations
         //      from one neuron to another isn't atomic like it should be
         neuronModel.saveNeuronData(sourceNeuron);
-        targetNeuron.setColor(sourceNeuron.getColor());
         neuronModel.saveNeuronData(targetNeuron);
 
         // trace new path; must be done after neuron save, so the path tracer
@@ -997,8 +1002,10 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                     fireNeuronChanged(targetNeuron);
                     historian.setRecordHistory(true);
                     try {
-                        TmHistoricalEvent targetFinal = createSerialization(targetNeuron);
+                        TmHistoricalEvent targetFinal = createSerialization(
+                                Arrays.asList(new TmNeuronMetadata[]{targetNeuron}));
                         targetFinal.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+                        targetFinal.setMultiAction(true);
                         historian.addHistoricalEvent(targetFinal);
                     } catch (Exception e) {
                         FrameworkAccess.handleException(e);
@@ -1017,14 +1024,14 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     }
 
-    private TmHistoricalEvent createSerialization (TmNeuronMetadata neuron) throws Exception {
+    private TmHistoricalEvent createSerialization (List<TmNeuronMetadata> neuronList) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
-        byte[] neuronData = mapper.writeValueAsBytes(neuron);
-
-        // add historical event
         TmHistoricalEvent event = new TmHistoricalEvent();
-        Map<Long,byte[]> map = new HashMap<>();
-        map.put(neuron.getId(), neuronData);
+        Map<Long, byte[]> map = new HashMap<>();
+        for (TmNeuronMetadata neuron: neuronList) {
+            byte[] neuronData = mapper.writeValueAsBytes(neuron);
+            map.put(neuron.getId(), neuronData);
+        }
         event.setNeurons(map);
         event.setTimestamp(new Date());
         return event;
@@ -1067,14 +1074,12 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         final TmNeuronMetadata sourceNeuron = getNeuronFromNeuronID(annotation.getNeuronId());
 
         TmHistory historian = TmModelManager.getInstance().getNeuronHistory();
-        TmHistoricalEvent sourceBackup = createSerialization(sourceNeuron);
-        sourceBackup.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
-        sourceBackup.setMultiAction(true);
-        historian.addHistoricalEvent(sourceBackup);
-        TmHistoricalEvent targetBackup = createSerialization(destNeuron);
-        targetBackup.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
-        targetBackup.setMultiAction(true);
-        historian.addHistoricalEvent(targetBackup);
+        List<TmNeuronMetadata> neuronList = new ArrayList<>();
+        neuronList.add(sourceNeuron);
+        neuronList.add(destNeuron);
+        TmHistoricalEvent backupNeurons = createSerialization(neuronList);
+        backupNeurons.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+        historian.addHistoricalEvent(backupNeurons);
         historian.setRecordHistory(false);
         neuronModel.moveNeurite(annotation, sourceNeuron, destNeuron);
         neuronModel.saveNeuronData(sourceNeuron);
@@ -1082,12 +1087,9 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
         historian.setRecordHistory(true);
         try {
-            TmHistoricalEvent sourceFinal = createSerialization(sourceNeuron);
-            sourceFinal.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
-            historian.addHistoricalEvent(sourceFinal);
-            TmHistoricalEvent destFinal = createSerialization(destNeuron);
-            destFinal.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
-            historian.addHistoricalEvent(destFinal);
+            TmHistoricalEvent finalHistory = createSerialization(neuronList);
+            finalHistory.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+            historian.addHistoricalEvent(finalHistory);
         } catch (Exception e) {
             FrameworkAccess.handleException(e);
         }

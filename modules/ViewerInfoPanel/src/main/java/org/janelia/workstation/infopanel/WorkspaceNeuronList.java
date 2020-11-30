@@ -738,7 +738,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     /**
-     * update the table neuron with a new version of an
+     * update the table neuron with a new vernon of an
      * existing neuron (replaces in place)
      */
     public void updateModel(TmNeuronMetadata neuron) {
@@ -1005,6 +1005,8 @@ class NeuronTableModel extends AbstractTableModel {
     }
     
     public TmNeuronMetadata getNeuronAtRow(int row) {
+        if (row>=getCurrentNeuronList().size())
+            return null;
         return getCurrentNeuronList().get(row);
     }
 

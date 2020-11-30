@@ -46,6 +46,8 @@ public class TmHistory {
             return null;
         List<TmHistoricalEvent> actions = new ArrayList<>();
         if (undoMode) {
+            if (undoStep==0)
+                return null;
             if (undoStep>0)
                 undoStep--;
         } else {
@@ -60,10 +62,7 @@ public class TmHistory {
             undoStep--;
         }
         if (range!=undoStep) {
-            int startRange = undoStep;
-            if (startRange>0)
-                startRange++;
-            actions.addAll(historyOperations.subList(startRange, range+1));
+            actions.addAll(historyOperations.subList(undoStep, range+1));
         } else {
             actions.add(historyOperations.get(undoStep));
         }
@@ -80,14 +79,13 @@ public class TmHistory {
             undoStep++;
         }
 
+        int range = undoStep;
         while (historyOperations.get(undoStep).isMultiAction() && undoStep<historyOperations.size()-1) {
             undoStep++;
         }
-
         List<TmHistoricalEvent> actions = new ArrayList<>();
-        int range = undoStep;
         if (range!=undoStep) {
-            actions.addAll(historyOperations.subList(undoStep+1, range+1));
+            actions.addAll(historyOperations.subList(range, undoStep+1));
         } else {
             actions.add(historyOperations.get(undoStep));
         }
