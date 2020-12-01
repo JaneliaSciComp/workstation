@@ -59,6 +59,7 @@ public class RefreshHandler implements MessageHandler {
     }
 
     private RefreshHandler() {
+        modelManager = TmModelManager.getInstance();
     }
 
     public void setModel(TmModelManager modelManager) {

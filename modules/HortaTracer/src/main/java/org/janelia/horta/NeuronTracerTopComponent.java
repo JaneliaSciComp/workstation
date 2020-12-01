@@ -361,8 +361,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         // Default to compressed voxels, per user request February 2016
         setCubifyVoxels(true);
 
-        loadStartupPreferences();
-
         //metaWorksopace.notifyObservers();
         playback = new PlayReviewManager(sceneWindow, this, neuronTraceLoader);
         if (TmModelManager.getInstance().getCurrentSample()==null)
@@ -376,6 +374,8 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         MovieEvent movieEvent = new MovieEvent(this);
         ViewerEventBus.postEvent(movieEvent);
+
+        loadStartupPreferences();
 
     }
 
@@ -829,17 +829,20 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     private ImageColorModel imageColorModel = new ImageColorModel(65535, 3);
 
-    private void loadStartupPreferences() {
+    public void loadStartupPreferences() {
         Preferences prefs = NbPreferences.forModule(getClass());
 
         // Load camera state
         Vantage vantage = sceneWindow.getVantage();
         vantage.setConstrainedToUpDirection(prefs.getBoolean("dorsalIsUp", vantage.isConstrainedToUpDirection()));
-        vantage.setSceneUnitsPerViewportHeight(prefs.getFloat("zoom", vantage.getSceneUnitsPerViewportHeight()));
-        float focusX = prefs.getFloat("focusXvantage.getFocus()[2]", vantage.getFocus()[0]);
-        float focusY = prefs.getFloat("focusY", vantage.getFocus()[1]);
-        float focusZ = prefs.getFloat("focusZ", vantage.getFocus()[2]);
-        vantage.setFocus(focusX, focusY, focusZ);
+
+        ViewEvent event = new ViewEvent(this,
+                prefs.getFloat("focusX", vantage.getFocus()[0]),
+                prefs.getFloat("focusY", vantage.getFocus()[1]),
+                prefs.getFloat("focusZ", vantage.getFocus()[2]),
+                prefs.getFloat("zoom", vantage.getSceneUnitsPerViewportHeight()),
+                null, false);
+        setSampleLocation(event);
         Viewport viewport = sceneWindow.getCamera().getViewport();
         viewport.setzNearRelative(prefs.getFloat("slabNear", viewport.getzNearRelative()));
         viewport.setzFarRelative(prefs.getFloat("slabFar", viewport.getzFarRelative()));

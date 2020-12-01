@@ -165,6 +165,7 @@ public class HortaManager {
                 topComponent.initColorModel();
                 topComponent.initMeshes();
             }
+            topComponent.loadStartupPreferences();
             topComponent.redrawNow();
         } catch (Exception e) {
             FrameworkAccess.handleException("Problem loading workspace into Horta", e);
