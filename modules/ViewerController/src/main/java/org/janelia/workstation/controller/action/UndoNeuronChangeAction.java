@@ -68,7 +68,6 @@ public class UndoNeuronChangeAction extends AbstractAction {
                     for (Long neuronId : neuronMap.keySet()) {
                         TmNeuronMetadata restoredNeuron = objectMapper.readValue(
                                 neuronMap.get(neuronId), TmNeuronMetadata.class);
-                        Long oldId = restoredNeuron.getId();
                         restoredNeuron.initNeuronData();
                         NeuronManager.getInstance().restoreNeuron(restoredNeuron);
                         // since we can't force create with ids, backfill id to event for future undo

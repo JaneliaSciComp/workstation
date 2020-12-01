@@ -36,7 +36,11 @@ public class NeuronHideOthersAction extends EditAction {
     public void actionPerformed(ActionEvent e) {
         // hide all others except for this neuron
         Collection<TmNeuronMetadata> neuronList = NeuronManager.getInstance().getNeuronList();
+        TmNeuronMetadata currentNeuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
         for (TmNeuronMetadata neuron: neuronList) {
+            if (currentNeuron!=null && neuron.getId().equals(currentNeuron.getId())) {
+                continue;
+            }
             TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
         }
         NeuronHideEvent neuronHideEvent = new NeuronHideEvent(this,

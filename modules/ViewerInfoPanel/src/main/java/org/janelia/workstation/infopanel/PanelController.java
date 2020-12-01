@@ -94,8 +94,6 @@ public class PanelController {
         for (TmNeuronMetadata neuron : neurons) {
             wsNeuronList.addNeuronToModel(neuron);
         }
-        TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
-        wsNeuronList.loadWorkspace(workspace);
     }
 
     @Subscribe
