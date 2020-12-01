@@ -103,7 +103,7 @@ public abstract class DomainObjectEditorPanel<P extends DomainObject, T> extends
                     getResultsPanel().getViewer().select(selected, true, true, false, true);
                 }
             }
-            success.call();
+            if (success != null) success.call();
             return null;
         };
                 
