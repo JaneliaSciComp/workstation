@@ -283,6 +283,17 @@ public class HortaManager {
         topComponent.redrawNow();
     }
 
+    @Subscribe
+    private void spatialFilterUpdated(NeuronSpatialFilterUpdateEvent event) {
+        renderer.clearNeuronReconstructions();
+
+        if (TmModelManager.getInstance().getCurrentWorkspace() != null) {
+            for (TmNeuronMetadata neuron : NeuronManager.getInstance().getNeuronList()) {
+                renderer.addNeuronActors(neuron);
+            }
+        }
+    }
+
     TmWorkspace getWorkspace() {
         return workspace;
     }

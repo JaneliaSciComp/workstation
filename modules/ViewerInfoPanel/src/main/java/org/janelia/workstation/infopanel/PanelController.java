@@ -161,6 +161,11 @@ public class PanelController {
     @Subscribe
     public void neuronSpatialFilterUpdated(NeuronSpatialFilterUpdateEvent spatialEvent) {
         wsNeuronList.updateNeuronSpatialFilter(spatialEvent.isEnabled(), spatialEvent.getDescription());
+        TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+        annotationPanel.loadWorkspace(workspace);
+        filteredAnnotationList.loadWorkspace(workspace);
+        wsNeuronList.loadWorkspace(workspace);
+        wsInfoPanel.loadWorkspace(workspace);
     }
 
     @Subscribe

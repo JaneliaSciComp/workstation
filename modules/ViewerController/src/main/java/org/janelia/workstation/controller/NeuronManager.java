@@ -2326,15 +2326,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         ViewerEventBus.postEvent(deleteNeuronsEvent);
     }
 
-
-    public void fireSpatialIndexReady(TmWorkspace workspace) {
-// not sure if I need this anymore
-    }
-
-    void fireNeuronSpatialFilterUpdated(boolean enabled, NeuronSpatialFilter filter) {
-
-    }
-
     public void fireNeuronCreated(TmNeuronMetadata neuron) {
         NeuronCreateEvent annotationEvent = new NeuronCreateEvent(this,
                 Arrays.asList(new TmNeuronMetadata[]{neuron}));
@@ -2429,13 +2420,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public void setNeuronFiltering(boolean filtering) {
         applyFilter = filtering;
-        try {
-           // fireWorkspaceLoaded(currentWorkspace);
-            fireSpatialIndexReady(currentWorkspace);
-        } catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
-       // fireNeuronSpatialFilterUpdated(applyFilter, getFilterStrategy());
     }
 
     public NeuronSpatialFilter getFilterStrategy() {

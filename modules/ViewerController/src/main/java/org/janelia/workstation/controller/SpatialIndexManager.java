@@ -94,6 +94,12 @@ public class SpatialIndexManager {
     }
 
     @Subscribe
+    public void neuronSpatialFilterUpdated(NeuronSpatialFilterUpdateEvent event) {
+        spatialIndex.clear();
+        spatialIndex.rebuildIndex(NeuronManager.getInstance().getNeuronList());
+    }
+
+    @Subscribe
     public void projectClosed(UnloadProjectEvent event) {
         spatialIndex.clear();
     }

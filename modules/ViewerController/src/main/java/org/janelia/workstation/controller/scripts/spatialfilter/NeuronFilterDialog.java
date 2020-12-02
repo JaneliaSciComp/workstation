@@ -11,6 +11,7 @@ import javax.swing.event.DocumentListener;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.NeuronSpatialFilterUpdateEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.slf4j.Logger;
@@ -253,6 +254,12 @@ public class NeuronFilterDialog extends ModalDialog {
     
     private boolean update() throws Exception {
         // set the filter on/off in the model and set the strategy/options
+        if (enableFiltering.isSelected()) {
+            annModel.setFilterStrategy(currentFilter);
+            annModel.setNeuronFiltering(true);
+        } else {
+            annModel.setNeuronFiltering(false);
+        }
         NeuronSpatialFilterUpdateEvent event = new NeuronSpatialFilterUpdateEvent(this,
                 enableFiltering.isSelected(),
                 currentFilter,(String)strategySelection.getSelectedItem());

@@ -153,6 +153,12 @@ public class SkeletonController implements NextParentListener {
         clearAnchors();
     }
 
+    @Subscribe
+    public void neuronSpatialFilterUpdated(NeuronSpatialFilterUpdateEvent event) {
+        clearAnchors();
+        loadWorkspaceNeurons(TmModelManager.getInstance().getCurrentWorkspace());
+    }
+
     // -------------------- neuron-level events
     @Subscribe
     public void neuronCreated(NeuronCreateEvent event) {
