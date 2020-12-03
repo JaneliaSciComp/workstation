@@ -53,7 +53,6 @@ public class DataSetDialog extends ModalDialog {
             {"FlyLight Split Screen Review","/misc/sc/pipeline/grammar/split_screen_review.gra"},
             {"Project Technical Resources","/misc/sc/pipeline/grammar/projtechres.gra"},
             {"FlyLight Test","/misc/sc/pipeline/grammar/flylighttest.gra"},
-            {"FlyLight Polarity","/misc/sc/pipeline/grammar/flylightpolarity.gra "},
             {"Truman Lab Larval Split Screen","/misc/sc/pipeline/grammar/trumanj_larval_ss.gra"},
             {"Lee Lab Pan Lineage","/misc/sc/pipeline/grammar/leet_pan_lineage.gra"},
             {"Lee Lab Central Brain Lineage","/misc/sc/pipeline/grammar/leet_central_brain_lineage.gra"},
