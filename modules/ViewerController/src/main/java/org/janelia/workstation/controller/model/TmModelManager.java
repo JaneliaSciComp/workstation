@@ -7,6 +7,7 @@ import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.SpatialIndexManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.controller.tileimagery.TileLoader;
 import org.janelia.workstation.controller.tileimagery.TileServer;
 import org.janelia.workstation.core.api.AccessManager;
@@ -52,11 +53,14 @@ public class TmModelManager {
     private final TiledMicroscopeDomainMgr tmDomainMgr;
     private TileLoader tileLoader;
     private TileServer tileServer;
+    private TileFormat tileFormat;
     private Vec3 voxelCenter;
     private BoundingBox3d sampleBoundingBox;
     private SpatialIndexManager spatialIndexManager;
 
     private static final TmModelManager instance = new TmModelManager();
+
+
     public static TmModelManager getInstance() {
         return instance;
     }
@@ -222,6 +226,14 @@ public class TmModelManager {
 
     public void setCurrentTagMap(TmNeuronTagMap currentTagMap) {
         this.currentTagMap = currentTagMap;
+    }
+
+    public TileFormat getTileFormat() {
+        return tileFormat;
+    }
+
+    public void setTileFormat(TileFormat tileFormat) {
+        this.tileFormat = tileFormat;
     }
 
     public TileLoader getTileLoader() {

@@ -5,6 +5,7 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.util.MatrixUtilities;
 import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.TmViewerManager;
@@ -81,16 +82,30 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 TileServer tileServer = new TileServer(sharedVolumeImage);
                 TmModelManager.getInstance().setTileServer(tileServer);
                 URL url = TmModelManager.getInstance().getTileLoader().getUrl();
+
+                TileFormat tileFormat = new TileFormat();
+                TmModelManager.getInstance().setTileFormat(tileFormat);
                 sharedVolumeImage.setTileLoaderProvider(new BlockTiffOctreeTileLoaderProvider() {
                     int concurrency = 15;
 
                     @Override
                     public BlockTiffOctreeLoadAdapter createLoadAdapter(String baseURI) {
                         return TileStackCacheController.createInstance(
-                                new TileStackOctreeLoadAdapter(new TileFormat(), URI.create(baseURI), concurrency));
+                                new TileStackOctreeLoadAdapter(tileFormat, URI.create(baseURI), concurrency));
                     }
                 });
                 sharedVolumeImage.loadURL(url);
+
+                if (sample.getVoxToMicronMatrix()==null) {
+                    // init sample from tileformat
+                    sample.setVoxToMicronMatrix(MatrixUtilities.serializeMatrix(
+                            tileFormat.getVoxToMicronMatrix(),
+                            "voxToMicronMatrix"));
+                    sample.setMicronToVoxMatrix(MatrixUtilities.serializeMatrix(
+                            tileFormat.getMicronToVoxMatrix(),
+                            "micronToVoxMatrix"));
+                    TiledMicroscopeDomainMgr.getDomainMgr().save(sample);
+                }
                 modelManager.updateVoxToMicronMatrices();
                 BoundingBox3d box = sharedVolumeImage.getBoundingBox3d();
                 TmModelManager.getInstance().setSampleBoundingBox (box);
