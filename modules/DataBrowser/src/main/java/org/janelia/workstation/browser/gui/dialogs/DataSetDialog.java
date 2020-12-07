@@ -41,21 +41,21 @@ public class DataSetDialog extends ModalDialog {
     private static final String DEFAULT_SAMPLE_NAME_PATTERN = "{Line}-" + SLIDE_CODE_PATTERN;
 
     private static final String[][] VALID_CONFIG_PATHS = {
-            {"Dickson Lab Light Imagery","/groups/scicomp/informatics/data/dickson_light_imagery-config.xml"},
             {"FlyLight Light Imagery","/groups/scicomp/informatics/data/flylightflip_light_imagery-config.xml"},
             {"Lee Lab Light Imagery","/groups/scicomp/informatics/data/leetlineage_light_imagery-config.xml"},
+            {"Vienna Reimaging","/groups/scicomp/informatics/data/dickson_light_imagery-config.xml"},
     };
 
     private static final String[][] VALID_GRAMMAR_PATHS = {
-            {"Dickson Lab","/misc/sc/pipeline/grammar/dickson.gra"},
+            {"FlyLight Split Screen Review","/misc/sc/pipeline/grammar/split_screen_review.gra"},
             {"FlyLight Polarity","/misc/sc/pipeline/grammar/flylightpolarity.gra"},
             {"FlyLight FLIP","/misc/sc/pipeline/grammar/flylightflip.gra"},
-            {"FlyLight Split Screen Review","/misc/sc/pipeline/grammar/split_screen_review.gra"},
-            {"Project Technical Resources","/misc/sc/pipeline/grammar/projtechres.gra"},
             {"FlyLight Test","/misc/sc/pipeline/grammar/flylighttest.gra"},
+            {"Project Technical Resources","/misc/sc/pipeline/grammar/projtechres.gra"},
             {"Truman Lab Larval Split Screen","/misc/sc/pipeline/grammar/trumanj_larval_ss.gra"},
             {"Lee Lab Pan Lineage","/misc/sc/pipeline/grammar/leet_pan_lineage.gra"},
             {"Lee Lab Central Brain Lineage","/misc/sc/pipeline/grammar/leet_central_brain_lineage.gra"},
+            {"Vienna Reimaging","/misc/sc/pipeline/grammar/dickson.gra"},
     };
 
     DocumentListener dataSetListener = new DocumentListener() {
