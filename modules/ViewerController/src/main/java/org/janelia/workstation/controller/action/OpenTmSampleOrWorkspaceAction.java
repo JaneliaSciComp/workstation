@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 @ActionReferences({
         @ActionReference(path = "Menu/Actions/Horta", position = 1510, separatorBefore = 1499)
 })
-@NbBundle.Messages("CTL_OpenTmSampleOrWorkspaceAction=Load Workspace into 3D Viewers")
+@NbBundle.Messages("CTL_OpenTmSampleOrWorkspaceAction=Open in Horta")
 public class OpenTmSampleOrWorkspaceAction extends BaseContextualNodeAction {
 
     private static final Logger log = LoggerFactory.getLogger(OpenTmSampleOrWorkspaceAction.class);
