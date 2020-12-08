@@ -252,6 +252,9 @@ public class HortaManager {
 
     @Subscribe
     private void selectNeurons(SelectionNeuronsEvent event) {
+        if (event.getItems().isEmpty()) {
+            return;
+        }
         TmNeuronMetadata neuron = (TmNeuronMetadata)event.getItems().iterator().next();
         if (neuron==null)
             return;
