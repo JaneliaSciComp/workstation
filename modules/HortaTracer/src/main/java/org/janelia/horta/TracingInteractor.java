@@ -1194,12 +1194,13 @@ public class TracingInteractor extends MouseAdapter
         public void selectParent() {
             TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(hoveredNeuron);
             TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(hoveredVertex);
-            NeuronManager.getInstance().updateFragsByAnnotation(hoveredNeuron.getId(), hoveredVertex.getId());
             SelectionAnnotationEvent event = new SelectionAnnotationEvent(this,
                     Arrays.asList(new TmGeoAnnotation[]{hoveredVertex}), true, false
             );
             ViewerEventBus.postEvent(event);
             selectParentVertex(hoveredVertex, hoveredNeuron);
+            NeuronManager.getInstance().updateFragsByAnnotation(hoveredNeuron.getId(), hoveredVertex.getId());
+
         }
 
         boolean canUpdateAnchorRadius() {

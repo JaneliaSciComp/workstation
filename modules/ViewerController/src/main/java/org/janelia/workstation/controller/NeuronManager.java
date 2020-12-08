@@ -290,6 +290,10 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
                     NeuronUpdates updates = neuronFilter.selectVertex(annotation);
                     updateFrags(updates);
+                    SelectionAnnotationEvent event = new SelectionAnnotationEvent(this,
+                            Arrays.asList(new TmGeoAnnotation[]{annotation}), true, false
+                    );
+                    ViewerEventBus.postEvent(event);
                     log.info("TOTAL FRAG UPDATE TIME: {}",stopwatch.elapsed().toMillis());
                     stopwatch.stop();
                 }
