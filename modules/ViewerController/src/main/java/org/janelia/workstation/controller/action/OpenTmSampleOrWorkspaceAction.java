@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Horta", position = 1510, separatorBefore = 1499)
+        @ActionReference(path = "Menu/Actions/Large Volume", position = 1510)
 })
 @NbBundle.Messages("CTL_OpenTmSampleOrWorkspaceAction=Open in Horta")
 public class OpenTmSampleOrWorkspaceAction extends BaseContextualNodeAction {
