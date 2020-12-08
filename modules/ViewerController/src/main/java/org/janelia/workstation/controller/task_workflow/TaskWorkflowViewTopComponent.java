@@ -66,7 +66,7 @@ import java.util.*;
 @TopComponent.Description(
         preferredID = TaskWorkflowViewTopComponent.PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
-        persistenceType = TopComponent.PERSISTENCE_ALWAYS
+        persistenceType = TopComponent.PERSISTENCE_NEVER
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.workstation.gui.task_workflow.TaskWorkflowViewTopComponentTopComponent")
