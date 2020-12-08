@@ -763,16 +763,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     private void onNeuronDoubleClicked(TmNeuronMetadata neuron) {
-        // should pan to center of neuron; let's call that the center
-        //  of the bounding cube for its annotations
-        // I'd prefer this calculation be part of TmNeuron, but
-        //  I can't use BoundingBox3d there
-        if (neuron.getGeoAnnotationMap().size() != 0) {
-            BoundingBox3d bounds = new BoundingBox3d();
-            for (TmGeoAnnotation ann: neuron.getGeoAnnotationMap().values()) {
-                bounds.include(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
-            }
-            sendViewEvent(bounds.getCenter());
+        if (neuron.getFirstRoot()!=null) {
+            TmGeoAnnotation root = neuron.getFirstRoot();
+            sendViewEvent(new Vec3(root.getX(), root.getY(), root.getZ()));
         }
     }
 

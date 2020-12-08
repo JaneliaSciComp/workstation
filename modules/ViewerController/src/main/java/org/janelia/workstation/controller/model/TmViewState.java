@@ -299,6 +299,8 @@ public class TmViewState {
     }
 
     public ImageColorModel getColorMode(String key) {
+        if (colorModels==null)
+            return null;
         return colorModels.get(key);
     }
 
