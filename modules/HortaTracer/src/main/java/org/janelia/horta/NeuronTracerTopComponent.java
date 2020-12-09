@@ -5,9 +5,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -39,6 +37,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 
 import org.janelia.geometry3d.ObservableInterface;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.controller.dialog.NeuronColorDialog;
 import org.janelia.workstation.controller.listener.ColorModelListener;
 import org.janelia.workstation.controller.listener.UnmixingListener;
 import org.janelia.workstation.controller.listener.NeuronVertexCreationListener;
@@ -46,6 +46,7 @@ import org.janelia.workstation.controller.listener.NeuronVertexDeletionListener;
 import org.janelia.workstation.controller.listener.NeuronVertexUpdateListener;
 import org.janelia.workstation.controller.listener.TolerantMouseClickListener;
 import org.janelia.workstation.controller.model.color.ChannelColorModel;
+import org.janelia.workstation.controller.model.color.ColorSwatch;
 import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.workstation.controller.model.annotations.neuron.VertexCollectionWithNeuron;
 import org.janelia.workstation.controller.model.annotations.neuron.VertexWithNeuron;
@@ -1533,6 +1534,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                     topMenu.add(new JPopupMenu.Separator());
                     topMenu.add("Anchor").setEnabled(false);
 
+                    TmNeuronMetadata neuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
+                    topMenu.add(new JMenuItem(new CopyToClipboardAction("Name",neuron.getName())));
+
                     if (interactorContext.canUpdateAnchorRadius()) {
                         topMenu.add(new AbstractAction("Adjust Anchor Radius") {
                             @Override
@@ -1683,6 +1687,31 @@ public final class NeuronTracerTopComponent extends TopComponent
                         }
                     };
                     topMenu.add(clearLoopIndicator);
+
+                    JMenu selectLoopColorMenu = new JMenu("Set Loop Indicator Color");
+                    topMenu.add(selectLoopColorMenu);
+
+                    JPanel selectLoopColorPanel = new JPanel(new FlowLayout());
+
+                    ColorSwatch swatch = new ColorSwatch();
+                    Color currLoopColor = TmModelManager.getInstance().getCurrentView().getColorLoopIndicator();
+                    swatch.setColor(currLoopColor);
+                    selectLoopColorPanel.add(swatch);
+                    swatch.addMouseListener(new MouseInputAdapter() {
+                        @Override
+                        public void mouseClicked(MouseEvent event) {
+                            NeuronColorDialog dialog = new NeuronColorDialog(
+                                    null,
+                                    currLoopColor);
+                            dialog.setVisible(true);
+                            if (dialog.styleChosen()) {
+                                TmModelManager.getInstance().getCurrentView().setColorLoopIndicator(dialog.getChosenColor());
+                            }
+                        }
+
+                    });
+                    selectLoopColorMenu.add(selectLoopColorPanel);
+
 
                     // Change Neuron Color
                     if (interactorContext.canRecolorNeuron()) {

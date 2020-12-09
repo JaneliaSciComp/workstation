@@ -30,6 +30,7 @@ public class TmViewState {
     private double zoomLevel;
     private float[] cameraRotation;
     private boolean interpolate;
+    private Color colorLoopIndicator = Color.red; // pixels
     private static Map<String, ImageColorModel> colorModels;
     private static Map<Long, Color> customNeuronColors;
     private static Map<Long, Long> customNeuronRadii;
@@ -306,5 +307,13 @@ public class TmViewState {
 
     public void setColorModel(String key, ImageColorModel model) {
         colorModels.put(key, model);
+    }
+
+    public Color getColorLoopIndicator() {
+        return colorLoopIndicator;
+    }
+
+    public void setColorLoopIndicator(Color colorLoopIndicator) {
+        this.colorLoopIndicator = colorLoopIndicator;
     }
 }

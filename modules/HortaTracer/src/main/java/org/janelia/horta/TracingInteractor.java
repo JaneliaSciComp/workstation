@@ -1393,5 +1393,4 @@ public class TracingInteractor extends MouseAdapter
         }
 
     }
-
 }

@@ -321,9 +321,10 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
                     vertexAttributes.add(REVIEWED_GRAY_COLOR); // green
                     vertexAttributes.add(REVIEWED_GRAY_COLOR); // blue
                 } else if (reviews.isLoopedAnnotation(vertex.getId())) {
-                    vertexAttributes.add(0.8f); // red
-                    vertexAttributes.add(0.1f); // green
-                    vertexAttributes.add(0.1f); // blue
+                    Color loopColor = viewState.getColorLoopIndicator();
+                    vertexAttributes.add(loopColor.getRed()/255.0f); // red
+                    vertexAttributes.add(loopColor.getGreen()/255.0f); // green
+                    vertexAttributes.add(loopColor.getBlue()/255.0f); // blue
                 } else {
                     vertexAttributes.add(rgb[0]); // red
                     vertexAttributes.add(rgb[1]); // green
