@@ -1,10 +1,12 @@
 package org.janelia.workstation.controller.action;
 
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.controller.TmViewerManager;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -38,10 +40,12 @@ public class OpenTmSampleOrWorkspaceAction extends BaseContextualNodeAction {
         if (getNodeContext().isSingleObjectOfType(TmSample.class)) {
             domainObject = getNodeContext().getSingleObjectOfType(TmSample.class);
             setEnabledAndVisible(true);
+            FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor(domainObject));
         }
         else if (getNodeContext().isSingleObjectOfType(TmWorkspace.class)) {
             domainObject = getNodeContext().getSingleObjectOfType(TmWorkspace.class);
             setEnabledAndVisible(true);
+            FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor(domainObject));
         }
         else {
             domainObject = null;

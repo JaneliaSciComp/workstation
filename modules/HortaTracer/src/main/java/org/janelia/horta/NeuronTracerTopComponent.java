@@ -1534,10 +1534,16 @@ public final class NeuronTracerTopComponent extends TopComponent
                     topMenu.add(new JPopupMenu.Separator());
                     topMenu.add("Anchor").setEnabled(false);
 
-                    TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(
-                            interactorContext.getHighlightedAnchor().getNeuronId());
-                    if (neuron!=null)
-                        topMenu.add(new JMenuItem(new CopyToClipboardAction("Name",neuron.getName())));
+                    String neuronName = null;
+                    if (interactorContext.getHighlightedAnchor()!=null) {
+                        neuronName = NeuronManager.getInstance().getNeuronFromNeuronID(
+                                interactorContext.getHighlightedAnchor().getNeuronId()).getName();
+                    } else if (interactorContext.getCurrentParentAnchor()!=null) {
+                        neuronName = NeuronManager.getInstance().getNeuronFromNeuronID(
+                                interactorContext.getCurrentParentAnchor().getNeuronId()).getName();
+                    }
+                    if (neuronName!=null)
+                        topMenu.add(new JMenuItem(new CopyToClipboardAction("Name",neuronName)));
 
                     if (interactorContext.canUpdateAnchorRadius()) {
                         topMenu.add(new AbstractAction("Adjust Anchor Radius") {
