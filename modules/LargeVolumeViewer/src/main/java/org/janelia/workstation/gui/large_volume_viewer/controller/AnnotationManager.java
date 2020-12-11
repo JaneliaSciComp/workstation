@@ -327,8 +327,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void addAnnotation(final Vec3 xyz, final Long parentID) {
 
         if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
-            FrameworkAccess.handleException(
-                    new RuntimeException("You must load a workspace before beginning annotation!"));
+            showError("No workspace loaded!", "You must load a workspace before beginning annotation!");
             return;
         }
 
@@ -339,8 +338,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         final TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
         if (currentNeuron == null) {
-            FrameworkAccess.handleException(
-                    new RuntimeException("You must select a neuron before beginning annotation!"));
+            showError("No neuron selected!", "You must select a neuron before beginning annotation!");
             return;
         }
 
@@ -494,8 +492,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public void smartMergeNeuriteRequested(Anchor sourceAnchor, Anchor targetAnchor) {
         if (targetAnchor == null) {
-            FrameworkAccess.handleException(
-                    new RuntimeException("No neurite selected!  Select an annotation on target neurite, then choose this operation again."));
+            showError("No neurite selected!", "Select an annotation on target neurite, then choose this operation again.");
             return;
         }
 
@@ -513,8 +510,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // check for cycles (this can be tested before we check exactly which annotations to merge
         if (annotationModel.sameNeurite(sourceAnnotation, targetAnnotation)) {
-            FrameworkAccess.handleException(new RuntimeException(
-                    "Cannot merge a neurite with itself!"));
+            showError("No self-merges!", "Cannot merge a neurite with itself!");
             return;
         }
 
@@ -524,15 +520,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             sourceNeuron, targetAnnotation, targetNeuron);
 
         if (result.size() != 2) {
-            FrameworkAccess.handleException(new RuntimeException(
-                    "There was an error in the smart merge algorithm!"));
+            showError("Error", "There was an error in the smart merge algorithm!");
             return;
         }
         // returned annotations should be on same neurite as input ones:
         if (!annotationModel.sameNeurite(sourceAnnotation, result.get(0)) ||
                 !annotationModel.sameNeurite(targetAnnotation, result.get(1))) {
-            FrameworkAccess.handleException(new RuntimeException(
-                    "There was an error in the smart merge algorithm!"));
+            showError("Error", "There was an error in the smart merge algorithm!");
             return;
         }
         sourceAnnotation = result.get(0);
@@ -909,5 +903,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     private Long getWorkspaceID() {
         return TmModelManager.getInstance().getCurrentWorkspace().getId();
+    }
+
+    private void showError(String title, String message) {
+        JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), message, title, JOptionPane.ERROR_MESSAGE);
     }
 }
