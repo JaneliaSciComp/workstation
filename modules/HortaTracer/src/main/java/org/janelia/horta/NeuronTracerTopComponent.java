@@ -1534,8 +1534,10 @@ public final class NeuronTracerTopComponent extends TopComponent
                     topMenu.add(new JPopupMenu.Separator());
                     topMenu.add("Anchor").setEnabled(false);
 
-                    TmNeuronMetadata neuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
-                    topMenu.add(new JMenuItem(new CopyToClipboardAction("Name",neuron.getName())));
+                    TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(
+                            interactorContext.getHighlightedAnchor().getNeuronId());
+                    if (neuron!=null)
+                        topMenu.add(new JMenuItem(new CopyToClipboardAction("Name",neuron.getName())));
 
                     if (interactorContext.canUpdateAnchorRadius()) {
                         topMenu.add(new AbstractAction("Adjust Anchor Radius") {
@@ -1560,14 +1562,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             NeuronGroupsDialog ngDialog = new NeuronGroupsDialog();
                             ngDialog.showDialog();
-                        }
-                    });
-
-                    topMenu.add(new AbstractAction("View Neuron History") {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            NeuronHistoryDialog historyDialog = new NeuronHistoryDialog();
-                            historyDialog.showDialog();
                         }
                     });
 
