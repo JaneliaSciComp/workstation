@@ -40,12 +40,10 @@ public class OpenTmSampleOrWorkspaceAction extends BaseContextualNodeAction {
         if (getNodeContext().isSingleObjectOfType(TmSample.class)) {
             domainObject = getNodeContext().getSingleObjectOfType(TmSample.class);
             setEnabledAndVisible(true);
-            FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor(domainObject));
         }
         else if (getNodeContext().isSingleObjectOfType(TmWorkspace.class)) {
             domainObject = getNodeContext().getSingleObjectOfType(TmWorkspace.class);
             setEnabledAndVisible(true);
-            FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor(domainObject));
         }
         else {
             domainObject = null;
@@ -63,6 +61,7 @@ public class OpenTmSampleOrWorkspaceAction extends BaseContextualNodeAction {
         }
 
         TmViewerManager.getInstance().loadProject(domainObject);
+        FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor(domainObject));
 
     }
 }
