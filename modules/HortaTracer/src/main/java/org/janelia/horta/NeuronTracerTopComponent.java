@@ -402,30 +402,6 @@ public final class NeuronTracerTopComponent extends TopComponent
      //   tracingInteractor.setDefaultWorkspace(activeNeuronSet);
     }
 
-    /** MOVE THESE TO COMMON **/
-     public void addEditNote() {
-        // get current primary anchor and call out to pop up add/edit note dialog
-         TmGeoAnnotation anchor = TmModelManager.getInstance().getCurrentSelections().getCurrentVertex();
-        //activeNeuronSet.addEditNote(anchor);
-    }
-
-    public void addTracedEndNote() {
-        // automatically set the traced end note for this anchor
-        TmGeoAnnotation anchor = TmModelManager.getInstance().getCurrentSelections().getCurrentVertex();
-        //activeNeuronSet.addTraceEndNote(anchor);
-    }
-
-    public void addUnique1Note() {
-        // automatically set the traced end note for this anchor
-        TmGeoAnnotation anchor = TmModelManager.getInstance().getCurrentSelections().getCurrentVertex();
-        //activeNeuronSet.addUnique1Note(anchor);
-    }
-
-    public void addUnique2Note() {
-        // automatically set the traced end note for this anchor
-        TmGeoAnnotation anchor = TmModelManager.getInstance().getCurrentSelections().getCurrentVertex();
-    }
-
     // UNDO
     @Override
     public UndoRedo getUndoRedo() {

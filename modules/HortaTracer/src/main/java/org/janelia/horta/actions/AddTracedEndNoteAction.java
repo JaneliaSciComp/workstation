@@ -2,10 +2,7 @@ package org.janelia.horta.actions;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
-import javax.swing.KeyStroke;
-import org.janelia.horta.NeuronTracerTopComponent;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
@@ -16,8 +13,6 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @ActionID(
         category = "Horta",
@@ -36,8 +31,6 @@ public final class AddTracedEndNoteAction
 extends AbstractAction
 implements ActionListener
 {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
     public AddTracedEndNoteAction() {
         super("Add Traced End Note");
     }
