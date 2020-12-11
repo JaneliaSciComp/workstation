@@ -6,6 +6,11 @@ import java.awt.event.KeyEvent;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 import org.janelia.horta.NeuronTracerTopComponent;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmSelectionState;
+import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -45,6 +50,29 @@ implements ActionListener
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        context.addTracedEndNote();
+        // context.addTracedEndNote();
+
+        NeuronManager neuronManager = NeuronManager.getInstance();
+        TmSelectionState state = TmSelectionState.getInstance();
+        SimpleWorker setter = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                neuronManager.setNote(state.getCurrentVertex(), PredefinedNote.TRACED_END.getNoteText());
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing to see here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+            }
+        };
+        setter.execute();
+
+
+
     }
 }
