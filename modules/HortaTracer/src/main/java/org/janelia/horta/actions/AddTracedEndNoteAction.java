@@ -31,27 +31,19 @@ import org.slf4j.LoggerFactory;
     @ActionReference(path = "Shortcuts", name = "T")
 })
 @Messages("CTL_AddTracedEndNote=Add Traced End Note")
-// Based on example at http://wiki.netbeans.org/DevFaqActionNodePopupSubmenu
+
 public final class AddTracedEndNoteAction
 extends AbstractAction
 implements ActionListener
 {
-    private final NeuronTracerTopComponent context;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    
-    // Netbeans magically enables this menu Action when the current Lookup
-    // contains a NeuronTracerTopComponent
-    public AddTracedEndNoteAction(NeuronTracerTopComponent horta) {
-        context = horta;
-        putValue(NAME, Bundle.CTL_AddTracedEndNote());
-        // Repeat key shortcut, so it could appear on the Horta context menu item
-        putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK));
+
+    public AddTracedEndNoteAction() {
+        super("Add Traced End Note");
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // context.addTracedEndNote();
-
         NeuronManager neuronManager = NeuronManager.getInstance();
         TmSelectionState state = TmSelectionState.getInstance();
         SimpleWorker setter = new SimpleWorker() {
@@ -71,8 +63,5 @@ implements ActionListener
             }
         };
         setter.execute();
-
-
-
     }
 }
