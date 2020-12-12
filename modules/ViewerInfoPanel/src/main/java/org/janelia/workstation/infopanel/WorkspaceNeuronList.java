@@ -583,6 +583,10 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         neuronLabel.setToolTipText(String.format("%s in table/%s in memory/%s total", showing, loaded, total));
     }
 
+    public void updateNeuron (TmNeuronMetadata neuron) {
+        neuronTableModel.updateNeuron(neuron);
+    }
+
     public void updateNeuronSpatialFilter(boolean enabled, String description) {
         if (enabled) {
             spatialFilterLabel.setText(description);

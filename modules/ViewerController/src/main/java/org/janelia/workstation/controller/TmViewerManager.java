@@ -116,6 +116,8 @@ public class TmViewerManager implements GlobalViewerController {
             NeuronManager.getInstance().clearOutOldProject();
             ViewerEventBus.postEvent(event);
         }
+        // freeze incoming updates until we are fully loaded in the workspace
+        RefreshHandler.getInstance().ifPresent(rh -> rh.setReceiveUpdates(false));
 
         projectInit = new ProjectInitFacadeImpl(project);
         projectInit.clearViewers();
@@ -277,5 +279,8 @@ public class TmViewerManager implements GlobalViewerController {
         SelectionEvent selectionEvent = new SelectionEvent(this,
                 null, false, true);
         ViewerEventBus.postEvent(selectionEvent);
+
+        // re-enable updates once the model is fully loaded
+        RefreshHandler.getInstance().ifPresent(rh -> rh.setReceiveUpdates(true));
     }
 }

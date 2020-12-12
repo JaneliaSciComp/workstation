@@ -2340,6 +2340,12 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         ViewerEventBus.postEvent(annotationEvent);
     }
 
+    public void fireSharedNeuronChanged(TmNeuronMetadata neuron) {
+        SharedNeuronUpdateEvent updateEvent = new SharedNeuronUpdateEvent(this,
+                Arrays.asList(new TmNeuronMetadata[]{neuron}));
+        ViewerEventBus.postEvent(updateEvent);
+    }
+
     public void fireNeuronRenamed(TmNeuronMetadata neuron) {
         NeuronUpdateEvent annotationEvent = new NeuronUpdateEvent(this,
                 Arrays.asList(new TmNeuronMetadata[]{neuron}));

@@ -117,6 +117,16 @@ public class PanelController {
     }
 
     @Subscribe
+    public void sharedNeuronsUpdated(SharedNeuronUpdateEvent updateEvent) {
+        Collection<TmNeuronMetadata> neurons = updateEvent.getNeurons();
+        if (neurons==null)
+            return;
+        for (TmNeuronMetadata neuron : neurons) {
+            wsNeuronList.updateNeuron(neuron);
+        }
+    }
+
+    @Subscribe
     public void neuronsOwnerChanged (NeuronOwnerChangedEvent event) {
         for (TmNeuronMetadata neuron : event.getNeurons()) {
             wsNeuronList.updateModel(neuron);

@@ -2,6 +2,7 @@ package org.janelia.workstation.controller.model.annotations.neuron;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
@@ -33,7 +34,7 @@ public class NeuronModel {
     }
 
     public NeuronModel() {
-        neuronMap = new HashMap<>();
+        neuronMap = new ConcurrentHashMap<>();
     }
 
     public Collection<TmNeuronMetadata> getNeurons() {
