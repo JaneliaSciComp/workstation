@@ -12,7 +12,7 @@
     <name>AdministrationGUI</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>adminstration</artifactId>
-    <version>8.22</version>
+    <version>9.0</version>
     <packaging>nbm</packaging>
 
     <dependencies>
