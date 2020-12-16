@@ -72,7 +72,7 @@
         <netbeans.version>RELEASE82</netbeans.version>
 
         <!-- Modules specification version, for modules which track together -->
-        <janeliaws.modules.specification.version>3.41</janeliaws.modules.specification.version>
+        <janeliaws.modules.specification.version>3.42</janeliaws.modules.specification.version>
 
         <!-- Java compilation settings -->
         <janeliaws.javac.source>1.8</janeliaws.javac.source>
