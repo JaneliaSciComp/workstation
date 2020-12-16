@@ -1,10 +1,5 @@
 // 9.0
 
-Browser
-* Distortion correction can now be turned off at the Data Set level
-* Improved performance when refreshing
-* Improved error handling
-
 Horta/LVV
 * Data model has been unified to use single TiledMicroscope data model
 * Google event bus used for all internal communication between model and 3D viewers
