@@ -1,6 +1,12 @@
 // 9.0
 
-Horta/LVV
+Color Depth Search
+* Updated color depth algorithm to use latest algorithm (same as NeuronBridge)
+* Added option to use segmented color depth MIPs for better accuracy
+* Added option to use gradients for better EM scoring
+* Added "Show matched image" option for displaying actual image match
+
+MouseLight Tools
 * Data model has been unified to use single TiledMicroscope data model
 * Google event bus used for all internal communication between model and 3D viewers
 * Refactored common functionality out of LVV into central module
