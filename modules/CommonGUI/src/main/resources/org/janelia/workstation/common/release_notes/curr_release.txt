@@ -4,3 +4,12 @@ Browser
 * Distortion correction can now be turned off at the Data Set level
 * Improved performance when refreshing
 * Improved error handling
+
+Horta/LVV
+* Data model has been unified to use single TiledMicroscope data model
+* Google event bus used for all internal communication between model and 3D viewers
+* Refactored common functionality out of LVV into central module
+* Added universal undo/redo feature
+* Added user-defined and workspace-default color models
+* Annotation Panel from LVV now a top-level Netbeans component
+* LVV rebranded to be called Horta 2D (Horta is now Horta 3D)
