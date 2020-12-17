@@ -31,6 +31,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 
 import Jama.Matrix;
+import org.janelia.workstation.controller.action.NeuronChooseColorAction;
 import org.janelia.workstation.controller.model.DefaultNeuron;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.model.annotations.neuron.VertexCollectionWithNeuron;
@@ -1174,11 +1175,12 @@ public class TracingInteractor extends MouseAdapter
                 return;
             if (!TmModelManager.checkOwnership(hoveredNeuron)) {
                 return;
-            }  
-          /*  new RecolorNeuronAction(
-                    volumeProjection.getMouseableComponent(),
-                    defaultWorkspace,
-                    hoveredNeuron).actionPerformed(null);*/
+            }
+            if (hoveredNeuron == null) {
+                return;
+            }
+            NeuronChooseColorAction action = new NeuronChooseColorAction();
+            action.chooseNeuronColor(hoveredNeuron);
         }
         
         public boolean canSelectParent() {
