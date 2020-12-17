@@ -440,27 +440,17 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         for (TmNeuronMetadata neuron: neuronList) {
             Long neuronID = neuron.getId();
 
-            getNeuronModel().requestAssignmentChange(neuron, newOwner.getKey());
+            // some issues with this; need to isolate why serialization wipes out neuron IDs
+            // getNeuronModel().requestAssignmentChange(neuron, newOwner.getKey());
 
             // it's now safe to change local object
             neuron.setOwnerKey(newOwner.getKey());
-
+            neuronModel.saveNeuronData(neuron);
             // if filter, find new fragments that might be affected
-            if (applyFilter && neuron.getOwnerKey().equals(AccessManager.getAccessManager().getActualSubject().getKey())) {
-                NeuronUpdates updates = neuronFilter.addNeuron(neuron);
-                updateFrags(updates);
-            }
+            fireNeuronChanged(neuron);
 
             log.info("Neuron " + neuron.getName() + " owner changed to  " + newOwner.getKey());
-
-            final TmWorkspace workspace = modelManager.getCurrentWorkspace();
         }
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireNeuronsOwnerChanged(neuronList);
-            }
-        });
     }
 
     public synchronized void deleteCurrentNeuron() {

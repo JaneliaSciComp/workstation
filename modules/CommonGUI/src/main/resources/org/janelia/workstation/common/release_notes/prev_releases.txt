@@ -1,3 +1,10 @@
+// 8.21.1
+
+Browser
+* Distortion correction can now be turned off at the Data Set level
+* Improved performance when refreshing
+* Improved error handling
+
 // 8.21
 
 Browser
