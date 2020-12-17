@@ -67,24 +67,23 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, R
     }
 
     public ColorDepthImage getImage(ColorDepthMatch match) {
-        Reference imageRef  = getUsedImageRef(match);
-        if (imageRef==null) {
-            throw new IllegalStateException("Null image ref: "+match);
+        Reference imageRef = getUsedImageRef(match);
+        if (imageRef == null) {
+            return null;
         }
         return imageMap.get(imageRef);
     }
 
     protected Reference getUsedImageRef(ColorDepthMatch match) {
-        return match.getImageRef();
+        return match != null ? match.getImageRef() : null;
     }
 
     public Sample getSample(ColorDepthMatch match) {
         ColorDepthImage image = getImage(match);
         if (image == null) {
-            log.warn("Image does not exist: "+match.getImageRef());
             return null;
         }
-        if (image.getSampleRef()==null) {
+        if (image.getSampleRef() == null) {
             return null;
         }
         return sampleMap.get(image.getSampleRef());
@@ -102,7 +101,8 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, R
     @Override
     public String getImageFilepath(ColorDepthMatch match) {
         if (!hasAccess(match)) return null;
-        return getImage(match).getFilepath();
+        ColorDepthImage image = getImage(match);
+        return image == null ? null : image.getFilepath();
     }
 
     @Override
@@ -120,10 +120,12 @@ public class ColorDepthResultImageModel implements ImageModel<ColorDepthMatch, R
     public String getImageTitle(ColorDepthMatch match) {
         if (!hasAccess(match)) return "Access denied";
         ColorDepthImage image = getImage(match);
+        if (image == null) {
+            return null; // this should not happen
+        }
         if (image.getSampleRef()==null) {
             return image.getName();
-        }
-        else {
+        } else {
             Sample sample = getSample(match);
             if (isShowVtLineNames()) {
                 if (sample.getVtLine()!=null) {

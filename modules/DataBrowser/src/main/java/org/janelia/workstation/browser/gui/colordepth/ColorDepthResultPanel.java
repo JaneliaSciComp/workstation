@@ -452,9 +452,13 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         // Fetch associated images
         Set<Reference> imageRefs;
         if (showMatchedImage.isSelected()) {
-            imageRefs = maskMatches.stream().map(ColorDepthMatch::getMatchingImageRef).collect(Collectors.toSet());
+            imageRefs = maskMatches.stream()
+                    .map(m -> m.getMatchingImageRef() != null ? m.getMatchingImageRef() : m.getImageRef())
+                    .collect(Collectors.toSet());
         } else {
-            imageRefs = maskMatches.stream().map(ColorDepthMatch::getImageRef).collect(Collectors.toSet());
+            imageRefs = maskMatches.stream()
+                    .map(ColorDepthMatch::getImageRef)
+                    .collect(Collectors.toSet());
         }
 
         List<ColorDepthImage> images = model.getDomainObjectsAs(ColorDepthImage.class, new ArrayList<>(imageRefs));
@@ -497,7 +501,7 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         ColorDepthResultImageModel imageModel = new ColorDepthResultImageModel(mask, maskMatches, images, samples, splitInfos) {
             @Override
             protected Reference getUsedImageRef(ColorDepthMatch match) {
-                return showMatchedImage.isSelected() ? match.getMatchingImageRef() : match.getImageRef();
+                return showMatchedImage.isSelected() && match.getMatchingImageRef() != null ? match.getMatchingImageRef() : match.getImageRef();
             }
         };
         resultsPanel.setImageModel(imageModel);
