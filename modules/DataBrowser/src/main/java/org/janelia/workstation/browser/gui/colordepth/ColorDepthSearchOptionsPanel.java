@@ -131,6 +131,23 @@ public class ColorDepthSearchOptionsPanel extends ConfigPanel {
         mirrorCheckbox = new JCheckBox("Mirror mask");
 
         useSegmentationCheckbox = new JCheckBox("Use segmentation");
+        useSegmentationCheckbox.addActionListener(e -> {
+            JCheckBox cb = (JCheckBox) e.getSource();
+            if (cb.isSelected()) {
+                StringBuilder html = new StringBuilder("<html><body>")
+                        .append("Preparing data in order to search against all segmentations takes 2-3 times longer than a simple search.")
+                        .append("<br>Are you sure you want to use it?</br>")
+                        .append("</body></html>");
+
+                String[] buttons = { "Yes", "Cancel" };
+                int selectedOption = JOptionPane.showOptionDialog(this, html,
+                        "Use Segmentation", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, buttons, buttons[1]);
+                if (selectedOption == 1) {
+                    // cancel selection
+                    cb.setSelected(false);
+                }
+            }
+        });
 
         useGradScoresCheckbox = new JCheckBox("Use gradient scores");
         useGradScoresCheckbox.addActionListener(e -> {
