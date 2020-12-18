@@ -5,13 +5,13 @@
   <parent>
       <groupId>org.janelia</groupId>
       <artifactId>workstation</artifactId>
-      <version>9.0-rc4</version>
+      <version>9.0</version>
       <relativePath>../..</relativePath>
   </parent>
 
   <groupId>org.janelia.workstation</groupId>
   <artifactId>branding</artifactId>
-  <version>9.0-rc4</version>
+  <version>9.0</version>
   <packaging>nbm</packaging>
   <name>Branding</name>
 

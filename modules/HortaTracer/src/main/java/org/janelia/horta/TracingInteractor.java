@@ -332,6 +332,10 @@ public class TracingInteractor extends MouseAdapter
         parentVertexModel.getGeoAnnotationMap().clear();
         parentVertexModel.getEdges().clear();
 
+        // update model parent vertex
+        TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(vertex);
+        TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(neuron);
+
         float[] loc = new float[]{vertex.getX().floatValue(),
                 vertex.getY().floatValue(), vertex.getZ().floatValue()};
 
