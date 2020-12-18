@@ -1295,14 +1295,11 @@ public class TracingInteractor extends MouseAdapter
                 return; // no change
             String errorMessage = "Failed to adjust anchor radius";
             try {
-               // if (cmd.execute()) {
-                    log.info("User adjusted anchor radius in Horta");
+                log.info("User adjusted anchor radius in Horta");
 
-                    // repaint right now...
-                updateActorListener.neuronVertexUpdated(new VertexWithNeuron(
-                        highlightHoverModel.getGeoAnnotationMap().get(0), highlightHoverModel));
-                    return;
-                //}
+                // repaint right now...
+                updateActorListener.neuronVertexUpdated(new VertexWithNeuron(anchor, neuron));
+                return;
             }
             catch (Exception exc) {
                 errorMessage += ":\n" + exc.getMessage();
