@@ -59,6 +59,7 @@ import org.janelia.workstation.core.keybind.KeymapUtil;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.StatusDisplayer;
@@ -1296,6 +1297,25 @@ public class TracingInteractor extends MouseAdapter
             String errorMessage = "Failed to adjust anchor radius";
             try {
                 log.info("User adjusted anchor radius in Horta");
+
+                SimpleWorker setter = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        NeuronManager manager = NeuronManager.getInstance();
+                        manager.updateNeuronRadius(neuron.getId(), currentRadius);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        // nothing here
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        FrameworkAccess.handleException(error);
+                    }
+                };
+                setter.execute();
 
                 // repaint right now...
                 updateActorListener.neuronVertexUpdated(new VertexWithNeuron(anchor, neuron));
