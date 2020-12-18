@@ -1319,9 +1319,12 @@ public class TracingInteractor extends MouseAdapter
             initialRadius = vertex.getRadius().floatValue();
             currentRadius = initialRadius;
 
-            // Populate a temporary little neuron model, to display current radius before comitting
-            anchorEditModel.getGeoAnnotationMap().clear();
-            anchorEditModel.addGeometricAnnotation(anchor);
+            // Populate a temporary little neuron model, to display current radius before committing
+            // this is all disabled; wasn't working right; notably, when you add the anchor
+            //  to the temp model, it resets its neuron ID to the fake temp model ID,
+            //  and that breaks things; frankly not sure how/if it ever worked
+            //anchorEditModel.getGeoAnnotationMap().clear();
+            //anchorEditModel.addGeometricAnnotation(anchor);
             // Also add adjacent anchors TODO:
 
            // anchorEditModel.getVertexUpdatedObservable().setChanged();
@@ -1389,10 +1392,11 @@ public class TracingInteractor extends MouseAdapter
             dialog.setVisible(true);
 
             // Turn off editing model after dialog is done displaying
-            anchorEditModel.getGeoAnnotationMap().clear();
-            anchorEditModel.getEdges().clear();
-            //anchorEditModel.getVertexesRemovedObservable().setChanged();
-            //anchorEditModel.getVertexesRemovedObservable().notifyObservers(null);
+            // currently all disabled
+            // anchorEditModel.getGeoAnnotationMap().clear();
+            // anchorEditModel.getEdges().clear();
+            // anchorEditModel.getVertexesRemovedObservable().setChanged();
+            // anchorEditModel.getVertexesRemovedObservable().notifyObservers(null);
         }
 
     }
