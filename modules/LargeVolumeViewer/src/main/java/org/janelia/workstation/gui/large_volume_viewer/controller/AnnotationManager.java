@@ -19,6 +19,7 @@ import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.tileimagery.TileServer;
+import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceListener;
 import org.janelia.workstation.controller.listener.TmGeoAnnotationAnchorListener;
 import org.janelia.workstation.controller.listener.ViewStateListener;
@@ -206,19 +207,22 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         if (!TmModelManager.getInstance().checkOwnership(anchor.getNeuronID()))
             return;
-        
-        // find closest to new anchor location that isn't the annotation already
-        //  associated with anchor; remember that anchors are in micron
-        //  coords, and we need voxels!
+
         TileFormat.VoxelXyz tempLocation = getTileFormat().voxelXyzForMicrometerXyz(
                 new TileFormat.MicrometerXyz(anchor.getLocation().getX(),
                         anchor.getLocation().getY(),anchor.getLocation().getZ()));
         Vec3 anchorVoxelLocation = new Vec3(tempLocation.getX(),
                 tempLocation.getY(), tempLocation.getZ());
 
-        // Better to use micron location here, because the spatial index uses microns
-        TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchor.getLocation(),
-                annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid()));
+        // if drag-to-merge is enabled, find merge candidate
+        TmGeoAnnotation closest;
+        if (ApplicationPanel.isDragToMerge2D()) {
+            // Better to use micron location here, because the spatial index uses microns
+            closest = annotationModel.getClosestAnnotation(anchor.getLocation(),
+                    annotationModel.getGeoAnnotationFromID(anchor.getNeuronID(), anchor.getGuid()));
+        } else {
+            closest = null;
+        }
 
         // check distance and other restrictions
         if (closest != null && canMergeNeurite(anchor.getNeuronID(), anchor.getGuid(), anchorVoxelLocation, closest.getNeuronId(), closest.getId())) {

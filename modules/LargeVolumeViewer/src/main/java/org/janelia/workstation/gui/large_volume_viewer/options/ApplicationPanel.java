@@ -33,6 +33,8 @@ public class ApplicationPanel extends javax.swing.JPanel {
     public static final String PREFERENCE_ANNOTATIONS_CLICK_MODE = "AnnotationClickMode";
     public static final String CLICK_MODE_SHIFT_LEFT_CLICK = "shift-left-click";
     public static final String CLICK_MODE_LEFT_CLICK = "left-click";
+    public static final String PREFERENCE_DRAG_TO_MERGE_2D = "DragToMerge2D";
+    public static final String PREFERENCE_DRAG_TO_MERGE_2D_DEFAULT = "true";
     public static final String PREFERENCE_ANNOTATIONS_CLICK_MODE_DEFAULT = CLICK_MODE_SHIFT_LEFT_CLICK;
 
     private final ApplicationOptionsPanelController controller;
@@ -41,6 +43,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
     private JCheckBox anchorsInViewportCheckbox; 
     private JTextField zThicknessField;
     private JComboBox<String> clickModeCombo;
+    private JCheckBox dragToMergeCheckbox;
     private JLabel errorLabel;
     
     ApplicationPanel(final ApplicationOptionsPanelController controller) {
@@ -76,12 +79,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
         
 
         this.anchorsInViewportCheckbox = new JCheckBox();
-        anchorsInViewportCheckbox.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                controller.changed();
-            }
-        });
+        anchorsInViewportCheckbox.addChangeListener(e -> controller.changed());
         JLabel titleLabel2 = new JLabel("Use anchors-in-viewport optimization: ");
         titleLabel2.setLabelFor(anchorsInViewportCheckbox);
         attrPanel.add(titleLabel2,"gap para");
@@ -99,6 +97,12 @@ public class ApplicationPanel extends javax.swing.JPanel {
         attrPanel.add(clickModeLabel, "gap para");
         attrPanel.add(clickModeCombo, "gap para");
 
+        this.dragToMergeCheckbox = new JCheckBox();
+        dragToMergeCheckbox.addChangeListener(e -> controller.changed());
+        JLabel titlelabel4 = new JLabel("Left-drag to merge in 2D");
+        titlelabel4.setLabelFor(dragToMergeCheckbox);
+        attrPanel.add(titlelabel4, "gap para");
+        attrPanel.add(dragToMergeCheckbox, "gap para");
 
         this.zThicknessField = new JTextField();
         zThicknessField.getDocument().addDocumentListener(new DocumentListener() {
@@ -143,6 +147,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
         verifyNeuronsCheckbox.setSelected(isVerifyNeurons());
         anchorsInViewportCheckbox.setSelected(isAnchorsInViewport());
         clickModeCombo.setSelectedItem(getAnnotationClickMode());
+        dragToMergeCheckbox.setSelected(isDragToMerge2D());
         zThicknessField.setText(getZThickness()+"");
     }
 
@@ -167,6 +172,11 @@ public class ApplicationPanel extends javax.swing.JPanel {
                 ApplicationPanel.class,
                 PREFERENCE_ANNOTATIONS_CLICK_MODE,
                 (String) clickModeCombo.getSelectedItem());
+
+        FrameworkAccess.setLocalPreferenceValue(
+                ApplicationPanel.class,
+                PREFERENCE_DRAG_TO_MERGE_2D,
+                dragToMergeCheckbox.isSelected()+"");
 
         FrameworkAccess.setLocalPreferenceValue(
                 ApplicationPanel.class, 
@@ -228,6 +238,14 @@ public class ApplicationPanel extends javax.swing.JPanel {
                 ApplicationPanel.class,
                 ApplicationPanel.PREFERENCE_ANNOTATIONS_CLICK_MODE,
                 ApplicationPanel.PREFERENCE_ANNOTATIONS_CLICK_MODE_DEFAULT);
+    }
+
+    public static boolean isDragToMerge2D() {
+        String dragStr = FrameworkAccess.getLocalPreferenceValue(
+                ApplicationPanel.class,
+                ApplicationPanel.PREFERENCE_DRAG_TO_MERGE_2D,
+                ApplicationPanel.PREFERENCE_DRAG_TO_MERGE_2D_DEFAULT);
+        return Boolean.parseBoolean(dragStr);
     }
 
     public static int getZThickness() {
