@@ -9,16 +9,12 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import edu.wlu.cs.levy.CG.*;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import edu.wlu.cs.levy.CG.KDTree;
-import edu.wlu.cs.levy.CG.KeyDuplicateException;
-import edu.wlu.cs.levy.CG.KeyMissingException;
-import edu.wlu.cs.levy.CG.KeySizeException;
 
 /**
  * Spatial index for fast access to local NeuronVertexes, given a position in micron space.
@@ -71,6 +67,25 @@ public class NeuronVertexSpatialIndex {
         try {
             return index.nearest(micronXYZ, n);
         } 
+        catch (KeySizeException ex) {
+            log.warn("Exception while finding anchor in spatial index", ex);
+            return null;
+        }
+    }
+
+    /**
+     * Returns the N closest anchors to the location given in micron units. The locations are sorted in
+     * order from closest to farthest.
+     * @param micronXYZ micron location
+     * @param n number of results to return
+     * @param filter filter which anchors to exclude
+     * @return list of matching anchors
+     */
+    public List<TmGeoAnnotation> getAnchorClosestToMicronLocation(double[] micronXYZ, int n, final Checker<TmGeoAnnotation> filter) {
+        if (index==null) return Collections.emptyList();
+        try {
+            return index.nearest(micronXYZ, n, filter);
+        }
         catch (KeySizeException ex) {
             log.warn("Exception while finding anchor in spatial index", ex);
             return null;

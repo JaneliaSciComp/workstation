@@ -392,6 +392,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     /**
      * find the annotation closest to the input location, excluding
      * the input annotation (null = don't exclude any)
+     *
+     * this method is only used for finding merge candidates when dragging annotations in 2d
      */
     public TmGeoAnnotation getClosestAnnotation(Vec3 micronLocation, TmGeoAnnotation excludedAnnotation) {
 
@@ -404,6 +406,19 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         final Long excludedAnnotationID = excludedAnnotation == null ? -1L : excludedAnnotation.getId();
 
         log.trace("getClosestAnnotation to {}", excludedAnnotationID);
+
+        SpatialIndexManager spatialIndexManager = TmModelManager.getInstance().getSpatialIndexManager();
+        List<TmGeoAnnotation> annotations = spatialIndexManager.getAnchorClosestToMicronLocation(new double[]{x, y, z}, 1,
+                annotation -> {
+                    boolean notItself = !annotation.getId().equals(excludedAnnotationID);
+                    boolean visible = getNeuronVisibility(getNeuronFromNeuronID(annotation.getNeuronId()));
+                    return notItself && visible;
+                });
+
+        if (annotations != null && !annotations.isEmpty()) {
+            log.trace("Got {} anchors closest to {}", annotations.size(), micronLocation);
+            closest = annotations.get(0);
+        }
 
         if (closest!=null) {
             log.trace("Returning closest anchor: {}", closest.getId());

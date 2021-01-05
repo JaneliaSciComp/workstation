@@ -443,7 +443,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // can't merge if target is hidden
         TmNeuronMetadata targetNeuron = annotationModel.getNeuronFromNeuronID(targetNeuronID);
-        if (!TmModelManager.getInstance().getCurrentView().isHidden(targetNeuron.getId())) {
+        if (TmModelManager.getInstance().getCurrentView().isHidden(targetNeuron.getId())) {
             log.warn("Can't merge annotation to hidden neuron");
             return false;
         }

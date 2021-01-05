@@ -282,6 +282,9 @@ public class TmViewState {
 
     public static float[] getColorForNeuronAsFloatArray(Long neuronID) {
         TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(neuronID);
+        if (neuron == null) {
+            return new float[]{0.0f, 0.0f, 0.0f};
+        }
         Color color = getColorForNeuron(neuronID);
         if (color == null) {
             if (neuron.getColor()==null) {

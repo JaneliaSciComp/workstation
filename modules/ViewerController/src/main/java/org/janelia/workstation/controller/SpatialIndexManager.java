@@ -1,6 +1,7 @@
 package org.janelia.workstation.controller;
 
 import com.google.common.eventbus.Subscribe;
+import edu.wlu.cs.levy.CG.Checker;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.eventbus.*;
@@ -29,6 +30,10 @@ public class SpatialIndexManager {
 
     public TmGeoAnnotation getAnchorClosestToMicronLocation(double[] voxelXYZ) {
         return spatialIndex.getAnchorClosestToMicronLocation(voxelXYZ);
+    }
+
+    public List<TmGeoAnnotation> getAnchorClosestToMicronLocation(double[] micronXYZ, int n, final Checker<TmGeoAnnotation> filter) {
+        return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n, filter);
     }
 
     @Subscribe
