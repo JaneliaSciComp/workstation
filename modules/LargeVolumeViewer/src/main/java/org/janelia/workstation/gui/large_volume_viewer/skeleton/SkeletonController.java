@@ -235,6 +235,14 @@ public class SkeletonController implements NextParentListener {
     }
 
     private void processNeuronDeleted(TmNeuronMetadata neuron) {
+        // debugging: log what's null and let the error bubble up and be reported
+        if (neuron == null) {
+            log.info("neuron is null");
+        }
+        if (neuron.getGeoAnnotationMap() == null) {
+            log.info("GeoAnnMap for neuron {} ({}) is null", neuron.getName(), neuron.getId());
+        }
+
         processAnchorsDeleted(neuron.getGeoAnnotationMap().values(), null);
         processAnchoredVoxelPathsDeleted(neuron.getId());
     }
