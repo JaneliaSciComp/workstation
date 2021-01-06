@@ -19,7 +19,9 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class IdentifiersVisualPanel2 extends JPanel {
 
@@ -85,22 +87,24 @@ public final class IdentifiersVisualPanel2 extends JPanel {
 
         SimpleWorker worker = new SimpleWorker() {
 
-            List<Reference> refs = new ArrayList<>();
+            Set<Reference> refs = new LinkedHashSet<>();
             StringBuilder notFound = new StringBuilder();
 
             @Override
             protected void doStuff() throws Exception {
                 int i=0;
                 for (String line : lines) {
-                    boolean found;
+                    boolean found = false;
                     if (line.contains("#")) {
                         refs.add(Reference.createFor(line));
                         found = true;
                     }
                     else {
-                        List<Reference> lineResults = search(searchClass, line);
-                        found = !lineResults.isEmpty();
-                        refs.addAll(lineResults);
+                        Set<Reference> lineResults = search(searchClass, line);
+                        if (!lineResults.isEmpty()) {
+                            refs.addAll(lineResults);
+                            found = true;
+                        }
                     }
                     if (!found) {
                         if (notFound.length()>0) notFound.append('\n');
@@ -115,7 +119,7 @@ public final class IdentifiersVisualPanel2 extends JPanel {
             protected void hadSuccess() {
 
                 // Update state
-                results = refs;
+                results = new ArrayList<>(refs);
                 isSearching = false;
                 triggerValidation();
 
@@ -149,7 +153,7 @@ public final class IdentifiersVisualPanel2 extends JPanel {
 
     }
 
-    private List<Reference> search(Class<? extends DomainObject> searchClass, String searchString) throws Exception {
+    private Set<Reference> search(Class<? extends DomainObject> searchClass, String searchString) throws Exception {
 
         Filter filter = createUnsavedFilter(searchClass, "Bulk Search");
         filter.setSearchString(searchString);
@@ -157,7 +161,8 @@ public final class IdentifiersVisualPanel2 extends JPanel {
         config.setFetchAnnotations(false);
         SolrSearchResults searchResults = config.performSearch();
 
-        List<Reference> refs = new ArrayList<>();
+        Set<Reference> refs = new LinkedHashSet<>();
+        // This only fetches a page of results. This seems reasonable if we're searching for identifiers.
         for (DomainObject object : searchResults.getPage(0).getObjects()) {
             refs.add(Reference.createFor(object));
         }

@@ -25,6 +25,7 @@ import org.janelia.model.security.Subject;
 import org.janelia.workstation.core.api.facade.interfaces.*;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.*;
+import org.janelia.workstation.core.model.search.DomainObjectResultPage;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.util.ColorDepthUtils;
 import org.perf4j.LoggingStopWatch;
@@ -366,10 +367,16 @@ public class DomainModel {
             // Get everything, sort it, and then select the page.
             // TODO: this could be improved by moving this logic to the server-side
             List<DomainObject> allDomainObjects = getDomainObjects(node.getChildren());
+            log.info("Looked up {} children and got {} objects", node.getChildren().size(), allDomainObjects.size());
             DomainUtils.sortDomainObjects(allDomainObjects, sortCriteria);
             List<Annotation> annotations = getAnnotations(node.getChildren());
             DomainObjectSearchResults results = new DomainObjectSearchResults(allDomainObjects, annotations);
-            domainObjects = results.getPage(page).getObjects();
+            log.info("Got results: {}", results);
+            DomainObjectResultPage resultPage = results.getPage(page);
+            if (resultPage==null) {
+                throw new IllegalStateException("Results have no such page: "+page);
+            }
+            domainObjects = resultPage.getObjects();
         }
         else {
             // This is a persisted node, so we can paginate on the server and return just the requested page

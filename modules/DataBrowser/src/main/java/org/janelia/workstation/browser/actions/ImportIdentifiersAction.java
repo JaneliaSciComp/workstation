@@ -44,7 +44,9 @@ import java.text.MessageFormat;
 public final class ImportIdentifiersAction extends CallableSystemAction {
 
     private static final Logger log = LoggerFactory.getLogger(ImportIdentifiersAction.class);
-    
+
+    private static Long resultId = -1L;
+
     @Override
     public String getName() {
         return "Batch Search";
@@ -90,10 +92,8 @@ public final class ImportIdentifiersAction extends CallableSystemAction {
 
             IdentifiersWizardState endState = (IdentifiersWizardState) wiz.getProperty(IdentifiersWizardIterator.PROP_WIZARD_STATE);
 
-            Long guid = -1L;
-
             TreeNode node = new TreeNode();
-            node.setId(guid);
+            node.setId(resultId--); // decrement search result
             node.setName("Batch Search Results");
             node.setChildren(endState.getResults());
 
