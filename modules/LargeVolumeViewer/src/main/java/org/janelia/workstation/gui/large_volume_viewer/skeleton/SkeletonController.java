@@ -407,6 +407,20 @@ public class SkeletonController implements NextParentListener {
         }
     }
 
+    @Subscribe
+    public void anchorMovedBack(AnnotationMovedBackEvent event) {
+        Collection<TmGeoAnnotation> annotations = event.getAnnotations();
+        if (!annotations.isEmpty()) {
+            for (TmGeoAnnotation annotation: annotations) {
+                skeleton.moveTmGeoAnchorBack(annotation);
+            }
+        }
+        if (event.hasRequestedNextParent()) {
+            setNextParent(event.getRequestedNextParent().getId());
+            skeletonChanged();
+        }
+    }
+
     public void clearAnchors() {
         skeleton.clear();
 		skeletonChanged();

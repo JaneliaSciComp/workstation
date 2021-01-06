@@ -2248,12 +2248,11 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
 
     // ----- notifications to listeners -----
-    // ***** NOTE *****
-    // all calls to all "fire" methods must be done in the UI thread!
-    //  use SwingUtilities.invokeLater()!
-
-    // need to refactor this so the check for whether a neuron can get edited is actually at the point of attack
     public void fireAnnotationNotMoved(TmGeoAnnotation annotation) {
+        AnnotationMovedBackEvent event = new AnnotationMovedBackEvent(this,
+                Arrays.asList(new TmGeoAnnotation[]{annotation}),
+                null);
+        ViewerEventBus.postEvent(event);
     }
 
     public void fireAnnotationMoved(TmGeoAnnotation annotation) {
