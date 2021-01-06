@@ -17,9 +17,9 @@ public class DomainObjectPermission {
     public DomainObjectPermission(DomainObject domainObject, String subjectKey) {
         this.domainObject = domainObject;
         this.subjectKey = subjectKey;
-        this.owner = domainObject.getOwnerKey().equals(subjectKey);
-        this.write = domainObject.getWriters().contains(subjectKey);
-        this.read = domainObject.getReaders().contains(subjectKey);
+        this.owner = domainObject.getOwnerKey() != null && domainObject.getOwnerKey().equals(subjectKey);
+        this.write = domainObject.getWriters() != null && domainObject.getWriters().contains(subjectKey);
+        this.read = domainObject.getReaders() != null && domainObject.getReaders().contains(subjectKey);
     }
 
     public void setRead(boolean read) {

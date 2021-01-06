@@ -1,5 +1,6 @@
 package org.janelia.workstation.core.model.results;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.janelia.workstation.core.model.search.DomainObjectResultPage;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 
@@ -25,5 +26,16 @@ public class NodeQueryResults extends DomainObjectSearchResults {
             setPage(page, resultPage);
         }
         return resultPage;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("nodeId", searchConfig.getNode() == null ? null : searchConfig.getNode().getId())
+                .append("pages", pages)
+                .append("loadedPages", loadedPages)
+                .append("numTotalResults", numTotalResults)
+                .append("numLoadedResults", numLoadedResults)
+                .toString();
     }
 }
