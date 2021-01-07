@@ -1,4 +1,4 @@
-package org.janelia.horta.actions;
+package org.janelia.workstation.controller.action;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,19 +14,19 @@ import org.openide.util.NbBundle.Messages;
 
 @ActionID(
         category = "Horta",
-        id = "org.janelia.horta.actions.AddUnique2NoteAction"
+        id = "org.janelia.horta.actions.AddUnique1NoteAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_AddUnique2Note",
+        displayName = "#CTL_AddUnique1Note",
         lazy = true
 )
-@Messages("CTL_AddUnique2Note=Add Unique 2 Note")
-public final class AddUnique2NoteAction
+@Messages("CTL_AddUnique1Note=Add Unique 1 Note")
+public final class AddUnique1NoteAction
 extends AbstractAction
 implements ActionListener
 {
-    public AddUnique2NoteAction() {
-        super("Add Unique 2 Note");
+    public AddUnique1NoteAction() {
+        super("Add Unique 1 Note");
     }
 
     @Override
@@ -36,7 +36,7 @@ implements ActionListener
         SimpleWorker setter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                neuronManager.setNote(state.getCurrentVertex(), PredefinedNote.UNIQUE_2.getNoteText());
+                neuronManager.setNote(state.getCurrentVertex(), PredefinedNote.UNIQUE_1.getNoteText());
             }
 
             @Override

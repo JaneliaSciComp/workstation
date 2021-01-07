@@ -2,6 +2,7 @@ package org.janelia.workstation.controller.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
@@ -129,6 +130,18 @@ public class TmHistory {
         }
     }
 
+    private void addCurrentSelectionsToEvent(TmHistoricalEvent event) {
+        TmSelectionState state = TmModelManager.getInstance().getCurrentSelections();
+        if (state.getCurrentNeuron()!=null) {
+            TmNeuronMetadata neuron = state.getCurrentNeuron();
+            event.addItemToSelectionState(TmSelectionState.SelectionCode.NEURON, neuron.getId());
+        }
+        if (state.getCurrentVertex()!=null) {
+            TmGeoAnnotation vertex = state.getCurrentVertex();
+            event.addItemToSelectionState(TmSelectionState.SelectionCode.VERTEX, vertex.getId());
+        }
+    }
+
     public void addHistoricalEvent (TmHistoricalEvent event) {
         if (!recordHistory)
             return;
@@ -143,6 +156,7 @@ public class TmHistory {
             undoMode = false;
         }
 
+        addCurrentSelectionsToEvent(event);
         historyOperations.add(event);
         undoStep = 0;
 

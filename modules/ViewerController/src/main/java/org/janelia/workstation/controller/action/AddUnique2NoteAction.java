@@ -1,4 +1,4 @@
-package org.janelia.horta.actions;
+package org.janelia.workstation.controller.action;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,30 +9,24 @@ import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNot
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 
 @ActionID(
         category = "Horta",
-        id = "org.janelia.horta.actions.AddTracedEndNoteAction"
+        id = "org.janelia.horta.actions.AddUnique2NoteAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_AddTracedEndNote",
+        displayName = "#CTL_AddUnique2Note",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "T")
-})
-@Messages("CTL_AddTracedEndNote=Add Traced End Note")
-
-public final class AddTracedEndNoteAction
+@Messages("CTL_AddUnique2Note=Add Unique 2 Note")
+public final class AddUnique2NoteAction
 extends AbstractAction
 implements ActionListener
 {
-    public AddTracedEndNoteAction() {
-        super("Add Traced End Note");
+    public AddUnique2NoteAction() {
+        super("Add Unique 2 Note");
     }
 
     @Override
@@ -42,7 +36,7 @@ implements ActionListener
         SimpleWorker setter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                neuronManager.setNote(state.getCurrentVertex(), PredefinedNote.TRACED_END.getNoteText());
+                neuronManager.setNote(state.getCurrentVertex(), PredefinedNote.UNIQUE_2.getNoteText());
             }
 
             @Override

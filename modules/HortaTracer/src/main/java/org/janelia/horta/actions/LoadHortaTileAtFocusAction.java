@@ -24,17 +24,19 @@ import org.slf4j.LoggerFactory;
 @Messages("CTL_LoadHortaTileAtFocusAction=Load Horta Tile At Focus")
 
 public final class LoadHortaTileAtFocusAction implements ActionListener {
+    private NeuronTracerTopComponent context;
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
+
+    public LoadHortaTileAtFocusAction(NeuronTracerTopComponent horta) {
+        context = horta;
+    }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        LOG.info("Load KTX Central Tile Action invoked");
-        NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
-        if (nttc == null)
-            return;
         try {
-            nttc.setPreferKtx(true);
-            nttc.loadPersistentTileAtFocus();
+            LOG.info("Load KTX Central Tile Action invoked");
+            context.setPreferKtx(true);
+            context.loadPersistentTileAtFocus();
         } catch (IOException ex) {
             LOG.info("Tile load failed", ex);
         }

@@ -378,6 +378,10 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         loadStartupPreferences();
 
+        // fire off notice for checkboxes, etc.
+        ViewerOpenEvent openEvent = new ViewerOpenEvent(this,
+                ViewerOpenEvent.VIEWER.HORTA);
+        ViewerEventBus.postEvent(openEvent);
     }
 
     public SceneWindow getSceneWindow() {
@@ -1642,11 +1646,11 @@ public final class NeuronTracerTopComponent extends TopComponent
                             + indicatedNeuron.getName()
                             + "':").setEnabled(false);
 
-                    // Toggle Visiblity (maybe we could only hide from here though...)
                     AbstractAction toggleVisAction = new AbstractAction("Set neuron radius...") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            TmModelManager.getInstance().getCurrentView().toggleHidden(indicatedNeuron.getId());
+                            NeuronSetRadiusAction setRadiusAction = new NeuronSetRadiusAction();
+                            setRadiusAction.execute(indicatedNeuron.getId());
                         }
                     };
                     topMenu.add(toggleVisAction);

@@ -1,5 +1,7 @@
 package org.janelia.workstation.controller.model;
 
+import org.janelia.workstation.controller.eventbus.ViewerEvent;
+import org.janelia.workstation.controller.eventbus.ViewerOpenEvent;
 import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
@@ -18,6 +20,7 @@ public class TmViewState {
     private NeuronSelectionSpatialFilter neuronFilter;
     private boolean applyFilter;
     private boolean projectReadOnly;
+    private Set<ViewerEvent.VIEWER> viewerSet;
     private Set<Long> hiddenAnnotations;
     private Set<String> hiddenMeshes;
     private Set<Long> nonInteractableAnnotations;
@@ -46,6 +49,7 @@ public class TmViewState {
         customNeuronColors = new ConcurrentHashMap<>();
         customNeuronRadii = new ConcurrentHashMap<>();
         reviewModeNeurons = threadSafeMap.newKeySet();
+        viewerSet = threadSafeMap.newKeySet();
     }
 
     public boolean getFilter() {
@@ -132,6 +136,18 @@ public class TmViewState {
 
     public void clearNeuronRadiusToggle() {
         neuronRadiusToggle.clear();
+    }
+
+    public void addViewer(ViewerEvent.VIEWER viewer) {
+        viewerSet.add(viewer);
+    }
+
+    public void removeViewer(ViewerEvent.VIEWER viewer) {
+        viewerSet.remove(viewer);
+    }
+
+    public Set<ViewerEvent.VIEWER> getViewerSet() {
+        return viewerSet;
     }
 
     public void addAnnotationToNeuronRadiusToggle(Long annId) {

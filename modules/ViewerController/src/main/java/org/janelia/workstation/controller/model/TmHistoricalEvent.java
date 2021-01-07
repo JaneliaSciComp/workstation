@@ -1,5 +1,7 @@
 package org.janelia.workstation.controller.model;
 
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +11,7 @@ public class TmHistoricalEvent {
     public enum EVENT_TYPE {NEURON_UPDATE, NEURON_DELETE, NEURON_CREATE, NEURON_MERGE};
     EVENT_TYPE type;
     Date timestamp;
+    Map<TmSelectionState.SelectionCode,Long> selectionState = new HashMap<>();
     Boolean multiAction = false;
 
     public Date getTimestamp() {
@@ -25,6 +28,14 @@ public class TmHistoricalEvent {
 
     public void setNeurons(Map<Long, byte[]> neurons) {
         this.neurons = neurons;
+    }
+
+    public void addItemToSelectionState (TmSelectionState.SelectionCode key, Long itemID) {
+        selectionState.put(key, itemID);
+    }
+
+    public Long getSelectedItem(TmSelectionState.SelectionCode type) {
+        return selectionState.get(type);
     }
 
     public EVENT_TYPE getType() {

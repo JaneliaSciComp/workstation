@@ -23,19 +23,19 @@ import java.util.Map;
         id = "NeuronSetRadiusAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_NeuronSetRadiusAction",
+        displayName = "#CTL_AnnotationSetRadiusAction",
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Horta", position = 1510, separatorBefore = 1499)
+        @ActionReference(path = "Menu/Actions/Horta", position = 1511, separatorBefore = 1499)
 })
-@NbBundle.Messages("CTL_NeuronSetRadiusAction=Set Neuron Radius")
+@NbBundle.Messages("CTL_AnnotationSetRadiusAction=Set Vertex Radius")
 
-public class NeuronSetRadiusAction extends AbstractAction {
-    private static final Logger log = LoggerFactory.getLogger(NeuronSetRadiusAction.class);
+public class AnnotationSetRadiusAction extends AbstractAction {
+    private static final Logger log = LoggerFactory.getLogger(AnnotationSetRadiusAction.class);
 
-    public NeuronSetRadiusAction() {
-        super("Set Neuron Radius");
+    public AnnotationSetRadiusAction() {
+        super("Set Vertex Radius");
     }
 
     @Override
@@ -45,29 +45,28 @@ public class NeuronSetRadiusAction extends AbstractAction {
         if (currNeuron==null)
             return;
 
-        setNeuronRadius(currNeuron.getId());
+        TmGeoAnnotation currVertex = TmModelManager.getInstance().getCurrentSelections().getCurrentVertex();
+        if (currVertex==null)
+            return;
+
+        setAnnotationRadius(currNeuron.getId(), currVertex.getId());
     }
 
-    public void execute(Long neuronID) {
-        setNeuronRadius(neuronID);
+    public void execute(Long neuronID, Long vertexID) {
+        setAnnotationRadius(neuronID, vertexID);
     }
 
-    public void setNeuronRadius(Long neuronID) {
+    public void setAnnotationRadius(Long neuronID, Long vertexID) {
         if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
         double defaultRadius = 1.0f;
         TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(neuronID);
-        Map<Long, TmGeoAnnotation> map = neuron.getGeoAnnotationMap();
-        if (!map.isEmpty()) {
-             TmGeoAnnotation ann = map.values().iterator().next();
-             if (ann!=null) {
-                 defaultRadius = ann.getRadius();
-             }
-        }
+        TmGeoAnnotation vertex = NeuronManager.getInstance().getGeoAnnotationFromID(neuronID, vertexID);
+        defaultRadius = vertex.getRadius();
 
         String ans = (String) JOptionPane.showInputDialog(
                 null,
-                "Set radius for neuron (µm): ",
+                "Set radius for vertex (µm): ",
                 "Set radius",
                 JOptionPane.PLAIN_MESSAGE,
                 null,
@@ -97,7 +96,7 @@ public class NeuronSetRadiusAction extends AbstractAction {
             @Override
             protected void doStuff() throws Exception {
                 NeuronManager manager = NeuronManager.getInstance();
-                manager.updateNeuronRadius(neuronID, finalRadius);
+                manager.updateAnnotationRadius(neuronID, vertexID, finalRadius);
             }
 
             @Override

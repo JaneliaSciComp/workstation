@@ -54,7 +54,10 @@ class KtxBlockMenuBuilder {
        tilesMenu.add(new AbstractAction("Load KTX Tile At Focus") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new LoadHortaTileAtFocusAction().actionPerformed(e);
+                NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
+                if (nttc == null)
+                    return;
+                new LoadHortaTileAtFocusAction(nttc).actionPerformed(e);
             }
         });
         

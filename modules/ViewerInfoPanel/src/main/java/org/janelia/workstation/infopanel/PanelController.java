@@ -19,7 +19,6 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.janelia.workstation.controller.eventbus.ViewerCloseEvent.VIEWER.HORTA;
 
 /**
  * This will have access to setters, etc. on the panels, to provide

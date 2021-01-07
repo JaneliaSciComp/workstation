@@ -6,10 +6,13 @@ package org.janelia.horta.actions;
  */
 
 import java.awt.event.ActionEvent;
+import java.util.Set;
 
 import javax.swing.AbstractAction;
 import org.janelia.horta.NeuronTracerTopComponent;
 import org.janelia.horta.PlayReviewManager;
+import org.janelia.workstation.controller.eventbus.ViewerEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -25,22 +28,21 @@ import org.slf4j.LoggerFactory;
         displayName = "Reverse Playback",
         lazy = true
 )
-@ActionReferences({
-        @ActionReference(path = "Shortcuts", name = "C-LEFT")
-})
 public class ReversePlayReviewAction extends AbstractAction {
 
+    private NeuronTracerTopComponent context;
     private static final Logger log = LoggerFactory.getLogger(ReversePlayReviewAction.class);
-    public ReversePlayReviewAction() {
+    public ReversePlayReviewAction(NeuronTracerTopComponent horta) {
         super("Reverse Play Review");
+        context = horta;
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
-       NeuronTracerTopComponent nttc = NeuronTracerTopComponent.findThisComponent();
-        if (nttc != null && nttc.isShowing()) {
-            nttc.resumePlaybackReview(PlayReviewManager.PlayDirection.REVERSE);
-        }
+        Set<ViewerEvent.VIEWER> openViewers = TmModelManager.getInstance().getCurrentView().getViewerSet();
+        if (!openViewers.contains(ViewerEvent.VIEWER.HORTA))
+            return;
+        context.resumePlaybackReview(PlayReviewManager.PlayDirection.REVERSE);
     }
     
     @Override

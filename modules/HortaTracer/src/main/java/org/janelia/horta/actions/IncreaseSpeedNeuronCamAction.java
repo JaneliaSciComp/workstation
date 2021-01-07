@@ -26,20 +26,18 @@ import org.slf4j.LoggerFactory;
         displayName = "Increase Speed NeuronCam",
         lazy = true
 )
-@ActionReferences({
-        @ActionReference(path = "Shortcuts", name = "C-DOWN")
-})
 public class IncreaseSpeedNeuronCamAction extends AbstractAction {
 
+    private NeuronTracerTopComponent context;
     private static final Logger log = LoggerFactory.getLogger(IncreaseSpeedNeuronCamAction.class);
-    public IncreaseSpeedNeuronCamAction() {
+    public IncreaseSpeedNeuronCamAction(NeuronTracerTopComponent horta) {
         super("Increase Speed Of NeuronCam");
+        context = horta;
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
-       NeuronTracerTopComponent nttc = NeuronTracerTopComponent.findThisComponent();
-       nttc.updatePlaybackSpeed(true);
+       context.updatePlaybackSpeed(true);
     }
     
     @Override

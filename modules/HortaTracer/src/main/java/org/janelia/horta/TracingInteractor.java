@@ -31,6 +31,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 
 import Jama.Matrix;
+import org.janelia.workstation.controller.action.AnnotationSetRadiusAction;
 import org.janelia.workstation.controller.action.NeuronChooseColorAction;
 import org.janelia.workstation.controller.model.DefaultNeuron;
 import org.janelia.workstation.controller.model.TmViewState;
@@ -1224,32 +1225,9 @@ public class TracingInteractor extends MouseAdapter
             if (!TmModelManager.checkOwnership(hoveredNeuron)) {
                 return false;
             }
-            RadiusDialog radiusDialog = new RadiusDialog(hoveredNeuron, hoveredVertex);
-            Object selectedValue = radiusDialog.getValue();
-            int result = -1;
-            if (selectedValue == null) {
-                result = JOptionPane.CLOSED_OPTION;
-            }
-            else {
-                result = Integer.parseInt(selectedValue.toString());
-            }
-            
-            if ( result == JOptionPane.CANCEL_OPTION )
-            {
-                log.info("Radius dialog canceled");
-                radiusDialog.revertRadiusChange();
-                return false;
-            }
-            else if (result == JOptionPane.CLOSED_OPTION) {
-                log.info("Radius dialog closed");
-                radiusDialog.revertRadiusChange();
-                return false;                
-            }
-            else {
-                log.info("Radius dialog accepted");
-                radiusDialog.commitRadius();
-                return true;
-            }
+            AnnotationSetRadiusAction vertexRadiusAction = new AnnotationSetRadiusAction();
+            vertexRadiusAction.execute(hoveredNeuron.getId(), hoveredVertex.getId());
+            return true;
         }
 
         TmNeuronMetadata getHighlightedNeuron() {

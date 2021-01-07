@@ -140,6 +140,25 @@ public class TmViewerManager implements GlobalViewerController {
         }
     }
 
+    @Subscribe
+    public void viewerOpenedEvent(ViewerOpenEvent event) {
+        try {
+            TmModelManager.getInstance().getCurrentView().addViewer(event.getViewer());
+        } catch (Exception error) {
+            FrameworkAccess.handleException(error);
+        }
+    }
+
+    @Subscribe
+    public void viewerClosedEvent(ViewerCloseEvent event) {
+        try {
+            TmModelManager.getInstance().getCurrentView().removeViewer(event.getViewer());
+        } catch (Exception error) {
+            FrameworkAccess.handleException(error);
+        }
+    }
+
+
     private void loadImagery(TmSample sample) {
         projectInit.loadImagery(sample);
     }

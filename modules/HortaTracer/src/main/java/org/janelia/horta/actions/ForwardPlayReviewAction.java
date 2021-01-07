@@ -25,20 +25,18 @@ import org.slf4j.LoggerFactory;
         displayName = "Forward Playback",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "C-RIGHT")
-})
 public class ForwardPlayReviewAction extends AbstractAction {
 
+    private NeuronTracerTopComponent context;
     private static final Logger log = LoggerFactory.getLogger(ForwardPlayReviewAction.class);
-    public ForwardPlayReviewAction() {
+    public ForwardPlayReviewAction(NeuronTracerTopComponent horta) {
         super("Forward Play Review");
+        context = horta;
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
-       NeuronTracerTopComponent nttc = NeuronTracerTopComponent.findThisComponent();
-       nttc.resumePlaybackReview(PlayReviewManager.PlayDirection.FORWARD);
+       context.resumePlaybackReview(PlayReviewManager.PlayDirection.FORWARD);
     }
     
     @Override

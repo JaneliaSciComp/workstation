@@ -9,6 +9,8 @@ import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.horta.NeuronTracerTopComponent;
 import org.janelia.scenewindow.SceneWindow;
+import org.janelia.workstation.controller.eventbus.ViewerEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -18,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import java.util.Set;
 
 @ActionID(
         category = "Horta",
@@ -39,6 +42,9 @@ public class ZSliceDownAction extends AbstractAction {
     
     @Override
     public void actionPerformed(ActionEvent e) {
+        Set<ViewerEvent.VIEWER> openViewers = TmModelManager.getInstance().getCurrentView().getViewerSet();
+        if (!openViewers.contains(ViewerEvent.VIEWER.HORTA))
+            return;
        NeuronTracerTopComponent nttc = NeuronTracerTopComponent.findThisComponent();
        SceneWindow sc = nttc.getSceneWindow();
        Vantage vantage = sc.getVantage();

@@ -1,6 +1,9 @@
 package org.janelia.workstation.controller.eventbus;
 
 public class ViewerEvent {
+    public enum VIEWER {
+        HORTA, TASKVIEW, LVV
+    };
     protected Object sourceClass;
     protected String sourceMethod;
 
