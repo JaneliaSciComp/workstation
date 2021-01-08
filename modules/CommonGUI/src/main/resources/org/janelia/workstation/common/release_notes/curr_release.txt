@@ -3,3 +3,7 @@
 Horta
 * Fixed drag-to-merge in Horta 2d
 * Added preference to enable/disable drag-to-merge in Horta 2d
+* Fixed hotkeys that were getting triggered out of their correct context
+* Fixed adjusting anchor radius in Horta
+* Added support to restore vertex selection on undo
+* Fixed restoring colormodel unmixing parameters on workspace open
