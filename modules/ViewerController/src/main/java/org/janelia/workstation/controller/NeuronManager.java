@@ -623,11 +623,12 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         if (parentAnn == null) {
             return null;
         }
-
         addTimer.mark("start addChildAnn");
 
         final TmNeuronMetadata neuron = getNeuronFromNeuronID(parentAnn.getNeuronId());
-        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
+        TmHistory historian = TmModelManager.getInstance().getNeuronHistory();
+        historian.checkBackup(neuron);
+        historian.setRecordHistory(false);
 
         final TmGeoAnnotation annotation = neuronModel.addGeometricAnnotation(
                 neuron, parentAnn.getId(), xyz.x(), xyz.y(), xyz.z());
@@ -649,7 +650,16 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         addTimer.mark("end addChildAnn");
         // reset timer state; we don't care about end > start
         addTimer.clearPreviousStepName();
-
+        fireVertexSelected(annotation);
+        historian.setRecordHistory(true);
+        try {
+            TmHistoricalEvent targetFinal = createSerialization(
+                    Arrays.asList(new TmNeuronMetadata[]{neuron}));
+            targetFinal.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+            historian.addHistoricalEvent(targetFinal);
+        } catch (Exception e) {
+            FrameworkAccess.handleException(e);
+        }
         return annotation;
     }
 
@@ -2363,6 +2373,13 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public void fireNeuronsOwnerChanged(List<TmNeuronMetadata> neuronList) {
         NeuronOwnerChangedEvent annotationEvent = new NeuronOwnerChangedEvent(this,neuronList);
         ViewerEventBus.postEvent(annotationEvent);
+    }
+
+    void fireVertexSelected(TmGeoAnnotation ann) {
+        SelectionAnnotationEvent selectionEvent = new SelectionAnnotationEvent(this,
+                Arrays.asList(new TmGeoAnnotation[]{ann}),
+                true, false);
+        ViewerEventBus.postEvent(selectionEvent);
     }
 
     void fireNeuronSelected(TmNeuronMetadata neuron) {

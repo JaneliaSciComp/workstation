@@ -39,6 +39,7 @@ public class ModelTranslation {
             tmChannelModel.setCombiningConstant(channelModel.getCombiningConstant());
             tmColorModel.getChannels().add(tmChannelModel);
         }
+        tmColorModel.setUnmixParams(colorModel.getUnmixParameters());
 
         return tmColorModel;
     }

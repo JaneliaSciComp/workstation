@@ -58,9 +58,10 @@ public class UndoNeuronChangeAction extends AbstractAction {
 
         SimpleWorker restorer = new SimpleWorker() {
             TmNeuronMetadata newNeuron;
+            List<TmHistoricalEvent> eventList;
             @Override
             protected void doStuff() throws Exception {
-                List<TmHistoricalEvent> eventList = TmModelManager.getInstance().getNeuronHistory().undoAction();
+                eventList = TmModelManager.getInstance().getNeuronHistory().undoAction();
                 if (eventList==null || eventList.size()==0)
                     return;
 
@@ -75,39 +76,35 @@ public class UndoNeuronChangeAction extends AbstractAction {
                                 neuronMap.get(neuronId), TmNeuronMetadata.class);
                         restoredNeuron.initNeuronData();
                         NeuronManager.getInstance().restoreNeuron(restoredNeuron);
-                        Long selectedNeuronId = event.getSelectedItem(TmSelectionState.SelectionCode.NEURON);
-                        if (selectedNeuronId!=null) {
-                            TmNeuronMetadata neuronSelected = NeuronManager.getInstance().getNeuronFromNeuronID(selectedNeuronId);
-                            if (neuronSelected==null)
-                                continue;
-                            TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(neuronSelected);
-                            SelectionNeuronsEvent selectionEvent = new SelectionNeuronsEvent(this,
-                                    Arrays.asList(new TmNeuronMetadata[]{neuronSelected}),
-                                    true, false);
-                            ViewerEventBus.postEvent(selectionEvent);
-                            Long selectedVertexId = event.getSelectedItem(TmSelectionState.SelectionCode.VERTEX);
-                            if (selectedVertexId!=null) {
-                                TmGeoAnnotation vertexSelected = NeuronManager.getInstance().getGeoAnnotationFromID(neuronSelected,
-                                        selectedVertexId);
-                                if (vertexSelected==null)
-                                    continue;
-
-                                TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(vertexSelected);
-                                SelectionAnnotationEvent selAnnoEvent = new SelectionAnnotationEvent(this,
-                                        Arrays.asList(new TmGeoAnnotation[]{vertexSelected}),
-                                        true, false);
-                                ViewerEventBus.postEvent(selAnnoEvent);
-                            }
-                        }
-
-
                     }
                 }
             }
 
             @Override
             protected void hadSuccess() {
+                if (eventList==null || eventList.size()==0)
+                    return;
+                TmHistoricalEvent event = eventList.get(eventList.size()-1) ;
+                Long selectedNeuronId = event.getSelectedItem(TmSelectionState.SelectionCode.NEURON);
+                if (selectedNeuronId!=null) {
+                    TmNeuronMetadata neuronSelected = NeuronManager.getInstance().getNeuronFromNeuronID(selectedNeuronId);
+                    if (neuronSelected==null)
+                        return;
+                    TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(neuronSelected);
+                    Long selectedVertexId = event.getSelectedItem(TmSelectionState.SelectionCode.VERTEX);
+                    if (selectedVertexId!=null) {
+                        TmGeoAnnotation vertexSelected = NeuronManager.getInstance().getGeoAnnotationFromID(neuronSelected,
+                                selectedVertexId);
+                        if (vertexSelected==null)
+                            return;
 
+                        TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(vertexSelected);
+                        SelectionAnnotationEvent selAnnoEvent = new SelectionAnnotationEvent(this,
+                                Arrays.asList(new TmGeoAnnotation[]{vertexSelected}),
+                                true, false);
+                        ViewerEventBus.postEvent(selAnnoEvent);
+                    }
+                }
             }
 
             @Override
