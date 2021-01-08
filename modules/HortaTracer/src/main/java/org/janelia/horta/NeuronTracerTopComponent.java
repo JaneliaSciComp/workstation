@@ -1608,15 +1608,15 @@ public final class NeuronTracerTopComponent extends TopComponent
                             }
                         });
 
-                        if (!vertex.isRoot()) {
-                            topMenu.add(new AbstractAction("Delete Neuron Subtree") {
-                                @Override
-                                public void actionPerformed(ActionEvent e) {
-                                    DeleteNeuronSubtreeAction action = new DeleteNeuronSubtreeAction();
-                                    action.execute(vertex.getNeuronId(), vertex.getId());
-                                }
-                            });
+                        topMenu.add(new AbstractAction("Delete Neuron Subtree") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                DeleteNeuronSubtreeAction action = new DeleteNeuronSubtreeAction();
+                                action.execute(vertex.getNeuronId(), vertex.getId());
+                            }
+                        });
 
+                        if (!vertex.isRoot() || vertex.getChildIds().size() == 0) {
                             topMenu.add(new AbstractAction("Delete Vertex") {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
@@ -1624,7 +1624,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                                     action.execute(vertex.getNeuronId(), vertex.getId());
                                 }
                             });
+                        }
 
+                        if (!vertex.isRoot()) {
                             topMenu.add(new AbstractAction("Set Vertex as Neuron Root") {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
@@ -1648,15 +1650,14 @@ public final class NeuronTracerTopComponent extends TopComponent
                                     action.execute(vertex.getNeuronId(), vertex.getId());
                                 }
                             });
-
-                            topMenu.add(new AbstractAction("Transfer Neurite") {
-                                @Override
-                                public void actionPerformed(ActionEvent e) {
-                                    TransferNeuriteAction action = new TransferNeuriteAction();
-                                    action.execute(vertex.getNeuronId(), vertex.getId());
-                                }
-                            });
                         }
+                        topMenu.add(new AbstractAction("Transfer Neurite") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                TransferNeuriteAction action = new TransferNeuriteAction();
+                                action.execute(vertex.getNeuronId(), vertex.getId());
+                            }
+                        });
                     }
                 }
 
