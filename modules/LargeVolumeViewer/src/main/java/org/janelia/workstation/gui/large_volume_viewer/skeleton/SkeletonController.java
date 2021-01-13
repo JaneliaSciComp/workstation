@@ -171,11 +171,11 @@ public class SkeletonController implements NextParentListener {
     @Subscribe
     public void neuronDeleted(NeuronDeleteEvent event) {
         Collection<TmNeuronMetadata> neurons = event.getNeurons();
-        TmNeuronMetadata neuron=null;
+        // should never be empty, but check anyway:
         if (!neurons.isEmpty()) {
-            neuron = neurons.iterator().next();
+            TmNeuronMetadata neuron = neurons.iterator().next();
+            processNeuronDeleted(neuron);
         }
-        processNeuronDeleted(neuron);
     }
 
     @Subscribe
@@ -235,14 +235,6 @@ public class SkeletonController implements NextParentListener {
     }
 
     private void processNeuronDeleted(TmNeuronMetadata neuron) {
-        // debugging: log what's null and let the error bubble up and be reported
-        if (neuron == null) {
-            log.info("neuron is null");
-        }
-        if (neuron.getGeoAnnotationMap() == null) {
-            log.info("GeoAnnMap for neuron {} ({}) is null", neuron.getName(), neuron.getId());
-        }
-
         processAnchorsDeleted(neuron.getGeoAnnotationMap().values(), null);
         processAnchoredVoxelPathsDeleted(neuron.getId());
     }

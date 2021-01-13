@@ -2330,10 +2330,15 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     void fireBulkNeuronsChanged(List<TmNeuronMetadata> addList, List<TmNeuronMetadata> deleteList) {
-        NeuronCreateEvent addNeuronsEvent = new NeuronCreateEvent(this,addList);
-        ViewerEventBus.postEvent(addNeuronsEvent);
-        NeuronDeleteEvent deleteNeuronsEvent = new NeuronDeleteEvent(this,deleteList);
-        ViewerEventBus.postEvent(deleteNeuronsEvent);
+        // this method is called via *many* different updates, not all of which use both lists
+        if (addList.size() > 0) {
+            NeuronCreateEvent addNeuronsEvent = new NeuronCreateEvent(this, addList);
+            ViewerEventBus.postEvent(addNeuronsEvent);
+        }
+        if (deleteList.size() > 0) {
+            NeuronDeleteEvent deleteNeuronsEvent = new NeuronDeleteEvent(this, deleteList);
+            ViewerEventBus.postEvent(deleteNeuronsEvent);
+        }
     }
 
     public void fireNeuronCreated(TmNeuronMetadata neuron) {
