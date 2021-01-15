@@ -177,10 +177,15 @@ public class FilteredAnnotationList extends JPanel {
             InterestingAnnotation annAtRow = model.getAnnotationAtRow(i);
             if (annAtRow.getAnnotationID().equals(ann.getId())) {
                 int viewRow = filteredTable.convertRowIndexToView(i);
-                filteredTable.setRowSelectionInterval(viewRow, viewRow);
-                // scroll to it
-                Rectangle rect = filteredTable.getCellRect(viewRow, 0, true);
-                filteredTable.scrollRectToVisible(rect);
+                if (viewRow >= 0) {
+                    // if visible, select and scroll to it
+                    filteredTable.setRowSelectionInterval(viewRow, viewRow);
+                    Rectangle rect = filteredTable.getCellRect(viewRow, 0, true);
+                    filteredTable.scrollRectToVisible(rect);
+                } else {
+                    // not visible, deselect
+                    filteredTable.clearSelection();
+                }
                 success = true;
                 break;
             }
