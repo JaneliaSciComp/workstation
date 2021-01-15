@@ -1119,7 +1119,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                     fireNeuronSelected(destNeuron);
                 }
                 finally {
-                    endTransaction();
+                    // endTransaction();
                     setSelectMode(true);
                 }
                 //activityLog.logEndOfOperation(getWsId(), annotation);
