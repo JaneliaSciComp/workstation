@@ -1,5 +1,6 @@
 package org.janelia.workstation.controller.eventbus;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SelectionEvent extends ViewerEvent {
@@ -9,7 +10,11 @@ public class SelectionEvent extends ViewerEvent {
 
     public SelectionEvent(Object source, List items, boolean select, boolean clear) {
         super(source);
-        this.items = items;
+        if (items == null) {
+            this.items = new ArrayList();
+        } else {
+            this.items = items;
+        }
         this.select = select;
         this.clear = clear;
     }
