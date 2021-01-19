@@ -268,7 +268,10 @@ public class ObjectMeshPanel extends JPanel {
     public void loadWorkspace(TmWorkspace workspace) {
         objectMeshTableModel.clear();
         if (workspace != null) {
-            objectMeshTableModel.addMeshes(workspace.getObjectMeshList());
+            List<TmObjectMesh> meshList = workspace.getObjectMeshList();
+            if (meshList != null) {
+                objectMeshTableModel.addMeshes(meshList);
+            }
         }
     }
 
