@@ -38,6 +38,10 @@ public class TmViewState {
     private static Map<Long, Color> customNeuronColors;
     private static Map<Long, Long> customNeuronRadii;
 
+    public TmViewState() {
+        init();
+    }
+
     public void init() {
         neuronFilter = new NeuronSelectionSpatialFilter();
         ConcurrentHashMap<Long, Long> threadSafeMap = new ConcurrentHashMap<>();
