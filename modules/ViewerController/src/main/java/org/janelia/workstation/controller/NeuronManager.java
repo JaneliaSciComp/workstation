@@ -1874,12 +1874,12 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         //  we set progress; i only increments per neuron, but we show progress over
         //  all files
         int total = 1;
-        if (exportNotes) {
-            total = 2 * (swcDatas.size() + 1);
-        } else {
-            total = swcDatas.size() + 1;
-        }
         if (swcDatas != null && !swcDatas.isEmpty()) {
+            if (exportNotes) {
+                total = 2 * (swcDatas.size() + 1);
+            } else {
+                total = swcDatas.size() + 1;
+            }
             int i = 0;
             for (SWCData swcData: swcDatas) {
                 progress.setStatus("Exporting neuron file " + (i + 1));
@@ -1907,6 +1907,10 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                     total = 2 * i + 1;
                 }
             }
+        } else {
+            progress.setProgress(total, total);
+            progress.setStatus("No data retrieved!");
+            return;
         }
 
 
