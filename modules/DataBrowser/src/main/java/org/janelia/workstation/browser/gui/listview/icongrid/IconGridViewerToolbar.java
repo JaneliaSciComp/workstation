@@ -84,7 +84,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         configButton.setFocusable(false);
         configButton.setToolTipText("Options for the image viewer");
 
-        mustHaveImageMenuItem = new JCheckBoxMenuItem("Show only items with selected tileimagery");
+        mustHaveImageMenuItem = new JCheckBoxMenuItem("Show only items with selected imagery");
         mustHaveImageMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setMustHaveImage(mustHaveImageMenuItem.isSelected());
