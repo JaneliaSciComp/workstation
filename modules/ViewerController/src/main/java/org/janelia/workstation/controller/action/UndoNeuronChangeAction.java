@@ -28,6 +28,8 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
@@ -43,6 +45,7 @@ import javax.swing.*;
         @ActionReference(path = "Shortcuts", name = "C-Z")
 })
 public class UndoNeuronChangeAction extends AbstractAction {
+    private static final Logger log = LoggerFactory.getLogger(SplitNeuronAtVertexAction.class);
 
     public UndoNeuronChangeAction() {
         super("Undo Neuron Change");
@@ -65,7 +68,9 @@ public class UndoNeuronChangeAction extends AbstractAction {
                 if (eventList==null || eventList.size()==0)
                     return;
 
+                log.info("undoing {} actions", eventList.size());
                 for (TmHistoricalEvent event: eventList) {
+                    log.info("undoing type {} on neurons {}", event.getType(), event.getNeurons().keySet());
                     if (event.getType()== TmHistoricalEvent.EVENT_TYPE.NEURON_DELETE)
                         continue;
                     Map<Long, byte[]> neuronMap = event.getNeurons();
