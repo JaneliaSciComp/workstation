@@ -123,9 +123,11 @@ public class TmViewerManager implements GlobalViewerController {
         projectInit.clearViewers();
         currProject = project;
         if (currProject instanceof TmWorkspace) {
+            log.info("loading workspace {} (ID {})", currProject.getName(), currProject.getId());
             TmModelManager.getInstance().setCurrentWorkspace((TmWorkspace)currProject);
             projectInit.loadAnnotationData((TmWorkspace)currProject);
         } else {
+            log.info("loading sample {} (ID {})", currProject.getName(), currProject.getId());
             loadImagery((TmSample)currProject);
         }
     }
