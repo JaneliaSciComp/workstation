@@ -253,6 +253,6 @@ public class EditWorkspaceNameDialog extends ModalDialog {
     }
     
     private void presentError(String message, String title) throws HeadlessException {
-        FrameworkAccess.handleException(new RuntimeException(message));
+        JOptionPane.showMessageDialog(this, message, title, JOptionPane.ERROR_MESSAGE);
     }
 }
