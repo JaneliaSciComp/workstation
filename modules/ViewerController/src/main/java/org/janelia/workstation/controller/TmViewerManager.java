@@ -254,7 +254,9 @@ public class TmViewerManager implements GlobalViewerController {
             }
             for (TmGeoAnnotation ann : neuron.getGeoAnnotationMap().values()) {
                 if (ann.getRadius() == null) {
+                    Date modDate = ann.getModificationDate();
                     ann.setRadius(1.0);
+                    ann.setModificationDate(modDate);
                 }
             }
         }
