@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.core.api.AccessManager;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -29,6 +30,13 @@ public class NeuronDeleteAction extends EditAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         TmNeuronMetadata currNeuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
+        if (!currNeuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
+            JOptionPane.showMessageDialog(null,
+                    String.format("Unable to delete this neuron"),
+                    "Can't Delete Non-owned Neuron",
+                    JOptionPane.OK_OPTION);
+            return;
+        }
         int nAnnotations = currNeuron.getGeoAnnotationMap().size();
         int ans = JOptionPane.showConfirmDialog(
                 null,
