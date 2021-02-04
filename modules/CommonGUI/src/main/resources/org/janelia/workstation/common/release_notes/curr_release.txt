@@ -4,3 +4,10 @@ Data Browser
 * Added new attributes for Samples and LSMs: Effector Description, Cross Description, Lab, Lab Member
 * Renamed "Driver" attribute to "Line Type"
 * Renamed "Genotype" attribute to "Line Description"
+
+Horta
+* Fixed issue with Z-slice initialization
+* Fixed viewer management when opening Sample
+* Fixed issue with modification date being updated on Workspace Open
+* Constrained deletion on euron to owners
+* Added clear loop indicator on undo
