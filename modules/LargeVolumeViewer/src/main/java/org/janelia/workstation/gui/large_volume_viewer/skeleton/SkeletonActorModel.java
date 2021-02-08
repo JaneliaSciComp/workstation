@@ -717,7 +717,9 @@ public class SkeletonActorModel {
             TmNeuronMetadata nextNeuron = NeuronManager.getInstance().getNeuronFromNeuronID(nextParent.getNeuronID());
             if (nextNeuron!=null) {
                 TmGeoAnnotation nextVertex = nextNeuron.getGeoAnnotationMap().get(nextParent.getGuid());
-                annotations.put(nextVertex.getId(), nextVertex);
+                if (nextVertex != null) {
+                    annotations.put(nextVertex.getId(), nextVertex);
+                }
             }
         }
 
