@@ -1,8 +1,5 @@
 package org.janelia.workstation.controller.model.annotations.neuron;
 
-import org.janelia.workstation.controller.model.annotations.neuron.AnnotationGeometry;
-import org.janelia.workstation.controller.model.annotations.neuron.InterestingAnnotation;
-
 import java.util.ArrayList;
 import java.util.Date;
 import javax.swing.table.AbstractTableModel;

@@ -170,7 +170,7 @@ public class FilteredAnnotationList extends JPanel {
         }
     }
 
-    public void selectAnnotation (TmGeoAnnotation ann) {
+    private void selectAnnotation (TmGeoAnnotation ann) {
         int numAnnotations = model.getRowCount();
         boolean success = false;
         for (int i=0; i<numAnnotations; i++) {
@@ -200,38 +200,38 @@ public class FilteredAnnotationList extends JPanel {
     //   generally they all end up calling updateData()
 
     // sets input neuron to current (ie, selected) and updates
-    public void loadNeuron(TmNeuronMetadata neuron) {
+    void loadNeuron(TmNeuronMetadata neuron) {
         currentNeuron = neuron;
         updateData();
     }
 
-    public void deleteNeuron(TmNeuronMetadata neuron) {
+    void deleteNeuron(TmNeuronMetadata neuron) {
         if (currentNeuron!=null && neuron.getId().equals(currentNeuron.getId())) {
             currentNeuron = null;
         }
         updateData();
     }
 
-    public void loadWorkspace(TmWorkspace workspace) {
+    void loadWorkspace(TmWorkspace workspace) {
         currentNeuron = null;
         updateData();
     }
 
-    public void notesChanged(TmGeoAnnotation ann) {
+    void notesChanged(TmGeoAnnotation ann) {
         // only update if it's in our neuron
         if (currentNeuron != null && ann.getNeuronId().equals(currentNeuron.getId())) {
             updateData();
         }
     }
 
-    public void annotationChanged(TmGeoAnnotation ann) {
+    void annotationChanged(TmGeoAnnotation ann) {
         // only update if it's in our neuron
         if (currentNeuron != null && ann.getNeuronId().equals(currentNeuron.getId())) {
             updateData();
         }
     }
 
-    public synchronized void updateData() {
+    private synchronized void updateData() {
 
         if (skipUpdate)
             return;
@@ -273,7 +273,7 @@ public class FilteredAnnotationList extends JPanel {
         // System.out.println("updated filtered annotation list; elapsed time = " + stopwatch.toString());
     }
 
-    private void loadNeuronAnnotations(TmNeuronMetadata neuron) {
+    private synchronized void loadNeuronAnnotations(TmNeuronMetadata neuron) {
 
         // loop over roots in neuron, annotations per root;
         //  put all the "interesting" annotations in a list
@@ -602,18 +602,18 @@ public class FilteredAnnotationList extends JPanel {
      * here than in the "set" side, because flipping the "current
      * neuron" toggle doesn't explicitly set the filter
      */
-    public AnnotationFilter getCurrentFilter() {
+    private AnnotationFilter getCurrentFilter() {
         return currentFilter;
     }
 
     /**
      * sets the current filter
      */
-    public void setCurrentFilter(AnnotationFilter currentFilter) {
+    private void setCurrentFilter(AnnotationFilter currentFilter) {
         this.currentFilter = currentFilter;
     }
 
-    public AnnotationGeometry getAnnotationGeometry(TmGeoAnnotation ann) {
+    private AnnotationGeometry getAnnotationGeometry(TmGeoAnnotation ann) {
         if (ann.isRoot()) {
             return AnnotationGeometry.ROOT;
         } else if (ann.isBranch()) {

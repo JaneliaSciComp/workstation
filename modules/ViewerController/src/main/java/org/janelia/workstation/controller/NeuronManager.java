@@ -34,7 +34,6 @@ import org.janelia.workstation.controller.action.NeuronTagsAction;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.listener.ViewStateListener;
 import org.janelia.workstation.controller.model.*;
-import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnotationModel;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronMessageConstants;
@@ -100,7 +99,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     private List<TmNeuronMetadata> currentFilteredNeuronList;
 
     private NeuronSpatialFilter neuronFilter;
-   // private final FilteredAnnotationModel filteredAnnotationModel;
 
     private static NeuronManager annotationModel;
     private TmModelManager modelManager;
@@ -117,7 +115,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     // ----- constants
     // how far away to try to put split anchors (pixels)
     private static final Double SPLIT_ANCHOR_DISTANCE = 60.0;
-    private FilteredAnnotationModel filteredAnnotationModel;
 
     public static NeuronManager getInstance() {
         if (annotationModel==null) {
@@ -164,10 +161,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public void addNeuron(TmNeuronMetadata neuron) {
         neuronModel.addNeuron(neuron);
     }
-
-    public FilteredAnnotationModel getFilteredAnnotationModel() {
-       return filteredAnnotationModel;
-   }
 
     public synchronized void clear() {
         log.info("Clearing annotation model");
