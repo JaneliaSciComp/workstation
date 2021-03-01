@@ -90,6 +90,8 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
     private KtxOctreeResolution getKtxResolution(KtxHeader ktxHeader) {
         // Parse maximum resolution
         int maxRes = Integer.parseInt(ktxHeader.keyValueMetadata.get("multiscale_total_levels").trim()) - 1;
+        if (maxRes==0)
+            maxRes = 1;
         return new KtxOctreeResolution(maxRes);
     }
 
@@ -180,6 +182,9 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
             ktxResolution = maximumResolution;
         } else {
             ktxResolution = resolution;
+        }
+        if (getMaximumResolution().getResolution()==1) {
+            return new KtxOctreeBlockTileKey(this, ImmutableList.copyOf( new ArrayList<>()));
         }
         if (ktxResolution.compareTo(getMaximumResolution()) > 0)
             return null; // no resolution that high

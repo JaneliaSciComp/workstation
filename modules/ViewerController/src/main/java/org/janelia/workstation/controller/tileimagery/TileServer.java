@@ -426,7 +426,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         // Initialize pre-fetchers
         minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
         futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
-        clearCache();
+        //clearCache();
         refreshCurrentTileSet();
     }
 

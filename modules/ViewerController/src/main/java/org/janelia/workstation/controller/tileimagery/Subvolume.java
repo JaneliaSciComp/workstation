@@ -24,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.octree.ZoomLevel;
 import org.janelia.workstation.octree.ZoomedVoxelIndex;
