@@ -77,6 +77,8 @@ public class UndoNeuronChangeAction extends AbstractAction {
                     ObjectMapper objectMapper = new ObjectMapper();
 
                     for (Long neuronId : neuronMap.keySet()) {
+                        TmModelManager.getInstance().getCurrentReviews().clearLoopedAnnotations();
+
                         TmNeuronMetadata restoredNeuron = objectMapper.readValue(
                                 neuronMap.get(neuronId), TmNeuronMetadata.class);
                         restoredNeuron.initNeuronData();
