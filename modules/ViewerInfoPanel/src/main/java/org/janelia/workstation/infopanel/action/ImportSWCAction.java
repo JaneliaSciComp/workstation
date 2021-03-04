@@ -77,6 +77,7 @@ public class ImportSWCAction extends AbstractAction {
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 List<File> swcFiles = getFilesList(chooser.getSelectedFile());
                 if (swcFiles.size() > 0) {
+                    SWCDirectorySource.setSwcDirectory(swcFiles.get(0).getParentFile());
                     NeuronManager annotationModel = NeuronManager.getInstance();
                     BackgroundWorker importer = new BackgroundWorker() {
                         @Override
