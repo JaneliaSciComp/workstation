@@ -74,8 +74,7 @@ public class DeleteVertexLinkAction extends AbstractAction {
         final TmGeoAnnotation annotation = manager.getGeoAnnotationFromID(neuronID, annotationID);
         final TmGeoAnnotation parentAnnotation = manager.getGeoAnnotationFromID(neuronID, annotation.getParentId());
         if (annotation == null) {
-            FrameworkAccess.handleException(new Throwable(
-                    "No annotation to delete."));
+            showError("Error", "No annotation to delete.");
             return;
         }
 
@@ -83,13 +82,11 @@ public class DeleteVertexLinkAction extends AbstractAction {
             return;
 
         if (annotation.isRoot() && annotation.getChildIds().size() > 0) {
-            FrameworkAccess.handleException(new Throwable(
-                    "This annotation is a root with children, not a link!"));
+            showError("Error","This annotation is a root with children, not a link!");
             return;
         }
         if (annotation.getChildIds().size() > 1) {
-            FrameworkAccess.handleException(new Throwable(
-                    "This annotation is a branch (many children), not a link!"));
+            showError("Error","This annotation is a branch (many children), not a link!");
             return;
         }
 
@@ -116,5 +113,10 @@ public class DeleteVertexLinkAction extends AbstractAction {
             }
         };
         deleter.execute();
-        }
     }
+
+    void showError(String title, String message) {
+        JOptionPane.showMessageDialog(null, message, title, JOptionPane.OK_OPTION);
+    }
+
+}
