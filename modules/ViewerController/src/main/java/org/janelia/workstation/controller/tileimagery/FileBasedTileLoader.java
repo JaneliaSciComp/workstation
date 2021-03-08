@@ -18,13 +18,10 @@ public class FileBasedTileLoader extends TileLoader {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileBasedTileLoader.class);
 
-    private final JadeServiceClient jadeServiceClient;
-
     /**
      * Create the frame.
      */
-    public FileBasedTileLoader(JadeServiceClient jadeServiceClient) {
-        this.jadeServiceClient = jadeServiceClient;
+    public FileBasedTileLoader() {
     }
 
         /**

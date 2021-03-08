@@ -19,7 +19,7 @@ public class OptionConstants {
     public static final String LAST_SHOWN_RELEASE_NOTES = "SessionMgr.LastShownReleaseNotes";
     public static final String SANITIZE_FILENAMES_PROPERTY = "SessionMgr.SanitizeFilenames1";
     public static final String USE_RUN_AS_USER_PREFERENCES = "useRunAsUserPreferences";
-    public static final String USE_HTTP_FOR_TILE_ACCESS = "useHTTPForTileAccess";
+    public static final String WORKSTATION_LITE = "workstationLite";
     public static final String FILE_CACHE_DISABLED_PROPERTY = "console.localCache.disabled";
     public static final String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
     public static final String NUM_CONCURRENT_DOWNLOADS_PROPERTY = "console.concurrent.downloads";

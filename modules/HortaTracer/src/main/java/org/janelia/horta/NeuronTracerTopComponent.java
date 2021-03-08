@@ -28,7 +28,6 @@ import javax.swing.*;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.MouseInputListener;
-import javax.swing.text.Keymap;
 
 import Jama.Matrix;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,7 +71,6 @@ import org.janelia.horta.loader.ObjMeshLoader;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
 import org.janelia.horta.loader.TilebaseYamlLoader;
-import org.janelia.horta.movie.HortaMovieSource;
 import org.janelia.horta.render.NeuronMPRenderer;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
@@ -93,7 +91,6 @@ import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.access.ModelTranslation;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
-import org.janelia.workstation.controller.dialog.NeuronHistoryDialog;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
@@ -105,17 +102,13 @@ import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
-import org.openide.actions.RedoAction;
-import org.openide.actions.UndoAction;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.MouseUtils;
 import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
-import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
-import org.openide.util.actions.SystemAction;
 import org.openide.util.lookup.Lookups;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
@@ -2175,7 +2168,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     TileLoader getTileLoader() {
-        if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
+        if (ApplicationOptions.getInstance().isWorkstationLite()) {
             return new CachedTileLoader(
                     new JadeBasedTileLoader(new JadeServiceClient(ConsoleProperties.getString("jadestorage.rest.url"), () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false))),
                     LocalCacheMgr.getInstance().getLocalFileCacheStorage(),

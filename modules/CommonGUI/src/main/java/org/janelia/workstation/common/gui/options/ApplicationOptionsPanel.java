@@ -31,7 +31,6 @@ import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.LocalPreferenceMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.panels.MemorySettingPanel;
@@ -310,7 +309,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         showReleaseNotesOnStartup.setSelected(options.isShowReleaseNotes());
         showStartPageOnStartup.setSelected(options.isShowStartPageOnStartup());
         useRunAsUserPreferences.setSelected(options.isUseRunAsUserPreferences());
-        useHTTPForTileAccess.setSelected(options.isUseHTTPForTileAccess());
+        useHTTPForTileAccess.setSelected(options.isWorkstationLite());
         memoryPanel.setMemorySetting(Utils.getMemoryAllocation());
         
         updateFileCacheComponents(false);
@@ -326,7 +325,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         options.setShowReleaseNotes(showReleaseNotesOnStartup.isSelected());
         options.setShowStartPageOnStartup(showStartPageOnStartup.isSelected());
         options.setUseRunAsUserPreferences(useRunAsUserPreferences.isSelected());
-        options.setUseHTTPForTileAccess(useHTTPForTileAccess.isSelected());        
+        options.setWorkstationLite(useHTTPForTileAccess.isSelected());
 
         // Memory
         String error = memoryPanel.getError();

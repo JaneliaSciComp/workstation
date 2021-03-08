@@ -2,7 +2,6 @@ package org.janelia.workstation.controller.access;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.MatrixUtilities;
@@ -65,15 +64,15 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
             @Override
             protected void doStuff() throws Exception {
                 TmModelManager.getInstance().setCurrentSample(sample);
-                JadeServiceClient jadeServiceClient = new JadeServiceClient(
-                        ConsoleProperties.getString("jadestorage.rest.url"),
-                        () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
-                );
                 TileLoader loader;
-                if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
+                if (!ApplicationOptions.getInstance().isWorkstationLite()) {
+                    JadeServiceClient jadeServiceClient = new JadeServiceClient(
+                            ConsoleProperties.getString("jadestorage.rest.url"),
+                            () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
+                    );
                     loader = new URLBasedTileLoader(jadeServiceClient);
                 } else {
-                    loader = new FileBasedTileLoader(jadeServiceClient);
+                    loader = new FileBasedTileLoader();
                 }
                 modelManager.setTileLoader(loader);
                 loader.loadData(sample);
@@ -94,7 +93,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                                 new TileStackOctreeLoadAdapter(tileFormat, URI.create(baseURI), concurrency));
                     }
                 });
-                sharedVolumeImage.loadURL(url);
+               // sharedVolumeImage.loadURL(url);
 
                 if (sample.getVoxToMicronMatrix()==null) {
                     // init sample from tileformat

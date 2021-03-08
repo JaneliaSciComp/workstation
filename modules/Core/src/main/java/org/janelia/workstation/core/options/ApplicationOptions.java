@@ -108,22 +108,22 @@ public class ApplicationOptions {
             propSupport.firePropertyChange(OptionConstants.USE_RUN_AS_USER_PREFERENCES, oldVal, value); 
     }
         
-    public boolean isUseHTTPForTileAccess() {
-        Boolean value = FrameworkAccess.getModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, true);
+    public boolean isWorkstationLite() {
+        Boolean value = FrameworkAccess.getModelProperty(OptionConstants.WORKSTATION_LITE, true);
         return value!=null && value;
     }
     
-    public void setUseHTTPForTileAccess(boolean value) {
-        boolean oldVal = isUseHTTPForTileAccess();
+    public void setWorkstationLite(boolean value) {
+        boolean oldVal = isWorkstationLite();
         if (oldVal == value) {
             return;
         }
         
-        FrameworkAccess.setModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, value);
+        FrameworkAccess.setModelProperty(OptionConstants.WORKSTATION_LITE, value);
         log.info("Set use HTTP for tile access = {}", value);
         
         if (null != propSupport)
-            propSupport.firePropertyChange(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, oldVal, value);         
+            propSupport.firePropertyChange(OptionConstants.WORKSTATION_LITE, oldVal, value);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener l) {

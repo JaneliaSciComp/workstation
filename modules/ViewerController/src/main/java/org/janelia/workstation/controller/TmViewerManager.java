@@ -20,6 +20,7 @@ import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
@@ -106,6 +107,7 @@ public class TmViewerManager implements GlobalViewerController {
      *
       */
     public void loadProject(DomainObject project) {
+        ApplicationOptions.getInstance().setWorkstationLite(true);
         if (TmModelManager.getInstance().getCurrentSample()!=null) {
             boolean isSample = (TmModelManager.getInstance().getCurrentWorkspace()==null) ? true : false;
             TmModelManager.getInstance().setCurrentSample(null);

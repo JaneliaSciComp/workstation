@@ -131,7 +131,7 @@ public class Texture3d extends BasicTexture implements GL3Resource {
 
             float t2=timer.reportMsAndRestart();
             LOG.debug("Tiff RenderedImages to raster took {} ms", t2);
-            activityLog.logBrickLoadToRendered(logId, stackName, ApplicationOptions.getInstance().isUseHTTPForTileAccess(), t1 + t2);
+            activityLog.logBrickLoadToRendered(logId, stackName, ApplicationOptions.getInstance().isWorkstationLite(), t1 + t2);
 
             loadStack(slicePair.getLeft(), slicePair.getRight());
 
