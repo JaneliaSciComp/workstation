@@ -1999,17 +1999,20 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     public boolean setVisibleActors(Collection<String> visibleActorNames) {
+        List<TmNeuronMetadata> neuronUpdateList = new ArrayList<>();
         // TODO: This is just neurons for now...
         for (TmNeuronMetadata neuron : NeuronManager.getInstance().getNeuronList()) {
             String n = neuron.getName();
-            boolean bWas = neuron.isVisible();
             boolean bIs = visibleActorNames.contains(n);
-            if (bWas == bIs)
-                continue;
-            neuron.setVisible(bIs);
-            //  neuron.getVisibilityChangeObservable().notifyObservers();
-
+            if (bIs && TmModelManager.getInstance().getCurrentView().isHidden(neuron.getId())) {
+                TmModelManager.getInstance().getCurrentView().removeAnnotationFromHidden(neuron.getId());
+                neuronUpdateList.add(neuron);
+            }
+            if (!bIs)
+                TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(neuron.getId());
         }
+        NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(this,neuronUpdateList);
+        ViewerEventBus.postEvent(updateEvent);
 
         return false;
     }
@@ -2043,7 +2046,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         // TODO: This is just neurons for now...
         for (TmNeuronMetadata neuron : NeuronManager.getInstance().getNeuronList()) {
-            if (neuron.isVisible())
+            if (!TmModelManager.getInstance().getCurrentView().isHidden(neuron.getId()))
                 result.add(neuron.getName());
         }
 
