@@ -1,3 +1,10 @@
+// 9.2
+
+Data Browser
+* Added new attributes for Samples and LSMs: Effector Description, Cross Description, Lab, Lab Member
+* Renamed "Driver" attribute to "Line Type"
+* Renamed "Genotype" attribute to "Line Description"
+
 // 9.1
 
 Horta
