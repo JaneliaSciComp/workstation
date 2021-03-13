@@ -142,6 +142,17 @@ public class TmHistory {
         }
     }
 
+    // update last historical event with more relevant selection so undo
+    // reverts make more sense contextually.
+    public void addSelectionEvent () {
+        if (undoMode)
+            return;
+        if (historyOperations.size()>0) {
+            TmHistoricalEvent event = historyOperations.get(historyOperations.size() - 1);
+            addCurrentSelectionsToEvent(event);
+        }
+    }
+
     public void addHistoricalEvent (TmHistoricalEvent event) {
         if (!recordHistory)
             return;

@@ -621,6 +621,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         final TmNeuronMetadata neuron = getNeuronFromNeuronID(parentAnn.getNeuronId());
         TmHistory historian = TmModelManager.getInstance().getNeuronHistory();
         historian.checkBackup(neuron);
+        historian.addSelectionEvent();
         historian.setRecordHistory(false);
 
         final TmGeoAnnotation annotation = neuronModel.addGeometricAnnotation(
