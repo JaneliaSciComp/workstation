@@ -22,7 +22,7 @@ public class OctreeDisplayBlockChooser implements BlockChooser<KtxOctreeBlockTil
 
     private void initBlockSizes(KtxOctreeBlockTileSource source, Vantage vantage) {
         int numLevels = (int)source.getZoomLevels();
-        for (int i=1; i<numLevels; i++) {
+        for (int i=2; i<numLevels; i++) {
             float blockHeight = source.getBlockSize(new KtxOctreeResolution(i)).getY();
             zoomLevels.add((float)(blockHeight * BLOCK_WIDTH_ACROSS_VIEWPORT));
             LOG.info("ZOOM LEVEL {} is {}",i,(float)(blockHeight * BLOCK_WIDTH_ACROSS_VIEWPORT));
