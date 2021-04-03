@@ -1,23 +1,5 @@
 package org.janelia.workstation.browser.actions.context;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.ArrayList;
-import java.util.Collection;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
 import org.apache.commons.lang.StringUtils;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
@@ -43,6 +25,13 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  *  *
@@ -162,6 +151,9 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
                 if (dialog.isSkipGrouper()) {
                     extraOptions.append(",skip grouper=true");
                 }
+                if (dialog.isSkipGrouper()) {
+                    extraOptions.append(",skip prealigner=true");
+                }
                 if (!StringUtils.isBlank(dialog.getRunObjectives())) {
                     extraOptions.append(",run objectives="+dialog.getRunObjectives());
                 }
@@ -214,6 +206,7 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
         private final JCheckBox keepResultsCheckbox;
         private final JCheckBox skipCorrectionCheckbox;
         private final JCheckBox skipGrouperCheckbox;
+        private final JCheckBox skipPrealignerCheckbox;
         private final JTextField runObjectivesField;
         private final JTextField extraOptionsField;
         
@@ -253,7 +246,9 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
             this.skipCorrectionCheckbox = new JCheckBox();
             mainPanel.addItem("Skip distortion correction", skipCorrectionCheckbox);
             this.skipGrouperCheckbox = new JCheckBox();
-            mainPanel.addItem("Skip stitching grouper", skipGrouperCheckbox);
+            mainPanel.addItem("Skip stitching pre-check", skipGrouperCheckbox);
+            this.skipPrealignerCheckbox = new JCheckBox();
+            mainPanel.addItem("Skip alignment pre-check", skipPrealignerCheckbox);
 
             this.runObjectivesField = new JTextField();
             runObjectivesField.setColumns(20);
@@ -308,21 +303,17 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
             return returnValue;
         }
 
-
         public boolean isReuseSummary() {
             return reuseSummaryCheckbox.isSelected();
         }
-
 
         public boolean isReuseProcessing() {
             return reuseProcessingCheckbox.isSelected();
         }
 
-
         public boolean isReusePost() {
             return reusePostCheckbox.isSelected();
         }
-
 
         public boolean isReuseAlignment() {
             return reuseAlignmentCheckbox.isSelected();
@@ -342,6 +333,10 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
 
         public boolean isSkipGrouper() {
             return skipGrouperCheckbox.isSelected();
+        }
+
+        public boolean isSkipPrealigner() {
+            return skipPrealignerCheckbox.isSelected();
         }
 
         public String getRunObjectives() {
