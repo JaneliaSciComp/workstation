@@ -40,6 +40,7 @@ public class SWCNode {
     private double x, y, z;
     private double radius;
     private int parentIndex;
+    private String invalidReason = "";
 
     /**
      * create a node from a line of a swc file; null if it fails
@@ -86,14 +87,20 @@ public class SWCNode {
     }
 
     /**
-     * simple validity checks; not returning a reason at this point
+     * simple validity check
      */
     public boolean isValid() {
-        // couple simple validity checks
+        invalidReason = "";
         if (radius <= 0.0) {
+            invalidReason = "invalid radius " + radius;
             return false;
         }
         return true;
+    }
+
+
+    public String getInvalidReason() {
+        return invalidReason;
     }
 
     /**

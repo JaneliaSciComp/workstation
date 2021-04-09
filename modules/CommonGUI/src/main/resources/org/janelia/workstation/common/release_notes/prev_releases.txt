@@ -1,3 +1,12 @@
+// 9.3
+
+Horta
+* Fixed issue with date in annotation list not reflecting correctly
+* Fixed visibility keyframing for neurons in MovieMaker
+* Fixed issue with undo not selecting correct vertex
+* Fixed A*trace in 2D
+* Added better support for single-layer image stacks
+
 // 9.2
 
 Data Browser

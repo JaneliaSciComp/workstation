@@ -338,7 +338,8 @@ public class SWCData {
 
             // is node valid:
             if (!node.isValid()) {
-                invalidReason = String.format("invalid node (index %d)", node.getIndex());
+                // invalidReason = String.format("invalid node (index %d)", node.getIndex());
+                invalidReason = String.format("invalid node (index %d): %s", node.getIndex(), node.getInvalidReason());
                 return false;
             }
 
