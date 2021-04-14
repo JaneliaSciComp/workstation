@@ -2435,7 +2435,9 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             }
         }
 
-        fireBulkNeuronsChanged(addList, deleteList);
+        if (!addList.isEmpty() || !deleteList.isEmpty()) {
+            fireBulkNeuronsChanged(addList, deleteList);
+        }
     }
 
     public boolean isFilteringEnabled() {
