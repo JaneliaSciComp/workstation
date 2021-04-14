@@ -2,13 +2,13 @@ package org.janelia.workstation.controller;
 
 import com.google.common.eventbus.EventBus;
 
-import java.util.HashMap;
+import javax.swing.*;
 
 public class ViewerEventBus {
     private static final EventBus viewerbus = new EventBus();
 
     public static void postEvent(Object event) {
-        viewerbus.post(event);
+        SwingUtilities.invokeLater(()->viewerbus.post(event));
     }
     public static void unregisterForEvents(Object listener) {
         viewerbus.unregister(listener);
