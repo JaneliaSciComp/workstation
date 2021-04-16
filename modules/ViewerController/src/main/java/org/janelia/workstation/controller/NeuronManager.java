@@ -18,6 +18,8 @@ import com.google.common.base.Stopwatch;
 
 import com.google.common.eventbus.Subscribe;
 import org.apache.commons.io.FilenameUtils;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgrFactory;
 import org.janelia.workstation.controller.model.DefaultNeuron;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Reference;
@@ -46,7 +48,6 @@ import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionSupport;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.core.util.Progress;
 import org.janelia.workstation.geom.ParametrizedLine;
 import org.janelia.workstation.geom.Vec3;
@@ -125,7 +126,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public NeuronManager() {
         this.modelManager = TmModelManager.getInstance();
-        this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+        this.tmDomainMgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
         this.neuronModel = NeuronModel.getInstance();
         registerEvents();
     }

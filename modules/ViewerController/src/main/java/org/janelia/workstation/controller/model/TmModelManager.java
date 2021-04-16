@@ -5,14 +5,15 @@ import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.model.util.MatrixUtilities;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.SpatialIndexManager;
-import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgrFactory;
+import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.controller.tileimagery.TileLoader;
 import org.janelia.workstation.controller.tileimagery.TileServer;
 import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.ConnectionMgr;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -21,9 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * This class is singleton to manage references to all the different model
@@ -57,9 +55,9 @@ public class TmModelManager {
     private Vec3 voxelCenter;
     private BoundingBox3d sampleBoundingBox;
     private SpatialIndexManager spatialIndexManager;
+    private boolean isLocal;
 
     private static final TmModelManager instance = new TmModelManager();
-
 
     public static TmModelManager getInstance() {
         return instance;
@@ -67,11 +65,29 @@ public class TmModelManager {
     private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     private TmModelManager() {
-        this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+        this.tmDomainMgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
         neuronModel = NeuronModel.getInstance();
         currentView = new TmViewState();
         spatialIndexManager = new SpatialIndexManager();
         neuronHistory = new TmHistory();
+        initModel();
+         }
+
+    private void initModel() {
+        String connectionType = FrameworkAccess.getLocalPreferenceValue(ConnectionMgr.class, ConnectionMgr.CONNECTION_STRING_PREF, null);
+        if (connectionType!=null && connectionType.equals("local")) {
+            isLocal =true;
+        } else {
+            isLocal = false;
+        }
+    }
+
+    public boolean isLocal() {
+        return isLocal;
+    }
+
+    public void setLocal(boolean local) {
+        isLocal = local;
     }
 
     public TmSample getCurrentSample() {

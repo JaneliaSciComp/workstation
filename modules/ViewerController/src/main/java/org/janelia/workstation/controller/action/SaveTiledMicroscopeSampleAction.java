@@ -9,6 +9,7 @@ import javax.swing.JOptionPane;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgrFactory;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
@@ -67,10 +68,10 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
                                 DomainUtils.setFilepath(sample, FileType.TwoPhotonAcquisition, rawPath);
                             }
                         }
-                        newSample = TiledMicroscopeDomainMgr.getDomainMgr().save(sample);
+                        newSample = TiledMicroscopeDomainMgrFactory.getDomainMgr().save(sample);
                     }
                     else {
-                        newSample = TiledMicroscopeDomainMgr.getDomainMgr().createSample(name, octreePath, ktxPath, rawPath);
+                        newSample = TiledMicroscopeDomainMgrFactory.getDomainMgr().createSample(name, octreePath, ktxPath, rawPath);
                     }
             }
             

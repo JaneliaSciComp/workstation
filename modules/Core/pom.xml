@@ -138,6 +138,13 @@
             <version>4.2.3.GA</version>
         </dependency>
 
+        <!-- local persistence -->
+        <dependency>
+            <groupId>org.dizitart</groupId>
+            <artifactId>nitrite</artifactId>
+            <version>1.0</version>
+        </dependency>
+
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.mockito</groupId>

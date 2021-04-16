@@ -11,7 +11,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgrFactory;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.support.StringMemberListPanel;
 import org.janelia.workstation.gui.large_volume_viewer.action.LargeVolumeSampleDiscoveryAction;
@@ -69,7 +69,7 @@ final class SampleRootPathsPanel extends javax.swing.JPanel {
 
     void load() {
         try {
-            List<String> paths = TiledMicroscopeDomainMgr.getDomainMgr().getSamplePaths();
+            List<String> paths = TiledMicroscopeDomainMgrFactory.getDomainMgr().getSamplePaths();
             log.info("Loaded sample paths: {}",paths);
             pathPanel.initItemsInList(paths);
         } 
@@ -82,7 +82,7 @@ final class SampleRootPathsPanel extends javax.swing.JPanel {
         try {
             List<String> paths = pathPanel.getItemsInList();
             log.info("Saving sample paths: {}",paths);
-            TiledMicroscopeDomainMgr.getDomainMgr().setSamplePaths(paths);
+            TiledMicroscopeDomainMgrFactory.getDomainMgr().setSamplePaths(paths);
         } 
         catch (Exception e) {
             FrameworkAccess.handleException(e);

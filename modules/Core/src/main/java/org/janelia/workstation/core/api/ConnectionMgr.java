@@ -28,7 +28,8 @@ public class ConnectionMgr {
 
     private static final Logger log = LoggerFactory.getLogger(ConnectionMgr.class);
 
-    private static final String CONNECTION_STRING_PREF = "connectionString";
+    public static final String CONNECTION_STRING_PREF = "connectionString";
+    private static final String PROJECT_DIRECTORY = "projectDirectory";
 
     // Singleton
     private static ConnectionMgr instance;

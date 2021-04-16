@@ -6,14 +6,11 @@ import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.model.security.GroupRole;
 import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
-import org.janelia.workstation.controller.access.ProjectInitFacade;
-import org.janelia.workstation.controller.access.ProjectInitFacadeImpl;
-import org.janelia.workstation.controller.access.RefreshHandler;
+import org.janelia.workstation.controller.access.*;
 import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.model.TmReviewState;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
@@ -49,7 +46,7 @@ public class TmViewerManager implements GlobalViewerController {
     }
 
     public TmViewerManager() {
-        this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+        this.tmDomainMgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
         setNeuronManager(NeuronManager.getInstance());
         ViewerEventBus.registerForEvents(this);
     }
@@ -119,7 +116,8 @@ public class TmViewerManager implements GlobalViewerController {
             ViewerEventBus.postEvent(event);
         }
         // freeze incoming updates until we are fully loaded in the workspace
-        RefreshHandler.getInstance().ifPresent(rh -> rh.setReceiveUpdates(false));
+        if (!TmModelManager.getInstance().isLocal())
+            RefreshHandler.getInstance().ifPresent(rh -> rh.setReceiveUpdates(false));
 
         projectInit = new ProjectInitFacadeImpl(project);
         projectInit.clearViewers();
@@ -277,7 +275,8 @@ public class TmViewerManager implements GlobalViewerController {
 
         try {
             loadUserPreferences();
-            RefreshHandler.getInstance().ifPresent(rh -> rh.setAnnotationModel(getNeuronManager()));
+            if (!TmModelManager.getInstance().isLocal())
+                RefreshHandler.getInstance().ifPresent(rh -> rh.setAnnotationModel(getNeuronManager()));
             //TaskWorkflowViewTopComponent.getInstance().loadHistory();
         } catch (Exception error) {
             FrameworkAccess.handleException(error);
@@ -306,6 +305,7 @@ public class TmViewerManager implements GlobalViewerController {
         ViewerEventBus.postEvent(selectionEvent);
 
         // re-enable updates once the model is fully loaded
-        RefreshHandler.getInstance().ifPresent(rh -> rh.setReceiveUpdates(true));
+        if (!TmModelManager.getInstance().isLocal())
+            RefreshHandler.getInstance().ifPresent(rh -> rh.setReceiveUpdates(true));
     }
 }

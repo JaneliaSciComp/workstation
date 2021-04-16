@@ -13,13 +13,14 @@ import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.TmNeuronUtils;
 import org.janelia.workstation.controller.model.IdSource;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NeuronModel {
 
     private static final Logger LOG = LoggerFactory.getLogger(NeuronModel.class);
-    private final NeuronModelAdapter neuronModelAdapter = new NeuronModelAdapter();
+    private static NeuronModelAdapter neuronModelAdapter;
     private final IdSource idSource = new IdSource();
     private Map<Long, TmNeuronMetadata> neuronMap;
     private CompletableFuture<Boolean> ownershipRequest;
@@ -29,6 +30,11 @@ public class NeuronModel {
     static public NeuronModel getInstance() {
         if (modelInstance==null) {
             modelInstance = new NeuronModel();
+            if (TmModelManager.getInstance().isLocal()) {
+                neuronModelAdapter = new LocalNeuronModelAdapter();
+            } else {
+                neuronModelAdapter = new RestNeuronModelAdapter();
+            }
         }
         return modelInstance;
     }

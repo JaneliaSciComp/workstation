@@ -1,20 +1,16 @@
 package org.janelia.workstation.controller.action;
 
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgrFactory;
 import org.janelia.workstation.controller.dialog.EditWorkspaceNameDialog;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.TmViewerManager;
-import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
-import org.openide.awt.ActionRegistration;;
-import org.openide.util.NbBundle;
+;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +74,7 @@ public class CreateWorkspaceAction extends AbstractAction {
                 // Reuse the existing color model
                 if (existingWorkspace) {
                     workspace.setColorModel(origWorkspace.getColorModel());
-                    TiledMicroscopeDomainMgr.getDomainMgr().save(workspace);
+                    TiledMicroscopeDomainMgrFactory.getDomainMgr().save(workspace);
                     log.info("Copied existing color model");
                 }
             }

@@ -3,14 +3,9 @@ package org.janelia.workstation.common.gui.dialogs;
 import java.awt.BorderLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.io.File;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.UIManager;
+import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -18,8 +13,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.SmartTextField;
 import org.janelia.workstation.core.api.ConnectionMgr;
+import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.lifecycle.ConnectionEvent;
+import org.janelia.workstation.core.events.lifecycle.LocalProjectSelected;
 import org.janelia.workstation.core.model.ConnectionResult;
 import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,8 +34,16 @@ public class ConnectDialog extends ModalDialog {
     private static final String OK_BUTTON_TEXT = "Connect";
     private static final String HINT_TEXT = "<html>Which server would you like to connect to? This is usually the " +
             "same as the website where you downloaded the Workstation installer.</html>";
+    private static final String CONNECTION_STRING_PREF = "connectionString";
+    private static final String CONNECTION_STRING_LOCAL = "local";
 
     private final SmartTextField connectionStringField;
+    private boolean connectLocally = false;
+    private File projectDirectory;
+    private final JCheckBox workstationLite;
+    private final JPanel projectDirPanel = new JPanel();
+    private final JFileChooser projectDir = new JFileChooser();
+    private final JLabel projectDirLabel = new JLabel("Not Selected");
     private final JLabel errorLabel;
     private final JButton okButton;
 
@@ -53,10 +60,40 @@ public class ConnectDialog extends ModalDialog {
 
         errorLabel = new JLabel();
         setNoError();
+        add(mainPanel, BorderLayout.CENTER);
+
+        workstationLite = new JCheckBox("Use Workstation Locally");
+        projectDirPanel.setLayout(new BoxLayout(projectDirPanel, BoxLayout.LINE_AXIS));
+        projectDirPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
+        projectDirPanel.add(Box.createHorizontalGlue());
+
+        projectDir.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        JButton projectDirButton = new JButton("Choose Project Dir");
+        projectDirButton.addActionListener((e)-> {
+            int saveDialogResult = projectDir.showSaveDialog(this);
+            if (saveDialogResult != JFileChooser.APPROVE_OPTION)
+                return;
+
+            projectDirectory = projectDir.getSelectedFile();
+            projectDirLabel.setText(projectDirectory.getPath());
+        });
+        projectDirPanel.add(projectDirLabel);
+        projectDirPanel.add(projectDirButton);
+
+        workstationLite.addActionListener((e) -> {
+            if (workstationLite.isSelected()) {
+                setLocal(true);
+            } else {
+                setLocal(false);
+            }
+        });
 
         mainPanel.add(new JLabel(HINT_TEXT), "span 2, al center top, width 100%");
+        mainPanel.add(workstationLite,"span 2, al center top, width 100%");
         mainPanel.add(new JLabel("Connection URL"));
         mainPanel.add(connectionStringField, "width 300");
+        mainPanel.add(new JLabel("Project Directory:"));
+        mainPanel.add(projectDirPanel);
         mainPanel.add(errorLabel, "span 2, al center top, width 100%");
 
         JButton cancelButton = new JButton("Cancel");
@@ -78,7 +115,7 @@ public class ConnectDialog extends ModalDialog {
 
         add(mainPanel, BorderLayout.CENTER);
         add(buttonPane, BorderLayout.SOUTH);
-        
+
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentShown(ComponentEvent e) {
@@ -125,8 +162,18 @@ public class ConnectDialog extends ModalDialog {
         okButton.setText(OK_BUTTON_TEXT);
 
         String connectionString = ConnectionMgr.getConnectionMgr().getConnectionString();
-        connectionStringField.setText(connectionString);
+        if (connectionString!=null && connectionString.equals(CONNECTION_STRING_LOCAL)) {
+            setLocal(true);
+        } else {
+            setLocal(false);
+        }
         packAndShow();
+    }
+
+    private void setLocal(boolean local) {
+        connectLocally = local;
+        connectionStringField.setVisible(!local);
+        projectDirPanel.setVisible(local);
     }
 
     private void saveAndClose() {
@@ -135,40 +182,47 @@ public class ConnectDialog extends ModalDialog {
         okButton.setText(null);
         setNoError();
 
-        String connectionString = connectionStringField.getText().trim();
+        if (connectLocally) {
+            FrameworkAccess.setLocalPreferenceValue(ConnectionMgr.class,
+                    CONNECTION_STRING_PREF, "local");
 
-        SimpleWorker worker = new SimpleWorker() {
+            Events.getInstance().postOnEventBus(new LocalProjectSelected());
 
-            private ConnectionResult connectionResult;
+        } else {
+            String connectionString = connectionStringField.getText().trim();
 
-            @Override
-            protected void doStuff() throws Exception {
-                connectionResult = ConnectionMgr.getConnectionMgr().connect(connectionString);
-            }
+            SimpleWorker worker = new SimpleWorker() {
 
-            @Override
-            protected void hadSuccess() {
-                okButton.setIcon(null);
-                okButton.setText(OK_BUTTON_TEXT);
-                if (connectionResult.getErrorText()==null) {
-                    connectionStringField.addCurrentTextToHistory();
-                    setVisible(false);
+                private ConnectionResult connectionResult;
+
+                @Override
+                protected void doStuff() throws Exception {
+                    connectionResult = ConnectionMgr.getConnectionMgr().connect(connectionString);
                 }
-                else {
-                    setError(connectionResult.getErrorText());
+
+                @Override
+                protected void hadSuccess() {
+                    okButton.setIcon(null);
+                    okButton.setText(OK_BUTTON_TEXT);
+                    if (connectionResult.getErrorText() == null) {
+                        connectionStringField.addCurrentTextToHistory();
+                        setVisible(false);
+                    } else {
+                        setError(connectionResult.getErrorText());
+                    }
                 }
-            }
 
-            @Override
-            protected void hadError(Throwable e) {
-                log.error("Unknown connection error", e);
-                okButton.setIcon(null);
-                okButton.setText(OK_BUTTON_TEXT);
-                setError("Unknown connection error");
-            }
-        };
+                @Override
+                protected void hadError(Throwable e) {
+                    log.error("Unknown connection error", e);
+                    okButton.setIcon(null);
+                    okButton.setText(OK_BUTTON_TEXT);
+                    setError("Unknown connection error");
+                }
+            };
 
-        worker.execute();
+            worker.execute();
+        }
     }
 
     private void setNoError() {

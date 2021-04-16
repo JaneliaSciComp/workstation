@@ -1,4 +1,4 @@
-package org.janelia.workstation.controller.access;
+package org.janelia.workstation.controller.access.rest;
 
 import java.io.InputStream;
 import java.net.URI;

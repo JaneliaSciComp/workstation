@@ -81,7 +81,7 @@ public class TiledMicroscopeObjectHandler implements DomainObjectHandler {
     
     @Override
     public void remove(DomainObject domainObject) throws Exception {
-        TiledMicroscopeDomainMgr mgr = TiledMicroscopeDomainMgr.getDomainMgr();
+        TiledMicroscopeDomainMgr mgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
         if (TmSample.class.isAssignableFrom(domainObject.getClass())) {
             mgr.remove((TmSample)domainObject);
         }

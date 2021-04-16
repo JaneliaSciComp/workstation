@@ -8,6 +8,7 @@ import org.janelia.model.util.MatrixUtilities;
 import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.TmViewerManager;
+import org.janelia.workstation.controller.access.rest.RestTiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
@@ -103,7 +104,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                     sample.setMicronToVoxMatrix(MatrixUtilities.serializeMatrix(
                             tileFormat.getMicronToVoxMatrix(),
                             "micronToVoxMatrix"));
-                    TiledMicroscopeDomainMgr.getDomainMgr().save(sample);
+                    TiledMicroscopeDomainMgrFactory.getDomainMgr().save(sample);
                 }
                 modelManager.updateVoxToMicronMatrices();
                 BoundingBox3d box = sharedVolumeImage.getBoundingBox3d();
@@ -152,7 +153,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
             @Override
             protected void doStuff() throws Exception {
                 TmModelManager modelManager = TmModelManager.getInstance();
-                sample = TiledMicroscopeDomainMgr.getDomainMgr().getSample(workspace);
+                sample = TiledMicroscopeDomainMgrFactory.getDomainMgr().getSample(workspace);
                 progress2.start();
                 progress2.setDisplayName("Loading metadata");
                 progress2.switchToIndeterminate();

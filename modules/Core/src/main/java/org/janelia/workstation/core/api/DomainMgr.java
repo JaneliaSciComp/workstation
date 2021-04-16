@@ -16,6 +16,7 @@ import org.janelia.model.security.Subject;
 import org.janelia.model.security.User;
 import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.core.api.exceptions.SystemError;
+import org.janelia.workstation.core.api.facade.impl.local.*;
 import org.janelia.workstation.core.api.facade.impl.rest.AsyncServiceFacadeImpl;
 import org.janelia.workstation.core.api.facade.impl.rest.DomainFacadeImpl;
 import org.janelia.workstation.core.api.facade.impl.rest.OntologyFacadeImpl;
@@ -32,6 +33,7 @@ import org.janelia.workstation.core.api.web.AuthServiceClient;
 import org.janelia.workstation.core.api.web.SageRestClient;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
+import org.janelia.workstation.core.events.lifecycle.LocalProjectSelected;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.events.model.PreferenceChangeEvent;
 import org.janelia.workstation.core.options.ApplicationOptions;
@@ -98,6 +100,27 @@ public class DomainMgr {
             workspaceFacade = new WorkspaceFacadeImpl(domainFacadeURL);
             asyncFacade = new AsyncServiceFacadeImpl();
             sageClient = new SageRestClient();
+            model = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
+        }
+        catch (Exception e) {
+            FrameworkAccess.handleException(e);
+        }
+    }
+
+    @Subscribe
+    public synchronized void localProject(LocalProjectSelected event) {
+
+        // This initialization must be run on the EDT, because other things in the connection sequence depend
+        // on these services, namely the authentication which depends on the AuthServiceClient.
+
+        log.info("Initializing Domain Manager");
+        try {
+            domainFacade = new LocalDomainFacadeImpl();
+            ontologyFacade = new LocalOntologyFacadeImpl();
+            sampleFacade = new LocalSampleFacadeImpl();
+            subjectFacade = new LocalSubjectFacadeImpl();
+            workspaceFacade = new LocalWorkspaceFacadeImpl();
+            asyncFacade = new LocalAsyncServiceFacadeImpl();
             model = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
         }
         catch (Exception e) {

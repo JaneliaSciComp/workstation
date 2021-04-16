@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
 import com.mxgraph.model.mxCell;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgrFactory;
 import org.janelia.workstation.controller.widgets.SimpleIcons;
 import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.workstation.controller.NeuronManager;
@@ -18,7 +20,6 @@ import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.geom.Quaternion;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.common.gui.support.MouseHandler;
-import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -944,7 +945,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
      */
     public List<TmReviewTask> retrieveTasks () {
         List<TmReviewTask> reviewTasks = null;
-        TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+        TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
         try {
             reviewTasks = persistenceMgr.getReviewTasks();
             TaskReviewTableModel tableModel = (TaskReviewTableModel)taskReviewTable.getModel();
@@ -1101,7 +1102,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
              }
         }
         try {
-            TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+            TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
             currTask = persistenceMgr.save(currTask);
             ((TaskReviewTableModel)taskReviewTable.getModel()).addReviewTask(currTask);
             ((TaskReviewTableModel)taskReviewTable.getModel()).fireTableDataChanged();
@@ -1114,7 +1115,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
     public void updateCurrentTask () {
         try {
             if (currTask != null) {
-                TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+                TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
                 persistenceMgr.save(currTask);
             }
         } catch (Exception ex) {
@@ -1202,7 +1203,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 
         public void deleteTask(TmReviewTask task, int deletedRow) {
              try {
-                 TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+                 TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
                  persistenceMgr.remove(task);
                  data.remove(deletedRow);
                  fireTableRowsDeleted(deletedRow, deletedRow);
@@ -1216,7 +1217,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
                  for (int i=0;i<data.size(); i++) {
                      TmReviewTask dataTask = (TmReviewTask)data.get(i).get(7);
                      if (dataTask.getId()==task.getId()) {
-                         TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+                         TiledMicroscopeDomainMgr persistenceMgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
                          persistenceMgr.remove(task);
                          data.remove(i);
                          fireTableRowsDeleted(i, i);

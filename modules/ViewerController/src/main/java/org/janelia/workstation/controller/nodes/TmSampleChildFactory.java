@@ -3,9 +3,10 @@ package org.janelia.workstation.controller.nodes;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgrFactory;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ public class TmSampleChildFactory extends ChildFactory<TmWorkspace> {
 
             log.debug("Creating children keys for {}",sample.getName());
             
-            TiledMicroscopeDomainMgr mgr = TiledMicroscopeDomainMgr.getDomainMgr();
+            TiledMicroscopeDomainMgr mgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
             List<TmWorkspace> children = mgr.getWorkspacesSortedByCurrentPrincipal(sample.getId());
             log.debug("Got children: {}",children);
 
