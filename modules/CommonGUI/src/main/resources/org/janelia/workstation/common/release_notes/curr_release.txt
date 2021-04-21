@@ -1,4 +1,8 @@
 // 9.4
 
+Data Browser
+* Added reprocessing option to skip VNC prealigner check
+* Send sample names to VVD for display
+
 Horta
 * added more error text for invalid SWC files
