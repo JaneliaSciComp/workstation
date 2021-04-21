@@ -3,6 +3,7 @@ package org.janelia.workstation.browser.actions.context;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.OpenInToolAction;
 import org.janelia.workstation.browser.tools.ToolMgr;
 import org.openide.awt.ActionID;
@@ -10,6 +11,9 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -44,7 +48,15 @@ public class OpenInVvdViewerAction extends BaseOpenExternallyAction {
     public void performAction() {
         String filepath = getFilepath();
         if (filepath == null) return;
-        OpenInToolAction action = new OpenInToolAction(ToolMgr.TOOL_VVD, filepath, null);
-        action.actionPerformed(null);
+        if (getSelectedObject() instanceof Sample) {
+            Sample sample = (Sample)getSelectedObject();
+            String name = sample.getName();
+            OpenInToolAction action = new OpenInToolAction(ToolMgr.TOOL_VVD, filepath, null, Arrays.asList("--desc",name));
+            action.actionPerformed(null);
+        }
+        else {
+            OpenInToolAction action = new OpenInToolAction(ToolMgr.TOOL_VVD, filepath, null);
+            action.actionPerformed(null);
+        }
     }
 }

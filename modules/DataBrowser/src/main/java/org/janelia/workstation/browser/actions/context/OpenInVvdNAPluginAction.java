@@ -1,12 +1,6 @@
 package org.janelia.workstation.browser.actions.context;
 
-import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.NeuronFragment;
-import org.janelia.workstation.browser.actions.OpenInNeuronAnnotatorActionListener;
-import org.janelia.workstation.browser.actions.OpenInToolAction;
-import org.janelia.workstation.browser.tools.ToolMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;

@@ -111,14 +111,14 @@ public class OpenInVvdNAPluginActionListener implements ActionListener {
             String consolidatedLabelFilepath = separation.getFilepath()+"/ConsolidatedLabel.v3dpbd";
             String opticalRes = getOpticalResolution(result);
             String chanSpec = getChannelSpec(result);
-
+            String sampleName = result.getParentRun().getParent().getParent().getName();
 
             // Fetch both the stack and the label
-            log.info("Fetching stack: ", stackFilepath);
+            log.info("Fetching stack: {}", stackFilepath);
             Utils.processStandardFilepath(stackFilepath, new FileCallable() {
                 @Override
                 public void call(File stackFile) throws Exception {
-                    log.info("Fetching label: ", consolidatedLabelFilepath);
+                    log.info("Fetching label: {}", consolidatedLabelFilepath);
                     Utils.processStandardFilepath(consolidatedLabelFilepath, new FileCallable() {
                         @Override
                         public void call(File consolidatedLabelFile) throws Exception {
@@ -132,6 +132,8 @@ public class OpenInVvdNAPluginActionListener implements ActionListener {
                             List<String> arguments = new ArrayList<>();
                             arguments.add("-p");
                             arguments.add(pluginArgs.toString());
+                            arguments.add("--desc");
+                            arguments.add(sampleName);
 
                             ToolMgr.runTool(FrameworkAccess.getMainFrame(), ToolMgr.TOOL_VVD, arguments);
                         }

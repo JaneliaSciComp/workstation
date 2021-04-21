@@ -1,22 +1,22 @@
 package org.janelia.workstation.browser.actions;
 
-import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.io.File;
-
-import javax.swing.AbstractAction;
-import javax.swing.JOptionPane;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.editor.SampleResultContextMenu;
+import org.janelia.workstation.browser.tools.ToolMgr;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.util.Utils;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.tools.ToolMgr;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Named action to open a file with a given tool in a specified mode.
@@ -30,12 +30,18 @@ public class OpenInToolAction extends AbstractAction {
     private final String tool;
     private final String path;
     private final String mode;
-    
+    private final List<String> args;
+
     public OpenInToolAction(String tool, String path, String mode) {
+        this(tool, path, mode, Collections.emptyList());
+    }
+
+    public OpenInToolAction(String tool, String path, String mode, List<String> args) {
         super(getName(tool, mode));
         this.tool = tool;
         this.path = path;
         this.mode = mode;
+        this.args = args;
     }
 
     public static String getName(String tool, String mode) {
@@ -103,7 +109,7 @@ public class OpenInToolAction extends AbstractAction {
     
     private void openFile(String filepath) {
         try {
-            ToolMgr.openFile(FrameworkAccess.getMainFrame(), tool, filepath, mode);
+            ToolMgr.openFile(FrameworkAccess.getMainFrame(), tool, filepath, mode, args);
         } 
         catch (Exception e) {
             FrameworkAccess.handleException(e);

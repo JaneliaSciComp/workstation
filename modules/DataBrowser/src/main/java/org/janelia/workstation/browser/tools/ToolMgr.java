@@ -421,18 +421,39 @@ public class ToolMgr extends PreferenceManager {
             // Log output in background thread
             SimpleWorker worker = new SimpleWorker() {
 
+                int vvdDescIndex = -1;
+
                 @Override
                 protected void doStuff() throws Exception {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-                        String line = null;
+                        String line;
                         while ((line = reader.readLine()) != null) {
                             log.info("Tool output from {}: {}", toolName, line);
+                            // Workaround for VVD's strict option handling
+                            if (toolName.equals(TOOL_VVD) && "Unknown long option 'desc'".equals(line)) {
+                                // Remove desc option and resubmit
+                                vvdDescIndex = arguments.indexOf("--desc");
+                                if (vvdDescIndex<0) {
+                                    log.error("Cannot find --desc option");
+                                }
+                            }
                         }
                     }
                 }
 
                 @Override
                 protected void hadSuccess() {
+                    if (vvdDescIndex>=0) {
+                        try {
+                            log.info("Removing --desc option and trying again...");
+                            List<String> newArgs = new ArrayList<>(arguments);
+                            newArgs.remove(vvdDescIndex + 1);
+                            newArgs.remove(vvdDescIndex);
+                            runTool(parent, toolName, newArgs);
+                        } catch (Exception e) {
+                            hadError(e);
+                        }
+                    }
                 }
 
                 @Override
@@ -454,7 +475,7 @@ public class ToolMgr extends PreferenceManager {
         }
     }
 
-    public static void openFile(final Container parent, final String toolName, final String standardFilepath, final String mode) throws Exception {
+    public static void openFile(final Container parent, final String toolName, final String standardFilepath, final String mode, final List<String> args) throws Exception {
 
         if (standardFilepath == null) {
             throw new Exception("Entity has no file path");
@@ -464,7 +485,7 @@ public class ToolMgr extends PreferenceManager {
             @Override
             public void call(File file) throws Exception {
 
-                List<String> arguments = new ArrayList<>();
+                List<String> arguments = new ArrayList<>(args);
 
                 ToolInfo tool = getToolMgr().getToolSafely(parent, toolName);
                 if (tool == null) {
@@ -482,7 +503,7 @@ public class ToolMgr extends PreferenceManager {
                     }
                 } else if (TOOL_FIJI.equals(toolName)) {
                     if (toolPath.endsWith(".app")) {
-                        tool.setPath(toolPath + "/Contents/MacOS/fiji-macosx");
+                        tool.setPath(toolPath + "/Contents/MacOS/ImageJ-macosx");
                     }
                     arguments.add(file.getAbsolutePath());
                 } else {

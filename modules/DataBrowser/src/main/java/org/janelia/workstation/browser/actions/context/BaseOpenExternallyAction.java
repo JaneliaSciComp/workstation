@@ -67,6 +67,10 @@ public abstract class BaseOpenExternallyAction extends BaseContextualNodeAction 
         setEnabledAndVisible(filepath != null);
     }
 
+    public DomainObject getSelectedObject() {
+        return selectedObject;
+    }
+
     protected String getFilepath(HasFiles fileProvider) {
         return DomainUtils.getDefault3dImageFilePath(fileProvider);
     }

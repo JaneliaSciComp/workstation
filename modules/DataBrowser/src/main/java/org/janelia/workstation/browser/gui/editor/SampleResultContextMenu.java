@@ -30,6 +30,7 @@ import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
 
 import javax.swing.*;
+import java.util.Arrays;
 import java.util.Collections;
 
 /**
@@ -164,15 +165,16 @@ public class SampleResultContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getVvdViewerItem() {
+
         String path = DomainUtils.getFilepath(result, FileType.VisuallyLosslessStack);
         if (path==null) return null;
-        return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VVD, path, null));
+        String name = getSample().getName();
+        return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VVD, path, null, Arrays.asList("--desc",name)));
     }
     protected JMenuItem getDownloadItem() {
 
         String path = DomainUtils.getDefault3dImageFilePath(result);
-        ObjectiveSample objectiveSample = result.getParentRun().getParent();
-        final Sample sample = objectiveSample.getParent();
+        final Sample sample = getSample();
         final ArtifactDescriptor descriptor = new ResultArtifactDescriptor(result);
         
         JMenuItem downloadItem = new JMenuItem("Download...");
@@ -204,12 +206,16 @@ public class SampleResultContextMenu extends PopupContextMenu {
         JMenuItem toggleHudMI = new JMenuItem("Show in Lightbox");
         toggleHudMI.addActionListener(e -> {
             ActivityLogHelper.logUserAction("SampleResultContextMenu.showInLightbox", result);
-            ObjectiveSample objectiveSample = result.getParentRun().getParent();
-            Sample sample = objectiveSample.getParent();
+            Sample sample = getSample();
             ArtifactDescriptor descriptor = new ResultArtifactDescriptor(result);
             Hud.getSingletonInstance().setObjectAndToggleDialog(sample, descriptor, FileType.SignalMip.toString(), true, true);
         });
 
         return toggleHudMI;
+    }
+
+    private Sample getSample() {
+        ObjectiveSample objectiveSample = result.getParentRun().getParent();
+        return objectiveSample.getParent();
     }
 }
