@@ -151,13 +151,13 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
                 if (dialog.isSkipGrouper()) {
                     extraOptions.append(",skip grouper=true");
                 }
-                if (dialog.isSkipGrouper()) {
+                if (dialog.isSkipPrealigner()) {
                     extraOptions.append(",skip prealigner=true");
                 }
                 if (!StringUtils.isBlank(dialog.getRunObjectives())) {
-                    extraOptions.append(",run objectives="+dialog.getRunObjectives());
+                    extraOptions.append(",run objectives=").append(dialog.getRunObjectives());
                 }
-                if (!StringUtils.isBlank(dialog.getRunObjectives())) {
+                if (!StringUtils.isBlank(dialog.getExtraOptions())) {
                     extraOptions.append(",").append(dialog.getExtraOptions());
                 }
 
@@ -299,7 +299,6 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
             // Blocks until dialog is no longer visible, and then:
             removeAll();
             dispose();
-            log.info("Returning value: "+returnValue);
             return returnValue;
         }
 
