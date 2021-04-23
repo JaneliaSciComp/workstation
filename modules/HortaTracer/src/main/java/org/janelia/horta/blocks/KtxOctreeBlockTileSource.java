@@ -90,8 +90,6 @@ public class KtxOctreeBlockTileSource implements BlockTileSource<KtxOctreeBlockT
     private KtxOctreeResolution getKtxResolution(KtxHeader ktxHeader) {
         // Parse maximum resolution
         int maxRes = Integer.parseInt(ktxHeader.keyValueMetadata.get("multiscale_total_levels").trim()) - 1;
-        if (maxRes==0)
-            maxRes = 1;
         return new KtxOctreeResolution(maxRes);
     }
 
