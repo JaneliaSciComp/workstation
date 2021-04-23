@@ -1,5 +1,6 @@
 package org.janelia.workstation.infopanel;
 
+import Jama.Matrix;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -10,9 +11,12 @@ import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronFilterAction;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.geom.Vec3;
+import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.infopanel.action.*;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.windows.TopComponent;
@@ -179,6 +183,10 @@ public class AnnotationPanel extends JPanel
         workspaceButtonsPanel2.setLayout(new BoxLayout(workspaceButtonsPanel2, BoxLayout.LINE_AXIS));
         mainPanel.add(workspaceButtonsPanel2, cVert);
 
+        JPanel locationPanel = new JPanel();
+        locationPanel.setLayout(new BoxLayout(locationPanel, BoxLayout.LINE_AXIS));
+        mainPanel.add(locationPanel, cVert);
+
         // testingFil
         // showOutline(workspaceButtonsPanel, Color.green);
 
@@ -336,6 +344,10 @@ public class AnnotationPanel extends JPanel
                         workspaceToolButton.getBounds().y + workspaceToolButton.getBounds().height);
             }
         });
+
+        JButton gotoLocationButton = new JButton("Go To..");
+        gotoLocationButton.setAction(new GoToLocationAction());
+        locationPanel.add(gotoLocationButton);
 
 
         // list of neurons in workspace

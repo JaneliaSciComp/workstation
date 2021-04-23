@@ -164,10 +164,6 @@ public class QuadViewController implements ViewStateListener {
         tileServer.setLoadStatusListener(new QvucLoadStatusListener());
     }
     
-    public void registerForEvents(GoToLocationAction action) {
-        action.setListener(new QvucGotoListener());
-    }
-    
     public void mouseModeChanged(MouseMode.Mode mode) {
         lvv.setMouseMode(mode);
         ui.setMouseMode(mode);

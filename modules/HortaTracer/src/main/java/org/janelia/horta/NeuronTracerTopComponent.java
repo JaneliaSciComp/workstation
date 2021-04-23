@@ -1,9 +1,7 @@
 package org.janelia.horta;
 
 import java.awt.*;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.datatransfer.*;
 import java.awt.dnd.*;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
@@ -1112,6 +1110,25 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 };
                 topMenu.add(syncViewsAction);
+
+                AbstractAction copyLocToClipboard = new AbstractAction("Copy Micron Location To Clipboard") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        // send out a view event to synchronize
+                        Vantage vantage = sceneWindow.getVantage();
+                        Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
+                                {vantage.getFocus()[0],},
+                                {vantage.getFocus()[1],},
+                                {vantage.getFocus()[2],},
+                                {1.0,},});
+                        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                        String vantageStr = "[" + vantage.getFocus()[0] +"," +
+                                vantage.getFocus()[1] + "," + vantage.getFocus()[2] + "]";
+                        StringSelection selection = new StringSelection(vantageStr);
+                        clipboard.setContents(selection, selection);
+                    }
+                };
+                topMenu.add(copyLocToClipboard);
                 topMenu.add(new JPopupMenu.Separator());
 
 

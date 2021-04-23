@@ -161,8 +161,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
     private final SliceScanAction previousZSliceAction = new PreviousZSliceAction(volumeImage, camera);
     private final SliceScanAction advanceZSlicesAction = new AdvanceZSlicesAction(volumeImage, camera, 10);
     private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(volumeImage, camera, -10);
-    // go to actions
-    private final GoToLocationAction goToLocationAction = new GoToLocationAction(camera);
 
     private QuadViewController quadViewController;
     private URL loadedUrl;
@@ -368,7 +366,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         quadViewController.registerForEvents(zoomScrollModeAction);
         quadViewController.registerForEvents(zScanScrollModeAction);
         quadViewController.registerForEvents(tileServer);
-        quadViewController.registerForEvents(goToLocationAction);
 
         OrthogonalPanel[] viewPanels = {nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
@@ -751,10 +748,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         resetViewButton.setAction(resetViewAction);
         buttonsPanel.add(resetViewButton);
 
-        JButton gotoLocationButton = new JButton("New button");
-        gotoLocationButton.setAction(goToLocationAction);
-        buttonsPanel.add(gotoLocationButton);
-
         JButton loadUpdatesButton = new JButton("Refresh Updates");
         loadUpdatesButton.setAction(refreshSharedUpdatesAction);
 
@@ -877,8 +870,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
             zoomInAction,
             zoomOutAction,
             nextZSliceAction,
-            previousZSliceAction,
-            goToLocationAction
+            previousZSliceAction
         };
         // input map for viewer area, not all of QuadViewUi or anything that has
         //  text entry fields, or we'll trigger actions while typing in them!
