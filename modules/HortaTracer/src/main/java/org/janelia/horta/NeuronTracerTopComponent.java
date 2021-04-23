@@ -1669,6 +1669,17 @@ public final class NeuronTracerTopComponent extends TopComponent
                             + indicatedNeuron.getName()
                             + "':").setEnabled(false);
 
+                    AbstractAction hideNeuronAction = new AbstractAction("Hide Neuron") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(indicatedNeuron.getId());
+                            NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(
+                                    this, Arrays.asList(new TmNeuronMetadata[]{indicatedNeuron}));
+                            ViewerEventBus.postEvent(updateEvent);
+                        }
+                    };
+                    topMenu.add(hideNeuronAction);
+
                     AbstractAction toggleVisAction = new AbstractAction("Set neuron radius...") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
