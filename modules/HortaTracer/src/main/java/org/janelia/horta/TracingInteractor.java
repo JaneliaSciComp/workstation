@@ -731,6 +731,9 @@ public class TracingInteractor extends MouseAdapter
                 }
                 if (nearestVertex != null) {
                     neuronModel = NeuronManager.getInstance().getNeuronFromNeuronID(nearestVertex.getNeuronId());
+                    if (TmModelManager.getInstance().getCurrentView().isHidden(neuronModel.getId())) {
+                        nearestVertex = null;
+                    }
                 }
             }
             else {
