@@ -6,3 +6,7 @@ Data Browser
 
 Horta
 * added more error text for invalid SWC files
+* added copy coordinates/goto in horta 3d
+* fixed issue with hidden neurons being interactable
+* added right-click option for hiding neurons in horta 3d
+
