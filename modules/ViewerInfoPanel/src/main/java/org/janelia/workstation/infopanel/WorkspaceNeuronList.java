@@ -228,7 +228,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                     selectNeuron(selectedNeuron);
 
                     // show popup menu for the selected neuron
-                    JPopupMenu popupMenu = createPopupMenu(me);
+                    JPopupMenu popupMenu = createPopupMenu(selectedNeuron);
                     if (popupMenu!=null) {
                         popupMenu.show(me.getComponent(), me.getX(), me.getY());
                     }
@@ -449,8 +449,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         loadWorkspace(null);
     }
 
-    protected JPopupMenu createPopupMenu(MouseEvent me) {
-        NeuronContextMenu menu = new NeuronContextMenu(TmSelectionState.getInstance().getCurrentNeuron());
+    protected JPopupMenu createPopupMenu(TmNeuronMetadata neuron) {
+        NeuronContextMenu menu = new NeuronContextMenu(neuron);
         menu.addMenuItems();
         return menu;
     }
