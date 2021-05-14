@@ -248,7 +248,7 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
             this.skipGrouperCheckbox = new JCheckBox();
             mainPanel.addItem("Skip stitching pre-check", skipGrouperCheckbox);
             this.skipPrealignerCheckbox = new JCheckBox();
-            mainPanel.addItem("Skip alignment pre-check", skipPrealignerCheckbox);
+            mainPanel.addItem("Skip VNC alignment pre-check", skipPrealignerCheckbox);
 
             this.runObjectivesField = new JTextField();
             runObjectivesField.setColumns(20);
