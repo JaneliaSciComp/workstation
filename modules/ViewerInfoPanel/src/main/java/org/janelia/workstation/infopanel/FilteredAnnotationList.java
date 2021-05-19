@@ -164,9 +164,12 @@ public class FilteredAnnotationList extends JPanel {
 
     @Subscribe
     public void annotationSelected(SelectionAnnotationEvent event) {
-        TmGeoAnnotation annotation = (TmGeoAnnotation)event.getItems().iterator().next();
-        if (annotation != null) {
-            selectAnnotation(annotation);
+        List<TmGeoAnnotation> annList = event.getItems();
+        if (!annList.isEmpty()) {
+            TmGeoAnnotation annotation = annList.get(0);
+            if (annotation != null) {
+                selectAnnotation(annotation);
+            }
         }
     }
 
