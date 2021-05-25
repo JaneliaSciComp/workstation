@@ -8,6 +8,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.*;
 
@@ -534,7 +536,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      * @param name = name of neuron
      * @throws Exception
      */
-    public synchronized TmNeuronMetadata createNeuron(String name) throws Exception {
+    public synchronized TmNeuronMetadata createNeuron(String name, boolean deferUIUpdate) throws Exception {
         TmNeuronMetadata newNeuron = new TmNeuronMetadata();
         newNeuron.setOwnerKey(AccessManager.getSubjectKey());
         final TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
@@ -548,22 +550,27 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         log.info("Neuron was created: "+neuron);
         setCurrentNeuron(neuron);
 
+        if (!deferUIUpdate) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    // if filter, find new fragments that might be affected
+                    if (applyFilter) {
+                        NeuronUpdates updates = neuronFilter.addNeuron(neuron);
+                        updateFrags(updates);
+                    }
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                // if filter, find new fragments that might be affected
-                if (applyFilter) {
-                    NeuronUpdates updates = neuronFilter.addNeuron(neuron);
-                    updateFrags(updates);
+                    fireNeuronCreated(neuron);
+                    fireNeuronSelected(neuron);
                 }
-
-                fireNeuronCreated(neuron);
-                fireNeuronSelected(neuron);
-            }
-        });
+            });
+        }
 
         return neuron;
+    }
+
+    public synchronized TmNeuronMetadata createNeuron(String name) throws Exception {
+        return createNeuron(name, false);
     }
 
     /**
@@ -1075,7 +1082,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     /**
      * move the neurite containing the input annotation to the given neuron
      */
-    public synchronized void moveNeurite(final TmGeoAnnotation annotation, final TmNeuronMetadata destNeuron) throws Exception {
+    public synchronized void moveNeurite(final TmGeoAnnotation annotation, final TmNeuronMetadata destNeuron,
+        boolean deferUIUpdate) throws Exception {
         if (eitherIsNull(annotation, destNeuron)) {
             return;
         }
@@ -1107,21 +1115,26 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             updates = neuronFilter.updateNeuron(destNeuron);
             updateFrags(updates);
         }
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    fireNeuronChanged(sourceNeuron);
-                    fireNeuronChanged(destNeuron);
-                    fireNeuronSelected(destNeuron);
+
+        if (!deferUIUpdate) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        fireNeuronChanged(sourceNeuron);
+                        fireNeuronChanged(destNeuron);
+                        fireNeuronSelected(destNeuron);
+                    } finally {
+                        // endTransaction();
+                        setSelectMode(true);
+                    }
+                    //activityLog.logEndOfOperation(getWsId(), annotation);
                 }
-                finally {
-                    // endTransaction();
-                    setSelectMode(true);
-                }
-                //activityLog.logEndOfOperation(getWsId(), annotation);
-            }
-        });
+            });
+        }
+    }
+    public synchronized void moveNeurite(final TmGeoAnnotation annotation, final TmNeuronMetadata destNeuron) throws Exception {
+        moveNeurite(annotation, destNeuron, false);
     }
 
 
@@ -1483,7 +1496,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      * @param newRootID = ID of root of new neurite
      * @throws Exception
      */
-    public synchronized void splitNeurite(final Long neuronID, final Long newRootID) throws Exception {
+    public synchronized void splitNeurite(final Long neuronID, final Long newRootID, boolean deferUIUpdate) throws Exception {
         final TmGeoAnnotation newRoot = getGeoAnnotationFromID(neuronID, newRootID);
         final TmNeuronMetadata neuron = getNeuronFromNeuronID(neuronID);
         TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
@@ -1496,31 +1509,81 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
         log.info("Split neuron at annotation {} in neuron {}", newRootID,  neuron);
 
+        if (!deferUIUpdate) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    beginTransaction();
+                    try {
+                        TmGeoAnnotation newRootAnnotation = neuron.getGeoAnnotationMap().get(newRootID);
+                        if (newRootAnnotation == null) {
+                            // Happens during Horta undo-merge-neurites. I'm Not sure why.
+                            log.warn("Failed to find new annotation after splitNeurite");
+                        } else {
+                            fireAnnotationReparented(newRootAnnotation, neuron.getId());
+                        }
+                        if (applyFilter) {
+                            NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                            updateFrags(updates);
+                        }
+                        fireNeuronSelected(neuron);
+                    } finally {
+                        endTransaction();
+                    }
+                    //activityLog.logEndOfOperation(getWsId(), newRoot);
+                }
+            });
+        }
+    }
+    public synchronized void splitNeurite(final Long neuronID, final Long newRootID) throws Exception {
+        splitNeurite(neuronID, newRootID);
+    }
+
+    /**
+     * split a neurite at the input node; the node is detached from its parent, and the node
+     * and its children become a new neurite; that neurite is moved to a new neuron
+     */
+    public synchronized void splitAndMoveNeurite(final Long neuronID, final Long newRootID) throws Exception {
+
+        // this is a composite operation; we'll call each in turn but defer the UI updates
+        //  until the end, to prevent any concurrency issues
+        TmGeoAnnotation newRootAnnotation = getGeoAnnotationFromID(neuronID, newRootID);
+        TmNeuronMetadata originalNeuron = getNeuronFromNeuronID(neuronID);
+        splitNeurite(neuronID, newRootID, true);
+        String newNeuriteName = getNextNeuronName();
+        TmNeuronMetadata newNeuron = createNeuron(newNeuriteName, true);
+        moveNeurite(newRootAnnotation, newNeuron, true);
+
+
+        // amalgamated updates from those three individual operations; I'm not 100% sure all
+        //  these are necessary...some of the later ones may repeat the earlier ones
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                beginTransaction();
-                try {
-                    TmGeoAnnotation newRootAnnotation = neuron.getGeoAnnotationMap().get(newRootID);
-                    if (newRootAnnotation == null) {
-                        // Happens during Horta undo-merge-neurites. I'm Not sure why.
-                        log.warn("Failed to find new annotation after splitNeurite");
-                    }
-                    else {
-                        fireAnnotationReparented(newRootAnnotation, neuron.getId());
-                    }
-                    if (applyFilter) {
-                        NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
-                        updateFrags(updates);
-                    }
-                    fireNeuronSelected(neuron);
+                if (newRootAnnotation == null) {
+                    // Happens during Horta undo-merge-neurites. I'm not sure why.
+                    log.warn("Failed to find new annotation after splitNeurite");
+                } else {
+                    fireAnnotationReparented(newRootAnnotation, originalNeuron.getId());
                 }
-                finally {
-                    endTransaction();
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.updateNeuron(originalNeuron);
+                    updateFrags(updates);
                 }
-                //activityLog.logEndOfOperation(getWsId(), newRoot);
+
+                fireNeuronCreated(newNeuron);
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.addNeuron(newNeuron);
+                    updateFrags(updates);
+                }
+
+                fireNeuronChanged(originalNeuron);
+                fireNeuronChanged(newNeuron);
+
+                fireNeuronSelected(newNeuron);
             }
         });
+
     }
 
     public synchronized void addAnchoredPath(final Long neuronID, final TmAnchoredPathEndpoints endpoints, List<List<Integer>> points) throws Exception{
@@ -2475,6 +2538,42 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             return getNeuronModel().getNeurons().size();
         }
     }
+
+    /**
+     * given a workspace, return a new generic neuron name (probably something
+     * like "New neuron 12", where the integer is based on whatever similarly
+     * named neurons exist already)
+     */
+    public static String getNextNeuronName() {
+        // go through existing neuron names; try to parse against
+        //  standard template; create list of integers found
+        ArrayList<Long> intList = new ArrayList<Long>();
+        Pattern pattern = Pattern.compile("Neuron[ _]([0-9]+)");
+        for (TmNeuronMetadata neuron : NeuronManager.getInstance().getNeuronList()) {
+            if (neuron.getName() != null) {
+                Matcher matcher = pattern.matcher(neuron.getName());
+                if (matcher.matches()) {
+                    intList.add(Long.parseLong(matcher.group(1)));
+                }
+            }
+        }
+
+        // construct new name from standard template; use largest integer
+        //  found + 1; starting with max = 0 has the effect of always starting
+        //  at at least 1, if anyone has named their neurons with negative numbers
+        Long maximum = 0L;
+        if (intList.size() > 0) {
+            for (Long l : intList) {
+                if (l > maximum) {
+                    maximum = l;
+                }
+            }
+        }
+        return String.format("Neuron %d", maximum + 1);
+    }
+
+
+
 
     public static void handleException(String message, String title) {
         FrameworkAccess.handleException(message, new Throwable(title));

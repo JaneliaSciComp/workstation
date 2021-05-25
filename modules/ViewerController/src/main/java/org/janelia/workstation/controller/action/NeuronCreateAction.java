@@ -51,7 +51,7 @@ public class NeuronCreateAction extends EditAction {
         }
 
         // prompt the user for a name, but suggest a standard name
-        final String neuronName = promptForNeuronName(getNextNeuronName());
+        final String neuronName = promptForNeuronName(NeuronManager.getNextNeuronName());
         if (neuronName != null) {
             // create it:
             SimpleWorker creator = new SimpleWorker() {
@@ -82,40 +82,6 @@ public class NeuronCreateAction extends EditAction {
             creator.execute();
         }
     }
-
-    /**
-     * given a workspace, return a new generic neuron name (probably something
-     * like "New neuron 12", where the integer is based on whatever similarly
-     * named neurons exist already)
-     */
-    private String getNextNeuronName() {
-        // go through existing neuron names; try to parse against
-        //  standard template; create list of integers found
-        ArrayList<Long> intList = new ArrayList<Long>();
-        Pattern pattern = Pattern.compile("Neuron[ _]([0-9]+)");
-        for (TmNeuronMetadata neuron : NeuronManager.getInstance().getNeuronList()) {
-            if (neuron.getName() != null) {
-                Matcher matcher = pattern.matcher(neuron.getName());
-                if (matcher.matches()) {
-                    intList.add(Long.parseLong(matcher.group(1)));
-                }
-            }
-        }
-
-        // construct new name from standard template; use largest integer
-        //  found + 1; starting with max = 0 has the effect of always starting
-        //  at at least 1, if anyone has named their neurons with negative numbers
-        Long maximum = 0L;
-        if (intList.size() > 0) {
-            for (Long l : intList) {
-                if (l > maximum) {
-                    maximum = l;
-                }
-            }
-        }
-        return String.format("Neuron %d", maximum + 1);
-    }
-
 
     /**
      * pop a dialog that asks for a name for a neuron;
