@@ -17,6 +17,7 @@ import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.api.ConnectionMgr;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -26,29 +27,55 @@ import java.util.*;
 
 public class TmViewerManager implements GlobalViewerController {
     private final Logger log = LoggerFactory.getLogger(TmViewerManager.class);
-    private static final TmViewerManager instance = new TmViewerManager();
-    private TmModelManager modelManager = TmModelManager.getInstance();
+    private static TmViewerManager instance;
+    private static TmModelManager modelManager;
     private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
-    private TiledMicroscopeDomainMgr tmDomainMgr;
     private NeuronManager neuronManager;
     private ProjectInitFacade projectInit;
     private DomainObject currProject;
     private int NUMBER_FRAGMENTS_THRESHOLD = 100;
     private boolean isTempOwnershipAdmin = false;
+    private boolean isLocal = false;
+    private static TiledMicroscopeDomainMgr tmDomainMgr;
 
     public enum ToolSet {
         NEURON
     }
 
-    public static TmViewerManager getInstance() {
+    public  static TmViewerManager getInstance() {
+        if (instance==null)
+            instance = new TmViewerManager();
         return instance;
     }
 
     public TmViewerManager() {
-        this.tmDomainMgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
-        setNeuronManager(NeuronManager.getInstance());
+        modelManager = TmModelManager.getInstance();
+        neuronManager = NeuronManager.getInstance();
+        initModel();
+
+        tmDomainMgr = TiledMicroscopeDomainMgrFactory.initDomainMgr(isLocal);
+        modelManager.setDomainMgr(tmDomainMgr);
+        neuronManager.setDomainMgr(tmDomainMgr);
         ViewerEventBus.registerForEvents(this);
+    }
+
+    private void initModel() {
+        String connectionType = FrameworkAccess.getLocalPreferenceValue(ConnectionMgr.class, ConnectionMgr.CONNECTION_STRING_PREF, null);
+        if (connectionType!=null && connectionType.equals("local")) {
+            isLocal =true;
+        } else {
+            isLocal = false;
+        }
+        TmModelManager.getInstance().getNeuronModel().setNeuronModelAdapter(isLocal);
+    }
+
+    public boolean isLocal() {
+        return isLocal;
+    }
+
+    public void setLocal(boolean local) {
+        isLocal = local;
     }
 
     @Subscribe
@@ -116,7 +143,7 @@ public class TmViewerManager implements GlobalViewerController {
             ViewerEventBus.postEvent(event);
         }
         // freeze incoming updates until we are fully loaded in the workspace
-        if (!TmModelManager.getInstance().isLocal())
+        if (!isLocal())
             RefreshHandler.getInstance().ifPresent(rh -> rh.setReceiveUpdates(false));
 
         projectInit = new ProjectInitFacadeImpl(project);
@@ -275,7 +302,7 @@ public class TmViewerManager implements GlobalViewerController {
 
         try {
             loadUserPreferences();
-            if (!TmModelManager.getInstance().isLocal())
+            if (!isLocal())
                 RefreshHandler.getInstance().ifPresent(rh -> rh.setAnnotationModel(getNeuronManager()));
             //TaskWorkflowViewTopComponent.getInstance().loadHistory();
         } catch (Exception error) {
@@ -305,7 +332,7 @@ public class TmViewerManager implements GlobalViewerController {
         ViewerEventBus.postEvent(selectionEvent);
 
         // re-enable updates once the model is fully loaded
-        if (!TmModelManager.getInstance().isLocal())
+        if (!isLocal())
             RefreshHandler.getInstance().ifPresent(rh -> rh.setReceiveUpdates(true));
     }
 }

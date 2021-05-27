@@ -55,6 +55,7 @@ public final class AccessManager {
     // TODO: technician groups should be modeled explicitly in the Subject model via a Group attribute
     public static final String FLYLIGHT_GROUP = "group:flylighttechnical";
     public static final String PTR_GROUP = "group:projtechres";
+    private boolean localConnection;
 
     private enum AuthState {
         Starting,
@@ -102,6 +103,7 @@ public final class AccessManager {
         this.token = null;
         this.authenticatedSubject = null;
         this.actualSubject = null;
+        localConnection = false;
     }
     
     private void moveToLoggedInState(Subject authenticatedSubject) {
@@ -238,10 +240,15 @@ public final class AccessManager {
             return false;
         }
     }
+
+    public void setLocal(boolean local) {
+        localConnection = local;
+    }
         
     private Subject authenticateSubject() {
         // First get auth token
-        renewToken();
+        if (!localConnection)
+            renewToken();
         // We're now authenticated. Get or create the Workstation user object.
         try {
             return DomainMgr.getDomainMgr().getModel().getUser(username);
@@ -491,4 +498,5 @@ public final class AccessManager {
         }
         return null;
     }
+
 }

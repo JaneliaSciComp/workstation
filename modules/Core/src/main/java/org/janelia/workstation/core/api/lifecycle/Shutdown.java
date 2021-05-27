@@ -2,6 +2,7 @@ package org.janelia.workstation.core.api.lifecycle;
 
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ApplicationClosing;
+import org.janelia.workstation.core.model.local.LocalMongoService;
 import org.openide.modules.OnStop;
 
 /**
@@ -13,6 +14,7 @@ import org.openide.modules.OnStop;
 @OnStop
 public class Shutdown implements Runnable {
     public void run() {
+        LocalMongoService.cleanupConnection();
         Events.getInstance().postOnEventBus(new ApplicationClosing());
     }
 }

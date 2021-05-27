@@ -24,6 +24,7 @@ import org.janelia.workstation.core.api.lifecycle.ConsoleState;
 import org.janelia.workstation.core.api.lifecycle.GracefulBrick;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
+import org.janelia.workstation.core.events.lifecycle.LocalProjectSelected;
 import org.janelia.workstation.core.model.ConnectionResult;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.BrandingConfig;
@@ -152,6 +153,18 @@ public class ShowingHook implements Runnable {
             worker.execute();
         });
     }
+
+    /**
+     * perform some basic setup when the onnection is local including creating a dummy Subject for local usage
+     * as well as basic initialization of the Data Explorer
+     */
+    @Subscribe
+    public void localConnection (LocalProjectSelected event) {
+        // do a login with a dummy local user to get the ball rolling
+        AccessManager.getAccessManager().setLocal(true);
+        AccessManager.getAccessManager().loginUsingSavedCredentials();
+    }
+
 
     /**
      * After connecting to a data server, the remote properties must be fetched from the server, and updated locally.

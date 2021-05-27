@@ -42,7 +42,6 @@ public class ConnectionMgr {
     }
 
     public String getConnectionString() {
-
         String defaultValue = ConsoleProperties.getString("api.gateway", null);
         log.debug("hardcoded network.gateway string: {}", defaultValue);
 

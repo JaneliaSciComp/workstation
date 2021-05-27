@@ -37,6 +37,7 @@ import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 
 import org.janelia.geometry3d.ObservableInterface;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
+import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.dialog.NeuronColorDialog;
 import org.janelia.workstation.controller.listener.ColorModelListener;
 import org.janelia.workstation.controller.listener.UnmixingListener;
@@ -2168,7 +2169,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     TileLoader getTileLoader() {
-        if (ApplicationOptions.getInstance().isWorkstationLite()) {
+        if (!TmViewerManager.getInstance().isLocal()) {
             return new CachedTileLoader(
                     new JadeBasedTileLoader(new JadeServiceClient(ConsoleProperties.getString("jadestorage.rest.url"), () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false))),
                     LocalCacheMgr.getInstance().getLocalFileCacheStorage(),

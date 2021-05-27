@@ -48,7 +48,7 @@ public class TmModelManager {
     private Jama.Matrix voxToMicronMatrix;
     private Jama.Matrix micronToVoxMatrix;
     private NeuronModel neuronModel;
-    private final TiledMicroscopeDomainMgr tmDomainMgr;
+    private TiledMicroscopeDomainMgr tmDomainMgr;
     private TileLoader tileLoader;
     private TileServer tileServer;
     private TileFormat tileFormat;
@@ -57,37 +57,28 @@ public class TmModelManager {
     private SpatialIndexManager spatialIndexManager;
     private boolean isLocal;
 
-    private static final TmModelManager instance = new TmModelManager();
+    private static TmModelManager instance;
 
     public static TmModelManager getInstance() {
+        if (instance==null)
+            instance = new TmModelManager();
         return instance;
     }
     private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     private TmModelManager() {
-        this.tmDomainMgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
         neuronModel = NeuronModel.getInstance();
         currentView = new TmViewState();
         spatialIndexManager = new SpatialIndexManager();
         neuronHistory = new TmHistory();
-        initModel();
-         }
-
-    private void initModel() {
-        String connectionType = FrameworkAccess.getLocalPreferenceValue(ConnectionMgr.class, ConnectionMgr.CONNECTION_STRING_PREF, null);
-        if (connectionType!=null && connectionType.equals("local")) {
-            isLocal =true;
-        } else {
-            isLocal = false;
-        }
     }
 
-    public boolean isLocal() {
-        return isLocal;
+    public TiledMicroscopeDomainMgr getDomainMgr() {
+        return tmDomainMgr;
     }
 
-    public void setLocal(boolean local) {
-        isLocal = local;
+    public void setDomainMgr(TiledMicroscopeDomainMgr tmDomainMgr) {
+        this.tmDomainMgr = tmDomainMgr;
     }
 
     public TmSample getCurrentSample() {

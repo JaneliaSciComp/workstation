@@ -90,7 +90,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     private static final String NEURON_TAG_VISIBILITY = "hidden";
 
     private static final int NUMBER_FRAGMENTS_THRESHOLD = 1000;
-    private final TiledMicroscopeDomainMgr tmDomainMgr;
+    private static TiledMicroscopeDomainMgr tmDomainMgr;
     private SWCDataConverter swcDataConverter;
 
     private TmSample currentSample;
@@ -125,10 +125,17 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public NeuronManager() {
-        this.modelManager = TmModelManager.getInstance();
-        this.tmDomainMgr = TiledMicroscopeDomainMgrFactory.getDomainMgr();
-        this.neuronModel = NeuronModel.getInstance();
+        modelManager = TmModelManager.getInstance();
+        neuronModel = NeuronModel.getInstance();
         registerEvents();
+    }
+
+    public TiledMicroscopeDomainMgr getDomainMgr() {
+        return tmDomainMgr;
+    }
+
+    public void setDomainMgr(TiledMicroscopeDomainMgr tmDomainMgr) {
+        this.tmDomainMgr = tmDomainMgr;
     }
 
     public void registerEvents() {
@@ -505,7 +512,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      * @throws Exception
      */
     public synchronized TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {
-        TmWorkspace workspace = tmDomainMgr.createWorkspace(sampleId, name);
+        TmWorkspace workspace = TiledMicroscopeDomainMgrFactory.getDomainMgr().createWorkspace(sampleId, name);
         return workspace;
     }
 
@@ -538,7 +545,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         final TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
         newNeuron.setWorkspaceRef(Reference.createFor(TmWorkspace.class, workspace.getId()));
         newNeuron.setName(name);
-        TmNeuronMetadata neuron = tmDomainMgr.save(newNeuron);
+        TmNeuronMetadata neuron = TiledMicroscopeDomainMgrFactory.getDomainMgr().save(newNeuron);
         neuron.setColor(neuronColors[(int) (neuron.getId() % neuronColors.length)]);
         neuronModel.completeCreateNeuron(neuron);
 
@@ -571,7 +578,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      * @throws Exception
      */
     public synchronized TmWorkspace copyWorkspace(TmWorkspace workspace, String name, String assignOwner) throws Exception {
-        TmWorkspace workspaceCopy = tmDomainMgr.copyWorkspace(workspace, name, assignOwner);
+        TmWorkspace workspaceCopy = TiledMicroscopeDomainMgrFactory.getDomainMgr().copyWorkspace(workspace, name, assignOwner);
         //activityLog.logCreateWorkspace(workspace.getId());
         return workspaceCopy;
     }
@@ -750,7 +757,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public synchronized void restoreNeuron (TmNeuronMetadata restoredNeuron) throws Exception {
         if (neuronModel.getNeuronById(restoredNeuron.getId())==null) {
-            restoredNeuron = tmDomainMgr.createWithId(restoredNeuron);
+            restoredNeuron = TiledMicroscopeDomainMgrFactory.getDomainMgr()
+                    .createWithId(restoredNeuron);
             restoredNeuron.initNeuronData();
             neuronModel.addNeuron(restoredNeuron);
             if (applyFilter) {
@@ -1722,81 +1730,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         return true;
     }
 
-    /*public void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
-        NeuronStyle style = getNeuronStyle(neuron);
-        if (style.isVisible() != visibility) {
-            Map<TmNeuronMetadata,NeuronStyle> styleUpdater = new HashMap<>();
-            style.setVisible(visibility);
-            styleUpdater.put(neuron, style);
-            if (visibility) {
-                removeUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
-            } else {
-                addUserNeuronTag(NEURON_TAG_VISIBILITY, neuron);
-            }
-            SwingUtilities.invokeLater(() -> fireNeuronStylesChanged(styleUpdater));
-        }
-    }
-
-    public void setNeuronVisibility(Collection<TmNeuronMetadata> bulkNeurons, boolean visibility) {
-        Map<TmNeuronMetadata, NeuronStyle> styleUpdater = new HashMap<>();
-        for (TmNeuronMetadata neuron : bulkNeurons) {
-            NeuronStyle style = getNeuronStyle(neuron);
-            if (style.isVisible() != visibility) {
-                style.setVisible(visibility);
-                styleUpdater.put(neuron, style);
-                if (visibility) {
-                    getAllTagMeta().removeUserTag(NEURON_TAG_VISIBILITY, neuron);
-                } else {
-                    getAllTagMeta().addUserTag(NEURON_TAG_VISIBILITY, neuron);
-                }
-            }
-        }
-        if (styleUpdater.size() > 0) {
-            SwingUtilities.invokeLater(() -> fireNeuronStylesChanged(styleUpdater));
-        }
-    }
-*/
-    /**
-     * change the style for a neuron; synchronized because it could be
-     * called from multiple threads, and the update is not atomic
-     */
-  /*  public synchronized void setNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) throws Exception {
-        neuron.setColor(style.getColor());
-        setNeuronVisibility(neuron, style.isVisible());
-        neuronModel.saveNeuronData(neuron);
-        SwingUtilities.invokeLater(() -> fireNeuronStyleChanged(neuron, style));
-        //activityLog.logSetStyle(modelManager.getCurrentWorkspace().getId(), neuron.getId());
-    }
-
-    public synchronized void setNeuronColors(List<TmNeuronMetadata> neuronList, Color color) throws Exception {
-
-        BulkNeuronStyleUpdate bulkNeuronStyleUpdate = new BulkNeuronStyleUpdate();
-        bulkNeuronStyleUpdate.setNeuronIds(DomainUtils.getIds(neuronList));
-        bulkNeuronStyleUpdate.setColorHex(ModelTranslation.getColorHex(color));
-        tmDomainMgr.updateNeuronStyles(bulkNeuronStyleUpdate);
-
-        Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
-        for (TmNeuronMetadata neuron : neuronList) {
-            neuron.setColor(color);
-            updateMap.put(neuron, getNeuronStyle(neuron));
-        }
-
-        SwingUtilities.invokeLater(() -> fireNeuronStylesChanged(updateMap));
-    }
-*/
-    /**
-     * retrieve a neuron style for a neuron, whether stored or default
-     */
-  /*  public NeuronStyle getNeuronStyle(TmNeuronMetadata neuron) {
-        boolean visibility = getNeuronVisibility(neuron);
-        if (neuron.getColor() == null) {
-            return NeuronStyle.getStyleForNeuron(neuron.getId(), visibility, false);
-        }
-        else {
-            return new NeuronStyle(neuron.getColor(), visibility, false);
-        }
-    }
-*/
     public boolean automatedRefinementEnabled() {
         return modelManager.getCurrentWorkspace().isAutoPointRefinement();
     }
@@ -2190,7 +2123,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public void addNeuronTag(String tag, List<TmNeuronMetadata> neuronList) throws Exception {
         TmNeuronTagMap currentTagMap = modelManager.getCurrentTagMap();
-        tmDomainMgr.bulkEditNeuronTags(neuronList, Arrays.asList(tag), true);
+        TiledMicroscopeDomainMgrFactory.getDomainMgr()
+                .bulkEditNeuronTags(neuronList, Arrays.asList(tag), true);
         for (TmNeuronMetadata neuron: neuronList) {
             currentTagMap.addTag(tag, neuron);
             neuron.getTags().add(tag);

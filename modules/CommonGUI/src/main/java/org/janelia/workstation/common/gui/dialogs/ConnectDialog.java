@@ -67,19 +67,6 @@ public class ConnectDialog extends ModalDialog {
         projectDirPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         projectDirPanel.add(Box.createHorizontalGlue());
 
-        projectDir.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        JButton projectDirButton = new JButton("Choose Project Dir");
-        projectDirButton.addActionListener((e)-> {
-            int saveDialogResult = projectDir.showSaveDialog(this);
-            if (saveDialogResult != JFileChooser.APPROVE_OPTION)
-                return;
-
-            projectDirectory = projectDir.getSelectedFile();
-            projectDirLabel.setText(projectDirectory.getPath());
-        });
-        projectDirPanel.add(projectDirLabel);
-        projectDirPanel.add(projectDirButton);
-
         workstationLite.addActionListener((e) -> {
             if (workstationLite.isSelected()) {
                 setLocal(true);
@@ -92,8 +79,8 @@ public class ConnectDialog extends ModalDialog {
         mainPanel.add(workstationLite,"span 2, al center top, width 100%");
         mainPanel.add(new JLabel("Connection URL"));
         mainPanel.add(connectionStringField, "width 300");
-        mainPanel.add(new JLabel("Project Directory:"));
-        mainPanel.add(projectDirPanel);
+        //mainPanel.add(new JLabel("Project Directory:"));
+        //mainPanel.add(projectDirPanel);
         mainPanel.add(errorLabel, "span 2, al center top, width 100%");
 
         JButton cancelButton = new JButton("Cancel");
@@ -187,6 +174,8 @@ public class ConnectDialog extends ModalDialog {
                     CONNECTION_STRING_PREF, "local");
 
             Events.getInstance().postOnEventBus(new LocalProjectSelected());
+
+            setVisible(false);
 
         } else {
             String connectionString = connectionStringField.getText().trim();
