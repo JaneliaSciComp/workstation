@@ -677,6 +677,7 @@
                         <publicPackage>org.janelia.model.domain.dto</publicPackage>
                         <publicPackage>org.janelia.model.domain.enums</publicPackage>
                         <publicPackage>org.janelia.model.domain.enums.algorithms</publicPackage>
+                        <publicPackage>org.janelia.model.domain.flyem</publicPackage>
                         <publicPackage>org.janelia.model.domain.gui.alignment_board</publicPackage>
                         <publicPackage>org.janelia.model.domain.gui.cdmip</publicPackage>
                         <publicPackage>org.janelia.model.domain.gui.search</publicPackage>

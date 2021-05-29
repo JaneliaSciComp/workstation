@@ -8,6 +8,7 @@ import org.janelia.model.access.domain.search.DocumentSearchResults;
 import org.janelia.model.domain.*;
 import org.janelia.model.domain.compute.ContainerizedService;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
+import org.janelia.model.domain.flyem.EMDataSet;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
@@ -621,7 +622,7 @@ public class DomainModel {
                     .compareTrueFirst(ClientDomainUtils.isOwner(o1), ClientDomainUtils.isOwner(o2))
                     .compare(o1.getIdentifier(), o2.getIdentifier()).result();
         }
-    };
+    }
 
     public DataSet getDataSet(String identifier) throws Exception {
         // TODO: improve performance by fetching only the required data set
@@ -631,6 +632,24 @@ public class DomainModel {
             }
         }
         return null;
+    }
+
+    public List<EMDataSet> getEMDataSets() throws Exception {
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        List<EMDataSet> dataSets = getAllDomainObjectsByClass(EMDataSet.class);
+        dataSets.sort(new EMDataSetComparator());
+        List<EMDataSet> canonicalDataSets = putOrUpdate(dataSets, false);
+        if (TIMER) w.stop("getDataSets");
+        return canonicalDataSets;
+    }
+
+    public static class EMDataSetComparator implements Comparator<EMDataSet> {
+        @Override
+        public int compare(EMDataSet o1, EMDataSet o2) {
+            return ComparisonChain.start()
+                    .compareTrueFirst(ClientDomainUtils.isOwner(o1), ClientDomainUtils.isOwner(o2))
+                    .compare(o1.getDataSetIdentifier(), o2.getDataSetIdentifier()).result();
+        }
     }
 
     public List<ColorDepthLibrary> getColorDepthLibraries() throws Exception {

@@ -171,9 +171,13 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         showRecentItemsMenuItem.addActionListener(e -> setShowRecentMenuItems(showRecentItemsMenuItem.isSelected()));
         configButton.addMenuItem(showRecentItemsMenuItem);
 
-        final JCheckBoxMenuItem showDataSetsMenuItem = new JCheckBoxMenuItem("Show data sets", isShowDataSets());
+        final JCheckBoxMenuItem showDataSetsMenuItem = new JCheckBoxMenuItem("Show LM data sets", isShowDataSets());
         showDataSetsMenuItem.addActionListener(e -> setShowDataSets(showDataSetsMenuItem.isSelected()));
         configButton.addMenuItem(showDataSetsMenuItem);
+
+        final JCheckBoxMenuItem showEMDataSetsMenuItem = new JCheckBoxMenuItem("Show EM data sets", isShowDataSets());
+        showEMDataSetsMenuItem.addActionListener(e -> setShowDataSets(showEMDataSetsMenuItem.isSelected()));
+        configButton.addMenuItem(showEMDataSetsMenuItem);
 
         final JCheckBoxMenuItem showColorDepthLibraries = new JCheckBoxMenuItem("Show color depth libraries", isShowColorDepthLibraries());
         showColorDepthLibraries.addActionListener(e -> setShowColorDepthLibraries(showColorDepthLibraries.isSelected()));
@@ -385,6 +389,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
         else if (event.getKey().equals(SHOW_RECENTLY_OPENED_ITEMS)
                 || event.getKey().equals(SHOW_DATA_SETS)
+                || event.getKey().equals(SHOW_EM_DATA_SETS)
                 || event.getKey().equals(SHOW_COLOR_DEPTH_LIBRARIES)
                 || event.getKey().equals(SHOW_COLOR_DEPTH_SEARCHES)
                 || event.getKey().equals(SHOW_FLY_LINE_RELEASES)) {
@@ -713,6 +718,14 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     private static void setShowDataSets(boolean value) {
         FrameworkAccess.setModelProperty(SHOW_DATA_SETS, value);
+    }
+
+    private static boolean isShowEMDataSets() {
+        return FrameworkAccess.getModelProperty(SHOW_COLOR_DEPTH_LIBRARIES, true);
+    }
+
+    private static void setShowEMDataSets(boolean value) {
+        FrameworkAccess.setModelProperty(SHOW_COLOR_DEPTH_LIBRARIES, value);
     }
 
     private static boolean isShowColorDepthLibraries() {
