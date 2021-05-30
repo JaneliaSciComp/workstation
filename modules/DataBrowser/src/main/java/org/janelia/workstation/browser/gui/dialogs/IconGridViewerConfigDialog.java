@@ -28,8 +28,6 @@ import javax.swing.JRadioButtonMenuItem;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.HeadlessException;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
@@ -42,9 +40,6 @@ import static org.janelia.workstation.browser.gui.editor.FilterEditorPanel.DEFAU
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class IconGridViewerConfigDialog extends ModalDialog {
-
-    private static final String DEFAULT_TITLE_VALUE = "{Name}";
-    private static final String DEFAULT_SUBTITLE_VALUE = "";
 
     public static final int ERROR_OPTION = -1;
     public static final int CANCEL_OPTION = 0;
@@ -96,22 +91,14 @@ public class IconGridViewerConfigDialog extends ModalDialog {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                returnValue = CANCEL_OPTION;
-                setVisible(false);
-            }
+        cancelButton.addActionListener(e -> {
+            returnValue = CANCEL_OPTION;
+            setVisible(false);
         });
 
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                saveAndClose();
-            }
-        });
+        okButton.addActionListener(e -> saveAndClose());
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
@@ -134,11 +121,9 @@ public class IconGridViewerConfigDialog extends ModalDialog {
         for (final Class<? extends DomainObject> searchClass : DomainUtils.getSearchClasses()) {
             final String type = DomainUtils.getTypeName(searchClass);
             JMenuItem menuItem = new JRadioButtonMenuItem(type, searchClass.equals(DEFAULT_SEARCH_CLASS));
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    addCurrentConfig();
-                    setResultType(searchClass);
-                }
+            menuItem.addActionListener(e -> {
+                addCurrentConfig();
+                setResultType(searchClass);
             });
             typeGroup.add(menuItem);
             typeCriteriaButton.addMenuItem(menuItem);
@@ -164,20 +149,10 @@ public class IconGridViewerConfigDialog extends ModalDialog {
         subtitleInputBox.setCompletionProvider(provider);
 
         String title = config.getDomainClassTitle(resultClass.getSimpleName());
-        if (title==null) {
-            titleInputBox.setText(DEFAULT_TITLE_VALUE);
-        }
-        else {
-            titleInputBox.setText(title);
-        }
+        titleInputBox.setText(title);
 
         String subtitle = config.getDomainClassSubtitle(resultClass.getSimpleName());
-        if (subtitle==null) {
-            subtitleInputBox.setText(DEFAULT_SUBTITLE_VALUE);
-        }
-        else {
-            subtitleInputBox.setText(subtitle);
-        }
+        subtitleInputBox.setText(subtitle);
     }
 
     private CompletionProvider createCompletionProvider(Class<? extends DomainObject> resultClass) {

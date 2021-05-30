@@ -503,7 +503,6 @@ public class DomainObjectIconGridViewer
     }
 
     private void refreshView() {
-        //selectionModel.reset();
         show(domainObjectList, () -> {
             // Reselect previously selected items
             select(selectionModel.getObjects(), true, true, false, false);
@@ -541,7 +540,7 @@ public class DomainObjectIconGridViewer
     
     @Override
     protected void objectDoubleClick(DomainObject object) {
-        getPopupMenu(Arrays.asList(object)).runDefaultAction();
+        getPopupMenu(Collections.singletonList(object)).runDefaultAction();
     }
     
     @Override

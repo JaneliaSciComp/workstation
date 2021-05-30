@@ -77,13 +77,9 @@ public abstract class DomainObjectImageModel implements ImageModel<DomainObject,
         return StringUtilsExtra.replaceVariablePattern(subtitlePattern, proxy);
     }
 
-    protected String getTitlePattern(Class<? extends DomainObject> clazz) {
-        return "{Name}";
-    }
-    
-    protected String getSubtitlePattern(Class<? extends DomainObject> clazz) {
-        return "";
-    }
+    protected abstract String getTitlePattern(Class<? extends DomainObject> clazz);
+
+    protected abstract String getSubtitlePattern(Class<? extends DomainObject> clazz);
 
     public abstract ArtifactDescriptor getArtifactDescriptor();
 

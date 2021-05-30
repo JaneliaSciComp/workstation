@@ -1,24 +1,15 @@
 package org.janelia.workstation.browser.gui.listview.icongrid;
 
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-import javax.swing.JSlider;
-import javax.swing.JToggleButton;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
+import org.janelia.workstation.common.gui.support.ViewerToolbar;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.common.gui.support.ViewerToolbar;
 import org.janelia.workstation.core.options.OptionConstants;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * Tool bar for icon panels.
@@ -49,14 +40,11 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         showTitlesButton.setFocusable(false);
         showTitlesButton.setSelected(showTitles);
         showTitlesButton.setToolTipText("Show the image title above each image.");
-        showTitlesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ActivityLogHelper.logUserAction("IconGridViewerToolbar.showTitlesButtonPressed");
-                showTitlesButtonPressed();
-                FrameworkAccess.setModelProperty(
-                        OptionConstants.ICON_GRID_VIEWER_SHOW_TITLES, showTitlesButton.isSelected());
-            }
+        showTitlesButton.addActionListener(e -> {
+            ActivityLogHelper.logUserAction("IconGridViewerToolbar.showTitlesButtonPressed");
+            showTitlesButtonPressed();
+            FrameworkAccess.setModelProperty(
+                    OptionConstants.ICON_GRID_VIEWER_SHOW_TITLES, showTitlesButton.isSelected());
         });
         showTitlesButton.addMouseListener(new MouseForwarder(toolbar, "ShowTitlesButton->JToolBar"));
         toolbar.add(showTitlesButton);
@@ -66,14 +54,11 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         showTagsButton.setFocusable(false);
         showTagsButton.setSelected(showAnnotations);
         showTagsButton.setToolTipText("Show annotations below each image");
-        showTagsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ActivityLogHelper.logUserAction("IconGridViewerToolbar.showTagsButtonPressed");
-                showTagsButtonPressed();
-                FrameworkAccess.setModelProperty(
-                        OptionConstants.ICON_GRID_VIEWER_SHOW_TAGS, showTagsButton.isSelected());
-            }
+        showTagsButton.addActionListener(e -> {
+            ActivityLogHelper.logUserAction("IconGridViewerToolbar.showTagsButtonPressed");
+            showTagsButtonPressed();
+            FrameworkAccess.setModelProperty(
+                    OptionConstants.ICON_GRID_VIEWER_SHOW_TAGS, showTagsButton.isSelected());
         });
         showTagsButton.addMouseListener(new MouseForwarder(toolbar, "ShowTagsButton->JToolBar"));
         toolbar.add(showTagsButton);
@@ -85,19 +70,13 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         configButton.setToolTipText("Options for the image viewer");
 
         mustHaveImageMenuItem = new JCheckBoxMenuItem("Show only items with selected imagery");
-        mustHaveImageMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                setMustHaveImage(mustHaveImageMenuItem.isSelected());
-            }
-        });
+        mustHaveImageMenuItem.addActionListener(e -> setMustHaveImage(mustHaveImageMenuItem.isSelected()));
         configButton.addMenuItem(mustHaveImageMenuItem);
 
         final JMenuItem titlesMenuItem = new JMenuItem("Customize titles...");
-        titlesMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                ActivityLogHelper.logUserAction("IconGridViewerToolbar.configButtonPressed");
-                customizeTitlesPressed();
-            }
+        titlesMenuItem.addActionListener(e -> {
+            ActivityLogHelper.logUserAction("IconGridViewerToolbar.configButtonPressed");
+            customizeTitlesPressed();
         });
         configButton.addMenuItem(titlesMenuItem);
         
@@ -118,17 +97,14 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         imageSizeSlider.addMouseListener(new MouseForwarder(toolbar, "ImageSizeSlider->JToolBar"));
         toolbar.add(imageSizeSlider);
 
-        imageSizeSlider.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                JSlider source = (JSlider) e.getSource();
-                int imageSize = source.getValue();
-                if (currImageSize == imageSize) {
-                    return;
-                }
-                currImageSize = imageSize;
-                currImageSizeChanged(currImageSize);
+        imageSizeSlider.addChangeListener(e -> {
+            JSlider source = (JSlider) e.getSource();
+            int imageSize = source.getValue();
+            if (currImageSize == imageSize) {
+                return;
             }
+            currImageSize = imageSize;
+            currImageSizeChanged(currImageSize);
         });
     }
 

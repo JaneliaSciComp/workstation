@@ -59,13 +59,45 @@ public class IconGridViewerConfiguration {
 
     public String getDomainClassTitle(String className) {
         String title = domainClassTitles.get(className);
-        log.trace("Got title {} for {}",title,className);
+        if (title==null) {
+            title = getDefaultTitle(className);
+            log.trace("Got default title {} for {}",title,className);
+        }
+        else {
+            log.trace("Got user preference title {} for {}",title,className);
+        }
+
         return title;
     }
 
     public String getDomainClassSubtitle(String className) {
         String subtitle = domainClassSubtitles.get(className);
-        log.trace("Got subtitle {} for {}",subtitle,className);
+        if (subtitle==null) {
+            subtitle = getDefaultSubtitle(className);
+            log.trace("Got default subtitle {} for {}",subtitle,className);
+        }
+        else {
+            log.trace("Got user preference subtitle {} for {}",subtitle,className);
+        }
+
         return subtitle;
+    }
+
+    private String getDefaultTitle(String className) {
+        switch (className) {
+            case "EMDataSet": return "{Identifier}";
+            case "EMBody": return "{Data Set}:{Name}";
+            default: return "{Name}";
+        }
+    }
+
+    private String getDefaultSubtitle(String className) {
+        switch (className) {
+            case "EMBody": return "{Neuron Instance} ({Status})";
+            case "LSMImage": return "{Tile}";
+            case "NeuronFragment": return "{Sample Name}";
+            case "Sample": return "{Status}";
+            default: return "";
+        }
     }
 }
