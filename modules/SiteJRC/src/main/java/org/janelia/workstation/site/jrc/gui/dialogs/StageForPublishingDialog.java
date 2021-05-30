@@ -337,17 +337,20 @@ public class StageForPublishingDialog extends ModalDialog {
                 lineRelease.setSageSync(true);
                 model.save(lineRelease);
 
+                setStatus("Adding samples to release");
                 log.info("Adding {} samples to release {}", samples.size(), lineRelease.getName());
                 List<Reference> oldChildren = lineRelease.getChildren();
                 lineRelease = model.addChildren(this.lineRelease, samples);
                 log.info("Added {} new samples to release", lineRelease.getChildren().size()-oldChildren.size());
 
+                setStatus("Adding release annotations");
                 numAnnotations = annotatePublishObjective(samples, objectives);
                 log.info("Adding release annotations for {} objectives in {} samples", objectives.size(), samples.size());
                 numExpectedAnnotations = samples.size() * objectives.size();
                 hadProblems |= numAnnotations != numExpectedAnnotations;
                 log.info("Added {} release annotations", numAnnotations);
 
+                setStatus("Adding publishing names");
                 log.info("Adding publishing names for {} samples", samples.size());
                 numPublishingNames = annotatePublishNames(samples);
                 numExpectedPublishingNames = samples.size();

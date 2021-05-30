@@ -29,7 +29,7 @@ import java.awt.datatransfer.Transferable;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 3, separatorAfter = 5)
+        @ActionReference(path = "Menu/Actions", position = 4, separatorAfter = 5)
 })
 @NbBundle.Messages("CTL_CopyBodyIdToClipboardAction=Copy FlyEM Body Id To Clipboard")
 public class CopyBodyIdToClipboardAction extends BaseContextualNodeAction {

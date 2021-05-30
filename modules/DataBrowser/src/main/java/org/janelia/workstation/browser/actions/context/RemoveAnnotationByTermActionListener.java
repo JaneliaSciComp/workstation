@@ -4,7 +4,7 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.ontology.OntologyTermReference;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelectionModel;
@@ -37,6 +37,7 @@ public class RemoveAnnotationByTermActionListener implements ActionListener {
     public void actionPerformed(ActionEvent event) {
 
         final List<Reference> selectedIds = GlobalDomainObjectSelectionModel.getInstance().getSelectedIds();
+        log.info("Removing annotations from {} objects", selectedIds.size());
 
         if (selectedIds.isEmpty()) {
             // Cannot annotate nothing
@@ -51,23 +52,27 @@ public class RemoveAnnotationByTermActionListener implements ActionListener {
             @Override
             protected void doStuff() throws Exception {
 
-                int i = 0;
+                List<Annotation> toRemove = new ArrayList<>();
                 List<Annotation> annotations = model.getAnnotations(selectedIds);
                 for (Annotation annotation : annotations) {
-
-                    OntologyTermReference keyTerm = annotation.getKeyTerm();
-                    for(OntologyTerm ontologyTerm : ontologyTerms) {
-                        if (keyTerm.getOntologyId().equals(ontologyTerm.getOntology().getId())
-                                && keyTerm.getOntologyTermId().equals(ontologyTerm.getId())) {
-                            log.info("Removing matching annotation: {}", annotation);
-                            model.remove(annotation);
-                            break;
+                    if (ClientDomainUtils.hasWriteAccess(annotation)) {
+                        OntologyTermReference keyTerm = annotation.getKeyTerm();
+                        for (OntologyTerm ontologyTerm : ontologyTerms) {
+                            if (keyTerm.getOntologyId().equals(ontologyTerm.getOntology().getId())
+                                    && keyTerm.getOntologyTermId().equals(ontologyTerm.getId())) {
+                                toRemove.add(annotation);
+                                break;
+                            }
                         }
                     }
-
-                    setProgress(i++, annotations.size());
                 }
 
+                int i = 1;
+                for(Annotation annotation : toRemove) {
+                    log.info("Removing {} - {}", i, annotation);
+                    model.remove(annotation);
+                    setProgress(i++, toRemove.size());
+                }
             }
 
             @Override

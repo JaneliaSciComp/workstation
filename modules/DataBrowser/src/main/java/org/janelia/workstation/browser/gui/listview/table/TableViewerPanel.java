@@ -121,8 +121,8 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
                     // Clear out everything that was not selected above
                     for (S selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
                         if (!selectedIds.contains(selectedId)) {
-                            T object = imageModel.getImageByUniqueId(selectedId);
                             if (selectionModel.isSelected(selectedId)) {
+                                T object = imageModel.getImageByUniqueId(selectedId);
                                 selectionModel.deselect(object, true);
                             }
                         }

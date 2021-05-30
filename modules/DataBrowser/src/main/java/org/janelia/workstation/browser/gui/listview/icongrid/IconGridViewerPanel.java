@@ -9,11 +9,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
@@ -411,7 +407,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     }
 
     protected void userSelectObject(T object, boolean clearAll) {
-        selectObjects(Arrays.asList(object), clearAll, true);
+        selectObjects(Collections.singletonList(object), clearAll, true);
 
         S id = getImageModel().getImageUniqueId(object);
         AnnotatedImageButton<T,S> button = imagesPanel.getButtonById(id);
@@ -423,7 +419,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     }
 
     protected void userDeselectObject(T object) {
-        deselectObjects(Arrays.asList(object), true);
+        deselectObjects(Collections.singletonList(object), true);
     }
     
     protected void selectObjects(List<T> objects, boolean clearAll, boolean isUserDriven) {

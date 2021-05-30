@@ -10,12 +10,7 @@ import javax.swing.JMenuItem;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.ontology.Accumulation;
-import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.ontology.EnumText;
-import org.janelia.model.domain.ontology.Interval;
-import org.janelia.model.domain.ontology.OntologyTerm;
-import org.janelia.model.domain.ontology.Text;
+import org.janelia.model.domain.ontology.*;
 import org.janelia.workstation.browser.actions.BulkEditAnnotationKeyValueAction;
 import org.janelia.workstation.browser.actions.RemoveAnnotationsAction;
 import org.janelia.workstation.browser.actions.context.RemoveAnnotationByTermActionListener;
@@ -67,7 +62,9 @@ public class AnnotationContextMenu extends PopupContextMenu {
             add(getRemoveAnnotationItem());
             OntologyTerm keyTerm = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(annotation.getKeyTerm());
             if (keyTerm!=null) {
-                add(getRemoveAnnotationByTermItem(keyTerm));
+                if (!(keyTerm instanceof Tag)) {
+                    add(getRemoveAnnotationByTermItem(keyTerm));
+                }
                 add(getEditAnnotationItem(keyTerm));
             }
         }  
@@ -113,7 +110,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
 
     protected JMenuItem getRemoveAnnotationByTermItem(OntologyTerm keyTerm) {
         RemoveAnnotationByTermActionListener action = new RemoveAnnotationByTermActionListener(Collections.singletonList(keyTerm));
-        return getNamedActionItem("Remove "+keyTerm.getName()+" Annotation From "+domainObjectList.size()+" Objects", action);
+        return getNamedActionItem("Remove \""+keyTerm.getName()+"\" Annotation From "+domainObjectList.size()+" Items", action);
     }
 
     protected JMenuItem getEditAnnotationItem(OntologyTerm keyTerm) {

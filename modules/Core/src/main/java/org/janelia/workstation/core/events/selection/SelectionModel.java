@@ -1,12 +1,12 @@
 package org.janelia.workstation.core.events.selection;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.janelia.model.util.MapFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * A generic selection model which tracks the selection of objects of type T, via unique identifiers of type S. 
@@ -50,7 +50,7 @@ public abstract class SelectionModel<T,S> {
      * @param clearAll
      */
     public final void select(T object, boolean clearAll, boolean isUserDriven) {
-        select(Arrays.asList(object), clearAll, isUserDriven);
+        select(Collections.singletonList(object), clearAll, isUserDriven);
     }
     
     /**
@@ -107,7 +107,9 @@ public abstract class SelectionModel<T,S> {
      * @param object
      */
     public final void deselect(T object, boolean isUserDriven) {
-        deselect(Arrays.asList(object), isUserDriven);
+        if (object!=null) {
+            deselect(Collections.singletonList(object), isUserDriven);
+        }
     }
     
     /**
@@ -124,9 +126,7 @@ public abstract class SelectionModel<T,S> {
         
         for(T object : objects) {
             S id = getId(object);
-            if (selected.containsKey(id)) {
-                selected.remove(id);
-            }
+            selected.remove(id);
         }
         log.trace("{} - {} selected", getClass().getSimpleName(), selected.size());
         selectionChanged(objects, false, false, isUserDriven);

@@ -9,6 +9,8 @@ import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 
 import org.apache.commons.lang.StringUtils;
+import org.janelia.model.domain.DomainUtils;
+import org.janelia.workstation.browser.actions.context.RemoveAnnotationByTermActionListener;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -19,6 +21,8 @@ import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Remove annotations from multiple domain objects.
@@ -30,6 +34,8 @@ import org.janelia.model.domain.ontology.Annotation;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class RemoveAnnotationsAction extends AbstractAction {
+
+    private final static Logger log = LoggerFactory.getLogger(RemoveAnnotationsAction.class);
 
     private final ImageModel<DomainObject,Reference> imageModel;
     private final List<DomainObject> selectedObjects;
@@ -53,6 +59,7 @@ public class RemoveAnnotationsAction extends AbstractAction {
     public void actionPerformed(ActionEvent event) {
 
         ActivityLogHelper.logUserAction("RemoveAnnotationsAction.doAction", annotation);
+        log.info("Removing annotations from {} objects", selectedObjects.size());
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
@@ -74,21 +81,21 @@ public class RemoveAnnotationsAction extends AbstractAction {
                 }
                 
                 List<Annotation> toRemove = new ArrayList<>();
-                for (DomainObject selectedObject : selectedObjects) {
-                    for (Annotation annotation : imageModel.getAnnotations(selectedObject)) {
-                        if (ClientDomainUtils.hasWriteAccess(annotation)) {
-                            if (matchIdOrName && StringUtils.equals(annotation.getName(), RemoveAnnotationsAction.this.annotation.getName())) {
-                                toRemove.add(annotation);            
-                            }
-                            else if (!matchIdOrName && annotation.getKeyTerm().getOntologyTermId().equals(RemoveAnnotationsAction.this.annotation.getKeyTerm().getOntologyTermId())) {
-                                toRemove.add(annotation);            
-                            }
+                List<Annotation> annotations = model.getAnnotations(DomainUtils.getReferences(selectedObjects));
+                for (Annotation annotation : annotations) {
+                    if (ClientDomainUtils.hasWriteAccess(annotation)) {
+                        if (matchIdOrName && StringUtils.equals(annotation.getName(), RemoveAnnotationsAction.this.annotation.getName())) {
+                            toRemove.add(annotation);
+                        }
+                        else if (!matchIdOrName && annotation.getKeyTerm().getOntologyTermId().equals(RemoveAnnotationsAction.this.annotation.getKeyTerm().getOntologyTermId())) {
+                            toRemove.add(annotation);
                         }
                     }
                 }
                 
                 int i = 1;
                 for(Annotation annotation : toRemove) {
+                    log.info("Removing {} - {}", i, annotation);
                     model.remove(annotation);    
                     setProgress(i++, toRemove.size());
                 }
