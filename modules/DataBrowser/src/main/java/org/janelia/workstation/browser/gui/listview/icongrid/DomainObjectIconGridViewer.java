@@ -128,6 +128,11 @@ public class DomainObjectIconGridViewer
         public List<Decorator> getDecorators(DomainObject imageObject) {
             return SampleUIUtils.getDecorators(imageObject);
         }
+
+        @Override
+        public DomainObject getImageByUniqueId(Reference id) {
+            return domainObjectList.getObjectById(id);
+        }
     };
 
     public DomainObjectIconGridViewer() {
