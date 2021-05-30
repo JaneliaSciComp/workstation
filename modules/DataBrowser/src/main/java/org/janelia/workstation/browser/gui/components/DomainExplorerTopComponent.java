@@ -175,8 +175,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         showDataSetsMenuItem.addActionListener(e -> setShowDataSets(showDataSetsMenuItem.isSelected()));
         configButton.addMenuItem(showDataSetsMenuItem);
 
-        final JCheckBoxMenuItem showEMDataSetsMenuItem = new JCheckBoxMenuItem("Show EM data sets", isShowDataSets());
-        showEMDataSetsMenuItem.addActionListener(e -> setShowDataSets(showEMDataSetsMenuItem.isSelected()));
+        final JCheckBoxMenuItem showEMDataSetsMenuItem = new JCheckBoxMenuItem("Show EM data sets", isShowEMDataSets());
+        showEMDataSetsMenuItem.addActionListener(e -> setShowEMDataSets(showEMDataSetsMenuItem.isSelected()));
         configButton.addMenuItem(showEMDataSetsMenuItem);
 
         final JCheckBoxMenuItem showColorDepthLibraries = new JCheckBoxMenuItem("Show color depth libraries", isShowColorDepthLibraries());
@@ -721,11 +721,11 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     private static boolean isShowEMDataSets() {
-        return FrameworkAccess.getModelProperty(SHOW_COLOR_DEPTH_LIBRARIES, true);
+        return FrameworkAccess.getModelProperty(SHOW_EM_DATA_SETS, true);
     }
 
     private static void setShowEMDataSets(boolean value) {
-        FrameworkAccess.setModelProperty(SHOW_COLOR_DEPTH_LIBRARIES, value);
+        FrameworkAccess.setModelProperty(SHOW_EM_DATA_SETS, value);
     }
 
     private static boolean isShowColorDepthLibraries() {
