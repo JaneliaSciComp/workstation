@@ -1156,7 +1156,18 @@ public class DomainModel {
     // Important: never call these methods from within a synchronized. That can lead to deadlocks because
     // the event bus is also synchronized, and events can trigger domain model access.
 
+    private boolean notify = true;
+
+    public boolean isNotify() {
+        return notify;
+    }
+
+    public void setNotify(boolean notify) {
+        this.notify = notify;
+    }
+
     public void notifyDomainObjectCreated(DomainObject domainObject) {
+        if (!notify) return;
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectCreateEvent for {}", DomainUtils.identify(domainObject));
         }
@@ -1167,6 +1178,7 @@ public class DomainModel {
     }
 
     public void notifyDomainObjectChanged(DomainObject domainObject) {
+        if (!notify) return;
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectChangeEvent for {}", DomainUtils.identify(domainObject));
         }
@@ -1178,6 +1190,7 @@ public class DomainModel {
     }
 
     public void notifyAnnotationsChanged(DomainObject domainObject) {
+        if (!notify) return;
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectAnnotationChangeEvent for {}", DomainUtils.identify(domainObject));
         }
@@ -1188,6 +1201,7 @@ public class DomainModel {
     }
 
     public void notifyDomainObjectRemoved(DomainObject domainObject) {
+        if (!notify) return;
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectRemoveEvent for {}", DomainUtils.identify(domainObject));
         }
@@ -1198,6 +1212,7 @@ public class DomainModel {
     }
 
     private void notifyDomainObjectsInvalidated(Collection<? extends DomainObject> objects, boolean invalidateTree) {
+        if (!notify) return;
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectInvalidationEvent with {} entities", objects.size());
         }

@@ -45,6 +45,7 @@ public class ApplyAnnotationActionListener implements ActionListener {
     private Collection<OntologyTerm> ontologyTerms;
     private final boolean isDuplicateAnnotationAllowed;
     private final boolean overrideExisting;
+    private boolean batchMode;
 
     public ApplyAnnotationActionListener() {
         this(new ArrayList<>());
@@ -62,6 +63,10 @@ public class ApplyAnnotationActionListener implements ActionListener {
         this.ontologyTerms = ontologyTerms;
         this.overrideExisting = overrideExisting;
         this.isDuplicateAnnotationAllowed = BrowserOptions.getInstance().isDuplicateAnnotationAllowed();
+    }
+
+    public void setBatchMode(boolean batchMode) {
+        this.batchMode = batchMode;
     }
 
     @Override
@@ -152,54 +157,63 @@ public class ApplyAnnotationActionListener implements ActionListener {
     public List<Annotation> setObjectAnnotations(List<? extends DomainObject> domainObjects, OntologyTerm ontologyTerm, Object value, Progress progress) throws Exception {
 
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        List<Reference> refs = DomainUtils.getReferences(domainObjects);
-        Multimap<Long,Annotation> annotationMap = DomainUtils.getAnnotationsByDomainObjectId(model.getAnnotations(refs));
+        try {
+            if (batchMode) {
+                log.info("Batch mode ON");
+                model.setNotify(false);
+            }
+            List<Reference> refs = DomainUtils.getReferences(domainObjects);
+            Multimap<Long, Annotation> annotationMap = DomainUtils.getAnnotationsByDomainObjectId(model.getAnnotations(refs));
 
-        List<Annotation> createdAnnotations = new ArrayList<>();
-        int i = 1;
-        for (DomainObject domainObject : domainObjects) {
+            List<Annotation> createdAnnotations = new ArrayList<>();
+            int i = 1;
+            for (DomainObject domainObject : domainObjects) {
 
-            Annotation existingAnnotation = null;
-            if (!isDuplicateAnnotationAllowed) {
+                Annotation existingAnnotation = null;
+                if (!isDuplicateAnnotationAllowed) {
 
-                Collection<Annotation> annotations = annotationMap.get(domainObject.getId());
-                if (annotations!=null) {
+                    Collection<Annotation> annotations = annotationMap.get(domainObject.getId());
+                    if (annotations != null) {
 
-                    OntologyTerm keyTerm = ontologyTerm;
-                    if (keyTerm instanceof EnumItem) {
-                        keyTerm = ontologyTerm.getParent();
-                    }
+                        OntologyTerm keyTerm = ontologyTerm;
+                        if (keyTerm instanceof EnumItem) {
+                            keyTerm = ontologyTerm.getParent();
+                        }
 
-                    for(Annotation annotation : annotations) {
-                        if (annotation.getKeyTerm().getOntologyTermId().equals(keyTerm.getId())) {
-                            existingAnnotation = annotation;
-                            break;
+                        for (Annotation annotation : annotations) {
+                            if (annotation.getKeyTerm().getOntologyTermId().equals(keyTerm.getId())) {
+                                existingAnnotation = annotation;
+                                break;
+                            }
                         }
                     }
                 }
-            }
 
-            if (existingAnnotation!=null) {
-                if (!overrideExisting) {
-                    createdAnnotations.add(existingAnnotation);
+                if (existingAnnotation != null) {
+                    if (!overrideExisting) {
+                        createdAnnotations.add(existingAnnotation);
+                    } else {
+                        log.info("Found existing annotation to update: " + existingAnnotation);
+                        createdAnnotations.add(doAnnotation(domainObject, existingAnnotation, ontologyTerm, value));
+                    }
+                } else {
+                    createdAnnotations.add(doAnnotation(domainObject, null, ontologyTerm, value));
                 }
-                else {
-                    log.info("Found existing annotation to update: "+existingAnnotation);
-                    createdAnnotations.add(doAnnotation(domainObject, existingAnnotation, ontologyTerm, value));
-                }
-            }
-            else {
-                createdAnnotations.add(doAnnotation(domainObject, null, ontologyTerm, value));
-            }
 
-            // Update progress
-            if (progress!=null) {
-                if (progress.isCancelled()) return createdAnnotations;
-                progress.setProgress(i++, domainObjects.size());
+                // Update progress
+                if (progress != null) {
+                    if (progress.isCancelled()) return createdAnnotations;
+                    progress.setProgress(i++, domainObjects.size());
+                }
+            }
+            return createdAnnotations;
+        }
+        finally {
+            if (batchMode) {
+                log.info("Batch mode OFF");
+                model.setNotify(true);
             }
         }
-
-        return createdAnnotations;
     }
 
     public Annotation addAnnotation(DomainObject target, OntologyTerm ontologyTerm, Object value) throws Exception {

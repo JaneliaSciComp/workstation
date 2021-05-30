@@ -54,6 +54,7 @@ public final class StageForPublishingAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
+        Collection<Sample> samples = new ArrayList<>(this.samples);
         new StageForPublishingDialog().showForSamples(samples);
     }
 

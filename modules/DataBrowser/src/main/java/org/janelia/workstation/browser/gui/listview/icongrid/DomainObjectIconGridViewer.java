@@ -34,6 +34,7 @@ import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionEvent;
+import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.workstation.core.model.AnnotatedObjectList;
 import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
@@ -528,9 +529,16 @@ public class DomainObjectIconGridViewer
 
     @Override
     protected JPopupMenu getAnnotationPopupMenu(DomainObject domainObject, Annotation annotation) {
-        AnnotationContextMenu menu = new AnnotationContextMenu(annotation, getSelectedObjects(), imageModel);
-        menu.addMenuItems();
-        return menu;
+        List<DomainObject> selectedObjects = GlobalDomainObjectSelectionModel.getInstance().getObjects();
+        if (selectedObjects.contains(domainObject)) {
+            AnnotationContextMenu menu = new AnnotationContextMenu(annotation, selectedObjects, imageModel);
+            menu.addMenuItems();
+            return menu;
+        }
+        else {
+            log.warn("Global selection list does not contain object whose annotation was clicked");
+            return null;
+        }
     }
 
     @Override

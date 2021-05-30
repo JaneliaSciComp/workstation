@@ -333,22 +333,26 @@ public class StageForPublishingDialog extends ModalDialog {
                     log.info("Using existing release {}", lineRelease);
                 }
 
+                log.info("Setting SAGE Sync to true for release {}", lineRelease.getName());
                 lineRelease.setSageSync(true);
                 model.save(lineRelease);
 
+                log.info("Adding {} samples to release {}", samples.size(), lineRelease.getName());
                 List<Reference> oldChildren = lineRelease.getChildren();
                 lineRelease = model.addChildren(this.lineRelease, samples);
                 log.info("Added {} new samples to release", lineRelease.getChildren().size()-oldChildren.size());
 
                 numAnnotations = annotatePublishObjective(samples, objectives);
-                numExpectedAnnotations = samples.size()*objectives.size();
+                log.info("Adding release annotations for {} objectives in {} samples", objectives.size(), samples.size());
+                numExpectedAnnotations = samples.size() * objectives.size();
                 hadProblems |= numAnnotations != numExpectedAnnotations;
                 log.info("Added {} release annotations", numAnnotations);
 
+                log.info("Adding publishing names for {} samples", samples.size());
                 numPublishingNames = annotatePublishNames(samples);
                 numExpectedPublishingNames = samples.size();
                 hadProblems |= numPublishingNames != numExpectedPublishingNames;
-                log.info("Added {} line publishing names", numPublishingNames);
+                log.info("Added {} publishing names", numPublishingNames);
             }
 
             @Override
@@ -358,7 +362,6 @@ public class StageForPublishingDialog extends ModalDialog {
                 setLastSelectedObjectives(objectives);
 
                 if (hadProblems) {
-                    log.warn("Some problems were encountered");
 
                     StringBuilder sb = new StringBuilder();
                     sb.append("Some problems were encountered while staging samples for publishing: ");
@@ -369,6 +372,7 @@ public class StageForPublishingDialog extends ModalDialog {
                         sb.append("Expected ").append(numExpectedPublishingNames).append(" publishing names, but set ").append(numPublishingNames).append(". ");
                     }
 
+                    log.warn(sb.toString());
                     JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                             sb.toString(),
                             "Problems Staging Samples for Publishing",
@@ -406,6 +410,7 @@ public class StageForPublishingDialog extends ModalDialog {
         int numAnnotations = 0;
         Ontology publicationOntology = getPublicationOntology();
         final ApplyAnnotationActionListener action = new ApplyAnnotationActionListener();
+        action.setBatchMode(true);
         for (String objective : objectives) {
             OntologyTerm publishingNameTerm = getPublishedTerm(publicationOntology, String.format(ANNOTATION_PUBLISH_OBJECTIVE, objective));
             List<Annotation> annotations = action.setObjectAnnotations(new ArrayList<>(samples), publishingNameTerm, null, null);

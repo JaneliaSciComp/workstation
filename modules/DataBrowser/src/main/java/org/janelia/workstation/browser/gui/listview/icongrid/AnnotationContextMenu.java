@@ -2,6 +2,8 @@ package org.janelia.workstation.browser.gui.listview.icongrid;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JMenuItem;
@@ -16,6 +18,7 @@ import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.ontology.Text;
 import org.janelia.workstation.browser.actions.BulkEditAnnotationKeyValueAction;
 import org.janelia.workstation.browser.actions.RemoveAnnotationsAction;
+import org.janelia.workstation.browser.actions.context.RemoveAnnotationByTermActionListener;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.core.model.ImageModel;
@@ -64,6 +67,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
             add(getRemoveAnnotationItem());
             OntologyTerm keyTerm = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(annotation.getKeyTerm());
             if (keyTerm!=null) {
+                add(getRemoveAnnotationByTermItem(keyTerm));
                 add(getEditAnnotationItem(keyTerm));
             }
         }  
@@ -107,6 +111,11 @@ public class AnnotationContextMenu extends PopupContextMenu {
         return getNamedActionItem(removeAction);
     }
 
+    protected JMenuItem getRemoveAnnotationByTermItem(OntologyTerm keyTerm) {
+        RemoveAnnotationByTermActionListener action = new RemoveAnnotationByTermActionListener(Collections.singletonList(keyTerm));
+        return getNamedActionItem("Remove "+keyTerm.getName()+" Annotation From "+domainObjectList.size()+" Objects", action);
+    }
+
     protected JMenuItem getEditAnnotationItem(OntologyTerm keyTerm) {
         if (keyTerm==null) return null;
         if (keyTerm instanceof EnumText || keyTerm instanceof Text || keyTerm instanceof Accumulation || keyTerm instanceof Interval) {
@@ -119,11 +128,9 @@ public class AnnotationContextMenu extends PopupContextMenu {
     protected JMenuItem getViewDetailsItem() {
         if (multiple) return null;
         JMenuItem detailsItem = new JMenuItem("View Details");
-        detailsItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                ActivityLogHelper.logUserAction("AnnotationContextMenu.viewDetails", annotation);
-                new DomainDetailsDialog().showForDomainObject(annotation);
-            }
+        detailsItem.addActionListener(actionEvent -> {
+            ActivityLogHelper.logUserAction("AnnotationContextMenu.viewDetails", annotation);
+            new DomainDetailsDialog().showForDomainObject(annotation);
         });
         return detailsItem;
     }
