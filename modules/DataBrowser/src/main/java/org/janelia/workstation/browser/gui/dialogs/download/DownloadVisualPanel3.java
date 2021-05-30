@@ -285,13 +285,7 @@ public final class DownloadVisualPanel3 extends JPanel {
     private List<DownloadFileItem> createDownloadFileItems(boolean flattenStructure, String filenamePattern, Progress progress) throws Exception {
         
         List<DownloadFileItem> downloadFileItems = new ArrayList<>();
-        
-        Map<Integer,FileType> colorDepthTypes = new HashMap<>();
-        colorDepthTypes.put(0, FileType.ColorDepthMip1);
-        colorDepthTypes.put(1, FileType.ColorDepthMip2);
-        colorDepthTypes.put(2, FileType.ColorDepthMip3);
-        colorDepthTypes.put(3, FileType.ColorDepthMip4);
-        
+
         int i = 0;
         int index = 0;
         
@@ -312,15 +306,17 @@ public final class DownloadVisualPanel3 extends JPanel {
                     List<FileType> selectedFileTypes = new ArrayList<>(artifactDescriptor.getSelectedFileTypes());
                     if (selectedFileTypes.contains(FileType.ColorDepthMips)) {
                         selectedFileTypes.remove(FileType.ColorDepthMips);
-                        if (hasFiles instanceof SampleAlignmentResult) {
-                            SampleAlignmentResult alignment = (SampleAlignmentResult)hasFiles;
-                            List<Integer> signalChans = ChanSpecUtils.getSignalChannelIndexList(alignment.getChannelSpec());
-                            for(Integer signalChan : signalChans) {
-                                selectedFileTypes.add(colorDepthTypes.get(signalChan));
-                            }
+                        if (hasFiles.getFiles().containsKey(FileType.ColorDepthMip1)) {
+                            selectedFileTypes.add(FileType.ColorDepthMip1);
                         }
-                        else {
-                            throw new IllegalStateException("Color depth MIPs selected for unaligned data");
+                        else if (hasFiles.getFiles().containsKey(FileType.ColorDepthMip2)) {
+                            selectedFileTypes.add(FileType.ColorDepthMip2);
+                        }
+                        else if (hasFiles.getFiles().containsKey(FileType.ColorDepthMip3)) {
+                            selectedFileTypes.add(FileType.ColorDepthMip3);
+                        }
+                        else if (hasFiles.getFiles().containsKey(FileType.ColorDepthMip4)) {
+                            selectedFileTypes.add(FileType.ColorDepthMip4);
                         }
                     }
                     
