@@ -101,37 +101,19 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         };
 
         resultsTable.getTable().addKeyListener(keyListener);
-        resultsTable.getTable().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                try {
-                    if (e.getValueIsAdjusting()) return;
-                    // Synchronize the table selection to the selection model
-                    Set<S> selectedIds = new HashSet<>();
-                    // Everything selected in the table should be selected in the model
-                    for (Object object : resultsTable.getSelectedObjects()) {
-                        @SuppressWarnings("unchecked")
-                        T obj = (T) object;
-                        S id = imageModel.getImageUniqueId(obj);
-                        selectedIds.add(id);
-                        if (!selectionModel.isSelected(id)) {
-                            selectionModel.select(obj, false, true);
-                        }
-                    }
-                    // Clear out everything that was not selected above
-                    for (S selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
-                        if (!selectedIds.contains(selectedId)) {
-                            if (selectionModel.isSelected(selectedId)) {
-                                T object = imageModel.getImageByUniqueId(selectedId);
-                                selectionModel.deselect(object, true);
-                            }
-                        }
-                    }
-                    updateHud(false);
-                } catch (Exception ex) {
-                    FrameworkAccess.handleException(ex);
-                }
+        resultsTable.getTable().getSelectionModel().addListSelectionListener(e -> {
+            if (e.getValueIsAdjusting()) return;
+            // Synchronize the table selection to the selection model
+            List<T> selectedObjects = new ArrayList<>();
+            // Everything selected in the table should be selected in the model
+            for (Object object : resultsTable.getSelectedObjects()) {
+                @SuppressWarnings("unchecked")
+                T obj = (T) object;
+                S id = imageModel.getImageUniqueId(obj);
+                selectedObjects.add(obj);
             }
+            selectionModel.select(selectedObjects, true, true);
+            updateHud(false);
         });
         
         resultsTable.setMaxColWidth(80);
@@ -232,7 +214,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
     public void selectObjects(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven, boolean notifyModel) {
 
-        log.debug("selectObjects(objects.size={},select={},clearAll={},isUserDriven={},notifyModel={})", objects.size(),select,clearAll,isUserDriven,notifyModel);
+        log.info("selectObjects(objects.size={},select={},clearAll={},isUserDriven={},notifyModel={})", objects.size(),select,clearAll,isUserDriven,notifyModel);
 
         if (objects.isEmpty()) {
             return;
@@ -276,12 +258,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         }
 
         if (start!=null) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    scrollSelectedObjectsToCenter();
-                }
-            });
+            SwingUtilities.invokeLater(() -> scrollSelectedObjectsToCenter());
         }
     }
     
@@ -388,7 +365,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     @SuppressWarnings({ "unchecked" })
     public void setSortColumn(String columnName, boolean ascending) {
         if (StringUtils.isEmpty(columnName)) {
-            getTable().getRowSorter().setSortKeys(new ArrayList());
+            getTable().getRowSorter().setSortKeys(new ArrayList<>());
         }
         else {
             int index = getColumnIndex(columnName);

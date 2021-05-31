@@ -31,7 +31,7 @@ public class GlobalDomainObjectSelectionModel extends SelectionModel<DomainObjec
 
     @Override
     protected void selectionChanged(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
-        log.info("selectionChanged({}, select={}, clearAll={}, isUserDriven={})", DomainUtils.abbr(domainObjects), select, clearAll, isUserDriven);
+        log.debug("selectionChanged({}, select={}, clearAll={}, isUserDriven={})", DomainUtils.abbr(domainObjects), select, clearAll, isUserDriven);
         log.info("Global selection: {}", DomainUtils.abbr(getSelectedIds()));
     }
     

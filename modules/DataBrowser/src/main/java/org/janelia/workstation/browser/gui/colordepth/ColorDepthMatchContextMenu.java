@@ -84,10 +84,22 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         this.flyem = false;
         OUTER: for (ColorDepthMatch match : matches) {
             ColorDepthImage matchImage = imageModel.getImage(match);
-            if (matchImage.getBodyId() != null) {
-                this.flyem = true;
-                this.bodyId = getBodyId(image);
-                break OUTER;
+            if (matchImage != null) {
+                if (matchImage.getBodyId() != null) {
+                    this.flyem = true;
+                    this.bodyId = getBodyId(image);
+                    break OUTER;
+                }
+                // Fallback if FlyEM data is not linked
+                if (matchImage.getLibraries() != null) {
+                    for (String library : matchImage.getLibraries()) {
+                        if (library.startsWith("flyem_")) {
+                            this.flyem = true;
+                            this.bodyId = getBodyId(image);
+                            break OUTER;
+                        }
+                    }
+                }
             }
         }
         ActivityLogHelper.logUserAction("ColorDepthMatchContextMenu.create", match);
@@ -114,7 +126,10 @@ public class ColorDepthMatchContextMenu extends PopupContextMenu {
         if (image.getBodyId()!=null) {
             return image.getBodyId() + "";
         }
-        return "";
+        // Fallback if FlyEM data it not linked
+        Pattern p = Pattern.compile(".*?(\\d{9,}).*?");
+        Matcher m = p.matcher(image.getName());
+        return m.matches() ? m.group(1) : null;
     }
 
     public void addMenuItems() {

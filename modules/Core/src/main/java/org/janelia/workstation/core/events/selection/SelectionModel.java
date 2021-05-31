@@ -125,8 +125,10 @@ public abstract class SelectionModel<T,S> {
         }
         
         for(T object : objects) {
-            S id = getId(object);
-            selected.remove(id);
+            if (object != null) {
+                S id = getId(object);
+                selected.remove(id);
+            }
         }
         log.trace("{} - {} selected", getClass().getSimpleName(), selected.size());
         selectionChanged(objects, false, false, isUserDriven);

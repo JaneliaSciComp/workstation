@@ -1,39 +1,6 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JToggleButton;
-import javax.swing.SwingUtilities;
-
-import org.janelia.workstation.browser.actions.ExportPickedNames;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.browser.actions.ExportPickedGUIDs;
-import org.janelia.workstation.browser.actions.ExportPickedLineNames;
-import org.janelia.workstation.browser.actions.ExportPickedToSplitGenWebsite;
-import org.janelia.workstation.browser.gui.hud.Hud;
-import org.janelia.workstation.core.events.selection.ChildSelectionModel;
-import org.janelia.workstation.core.model.ImageModel;
-import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
-import org.janelia.workstation.core.model.AnnotatedObjectList;
-import org.janelia.workstation.core.model.search.ResultPage;
-import org.janelia.workstation.common.gui.listview.ListViewer;
-import org.janelia.workstation.common.gui.listview.ListViewerActionListener;
-import org.janelia.workstation.common.gui.listview.ListViewerState;
-import org.janelia.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
-import org.janelia.workstation.common.gui.support.PreferenceSupport;
-import org.janelia.workstation.common.gui.support.SearchProvider;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.SplitHalfType;
@@ -41,10 +8,33 @@ import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.model.domain.gui.cdmip.ColorDepthResult;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.workstation.browser.actions.ExportPickedGUIDs;
+import org.janelia.workstation.browser.actions.ExportPickedLineNames;
+import org.janelia.workstation.browser.actions.ExportPickedNames;
+import org.janelia.workstation.browser.actions.ExportPickedToSplitGenWebsite;
+import org.janelia.workstation.browser.gui.listview.icongrid.IconGridViewerPanel;
+import org.janelia.workstation.common.gui.listview.ListViewer;
+import org.janelia.workstation.common.gui.listview.ListViewerActionListener;
+import org.janelia.workstation.common.gui.listview.ListViewerState;
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.gui.support.PreferenceSupport;
+import org.janelia.workstation.common.gui.support.SearchProvider;
+import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
+import org.janelia.workstation.core.events.selection.ChildSelectionModel;
+import org.janelia.workstation.core.model.AnnotatedObjectList;
+import org.janelia.workstation.core.model.ImageModel;
+import org.janelia.workstation.core.model.search.ResultPage;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * An IconGridViewer implementation for viewing color depth search results.
