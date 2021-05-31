@@ -2,6 +2,7 @@ package org.janelia.workstation.browser.gui.editor;
 
 import com.google.common.eventbus.Subscribe;
 import net.miginfocom.swing.MigLayout;
+import org.janelia.model.domain.flyem.EMBody;
 import org.janelia.model.domain.report.DatabaseSummary;
 import org.janelia.model.domain.report.DiskUsageSummary;
 import org.janelia.model.domain.report.QuotaUsage;
@@ -149,34 +150,19 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         JToggleButton button1 = new JToggleButton("Confocal Samples");
         button1.setFont(mediumFont);
         button1.setMargin(new Insets(5,5,5,5));
-        button1.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                searchClass = Sample.class;
-            }
-        });
+        button1.addActionListener(e -> searchClass = Sample.class);
         group.add(button1);
 
         JToggleButton button2 = new JToggleButton("LSM Images");
         button2.setFont(mediumFont);
         button2.setMargin(new Insets(5,5,5,5));
-        button2.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                searchClass = LSMImage.class;
-            }
-        });
+        button2.addActionListener(e -> searchClass = LSMImage.class);
         group.add(button2);
 
-        JToggleButton button3 = new JToggleButton("Mouse Samples");
+        JToggleButton button3 = new JToggleButton("EM Bodies");
         button3.setFont(mediumFont);
         button3.setMargin(new Insets(5,5,5,5));
-        button3.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                searchClass = TmSample.class;
-            }
-        });
+        button3.addActionListener(e -> searchClass = EMBody.class);
         group.add(button3);
 
         buttonsPanel.add(button1);
