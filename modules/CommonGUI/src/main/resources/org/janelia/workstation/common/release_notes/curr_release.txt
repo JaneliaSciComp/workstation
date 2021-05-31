@@ -1,12 +1,11 @@
-// 9.4
+// 9.5
 
 Data Browser
-* Added reprocessing option to skip VNC prealigner check
-* Send sample names to VVD for display
+* Added FlyEM Data Sets to Data Explorer
+* Improved default titles/subtitles
+* It's now possible to remove annotations across multiple pages of results
+* Fixed issue with using "Stage for Publishing" from Table View
+* Fixed several concurrency bugs
 
 Horta
-* added more error text for invalid SWC files
-* added copy coordinates/goto in horta 3d
-* fixed issue with hidden neurons being interactable
-* added right-click option for hiding neurons in horta 3d
-
+* Fixed metadata for info panel plugin

@@ -1,3 +1,15 @@
+// 9.4
+
+Data Browser
+* Added reprocessing option to skip VNC prealigner check
+* Send sample names to VVD for display
+
+Horta
+* added more error text for invalid SWC files
+* added copy coordinates/goto in horta 3d
+* fixed issue with hidden neurons being interactable
+* added right-click option for hiding neurons in horta 3d
+
 // 9.3
 
 Horta
