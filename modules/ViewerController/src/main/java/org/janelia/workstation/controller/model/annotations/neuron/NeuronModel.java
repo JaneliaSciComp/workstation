@@ -478,6 +478,14 @@ public class NeuronModel {
         neuronModelAdapter.asyncSaveNeuron(neuron, extraArguments);
     }
 
+    public void refreshNeuronFromShared (TmNeuronMetadata neuron) throws Exception {
+        TmNeuronMetadata oldNeuron = neuronMap.get(neuron.getId());
+        oldNeuron.setNeuronData(neuron.getNeuronData());
+        oldNeuron.initNeuronData();
+        oldNeuron.setColor(neuron.getColor());
+        oldNeuron.setName(neuron.getName());
+    }
+
     public void splitNeurite(TmNeuronMetadata tmNeuronMetadata, TmGeoAnnotation newRoot) throws Exception {
         if (newRoot == null || tmNeuronMetadata == null)
 

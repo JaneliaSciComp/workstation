@@ -788,6 +788,17 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     }
 
+    public synchronized void refreshNeuron (TmNeuronMetadata refreshNeuron) {
+        NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(this,Arrays.asList(
+                new TmNeuronMetadata[]{refreshNeuron}));
+        TmModelManager.getInstance().getSpatialIndexManager().neuronUpdated(updateEvent);
+        fireNeuronChanged(refreshNeuron);
+        if (applyFilter) {
+            NeuronUpdates updates = neuronFilter.updateNeuron(refreshNeuron);
+            updateFrags(updates);
+        }
+    }
+
     /**
      * change radius of an existing annotation
      *

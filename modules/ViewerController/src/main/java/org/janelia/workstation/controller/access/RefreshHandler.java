@@ -264,14 +264,14 @@ public class RefreshHandler implements MessageHandler {
                                     break;
                                 case NEURON_SAVE_NEURONDATA:
                                     if (!user.equals(AccessManager.getSubjectKey())) {
-    //                                   handleNeuronChanged(neuron);
+                                       handleNeuronChanged(neuron);
                                     }
                                     break;
                                 case NEURON_DELETE:
-//                                    if (!user.equals(AccessManager.getSubjectKey())) {
-                                      //  handleNeuronDeleted(neuron);
+                                    if (!user.equals(AccessManager.getSubjectKey())) {
+                                        handleNeuronDeleted(neuron);
                                          
-  //                                  }
+                                    }
                                     break;
                             }
                             stopWatch2.stop();
@@ -306,8 +306,8 @@ public class RefreshHandler implements MessageHandler {
     private void handleNeuronChanged(TmNeuronMetadata neuron) {
         try {
             log.info("remote processing change neuron " + neuron.getName());
-            annotationModel.getNeuronModel().addNeuron(neuron);
-            annotationModel.fireSharedNeuronChanged(neuron);
+            annotationModel.getNeuronModel().refreshNeuronFromShared(neuron);
+            annotationModel.refreshNeuron(neuron);
         } catch (Exception e) {
             logError("Error handling neuron change: " + e.getMessage());
             log.error("Error handling neuron changed message for {}", neuron, e);
