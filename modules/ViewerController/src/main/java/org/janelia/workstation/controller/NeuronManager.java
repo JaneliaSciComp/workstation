@@ -1109,7 +1109,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         historian.addHistoricalEvent(backupNeurons);
         historian.setRecordHistory(false);
         neuronModel.moveNeurite(annotation, sourceNeuron, destNeuron);
-        neuronModel.saveNeuronData(sourceNeuron);
+        deleteNeuron(sourceNeuron);
         neuronModel.saveNeuronData(destNeuron);
 
         historian.setRecordHistory(true);
