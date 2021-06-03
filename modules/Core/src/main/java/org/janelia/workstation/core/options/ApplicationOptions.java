@@ -114,7 +114,7 @@ public class ApplicationOptions {
     }
 
     public boolean isShowHortaOnStartup() {
-        Boolean value = FrameworkAccess.getModelProperty(OptionConstants.SHOW_HORTA_CONTROL_CENTER_STARTUP, true);
+        Boolean value = FrameworkAccess.getModelProperty(OptionConstants.SHOW_HORTA_CONTROL_CENTER_STARTUP, false);
         return value!=null && value;
     }
     
