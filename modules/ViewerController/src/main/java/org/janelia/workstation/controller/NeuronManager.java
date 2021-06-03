@@ -542,6 +542,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         final TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
         newNeuron.setWorkspaceRef(Reference.createFor(TmWorkspace.class, workspace.getId()));
         newNeuron.setName(name);
+        newNeuron.getReaders().add(ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup"));
         TmNeuronMetadata neuron = tmDomainMgr.save(newNeuron);
         neuron.setColor(neuronColors[(int) (neuron.getId() % neuronColors.length)]);
         neuronModel.completeCreateNeuron(neuron);
