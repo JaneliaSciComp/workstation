@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.options;
+package org.janelia.workstation.controller.options;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -7,18 +7,16 @@ import org.netbeans.spi.options.OptionsPanelController;
 import org.openide.util.HelpCtx;
 import org.openide.util.Lookup;
 
-// This component is hidden for now, because the users are not sure if they want to use it. In the future it can either be removed or reinstated. 
-//
-//@OptionsPanelController.SubRegistration(
-//        location = "LargeVolumeViewer",
-//        displayName = "#AdvancedOption_DisplayName_SampleRootPaths",
-//        keywords = "#AdvancedOption_Keywords_SampleRootPaths",
-//        keywordsCategory = "LargeVolumeViewer/SampleRootPaths"
-//)
-//@org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_SampleRootPaths=Sample Root Paths", "AdvancedOption_Keywords_SampleRootPaths=paths"})
-public final class SampleRootPathsOptionsPanelController extends OptionsPanelController {
+@OptionsPanelController.SubRegistration(
+        location = "Horta",
+        displayName = "#AdvancedOption_DisplayName_Application",
+        keywords = "#AdvancedOption_Keywords_Application",
+        keywordsCategory = "LargeVolumeViewer/Application"
+)
+@org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_Application=Application", "AdvancedOption_Keywords_Application=LVV"})
+public final class ApplicationOptionsPanelController extends OptionsPanelController {
 
-    private SampleRootPathsPanel panel;
+    private ApplicationPanel panel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private boolean changed;
 
@@ -60,9 +58,9 @@ public final class SampleRootPathsOptionsPanelController extends OptionsPanelCon
         pcs.removePropertyChangeListener(l);
     }
 
-    private SampleRootPathsPanel getPanel() {
+    private ApplicationPanel getPanel() {
         if (panel == null) {
-            panel = new SampleRootPathsPanel(this);
+            panel = new ApplicationPanel(this);
         }
         return panel;
     }

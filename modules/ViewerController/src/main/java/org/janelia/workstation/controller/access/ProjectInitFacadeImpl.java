@@ -47,7 +47,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
         viewerManager = TmViewerManager.getInstance();
         modelManager = TmModelManager.getInstance();
         TopComponent tc = WindowManager.getDefault().findTopComponent("InfoPanelTopComponent");
-        if (tc != null) {
+        if (tc!= null && !tc.isOpened()) {
             tc.open();
             tc.requestActive();
         }

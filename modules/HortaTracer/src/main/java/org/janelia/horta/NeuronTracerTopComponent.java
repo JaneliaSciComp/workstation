@@ -95,6 +95,7 @@ import org.janelia.workstation.controller.dialog.NeuronHistoryDialog;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
+import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
@@ -134,7 +135,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.horta.NeuronTracerTopComponent")
-@ActionReference(path = "Menu/Window/Horta", position = 0)
+@ActionReference(path = "Menu/Window/Horta", position = 2)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_NeuronTracerAction",
         preferredID = NeuronTracerTopComponent.PREFERRED_ID
@@ -380,6 +381,15 @@ public final class NeuronTracerTopComponent extends TopComponent
         ViewerOpenEvent openEvent = new ViewerOpenEvent(this,
                 ViewerOpenEvent.VIEWER.HORTA);
         ViewerEventBus.postEvent(openEvent);
+
+        // init color sliders if option set
+        if (ApplicationPanel.isLoadColorSliders()) {
+            TopComponent tc = WindowManager.getDefault().findTopComponent("ColorSlidersTopComponent");
+            if (tc != null) {
+                tc.open();
+                tc.requestActive();
+            }
+        }
     }
 
     public SceneWindow getSceneWindow() {

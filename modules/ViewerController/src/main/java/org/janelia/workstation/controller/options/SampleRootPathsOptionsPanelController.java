@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.options;
+package org.janelia.workstation.controller.options;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -7,16 +7,9 @@ import org.netbeans.spi.options.OptionsPanelController;
 import org.openide.util.HelpCtx;
 import org.openide.util.Lookup;
 
-@OptionsPanelController.SubRegistration(
-        location = "LargeVolumeViewer",
-        displayName = "#AdvancedOption_DisplayName_Application",
-        keywords = "#AdvancedOption_Keywords_Application",
-        keywordsCategory = "LargeVolumeViewer/Application"
-)
-@org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_Application=Application", "AdvancedOption_Keywords_Application=LVV"})
-public final class ApplicationOptionsPanelController extends OptionsPanelController {
+public final class SampleRootPathsOptionsPanelController extends OptionsPanelController {
 
-    private ApplicationPanel panel;
+    private SampleRootPathsPanel panel;
     private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
     private boolean changed;
 
@@ -58,9 +51,9 @@ public final class ApplicationOptionsPanelController extends OptionsPanelControl
         pcs.removePropertyChangeListener(l);
     }
 
-    private ApplicationPanel getPanel() {
+    private SampleRootPathsPanel getPanel() {
         if (panel == null) {
-            panel = new ApplicationPanel(this);
+            panel = new SampleRootPathsPanel(this);
         }
         return panel;
     }

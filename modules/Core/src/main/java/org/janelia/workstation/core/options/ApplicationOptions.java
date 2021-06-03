@@ -112,6 +112,11 @@ public class ApplicationOptions {
         Boolean value = FrameworkAccess.getModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, true);
         return value!=null && value;
     }
+
+    public boolean isShowHortaOnStartup() {
+        Boolean value = FrameworkAccess.getModelProperty(OptionConstants.SHOW_HORTA_CONTROL_CENTER_STARTUP, true);
+        return value!=null && value;
+    }
     
     public void setUseHTTPForTileAccess(boolean value) {
         boolean oldVal = isUseHTTPForTileAccess();
@@ -124,6 +129,19 @@ public class ApplicationOptions {
         
         if (null != propSupport)
             propSupport.firePropertyChange(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, oldVal, value);         
+    }
+
+    public void setShowHortaControlCenterOnStartup(boolean value) {
+        boolean oldVal = isShowHortaOnStartup();
+        if (oldVal == value) {
+            return;
+        }
+
+        FrameworkAccess.setModelProperty(OptionConstants.SHOW_HORTA_CONTROL_CENTER_STARTUP, value);
+        log.info("Set horta control center show on startup = {}", value);
+
+        if (null != propSupport)
+            propSupport.firePropertyChange(OptionConstants.SHOW_HORTA_CONTROL_CENTER_STARTUP, oldVal, value);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener l) {

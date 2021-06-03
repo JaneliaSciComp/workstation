@@ -30,7 +30,7 @@ import org.janelia.workstation.gui.large_volume_viewer.MenuItemGenerator;
 import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
-import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
+import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;

@@ -1,15 +1,10 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import java.awt.*;
-
 import javax.swing.*;
-
-import com.google.common.eventbus.*;
 
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.LoadNeuronsEvent;
-import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
 import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
 import org.janelia.workstation.controller.eventbus.ViewerOpenEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -20,8 +15,7 @@ import org.janelia.workstation.geom.Vec3;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
-import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
+import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -45,7 +39,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "LargeVolumeViewerTopComponent")
-@ActionReference(path = "Menu/Window/Horta", position = 100)
+@ActionReference(path = "Menu/Window/Horta", position = 1)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_LargeVolumeViewerAction",
         preferredID = LargeVolumeViewerTopComponent.LVV_PREFERRED_ID

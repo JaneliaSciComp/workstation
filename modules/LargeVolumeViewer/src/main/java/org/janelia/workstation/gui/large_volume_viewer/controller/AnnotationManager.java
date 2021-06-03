@@ -19,7 +19,7 @@ import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.tileimagery.TileServer;
-import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
+import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.PathTraceListener;
 import org.janelia.workstation.controller.listener.TmGeoAnnotationAnchorListener;
 import org.janelia.workstation.controller.listener.ViewStateListener;

@@ -24,6 +24,7 @@ import org.janelia.workstation.core.api.lifecycle.ConsoleState;
 import org.janelia.workstation.core.api.lifecycle.GracefulBrick;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
+import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.model.ConnectionResult;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.BrandingConfig;
@@ -34,6 +35,8 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.StatusDisplayer;
 import org.openide.filesystems.FileUtil;
 import org.openide.windows.OnShowing;
+import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,6 +215,14 @@ public class ShowingHook implements Runnable {
 
         // Things that can be done lazily
         SwingUtilities.invokeLater(() -> getReleaseNotesDialog().showIfFirstRunSinceUpdate());
+
+        if (ApplicationOptions.getInstance().isShowHortaOnStartup()) {
+            TopComponent tc = WindowManager.getDefault().findTopComponent("InfoPanelTopComponent");
+            if (tc != null) {
+                tc.open();
+                tc.requestActive();
+            }
+        }
     }
 
     public static synchronized ReleaseNotesDialog getReleaseNotesDialog() {

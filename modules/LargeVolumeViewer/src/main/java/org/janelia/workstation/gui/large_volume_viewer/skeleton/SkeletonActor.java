@@ -22,7 +22,7 @@ import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;
-import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
+import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 import org.janelia.workstation.gui.large_volume_viewer.shader.PathShader;

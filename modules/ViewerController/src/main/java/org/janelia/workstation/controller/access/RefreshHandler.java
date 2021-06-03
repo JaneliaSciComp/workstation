@@ -10,8 +10,10 @@ import org.janelia.messaging.utils.MessagingUtils;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronMessageConstants;
 import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -306,8 +308,10 @@ public class RefreshHandler implements MessageHandler {
     private void handleNeuronChanged(TmNeuronMetadata neuron) {
         try {
             log.info("remote processing change neuron " + neuron.getName());
-            annotationModel.getNeuronModel().refreshNeuronFromShared(neuron);
-            annotationModel.refreshNeuron(neuron);
+            if (!ApplicationPanel.isDisableSharedWorkspace()) {
+                annotationModel.getNeuronModel().refreshNeuronFromShared(neuron);
+                annotationModel.refreshNeuron(neuron);
+            }
         } catch (Exception e) {
             logError("Error handling neuron change: " + e.getMessage());
             log.error("Error handling neuron changed message for {}", neuron, e);
@@ -317,8 +321,10 @@ public class RefreshHandler implements MessageHandler {
     private void handleNeuronDeleted(TmNeuronMetadata neuron) {
         try {
             log.info("remote processing delete neuron" + neuron.getName());
-            updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE);
-			annotationModel.fireNeuronDeleted(neuron);
+            if (!ApplicationPanel.isDisableSharedWorkspace()) {
+                updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE);
+                annotationModel.fireNeuronDeleted(neuron);
+            }
         } catch (Exception e) {
             logError("Error handling neuron change: " + e.getMessage());
             log.error("Error handling neuron changed message for {}", neuron, e);

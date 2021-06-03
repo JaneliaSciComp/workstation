@@ -21,7 +21,7 @@ import org.janelia.workstation.gui.large_volume_viewer.camera.ObservableCamera3d
 import org.janelia.workstation.gui.large_volume_viewer.listener.CameraListenerAdapter;
 import org.janelia.workstation.gui.large_volume_viewer.listener.MessageListener;
 import org.janelia.workstation.gui.large_volume_viewer.listener.RepaintListener;
-import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
+import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActorStateUpdater;

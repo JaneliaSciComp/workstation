@@ -54,7 +54,7 @@ import org.janelia.workstation.gui.large_volume_viewer.controller.QuadViewContro
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonController;
 import org.janelia.workstation.controller.listener.VolumeLoadListener;
 import org.janelia.workstation.gui.large_volume_viewer.listener.WorkspaceClosureListener;
-import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
+import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;

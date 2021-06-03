@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.options;
+package org.janelia.workstation.controller.options;
 
 import java.awt.BorderLayout;
 
@@ -21,9 +21,13 @@ import net.miginfocom.swing.MigLayout;
 public class ApplicationPanel extends javax.swing.JPanel {
 
     private static final Icon ERROR_ICON = UIManager.getIcon("OptionPane.errorIcon");
-    
+
     public static final String PREFERENCE_LOAD_LAST_OBJECT = "LoadLastObject";
-    public static final String PREFERENCE_LOAD_LAST_OBJECT_DEFAULT = "true";
+    public static final String PREFERENCE_LOAD_LAST_OBJECT_DEFAULT = "false";
+    public static final String PREFERENCE_DISABLE_SHARED = "DisableSharedWorkspace";
+    public static final String PREFERENCE_DISABLE_SHARED_DEFAULT = "false";
+    public static final String PREFERENCE_LOAD_COLOR_SLIDERS = "LoadColorSliders";
+    public static final String PREFERENCE_LOAD_COLOR_SLIDERS_DEFAULT = "false";
     public static final String PREFERENCE_VERIFY_NEURONS = "VerifyNeurons";
     public static final String PREFERENCE_VERIFY_NEURONS_DEFAULT = "false";
     public static final String PREFERENCE_ANCHORS_IN_VIEWPORT = "AnchorsInViewport";
@@ -38,7 +42,9 @@ public class ApplicationPanel extends javax.swing.JPanel {
     public static final String PREFERENCE_ANNOTATIONS_CLICK_MODE_DEFAULT = CLICK_MODE_SHIFT_LEFT_CLICK;
 
     private final ApplicationOptionsPanelController controller;
-    private JCheckBox loadLastCheckbox; 
+    private JCheckBox loadLastCheckbox;
+    private JCheckBox showColorSlidersOnOpen;
+    private JCheckBox disableSharedWorkspace;
     private JCheckBox verifyNeuronsCheckbox; 
     private JCheckBox anchorsInViewportCheckbox; 
     private JTextField zThicknessField;
@@ -63,6 +69,30 @@ public class ApplicationPanel extends javax.swing.JPanel {
         titleLabel.setLabelFor(loadLastCheckbox);
         attrPanel.add(titleLabel,"gap para");
         attrPanel.add(loadLastCheckbox,"gap para");
+
+        this.showColorSlidersOnOpen = new JCheckBox();
+        showColorSlidersOnOpen.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                controller.changed();
+            }
+        });
+        JLabel sliderLabel = new JLabel("Open Color Sliders Panel on Horta 3D Open: ");
+        sliderLabel.setLabelFor(showColorSlidersOnOpen);
+        attrPanel.add(sliderLabel,"gap para");
+        attrPanel.add(showColorSlidersOnOpen,"gap para");
+
+        this.disableSharedWorkspace = new JCheckBox();
+        disableSharedWorkspace.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                controller.changed();
+            }
+        });
+        JLabel disableSharedLabel = new JLabel("Disable Shared Workspace for Performance: ");
+        disableSharedLabel.setLabelFor(disableSharedWorkspace);
+        attrPanel.add(disableSharedLabel,"gap para");
+        attrPanel.add(disableSharedWorkspace,"gap para");
 
         
         this.verifyNeuronsCheckbox = new JCheckBox();
@@ -144,6 +174,8 @@ public class ApplicationPanel extends javax.swing.JPanel {
 
     void load() {
         loadLastCheckbox.setSelected(isLoadLastObject());
+        disableSharedWorkspace.setSelected(isDisableSharedWorkspace());
+        showColorSlidersOnOpen.setSelected(isLoadColorSliders());
         verifyNeuronsCheckbox.setSelected(isVerifyNeurons());
         anchorsInViewportCheckbox.setSelected(isAnchorsInViewport());
         clickModeCombo.setSelectedItem(getAnnotationClickMode());
@@ -154,9 +186,19 @@ public class ApplicationPanel extends javax.swing.JPanel {
     void store() {
         
         FrameworkAccess.setLocalPreferenceValue(
-                ApplicationPanel.class, 
-                PREFERENCE_LOAD_LAST_OBJECT, 
+                ApplicationPanel.class,
+                PREFERENCE_LOAD_LAST_OBJECT,
                 loadLastCheckbox.isSelected()+"");
+
+        FrameworkAccess.setLocalPreferenceValue(
+                ApplicationPanel.class,
+                PREFERENCE_LOAD_COLOR_SLIDERS,
+                showColorSlidersOnOpen.isSelected()+"");
+
+        FrameworkAccess.setLocalPreferenceValue(
+                ApplicationPanel.class,
+                PREFERENCE_DISABLE_SHARED,
+                disableSharedWorkspace.isSelected()+"");
 
         FrameworkAccess.setLocalPreferenceValue(
                 ApplicationPanel.class, 
@@ -214,6 +256,22 @@ public class ApplicationPanel extends javax.swing.JPanel {
                 ApplicationPanel.class, 
                 ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT, 
                 ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT_DEFAULT);
+        return Boolean.parseBoolean(loadLastStr);
+    }
+
+    public static boolean isLoadColorSliders() {
+        String loadColorSliders = FrameworkAccess.getLocalPreferenceValue(
+                ApplicationPanel.class,
+                ApplicationPanel.PREFERENCE_LOAD_COLOR_SLIDERS,
+                ApplicationPanel.PREFERENCE_LOAD_COLOR_SLIDERS_DEFAULT);
+        return Boolean.parseBoolean(loadColorSliders);
+    }
+
+    public static boolean isDisableSharedWorkspace() {
+        String loadLastStr = FrameworkAccess.getLocalPreferenceValue(
+                ApplicationPanel.class,
+                ApplicationPanel.PREFERENCE_DISABLE_SHARED,
+                ApplicationPanel.PREFERENCE_DISABLE_SHARED_DEFAULT);
         return Boolean.parseBoolean(loadLastStr);
     }
 

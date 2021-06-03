@@ -1,4 +1,4 @@
-package org.janelia.workstation.gui.large_volume_viewer.options;
+package org.janelia.workstation.controller.options;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -14,7 +14,7 @@ import javax.swing.JPanel;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.common.gui.support.StringMemberListPanel;
-import org.janelia.workstation.gui.large_volume_viewer.action.LargeVolumeSampleDiscoveryAction;
+//import org.janelia.workstation.gui.large_volume_viewer.action.LargeVolumeSampleDiscoveryAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +34,8 @@ final class SampleRootPathsPanel extends javax.swing.JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
             	controller.applyChanges();
-            	LargeVolumeSampleDiscoveryAction action = new LargeVolumeSampleDiscoveryAction();
-            	action.actionPerformed(e);
+            	//LargeVolumeSampleDiscoveryAction action = new LargeVolumeSampleDiscoveryAction();
+            	//action.actionPerformed(e);
             }
         });
 

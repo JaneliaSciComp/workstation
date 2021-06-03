@@ -12,6 +12,7 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
+import org.openide.util.actions.SystemAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,10 @@ public class OpenTmSampleOrWorkspaceAction extends BaseContextualNodeAction {
     private static final Logger log = LoggerFactory.getLogger(OpenTmSampleOrWorkspaceAction.class);
     private DomainObject domainObject;
 
+    public static OpenTmSampleOrWorkspaceAction get() {
+        return SystemAction.get(OpenTmSampleOrWorkspaceAction.class);
+    }
+
     @Override
     protected void processContext() {
         if (getNodeContext().isSingleObjectOfType(TmSample.class)) {
@@ -49,6 +54,10 @@ public class OpenTmSampleOrWorkspaceAction extends BaseContextualNodeAction {
             domainObject = null;
             setEnabledAndVisible(false);
         }
+    }
+
+    public void setDomainObject(DomainObject obj) {
+        domainObject = obj;
     }
 
     @Override

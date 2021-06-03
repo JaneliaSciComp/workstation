@@ -25,7 +25,7 @@ import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.controller.tileimagery.TileFormat;
 import org.janelia.workstation.gui.large_volume_viewer.action.BasicMouseMode;
-import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
+import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.AnchoredVoxelPath;
 import org.janelia.workstation.gui.large_volume_viewer.tracing.SegmentIndex;

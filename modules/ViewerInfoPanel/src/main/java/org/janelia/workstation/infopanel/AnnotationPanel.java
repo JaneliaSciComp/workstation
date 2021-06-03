@@ -107,6 +107,10 @@ public class AnnotationPanel extends JPanel
 
     }
 
+    public void loadRecentWorkspace () {
+        panelController.loadRecentWorkspace();
+    }
+
     public TmModelManager getAnnotationModel() {
         return annotationModel;
     }
