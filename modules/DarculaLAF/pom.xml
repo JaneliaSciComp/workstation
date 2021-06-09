@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>9.5</version>
+        <version>9.5.1</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>DarculaLAF</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>darcula</artifactId>
-    <version>9.5</version>
+    <version>9.5.1</version>
     <packaging>nbm</packaging>
 
     <dependencies>
