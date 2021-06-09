@@ -1110,8 +1110,14 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         historian.addHistoricalEvent(backupNeurons);
         historian.setRecordHistory(false);
         neuronModel.moveNeurite(annotation, sourceNeuron, destNeuron);
-        deleteNeuron(sourceNeuron);
+        neuronModel.saveNeuronData(sourceNeuron);
         neuronModel.saveNeuronData(destNeuron);
+
+        boolean sourceDeleted = false;
+        if (sourceNeuron.getGeoAnnotationMap().isEmpty()) {
+            deleteNeuron(sourceNeuron);
+            sourceDeleted = true;
+        }
 
         historian.setRecordHistory(true);
         try {
@@ -1129,11 +1135,16 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         }
 
         if (!deferUIUpdate) {
+            boolean finalSourceDeleted = sourceDeleted;
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        fireNeuronChanged(sourceNeuron);
+                        if (finalSourceDeleted) {
+                            fireNeuronDeleted(sourceNeuron);
+                        } else {
+                            fireNeuronChanged(sourceNeuron);
+                        }
                         fireNeuronChanged(destNeuron);
                         fireNeuronSelected(destNeuron);
                     } finally {
