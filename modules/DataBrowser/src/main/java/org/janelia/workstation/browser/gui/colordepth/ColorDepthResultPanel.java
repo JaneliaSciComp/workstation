@@ -321,8 +321,12 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         log.info("Preparing matching results from {} results", resultList.size());
 
         // Filter down to relevant results for the current mask
+        Reference maskRef = Reference.createFor(mask);
         results.clear();
-        results.addAll(resultList.stream().filter(r -> r.getParameters().getMasks().contains(Reference.createFor(mask))).collect(Collectors.toList()));
+        results.addAll(resultList.stream().filter(
+                r -> r.getMaskResults().stream().anyMatch(
+                        mr -> mr.getMaskRef().equals(maskRef))
+            ).collect(Collectors.toList()));
         
         SimpleWorker worker = new SimpleWorker() {
 

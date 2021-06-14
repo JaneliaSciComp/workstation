@@ -1,15 +1,4 @@
-// 9.5
+// 9.6
 
-Data Browser
-* Added FlyEM Data Sets to Data Explorer
-* Improved default titles/subtitles
-* It's now possible to remove annotations across multiple pages of results
-* Fixed issue with using "Stage for Publishing" from Table View
-* Fixed several concurrency bugs
-
-Horta
-* Fixed metadata for info panel plugin
-* Added support for Load Sample/Workspace on Startup
-* Fixed issues with Shared Workspace
-* Fixed group permissions for import SWC
-* Fixed removal of empty neuron for transfer neurite
+Color Depth Search
+* Fixed bug which causes empty results to show up when "Rerun all masks" was not checked
