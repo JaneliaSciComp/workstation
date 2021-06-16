@@ -41,9 +41,9 @@ public class DataSetDialog extends ModalDialog {
     private static final String DEFAULT_SAMPLE_NAME_PATTERN = "{Line}-" + SLIDE_CODE_PATTERN;
 
     private static final String[][] VALID_CONFIG_PATHS = {
-            {"FlyLight Light Imagery","/groups/scicomp/informatics/data/flylightflip_light_imagery-config.xml"},
-            {"Lee Lab Light Imagery","/groups/scicomp/informatics/data/leetlineage_light_imagery-config.xml"},
-            {"Vienna Reimaging","/groups/scicomp/informatics/data/dickson_light_imagery-config.xml"},
+            {"FlyLight Light Imagery","/groups/scicompsoft/informatics/data/flylightflip_light_imagery-config.xml"},
+            {"Lee Lab Light Imagery","/groups/scicompsoft/informatics/data/leetlineage_light_imagery-config.xml"},
+            {"Vienna Reimaging","/groups/scicompsoft/informatics/data/dickson_light_imagery-config.xml"},
     };
 
     private static final String[][] VALID_GRAMMAR_PATHS = {
