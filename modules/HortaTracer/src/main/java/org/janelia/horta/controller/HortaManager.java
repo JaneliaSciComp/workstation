@@ -240,14 +240,17 @@ public class HortaManager {
 
     @Subscribe
     private void vertexSelected(SelectionAnnotationEvent event) {
-        TmGeoAnnotation annotation = (TmGeoAnnotation)event.getItems().iterator().next();
-        if (annotation==null)
-            return;
+        List<TmGeoAnnotation> annList = event.getItems();
+        if (!annList.isEmpty()) {
+            TmGeoAnnotation annotation = annList.get(0);
+            if (annotation==null)
+                return;
 
-        for (NeuronSelectionListener listener: neuronSelectionListeners) {
-            listener.vertexSelected(annotation);
+            for (NeuronSelectionListener listener: neuronSelectionListeners) {
+                listener.vertexSelected(annotation);
+            }
+            topComponent.redrawNow();
         }
-        topComponent.redrawNow();
     }
 
     @Subscribe
