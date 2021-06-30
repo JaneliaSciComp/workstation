@@ -1,4 +1,10 @@
 // 9.6
 
+Ontology Explorer
+* Improved YAML export format for editability
+* Renamed "Import Ontology Here" to "Add from YAML"
+* Rename "Export Ontology" to "Export as YAML"
+* Added "Replace from YAML"
+
 Color Depth Search
 * Fixed bug which causes empty results to show up when "Rerun all masks" was not checked

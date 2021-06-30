@@ -38,8 +38,8 @@ public abstract class CustomTreeToolbar extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 expandAllButton.setEnabled(false);
                 collapseAllButton.setEnabled(false);
-                for(Node node : treeView.getSelectedNodes()) {
-                    treeView.expandNode(node);
+                for (Node node : treeView.getSelectedNodes()) {
+                    treeView.expandOrCollapseAll(treeView.getTreePath(node), true);
                 }
                 expandAllButton.setEnabled(true);
                 collapseAllButton.setEnabled(true);
@@ -49,28 +49,20 @@ public abstract class CustomTreeToolbar extends JPanel {
         collapseAllButton = new JButton(Icons.getCollapseAllIcon());
         collapseAllButton.setToolTipText("Collapse the selected nodes.");
         collapseAllButton.setFocusable(false);
-        collapseAllButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                collapseAllButton.setEnabled(false);
-                expandAllButton.setEnabled(false);
-                for(Node node : treeView.getSelectedNodes()) {
-                    treeView.collapseNode(node);
-                }
-                collapseAllButton.setEnabled(true);
-                expandAllButton.setEnabled(true);
+        collapseAllButton.addActionListener(e -> {
+            collapseAllButton.setEnabled(false);
+            expandAllButton.setEnabled(false);
+            for(Node node : treeView.getSelectedNodes()) {
+                treeView.expandOrCollapseAll(treeView.getTreePath(node), false);
             }
+            collapseAllButton.setEnabled(true);
+            expandAllButton.setEnabled(true);
         });
 
         refreshButton = new JButton(Icons.getRefreshIcon());
         refreshButton.setToolTipText("Refresh the data in the tree.");
         refreshButton.setFocusable(false);
-        refreshButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                refresh();
-            }
-        });
+        refreshButton.addActionListener(e -> refresh());
         
         toolBar.add(refreshButton);
         toolBar.add(expandAllButton);

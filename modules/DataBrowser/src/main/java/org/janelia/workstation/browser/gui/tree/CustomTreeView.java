@@ -248,9 +248,32 @@ public class CustomTreeView extends BeanTreeView {
         return numExpanded;
     }
 
-    private TreePath getTreePath(Long[] path) {
+    public void expandOrCollapseAll(TreePath parent, boolean expand) {
+        TreeNode node = (TreeNode)parent.getLastPathComponent();
+        if (node.getChildCount() > 0) {
+            Enumeration e = node.children();
+            while(e.hasMoreElements()) {
+                TreeNode n = (TreeNode)e.nextElement();
+                TreePath path = parent.pathByAddingChild(n);
+                this.expandOrCollapseAll(path, expand);
+            }
+        }
+
+        if (expand) {
+            this.tree.expandPath(parent);
+        } else {
+            this.tree.collapsePath(parent);
+        }
+
+    }
+
+    public TreePath getTreePath(Long[] path) {
         Node n = NodeUtils.findNodeWithPath(getRootNode(), path);
         if (n==null) return null;
+        return getTreePath(n);
+    }
+
+    public TreePath getTreePath(Node n) {
 
         LinkedList<TreeNode> treeNodes = new LinkedList<>();
         

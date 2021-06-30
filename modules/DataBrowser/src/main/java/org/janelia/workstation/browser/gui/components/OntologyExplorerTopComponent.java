@@ -438,7 +438,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         final DomainObject domainObject = event.getDomainObject();
         if (domainObject instanceof Ontology) {
             log.info("Refreshing because ontology ontology '{}' was changed.", domainObject.getName());
-            refresh(false, true, null);
+            refresh(false, false, null);
         }
     }
     

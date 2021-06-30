@@ -1,25 +1,12 @@
 package org.janelia.workstation.browser.actions.context;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileFilter;
-
-import org.janelia.model.domain.ontology.EnumText;
-import org.janelia.model.domain.ontology.Interval;
-import org.janelia.model.domain.ontology.Ontology;
-import org.janelia.model.domain.ontology.OntologyElementType;
-import org.janelia.model.domain.ontology.OntologyTerm;
+import org.janelia.model.domain.ontology.*;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.gui.support.YamlFileFilter;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.api.DomainModel;
+import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
@@ -30,6 +17,15 @@ import org.openide.util.NbBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Action to import an ontology at the selected ontology node.
@@ -45,9 +41,9 @@ import org.yaml.snakeyaml.Yaml;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Ontology", position = 601, separatorBefore = 599)
+        @ActionReference(path = "Menu/Actions/Ontology", position = 602, separatorBefore = 599)
 })
-@NbBundle.Messages("CTL_OntologyImportAction=Import Ontology Here...")
+@NbBundle.Messages("CTL_OntologyImportAction=Add from YAML...")
 public class OntologyImportAction extends BaseContextualNodeAction {
 
     private final static Logger log = LoggerFactory.getLogger(OntologyImportAction.class);
@@ -71,7 +67,7 @@ public class OntologyImportAction extends BaseContextualNodeAction {
         importOntology(selectedTerm);
     }
 
-    private void importOntology(final OntologyTerm ontologyTerm) {
+    protected void importOntology(final OntologyTerm ontologyTerm) {
 
         ActivityLogHelper.logUserAction("OntologyImportAction.importOntology");
 
@@ -92,7 +88,10 @@ public class OntologyImportAction extends BaseContextualNodeAction {
             InputStream input = new FileInputStream(file);
             Yaml yaml = new Yaml();
             @SuppressWarnings("unchecked")
-            final Map<String,Object> root = (Map<String,Object>)yaml.load(input);
+            final Map<String,Object> root = yaml.load(input);
+
+            final DomainModel model = DomainMgr.getDomainMgr().getModel();
+            model.setNotify(false);
 
             SimpleWorker worker = new SimpleWorker() {
 
@@ -103,15 +102,18 @@ public class OntologyImportAction extends BaseContextualNodeAction {
 
                 @Override
                 protected void hadSuccess() {
+                    model.setNotify(true);
+                    SimpleWorker.runInBackground(() -> model.notifyDomainObjectChanged(ontology));
                 }
 
                 @Override
                 protected void hadError(Throwable error) {
-                    log.error("Error creating ontology terms", error);
-                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "Error creating ontology term", "Error", JOptionPane.ERROR_MESSAGE);
+                    model.setNotify(true);
+                    FrameworkAccess.handleException(error);
                 }
             };
 
+            worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Importing YAML...", ""));
             worker.execute();
 
         }
@@ -120,13 +122,14 @@ public class OntologyImportAction extends BaseContextualNodeAction {
         }
     }
 
-    private void createOntologyTerms(Ontology ontology, OntologyTerm parentTerm, Map<String,Object> newNode) throws Exception {
+    protected void createOntologyTerms(Ontology ontology, OntologyTerm parentTerm, Map<String,Object> newNode) throws Exception {
 
         String termName = (String)newNode.get("name");
         String typeName = (String)newNode.get("type");
         if (typeName==null) typeName = "Tag";
+        if ("Ontology".equals(typeName)) typeName = "Category";
 
-        log.info("Importing "+termName+" of type "+typeName);
+        log.info("Importing "+termName+" of type {}", termName, typeName);
 
         OntologyTerm newTerm = OntologyElementType.createTypeByName(typeName);
         newTerm.setName(termName);

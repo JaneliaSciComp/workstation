@@ -1,16 +1,5 @@
 package org.janelia.workstation.browser.actions.context;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileFilter;
-
 import org.janelia.model.domain.ontology.EnumText;
 import org.janelia.model.domain.ontology.Interval;
 import org.janelia.model.domain.ontology.OntologyTerm;
@@ -25,6 +14,16 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Builds an action to export the ontology from the selected node.
@@ -42,7 +41,7 @@ import org.yaml.snakeyaml.Yaml;
 @ActionReferences({
         @ActionReference(path = "Menu/Actions/Ontology", position = 602, separatorAfter = 605)
 })
-@NbBundle.Messages("CTL_OntologyExportAction=Export Ontology...")
+@NbBundle.Messages("CTL_OntologyExportAction=Export as YAML...")
 public class OntologyExportAction extends BaseContextualNodeAction {
 
     private static final String SAVE_FILE_EXTENSION = "yaml";
@@ -98,7 +97,7 @@ public class OntologyExportAction extends BaseContextualNodeAction {
 
     private Map<String,Object> convertOntologyToMap(OntologyTerm ontologyTerm) {
 
-        Map<String,Object> map = new HashMap<>();
+        Map<String,Object> map = new LinkedHashMap<>();
         map.put("name", ontologyTerm.getName());
 
         String typeName = ontologyTerm.getTypeName();
@@ -122,7 +121,9 @@ public class OntologyExportAction extends BaseContextualNodeAction {
             for (OntologyTerm child : children) {
                 childList.add(convertOntologyToMap(child));
             }
-            map.put("children", childList);
+            if (!childList.isEmpty()) {
+                map.put("children", childList);
+            }
         }
 
         return map;
