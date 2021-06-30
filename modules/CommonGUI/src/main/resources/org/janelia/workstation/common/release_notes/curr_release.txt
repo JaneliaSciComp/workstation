@@ -1,5 +1,8 @@
 // 9.6
 
+Data Browser
+* Added "View Line Releases" right-click option for Samples
+
 Ontology Explorer
 * Improved YAML export format for editability
 * Renamed "Import Ontology Here" to "Add from YAML"

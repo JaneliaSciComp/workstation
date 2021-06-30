@@ -90,7 +90,6 @@ public class AddToFolderAction extends BaseContextualPopupAction {
 
     @Override
     protected List<JComponent> getItems() {
-
         Collection<DomainObject> domainObjects = new ArrayList<>(this.domainObjects);
 
         List<JComponent> items = new ArrayList<>();

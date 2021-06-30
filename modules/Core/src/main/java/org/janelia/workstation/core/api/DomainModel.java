@@ -76,6 +76,7 @@ public class DomainModel {
     private final Cache<Reference, DomainObject> objectCache;
     private Map<Reference, Workspace> workspaceCache;
     private Map<Reference, Ontology> ontologyCache;
+    private Map<Reference, LineRelease> releaseCache;
     private Map<Reference, ContainerizedService> containerCache;
 
     private final LoadingCache<DocumentSearchParams, DocumentSearchResults> cachedSearchResults = CacheBuilder.newBuilder()
@@ -103,6 +104,7 @@ public class DomainModel {
                 log.trace("Removed key from caches: {}", id);
                 if (workspaceCache != null) workspaceCache.remove(id);
                 if (ontologyCache != null) ontologyCache.remove(id);
+                if (releaseCache != null) releaseCache.remove(id);
                 if (containerCache != null) containerCache.remove(id);
             }
         }).build();
@@ -234,6 +236,8 @@ public class DomainModel {
             if (workspaceCache != null) workspaceCache.put(id, (Workspace) domainObject);
         } else if (domainObject instanceof Ontology) {
             if (ontologyCache != null) ontologyCache.put(id, (Ontology) domainObject);
+        } else if (domainObject instanceof LineRelease) {
+            if (releaseCache != null) releaseCache.put(id, (LineRelease) domainObject);
         } else if (domainObject instanceof ContainerizedService) {
             if (containerCache != null) containerCache.put(id, (ContainerizedService) domainObject);
         }
@@ -252,6 +256,7 @@ public class DomainModel {
         synchronized (modelLock) {
             this.workspaceCache = null;
             this.ontologyCache = null;
+            this.releaseCache = null;
             this.containerCache = null;
             objectCache.invalidateAll();
             cachedSearchResults.invalidateAll();;
@@ -293,6 +298,7 @@ public class DomainModel {
         objectCache.invalidate(ref);
         if (workspaceCache != null) workspaceCache.remove(ref);
         if (ontologyCache != null) ontologyCache.remove(ref);
+        if (releaseCache != null) releaseCache.remove(ref);
         if (containerCache != null) containerCache.remove(ref);
 
         // Reload the domain object and stick it into the cache
@@ -973,7 +979,7 @@ public class DomainModel {
     }
 
     public <T extends Node> T reorderChildren(T node, int[] order) throws Exception {
-        T canonicalObject = null;
+        T canonicalObject;
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.reorderChildren(node, order));
         }
@@ -982,11 +988,11 @@ public class DomainModel {
     }
 
     public <T extends Node> T addChild(T node, DomainObject domainObject) throws Exception {
-        return addChildren(node, Arrays.asList(domainObject));
+        return addChildren(node, Collections.singletonList(domainObject));
     }
 
     public <T extends Node> T addChild(T node, DomainObject domainObject, Integer index) throws Exception {
-        return addChildren(node, Arrays.asList(domainObject), index);
+        return addChildren(node, Collections.singletonList(domainObject), index);
     }
 
     public <T extends Node> T addChildren(T node, Collection<? extends DomainObject> domainObjects) throws Exception {
@@ -994,7 +1000,7 @@ public class DomainModel {
     }
 
     public <T extends Node> T addChildren(T node, Collection<? extends DomainObject> domainObjects, Integer index) throws Exception {
-        T canonicalObject = null;
+        T canonicalObject;
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.addChildren(node, DomainUtils.getReferences(domainObjects), index));
         }
@@ -1003,11 +1009,11 @@ public class DomainModel {
     }
 
     public <T extends Node> T removeChild(T node, DomainObject domainObject) throws Exception {
-        return removeChildren(node, Arrays.asList(domainObject));
+        return removeChildren(node, Collections.singletonList(domainObject));
     }
 
     public <T extends Node> T removeChildren(T node, Collection<? extends DomainObject> domainObjects) throws Exception {
-        T canonicalObject = null;
+        T canonicalObject;
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.removeChildren(node, DomainUtils.getReferences(domainObjects)));
         }
@@ -1016,7 +1022,7 @@ public class DomainModel {
     }
 
     public <T extends Node> T removeReference(T node, Reference reference) throws Exception {
-        T canonicalObject = null;
+        T canonicalObject;
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(workspaceFacade.removeChildren(node, Arrays.asList(reference)));
         }
@@ -1024,17 +1030,29 @@ public class DomainModel {
     }
 
     public List<LineRelease> getLineReleases() throws Exception {
-        StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        List<LineRelease> releases = sampleFacade.getLineReleases();
-        List<LineRelease> canonicalReleases = putOrUpdate(releases, false);
-        if (TIMER) w.stop("getLineReleases");
-        return canonicalReleases;
+        Collection<LineRelease> values;
+        synchronized (modelLock) {
+            if (releaseCache == null) {
+                log.debug("Getting line releases from database");
+                this.releaseCache = new LinkedHashMap<>();
+                StopWatch w = TIMER ? new LoggingStopWatch() : null;
+                List<LineRelease> releases = sampleFacade.getLineReleases();
+                List<LineRelease> canonicalObjects = putOrUpdate(releases, false);
+                for (LineRelease lineRelease : canonicalObjects) {
+                    releaseCache.put(Reference.createFor(lineRelease), lineRelease);
+                }
+                if (TIMER) w.stop("getLineReleases");
+            }
+            values = releaseCache.values();
+        }
+        return new ArrayList<>(values);
     }
 
     public LineRelease createLineRelease(String name) throws Exception {
         LineRelease canonicalObject;
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(sampleFacade.createLineRelease(name));
+            if (releaseCache != null) releaseCache.put(Reference.createFor(canonicalObject), canonicalObject);
         }
         notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;
@@ -1044,13 +1062,17 @@ public class DomainModel {
         LineRelease canonicalObject;
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(sampleFacade.update(release));
+            if (releaseCache != null) releaseCache.put(Reference.createFor(canonicalObject), canonicalObject);
         }
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
     }
 
     public void remove(LineRelease release) throws Exception {
-        sampleFacade.remove(release);
+        synchronized (modelLock) {
+            sampleFacade.remove(release);
+            if (ontologyCache != null) ontologyCache.remove(Reference.createFor(release));
+        }
         notifyDomainObjectRemoved(release);
     }
 

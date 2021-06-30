@@ -30,6 +30,7 @@ import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.site.jrc.action.context.ApplyPublishingNamesActionListener;
 import org.janelia.workstation.site.jrc.nodes.FlyLineReleasesNode;
+import org.janelia.workstation.site.jrc.util.SiteUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -382,19 +383,7 @@ public class StageForPublishingDialog extends ModalDialog {
                             JOptionPane.WARNING_MESSAGE);
                 }
 
-                DomainExplorerTopComponent.getInstance().refresh(() -> {
-                    DomainExplorerTopComponent.getInstance().expandNodeById(FlyLineReleasesNode.NODE_ID);
-                    for (IdentifiableNode node : NodeTracker.getInstance().getNodesById(lineRelease.getId())) {
-                        if (node instanceof AbstractDomainObjectNode) {
-                            AbstractDomainObjectNode<?> nodeToLoad = (AbstractDomainObjectNode<?>)node;
-                            DomainListViewTopComponent viewer = ViewerUtils.createNewViewer(DomainListViewManager.getInstance(), "editor");
-                            viewer.requestActive();
-                            viewer.loadDomainObjectNode(nodeToLoad, true);
-                            break;
-                        }
-                    }
-                    return null;
-                });
+                SiteUtils.navigateToLineRelease(lineRelease.getId());
             }
 
             @Override
