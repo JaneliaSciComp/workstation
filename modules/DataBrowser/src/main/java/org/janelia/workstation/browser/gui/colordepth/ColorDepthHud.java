@@ -301,13 +301,13 @@ public class ColorDepthHud extends ModalDialog {
                     image1 = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(mask.getFilepath()));
                 }
                 catch (FileNotFoundException e) {
-                    log.warn("Mask image not found: ", mask.getFilepath());
+                    log.warn("Mask image not found: {}", mask.getFilepath());
                 }
                 try (InputStream imageStream = FileMgr.getFileMgr().openFileInputStream(image.getFilepath(), false)) {
                     image2 = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(image.getFilepath()));
                 }
                 catch (FileNotFoundException e) {
-                    log.warn("Result image not found: ", image.getFilepath());
+                    log.warn("Result image not found: {}", image.getFilepath());
                 }
             }
 
