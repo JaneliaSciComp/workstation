@@ -407,8 +407,6 @@ public class ColorDepthResultIconGridViewer
             ColorDepthMatch match = selected.get(0);
 
             ColorDepthResultImageModel imageModel = (ColorDepthResultImageModel)getImageModel();
-            String filepath = imageModel.getImageFilepath(match);
-            String title = imageModel.getImageTitle(match);
             hud.setObjectAndToggleDialog(match, imageModel, toggle);
         } 
         catch (Exception ex) {
@@ -420,8 +418,7 @@ public class ColorDepthResultIconGridViewer
     public ListViewerState saveState() {
         int maxImageWidth = imagesPanel.getMaxImageWidth();
         log.debug("Saving maxImageWidth={}",maxImageWidth);
-        ColorDepthResultIconGridViewerState state = new ColorDepthResultIconGridViewerState(maxImageWidth);
-        return state;
+        return new ColorDepthResultIconGridViewerState(maxImageWidth);
     }
 
     @Override
