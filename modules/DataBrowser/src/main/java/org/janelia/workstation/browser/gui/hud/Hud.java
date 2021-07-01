@@ -1,31 +1,5 @@
 package org.janelia.workstation.browser.gui.hud;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
-
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
@@ -48,10 +22,17 @@ import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.util.ImageCache;
 import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.gui.viewer3d.Mip3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 
 /**
@@ -435,8 +416,6 @@ public class Hud extends ModalDialog {
                     // Pack to get sizes
                     pack();
 
-                    log.info("headPanel.getPreferredSize().height: "+menuLikePanel.getPreferredSize().height);
-
                     Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                     Insets scnMax = Toolkit.getDefaultToolkit().getScreenInsets(getGraphicsConfiguration());
                     log.trace("Got screen insets: {}", scnMax);
@@ -452,12 +431,12 @@ public class Hud extends ModalDialog {
                     int padding = 8;
                     int windowTitleHeight = 35;
                     log.info("Image size: {}x{}", imageWidth, imageHeight);
-                    log.info("  windowTitleHeight: {}", windowTitleHeight);
-                    log.info("  menuLikePanel height: {}", menuLikePanel.getPreferredSize().height);
+                    log.debug("  windowTitleHeight: {}", windowTitleHeight);
+                    log.debug("  menuLikePanel height: {}", menuLikePanel.getPreferredSize().height);
 
                     int availableWidth = width - padding;
                     int availableHeight = height - padding - windowTitleHeight - menuLikePanel.getPreferredSize().height;
-                    log.info("Available image size: {}x{}", availableWidth, availableHeight);
+                    log.debug("Available image size: {}x{}", availableWidth, availableHeight);
 
                     int scrollPaneWidth = Math.min(imageWidth + padding, availableWidth);
                     int scrollPaneHeight = Math.min(imageHeight + padding, availableHeight);
@@ -476,6 +455,7 @@ public class Hud extends ModalDialog {
                     else {
                         pack();
                         revalidate();
+                        repaint();
                     }
                 }
 

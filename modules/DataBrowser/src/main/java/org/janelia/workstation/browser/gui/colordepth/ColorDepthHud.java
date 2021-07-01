@@ -1,21 +1,5 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
-import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
-import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.List;
-
-import javax.swing.*;
-import javax.swing.plaf.LayerUI;
-
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.model.domain.enums.SplitHalfType;
@@ -26,7 +10,6 @@ import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.support.AnnotationTagCloudPanel;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.common.gui.support.MissingIcon;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.keybind.KeymapUtil;
@@ -35,6 +18,17 @@ import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.plaf.LayerUI;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.List;
 
 /**
  * Special heads-up display for viewing color depth search results alongside the search mask.
@@ -388,15 +382,15 @@ public class ColorDepthHud extends ModalDialog {
                 int padding = 8;
                 int windowTitleHeight = 35;
                 log.info("Image size: {}x{}", imageWidth, imageHeight);
-                log.info("  imageHeight: {}", imageHeight);
-                log.info("  windowTitleHeight: {}", windowTitleHeight);
-                log.info("  headPanel height: {}", headPanel.getPreferredSize().height);
-                log.info("  checkboxPanel1.height: {}", checkboxPanel1.getPreferredSize().height);
+                log.debug("  imageHeight: {}", imageHeight);
+                log.debug("  windowTitleHeight: {}", windowTitleHeight);
+                log.debug("  headPanel height: {}", headPanel.getPreferredSize().height);
+                log.debug("  checkboxPanel1.height: {}", checkboxPanel1.getPreferredSize().height);
 
                 int availableWidth = width/2 - padding;
                 int availableHeight = height - padding - windowTitleHeight
                         - headPanel.getPreferredSize().height -  checkboxPanel1.getPreferredSize().height;
-                log.info("Available image size: {}x{}", availableWidth, availableHeight);
+                log.debug("Available image size: {}x{}", availableWidth, availableHeight);
 
                 int scrollPaneWidth = Math.min(imageWidth + padding, availableWidth);
                 int scrollPaneHeight = Math.min(imageHeight + padding, availableHeight);
@@ -416,6 +410,7 @@ public class ColorDepthHud extends ModalDialog {
                 else {
                     pack();
                     revalidate();
+                    repaint();
                 }
             }
 
