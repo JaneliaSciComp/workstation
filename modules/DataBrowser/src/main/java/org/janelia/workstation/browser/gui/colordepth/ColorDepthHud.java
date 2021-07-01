@@ -26,6 +26,7 @@ import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.support.AnnotationTagCloudPanel;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.MissingIcon;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.keybind.KeymapUtil;
@@ -65,6 +66,10 @@ public class ColorDepthHud extends ModalDialog {
 
     // GUI
     private final JPanel headPanel;
+    private final JPanel imagePanel1;
+    private final JPanel imagePanel2;
+    private final JPanel checkboxPanel1;
+    private final JPanel checkboxPanel2;
     private final JCheckBox mirrorCheckbox1;
     private final JCheckBox mirrorCheckbox2;
     private final JScrollPane scrollPane1;
@@ -77,7 +82,7 @@ public class ColorDepthHud extends ModalDialog {
     private BufferedImage image2;
 
     // Current state
-    private boolean firstShowing = true;
+    private boolean resetPosition = true;
     private Point point;
 
     class MouseCursorLayerUI extends LayerUI<JScrollPane> {
@@ -184,14 +189,22 @@ public class ColorDepthHud extends ModalDialog {
         mirrorCheckbox2.setFocusable(false);
         mirrorCheckbox2.addItemListener((e) -> updateResultImage());
 
-        JPanel imagePanel1 = new JPanel();
+        checkboxPanel1 = new JPanel();
+        checkboxPanel1.setLayout(new BorderLayout());
+        checkboxPanel1.add(mirrorCheckbox1, BorderLayout.WEST);
+
+        checkboxPanel2 = new JPanel();
+        checkboxPanel2.setLayout(new BorderLayout());
+        checkboxPanel2.add(mirrorCheckbox2, BorderLayout.WEST);
+
+        imagePanel1 = new JPanel();
         imagePanel1.setLayout(new BorderLayout());
-        imagePanel1.add(mirrorCheckbox1, BorderLayout.NORTH);
+        imagePanel1.add(checkboxPanel1, BorderLayout.NORTH);
         imagePanel1.add(scrollLayer1, BorderLayout.CENTER);
 
-        JPanel imagePanel2 = new JPanel();
+        imagePanel2 = new JPanel();
         imagePanel2.setLayout(new BorderLayout());
-        imagePanel2.add(mirrorCheckbox2, BorderLayout.NORTH);
+        imagePanel2.add(checkboxPanel2, BorderLayout.NORTH);
         imagePanel2.add(scrollLayer2, BorderLayout.CENTER);
 
         JPanel mainPanel = new JPanel();
@@ -248,23 +261,24 @@ public class ColorDepthHud extends ModalDialog {
         }
     }
 
-    public void showDialog() {
-        log.debug("showDialog");
-        packAndShow();
-    }
-
     public void hideDialog() {
         log.debug("hideDialog");
         setVisible(false);
+    }
+
+    public void showDialog() {
+        log.debug("showDialog");
+        packAndShow();
     }
 
     @Override
     protected void packAndShow() {
         SwingUtilities.updateComponentTreeUI(this);
         pack();
-        if (firstShowing) {
+        if (resetPosition) {
+            log.info("Resetting HUD location");
             setLocationRelativeTo(getParent());
-            firstShowing = false;
+            resetPosition = false;
         }
         setVisible(true);
     }
@@ -342,21 +356,67 @@ public class ColorDepthHud extends ModalDialog {
                 updateMaskImage();
                 updateResultImage();
 
-                if (toggle) {
-                    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-                    int width = (int)Math.round((double)screenSize.width*0.9);
-                    int height = (int)Math.round((double)screenSize.height*0.9);
-                    log.debug("Got screen size: {}x{}", width, height);
-                    width = Math.min(image1.getWidth()+12, width);
-                    height = Math.min(image1.getHeight()+12, height);
-                    log.debug("Setting scroll pane size: {}x{}", width, height);
-
-                    scrollPane1.setPreferredSize(new Dimension(width, height));
-                    scrollPane2.setPreferredSize(new Dimension(width, height));
-
-                    toggleDialog();
+                int imageWidth, imageHeight;
+                if (image1 != null) {
+                    imageWidth = image1.getWidth();
+                    imageHeight = image1.getHeight();
+                }
+                else if (image2 != null) {
+                    imageWidth = image2.getWidth();
+                    imageHeight = image2.getHeight();
+                }
+                else {
+                    imageWidth = imageHeight = 100;
                 }
 
+                // Pack to get panel sizes
+                pack();
+
+                log.info("headPanel.getPreferredSize().height: "+headPanel.getPreferredSize().height);
+
+                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                Insets scnMax = Toolkit.getDefaultToolkit().getScreenInsets(getGraphicsConfiguration());
+                log.trace("Got screen insets: {}", scnMax);
+                // Available size of the screen
+                int width = screenSize.width - scnMax.left - scnMax.right;
+                int height = screenSize.height - scnMax.bottom - scnMax.top;
+
+                // Use less than available, just in case there are borders or padding
+                width = (int)Math.round((double)width * 0.95);
+                height = (int)Math.round((double)height * 0.95);
+                log.info("Got screen size: {}x{}", width, height);
+
+                int desiredWidth = 2 * (imageWidth) + 8;
+                log.info("Desired width: {}", desiredWidth);
+
+                int windowTitleHeight = 50;
+                int desiredHeight = imageHeight + windowTitleHeight
+                        + headPanel.getPreferredSize().height
+                        + checkboxPanel1.getPreferredSize().height;
+                log.info("  imageHeight: {}", imageHeight);
+                log.info("  windowTitleHeight: {}", windowTitleHeight);
+                log.info("  headPanel height: {}", headPanel.getPreferredSize().height);
+                log.info("  checkboxPanel1.height: {}", checkboxPanel1.getPreferredSize().height);
+                log.info("Desired height: {}", desiredHeight);
+
+                width = Math.min(desiredWidth, width);
+                height = Math.min(desiredHeight, height);
+
+                Dimension currentSize = getPreferredSize();
+                if (currentSize.width != width || currentSize.height != height) {
+                    resetPosition = true;
+                }
+
+                log.info("Setting content pane size: {}x{}", width, height);
+                setPreferredSize(new Dimension(width, height));
+
+                if (toggle) {
+                    toggleDialog();
+                }
+                else {
+                    pack();
+                    revalidate();
+                }
             }
 
             @Override
